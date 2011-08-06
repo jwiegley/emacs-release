@@ -6,6 +6,13 @@
 @iftex
 @finalout
 @end iftex
+
+@dircategory Editors
+@direntry
+* SC: (sc).		Supercite lets you cite parts of messages you're 
+			  replying to, in flexible ways.
+@end direntry
+
 @c @setchapternewpage odd		% For book style double sided manual.
 @comment %**end of header (This is for running Texinfo on a region.)
 @c      @smallbook
@@ -2463,8 +2470,7 @@ reports, general help questions, etc.  To subscribe or unsubscribe to
 the mailing list, send a request to the administrative address:
 
 @example
-Internet: supercite-request@@anthem.nlm.nih.gov
-    UUCP: uunet!anthem.nlm.nih.gov!supercite-request
+supercite-request@@python.org
 @end example
 
 Please be sure to include the most reliable and shortest (preferably
@@ -2474,8 +2480,7 @@ sure to indicate this in your article or replies may not be CC'd to
 you):
 
 @example
-Internet: supercite@@anthem.nlm.nih.gov
-    UUCP: uunet!anthem.nlm.nih.gov!supercite
+supercite@@python.org
 @end example
 
 If you are sending bug reports, they should go to the following address,
@@ -2485,8 +2490,7 @@ will set up a mail buffer automatically with this address on the
 @samp{To:@:} line:
 
 @example
-Internet: supercite-help@@anthem.nlm.nih.gov
-    UUCP: uunet!anthem.nlm.nih.gov!supercite-help
+supercite-help@@python.org
 @end example
 
 @node  Concept Index, Command Index, The Supercite Mailing List, Top

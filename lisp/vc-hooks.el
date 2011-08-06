@@ -1,9 +1,11 @@
 ;;; vc-hooks.el --- resident support for version-control
 
-;; Copyright (C) 1992, 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
+;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998 Free Software Foundation, Inc.
 
 ;; Author:     Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: Andre Spiegel <spiegel@inf.fu-berlin.de>
+
+;; $Id: vc-hooks.el,v 1.111 1998/08/08 07:11:40 rms Exp $
 
 ;; This file is part of GNU Emacs.
 
@@ -33,39 +35,52 @@
 
 ;; Customization Variables (the rest is in vc.el)
 
-(defvar vc-default-back-end nil
+(defcustom vc-default-back-end nil
   "*Back-end actually used by this interface; may be SCCS or RCS.
-The value is only computed when needed to avoid an expensive search.")
+The value is only computed when needed to avoid an expensive search."
+  :type '(choice (const nil) (const RCS) (const SCCS))
+  :group 'vc)
 
-(defvar vc-handle-cvs t
+(defcustom vc-handle-cvs t
   "*If non-nil, use VC for files managed with CVS.
-If it is nil, don't use VC for those files.")
+If it is nil, don't use VC for those files."
+  :type 'boolean
+  :group 'vc)
 
-(defvar vc-rcsdiff-knows-brief nil
+(defcustom vc-rcsdiff-knows-brief nil
   "*Indicates whether rcsdiff understands the --brief option.
 The value is either `yes', `no', or nil.  If it is nil, VC tries
-to use --brief and sets this variable to remember whether it worked.")
+to use --brief and sets this variable to remember whether it worked."
+  :type '(choice (const nil) (const yes) (const no))
+  :group 'vc)
 
-(defvar vc-path
+(defcustom vc-path
   (if (file-directory-p "/usr/sccs")
       '("/usr/sccs")
     nil)
-  "*List of extra directories to search for version control commands.")
+  "*List of extra directories to search for version control commands."
+  :type '(repeat directory)
+  :group 'vc)
 
-(defvar vc-master-templates
+(defcustom vc-master-templates
   '(("%sRCS/%s,v" . RCS) ("%s%s,v" . RCS) ("%sRCS/%s" . RCS)
     ("%sSCCS/s.%s" . SCCS) ("%ss.%s". SCCS)
-    vc-find-cvs-master)
+    vc-find-cvs-master
+    vc-search-sccs-project-dir)
   "*Where to look for version-control master files.
 The first pair corresponding to a given back end is used as a template
 when creating new masters.
-Setting this variable to nil turns off use of VC entirely.")
+Setting this variable to nil turns off use of VC entirely."
+  :type '(repeat sexp)
+  :group 'vc)
 
-(defvar vc-make-backup-files nil
+(defcustom vc-make-backup-files nil
   "*If non-nil, backups of registered files are made as with other files.
-If nil (the default), files covered by version control don't get backups.")
+If nil (the default), files covered by version control don't get backups."
+  :type 'boolean
+  :group 'vc)
 
-(defvar vc-follow-symlinks 'ask
+(defcustom vc-follow-symlinks 'ask
   "*Indicates what to do if you visit a symbolic link to a file
 that is under version control.  Editing such a file through the
 link bypasses the version control system, which is dangerous and
@@ -73,24 +88,45 @@ probably not what you want.
   If this variable is t, VC follows the link and visits the real file,
 telling you about it in the echo area.  If it is `ask', VC asks for
 confirmation whether it should follow the link.  If nil, the link is
-visited and a warning displayed.")
+visited and a warning displayed."
+  :type '(choice (const ask) (const nil) (const t))
+  :group 'vc)
 
-(defvar vc-display-status t
+(defcustom vc-display-status t
   "*If non-nil, display revision number and lock status in modeline.
-Otherwise, not displayed.")
+Otherwise, not displayed."
+  :type 'boolean
+  :group 'vc)
 
-(defvar vc-consult-headers t
-  "*If non-nil, identify work files by searching for version headers.")
 
-(defvar vc-keep-workfiles t
+(defcustom vc-consult-headers t
+  "*If non-nil, identify work files by searching for version headers."
+  :type 'boolean
+  :group 'vc)
+
+(defcustom vc-keep-workfiles t
   "*If non-nil, don't delete working files after registering changes.
 If the back-end is CVS, workfiles are always kept, regardless of the
-value of this flag.")
+value of this flag."
+  :type 'boolean
+  :group 'vc)
 
-(defvar vc-mistrust-permissions nil
+(defcustom vc-mistrust-permissions nil
   "*If non-nil, don't assume that permissions and ownership track 
 version-control status.  If nil, do rely on the permissions.
-See also variable `vc-consult-headers'.")
+See also variable `vc-consult-headers'."
+  :type 'boolean
+  :group 'vc)
+
+(defcustom vc-ignore-vc-files nil
+  "*If non-nil don't look for version control information when finding files.
+
+It may be useful to set this if (say) you edit files in a directory
+containing corresponding RCS files but don't have RCS available;
+similarly for other version control systems."
+  :type 'boolean
+  :group 'vc
+  :version "20.3")
 
 (defun vc-mistrust-permissions (file)
   ;; Access function to the above.
@@ -271,6 +307,45 @@ See also variable `vc-consult-headers'.")
 	   (error "Couldn't find version control information")))
     exec-status))
 
+(defun vc-parse-cvs-status (&optional full)
+  ;; Parse output of "cvs status" command in the current buffer and
+  ;; set file properties accordingly.  Unless FULL is t, parse only
+  ;; essential information.
+  (let (file status)
+    (goto-char (point-min))
+    (if (re-search-forward "^File: " nil t)
+        (cond 
+         ((looking-at "no file") nil)
+         ((re-search-forward "\\=\\([^ \t]+\\)" nil t)
+          (setq file (concat default-directory (match-string 1)))
+          (vc-file-setprop file 'vc-backend 'CVS)
+          (if (not (re-search-forward "\\=[ \t]+Status: \\(.*\\)" nil t))
+              (setq status "Unknown")
+            (setq status (match-string 1)))
+          (if (and full 
+                   (re-search-forward 
+  "\\(RCS Version\\|RCS Revision\\|Repository revision\\):[\t ]+\\([0-9.]+\\)"
+                    nil t))
+              (vc-file-setprop file 'vc-latest-version (match-string 2)))
+          (cond 
+           ((string-match "Up-to-date" status)
+            (vc-file-setprop file 'vc-cvs-status 'up-to-date)
+            (vc-file-setprop file 'vc-checkout-time 
+                             (nth 5 (file-attributes file))))
+           ((vc-file-setprop file 'vc-cvs-status
+             (cond 
+              ((string-match "Locally Modified"    status) 'locally-modified)
+              ((string-match "Needs Merge"         status) 'needs-merge)
+              ((string-match "Needs \\(Checkout\\|Patch\\)" status) 
+               'needs-checkout)
+              ((string-match "Unresolved Conflict" status) 
+	       'unresolved-conflict)
+	      ((string-match "File had conflicts on merge" status)
+	       'unresolved-conflict)
+              ((string-match "Locally Added"       status) 'locally-added)
+              ((string-match "New file!"           status) 'locally-added)
+              (t 'unknown))))))))))
+
 (defun vc-fetch-master-properties (file)
   ;; Fetch those properties of FILE that are stored in the master file.
   ;; For an RCS file, we don't get vc-latest-version vc-your-latest-version
@@ -334,32 +409,7 @@ See also variable `vc-consult-headers'.")
         (let ((default-directory (file-name-directory file)))
           (vc-simple-command 0 "cvs" (file-name-nondirectory file) "status"))
 	(set-buffer (get-buffer "*vc-info*"))
-	(vc-parse-buffer     
-	 ;; CVS 1.3 says "RCS Version:", other releases "RCS Revision:",
-	 ;; and CVS 1.4a1 says "Repository revision:".
-	 '(("\\(RCS Version\\|RCS Revision\\|Repository revision\\):[\t ]+\\([0-9.]+\\)" 2)
-	   ("^File: [^ \t]+[ \t]+Status: \\(.*\\)" 1))
-	 file
-	 '(vc-latest-version vc-cvs-status))
-	;; Translate those status values that we understand into symbols.
-	;; Any other value is converted to nil.
-	(let ((status (vc-file-getprop file 'vc-cvs-status)))
-	 (cond 
-	  ((string-match "Up-to-date" status)
-	   (vc-file-setprop file 'vc-cvs-status 'up-to-date)
-	   (vc-file-setprop file 'vc-checkout-time 
-			    (nth 5 (file-attributes file))))
-	  ((vc-file-setprop file 'vc-cvs-status
-	    (cond 
-	     ((string-match "Locally Modified"    status) 'locally-modified)
-	     ((string-match "Needs Merge"         status) 'needs-merge)
-	     ((string-match "Needs \\(Checkout\\|Patch\\)" status) 
-                                                          'needs-checkout)
-	     ((string-match "Unresolved Conflict" status) 'unresolved-conflict)
-	     ((string-match "Locally Added"       status) 'locally-added)
-	     ((string-match "New file!"           status) 'locally-added)
-	     (t 'unknown)
-	     ))))))))
+        (vc-parse-cvs-status t))))
     (if (get-buffer "*vc-info*")
 	(kill-buffer (get-buffer "*vc-info*")))))
 
@@ -386,10 +436,11 @@ See also variable `vc-consult-headers'.")
       (cond  
        ;; search for $Id or $Header
        ;; -------------------------
-       ((or (and (search-forward "$Id: " nil t)
+       ;; The `\ 's below avoid an RCS 5.7 bug when checking in this file.
+       ((or (and (search-forward "$Id\ : " nil t)
 		 (looking-at "[^ ]+ \\([0-9.]+\\) "))
 	    (and (progn (goto-char (point-min))
-			(search-forward "$Header: " nil t))
+			(search-forward "$Header\ : " nil t))
 		 (looking-at "[^ ]+ \\([0-9.]+\\) ")))
 	(goto-char (match-end 0))
 	;; if found, store the revision number ...
@@ -483,21 +534,26 @@ See also variable `vc-consult-headers'.")
   "Return the master name of a file, nil if it is not registered.
 For CVS, the full name of CVS/Entries is returned."
   (or (vc-file-getprop file 'vc-name)
-      (let ((name-and-type (vc-registered file)))
-	(if name-and-type
-	    (progn
-	      (vc-file-setprop file 'vc-backend (cdr name-and-type))
-	      (vc-file-setprop file 'vc-name (car name-and-type)))))))
+      ;; Use the caching mechanism of vc-backend, below.
+      (if (vc-backend file)
+	  (vc-file-getprop file 'vc-name))))
 
 (defun vc-backend (file)
   "Return the version-control type of a file, nil if it is not registered."
-  (and file
-       (or (vc-file-getprop file 'vc-backend)
-	   (let ((name-and-type (vc-registered file)))
-	     (if name-and-type
-		 (progn
-		   (vc-file-setprop file 'vc-name (car name-and-type))
-		   (vc-file-setprop file 'vc-backend (cdr name-and-type))))))))
+  ;; Note that internally, Emacs remembers unregistered 
+  ;; files by setting the property to `none'.
+  (if file
+      (let ((property (vc-file-getprop file 'vc-backend))
+	    (name-and-type))
+	(cond ((eq property 'none) nil)
+	      (property)
+	      (t (setq name-and-type (vc-registered file))
+		 (if name-and-type
+		     (progn
+		       (vc-file-setprop file 'vc-name (car name-and-type))
+		       (vc-file-setprop file 'vc-backend (cdr name-and-type)))
+		   (vc-file-setprop file 'vc-backend 'none)
+		   nil))))))
 
 (defun vc-checkout-model (file)
   ;; Return `manual' if the user has to type C-x C-q to check out FILE.
@@ -771,9 +827,50 @@ For CVS, the full name of CVS/Entries is returned."
 	   vc-master-templates)
 	  nil)))))
 
+(defun vc-sccs-project-dir () 
+  ;; Return the full pathname of the SCCS PROJECTDIR, if it exists,
+  ;; otherwise nil.  The PROJECTDIR is indicated by the environment
+  ;; variable of the same name.  If its value starts with a slash,
+  ;; it must be an absolute path name that points to the 
+  ;; directory where SCCS history files reside.  If it does not
+  ;; begin with a slash, it is taken as the name of a user,
+  ;; and history files reside in an "src" or "source" subdirectory
+  ;; of that user's home directory.
+  (let ((project-dir (getenv "PROJECTDIR")))
+    (and project-dir
+         (if (eq (elt project-dir 0) ?/)
+             (if (file-exists-p (concat project-dir "/SCCS"))
+                 (concat project-dir "/SCCS/")
+               (if (file-exists-p project-dir)
+                   project-dir))
+           (setq project-dir (expand-file-name (concat "~" project-dir)))
+           (let (trial)
+             (setq trial (concat project-dir "/src/SCCS"))
+             (if (file-exists-p trial)
+                 (concat trial "/")
+               (setq trial (concat project-dir "/src"))
+               (if (file-exists-p trial)
+                   (concat trial "/")
+                 (setq trial (concat project-dir "/source/SCCS"))
+                 (if (file-exists-p trial)
+                     (concat trial "/")
+                   (setq trial (concat project-dir "/source/"))
+                   (if (file-exists-p trial)
+                       (concat trial "/"))))))))))
+
+(defun vc-search-sccs-project-dir (dirname basename)
+  ;; Check if there is a master file for BASENAME in the 
+  ;; SCCS project directory.  If yes, throw `found' as
+  ;; expected by vc-registered.  If not, return nil.
+  (let* ((project-dir (vc-sccs-project-dir))
+         (master-file (and project-dir (concat project-dir "s." basename))))
+    (and master-file
+         (file-exists-p master-file)
+         (throw 'found (cons master-file 'SCCS)))))
+
 (defun vc-find-cvs-master (dirname basename)
   ;; Check if DIRNAME/BASENAME is handled by CVS.
-  ;; If it is, do a (throw 'found (cons MASTER 'CVS)).
+  ;; If it is, do a (throw 'found (cons MASTER-FILE 'CVS)).
   ;; Note: This function throws the name of CVS/Entries
   ;; NOT that of the RCS master file (because we wouldn't be able
   ;; to access it under remote CVS).
@@ -850,7 +947,8 @@ For CVS, the full name of CVS/Entries is returned."
 		;; We found it.  Store away version number now that we 
 		;; are anyhow so close to finding it.
 		(vc-file-setprop file 'vc-workfile-version (match-string 1))
-                (vc-file-setprop file 'vc-checkout-time 0))
+		(vc-file-setprop file 'vc-checkout-time 0)
+		(throw 'found (cons (concat dirname "CVS/Entries") 'CVS)))
 	       (t nil)))
 	  (kill-buffer buffer)))))
 
@@ -879,13 +977,7 @@ of the buffer.  With prefix argument, ask for version number."
   ;; not locked, and the checkout model for it is `implicit',
   ;; mark it "locked" and redisplay the mode line.
   (let ((file (buffer-file-name)))
-    (and (vc-file-getprop file 'vc-backend)
-	 ;; ...check the property directly, not through the function of the
-	 ;; same name.  Otherwise Emacs would check for a master file
-	 ;; each time a non-version-controlled buffer is saved.
-	 ;; The property is computed when the file is visited, so if it
-	 ;; is `nil' now, it is certain that the file is NOT 
-	 ;; version-controlled.
+    (and (vc-backend file)
 	 (or (and (equal (vc-file-getprop file 'vc-checkout-time)
 			 (nth 5 (file-attributes file)))
 		  ;; File has been saved in the same second in which
@@ -984,7 +1076,7 @@ control system name."
   ;; Recompute whether file is version controlled,
   ;; if user has killed the buffer and revisited.
   (cond 
-   (buffer-file-name
+   ((and (not vc-ignore-vc-files) buffer-file-name)
     (vc-file-clearprops buffer-file-name)
     (cond
      ((vc-backend buffer-file-name)
@@ -1027,7 +1119,11 @@ control system name."
 (defun vc-file-not-found-hook ()
   "When file is not found, try to check it out from RCS or SCCS.
 Returns t if checkout was successful, nil otherwise."
-  (if (vc-backend buffer-file-name)
+  ;; When a file does not exist, ignore cached info about it
+  ;; from a previous visit.
+  (vc-file-clearprops buffer-file-name)
+  (if (and (not vc-ignore-vc-files) 
+           (vc-backend buffer-file-name))
       (save-excursion
 	(require 'vc)
 	(setq default-directory (file-name-directory (buffer-file-name)))
@@ -1060,6 +1156,7 @@ Returns t if checkout was successful, nil otherwise."
       (define-key vc-prefix-map "h" 'vc-insert-headers)
       (define-key vc-prefix-map "i" 'vc-register)
       (define-key vc-prefix-map "l" 'vc-print-log)
+      (define-key vc-prefix-map "m" 'vc-merge)
       (define-key vc-prefix-map "r" 'vc-retrieve-snapshot)
       (define-key vc-prefix-map "s" 'vc-create-snapshot)
       (define-key vc-prefix-map "u" 'vc-revert-buffer)

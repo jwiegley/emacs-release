@@ -1,6 +1,185 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
+
+File: emacs,  Node: Visiting,  Next: Saving,  Prev: File Names,  Up: Files
+
+Visiting Files
+==============
+
+`C-x C-f'
+     Visit a file (`find-file').
+
+`C-x C-r'
+     Visit a file for viewing, without allowing changes to it
+     (`find-file-read-only').
+
+`C-x C-v'
+     Visit a different file instead of the one visited last
+     (`find-alternate-file').
+
+`C-x 4 f'
+     Visit a file, in another window (`find-file-other-window').  Don't
+     alter what is displayed in the selected window.
+
+`C-x 5 f'
+     Visit a file, in a new frame (`find-file-other-frame').  Don't
+     alter what is displayed in the selected frame.
+
+`M-x find-file-literally'
+     Visit a file with no conversion of the contents.
+
+   "Visiting" a file means copying its contents into an Emacs buffer so
+you can edit them.  Emacs makes a new buffer for each file that you
+visit.  We say that this buffer is visiting the file that it was created
+to hold.  Emacs constructs the buffer name from the file name by
+throwing away the directory, keeping just the name proper.  For example,
+a file named `/usr/rms/emacs.tex' would get a buffer named `emacs.tex'.
+If there is already a buffer with that name, a unique name is
+constructed by appending `<2>', `<3>', or so on, using the lowest
+number that makes a name that is not already in use.
+
+   Each window's mode line shows the name of the buffer that is being
+displayed in that window, so you can always tell what buffer you are
+editing.
+
+   The changes you make with editing commands are made in the Emacs
+buffer.  They do not take effect in the file that you visited, or any
+place permanent, until you "save" the buffer.  Saving the buffer means
+that Emacs writes the current contents of the buffer into its visited
+file.  *Note Saving::.
+
+   If a buffer contains changes that have not been saved, we say the
+buffer is "modified".  This is important because it implies that some
+changes will be lost if the buffer is not saved.  The mode line
+displays two stars near the left margin to indicate that the buffer is
+modified.
+
+   To visit a file, use the command `C-x C-f' (`find-file').  Follow
+the command with the name of the file you wish to visit, terminated by a
+<RET>.
+
+   The file name is read using the minibuffer (*note Minibuffer::.),
+with defaulting and completion in the standard manner (*note File
+Names::.).  While in the minibuffer, you can abort `C-x C-f' by typing
+`C-g'.
+
+   Your confirmation that `C-x C-f' has completed successfully is the
+appearance of new text on the screen and a new buffer name in the mode
+line.  If the specified file does not exist and could not be created, or
+cannot be read, then you get an error, with an error message displayed
+in the echo area.
+
+   If you visit a file that is already in Emacs, `C-x C-f' does not make
+another copy.  It selects the existing buffer containing that file.
+However, before doing so, it checks that the file itself has not changed
+since you visited or saved it last.  If the file has changed, a warning
+message is printed.  *Note Simultaneous Editing: Interlocking.
+
+   What if you want to create a new file?  Just visit it.  Emacs prints
+`(New File)' in the echo area, but in other respects behaves as if you
+had visited an existing empty file.  If you make any changes and save
+them, the file is created.
+
+   If the file you specify is actually a directory, `C-x C-f' invokes
+Dired, the Emacs directory browser, so that you can "edit" the contents
+of the directory (*note Dired::.).  Dired is a convenient way to delete,
+look at, or operate on the files in the directory.  However, if the
+variable `find-file-run-dired' is `nil', then it is an error to try to
+visit a directory.
+
+   If you visit a file that the operating system won't let you modify,
+Emacs makes the buffer read-only, so that you won't go ahead and make
+changes that you'll have trouble saving afterward.  You can make the
+buffer writable with `C-x C-q' (`vc-toggle-read-only').  *Note Misc
+Buffer::.
+
+   Occasionally you might want to visit a file as read-only in order to
+protect yourself from entering changes accidentally; do so by visiting
+the file with the command `C-x C-r' (`find-file-read-only').
+
+   If you visit a nonexistent file unintentionally (because you typed
+the wrong file name), use the `C-x C-v' command (`find-alternate-file')
+to visit the file you really wanted.  `C-x C-v' is similar to `C-x
+C-f', but it kills the current buffer (after first offering to save it
+if it is modified).  When it reads the file name to visit, it inserts
+the entire default file name in the buffer, with point just after the
+directory part; this is convenient if you made a slight error in typing
+the name.
+
+   If you find a file which exists but cannot be read, `C-x C-f'
+signals an error.
+
+   `C-x 4 f' (`find-file-other-window') is like `C-x C-f' except that
+the buffer containing the specified file is selected in another window.
+The window that was selected before `C-x 4 f' continues to show the
+same buffer it was already showing.  If this command is used when only
+one window is being displayed, that window is split in two, with one
+window showing the same buffer as before, and the other one showing the
+newly requested file.  *Note Windows::.
+
+   `C-x 5 f' (`find-file-other-frame') is similar, but opens a new
+frame, or makes visible any existing frame showing the file you seek.
+This feature is available only when you are using a window system.
+*Note Frames::.
+
+   If you wish to edit a file as a sequence of characters with no
+special encoding or conversion, use the `M-x find-file-literally'
+command.  It visits a file, like `C-x C-f', but does not do format
+conversion (*note Formatted Text::.), character code conversion (*note
+Coding Systems::.), or automatic uncompression (*note Compressed
+Files::.).  If you already have visited the same file in the usual
+(non-literal) manner, this command asks you whether to visit it
+literally instead.
+
+   Two special hook variables allow extensions to modify the operation
+of visiting files.  Visiting a file that does not exist runs the
+functions in the list `find-file-not-found-hooks'; this variable holds
+a list of functions, and the functions are called one by one until one
+of them returns non-`nil'.  Any visiting of a file, whether extant or
+not, expects `find-file-hooks' to contain a list of functions and calls
+them all, one by one.  In both cases the functions receive no
+arguments.  Of these two variables, `find-file-not-found-hooks' takes
+effect first.  These variables are *not* normal hooks, and their names
+end in `-hooks' rather than `-hook' to indicate that fact.  *Note
+Hooks::.
+
+   There are several ways to specify automatically the major mode for
+editing the file (*note Choosing Modes::.), and to specify local
+variables defined for that file (*note File Variables::.).
+
 
 File: emacs,  Node: Saving,  Next: Reverting,  Prev: Visiting,  Up: Files
 
@@ -213,11 +392,11 @@ accordingly at startup.  If the environment variable's value is `t' or
 or `existing', then `version-control' becomes `nil'; if it is `never'
 or `simple', then `version-control' becomes `never'.
 
-   For files under version control (*note Version Control::.), the
-variable `vc-make-backup-files' determines whether to make backup
-files.  By default, it is `nil', since backup files are redundant when
-you store all the previous versions in a version control system.  *Note
-Editing with VC::.
+   For files managed by a version control system (*note Version
+Control::.), the variable `vc-make-backup-files' determines whether to
+make backup files.  By default, it is `nil', since backup files are
+redundant when you store all the previous versions in a version control
+system.  *Note VC Workfile Handling::.
 
 
 File: emacs,  Node: Backup Deletion,  Next: Backup Copying,  Prev: Backup Names,  Up: Backup
@@ -276,10 +455,20 @@ locally (*note File Variables::.).
 Renaming is the default choice.  If the variable `backup-by-copying' is
 non-`nil', copying is used.  Otherwise, if the variable
 `backup-by-copying-when-linked' is non-`nil', then copying is used for
-files that have multiple names, but renaming may still used when the
+files that have multiple names, but renaming may still be used when the
 file being edited has only one name.  If the variable
 `backup-by-copying-when-mismatch' is non-`nil', then copying is used if
 renaming would cause the file's owner or group to change.
+`backup-by-copying-when-mismatch' is `t' by default if you start Emacs
+as the superuser.
+
+   When a file is managed with a version control system (*note Version
+Control::.), Emacs does not normally make backups in the usual way for
+that file.  But check-in and check-out are similar in some ways to
+making backups.  One unfortunate similarity is that these operations
+typically break hard links, disconnecting the file name you visited from
+any alternate names for the same file.  This has nothing to do with
+Emacs--the version control system does it.
 
 
 File: emacs,  Node: Interlocking,  Prev: Backup,  Up: Saving
@@ -517,9 +706,9 @@ Recovering Data from Auto-Saves
    You can use the contents of an auto-save file to recover from a loss
 of data with the command `M-x recover-file <RET> FILE <RET>'.  This
 visits FILE and then (after your confirmation) restores the contents
-from from its auto-save file `#FILE#'.  You can then save with `C-x
-C-s' to put the recovered text into FILE itself.  For example, to
-recover file `foo.c' from its auto-save file `#foo.c#', do:
+from its auto-save file `#FILE#'.  You can then save with `C-x C-s' to
+put the recovered text into FILE itself.  For example, to recover file
+`foo.c' from its auto-save file `#foo.c#', do:
 
      M-x recover-file <RET> foo.c <RET>
      yes <RET>
@@ -594,37 +783,49 @@ file just once.  Version control systems also record history information
 such as the creation time of each version, who created it, and a
 description of what was changed in that version.
 
-   The Emacs version control package is called VC.  Its commands work
+   The Emacs version control interface is called VC.  Its commands work
 with three version control systems--RCS, CVS and SCCS.  The GNU project
 recommends RCS and CVS, which are free software and available from the
 Free Software Foundation.
 
 * Menu:
 
-* Version Systems::     Supported version control back-end systems.
-* VC Concepts::         Basic version control information;
-                          checking files in and out.
-* Editing with VC::     Commands for editing a file maintained
-                          with version control.
-* Log Entries::         Logging your changes.
-* Change Logs and VC::  Generating a change log file from log entries.
+* Introduction to VC::  How version control works in general.
+* VC Mode Line::     How the mode line shows version control status.
+* Basic VC Editing::    How to edit a file under version control.
 * Old Versions::        Examining and comparing old versions.
-* Branches::            Selecting a branch to put your changes in,
-                          and creating a new branch.
-* Status in VC::        Commands to view the VC status of files and
-                          look at log entries.
-* Renaming and VC::     A command to rename both the source and
-                          master file correctly.
-* Snapshots::           How to make and use snapshots, a set of
-                          file versions that can be treated as a unit.
-* Version Headers::     Inserting version control headers into working files.
-* Customizing VC::      Variables to change VC's behavior.
+* Secondary VC Commands::    The commands used a little less frequently.
+* Branches::            Multiple lines of development.
+* Snapshots::           Sets of file versions treated as a unit.
+* Miscellaneous VC::    Various other commands and features of VC.
+* Customizing VC::      Variables that change VC's behavior.
 
 
-File: emacs,  Node: Version Systems,  Next: VC Concepts,  Up: Version Control
+File: emacs,  Node: Introduction to VC,  Next: VC Mode Line,  Up: Version Control
+
+Introduction to Version Control
+-------------------------------
+
+   VC allows you to use a version control system from within Emacs,
+integrating the version control operations smoothly with editing.  VC
+provides a uniform interface to version control, so that regardless of
+which version control system is in use, you can use it the same way.
+
+   This section provides a general overview of version control, and
+describes the version control systems that VC supports.  You can skip
+this section if you are already familiar with the version control system
+you want to use.
+
+* Menu:
+
+* Version Systems::  Supported version control back-end systems.
+* VC Concepts::      Words and concepts related to version control.
+
+
+File: emacs,  Node: Version Systems,  Next: VC Concepts,  Up: Introduction to VC
 
 Supported Version Control Systems
----------------------------------
+.................................
 
    VC currently works with three different version control systems or
 "back ends": RCS, CVS, and SCCS.
@@ -639,7 +840,7 @@ for more sophisticated release management, and concurrent multi-user
 development.  VC supports basic editing operations under CVS, but for
 some less common tasks you still need to call CVS from the command line.
 Note also that before using CVS you must set up a repository, which is a
-subject too complex to treat here.  *Note CVS and VC::.
+subject too complex to treat here.
 
    SCCS is a proprietary but widely used version control system.  In
 terms of capabilities, it is the weakest of the three that VC supports.
@@ -649,348 +850,189 @@ as multiple branches, are not available with SCCS.  You should use SCCS
 only if for some reason you cannot use RCS.
 
 
-File: emacs,  Node: VC Concepts,  Next: Editing with VC,  Prev: Version Systems,  Up: Version Control
+File: emacs,  Node: VC Concepts,  Prev: Version Systems,  Up: Introduction to VC
 
 Concepts of Version Control
----------------------------
+...........................
 
    When a file is under version control, we also say that it is
 "registered" in the version control system.  Each registered file has a
 corresponding "master file" which represents the file's present state
-plus its change history, so that you can reconstruct from it either the
-current version or any specified earlier version.  Usually the master
-file also records a "log entry" for each version describing what was
-changed in that version.
+plus its change history--enough to reconstruct the current version or
+any earlier version.  Usually the master file also records a "log
+entry" for each version, describing in words what was changed in that
+version.
 
    The file that is maintained under version control is sometimes called
-the "work file" corresponding to its master file.
+the "work file" corresponding to its master file.  You edit the work
+file and make changes in it, as you would with an ordinary file.  (With
+SCCS and RCS, you must "lock" the file before you start to edit it.)
+After you are done with a set of changes, you "check the file in",
+which records the changes in the master file, along with a log entry for
+them.
 
-   To examine a file, you "check it out".  This extracts a version of
-the source file (typically, the most recent) from the master file.  If
-you want to edit the file, you must check it out "locked".  Only one
-user can do this at a time for any given source file.  (This kind of
-locking is completely unrelated to the locking that Emacs uses to detect
-simultaneous editing of a file.)
+   With CVS, there are usually multiple work files corresponding to a
+single master file--often each user has his own copy.  It is also
+possible to use RCS in this way, but this is not the usual way to use
+RCS.
 
-   When you are done with your editing, you must "check in" the new
-version.  This records the new version in the master file, and unlocks
-the source file so that other people can lock it and thus modify it.
+   A version control system typically has some mechanism to coordinate
+between users who want to change the same file.  One method is
+"locking" (analogous to the locking that Emacs uses to detect
+simultaneous editing of a file, but distinct from it).  The other method
+is to merge your changes with other people's changes when you check them
+in.
 
-   Check-in and check-out are the basic operations of version control.
-You can do both of them with a single Emacs command: `C-x C-q'
-(`vc-toggle-read-only').
+   With version control locking, work files are normally read-only so
+that you cannot change them.  You ask the version control system to make
+a work file writable for you by locking it; only one user can do this
+at any given time.  When you check in your changes, that unlocks the
+file, making the work file read-only again.  This allows other users to
+lock the file to make further changes.  SCCS always uses locking, and
+RCS normally does.
 
-   There are variants of this basic pattern, though.  CVS, for example,
-has no such thing as locking, and therefore you can normally edit files
-right away, without having to check them out first.  *Note CVS and VC::.
-With RCS, you can optionally select "non-strict locking" for a
-particular source file; then you can edit the file in Emacs without
-explicitly locking it.
+   The other alternative for RCS is to let each user modify the work
+file at any time.  In this mode, locking is not required, but it is
+permitted; check-in is still the way to record a new version.
 
-   A "snapshot" is a coherent collection of versions of the various
-files that make up a program.  *Note Snapshots::.
+   CVS normally allows each user to modify his own copy of the work file
+at any time, but requires merging with changes from other users at
+check-in time.  However, CVS can also be set up to require locking.
+(*note Backend Options::.).
 
 
-File: emacs,  Node: Editing with VC,  Next: Log Entries,  Prev: VC Concepts,  Up: Version Control
+File: emacs,  Node: VC Mode Line,  Next: Basic VC Editing,  Prev: Introduction to VC,  Up: Version Control
 
-Editing with Version Control
-----------------------------
+Version Control and the Mode Line
+---------------------------------
 
-   These are the commands for editing a file maintained with version
-control:
+   When you visit a file that is under version control, Emacs indicates
+this on the mode line.  For example, `RCS-1.3' says that RCS is used
+for that file, and the current version is 1.3.
+
+   The character between the back-end name and the version number
+indicates the version control status of the file.  `-' means that the
+work file is not locked (if locking is in use), or not modified (if
+locking is not in use).  `:' indicates that the file is locked, or that
+it is modified.  If the file is locked by some other user (for
+instance, `jim'), that is displayed as `RCS:jim:1.3'.
+
+
+File: emacs,  Node: Basic VC Editing,  Next: Old Versions,  Prev: VC Mode Line,  Up: Version Control
+
+Basic Editing under Version Control
+-----------------------------------
+
+   The principal VC command is an all-purpose command that performs
+either locking or check-in, depending on the situation.
 
 `C-x C-q'
 `C-x v v'
-     Check the visited file in or out.
+     Perform the next logical version control operation on this file.
 
-`C-x v u'
-     Revert the buffer and the file to the last checked-in version.
+   Strictly speaking, the command for this job is `vc-next-action',
+bound to `C-x v v'.  However, the normal meaning of `C-x C-q' is to
+make a read-only buffer writable, or vice versa; we have extended it to
+do the same job properly for files managed by version control, by
+performing the appropriate version control operations.  When you type
+`C-x C-q' on a registered file, it acts like `C-x v v'.
 
-`C-x v c'
-     Remove the last-entered change from the master for the visited
-     file.  This undoes your last check-in.
-
-`C-x v i'
-     Register the visited file for version control.
-
-(`C-x v' is the prefix key for version control commands; all of these
-commands except for `C-x C-q' start with `C-x v'.)
+   The precise action of this command depends on the state of the file,
+and whether the version control system uses locking or not.  SCCS and
+RCS normally use locking; CVS normally does not use locking.
 
 * Menu:
 
-* Check-Out::                   Checking out a file so you can edit it.
-* Check-In::                    After you edit, you check in your changes
-                                  to make a new version.
-* Version Control Undo::        Canceling changes before or after check-in.
-* Registering::                 How to start using version control
-                                  for a file.
-* VC Mode Line::                Mode line indicates version and lock status.
-* CVS and VC::                  Check-Out and check-in work differently in CVS.
+* VC with Locking::     RCS in its default mode, SCCS, and optionally CVS.
+* Without Locking::     Without locking: default mode for CVS.
+* Log Buffer::          Features available in log entry buffers.
 
 
-File: emacs,  Node: Check-Out,  Next: Check-In,  Up: Editing with VC
+File: emacs,  Node: VC with Locking,  Next: Without Locking,  Up: Basic VC Editing
 
-Check-Out
-.........
+Basic Version Control with Locking
+..................................
 
-   When you want to modify a file maintained with version control, type
-`C-x C-q' (`vc-toggle-read-only').  This "checks out" the file, and
-tells RCS or SCCS to lock the file.  This makes the file writable for
-you (but not for anyone else).
+   If locking is used for the file (as with SCCS, and RCS in its default
+mode), `C-x C-q' can either lock a file or check it in:
 
-   If you specify a prefix argument (`C-u C-x C-q') for check-out,
-Emacs asks you for a version number, and checks out that version
-*unlocked*.  This lets you move to old versions, or existing branches
-of the file (*note Branches::.).  You can then start editing the
-selected version by typing `C-x C-q' again.  (If you edit an old
-version of a file this way, checking it in again creates a new branch.)
+   * If the file is not locked, `C-x C-q' locks it, and makes it
+     writable so that you can change it.
 
-   Under CVS, you normally don't need to check out files explicitly.
-CVS does not have locking; multiple users can edit their copies of a
-file whenever they want.  (If two users make conflicting changes, they
-need to reconcile their changes when checking them in.)  We therefore
-say that an "implicit" check-out happens when you make the first change
-in the file.
+   * If the file is locked by you, and contains changes, `C-x C-q'
+     checks in the changes.  In order to do this, it first reads the
+     log entry for the new version.  *Note Log Buffer::.
 
-   CVS has an alternative mode in which explicit check-out is required.
-And RCS has an alternative mode called "non-strict locking" in which
-explicit check-out is not required.  Selecting these modes is done
-outside of VC, but once you have selected them, VC obeys them.  With
-RCS, you can select non-strict locking for a particular file using the
-`rcs -U' command.  *Note CVS and VC::, for an explanation of how to do
-this with CVS.
+   * If the file is locked by you, but you have not changed it since you
+     locked it, `C-x C-q' releases the lock and makes the file read-only
+     again.
+
+   * If the file is locked by some other user, `C-x C-q' asks you
+     whether you want to "steal the lock" from that user.  If you say
+     yes, the file becomes locked by you, but a message is sent to the
+     person who had formerly locked the file, to inform him of what has
+     happened.
+
+   These rules also apply when you use CVS in locking mode, except that
+there is no such thing as stealing a lock.
 
 
-File: emacs,  Node: Check-In,  Next: Version Control Undo,  Prev: Check-Out,  Up: Editing with VC
+File: emacs,  Node: Without Locking,  Next: Log Buffer,  Prev: VC with Locking,  Up: Basic VC Editing
 
-Check-In
-........
+Basic Version Control without Locking
+.....................................
 
-   When you are finished editing the file, type `C-x C-q' again.  When
-used on a file that is checked out, this command checks the file in.
-But check-in does not start immediately; first, you must enter the "log
-entry"--a description of the changes in the new version.  `C-x C-q'
-pops up a buffer for you to enter this in.  When you are finished
-typing in the log entry, type `C-c C-c' to terminate it; this is when
-actual check-in takes place.  *Note Log Entries::.
-
-   With RCS and SCCS, a checked-out file is also "locked", which means
-it is writable for you, but not for anyone else.  As long as you own
-the lock on the file, nobody else can modify it, and nobody can check
-in any changes to that particular version.  Checking in your changes
-unlocks the file, so that other users can lock it and modify it.
-
-   CVS, on the contrary, doesn't have a concept of locking.  The working
-files are always modifiable, allowing concurrent development, with
-possible conflicts being resolved at check-in time.  *Note CVS and VC::.
-
-   To specify the version number for the new version, type `C-u C-x
-C-q' to check in a file.  Then Emacs asks you for the new version number
-in the minibuffer.  This can be used to create a new "branch" of the
-file (*note Branches::.), or to increment the file's major version
-number.
-
-   It is not impossible to lock a file that someone else has locked.  If
-you try to check out a file that is locked, `C-x C-q' asks you whether
-you want to "steal the lock."  If you say yes, the file becomes locked
-by you, but a message is sent to the person who had formerly locked the
-file, to inform him of what has happened.  The mode line indicates that
-a file is locked by someone else by displaying the login name of that
-person, before the version number.
-
-
-File: emacs,  Node: Registering,  Next: VC Mode Line,  Prev: Version Control Undo,  Up: Editing with VC
-
-Registering a File for Version Control
-......................................
-
-`C-x v i'
-     Register the visited file for version control.
-
-   You can put any file under version control by simply visiting it, and
-then typing `C-x v i' (`vc-register'). After `C-x v i', the file is
-unlocked and read-only.  Type `C-x C-q' if you wish to start editing it.
-
-   When you register the file, Emacs must choose which version control
-system to use for it.  You can specify your choice explicitly by setting
-`vc-default-back-end' to `RCS', `CVS' or `SCCS'.  Otherwise, if there
-is a subdirectory named `RCS', `SCCS', or `CVS', Emacs uses the
-corresponding version control system.  In the absence of any
-specification, the default choice is RCS if RCS is installed, otherwise
-SCCS.
-
-   After registering a file with CVS, you must subsequently commit the
-initial version by typing `C-x C-q'.  *Note CVS and VC::.
-
-   The initial version number for a newly registered file is 1.1, by
-default.  To specify a different number, give `C-x v i' a numeric
-argument; then it reads the initial version number using the minibuffer.
-
-   If `vc-initial-comment' is non-`nil', `C-x v i' reads an initial
-comment (much like a log entry) to describe the purpose of this source
+   When there is no locking-the default for CVS-work files are always
+writable; you do not need to do anything before you begin to edit a
+file.  The status indicator on the mode line is `-' if the file is
+unmodified; it flips to `:' as soon as you save any changes in the work
 file.
 
-
-File: emacs,  Node: Version Control Undo,  Next: Registering,  Prev: Check-In,  Up: Editing with VC
+   Here is what `C-x C-q' does when using CVS:
 
-Undoing Version Control Actions
-...............................
+   * If some other user has checked in changes into the master file,
+     Emacs asks you whether you want to merge those changes into your
+     own work file (*note Merging::.).  You must do this before you can
+     check in your own changes.
 
-`C-x v u'
-     Revert the buffer and the file to the last checked-in version.
+   * If there are no new changes in the master file, but you have made
+     modifications in your work file, `C-x C-q' checks in your changes.
+     In order to do this, it first reads the log entry for the new
+     version.  *Note Log Buffer::.
 
-`C-x v c'
-     Remove the last-entered change from the master for the visited
-     file.  This undoes your last check-in.
+   * If the file is not modified, the `C-x C-q' does nothing.
 
-   If you want to discard your current set of changes and revert to the
-last version checked in, use `C-x v u' (`vc-revert-buffer').  This
-cancels your last check-out, leaving the file unlocked.  If you want to
-make a different set of changes, you must first check the file out
-again.  `C-x v u' requires confirmation, unless it sees that you
-haven't made any changes since the last checked-in version.
+   These rules also apply when you use RCS in the mode that does not
+require locking, except that automatic merging of changes from the
+master file is not implemented.  Unfortunately, this means that nothing
+informs you if another user has checked in changes in the same file
+since you began editing it, and when this happens, his changes will be
+effectively removed when you check in your version (though they will
+remain in the master file, so they will not be entirely lost).  You must
+therefore verify the current version is unchanged, before you check in
+your changes.  We hope to eliminate this risk and provide automatic
+merging with RCS in a future Emacs version.
 
-   `C-x v u' is also the command to use to unlock a file if you lock it
-and then decide not to change it.
-
-   You can cancel a change after checking it in, with `C-x v c'
-(`vc-cancel-version').  This command discards all record of the most
-recent checked-in version.  `C-x v c' also offers to revert your work
-file and buffer to the previous version (the one that precedes the
-version that is deleted).  If you say `no', then VC keeps your changes
-in the buffer and locks the file.
-
-   The no-revert option is useful when you have checked in a change and
-then discover a trivial error in it; you can cancel the erroneous
-check-in, fix the error, and check the file in again.
-
-   When `C-x v c' does not revert the buffer, it unexpands all version
-control headers in the buffer instead (*note Version Headers::.).  This
-is because the buffer no longer corresponds to any existing version.
-If you check it in again, the check-in process will expand the headers
-properly for the new version number.
-
-   However, it is impossible to unexpand the RCS `$Log$' header
-automatically.  If you use that header feature, you have to unexpand it
-by hand--by deleting the entry for the version that you just canceled.
-
-   Be careful when invoking `C-x v c', as it is easy to throw away a
-lot of work with it.  To help you be careful, this command always
-requires confirmation with `yes'.  Note also that this command is
-disabled under CVS, because canceling versions is very dangerous and
-discouraged with CVS.
+   In addition, locking is possible with RCS even in this mode, although
+it is not required; `C-x C-q' with an unmodified file locks the file,
+just as it does with RCS in its normal (locking) mode.
 
 
-File: emacs,  Node: VC Mode Line,  Next: CVS and VC,  Prev: Registering,  Up: Editing with VC
+File: emacs,  Node: Log Buffer,  Prev: Without Locking,  Up: Basic VC Editing
 
-The VC Mode Line
-................
+Features of the Log Entry Buffer
+................................
 
-   When you visit a file that is under version control, the mode line
-indicates the current status of the file: the name of the version
-control system used for it, the locking state, and the version.
-
-   The locking state is displayed as a single character, which can be
-either `-' or `:'.  `-' means the file is not locked or not modified by
-you.  Once you lock the file, the state indicator changes to `:'.  If
-the file is locked by someone else, that user's name appears after the
-version number.
-
-   For example, `RCS-1.3' means you are looking at RCS version 1.3,
-which is not locked.  `RCS:1.3' means that you have locked the file,
-and possibly already changed it.  `RCS:jim:1.3' means that the file is
-locked by jim.
-
-
-File: emacs,  Node: CVS and VC,  Prev: VC Mode Line,  Up: Editing with VC
-
-Using VC with CVS
-.................
-
-   In CVS, files are never locked.  Two users can check out the same
-file at the same time; each user has a separate copy and can edit it.
-Work files are always writable; once you have one, you need not type a
-VC command to start editing the file.  You can edit it at any time.
-
-   When using RCS and SCCS, you normally use `C-x C-q' twice for each
-change; once before the change, for check-out, and once after, for
-check-in.  With CVS, it's different: you normally use `C-x C-q' just
-once for each change, to commit the change when it is done.  The work
-file remains writable, so you can begin editing again with no special
-commands.
-
-   One way to understand this is that VC does an "implicit" check-out
-when you save the modified file for the first time.  VC indicates this
-on the mode line: the status indicator changes from `-' to `:' as soon
-as you save a modified version, telling you that you are not in sync
-with the repository anymore (*note VC Mode Line::.).  The file stays
-"checked out" until you check it back in, even if you kill the buffer
-and visit the file again.
-
-   If, instead, you would like to use explicit check-out with CVS, set
-the `CVSREAD' environment variable to some value.  (It does not matter
-what value you use.)  CVS then makes your work files read-only by
-default, and VC requires you to check them out explicitly with `C-x
-C-q'.  When setting `CVSREAD' for the first time, make sure to check
-out all your modules anew, so that the file protections are set
-correctly.
-
-   VC does not provide a way to check out a working copy of an existing
-file in the repository.  You have to use the CVS shell commands to do
-that.  Once you have a work file, you can start using VC for that file.
-
-   CVS terminology speaks of "committing" a change rather than checking
-it in.  But in practical terms they work the same way: Emacs asks you
-to type in a log entry, and you finish it with `C-c C-c'.
-
-   When you try to commit a change in a file, but someone else has
-committed another change in the meanwhile, that creates a "conflict".
-VC detects this situation and offers to "merge" your changes and those
-of the other user, creating a new local version of the file, which you
-can then commit to the repository.  This works smoothly if the changes
-are in different parts of the file, although it is wise to check the
-resulting file for semantic consistency.
-
-   However, if you and the other user changed the same parts of the
-file, the conflict cannot be resolved automatically.  In this case, CVS
-inserts both variants of the conflicting regions into your working file,
-and puts so-called "conflict markers" around them.  They indicate how
-the region looks in the respective user's version.  You must resolve
-the conflict manually, for example by choosing one of the two variants
-and deleting the other one (and the conflict markers).  Then you can
-commit the resulting file into the repository.  The example below shows
-how a conflict region looks; the file is called `name' and the current
-repository version with user B's changes in it is 1.11.
-
-     <<<<<<< name
-       USER A'S VERSION
-     =======
-       USER B'S VERSION
-     >>>>>>> 1.11
-
-   You can turn off use of VC for CVS-managed files by setting the
-variable `vc-handle-cvs' to `nil'.  If you do this, Emacs treats these
-files as if they were not managed, and the VC commands are not
-available for them.  You must do all CVS operations manually.
-
-
-File: emacs,  Node: Log Entries,  Next: Change Logs and VC,  Prev: Editing with VC,  Up: Version Control
-
-Log Entries
------------
-
-   When you're editing an initial comment or log entry for inclusion in
-a master file, finish your entry by typing `C-c C-c'.
-
-`C-c C-c'
-     Finish the comment edit normally (`vc-finish-logentry').  This
-     finishes check-in.
+   When you check in changes, `C-x C-q' first reads a log entry.  It
+pops up a buffer called `*VC-Log*' for you to enter the log entry.
+When you are finished, type `C-c C-c' in the `*VC-Log*' buffer.  That
+is when check-in really happens.
 
    To abort check-in, just *don't* type `C-c C-c' in that buffer.  You
 can switch buffers and do other editing.  As long as you don't try to
-check in another file, the entry you were editing remains in its
-buffer, and you can go back to that buffer at any time to complete the
-check-in.
+check in another file, the entry you were editing remains in the
+`*VC-Log*' buffer, and you can go back to that buffer at any time to
+complete the check-in.
 
    If you change several source files for the same reason, it is often
 convenient to specify the same log entry for many of the files.  To do
@@ -1004,92 +1046,79 @@ Log mode, which involves running two hooks: `text-mode-hook' and
 `vc-log-mode-hook'.  *Note Hooks::.
 
 
-File: emacs,  Node: Change Logs and VC,  Next: Old Versions,  Prev: Log Entries,  Up: Version Control
+File: emacs,  Node: Old Versions,  Next: Secondary VC Commands,  Prev: Basic VC Editing,  Up: Version Control
 
-Change Logs and VC
-------------------
+Examining And Comparing Old Versions
+------------------------------------
 
-   If you use RCS for a program and also maintain a change log file for
-it (*note Change Log::.), you can generate change log entries
-automatically from the version control log entries:
+   One of the convenient features of version control is the ability to
+examine any version of a file, or compare two versions.
 
-`C-x v a'
-     Visit the current directory's change log file and, for registered
-     files in that directory, create new entries for versions checked
-     in since the most recent entry in the change log file.
-     (`vc-update-change-log').
+`C-x v ~ VERSION <RET>'
+     Examine version VERSION of the visited file, in a buffer of its
+     own.
 
-     This command works with RCS or CVS only, not with SCCS.
+`C-x v ='
+     Compare the current buffer contents with the latest checked-in
+     version of the file.
 
-`C-u C-x v a'
-     As above, but only find entries for the current buffer's file.
+`C-u C-x v = FILE <RET> OLDVERS <RET> NEWVERS <RET>'
+     Compare the specified two versions of FILE.
 
-`M-1 C-x v a'
-     As above, but find entries for all the currently visited files
-     that are maintained with version control.  This works only with
-     RCS, and it puts all entries in the log for the default directory,
-     which may not be appropriate.
+`C-x v g'
+     Display the result of the CVS annotate command using colors.
 
-   For example, suppose the first line of `ChangeLog' is dated 10 April
-1992, and that the only check-in since then was by Nathaniel Bowditch
-to `rcs2log' on 8 May 1992 with log text `Ignore log messages that
-start with `#'.'.  Then `C-x v a' visits `ChangeLog' and inserts text
-like this:
+   To examine an old version in toto, visit the file and then type `C-x
+v ~ VERSION <RET>' (`vc-version-other-window').  This puts the text of
+version VERSION in a file named `FILENAME.~VERSION~', and visits it in
+its own buffer in a separate window.  (In RCS, you can also select an
+old version and create a branch from it.  *Note Branches::.)
 
-     Fri May  8 21:45:00 1992  Nathaniel Bowditch  <nat@apn.org>
-     
-             * rcs2log: Ignore log messages that start with `#'.
+   But usually it is more convenient to compare two versions of the
+file, with the command `C-x v =' (`vc-diff').  Plain `C-x v =' compares
+the current buffer contents (saving them in the file if necessary) with
+the last checked-in version of the file.  `C-u C-x v =', with a numeric
+argument, reads a file name and two version numbers, then compares
+those versions of the specified file.
 
-You can then edit the new change log entry further as you wish.
+   If you supply a directory name instead of the name of a registered
+file, this command compares the two specified versions of all registered
+files in that directory and its subdirectories.
 
-   Normally, the log entry for file `foo' is displayed as `* foo: TEXT
-OF LOG ENTRY'.  The `:' after `foo' is omitted if the text of the log
-entry starts with `(FUNCTIONNAME): '.  For example, if the log entry
-for `vc.el' is `(vc-do-command): Check call-process status.', then the
-text in `ChangeLog' looks like this:
+   You can specify a checked-in version by its number; an empty input
+specifies the current contents of the work file (which may be different
+from all the checked-in versions).  You can also specify a snapshot name
+(*note Snapshots::.) instead of one or both version numbers.
 
-     Wed May  6 10:53:00 1992  Nathaniel Bowditch  <nat@apn.org>
-     
-             * vc.el (vc-do-command): Check call-process status.
+   This command works by running the `diff' utility, getting the
+options from the variable `diff-switches'.  It displays the output in a
+special buffer in another window.  Unlike the `M-x diff' command, `C-x
+v =' does not try to locate the changes in the old and new versions.
+This is because normally one or both versions do not exist as files
+when you compare them; they exist only in the records of the master
+file.  *Note Comparing Files::, for more information about `M-x diff'.
 
-   When `C-x v a' adds several change log entries at once, it groups
-related log entries together if they all are checked in by the same
-author at nearly the same time.  If the log entries for several such
-files all have the same text, it coalesces them into a single entry.
-For example, suppose the most recent check-ins have the following log
-entries:
+   For CVS-controlled files, you can display the result of the CVS
+annotate command, using colors to enhance the visual appearance.  Use
+the command `M-x vc-annotate' to do this.  Red means new, blue means
+old, and intermediate colors indicate intermediate ages.  A prefix
+argument N specifies a stretch factor for the time scale; it makes each
+color cover a period N times as long.
 
-* For `vc.texinfo': `Fix expansion typos.'
-* For `vc.el': `Don't call expand-file-name.'
-* For `vc-hooks.el': `Don't call expand-file-name.'
+
+File: emacs,  Node: Secondary VC Commands,  Next: Branches,  Prev: Old Versions,  Up: Version Control
 
-They appear like this in `ChangeLog':
+The Secondary Commands of VC
+----------------------------
 
-     Wed Apr  1 08:57:59 1992  Nathaniel Bowditch  <nat@apn.org>
-     
-             * vc.texinfo: Fix expansion typos.
-     
-             * vc.el, vc-hooks.el: Don't call expand-file-name.
+   This section explains the secondary commands of VC; those that you
+might use once a day.
 
-   Normally, `C-x v a' separates log entries by a blank line, but you
-can mark several related log entries to be clumped together (without an
-intervening blank line) by starting the text of each related log entry
-with a label of the form `{CLUMPNAME} '.  The label itself is not
-copied to `ChangeLog'.  For example, suppose the log entries are:
+* Menu:
 
-* For `vc.texinfo': `{expand} Fix expansion typos.'
-* For `vc.el': `{expand} Don't call expand-file-name.'
-* For `vc-hooks.el': `{expand} Don't call expand-file-name.'
-
-Then the text in `ChangeLog' looks like this:
-
-     Wed Apr  1 08:57:59 1992  Nathaniel Bowditch  <nat@apn.org>
-     
-             * vc.texinfo: Fix expansion typos.
-             * vc.el, vc-hooks.el: Don't call expand-file-name.
-
-   A log entry whose text begins with `#' is not copied to `ChangeLog'.
-For example, if you merely fix some misspellings in comments, you can
-log the change with an entry beginning with `#' to avoid putting such
-trivia into `ChangeLog'.
+* Registering::         Putting a file under version control.
+* VC Status::           Viewing the VC status of files.
+* VC Undo::             Cancelling changes before or after check-in.
+* VC Dired Mode::       Listing files managed by version control.
+* VC Dired Commands::   Commands to use in a VC Dired buffer.
 

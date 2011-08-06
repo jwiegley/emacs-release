@@ -1,6 +1,515 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
+
+File: emacs,  Node: Programs,  Next: Building,  Prev: Text,  Up: Top
+
+Editing Programs
+****************
+
+   Emacs has many commands designed to understand the syntax of
+programming languages such as Lisp and C.  These commands can
+
+   * Move over or kill balanced expressions or "sexps" (*note Lists::.).
+
+   * Move over or mark top-level expressions--"defuns", in Lisp;
+     functions, in C (*note Defuns::.).
+
+   * Show how parentheses balance (*note Matching::.).
+
+   * Insert, kill or align comments (*note Comments::.).
+
+   * Follow the usual indentation conventions of the language (*note
+     Program Indent::.).
+
+   The commands for words, sentences and paragraphs are very useful in
+editing code even though their canonical application is for editing
+human language text.  Most symbols contain words (*note Words::.);
+sentences can be found in strings and comments (*note Sentences::.).
+Paragraphs per se don't exist in code, but the paragraph commands are
+useful anyway, because programming language major modes define
+paragraphs to begin and end at blank lines (*note Paragraphs::.).
+Judicious use of blank lines to make the program clearer will also
+provide useful chunks of text for the paragraph commands to work on.
+
+   The selective display feature is useful for looking at the overall
+structure of a function (*note Selective Display::.).  This feature
+causes only the lines that are indented less than a specified amount to
+appear on the screen.
+
+* Menu:
+
+* Program Modes::       Major modes for editing programs.
+* Lists::	        Expressions with balanced parentheses.
+* List Commands::       The commands for working with list and sexps.
+* Defuns::	        Each program is made up of separate functions.
+			  There are editing commands to operate on them.
+* Program Indent::      Adjusting indentation to show the nesting.
+* Matching::	        Insertion of a close-delimiter flashes matching open.
+* Comments::	        Inserting, killing, and aligning comments.
+* Balanced Editing::    Inserting two matching parentheses at once, etc.
+* Symbol Completion::   Completion on symbol names of your program or language.
+* Which Function::      Which Function mode shows which function you are in.
+* Documentation::       Getting documentation of functions you plan to call.
+* Change Log::	        Maintaining a change history for your program.
+* Tags::	        Go direct to any function in your program in one
+			  command.  Tags remembers which file it is in.
+* Emerge::	        A convenient way of merging two versions of a program.
+* C/Java Modes::        Special commands of C, C++, Objective-C and Java modes.
+* Fortran::	        Fortran mode and its special features.
+* Asm Mode::	        Asm mode and its special features.
+
+
+File: emacs,  Node: Program Modes,  Next: Lists,  Up: Programs
+
+Major Modes for Programming Languages
+=====================================
+
+   Emacs also has major modes for the programming languages Lisp, Scheme
+(a variant of Lisp), Awk, C, C++, Fortran, Icon, Java, Objective-C,
+Pascal, Perl and Tcl.  There is also a major mode for makefiles, called
+Makefile mode.  An second alternative mode for Perl is called CPerl
+mode.
+
+   Ideally, a major mode should be implemented for each programming
+language that you might want to edit with Emacs; but often the mode for
+one language can serve for other syntactically similar languages.  The
+language modes that exist are those that someone decided to take the
+trouble to write.
+
+   There are several forms of Lisp mode, which differ in the way they
+interface to Lisp execution.  *Note Executing Lisp::.
+
+   Each of the programming language major modes defines the <TAB> key
+to run an indentation function that knows the indentation conventions of
+that language and updates the current line's indentation accordingly.
+For example, in C mode <TAB> is bound to `c-indent-line'.  `C-j' is
+normally defined to do <RET> followed by <TAB>; thus, it too indents in
+a mode-specific fashion.
+
+   In most programming languages, indentation is likely to vary from
+line to line.  So the major modes for those languages rebind <DEL> to
+treat a tab as if it were the equivalent number of spaces (using the
+command `backward-delete-char-untabify').  This makes it possible to
+rub out indentation one column at a time without worrying whether it is
+made up of spaces or tabs.  Use `C-b C-d' to delete a tab character
+before point, in these modes.
+
+   Programming language modes define paragraphs to be separated only by
+blank lines, so that the paragraph commands remain useful.  Auto Fill
+mode, if enabled in a programming language major mode, indents the new
+lines which it creates.
+
+   Turning on a major mode runs a normal hook called the "mode hook",
+which is the value of a Lisp variable.  Each major mode has a mode hook,
+and the hook's name is always made from the mode command's name by
+adding `-hook'.  For example, turning on C mode runs the hook
+`c-mode-hook', while turning on Lisp mode runs the hook
+`lisp-mode-hook'.  *Note Hooks::.
+
+
+File: emacs,  Node: Lists,  Next: List Commands,  Prev: Program Modes,  Up: Programs
+
+Lists and Sexps
+===============
+
+   By convention, Emacs keys for dealing with balanced expressions are
+usually Control-Meta characters.  They tend to be analogous in function
+to their Control and Meta equivalents.  These commands are usually
+thought of as pertaining to expressions in programming languages, but
+can be useful with any language in which some sort of parentheses exist
+(including human languages).
+
+   These commands fall into two classes.  Some deal only with "lists"
+(parenthetical groupings).  They see nothing except parentheses,
+brackets, braces (whichever ones must balance in the language you are
+working with), and escape characters that might be used to quote those.
+
+   The other commands deal with expressions or "sexps".  The word `sexp'
+is derived from "s-expression", the ancient term for an expression in
+Lisp.  But in Emacs, the notion of `sexp' is not limited to Lisp.  It
+refers to an expression in whatever language your program is written in.
+Each programming language has its own major mode, which customizes the
+syntax tables so that expressions in that language count as sexps.
+
+   Sexps typically include symbols, numbers, and string constants, as
+well as anything contained in parentheses, brackets or braces.
+
+   In languages that use prefix and infix operators, such as C, it is
+not possible for all expressions to be sexps.  For example, C mode does
+not recognize `foo + bar' as a sexp, even though it *is* a C expression;
+it recognizes `foo' as one sexp and `bar' as another, with the `+' as
+punctuation between them.  This is a fundamental ambiguity: both `foo +
+bar' and `foo' are legitimate choices for the sexp to move over if
+point is at the `f'.  Note that `(foo + bar)' is a single sexp in C
+mode.
+
+   Some languages have obscure forms of expression syntax that nobody
+has bothered to make Emacs understand properly.
+
+
+File: emacs,  Node: List Commands,  Next: Defuns,  Prev: Lists,  Up: Programs
+
+List And Sexp Commands
+======================
+
+`C-M-f'
+     Move forward over a sexp (`forward-sexp').
+
+`C-M-b'
+     Move backward over a sexp (`backward-sexp').
+
+`C-M-k'
+     Kill sexp forward (`kill-sexp').
+
+`C-M-<DEL>'
+     Kill sexp backward (`backward-kill-sexp').
+
+`C-M-u'
+     Move up and backward in list structure (`backward-up-list').
+
+`C-M-d'
+     Move down and forward in list structure (`down-list').
+
+`C-M-n'
+     Move forward over a list (`forward-list').
+
+`C-M-p'
+     Move backward over a list (`backward-list').
+
+`C-M-t'
+     Transpose expressions (`transpose-sexps').
+
+`C-M-@'
+     Put mark after following expression (`mark-sexp').
+
+   To move forward over a sexp, use `C-M-f' (`forward-sexp').  If the
+first significant character after point is an opening delimiter (`(' in
+Lisp; `(', `[' or `{' in C), `C-M-f' moves past the matching closing
+delimiter.  If the character begins a symbol, string, or number,
+`C-M-f' moves over that.
+
+   The command `C-M-b' (`backward-sexp') moves backward over a sexp.
+The detailed rules are like those above for `C-M-f', but with
+directions reversed.  If there are any prefix characters (single-quote,
+backquote and comma, in Lisp) preceding the sexp, `C-M-b' moves back
+over them as well.  The sexp commands move across comments as if they
+were whitespace in most modes.
+
+   `C-M-f' or `C-M-b' with an argument repeats that operation the
+specified number of times; with a negative argument, it moves in the
+opposite direction.
+
+   Killing a whole sexp can be done with `C-M-k' (`kill-sexp') or
+`C-M-<DEL>' (`backward-kill-sexp').  `C-M-k' kills the characters that
+`C-M-f' would move over, and `C-M-<DEL>' kills the characters that
+`C-M-b' would move over.
+
+   The "list commands" move over lists, as the sexp commands do, but
+skip blithely over any number of other kinds of sexps (symbols,
+strings, etc.).  They are `C-M-n' (`forward-list') and `C-M-p'
+(`backward-list').  The main reason they are useful is that they
+usually ignore comments (since the comments usually do not contain any
+lists).
+
+   `C-M-n' and `C-M-p' stay at the same level in parentheses, when
+that's possible.  To move *up* one (or N) levels, use `C-M-u'
+(`backward-up-list').  `C-M-u' moves backward up past one unmatched
+opening delimiter.  A positive argument serves as a repeat count; a
+negative argument reverses direction of motion and also requests
+repetition, so it moves forward and up one or more levels.
+
+   To move *down* in list structure, use `C-M-d' (`down-list').  In
+Lisp mode, where `(' is the only opening delimiter, this is nearly the
+same as searching for a `('.  An argument specifies the number of
+levels of parentheses to go down.
+
+   A somewhat random-sounding command which is nevertheless handy is
+`C-M-t' (`transpose-sexps'), which drags the previous sexp across the
+next one.  An argument serves as a repeat count, and a negative
+argument drags backwards (thus canceling out the effect of `C-M-t' with
+a positive argument).  An argument of zero, rather than doing nothing,
+transposes the sexps ending after point and the mark.
+
+   To set the region around the next sexp in the buffer, use `C-M-@'
+(`mark-sexp'), which sets mark at the same place that `C-M-f' would
+move to.  `C-M-@' takes arguments like `C-M-f'.  In particular, a
+negative argument is useful for putting the mark at the beginning of
+the previous sexp.
+
+   The list and sexp commands' understanding of syntax is completely
+controlled by the syntax table.  Any character can, for example, be
+declared to be an opening delimiter and act like an open parenthesis.
+*Note Syntax::.
+
+
+File: emacs,  Node: Defuns,  Next: Program Indent,  Prev: List Commands,  Up: Programs
+
+Defuns
+======
+
+   In Emacs, a parenthetical grouping at the top level in the buffer is
+called a "defun".  The name derives from the fact that most top-level
+lists in a Lisp file are instances of the special form `defun', but any
+top-level parenthetical grouping counts as a defun in Emacs parlance
+regardless of what its contents are, and regardless of the programming
+language in use.  For example, in C, the body of a function definition
+is a defun.
+
+`C-M-a'
+     Move to beginning of current or preceding defun
+     (`beginning-of-defun').
+
+`C-M-e'
+     Move to end of current or following defun (`end-of-defun').
+
+`C-M-h'
+     Put region around whole current or following defun (`mark-defun').
+
+   The commands to move to the beginning and end of the current defun
+are `C-M-a' (`beginning-of-defun') and `C-M-e' (`end-of-defun').
+
+   If you wish to operate on the current defun, use `C-M-h'
+(`mark-defun') which puts point at the beginning and mark at the end of
+the current or next defun.  For example, this is the easiest way to get
+ready to move the defun to a different place in the text.  In C mode,
+`C-M-h' runs the function `c-mark-function', which is almost the same
+as `mark-defun'; the difference is that it backs up over the argument
+declarations, function name and returned data type so that the entire C
+function is inside the region.  *Note Marking Objects::.
+
+   Emacs assumes that any open-parenthesis found in the leftmost column
+is the start of a defun.  Therefore, *never put an open-parenthesis at
+the left margin in a Lisp file unless it is the start of a top-level
+list.  Never put an open-brace or other opening delimiter at the
+beginning of a line of C code unless it starts the body of a function.*
+The most likely problem case is when you want an opening delimiter at
+the start of a line inside a string.  To avoid trouble, put an escape
+character (`\', in C and Emacs Lisp, `/' in some other Lisp dialects)
+before the opening delimiter.  It will not affect the contents of the
+string.
+
+   In the remotest past, the original Emacs found defuns by moving
+upward a level of parentheses until there were no more levels to go up.
+This always required scanning all the way back to the beginning of the
+buffer, even for a small function.  To speed up the operation, Emacs
+was changed to assume that any `(' (or other character assigned the
+syntactic class of opening-delimiter) at the left margin is the start
+of a defun.  This heuristic is nearly always right and avoids the
+costly scan; however, it mandates the convention described above.
+
+
+File: emacs,  Node: Program Indent,  Next: Matching,  Prev: Defuns,  Up: Programs
+
+Indentation for Programs
+========================
+
+   The best way to keep a program properly indented is to use Emacs to
+reindent it as you change it.  Emacs has commands to indent properly
+either a single line, a specified number of lines, or all of the lines
+inside a single parenthetical grouping.
+
+* Menu:
+
+* Basic Indent::	Indenting a single line.
+* Multi-line Indent::   Commands to reindent many lines at once.
+* Lisp Indent::		Specifying how each Lisp function should be indented.
+* C Indent::		Extra features for indenting C code.
+* Custom C Indent::	Controlling indentation style for C code.
+
+   Emacs also provides a Lisp pretty-printer in the library `pp'.  This
+program reformats a Lisp object with indentation chosen to look nice.
+
+
+File: emacs,  Node: Basic Indent,  Next: Multi-line Indent,  Up: Program Indent
+
+Basic Program Indentation Commands
+----------------------------------
+
+`<TAB>'
+     Adjust indentation of current line.
+
+`C-j'
+     Equivalent to <RET> followed by <TAB> (`newline-and-indent').
+
+   The basic indentation command is <TAB>, which gives the current line
+the correct indentation as determined from the previous lines.  The
+function that <TAB> runs depends on the major mode; it is
+`lisp-indent-line' in Lisp mode, `c-indent-line' in C mode, etc.  These
+functions understand different syntaxes for different languages, but
+they all do about the same thing.  <TAB> in any programming-language
+major mode inserts or deletes whitespace at the beginning of the
+current line, independent of where point is in the line.  If point is
+inside the whitespace at the beginning of the line, <TAB> leaves it at
+the end of that whitespace; otherwise, <TAB> leaves point fixed with
+respect to the characters around it.
+
+   Use `C-q <TAB>' to insert a tab at point.
+
+   When entering lines of new code, use `C-j' (`newline-and-indent'),
+which is equivalent to a <RET> followed by a <TAB>.  `C-j' creates a
+blank line and then gives it the appropriate indentation.
+
+   <TAB> indents the second and following lines of the body of a
+parenthetical grouping each under the preceding one; therefore, if you
+alter one line's indentation to be nonstandard, the lines below will
+tend to follow it.  This behavior is convenient in cases where you have
+overridden the standard result of <TAB> because you find it unaesthetic
+for a particular line.
+
+   Remember that an open-parenthesis, open-brace or other opening
+delimiter at the left margin is assumed by Emacs (including the
+indentation routines) to be the start of a function.  Therefore, you
+must never have an opening delimiter in column zero that is not the
+beginning of a function, not even inside a string.  This restriction is
+vital for making the indentation commands fast; you must simply accept
+it.  *Note Defuns::, for more information on this.
+
+
+File: emacs,  Node: Multi-line Indent,  Next: Lisp Indent,  Prev: Basic Indent,  Up: Program Indent
+
+Indenting Several Lines
+-----------------------
+
+   When you wish to reindent several lines of code which have been
+altered or moved to a different level in the list structure, you have
+several commands available.
+
+`C-M-q'
+     Reindent all the lines within one list (`indent-sexp').
+
+`C-u <TAB>'
+     Shift an entire list rigidly sideways so that its first line is
+     properly indented.
+
+`C-M-\'
+     Reindent all lines in the region (`indent-region').
+
+   You can reindent the contents of a single list by positioning point
+before the beginning of it and typing `C-M-q' (`indent-sexp' in Lisp
+mode, `c-indent-exp' in C mode; also bound to other suitable commands
+in other modes).  The indentation of the line the sexp starts on is not
+changed; therefore, only the relative indentation within the list, and
+not its position, is changed.  To correct the position as well, type a
+<TAB> before the `C-M-q'.
+
+   If the relative indentation within a list is correct but the
+indentation of its first line is not, go to that line and type `C-u
+<TAB>'.  <TAB> with a numeric argument reindents the current line as
+usual, then reindents by the same amount all the lines in the grouping
+starting on the current line.  In other words, it reindents the whole
+grouping rigidly as a unit.  It is clever, though, and does not alter
+lines that start inside strings, or C preprocessor lines when in C mode.
+
+   Another way to specify the range to be reindented is with the region.
+The command `C-M-\' (`indent-region') applies <TAB> to every line whose
+first character is between point and mark.
+
+
+File: emacs,  Node: Lisp Indent,  Next: C Indent,  Prev: Multi-line Indent,  Up: Program Indent
+
+Customizing Lisp Indentation
+----------------------------
+
+   The indentation pattern for a Lisp expression can depend on the
+function called by the expression.  For each Lisp function, you can
+choose among several predefined patterns of indentation, or define an
+arbitrary one with a Lisp program.
+
+   The standard pattern of indentation is as follows: the second line
+of the expression is indented under the first argument, if that is on
+the same line as the beginning of the expression; otherwise, the second
+line is indented underneath the function name.  Each following line is
+indented under the previous line whose nesting depth is the same.
+
+   If the variable `lisp-indent-offset' is non-`nil', it overrides the
+usual indentation pattern for the second line of an expression, so that
+such lines are always indented `lisp-indent-offset' more columns than
+the containing list.
+
+   The standard pattern is overridden for certain functions.  Functions
+whose names start with `def' always indent the second line by
+`lisp-body-indent' extra columns beyond the open-parenthesis starting
+the expression.
+
+   The standard pattern can be overridden in various ways for individual
+functions, according to the `lisp-indent-function' property of the
+function name.  There are four possibilities for this property:
+
+`nil'
+     This is the same as no property; the standard indentation pattern
+     is used.
+
+`defun'
+     The pattern used for function names that start with `def' is used
+     for this function also.
+
+a number, NUMBER
+     The first NUMBER arguments of the function are "distinguished"
+     arguments; the rest are considered the "body" of the expression.
+     A line in the expression is indented according to whether the
+     first argument on it is distinguished or not.  If the argument is
+     part of the body, the line is indented `lisp-body-indent' more
+     columns than the open-parenthesis starting the containing
+     expression.  If the argument is distinguished and is either the
+     first or second argument, it is indented *twice* that many extra
+     columns.  If the argument is distinguished and not the first or
+     second argument, the standard pattern is followed for that line.
+
+a symbol, SYMBOL
+     SYMBOL should be a function name; that function is called to
+     calculate the indentation of a line within this expression.  The
+     function receives two arguments:
+    STATE
+          The value returned by `parse-partial-sexp' (a Lisp primitive
+          for indentation and nesting computation) when it parses up to
+          the beginning of this line.
+
+    POS
+          The position at which the line being indented begins.
+
+     It should return either a number, which is the number of columns of
+     indentation for that line, or a list whose car is such a number.
+     The difference between returning a number and returning a list is
+     that a number says that all following lines at the same nesting
+     level should be indented just like this one; a list says that
+     following lines might call for different indentations.  This makes
+     a difference when the indentation is being computed by `C-M-q'; if
+     the value is a number, `C-M-q' need not recalculate indentation
+     for the following lines until the end of the list.
+
 
 File: emacs,  Node: C Indent,  Next: Custom C Indent,  Prev: Lisp Indent,  Up: Program Indent
 
@@ -27,7 +536,8 @@ Commands for C Indentation
 
      If that variable is `nil', this command reindents the current line
      only if point is at the left margin or in the line's indentation;
-     otherwise, it inserts a tab.
+     otherwise, it inserts a tab (or the equivalent number of spaces,
+     if `indent-tabs-mode' is `nil').
 
      Any other value (not `nil' or `t') means always reindent the line,
      and also insert a tab if within a comment, a string, or a
@@ -594,7 +1104,7 @@ valid.
 
    `M-;' can also be used to align an existing comment.  If a line
 already contains the string that starts comments, then `M-;' just moves
-point after it and re-indents it to the conventional place.  Exception:
+point after it and reindents it to the conventional place.  Exception:
 comments starting in column 0 are not moved.
 
    Some major modes have special rules for indenting certain kinds of
@@ -660,6 +1170,10 @@ affect how the comment is indented.  In Lisp, for proper indentation,
 you should use an argument of two, if between defuns, and three, if
 within a defun.
 
+   The variable `comment-padding' specifies how many spaces
+`comment-region' should insert on each line between the comment
+delimiter and the line's original text.  The default is 1.
+
 
 File: emacs,  Node: Options for Comments,  Prev: Multi-Line Comments,  Up: Comments
 
@@ -716,485 +1230,4 @@ comment is to be inserted.  It should return the column in which the
 comment ought to start.  For example, in Lisp mode, the indent hook
 function bases its decision on how many semicolons begin an existing
 comment, and on the code in the preceding lines.
-
-
-File: emacs,  Node: Balanced Editing,  Next: Symbol Completion,  Prev: Comments,  Up: Programs
-
-Editing Without Unbalanced Parentheses
-======================================
-
-`M-('
-     Put parentheses around next sexp(s) (`insert-parentheses').
-
-`M-)'
-     Move past next close parenthesis and re-indent
-     (`move-past-close-and-reindent').
-
-   The commands `M-(' (`insert-parentheses') and `M-)'
-(`move-past-close-and-reindent') are designed to facilitate a style of
-editing which keeps parentheses balanced at all times.  `M-(' inserts a
-pair of parentheses, either together as in `()', or, if given an
-argument, around the next several sexps.  It leaves point after the
-open parenthesis.  The command `M-)' moves past the close parenthesis,
-deleting any indentation preceding it (in this example there is none),
-and indenting with `C-j' after it.
-
-   For example, instead of typing `( F O O )', you can type `M-( F O
-O', which has the same effect except for leaving the cursor before the
-close parenthesis.
-
-   `M-(' may insert a space before the open parenthesis, depending on
-the syntax class of the preceding character.  Set
-`parens-require-spaces' to `nil' value if you wish to inhibit this.
-
-
-File: emacs,  Node: Symbol Completion,  Next: Documentation,  Prev: Balanced Editing,  Up: Programs
-
-Completion for Symbol Names
-===========================
-
-   Usually completion happens in the minibuffer.  But one kind of
-completion is available in all buffers: completion for symbol names.
-
-   The character `M-<TAB>' runs a command to complete the partial
-symbol before point against the set of meaningful symbol names.  Any
-additional characters determined by the partial name are inserted at
-point.
-
-   If the partial name in the buffer has more than one possible
-completion and they have no additional characters in common, a list of
-all possible completions is displayed in another window.
-
-   In most programming language major modes, `M-<TAB>' runs the command
-`complete-symbol', which provides two kinds of completion.  Normally it
-does completion based on a tags table (*note Tags::.); with a numeric
-argument (regardless of the value), it does completion based on the
-names listed in the Info file indexes for your language.  Thus, to
-complete the name of a symbol defined in your own program, use
-`M-<TAB>' with no argument; to complete the name of a standard library
-function, use `C-u M-<TAB>'.  Of course, Info-based completion works
-only if there is an Info file for the standard library functions of
-your language, and only if it is installed at your site.
-
-   In Emacs-Lisp mode, the name space for completion normally consists
-of nontrivial symbols present in Emacs--those that have function
-definitions, values or properties.  However, if there is an
-open-parenthesis immediately before the beginning of the partial symbol,
-only symbols with function definitions are considered as completions.
-The command which implements this is `lisp-complete-symbol'.
-
-   In Text mode and related modes, `M-<TAB>' completes words based on
-the spell-checker's dictionary.  *Note Spelling::.
-
-
-File: emacs,  Node: Documentation,  Next: Change Log,  Prev: Symbol Completion,  Up: Programs
-
-Documentation Commands
-======================
-
-   As you edit Lisp code to be run in Emacs, the commands `C-h f'
-(`describe-function') and `C-h v' (`describe-variable') can be used to
-print documentation of functions and variables that you want to call.
-These commands use the minibuffer to read the name of a function or
-variable to document, and display the documentation in a window.
-
-   For extra convenience, these commands provide default arguments
-based on the code in the neighborhood of point.  `C-h f' sets the
-default to the function called in the innermost list containing point.
-`C-h v' uses the symbol name around or adjacent to point as its default.
-
-   For Emacs Lisp code, you can also use Eldoc mode.  This minor mode
-constantly displays in the echo area the argument list for the function
-being called at point.  (In other words, it finds the function call that
-point is contained in, and displays the argument list of that function.)
-Eldoc mode applies in Emacs Lisp and Lisp Interaction modes only.  Use
-the command `M-x eldoc-mode' to enable or disable this feature.
-
-   For C, Lisp, and other languages, you can use `C-h C-i'
-(`info-lookup-symbol') to view the Info documentation for a symbol.
-You specify the symbol with the minibuffer; by default, it uses the
-symbol that appears in the buffer at point.  The major mode determines
-where to look for documentation for the symbol--which Info files and
-which indices.  You can also use `M-x info-lookup-file' to look for
-documentation for a file name.
-
-   You can read the "man page" for an operating system command, library
-function, or system call, with the `M-x manual-entry' command.  It runs
-the `man' program to format the man page, and runs it asynchronously if
-your system permits, so that you can keep on editing while the page is
-being formatted.  (MS-DOS and MS-Windows 3 do not permit asynchronous
-subprocesses, so on these systems you cannot edit while Emacs waits for
-`man' to exit.)  The result goes in a buffer named `*man TOPIC*'.
-These buffers use a special major mode, Man mode, that facilitates
-scrolling and examining other manual pages.  For details, type `C-h m'
-while in a man page buffer.
-
-   For a long man page, setting the faces properly can take substantial
-time.  By default, Emacs uses faces in man pages if Emacs can display
-different fonts or colors.  You can turn off use of faces in man pages
-by setting the variable `Man-fontify-manpage-flag' to `nil'.
-
-   If you insert the text of a man page into an Emacs buffer in some
-other fashion, you can use the command `M-x Man-fontify-manpage' to
-perform the same conversions that `M-x manual-entry' does.
-
-   Eventually the GNU project hopes to replace most man pages with
-better-organized manuals that you can browse with Info.  *Note Misc
-Help::.  Since this process is only partially completed, it is still
-useful to read manual pages.
-
-
-File: emacs,  Node: Change Log,  Next: Tags,  Prev: Documentation,  Up: Programs
-
-Change Logs
-===========
-
-   The Emacs command `C-x 4 a' adds a new entry to the change log file
-for the file you are editing (`add-change-log-entry-other-window').
-
-   A change log file contains a chronological record of when and why you
-have changed a program, consisting of a sequence of entries describing
-individual changes.  Normally it is kept in a file called `ChangeLog'
-in the same directory as the file you are editing, or one of its parent
-directories.  A single `ChangeLog' file can record changes for all the
-files in its directory and all its subdirectories.
-
-   A change log entry starts with a header line that contains your name,
-your email address (taken from the variable `user-mail-address'), and
-the current date and time.  Aside from these header lines, every line
-in the change log starts with a space or a tab.  The bulk of the entry
-consists of "items", each of which starts with a line starting with
-whitespace and a star.  Here are two entries, each with two items:
-
-     Wed May  5 14:11:45 1993  Richard Stallman  <rms@gnu.ai.mit.edu>
-     
-             * man.el: Rename symbols `man-*' to `Man-*'.
-             (manual-entry): Make prompt string clearer.
-     
-             * simple.el (blink-matching-paren-distance):
-             Change default to 12,000.
-     
-     Tue May  4 12:42:19 1993  Richard Stallman  <rms@gnu.ai.mit.edu>
-     
-             * vc.el (minor-mode-map-alist): Don't use it if it's void.
-             (vc-cancel-version): Doc fix.
-
-   One entry can describe several changes; each change should have its
-own item.  Normally there should be a blank line between items.  When
-items are related (parts of the same change, in different places), group
-them by leaving no blank line between them.  The second entry above
-contains two items grouped in this way.
-
-   `C-x 4 a' visits the change log file and creates a new entry unless
-the most recent entry is for today's date and your name.  It also
-creates a new item for the current file.  For many languages, it can
-even guess the name of the function or other object that was changed.
-
-   The change log file is visited in Change Log mode.  In this major
-mode, each bunch of grouped items counts as one paragraph, and each
-entry is considered a page.  This facilitates editing the entries.
-`C-j' and auto-fill indent each new line like the previous line; this
-is convenient for entering the contents of an entry.
-
-   Version control systems are another way to keep track of changes in
-your program and keep a change log.  *Note Log Entries::.
-
-
-File: emacs,  Node: Tags,  Next: Emerge,  Prev: Change Log,  Up: Programs
-
-Tags Tables
-===========
-
-   A "tags table" is a description of how a multi-file program is
-broken up into files.  It lists the names of the component files and the
-names and positions of the functions (or other named subunits) in each
-file.  Grouping the related files makes it possible to search or replace
-through all the files with one command.  Recording the function names
-and positions makes possible the `M-.'  command which finds the
-definition of a function by looking up which of the files it is in.
-
-   Tags tables are stored in files called "tags table files".  The
-conventional name for a tags table file is `TAGS'.
-
-   Each entry in the tags table records the name of one tag, the name
-of the file that the tag is defined in (implicitly), and the position
-in that file of the tag's definition.
-
-   Just what names from the described files are recorded in the tags
-table depends on the programming language of the described file.  They
-normally include all functions and subroutines, and may also include
-global variables, data types, and anything else convenient.  Each name
-recorded is called a "tag".
-
-* Menu:
-
-* Tag Syntax::		Tag syntax for various types of code and text files.
-* Create Tags Table::	Creating a tags table with `etags'.
-* Select Tags Table::	How to visit a tags table.
-* Find Tag::		Commands to find the definition of a specific tag.
-* Tags Search::		Using a tags table for searching and replacing.
-* List Tags::		Listing and finding tags defined in a file.
-
-
-File: emacs,  Node: Tag Syntax,  Next: Create Tags Table,  Up: Tags
-
-Source File Tag Syntax
-----------------------
-
-   Here is how tag syntax is defined for the most popular languages:
-
-   * In C code, any C function or typedef is a tag, and so are
-     definitions of `struct', `union' and `enum'.  `#define' macro
-     definitions and `enum' constants are also tags, unless you specify
-     `--no-defines' when making the tags table.  Similarly, global
-     variables are tags, unless you specify `--no-globals'.  Use of
-     `--no-globals' and `--no-defines' can make the tags table file
-     much smaller.
-
-   * In C++ code, in addition to all the tag constructs of C code,
-     member functions are also recognized, and optionally member
-     variables if you use the `--members' option.  Tags for variables
-     and functions in classes are named `CLASS::VARIABLE' and
-     `CLASS::FUNCTION'.
-
-   * In Java code, tags include all the constructs recognized in C++,
-     plus the `extends' and `implements' constructs.  Tags for variables
-     and functions in classes are named `CLASS.VARIABLE' and
-     `CLASS.FUNCTION'.
-
-   * In LaTeX text, the argument of any of the commands `\chapter',
-     `\section', `\subsection', `\subsubsection', `\eqno', `\label',
-     `\ref', `\cite', `\bibitem', `\part', `\appendix', `\entry', or
-     `\index', is a tag.
-
-     Other commands can make tags as well, if you specify them in the
-     environment variable `TEXTAGS' before invoking `etags'.  The value
-     of this environment variable should be a colon-separated list of
-     command names.  For example,
-
-          TEXTAGS="def:newcommand:newenvironment"
-          export TEXTAGS
-
-     specifies (using Bourne shell syntax) that the commands `\def',
-     `\newcommand' and `\newenvironment' also define tags.
-
-   * In Lisp code, any function defined with `defun', any variable
-     defined with `defvar' or `defconst', and in general the first
-     argument of any expression that starts with `(def' in column zero,
-     is a tag.
-
-   * In Scheme code, tags include anything defined with `def' or with a
-     construct whose name starts with `def'.  They also include
-     variables set with `set!' at top level in the file.
-
-   Several other languages are also supported:
-
-   * In assembler code, labels appearing at the beginning of a line,
-     followed by a colon, are tags.
-
-   * In Bison or Yacc input files, each rule defines as a tag the
-     nonterminal it constructs.  The portions of the file that contain
-     C code are parsed as C code.
-
-   * In Cobol code, tags are paragraph names; that is, any word
-     starting in column 8 and followed by a period.
-
-   * In Erlang code, the tags are the functions, records, and macros
-     defined in the file.
-
-   * In Fortran code, functions and subroutines are tags.
-
-   * In Objective C code, tags include Objective C definitions for
-     classes, class categories, methods, and protocols.
-
-   * In Pascal code, the tags are the functions and procedures defined
-     in the file.
-
-   * In Perl code, the tags are the procedures defined by the `sub'
-     keyword.
-
-   * In Postscript code, the tags are the functions.
-
-   * In Prolog code, a tag name appears at the left margin.
-
-   You can also generate tags based on regexp matching (*note Create
-Tags Table::.) to handle other formats and languages.
-
-
-File: emacs,  Node: Create Tags Table,  Next: Select Tags Table,  Prev: Tag Syntax,  Up: Tags
-
-Creating Tags Tables
---------------------
-
-   The `etags' program is used to create a tags table file.  It knows
-the syntax of several languages, as described in *Note Tag Syntax::.
-Here is how to run `etags':
-
-     etags INPUTFILES...
-
-The `etags' program reads the specified files, and writes a tags table
-named `TAGS' in the current working directory.  `etags' recognizes the
-language used in an input file based on its file name and contents.
-You can specify the language with the `--language=NAME' option,
-described below.
-
-   If the tags table data become outdated due to changes in the files
-described in the table, the way to update the tags table is the same
-way it was made in the first place.  It is not necessary to do this
-often.
-
-   If the tags table fails to record a tag, or records it for the wrong
-file, then Emacs cannot possibly find its definition.  However, if the
-position recorded in the tags table becomes a little bit wrong (due to
-some editing in the file that the tag definition is in), the only
-consequence is a slight delay in finding the tag.  Even if the stored
-position is very wrong, Emacs will still find the tag, but it must
-search the entire file for it.
-
-   So you should update a tags table when you define new tags that you
-want to have listed, or when you move tag definitions from one file to
-another, or when changes become substantial.  Normally there is no need
-to update the tags table after each edit, or even every day.
-
-   One tags table can effectively include another.  Specify the included
-tags file name with the `--include=FILE' option when creating the file
-that is to include it.  The latter file then acts as if it contained
-all the files specified in the included file, as well as the files it
-directly contains.
-
-   If you specify the source files with relative file names when you run
-`etags', the tags file will contain file names relative to the
-directory where the tags file was initially written.  This way, you can
-move an entire directory tree containing both the tags file and the
-source files, and the tags file will still refer correctly to the source
-files.
-
-   If you specify absolute file names as arguments to `etags', then the
-tags file will contain absolute file names.  This way, the tags file
-will still refer to the same files even if you move it, as long as the
-source files remain in the same place.  Absolute file names start with
-`/', or with `DEVICE:/' on MS-DOS and MS-Windows.
-
-   When you want to make a tags table from a great number of files, you
-may have problems listing them on the command line, because some systems
-have a limit on its length.  The simplest way to circumvent this limit
-is to tell `etags' to read the file names from its standard input, by
-typing a dash in place of the file names, like this:
-
-     find . -name "*.[chCH]" -print | etags -
-
-   Use the option `--language=NAME' to specify the language explicitly.
-You can intermix these options with file names; each one applies to
-the file names that follow it.  Specify `--language=auto' to tell
-`etags' to resume guessing the language from the file names and file
-contents.  Specify `--language=none' to turn off language-specific
-processing entirely; then `etags' recognizes tags by regexp matching
-alone.  `etags --help' prints the list of the languages `etags' knows,
-and the file name rules for guessing the language.
-
-   The `--regex' option provides a general way of recognizing tags
-based on regexp matching.  You can freely intermix it with file names.
-Each `--regex' option adds to the preceding ones, and applies only to
-the following files.  The syntax is:
-
-     --regex=/TAGREGEXP[/NAMEREGEXP]/
-
-where TAGREGEXP is used to match the lines to tag.  It is always
-anchored, that is, it behaves as if preceded by `^'.  If you want to
-account for indentation, just match any initial number of blanks by
-beginning your regular expression with `[ \t]*'.  In the regular
-expressions, `\' quotes the next character, and `\t' stands for the tab
-character.  Note that `etags' does not handle the other C escape
-sequences for special characters.
-
-   The syntax of regular expressions in `etags' is the same as in
-Emacs, augmented with the "interval operator", which works as in `grep'
-and `ed'.  The syntax of an interval operator is `\{M,N\}', and its
-meaning is to match the preceding expression at least M times and up to
-N times.
-
-   You should not match more characters with TAGREGEXP than that needed
-to recognize what you want to tag.  If the match is such that more
-characters than needed are unavoidably matched by TAGREGEXP, you may
-find useful to add a NAMEREGEXP, in order to narrow the tag scope.  You
-can find some examples below.
-
-   The `-R' option deletes all the regexps defined with `--regex'
-options.  It applies to the file names following it, as you can see
-from the following example:
-
-     etags --regex=/REG1/ voo.doo --regex=/REG2/ \
-         bar.ber -R --lang=lisp los.er
-
-Here `etags' chooses the parsing language for `voo.doo' and `bar.ber'
-according to their contents.  `etags' also uses REG1 to recognize
-additional tags in `voo.doo', and both REG1 and REG2 to recognize
-additional tags in `bar.ber'.  `etags' uses the Lisp tags rules, and no
-regexp matching, to recognize tags in `los.er'.
-
-   Here are some more examples.  The regexps are quoted to protect them
-from shell interpretation.
-
-   * Tag the `DEFVAR' macros in the emacs source files:
-
-          --regex='/[ \t]*DEFVAR_[A-Z_ \t(]+"\([^"]+\)"/'
-
-   * Tag VHDL files (this example is a single long line, broken here for
-     formatting reasons):
-
-          --language=none
-          --regex='/[ \t]*\(ARCHITECTURE\|CONFIGURATION\) +[^ ]* +OF/'
-          --regex='/[ \t]*\(ATTRIBUTE\|ENTITY\|FUNCTION\|PACKAGE\
-          \( BODY\)?\|PROCEDURE\|PROCESS\|TYPE\)[ \t]+\([^ \t(]+\)/\3/'
-
-   * Tag Tcl files (this last example shows the usage of a NAMEREGEXP):
-
-          --lang=none --regex='/proc[ \t]+\([^ \t]+\)/\1/'
-
-   For a list of the other available `etags' options, execute `etags
---help'.
-
-
-File: emacs,  Node: Select Tags Table,  Next: Find Tag,  Prev: Create Tags Table,  Up: Tags
-
-Selecting a Tags Table
-----------------------
-
-   Emacs has at any time one "selected" tags table, and all the commands
-for working with tags tables use the selected one.  To select a tags
-table, type `M-x visit-tags-table', which reads the tags table file
-name as an argument.  The name `TAGS' in the default directory is used
-as the default file name.
-
-   All this command does is store the file name in the variable
-`tags-file-name'.  Emacs does not actually read in the tags table
-contents until you try to use them.  Setting this variable yourself is
-just as good as using `visit-tags-table'.  The variable's initial value
-is `nil'; that value tells all the commands for working with tags tables
-that they must ask for a tags table file name to use.
-
-   Using `visit-tags-table' when a tags table is already loaded gives
-you a choice: you can add the new tags table to the current list of
-tags tables, or start a new list.  The tags commands use all the tags
-tables in the current list.  If you start a new list, the new tags table
-is used *instead* of others.  If you add the new table to the current
-list, it is used *as well as* the others.  When the tags commands scan
-the list of tags tables, they don't always start at the beginning of
-the list; they start with the first tags table (if any) that describes
-the current file, proceed from there to the end of the list, and then
-scan from the beginning of the list until they have covered all the
-tables in the list.
-
-   You can specify a precise list of tags tables by setting the variable
-`tags-table-list' to a list of strings, like this:
-
-     (setq tags-table-list
-           '("~/emacs" "/usr/local/lib/emacs/src"))
-
-This tells the tags commands to look at the `TAGS' files in your
-`~/emacs' directory and in the `/usr/local/lib/emacs/src' directory.
-The order depends on which file you are in and which tags table
-mentions that file, as explained above.
-
-   Do not set both `tags-file-name' and `tags-table-list'.
 

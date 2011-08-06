@@ -4,9 +4,8 @@
 ;;
 ;; Author: Michelangelo Grigni <mic@mathcs.emory.edu>
 ;; Created: 29 Mar 1993
-;; Keywords: files, hypermedia, matching, mouse
+;; Keywords: files, hypermedia, matching, mouse, convenience
 ;; X-URL: ftp://ftp.mathcs.emory.edu/pub/mic/emacs/
-;; X-Source: this file is generated from ffap.epp
 
 ;; This file is part of GNU Emacs.
 
@@ -106,7 +105,8 @@
 (defgroup ffap nil
   "Find file or URL at point."
   :link '(url-link :tag "URL" "ftp://ftp.mathcs.emory.edu/pub/mic/emacs/")
-  :group 'matching)
+  :group 'matching
+  :group 'convenience)
 
 ;; The code is organized in pages, separated by formfeed characters.
 ;; See the next two pages for standard customization ideas.
@@ -1160,8 +1160,7 @@ which may actually result in an url rather than a filename."
 		  (ffap-file-exists-string
 		   (ffap-replace-path-component remote-dir name))))))
 	 )
-      (store-match-data data))))
-
+      (set-match-data data))))
 
 ;;; Prompting (`ffap-read-file-or-url'):
 ;;
@@ -1184,15 +1183,15 @@ which may actually result in an url rather than a filename."
 		    (abbreviate-file-name (expand-file-name guess))
 		    ))
 	  (setq dir (file-name-directory guess))))
-    (setq guess
-	  (completing-read
-	   prompt
-	   'ffap-read-file-or-url-internal
-	   dir
-	   nil
-	   (if dir (cons guess (length dir)) guess)
-	   (list 'file-name-history)
-	   ))
+    (let ((minibuffer-completing-file-name t))
+      (setq guess
+	    (completing-read
+	     prompt
+	     'ffap-read-file-or-url-internal
+	     dir
+	     nil
+	     (if dir (cons guess (length dir)) guess)
+	     (list 'file-name-history))))
     ;; Do file substitution like (interactive "F"), suggested by MCOOK.
     (or (ffap-url-p guess) (setq guess (substitute-in-file-name guess)))
     ;; Should not do it on url's, where $ is a common (VMS?) character.
@@ -1625,6 +1624,52 @@ Only intended for interactive use."
   (interactive) (ffap-gnus-wrapper '(ffap-menu)))
 
 
+(defcustom dired-at-point-require-prefix nil
+  "*If set, reverses the prefix argument to `dired-at-point'.
+This is nil so neophytes notice ffap.  Experts may prefer to disable
+ffap most of the time."
+  :type 'boolean
+  :group 'ffap
+  :version "20.3")
+
+;;;###autoload
+(defun dired-at-point (&optional filename)
+  "Start Dired, defaulting to file at point.  See `ffap'."
+  (interactive)
+  (if (and (interactive-p)
+	   (if dired-at-point-require-prefix
+	       (not current-prefix-arg)
+	     current-prefix-arg))
+      (let (current-prefix-arg)		; already interpreted
+	(call-interactively 'dired))
+    (or filename (setq filename (dired-at-point-prompter)))
+    (cond
+     ((ffap-url-p filename)
+      (funcall ffap-url-fetcher filename))
+     ((and ffap-dired-wildcards
+	   (string-match ffap-dired-wildcards filename))
+      (dired filename))
+     ((file-exists-p filename)
+      (if (file-directory-p filename)
+	  (dired (expand-file-name filename))
+	(dired (concat (expand-file-name filename) "*"))))
+     ((y-or-n-p "Directory does not exist, create it? ")
+      (make-directory filename)
+      (dired filename))
+     ((error "No such file or directory `%s'" filename)))))
+
+(defun dired-at-point-prompter (&optional guess)
+  ;; Does guess and prompt step for find-file-at-point.
+  ;; Extra complication for the temporary highlighting.
+  (unwind-protect
+      (ffap-read-file-or-url
+       (if ffap-url-regexp "Dired file or URL: " "Dired file: ")
+       (prog1
+	   (setq guess (or guess (ffap-guesser)))
+	 (and guess (ffap-highlight))
+	 ))
+    (ffap-highlight t)))
+
 ;;; Offer default global bindings (`ffap-bindings'):
 
 (defvar ffap-bindings
@@ -1634,6 +1679,7 @@ Only intended for interactive use."
      (global-set-key "\C-x\C-f" 'find-file-at-point)
      (global-set-key "\C-x4f"   'ffap-other-window)
      (global-set-key "\C-x5f"   'ffap-other-frame)
+     (global-set-key "\C-xd"    'dired-at-point)
      (add-hook 'gnus-summary-mode-hook 'ffap-gnus-hook)
      (add-hook 'gnus-article-mode-hook 'ffap-gnus-hook)
      (add-hook 'vm-mode-hook 'ffap-ro-mode-hook)

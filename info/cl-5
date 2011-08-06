@@ -1,6 +1,11 @@
 This is Info file ../info/cl, produced by Makeinfo version 1.68 from
 the input file cl.texi.
 
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* CL: (cl).		Partial Common Lisp support for Emacs Lisp.
+END-INFO-DIR-ENTRY
+
    This file documents the GNU Emacs Common Lisp emulation package.
 
    Copyright (C) 1993 Free Software Foundation, Inc.

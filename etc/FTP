@@ -1,7 +1,7 @@
 								-*- text -*-
-How to get GNU Software by Internet FTP or by UUCP.  Last updated 1997-08-11
+How to get GNU Software by Internet FTP or by UUCP.  Last updated 1998-06-05
 
-* Please send improvements to this file to gnu@prep.ai.mit.edu.
+* Please send improvements to this file to gnu@gnu.org.
 
 * No Warranties
 
@@ -33,7 +33,7 @@ byte).
 If you are on the Internet (see also "** Alternative Internet FTP
 Sources" below), you can at present copy the latest distribution
 version of GNU Emacs from the file /pub/gnu/emacs-M.N.tar.gz on host
-prep.ai.mit.edu.  M and N stand for version numbers; look
+ftp.gnu.org.  M and N stand for version numbers; look
 at a listing of the directory through ftp to see what version is
 available.  This gzip'd file is about 12 megabytes long; it expands
 to about 45 megabytes.  After you unpack the distribution, be sure
@@ -45,18 +45,14 @@ named /pub/gnu/emacs-M.N.tar-split or perhaps
 /pub/gnu/emacs-M.N.tar.gz-split, containing files of 100000 characters
 each.  There is generally no trouble in ftping files of this size.
 They can be combined with cat to make a tar file or compressed tar
-file.  If you can't find such files on prep.ai.mit.edu, have a look at
-archive.cis.ohio-state.edu.
+file.  If you can't find such files on ftp.gnu.org, have a look at
+ftp.cis.ohio-state.edu.
 
 ALWAYS USE BINARY/IMAGE MODE TO TRANSFER THESE FILES!
 Text mode does not work for tar files or compressed files.
 
-Some ftp'ers have found it necessary for successful file transfer:
-   - to explicitly use prep.ai.mit.edu internet address:
-18.159.0.42	(as of 18 June 95)
-
 Files of differences from previous widely distributed GNU Emacs
-versions to the present version are also available on prep.ai.mit.edu
+versions to the present version are also available on ftp.gnu.org
 under names of the form emacs-OO.OO-NN.NN.diff in directory /pub/gnu.
 These are made with diff -rc2.  Sometimes there are versions
 compressed with gzip of these difference files as well; their names
@@ -71,20 +67,15 @@ The Emacs Lisp Reference Manual is in a separate file:
 
 ** VMS FTP sites with GNU Software
 You can anonymously ftp a VMS version of GNU emacs from:
-	- ftp.stacken.kth.se:[.GNU-VMS] - GNU Emacs and some other VMS
+	- ftp.vms.stacken.kth.se:[.GNU-VMS] - GNU Emacs and some other VMS
 ports (and some VMS binaries) of GNU software
 	- mango.rsmas.miami.edu has a VMS version of the GCC/G++ compiler.
 Contact angel@flipper.miami.edu (angel li) for details.
-	- addvax.llnl.gov - GNU Emacs
-	- VMSD.OAC.UCI.EDU - GNU Emacs 
 	- RIGEL.EFD.LTH.SE [130.235.48.3] - GNU Emacs 
-	- ctrsci.cc.utah.edu - GNU Emacs - The 00readme.txt file gives details
-	- cc.utah.edu [128.110.8.24] - misc. GNU software - user
-anonymous, pass guest.  The 00README.txt file gives details.
 
 ** Other GNU Software and How To FTP It
 
-Other GNU software is available on prep.ai.mit.edu under directory
+Other GNU software is available on ftp.gnu.org under the directory
 /pub/gnu.  diff files to convert between versions (like those used for
 GNU Emacs) exist for some of these programs.  Some programs have misc
 support files as well.  Have a look on prep to see which ones.
@@ -94,16 +85,16 @@ this software is in beta test (probably still buggy), and is being
 made available for use by hackers who like to test software.
 
 The file /pub/gnu/DESCRIPTIONS has a list of the packages distributed
-on prep.ai.mit.edu with a brief description explaining what
+on ftp.gnu.org with a brief description explaining what
 each one can be used for.
 
 More information about these programs can typically be found in the
-GNU's Bulletin.  To receive a copy, write to gnu@prep.ai.mit.edu.
+GNU's Bulletin.  To receive a copy, write to gnu@gnu.org.
 
 ** Scheme and How to FTP It
 
 The latest distribution version of C Scheme is available via anonymous FTP
-from altdorf.ai.mit.edu in /archive/scheme-X.XX/ (where X.XX is some version
+from swiss-ftp.ai.mit.edu in /pub/scheme-X.X/ (where X.X is some version
 number).
 
 Read the files INSTALL and README in the top level C Scheme directory.
@@ -122,109 +113,91 @@ TeX is freely redistributable.  You can get it by ftp, tape, or CD/ROM.
 ftp.cs.umb.edu/pub/tex/unixtex.ftp. (We don't include it here because it
 changes relatively frequently.  Sorry.)
 
-*** For TeX on a single tape (4mm DAT or QIC-24), ordering information is
-available from unixtex@u.washington.edu.  A distribution fee in the area
-of US$210.00 covers administrative costs.  Tapes will be available at
-least through summer of 1994.
-
-*** The FSF hopes soon to distribute tapes of TeX itself, after the
-University of Washington distribution service goes away.
-
 *** A minimal TeX collection (enough to process Texinfo files, anyway)
-is included on the GNU source CD/ROM.  See the file ORDERS in this
+is included on the GNU source CD-ROM.  See the file ORDERS in this
 directory for more information.
 
 ** Alternative Internet FTP Sources
 
 A possibly more up-to-date list of GNU FTP sites is at URL
-        http://www.gnu.ai.mit.edu/order/ftp.html
+        http://www.gnu.org/order/ftp.html
 
 Please do NOT use a site outside your country, until you have checked
 all sites inside your country, and then your continent.  Trans-ocean
 TCP/IP links are very expensive and usually very low speed.
 
-The administrators of louie.udel.edu maintain copies of GNU Emacs.
-The files are available via anonymous ftp under directory ~ftp/gnu.
+The canonical GNU ftp site is located at ftp.gnu.org/pub/gnu.
+You should probably use one of the many mirrors of that site - the
+mirrors will be less busy, and you can find one closer to your site.
 
-Emacs and other GNU programs may be available via anonymous ftp from
-these US sites:
+* GNU FTP Site Mirror List
 
-ftp.kpc.com/pub/mirror/gnu (Silicon Valley, CA)
-ftp.hawaii.edu/mirrors/gnu, f.ms.uky.edu/pub3/gnu,
-ftp.digex.net/pub/gnu (Internet address 164.109.10.23, nightly full
-mirror, run by mcguire@digex.net), wuarchive.wustl.edu/systems/gnu,
-uiarchive.cso.uiuc.edu/pub/gnu (Internet address 128.174.5.14, nightly
-full mirror, run by ftpadmin@uiuc.edu),
-ftp.cs.columbia.edu/archives/gnu/prep, jaguar.utah.edu/gnustuff,
-gatekeeper.dec.com/pub/GNU, labrea.stanford.edu,
-archive.cis.ohio-state.edu/pub/gnu, and
-ftp.uu.net/archive/systems/gnu.
+United States:
 
-And these foreign sites:
+California - labrea.stanford.edu/pub/gnu, gatekeeper.dec.com/pub/GNU
+Hawaii - ftp.hawaii.edu/mirrors/gnu
+Illinois - uiarchive.cso.uiuc.edu/pub/gnu (Internet address 128.174.5.14)
+Kentucky -  ftp.ms.uky.edu/pub/gnu
+Maryland - ftp.digex.net/pub/gnu (Internet address 164.109.10.23)
+Michigan - gnu.egr.msu.edu/pub/gnu
+Missouri - wuarchive.wustl.edu/systems/gnu
+New York - ftp.cs.columbia.edu/archives/gnu/prep
+Ohio - ftp.cis.ohio-state.edu/mirror/gnu
+Utah - jaguar.utah.edu/gnustuff
+Virginia - ftp.uu.net/archive/systems/gnu
 
 Africa:
 
-ftp.sun.ac.za/pub/gnu (South Africa).
+South Africa - ftp.sun.ac.za/pub/gnu
 
 The Americas:
 
-ftp.unicamp.br/pub/gnu (Brazil manual mirror, run by oliva@dcc.unicamp.br),
-ftp.cs.ubc.ca/mirror2/gnu (Canada, daily full mirror, run by
-  ftp-admin@cs.ubc.ca),
-ftp.inf.utfsm.cl/pub/gnu (Chile 146.83.198.3 nightly full mirror, run
-  by ftp@inf.utfsm.cl),
-sunsite.ulatina.ac.cr (Costa Rica 163.178.60.9
-  run by jonathan@mantra.ulatina.ac.cr).
+Brazil - ftp.unicamp.br/pub/gnu 
+Canada - ftp.cs.ubc.ca/mirror2/gnu 
+Chile - ftp.inf.utfsm.cl/pub/gnu (Internet address 146.83.198.3)
+Costa Rica - sunsite.ulatina.ac.cr/GNU 
+Mexico - ftp.uaem.mx/pub/gnu
 
-Asia:
+Asia and Australia:
 
-cair-archive.kaist.ac.kr/pub/gnu (Korea 143.248.186.3, run by
-  ftpkeeper@cair-archive.kaist.ac.kr), 
-ftp.nectec.or.th/pub/mirrors/gnu (Thailand 192.150.251.32 daily
-  mirror, run by ftp@nwg.nectec.or.th),
-tron.um.u-tokyo.ac.jp/pub/GNU/prep (Japan - run by
-  ftp-admin@tron.um.u-tokyo.ac.jp)
-ftp.cs.titech.ac.jp (Japan, run by ftp-admin@cs.titech.ac.jp).
-
-Australia:
-
-archie.au/gnu (Australia run by gnu@archie.au (archie.oz or
-  archie.oz.au for ACSnet)),
-ftp.progsoc.uts.edu.au/pub/gnu (Australia, run by
-  ftp@progsoc.uts.edu.au).
+Australia - archie.au/gnu (archie.oz or archie.oz.au for ACSnet)
+Australia - ftp.progsoc.uts.edu.au/pub/gnu 
+Japan - tron.um.u-tokyo.ac.jp/pub/GNU/prep
+Japan - ftp.cs.titech.ac.jp/pub/gnu 
+Korea - cair-archive.kaist.ac.kr/pub/gnu (Internet address 143.248.186.3)
+Thailand - ftp.nectec.or.th/pub/mirrors/gnu (Internet address - 192.150.251.32)
 
 Europe:
 
-ftp.fi.muni.cz/pub/gnu/ (Czech Republic),
-ftp.etsimo.uniovi.es/pub/gnu (Spain),
-ftp.mcc.ac.uk/pub/gnu (130.88.203.12 daily full mirror, run by
-  root@ftp.mcc.ac.uk),
-unix.hensa.ac.uk/mirrors/uunet/systems/gnu,
-ftp.warwick.ac.uk (137.205.192.14 daily full mirror, run by
-  unixhelp@warwick.ac.uk),
-ftp.informatik.tu-muenchen.de,
-ftp.informatik.rwth-aachen.de (Germany, run by
-  sunsite@sunsite.informatik.rwth-aachen.de),
-ftp.germany.eu.net (Germany, run by archive-admin@germany.eu.net),
-isy.liu.se (Sweden, run by ftpadm@isy.liu.se),
-ftp.stacken.kth.se or ftp.luth.se/pub/unix/gnu (Sweden),
-ftp.sunet.se/pub/gnu (Sweden 130.238.127.3 daily mirror, run by
-  archive@ftp.sunet.se (also mirrors the Mailing List Archives),
-ftp.nl.net (Netherlands),
-ftp.win.tue.nl/pub/gnu (Netherlands 131.155.70.100 daily mirror, run
-  by ftp@win.tue.nl),
-ftp.funet.fi/pub/gnu (Finland 128.214.6.100, run by gnu-adm@ftp.funet.fi),
-ftp.ntua.gr/pub/gnu (Greece, run by Y.Adamopoulos@noc.ntua.gr),
-ftp.denet.dk (Denmark),
-ugle.unit.no (Norway 129.241.1.97),
-ftp.eunet.ch (Switzerland),
-sunsite.cnlab-switch.ch/mirror/gnu (Switzerland 193.5.24.1 two*E1
-  daily mirror,run by archive@sunsite.cnlab-switch.ch),
-ftp.irisa.fr/pub/gnu (France, run by Hugues.Leroy@irisa.fr)
-ftp.univ-lyon1.fr/pub/gnu (France, run by ftpmaint@ftp.univ-lyon1.fr),
-ftp.ieunet.ie/pub/gnu (Ireland 192.111.39.1 weekly mirror, run by
-  archive@ieunet.ie),
-archive.eu.net (Europe 192.16.202.1).
+Austria - ftp.univie.ac.at/packages/gnu
+Czech Republic - ftp.fi.muni.cz/pub/gnu/
+Denmark - ftp.denet.dk/mirror/ftp.gnu.org/pub/gnu
+Finland - ftp.funet.fi/pub/gnu (Internet address 128.214.6.100)
+France - ftp.univ-lyon1.fr/pub/gnu 
+France - ftp.irisa.fr/pub/gnu
+Germany - ftp.informatik.tu-muenchen.de/pub/comp/os/unix/gnu/
+Germany - ftp.informatik.rwth-aachen.de/pub/gnu
+Germany - ftp.de.uu.net/pub/gnu
+Greece - ftp.ntua.gr/pub/gnu 
+Greece - ftp.aua.gr/pub/mirrors/GNU (Internet address 143.233.187.61)
+Hungary - ftp.kfki.hu/pub/gnu
+Ireland - ftp.ieunet.ie/pub/gnu (Internet address 192.111.39.1)
+Netherlands - ftp.eu.net/gnu (Internet address 192.16.202.1)
+Netherlands - ftp.nluug.nl/pub/gnu
+Netherlands - ftp.win.tue.nl/pub/gnu (Internet address 131.155.70.100)
+Norway - ugle.unit.no/pub/gnu (Internet address 129.241.1.97)
+Spain - ftp.etsimo.uniovi.es/pub/gnu
+Sweden - ftp.isy.liu.se/pub/gnu 
+Sweden - ftp.stacken.kth.se
+Sweden - ftp.luth.se/pub/unix/gnu
+Sweden - ftp.sunet.se/pub/gnu (Internet address 130.238.127.3)
+         Also mirrors the Mailing List Archives.
+Switzerland - ftp.eunet.ch/mirrors4/gnu
+Switzerland - sunsite.cnlab-switch.ch/mirror/gnu (Internet address 193.5.24.1)
+United Kingdom - ftp.mcc.ac.uk/pub/gnu (Internet address 130.88.203.12)
+United Kingdom - unix.hensa.ac.uk/mirrors/gnu
+United Kingdom - ftp.warwick.ac.uk (Internet address 137.205.192.14)
+United Kingdom - SunSITE.doc.ic.ac.uk/gnu (Internet address 193.63.255.4)
 
 * Getting GNU software in Great Britain
 
@@ -237,13 +210,10 @@ BattenIG@computer-science.birmingham.ac.uk (aka
 I.G.Batten@fulcrum.bt.co.uk) is also willing to distribute those GNU
 sources he has.
 
-lmjm@doc.ic.ac.uk is willing to distribute those GNU sources he has
-along with comp.sources.unix, comp.sources.x, X windows et al.  The
-archive, on src.doc.ic.ac.uk in directory /gnu, is available via ftp
-over the Internet (on 146.169.3.7), ftam over IXI, HTTP, FSP, Gopher,
-ftpmail, NFS, Lanmanger over IP, telnet, and uucp.  Due to
-communication costs this service is only available within the UK.
-Mail to info-server@doc.ic.ac.uk for details.
+wizards@doc.ic.ac.uk is willing to distribute those GNU sources they have
+along with most other freely distributable software.  The SunSITE archive
+on SunSITE.doc.ic.ac.uk (193.63.255.4) is available via ftp, http, fsp,
+gopher, NFS and Lanmanger over IP (SMB), and telnet.
 
 UK sites with just anonymous FTP access are in the above list.
 
@@ -270,7 +240,7 @@ Your donations will help to support the Foundation and make our future
 efforts successful, including a complete development and operating
 system, called GNU (Gnu's Not Unix), which will run Unix user
 programs.  For more information on GNU and the Foundation, contact us
-at the above address.
+at the above address, or see our web site at http://www.gnu.org.
 
-Ordering a distribution tape from the Foundation is often a good
-way to bring your company or university to make a donation.
+Ordering a GNU Source Code CD-ROM or Source Code CD-ROM Subscription
+is a good way for your organization to help support our work.

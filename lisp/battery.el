@@ -1,9 +1,9 @@
 ;;; battery.el --- display battery status information.
 
-;; Copyright (C) 1997 Free Software Foundation, Inc.
+;; Copyright (C) 1997, 1998 Free Software Foundation, Inc.
 
 ;; Author: Ralph Schleicher <rs@purple.UL.BaWue.DE>
-;; Keywords: local hardware
+;; Keywords: hardware
 
 ;; This file is part of GNU Emacs.
 
@@ -33,10 +33,16 @@
 (require 'timer)
 
 
-(defvar battery-status-function
+
+(defgroup battery nil
+  "Display battery status information."
+  :prefix "battery-"
+  :group 'hardware)
+
+(defcustom battery-status-function
   (cond ((and (eq system-type 'gnu/linux)
 	      (file-readable-p "/proc/apm"))
-	 'battery-linux-proc-apm))
+	 'battery-linux-proc-apm))  
   "*Function for getting battery status information.
 The function have to return an alist of conversion definitions.
 Cons cells are of the form
@@ -44,36 +50,44 @@ Cons cells are of the form
     (CONVERSION . REPLACEMENT-TEXT)
 
 CONVERSION is the character code of a \"conversion specification\"
-introduced by a `%' character in a control string.")
+introduced by a `%' character in a control string."
+  :type 'function
+  :group 'battery)
 
-(defvar battery-echo-area-format
+(defcustom battery-echo-area-format
   (cond ((eq battery-status-function 'battery-linux-proc-apm)
 	 "Power %L, battery %B (%p%% load, remaining time %t)"))
   "*Control string formatting the string to display in the echo area.
 Ordinary characters in the control string are printed as-is, while
 conversion specifications introduced by a `%' character in the control
 string are substituted as defined by the current value of the variable
-`battery-status-function'.")
+`battery-status-function'."
+  :type '(choice string (const nil))
+  :group 'battery)
 
 (defvar battery-mode-line-string nil
   "String to display in the mode line.")
 
-(defvar battery-mode-line-format
+(defcustom battery-mode-line-format
   (cond ((eq battery-status-function 'battery-linux-proc-apm)
 	 " [%b%p%%]"))
   "*Control string formatting the string to display in the mode line.
 Ordinary characters in the control string are printed as-is, while
 conversion specifications introduced by a `%' character in the control
 string are substituted as defined by the current value of the variable
-`battery-status-function'.")
+`battery-status-function'."
+  :type '(choice string (const nil))
+  :group 'battery)
 
-(defvar battery-update-interval 60
-  "*Seconds after which the battery status will be updated.")
+(defcustom battery-update-interval 60
+  "*Seconds after which the battery status will be updated."
+  :type 'integer
+  :group 'battery)
 
 (defvar battery-update-timer nil
   "Interval timer object.")
 
-;;;### autoload
+;;;###autoload
 (defun battery ()
   "Display battery status information in the echo area.
 The text beeing displayed in the echo area is controlled by the variables
@@ -84,7 +98,7 @@ The text beeing displayed in the echo area is controlled by the variables
 				    (funcall battery-status-function))
 		  "Battery status not available")))
 
-;;;### autoload
+;;;###autoload
 (defun display-battery ()
   "Display battery status information in the mode line.
 The text beeing displayed in the mode line is controlled by the variables
@@ -126,8 +140,8 @@ seconds."
 	  " 0x\\([0-9a-f]+\\)"		; AC line status.
 	  " 0x\\([0-9a-f]+\\)"		; Battery status.
 	  " 0x\\([0-9a-f]+\\)"		; Battery flags.
-	  " \\([0-9]+\\)%"		; Load percentage.
-	  " \\([0-9]+\\)"		; Remaining time.
+	  " \\(-?[0-9]+\\)%"		; Load percentage.
+	  " \\(-?[0-9]+\\)"		; Remaining time.
 	  " \\(.*\\)"			; Time unit.
 	  "$")
   "Regular expression matching contents of `/proc/apm'.")
@@ -155,9 +169,9 @@ The following %-sequences are provided:
 	seconds minutes hours remaining-time buffer tem)
     (unwind-protect
 	(save-excursion
-	  (setq buffer (generate-new-buffer " *battery*"))
-	  (buffer-disable-undo buffer)
+	  (setq buffer (get-buffer-create " *battery*"))
 	  (set-buffer buffer)
+	  (erase-buffer)
 	  (battery-insert-file-contents "/proc/apm")
 	  (re-search-forward battery-linux-proc-apm-regexp)
 	  (setq driver-version (match-string 1))
@@ -191,19 +205,18 @@ The following %-sequences are provided:
 	      (setq minutes (/ seconds 60)
 		    hours (/ seconds 3600))
 	      (setq remaining-time
-		    (format "%d:%02d" hours (- minutes (* 60 hours)))))))
-      (and buffer (kill-buffer buffer)))
-    (list (cons ?v driver-version)
-	  (cons ?V bios-version)
-	  (cons ?I bios-interface)
-	  (cons ?L line-status)
-	  (cons ?B battery-status)
-	  (cons ?b battery-status-symbol)
-	  (cons ?p load-percentage)
-	  (cons ?s (and seconds (number-to-string seconds)))
-	  (cons ?m (and minutes (number-to-string minutes)))
-	  (cons ?h (and hours (number-to-string hours)))
-	  (cons ?t remaining-time))))
+		    (format "%d:%02d" hours (- minutes (* 60 hours))))))))
+    (list (cons ?v (or driver-version "N/A"))
+	  (cons ?V (or bios-version "N/A"))
+	  (cons ?I (or bios-interface "N/A"))
+	  (cons ?L (or line-status "N/A"))
+	  (cons ?B (or battery-status "N/A"))
+	  (cons ?b (or battery-status-symbol ""))
+	  (cons ?p (or load-percentage "N/A"))
+	  (cons ?s (or (and seconds (number-to-string seconds)) "N/A"))
+	  (cons ?m (or (and minutes (number-to-string minutes)) "N/A"))
+	  (cons ?h (or (and hours (number-to-string hours)) "N/A"))
+	  (cons ?t (or remaining-time "N/A")))))
 
 
 ;;; Private functions.
@@ -235,6 +248,7 @@ The following %-sequences are provided:
 FILE-NAME can be a non-ordinary file, for example, a named pipe.
 Return t if file exists."
   (let ((load-read-function 'battery-read-function)
+	(load-source-file-function nil)
 	(load-path '("."))
 	(load-history nil))
     (save-excursion

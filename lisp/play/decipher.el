@@ -93,22 +93,39 @@
 (eval-when-compile
   (require 'cl))
 
-(defvar decipher-force-uppercase t
+(defgroup decipher nil
+  "Cryptanalyze monoalphabetic substitution ciphers."
+  :prefix "decipher-"
+  :group 'games)
+
+(defcustom decipher-force-uppercase t
   "*Non-nil means to convert ciphertext to uppercase.
 Nil means the case of the ciphertext is preserved.
-This variable must be set before typing `\\[decipher]'.")
+This variable must be set before typing `\\[decipher]'."
+  :type 'boolean
+  :group 'decipher)
 
-(defvar decipher-ignore-spaces nil
+
+(defcustom decipher-ignore-spaces nil
   "*Non-nil means to ignore spaces and punctuation when counting digrams.
 You should set this to `nil' if the cipher message is divided into words,
 or `t' if it is not.
-This variable is buffer-local.")
+This variable is buffer-local."
+  :type 'boolean
+  :group 'decipher)
 (make-variable-buffer-local 'decipher-ignore-spaces)
 
-(defvar decipher-undo-limit 5000
+(defcustom decipher-undo-limit 5000
   "The maximum number of entries in the undo list.
 When the undo list exceeds this number, 100 entries are deleted from
-the tail of the list.")
+the tail of the list."
+  :type 'integer
+  :group 'decipher)
+
+(defcustom decipher-mode-hook nil
+  "Hook to run upon entry to decipher."
+  :type 'hook
+  :group 'decipher)
 
 ;; End of user modifiable variables
 ;;--------------------------------------------------------------------
@@ -116,7 +133,7 @@ the tail of the list.")
 (defvar decipher-font-lock-keywords
   '(("^:.*"  . font-lock-keyword-face)
     ("^>.*"  . font-lock-string-face)
-    ("^%!.*" . font-lock-reference-face)
+    ("^%!.*" . font-lock-constant-face)
     ("^%.*"  . font-lock-comment-face)
     ("\\`(\\([a-z]+\\) +\\([A-Z]+\\)"
      (1 font-lock-string-face)
@@ -128,7 +145,7 @@ the tail of the list.")
 
 Ciphertext uses `font-lock-keyword-face', plaintext uses
 `font-lock-string-face', comments use `font-lock-comment-face', and
-checkpoints use `font-lock-reference-face'.  You can customize the
+checkpoints use `font-lock-constant-face'.  You can customize the
 display by changing these variables.  For best results, I recommend
 that all faces use the same background color.
 
@@ -408,7 +425,7 @@ The most useful commands are:
               (setcdr (nthcdr (1- new-size) decipher-undo-list) nil)
               (setq decipher-undo-list-size new-size))))))
 
-(defun decipher-get-undo-copy (cons)
+(defun decipher-copy-cons (cons)
   (if cons
       (cons (car cons) (cdr cons))))
 
@@ -417,8 +434,8 @@ The most useful commands are:
   ;;   (decipher-set-map CIPHER-CHAR PLAIN-CHAR)
   ;; We must copy the cons cell because the original cons cells will be
   ;; modified using setcdr.
-  (let ((cipher-map (decipher-get-undo-copy (rassoc cipher-char decipher-alphabet)))
-        (plain-map  (decipher-get-undo-copy (assoc  plain-char  decipher-alphabet))))
+  (let ((cipher-map (decipher-copy-cons (rassoc cipher-char decipher-alphabet)))
+        (plain-map  (decipher-copy-cons (assoc  plain-char  decipher-alphabet))))
     (cond ((equal ?\  plain-char)
            cipher-map)
           ((equal cipher-char (cdr plain-map))

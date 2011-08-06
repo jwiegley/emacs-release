@@ -1,13 +1,13 @@
 ;;; cc-vars.el --- user customization variables for CC Mode
 
-;; Copyright (C) 1985,87,92,93,94,95,96,97 Free Software Foundation, Inc.
+;; Copyright (C) 1985,87,92,93,94,95,96,97,98 Free Software Foundation, Inc.
 
 ;; Authors:    1992-1997 Barry A. Warsaw
 ;;             1987 Dave Detlefs and Stewart Clamen
 ;;             1985 Richard M. Stallman
 ;; Maintainer: cc-mode-help@python.org
 ;; Created:    22-Apr-1997 (split from cc-mode.el)
-;; Version:    5.17
+;; Version:    See cc-mode.el
 ;; Keywords:   c languages oop
 
 ;; This file is part of GNU Emacs.
@@ -304,18 +304,24 @@ enforces this."
 (defcustom c-progress-interval 5
   "*Interval used to update progress status during long re-indentation.
 If a number, percentage complete gets updated after each interval of
-that many seconds.  Set to nil to inhibit updating.  This is only
-useful for Emacs 19."
+that many seconds.  To inhibit all messages during indentation, set
+this variable to nil."
   :type 'integer
   :group 'c)
 
-(defcustom c-site-default-style "gnu"
-  "Default style for your site.
-To change the default style at your site, you can set this variable to
-any style defined in `c-style-alist'.  However, if CC Mode is usually
-loaded into your Emacs at compile time, you will need to set this
-variable in the `site-init.el' file before CC Mode is loaded, then
-re-dump Emacs."
+(defcustom c-default-style "gnu"
+  "*Style which gets installed by default.
+
+The value of this variable can be any style defined in
+`c-style-alist', including styles you add, if you add them before CC
+Mode gets initialized.  Note that if you set any CC Mode variables in
+the top-level of your .emacs file (i.e. *not* in a hook), these get
+incorporated into the `user' style so you would need to add:
+
+  (setq c-default-style \"user\")
+
+to see your customizations.  This is also true if you use the Custom
+interface -- be sure to set the default style to `user'."
   :type 'string
   :group 'c)
 
@@ -381,6 +387,15 @@ This hook is only run once per Emacs session and can be used as a
   :type 'hook
   :group 'c)
 
+(defcustom c-enable-xemacs-performance-kludge-p t
+  "*Enables a XEmacs only hack that may improve speed for some coding styles.
+For styles that hang top-level opening braces (as is common with JDK
+Java coding styles) this can improve performance between 3 and 60
+times for core indentation functions (e.g. `c-parse-state').  For
+styles that conform to the Emacs recommendation of putting these
+braces in column zero, this may slightly degrade performance in some
+situations, but only by a few percentage points.  This variable only
+has effect in XEmacs.")
 
 
 ;; Non-customizable variables, still part of the interface to CC Mode
@@ -406,8 +421,53 @@ as designated in the variable `c-file-style'.")
 (defvar c-syntactic-context nil
   "Variable containing syntactic analysis list during indentation.")
 
-(defvar c-indentation-style c-site-default-style
+(defvar c-indentation-style c-default-style
   "Name of style installed in the current buffer.")
+
+
+
+;; Figure out what features this Emacs has
+;;;###autoload
+(defconst c-emacs-features
+  (let ((infodock-p (boundp 'infodock-version))
+	(comments
+	 ;; XEmacs 19 and beyond use 8-bit modify-syntax-entry flags.
+	 ;; Emacs 19 uses a 1-bit flag.  We will have to set up our
+	 ;; syntax tables differently to handle this.
+	 (let ((table (copy-syntax-table))
+	       entry)
+	   (modify-syntax-entry ?a ". 12345678" table)
+	   (cond
+	    ;; XEmacs 19, and beyond Emacs 19.34
+	    ((arrayp table)
+	     (setq entry (aref table ?a))
+	     ;; In Emacs, table entries are cons cells
+	     (if (consp entry) (setq entry (car entry))))
+	    ;; XEmacs 20
+	    ((fboundp 'get-char-table) (setq entry (get-char-table ?a table)))
+	    ;; before and including Emacs 19.34
+	    ((and (fboundp 'char-table-p)
+		  (char-table-p table))
+	     (setq entry (car (char-table-range table [?a]))))
+	    ;; incompatible
+	    (t (error "CC Mode is incompatible with this version of Emacs")))
+	   (if (= (logand (lsh entry -16) 255) 255)
+	       '8-bit
+	     '1-bit))))
+    (if infodock-p
+	(list comments 'infodock)
+      (list comments)))
+  "A list of features extant in the Emacs you are using.
+There are many flavors of Emacs out there, each with different
+features supporting those needed by CC Mode.  Here's the current
+supported list, along with the values for this variable:
+
+ XEmacs 19:                  (8-bit)
+ XEmacs 20:                  (8-bit)
+ Emacs 19:                   (1-bit)
+
+Infodock (based on XEmacs) has an additional symbol on this list:
+`infodock'.")
 
 
 

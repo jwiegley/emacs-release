@@ -1,6 +1,38 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
 
 File: emacs,  Node: Glossary,  Next: Key Index,  Prev: Intro,  Up: Top
 
@@ -300,6 +332,14 @@ Echoing
      them (in the echo area).  Emacs never echoes single-character key
      sequences; longer key sequences echo only if you pause while
      typing them.
+
+Electric
+     We say that a character is electric if it is normally
+     self-inserting (q.v.), but the current major mode (q.v.) redefines
+     it to do something else as well.  For example, some programming
+     language major modes define particular delimiter characters to
+     reindent the line or insert one or more newlines in addition to
+     self-insertion.
 
 Error
      An error occurs when an Emacs command cannot execute in the current
@@ -873,6 +913,12 @@ Self-Documentation
      any command does, or give you a list of all commands related to a
      topic you specify.  You ask for self-documentation with the help
      character, `C-h'.  *Note Help::.
+
+Self-Inserting Character
+     A character is self-inserting if typing that character inserts that
+     character in the buffer.  Ordinary printing and whitespace
+     characters are self-inserting in Emacs, except in certain special
+     major modes.
 
 Sentences
      Emacs has commands for moving by or killing by sentences.  *Note

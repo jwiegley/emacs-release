@@ -290,6 +290,13 @@ Echoing is acknowledging the receipt of commands by displaying them (in
 the echo area).  Emacs never echoes single-character key sequences;
 longer key sequences echo only if you pause while typing them.
 
+@item Electric
+We say that a character is electric if it is normally self-inserting
+(q.v.), but the current major mode (q.v.) redefines it to do something
+else as well.  For example, some programming language major modes define
+particular delimiter characters to reindent the line or insert one or
+more newlines in addition to self-insertion.
+
 @item Error
 An error occurs when an Emacs command cannot execute in the current
 circumstances.  When an error occurs, execution of the command stops
@@ -849,6 +856,11 @@ Self-documentation is the feature of Emacs which can tell you what any
 command does, or give you a list of all commands related to a topic
 you specify.  You ask for self-documentation with the help character,
 @kbd{C-h}.  @xref{Help}.
+
+@item Self-Inserting Character
+A character is self-inserting if typing that character inserts that
+character in the buffer.  Ordinary printing and whitespace characters
+are self-inserting in Emacs, except in certain special major modes.
 
 @item Sentences
 Emacs has commands for moving by or killing by sentences.

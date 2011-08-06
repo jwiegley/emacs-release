@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1996 Free Software Foundation, Inc.
 
-;; Maintainer: Geoff Voelker (voelker@cs.washington.edu)
+;; Maintainer: Geoff Voelker <voelker@cs.washington.edu>
 ;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
@@ -32,8 +32,11 @@
 ;; Use ";" instead of ":" as a path separator (from files.el).
 (setq path-separator ";")
 
+(setq minibuffer-history-case-insensitive-variables
+      (cons 'file-name-history minibuffer-history-case-insensitive-variables))
+
 ;; Set the null device (for compile.el).
-(setq grep-null-device "NUL")
+(setq null-device "NUL")
 
 ;; Set the grep regexp to match entries with drive letters.
 (setq grep-regexp-alist
@@ -44,7 +47,7 @@
   '(
     ("[:/].*config.sys$" . nil)		; config.sys text
     ("\\.elc$" . t)			; emacs stuff
-    ("\\.\\(obj\\|exe\\|com\\|lib\\|sym\\|sys\\|chk\\|out\\|bin\\|ico\\|pif\\|dos\\|class\\)$" . t)
+    ("\\.\\(obj\\|exe\\|com\\|lib\\|sym\\|sys\\|chk\\|out\\|bin\\|ico\\|pif\\|class\\)$" . t)
 					; MS-Dos stuff
     ("\\.\\(dll\\|drv\\|cpl\\|scr\\vbx\\|386\\|vxd\\|fon\\|fnt\\|fot\\|ttf\\|grp\\)$" . t)
 					; Windows stuff
@@ -56,7 +59,7 @@
 					; Unix stuff
     ("\\.tp[ulpw]$" . t)
 					; Borland Pascal stuff
-    ("[:/]tags$" . t)
+    ("[:/]tags$" . nil)
 					; Emacs TAGS file
     )
   "*Alist for distinguishing text files from binary files.
@@ -244,24 +247,66 @@ filesystem mounted on drive Z:, FILESYSTEM could be \"Z:\"."
 	(delete (untranslated-canonical-name filesystem)
 		untranslated-filesystem-list)))
 
-;; Process I/O decoding and encoding.
+(setq-default default-process-coding-system
+	      (if (fboundp 'start-process)
+		  '(raw-text-dos . raw-text-dos)
+		'(undecided-dos . undecided-dos)))
 
-(defun find-binary-process-coding-system (command)
-  "Choose a coding system for process I/O.
-The coding system for decode is 'no-conversion' if 'binary-process-output'
-is non-nil, and 'undecided-dos' otherwise.  Similarly, the coding system 
-for encode is 'no-conversion' if 'binary-process-input' is non-nil,
-and 'undecided-dos' otherwise."
-  (let ((decode 'undecided-dos)
-	(encode 'undecided-dos))
-    (if binary-process-output
-	(setq decode 'no-conversion))
-    (if binary-process-input
-	(setq encode 'no-conversion))
-    (cons decode encode)))
+;; Support for printing under DOS/Windows, see lpr.el and ps-print.el.
+(defvar printer-name)
 
-(modify-coding-system-alist 'process "" 'find-binary-process-coding-system)
+(defun direct-print-region-function (start end
+					   &optional lpr-prog
+					   delete-text buf display
+					   &rest rest)
+  "DOS/Windows-specific function to print the region on a printer.
+Writes the region to the device or file which is a value of
+`printer-name' \(which see\).  Ignores any arguments beyond
+START and END."
 
+  ;; DOS printers need the lines to end with CR-LF pairs, so make
+  ;; sure it always happens that way, unless the buffer is binary.
+  (let* ((coding coding-system-for-write)
+	 (coding-base
+	  (if (null coding) 'undecided (coding-system-base coding)))
+	 (eol-type (coding-system-eol-type coding-base)))
+    (or (eq coding-system-for-write 'no-conversion)
+	(setq coding-system-for-write
+	      (aref eol-type 1)))	; force conversion to DOS EOLs
+    (write-region start end
+		  (or (and (boundp 'dos-printer) dos-printer)
+		      printer-name)
+		  t 0)
+    ;; Make each print-out start on a new page, but don't waste
+    ;; paper if there was a form-feed at the end of this file.
+    (if (not (char-equal (char-after (1- end)) ?\C-l))
+	(write-region "\f" nil
+		      (or (and (boundp 'dos-printer) dos-printer)
+			  printer-name)
+		      t 0))))
+
+;; Set this to nil if you have a port of the `lpr' program and
+;; you want to use it for printing.  If the default setting is
+;; in effect, `lpr-command' and its switches are ignored when
+;; printing with `lpr-xxx' and `print-xxx'.
+(setq print-region-function 'direct-print-region-function)
+
+;; Set this to nil if you have a port of the `pr' program
+;; (e.g., from GNU Textutils), or if you have an `lpr'
+;; program (see above) that can print page headers.
+;; If `lpr-headers-switches' is non-nil (the default) and
+;; `print-region-function' is set to `dos-print-region-function',
+;; then requests to print page headers will be silently
+;; ignored, and `print-buffer' and `print-region' produce
+;; the same output as `lpr-buffer' and `lpr-region', accordingly.
+(setq lpr-headers-switches "(page headers are not supported)")
+
+(defvar ps-printer-name)
+
+(setq ps-lpr-command "gs")
+
+(setq ps-lpr-switches '("-q" "-dNOPAUSE" "-sDEVICE=epson" "-r240x60"
+			  "-sOutputFile=LPT1" "-"))
 
 (provide 'dos-w32)
 

@@ -1,5 +1,5 @@
 /* X Selection processing for Emacs.
-   Copyright (C) 1993, 1994, 1995, 1996 Free Software Foundation.
+   Copyright (C) 1993, 1994, 1995, 1996, 1997 Free Software Foundation.
 
 This file is part of GNU Emacs.
 
@@ -27,8 +27,10 @@ Boston, MA 02111-1307, USA.  */
 #include "dispextern.h"	/* frame.h seems to want this */
 #include "frame.h"	/* Need this to get the X window of selected_frame */
 #include "blockinput.h"
+#include "buffer.h"
 #include "charset.h"
 #include "coding.h"
+#include "process.h"
 
 #define CUT_BUFFER_SUPPORT
 
@@ -47,7 +49,10 @@ static Lisp_Object Vx_lost_selection_hooks;
 static Lisp_Object Vx_sent_selection_hooks;
 /* Coding system for communicating with other X clients via cutbuffer,
    selection, and clipboard.  */
-static Lisp_Object Vclipboard_coding_system;
+static Lisp_Object Vselection_coding_system;
+
+/* Coding system for the next communicating with other X clients.  */
+static Lisp_Object Vnext_selection_coding_system;
 
 /* If this is a smaller number than the max-request-size of the display,
    emacs will use INCR selection transfer when the selection is larger
@@ -729,10 +734,10 @@ x_handle_selection_request (event)
       /* Indicate we have successfully processed this event.  */
       x_selection_current_request = 0;
 
-      /* Use free, not XFree, because lisp_data_to_selection_data
+      /* Use xfree, not XFree, because lisp_data_to_selection_data
 	 calls xmalloc itself.  */
       if (!nofree)
-	free (data);
+	xfree (data);
     }
   unbind_to (count, Qnil);
 
@@ -935,7 +940,7 @@ unexpect_property_change (location)
 	    prev->next = rest->next;
 	  else
 	    property_change_wait_list = rest->next;
-	  free (rest);
+	  xfree (rest);
 	  return;
 	}
       prev = rest;
@@ -1024,7 +1029,7 @@ x_handle_property_notify (event)
 	    prev->next = rest->next;
 	  else
 	    property_change_wait_list = rest->next;
-	  free (rest);
+	  xfree (rest);
 	  return;
 	}
       prev = rest;
@@ -1168,7 +1173,7 @@ x_get_foreign_selection (selection_symbol, target_type)
 
 /* Subroutines of x_get_window_property_as_lisp_data */
 
-/* Use free, not XFree, to free the data obtained with this function.  */
+/* Use xfree, not XFree, to free the data obtained with this function.  */
 
 static void
 x_get_window_property (display, window, property, data_ret, bytes_ret,
@@ -1251,7 +1256,7 @@ x_get_window_property (display, window, property, data_ret, bytes_ret,
   *bytes_ret = offset;
 }
 
-/* Use free, not XFree, to free the data obtained with this function.  */
+/* Use xfree, not XFree, to free the data obtained with this function.  */
 
 static void
 receive_incremental_selection (display, window, property, target_type,
@@ -1313,9 +1318,9 @@ receive_incremental_selection (display, window, property, target_type,
 	  if (! waiting_for_other_props_on_window (display, window))
 	    XSelectInput (display, window, STANDARD_EVENT_SET);
 	  unexpect_property_change (wait_object);
-	  /* Use free, not XFree, because x_get_window_property
+	  /* Use xfree, not XFree, because x_get_window_property
 	     calls xmalloc itself.  */
-	  if (tmp_data) free (tmp_data);
+	  if (tmp_data) xfree (tmp_data);
 	  break;
 	}
 
@@ -1340,9 +1345,9 @@ receive_incremental_selection (display, window, property, target_type,
 	}
       bcopy (tmp_data, (*data_ret) + offset, tmp_size_bytes);
       offset += tmp_size_bytes;
-      /* Use free, not XFree, because x_get_window_property
+      /* Use xfree, not XFree, because x_get_window_property
 	 calls xmalloc itself.  */
-      free (tmp_data);
+      xfree (tmp_data);
     }
 }
 
@@ -1397,9 +1402,9 @@ x_get_window_property_as_lisp_data (display, window, property, target_type,
 
       unsigned int min_size_bytes = * ((unsigned int *) data);
       BLOCK_INPUT;
-      /* Use free, not XFree, because x_get_window_property
+      /* Use xfree, not XFree, because x_get_window_property
 	 calls xmalloc itself.  */
-      free ((char *) data);
+      xfree ((char *) data);
       UNBLOCK_INPUT;
       receive_incremental_selection (display, window, property, target_type,
 				     min_size_bytes, &data, &bytes,
@@ -1417,9 +1422,9 @@ x_get_window_property_as_lisp_data (display, window, property, target_type,
   val = selection_data_to_lisp_data (display, data, bytes,
 				     actual_type, actual_format);
   
-  /* Use free, not XFree, because x_get_window_property
+  /* Use xfree, not XFree, because x_get_window_property
      calls xmalloc itself.  */
-  free ((char *) data);
+  xfree ((char *) data);
   return val;
 }
 
@@ -1468,41 +1473,61 @@ selection_data_to_lisp_data (display, data, size, type, format)
       Lisp_Object str;
       int require_encoding = 0;
 
-      /* If TYPE is `TEXT' or `COMPOUND_TEXT', we should decode DATA
-	 to Emacs internal format because DATA may be encoded in
-	 compound text format.  In addtion, if TYPE is `STRING' and
-	 DATA contains any 8-bit Latin-1 code, we should also decode
-	 it.  */
-      if (type == dpyinfo->Xatom_TEXT || type == dpyinfo->Xatom_COMPOUND_TEXT)
-	require_encoding = 1;
-      else if (type == XA_STRING)
+      if (
+#if 1
+	  1
+#else
+	  ! NILP (buffer_defaults.enable_multibyte_characters)
+#endif
+	  )
 	{
-	  int i;
-	  for (i = 0; i < size; i++)
+	  /* If TYPE is `TEXT' or `COMPOUND_TEXT', we should decode
+	     DATA to Emacs internal format because DATA may be encoded
+	     in compound text format.  In addtion, if TYPE is `STRING'
+	     and DATA contains any 8-bit Latin-1 code, we should also
+	     decode it.  */
+	  if (type == dpyinfo->Xatom_TEXT
+	      || type == dpyinfo->Xatom_COMPOUND_TEXT)
+	    require_encoding = 1;
+	  else if (type == XA_STRING)
 	    {
-	      if (data[i] >= 0x80)
+	      int i;
+	      for (i = 0; i < size; i++)
 		{
-		  require_encoding = 1;
-		  break;
+		  if (data[i] >= 0x80)
+		    {
+		      require_encoding = 1;
+		      break;
+		    }
 		}
 	    }
 	}
       if (!require_encoding)
-	str = make_string ((char *) data, size);
+	{
+	  str = make_unibyte_string ((char *) data, size);
+	  Vlast_coding_system_used = Qraw_text;
+	}
       else
 	{
-	  int bufsize, dummy;
+	  int bufsize;
 	  unsigned char *buf;
 	  struct coding_system coding;
 
+	  if (NILP (Vnext_selection_coding_system))
+	    Vnext_selection_coding_system = Vselection_coding_system;
 	  setup_coding_system
-            (Fcheck_coding_system(Vclipboard_coding_system), &coding);
-          coding.last_block = 1;
+	    (Fcheck_coding_system(Vnext_selection_coding_system), &coding);
+	  Vnext_selection_coding_system = Qnil;
+          coding.mode |= CODING_MODE_LAST_BLOCK;
 	  bufsize = decoding_buffer_size (&coding, size);
 	  buf = (unsigned char *) xmalloc (bufsize);
-	  size = decode_coding (&coding, data, buf, size, bufsize, &dummy);
-	  str = make_string ((char *) buf, size);
-	  free (buf);
+	  decode_coding (&coding, data, buf, size, bufsize);
+	  size = (coding.fake_multibyte
+		  ? multibyte_chars_in_text (buf, coding.produced)
+		  : coding.produced_char);
+	  str = make_string_from_bytes ((char *) buf, size, coding.produced);
+	  xfree (buf);
+	  Vlast_coding_system_used = coding.symbol;
 	}
       return str;
     }
@@ -1563,7 +1588,7 @@ selection_data_to_lisp_data (display, data, size, type, format)
 }
 
 
-/* Use free, not XFree, to free the data obtained with this function.  */
+/* Use xfree, not XFree, to free the data obtained with this function.  */
 
 static void
 lisp_data_to_selection_data (display, obj,
@@ -1605,18 +1630,21 @@ lisp_data_to_selection_data (display, obj,
       int num;
 
       *format_ret = 8;
-      *size_ret = XSTRING (obj)->size;
+      *size_ret = STRING_BYTES (XSTRING (obj));
       *data_ret = XSTRING (obj)->data;
       bzero (charsets, (MAX_CHARSET + 1) * sizeof (int));
-      num = ((*size_ret <= 1)	/* Check the possibility of short cut.  */
+      num = ((*size_ret <= 1	/* Check the possibility of short cut.  */
+	      || !STRING_MULTIBYTE (obj)
+	      || *size_ret == XSTRING (obj)->size)
 	     ? 0
-	     : find_charset_in_str (*data_ret, *size_ret, charsets, Qnil));
+	     : find_charset_in_str (*data_ret, *size_ret, charsets, Qnil, 1));
 
       if (!num || (num == 1 && charsets[CHARSET_ASCII]))
 	{
 	  /* No multibyte character in OBJ.  We need not encode it.  */
 	  *nofree_ret = 1;
 	  if (NILP (type)) type = QSTRING;
+	  Vlast_coding_system_used = Qraw_text;
 	}
       else
 	{
@@ -1624,19 +1652,22 @@ lisp_data_to_selection_data (display, obj,
              The format is compatible with what the target `STRING'
              expects if OBJ contains only ASCII and Latin-1
              characters.  */
-	  int bufsize, dummy;
+	  int bufsize;
 	  unsigned char *buf;
 	  struct coding_system coding;
 
+	  if (NILP (Vnext_selection_coding_system))
+	    Vnext_selection_coding_system = Vselection_coding_system;
 	  setup_coding_system
-            (Fcheck_coding_system (Vclipboard_coding_system), &coding);
-	  coding.last_block = 1;
+	    (Fcheck_coding_system (Vnext_selection_coding_system), &coding);
+	  Vnext_selection_coding_system = Qnil;
+	  coding.mode |= CODING_MODE_LAST_BLOCK;
 	  bufsize = encoding_buffer_size (&coding, *size_ret);
 	  buf = (unsigned char *) xmalloc (bufsize);
-	  *size_ret = encode_coding (&coding, *data_ret, buf,
-				     *size_ret, bufsize, &dummy);
+	  encode_coding (&coding, *data_ret, buf, *size_ret, bufsize);
+	  *size_ret = coding.produced;
 	  *data_ret = buf;
-          if (charsets[get_charset_id(charset_latin_iso8859_1)]
+          if (charsets[charset_latin_iso8859_1]
 	      && (num == 1 || (num == 2 && charsets[CHARSET_ASCII])))
 	    {
 	      /* Ok, we can return it as `STRING'.  */
@@ -1647,6 +1678,7 @@ lisp_data_to_selection_data (display, obj,
 	      /* We must return it as `COMPOUND_TEXT'.  */
 	      if (NILP (type)) type = QCOMPOUND_TEXT;
 	    }
+	  Vlast_coding_system_used = coding.symbol;
 	}
     }
   else if (SYMBOLP (obj))
@@ -1909,7 +1941,7 @@ Disowning it means there is no such selection.")
 {
   Time timestamp;
   Atom selection_atom;
-  XSelectionClearEvent event;
+  struct selection_input_event event;
   Display *display;
   struct x_display_info *dpyinfo;
 
@@ -1939,7 +1971,7 @@ Disowning it means there is no such selection.")
   SELECTION_EVENT_DISPLAY (&event) = display;
   SELECTION_EVENT_SELECTION (&event) = selection_atom;
   SELECTION_EVENT_TIME (&event) = timestamp;
-  x_handle_selection_clear (&event);
+  x_handle_selection_clear ((struct input_event *) &event);
 
   return Qt;
 }
@@ -2084,7 +2116,8 @@ DEFUN ("x-get-cut-buffer-internal", Fx_get_cut_buffer_internal,
 
   x_get_window_property (display, window, buffer_atom, &data, &bytes,
 			 &type, &format, &size, 0);
-  if (!data) return Qnil;
+  if (!data || !format)
+    return Qnil;
   
   if (format != 8 || type != XA_STRING)
     Fsignal (Qerror,
@@ -2093,9 +2126,9 @@ DEFUN ("x-get-cut-buffer-internal", Fx_get_cut_buffer_internal,
 			   Fcons (make_number (format), Qnil))));
 
   ret = (bytes ? make_string ((char *) data, bytes) : Qnil);
-  /* Use free, not XFree, because x_get_window_property
+  /* Use xfree, not XFree, because x_get_window_property
      calls xmalloc itself.  */
-  free (data);
+  xfree (data);
   return ret;
 }
 
@@ -2127,7 +2160,7 @@ DEFUN ("x-store-cut-buffer-internal", Fx_store_cut_buffer_internal,
   buffer_atom = symbol_to_x_atom (FRAME_X_DISPLAY_INFO (selected_frame),
 				  display, buffer);
   data = (unsigned char *) XSTRING (string)->data;
-  bytes = XSTRING (string)->size;
+  bytes = STRING_BYTES (XSTRING (string));
   bytes_remaining = bytes;
 
   if (! FRAME_X_DISPLAY_INFO (selected_frame)->cut_buffers_initialized)
@@ -2162,8 +2195,8 @@ DEFUN ("x-store-cut-buffer-internal", Fx_store_cut_buffer_internal,
 
 DEFUN ("x-rotate-cut-buffers-internal", Fx_rotate_cut_buffers_internal,
   Sx_rotate_cut_buffers_internal, 1, 1, 0,
-  "Rotate the values of the cut buffers by the given number of steps;\n\
-positive means move values forward, negative means backward.")
+  "Rotate the values of the cut buffers by the given number of step.\n\
+Positive means shift the values forward, negative means backward.")
   (n)
      Lisp_Object n;
 {
@@ -2264,13 +2297,20 @@ This hook doesn't let you change the behavior of Emacs's selection replies,\n\
 it merely informs you that they have happened.");
   Vx_sent_selection_hooks = Qnil;
 
-  DEFVAR_LISP ("clipboard-coding-system", &Vclipboard_coding_system,
+  DEFVAR_LISP ("selection-coding-system", &Vselection_coding_system,
     "Coding system for communicating with other X clients.\n\
 When sending or receiving text via cut_buffer, selection, and clipboard,\n\
 the text is encoded or decoded by this coding system.\n\
-A default value is `iso-latin-1'");
-  Vclipboard_coding_system=intern ("iso-latin-1");
-  staticpro(&Vclipboard_coding_system);
+A default value is `compound-text'");
+  Vselection_coding_system = intern ("compound-text");
+
+  DEFVAR_LISP ("next-selection-coding-system", &Vnext_selection_coding_system,
+    "Coding system for the next communication with other X clients.\n\
+Usually, `selection-coding-system' is used for communicating with\n\
+other X clients.   But, if this variable is set, it is used for the\n\
+next communication only.   After the communication, this variable is\n\
+set to nil.");
+  Vnext_selection_coding_system = Qnil;
 
   DEFVAR_INT ("x-selection-timeout", &x_selection_timeout,
     "Number of milliseconds to wait for a selection reply.\n\

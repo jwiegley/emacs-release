@@ -225,12 +225,17 @@ the associated section number."
   "Command used for processing awk scripts.")
 
 (defvar Man-mode-line-format
-  '("" mode-line-modified
-       mode-line-buffer-identification "  "
-       global-mode-string
-       " " Man-page-mode-string
-       "  %[(" mode-name mode-line-process minor-mode-alist ")%]----"
-       (-3 . "%p") "-%-")
+  '("-"
+    mode-line-mule-info
+    mode-line-modified
+    mode-line-frame-identification
+    mode-line-buffer-identification "  "
+    global-mode-string
+    " " Man-page-mode-string
+    "  %[(" mode-name mode-line-process minor-mode-alist "%n)%]--"
+    (line-number-mode "L%l--")
+    (column-number-mode "C%c--")
+    (-3 . "%p") "-%-")
   "Mode line format for manual mode buffer.")
 
 (defvar Man-mode-map nil
@@ -362,16 +367,18 @@ This is necessary if one wants to dump man.el with emacs."
   (setq Man-fontify-manpage-flag (and Man-fontify-manpage-flag
 				      window-system))
 
-  (setq Man-sed-script
-	(cond
-	 (Man-fontify-manpage-flag
-	  nil)
-	 ((= 0 (call-process Man-sed-command nil nil nil Man-sysv-sed-script))
-	  Man-sysv-sed-script)
-	 ((= 0 (call-process Man-sed-command nil nil nil Man-berkeley-sed-script))
-	  Man-berkeley-sed-script)
-	 (t
-	  nil)))
+  ;; Avoid possible error in call-process by using a directory that must exist.
+  (let ((default-directory "/"))
+    (setq Man-sed-script
+	  (cond
+	   (Man-fontify-manpage-flag
+	    nil)
+	   ((= 0 (call-process Man-sed-command nil nil nil Man-sysv-sed-script))
+	    Man-sysv-sed-script)
+	   ((= 0 (call-process Man-sed-command nil nil nil Man-berkeley-sed-script))
+	    Man-berkeley-sed-script)
+	   (t
+	    nil))))
 
   (setq Man-filter-list
 	(list
@@ -575,7 +582,12 @@ If a buffer already exists for this man page, it will display immediately."
 	(set-buffer buffer)
 	(setq Man-original-frame (selected-frame))
 	(setq Man-arguments man-args))
-      (let ((process-environment (copy-sequence process-environment)))
+      (let ((process-environment (copy-sequence process-environment))
+	    ;; The following is so Awk script gets \n intact
+	    ;; But don't prevent decoding of the outside.
+	    (coding-system-for-write 'raw-text-unix)
+	    ;; Avoid possible error by using a directory that always exists.
+	    (default-directory "/"))
 	;; Prevent any attempt to use display terminal fanciness.
 	(setenv "TERM" "dumb")
 	(if (fboundp 'start-process)
@@ -610,8 +622,9 @@ See the variable `Man-notify-method' for the different notification behaviors."
       ;; can't rely on the editor command loop to reselect the
       ;; selected window's buffer.
       (save-excursion
-	(set-buffer man-buffer)
-	(make-frame Man-frame-parameters)))
+	(let ((frame (make-frame Man-frame-parameters)))
+	  (set-window-buffer (frame-selected-window frame) man-buffer)
+          (set-window-dedicated-p (frame-selected-window frame) t))))
      ((eq Man-notify-method 'pushy)
       (switch-to-buffer man-buffer))
      ((eq Man-notify-method 'bully)
@@ -639,6 +652,15 @@ See the variable `Man-notify-method' for the different notification behaviors."
 	  t)
       (message ""))
      )))
+
+(defun Man-softhyphen-to-minus ()
+  ;; \255 is some kind of dash in Latin-1.
+  (goto-char (point-min))
+  (if enable-multibyte-characters
+      (while (search-forward "\255" nil t)
+	(if (= (preceding-char) ?\255)
+	    (replace-match "-")))
+    (while (search-forward "\255" nil t) (replace-match "-"))))
 
 (defun Man-fontify-manpage ()
   "Convert overstriking and underlining to the correct fonts.
@@ -673,9 +695,7 @@ Same for the ANSI bold and normal escape sequences."
   (while (re-search-forward "[-|]\\(\b[-|]\\)+" nil t)
     (replace-match "+")
     (put-text-property (1- (point)) (point) 'face 'bold))
-  ;; \255 is some kind of dash in Latin-1.
-  (goto-char (point-min))
-  (while (search-forward "\255" nil t) (replace-match "-"))
+  (Man-softhyphen-to-minus)
   (message "%s man page made up" Man-arguments))
 
 (defun Man-cleanup-manpage ()
@@ -699,9 +719,7 @@ Same for the ANSI bold and normal escape sequences."
 	))
   (goto-char (point-min))
   (while (re-search-forward "[-|]\\(\b[-|]\\)+" nil t) (replace-match "+"))
-  ;; \255 is some kind of dash in Latin-1.
-  (goto-char (point-min))
-  (while (search-forward "\255" nil t) (replace-match "-"))
+  (Man-softhyphen-to-minus)
   (message "%s man page cleaned up" Man-arguments))
 
 (defun Man-bgproc-sentinel (process msg)
@@ -1049,26 +1067,12 @@ Specify which reference to use; default is based on word at point."
 (defun Man-kill ()
   "Kill the buffer containing the manpage."
   (interactive)
-  (let ((buff (current-buffer)))
-    (delete-windows-on buff)
-    (kill-buffer buff))
-  (if (and window-system
-	   (or (eq Man-notify-method 'newframe)
-	       (and pop-up-frames
-		    (eq Man-notify-method 'bully))))
-      (delete-frame)))
+  (quit-window t))
 
 (defun Man-quit ()
   "Bury the buffer containing the manpage."
   (interactive)
-  (let ((buff (current-buffer)))
-    (delete-windows-on buff)
-    (bury-buffer buff))
-  (if (and window-system
-	   (or (eq Man-notify-method 'newframe)
-	       (and pop-up-frames
-		    (eq Man-notify-method 'bully))))
-      (delete-frame)))
+  (quit-window))
 
 (defun Man-goto-page (page)
   "Go to the manual page on page PAGE."

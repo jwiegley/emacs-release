@@ -157,6 +157,17 @@ mouse_off ()
     }
 }
 
+static void
+mouse_get_xy (int *x, int *y)
+{
+  union REGS regs;
+
+  regs.x.ax = 0x0003;
+  int86 (0x33, &regs, &regs);
+  *x = regs.x.cx / 8;
+  *y = regs.x.dx / 8;
+}
+
 void
 mouse_moveto (x, y)
      int x, y;
@@ -203,17 +214,6 @@ mouse_released (b, xp, yp)
   return (regs.x.bx != 0);
 }
 
-static void
-mouse_get_xy (int *x, int *y)
-{
-  union REGS regs;
-
-  regs.x.ax = 0x0003;
-  int86 (0x33, &regs, &regs);
-  *x = regs.x.cx / 8;
-  *y = regs.x.dx / 8;
-}
-
 void
 mouse_get_pos (f, insist, bar_window, part, x, y, time)
      FRAME_PTR *f;
@@ -223,17 +223,18 @@ mouse_get_pos (f, insist, bar_window, part, x, y, time)
      unsigned long *time;
 {
   int ix, iy;
-  union REGS regs;
+  Lisp_Object frame, tail;
 
-  regs.x.ax = 0x0003;
-  int86 (0x33, &regs, &regs);
+  /* Clear the mouse-moved flag for every frame on this display.  */
+  FOR_EACH_FRAME (tail, frame)
+    XFRAME (frame)->mouse_moved = 0;
+
   *f = selected_frame;
   *bar_window = Qnil;
   mouse_get_xy (&ix, &iy);
-  selected_frame->mouse_moved = 0;
-  *x = make_number (ix);
-  *y = make_number (iy);
   *time = event_timestamp ();
+  *x = make_number (mouse_last_x = ix);
+  *y = make_number (mouse_last_y = iy);
 }
 
 static void
@@ -307,6 +308,34 @@ struct x_output the_only_x_display;
 /* This is never dereferenced.  */
 Display *x_current_display;
 
+/* Support for DOS/V (allows Japanese characters to be displayed on
+   standard, non-Japanese, ATs).  Only supported for DJGPP v2 and later.  */
+
+/* Holds the address of the text-mode screen buffer.  */
+static unsigned long screen_old_address = 0;
+/* Segment and offset of the virtual screen.  If 0, DOS/V is NOT loaded.  */
+static unsigned short screen_virtual_segment = 0;
+static unsigned short screen_virtual_offset = 0;
+
+#if __DJGPP__ > 1
+/* Update the screen from a part of relocated DOS/V screen buffer which
+   begins at OFFSET and includes COUNT characters.  */
+static void
+dosv_refresh_virtual_screen (int offset, int count)
+{
+  __dpmi_regs regs;
+
+  if (offset < 0 || count < 0)	/* paranoia; illegal values crash DOS/V */
+    return;
+
+  regs.h.ah = 0xff;	/* update relocated screen */
+  regs.x.es = screen_virtual_segment;
+  regs.x.di = screen_virtual_offset + offset;
+  regs.x.cx = count;
+  __dpmi_int (0x10, &regs);
+}
+#endif
+
 static
 dos_direct_output (y, x, buf, len)
      int y;
@@ -314,7 +343,9 @@ dos_direct_output (y, x, buf, len)
      char *buf;
      int len;
 {
-  int t = (int) ScreenPrimary + 2 * (x + y * screen_size_X);
+  int t0 = 2 * (x + y * screen_size_X);
+  int t = t0 + (int) ScreenPrimary;
+  int l0 = len;
 
 #if (__DJGPP__ < 2)
   while (--len >= 0) {
@@ -325,6 +356,9 @@ dos_direct_output (y, x, buf, len)
   /* This is faster.  */
   for (_farsetsel (_dos_ds); --len >= 0; t += 2, buf++)
     _farnspokeb (t, *buf);
+
+  if (screen_virtual_segment)
+    dosv_refresh_virtual_screen (t0, l0);
 #endif
 }
 #endif
@@ -541,6 +575,11 @@ dos_set_window_size (rows, cols)
 
   /* Enable bright background colors.  */
   bright_bg ();
+
+  /* FIXME: I'm not sure the above will run at all on DOS/V.  But let's
+     be defensive anyway.  */
+  if (screen_virtual_segment)
+    dosv_refresh_virtual_screen (0, *cols * *rows);
 }
 
 /* If we write a character in the position where the mouse is,
@@ -561,8 +600,8 @@ mouse_off_maybe ()
   mouse_off ();
 }
 
-static
-IT_ring_bell ()
+static void
+IT_ring_bell (void)
 {
   if (visible_bell)
     {
@@ -597,12 +636,13 @@ IT_set_face (int face)
   ScreenAttrib = (FACE_BACKGROUND (fp) << 4) | FACE_FOREGROUND (fp);
 }
 
-static
+static void
 IT_write_glyphs (GLYPH *str, int len)
 {
   int newface;
   int ch, l = len;
   unsigned char *buf, *bp;
+  int offset = 2 * (new_pos_X + screen_size_X * new_pos_Y);
 
   if (len == 0) return;
   
@@ -623,16 +663,18 @@ IT_write_glyphs (GLYPH *str, int len)
     }
 
   mouse_off_maybe ();
-  dosmemput (buf, 2 * len, 
-	     (int)ScreenPrimary + 2 * (new_pos_X + screen_size_X * new_pos_Y));
+  dosmemput (buf, 2 * len, (int)ScreenPrimary + offset);
+  if (screen_virtual_segment)
+    dosv_refresh_virtual_screen (offset, len);
   new_pos_X += len;
 }
 
-static
-IT_clear_end_of_line (first_unused)
+static void
+IT_clear_end_of_line (int first_unused)
 {
   char *spaces, *sp;
   int i, j;
+  int offset = 2 * (new_pos_X + screen_size_X * new_pos_Y);
 
   IT_set_face (0);
   if (termscript)
@@ -647,11 +689,12 @@ IT_clear_end_of_line (first_unused)
     }
 
   mouse_off_maybe ();
-  dosmemput (spaces, i, 
-	     (int)ScreenPrimary + 2 * (new_pos_X + screen_size_X * new_pos_Y));
+  dosmemput (spaces, i, (int)ScreenPrimary + offset);
+  if (screen_virtual_segment)
+    dosv_refresh_virtual_screen (offset, i / 2);
 }
 
-static
+static void
 IT_clear_screen (void)
 {
   if (termscript)
@@ -659,10 +702,12 @@ IT_clear_screen (void)
   IT_set_face (0);
   mouse_off ();
   ScreenClear ();
+  if (screen_virtual_segment)
+    dosv_refresh_virtual_screen (0, screen_size);
   new_pos_X = new_pos_Y = 0;
 }
 
-static
+static void
 IT_clear_to_end (void)
 {
   if (termscript)
@@ -675,7 +720,7 @@ IT_clear_to_end (void)
   }
 }
 
-static
+static void
 IT_cursor_to (int y, int x)
 {
   if (termscript)
@@ -720,20 +765,25 @@ IT_display_cursor (int on)
    Special treatment is required when the cursor is in the echo area,
    to put the cursor at the end of the text displayed there.  */
 
-static
-IT_cmgoto (f)
-     FRAME_PTR f;
+static void
+IT_cmgoto (FRAME_PTR f)
 {
   /* Only set the cursor to where it should be if the display is
      already in sync with the window contents.  */
   int update_cursor_pos = MODIFF == unchanged_modified;
 
-  /* If we are in the echo area, put the cursor at the end of text.  */
+  /* If we are in the echo area, and the cursor is beyond the end of
+     the text, put the cursor at the end of text.  */
   if (!update_cursor_pos
       && XFASTINT (XWINDOW (FRAME_MINIBUF_WINDOW (f))->top) <= new_pos_Y)
     {
-      new_pos_X = FRAME_DESIRED_GLYPHS (f)->used[new_pos_Y];
-      update_cursor_pos = 1;
+      int tem_X = FRAME_DESIRED_GLYPHS (f)->used[new_pos_Y];
+
+      if (current_pos_X > tem_X)
+	{
+	  new_pos_X = tem_X;
+	  update_cursor_pos = 1;
+	}
     }
 
   if (update_cursor_pos
@@ -753,16 +803,15 @@ IT_cmgoto (f)
     mouse_on ();
 }
 
-static
-IT_reassert_line_highlight (new, vpos)
-     int new, vpos;
+static void
+IT_reassert_line_highlight (int new, int vpos)
 {
   highlight = new;
   IT_set_face (0); /* To possibly clear the highlighting.  */
 }
 
-static
-IT_change_line_highlight (new_highlight, vpos, first_unused_hpos)
+static void
+IT_change_line_highlight (int new_highlight, int vpos, int first_unused_hpos)
 {
   highlight = new_highlight;
   IT_set_face (0); /* To possibly clear the highlighting.  */
@@ -770,81 +819,38 @@ IT_change_line_highlight (new_highlight, vpos, first_unused_hpos)
   IT_clear_end_of_line (first_unused_hpos);
 }
 
-static
-IT_update_begin ()
+static void
+IT_update_begin (struct frame *foo)
 {
   highlight = 0;
   IT_set_face (0); /* To possibly clear the highlighting.  */
   screen_face = -1;
 }
 
-static
-IT_update_end ()
+static void
+IT_update_end (struct frame *foo)
 {
 }
 
-/* This was more or less copied from xterm.c
-
-   Nowadays, the corresponding function under X is `x_set_menu_bar_lines_1'
-   on xfns.c  */
-
-static void
-IT_set_menu_bar_lines (window, n)
-     Lisp_Object window;
-     int n;
+/* set-window-configuration on window.c needs this.  */
+void
+x_set_menu_bar_lines (f, value, oldval)
+     struct frame *f;
+     Lisp_Object value, oldval;
 {
-  struct window *w = XWINDOW (window);
-
-  XSETFASTINT (w->last_modified, 0);
-  XSETFASTINT (w->last_overlay_modified, 0);
-  XSETFASTINT (w->top, XFASTINT (w->top) + n);
-  XSETFASTINT (w->height, XFASTINT (w->height) - n);
-
-  /* Handle just the top child in a vertical split.  */
-  if (!NILP (w->vchild))
-    IT_set_menu_bar_lines (w->vchild, n);
-
-  /* Adjust all children in a horizontal split.  */
-  for (window = w->hchild; !NILP (window); window = w->next)
-    {
-      w = XWINDOW (window);
-      IT_set_menu_bar_lines (window, n);
-    }
+  set_menu_bar_lines (f, value, oldval);
 }
 
 /* This was copied from xfns.c  */
 
 Lisp_Object Qbackground_color;
 Lisp_Object Qforeground_color;
-
-void
-x_set_menu_bar_lines (f, value, oldval)
-     struct frame *f;
-     Lisp_Object value, oldval;
-{
-  int nlines;
-  int olines = FRAME_MENU_BAR_LINES (f);
-
-  /* Right now, menu bars don't work properly in minibuf-only frames;
-     most of the commands try to apply themselves to the minibuffer
-     frame itslef, and get an error because you can't switch buffers
-     in or split the minibuffer window.  */
-  if (FRAME_MINIBUF_ONLY_P (f))
-    return;
-
-  if (INTEGERP (value))
-    nlines = XINT (value);
-  else
-    nlines = 0;
-
-  FRAME_MENU_BAR_LINES (f) = nlines;
-  IT_set_menu_bar_lines (f->root_window, nlines - olines);
-}
+extern Lisp_Object Qtitle;
 
 /* IT_set_terminal_modes is called when emacs is started,
    resumed, and whenever the screen is redrawn!  */
 
-static
+static void
 IT_set_terminal_modes (void)
 {
   if (termscript)
@@ -866,12 +872,40 @@ IT_set_terminal_modes (void)
   startup_screen_size_Y = screen_size_Y;
   startup_screen_attrib = ScreenAttrib;
 
+#if __DJGPP__ > 1
+  /* Is DOS/V (or any other RSIS software which relocates
+     the screen) installed?  */
+  {
+    unsigned short es_value;
+    __dpmi_regs regs;
+
+    regs.h.ah = 0xfe;	/* get relocated screen address */
+    if (ScreenPrimary == 0xb0000UL || ScreenPrimary == 0xb8000UL)
+      regs.x.es = (ScreenPrimary >> 4) & 0xffff;
+    else if (screen_old_address) /* already switched to Japanese mode once */
+      regs.x.es = (screen_old_address >> 4) & 0xffff;
+    else
+      regs.x.es = ScreenMode () == 7 ? 0xb000 : 0xb800;
+    regs.x.di = 0;
+    es_value = regs.x.es;
+    __dpmi_int (0x10, &regs);
+
+    if (regs.x.es != es_value && regs.x.es != (ScreenPrimary >> 4) & 0xffff)
+      {
+	screen_old_address = ScreenPrimary;
+	screen_virtual_segment = regs.x.es;
+	screen_virtual_offset  = regs.x.di;
+	ScreenPrimary = (screen_virtual_segment << 4) + screen_virtual_offset;
+      }
+  }
+#endif /* __DJGPP__ > 1 */
+
   ScreenGetCursor (&startup_pos_Y, &startup_pos_X);
   ScreenRetrieve (startup_screen_buffer = xmalloc (screen_size * 2));
 
   if (termscript)
     fprintf (termscript, "<SCREEN SAVED (dimensions=%dx%d)>\n",
-             screen_size_X, screen_size_Y);
+	     screen_size_X, screen_size_Y);
 
   bright_bg ();
 }
@@ -879,7 +913,7 @@ IT_set_terminal_modes (void)
 /* IT_reset_terminal_modes is called when emacs is
    suspended or killed.  */
 
-static
+static void
 IT_reset_terminal_modes (void)
 {
   int display_row_start = (int) ScreenPrimary;
@@ -919,6 +953,8 @@ IT_reset_terminal_modes (void)
 
   ScreenAttrib = startup_screen_attrib;
   ScreenClear ();
+  if (screen_virtual_segment)
+    dosv_refresh_virtual_screen (0, screen_size);
 
   if (update_row_len > saved_row_len)
     update_row_len = saved_row_len;
@@ -932,6 +968,9 @@ IT_reset_terminal_modes (void)
   while (current_rows--)
     {
       dosmemput (saved_row, update_row_len, display_row_start);
+      if (screen_virtual_segment)
+	dosv_refresh_virtual_screen (display_row_start - ScreenPrimary,
+				     update_row_len / 2);
       saved_row         += saved_row_len;
       display_row_start += to_next_row;
     }
@@ -946,8 +985,8 @@ IT_reset_terminal_modes (void)
   term_setup_done = 0;
 }
 
-static
-IT_set_terminal_window (void)
+static void
+IT_set_terminal_window (int foo)
 {
 }
 
@@ -1010,9 +1049,21 @@ IT_set_frame_parameters (f, alist)
 		fprintf (termscript, "<BGCOLOR %lu>\n", new_color);
 	    }
 	}
-      else if (EQ (prop, intern ("menu-bar-lines")))
-	x_set_menu_bar_lines (f, val, 0);
+      else if (EQ (prop, Qtitle))
+	{
+	  x_set_title (f, val);
+	  if (termscript)
+	    fprintf (termscript, "<TITLE: %s>\n", XSTRING (val)->data);
+	}
+      else if (EQ (prop, intern ("reverse")) && EQ (val, Qt))
+	{
+	  unsigned long fg = FRAME_FOREGROUND_PIXEL (f);
 
+	  FRAME_FOREGROUND_PIXEL (f) = FRAME_BACKGROUND_PIXEL (f);
+	  FRAME_BACKGROUND_PIXEL (f) = fg;
+	  if (termscript)
+	    fprintf (termscript, "<INVERSE-VIDEO>\n");
+	}
       store_frame_param (f, prop, val);
 
     }
@@ -1061,7 +1112,10 @@ internal_terminal_init ()
 
   Vwindow_system = intern ("pc");
   Vwindow_system_version = make_number (1);
- 
+
+  /* If Emacs was dumped on DOS/V machine, forget the stale VRAM address.  */
+  screen_old_address = 0;
+
   bzero (&the_only_x_display, sizeof the_only_x_display);
   the_only_x_display.background_pixel = 7; /* White */
   the_only_x_display.foreground_pixel = 0; /* Black */
@@ -1116,7 +1170,7 @@ dos_get_saved_screen (screen, rows, cols)
   *screen = startup_screen_buffer;
   *cols = startup_screen_size_X;
   *rows = startup_screen_size_Y;
-  return 1;
+  return *screen != (char *)0;
 #else
   return 0;
 #endif  
@@ -1175,6 +1229,23 @@ static struct dos_keyboard_map fr_keyboard = {
   "  ~#{[|`\\^@]}             œ                              "
 };
 
+/*
+ * Italian keyboard support, country code 39.
+ * '<' 56:3c*0000
+ * '>' 56:3e*0000
+ * added also {,},` as, respectively, AltGr-8, AltGr-9, AltGr-'
+ * Donated by Stefano Brozzi <brozzis@mag00.cedi.unipr.it>
+ */
+static struct dos_keyboard_map it_keyboard = {
+/* 0          1         2         3         4         5     */
+/* 0 123456789012345678901234567890123456789012345678901234 */
+  "\\1234567890'ç  qwertyuiopä+   asdfghjklïÖó   zxcvbnm,.-  ",
+/* 01 23456789012345678901234567890123456789012345678901234 */
+  "|!\"ú$%&/()=?^  QWERTYUIOPÇ*   ASDFGHJKLá¯ı   ZXCVBNM;:_  ",
+/* 0123456789012345678901234567890123456789012345678901234 */
+  "        {}~`             []             @#               "
+};
+
 static struct dos_keyboard_map dk_keyboard = {
 /* 0         1         2         3         4         5      */
 /* 0123456789012345678901234567890123456789012345678901234 */
@@ -1193,6 +1264,7 @@ static struct keyboard_layout_list
 {
   1, &us_keyboard,
   33, &fr_keyboard,
+  39, &it_keyboard,
   45, &dk_keyboard
 };
 
@@ -1206,11 +1278,14 @@ dos_set_keyboard (code, always)
      int always;
 {
   int i;
-  union REGS regs;
+  _go32_dpmi_registers regs;
 
-  /* See if Keyb.Com is installed (for international keyboard support).  */
+  /* See if Keyb.Com is installed (for international keyboard support).
+     Note: calling Int 2Fh via int86 wedges the DOS box on some versions
+     of Windows 9X!  So don't do that!  */
   regs.x.ax = 0xad80;
-  int86 (0x2f, &regs, &regs);
+  regs.x.ss = regs.x.sp = regs.x.flags = 0;
+  _go32_dpmi_simulate_int (0x2f, &regs);
   if (regs.h.al == 0xff)
     international_keyboard = 1;
 
@@ -1888,7 +1963,7 @@ pixel_to_glyph_coords (f, pix_x, pix_y, x, y, bounds, noclip)
      FRAME_PTR f;
      register int pix_x, pix_y;
      register int *x, *y;
-     void /* XRectangle */ *bounds;
+     XRectangle *bounds;
      int noclip;
 {
   if (bounds) abort ();
@@ -2009,7 +2084,7 @@ IT_menu_display (XMenu *menu, int y, int x, int *faces)
   text = (GLYPH *) xmalloc ((width + 2) * sizeof (GLYPH));
   ScreenGetCursor (&row, &col);
   mouse_get_xy (&mx, &my);
-  IT_update_begin ();
+  IT_update_begin (selected_frame);
   for (i = 0; i < menu->count; i++)
     {
       IT_cursor_to (y + i, x);
@@ -2036,7 +2111,7 @@ IT_menu_display (XMenu *menu, int y, int x, int *faces)
       *p++ = FAST_MAKE_GLYPH (menu->submenu[i] ? 16 : ' ', face);
       IT_write_glyphs (text, width + 2);
     }
-  IT_update_end ();
+  IT_update_end (selected_frame);
   IT_cursor_to (row, col);
   xfree (text);
 }
@@ -2261,6 +2336,8 @@ XMenuActivate (Display *foo, XMenu *menu, int *pane, int *selidx,
 			  statecount--;
 			  mouse_off ();
 			  ScreenUpdate (state[statecount].screen_behind);
+			  if (screen_virtual_segment)
+			    dosv_refresh_virtual_screen (0, screen_size);
 			  xfree (state[statecount].screen_behind);
 			}
 		    if (i == statecount - 1 && state[i].menu->submenu[dy])
@@ -2296,6 +2373,8 @@ XMenuActivate (Display *foo, XMenu *menu, int *pane, int *selidx,
 
   mouse_off ();
   ScreenUpdate (state[0].screen_behind);
+  if (screen_virtual_segment)
+    dosv_refresh_virtual_screen (0, screen_size);
   while (statecount--)
     xfree (state[statecount].screen_behind);
   IT_display_cursor (1);	/* turn cursor back on */
@@ -2699,6 +2778,38 @@ init_environment (argc, argv, skip_args)
 {
   char *s, *t, *root;
   int len;
+  static const char * const tempdirs[] = {
+    "$TMPDIR", "$TEMP", "$TMP", "c:/"
+  };
+  int i;
+  const int imax = sizeof (tempdirs) / sizeof (tempdirs[0]);
+
+  /* Make sure they have a usable $TMPDIR.  Many Emacs functions use
+     temporary files and assume "/tmp" if $TMPDIR is unset, which
+     will break on DOS/Windows.  Refuse to work if we cannot find
+     a directory, not even "c:/", usable for that purpose.  */
+  for (i = 0; i < imax ; i++)
+    {
+      const char *tmp = tempdirs[i];
+
+      if (*tmp == '$')
+	tmp = getenv (tmp + 1);
+      /* Note that `access' can lie to us if the directory resides on a
+	 read-only filesystem, like CD-ROM or a write-protected floppy.
+	 The only way to be really sure is to actually create a file and
+	 see if it succeeds.  But I think that's too much to ask.  */
+      if (tmp && access (tmp, D_OK) == 0)
+	{
+	  setenv ("TMPDIR", tmp, 1);
+	  break;
+	}
+    }
+  if (i >= imax)
+    cmd_error_internal
+      (Fcons (Qerror,
+	      Fcons (build_string ("no usable temporary directories found!!"),
+		     Qnil)),
+       "While setting TMPDIR: ");
 
   /* Find our root from argv[0].  Assuming argv[0] is, say,
      "c:/emacs/bin/emacs.exe" our root will be "c:/emacs".  */
@@ -2969,12 +3080,13 @@ dos_ttcooked ()
    file TEMPOUT and stderr to TEMPERR.  */
 
 int
-run_msdos_command (argv, dir, tempin, tempout, temperr)
+run_msdos_command (argv, working_dir, tempin, tempout, temperr, envv)
      unsigned char **argv;
-     Lisp_Object dir;
+     const char *working_dir;
      int tempin, tempout, temperr;
+     char **envv;
 {
-  char *saveargv1, *saveargv2, **envv, *lowcase_argv0, *pa, *pl;
+  char *saveargv1, *saveargv2, *lowcase_argv0, *pa, *pl;
   char oldwd[MAXPATHLEN + 1]; /* Fixed size is safe on MSDOS.  */
   int msshell, result = -1;
   int inbak, outbak, errbak;
@@ -3019,29 +3131,7 @@ run_msdos_command (argv, dir, tempin, tempout, temperr)
 	}
     }
 
-  /* Build the environment array.  */
-  {
-    extern Lisp_Object Vprocess_environment;
-    Lisp_Object tmp, lst;
-    int i, len;
-
-    lst = Vprocess_environment;
-    len = XFASTINT (Flength (lst));
-
-    envv = alloca ((len + 1) * sizeof (char *));
-    for (i = 0; i < len; i++)
-      {
-	tmp = Fcar (lst);
-	lst = Fcdr (lst);
-	CHECK_STRING (tmp, 0);
-	envv[i] = alloca (XSTRING (tmp)->size + 1);
-	strcpy (envv[i], XSTRING (tmp)->data);
-      }
-    envv[len] = (char *) 0;
-  }
-
-  if (STRINGP (dir))
-    chdir (XSTRING (dir)->data);
+  chdir (working_dir);
   inbak = dup (0);
   outbak = dup (1);
   errbak = dup (2);
@@ -3065,12 +3155,36 @@ run_msdos_command (argv, dir, tempin, tempout, temperr)
 	 cannot grok commands longer than 126 characters.  In DJGPP v2
 	 and later, `system' is much smarter, so we'll call it instead.  */
 
-      extern char **environ;
-      environ = envv;
+      const char *cmnd;
 
       /* A shell gets a single argument--its full command
 	 line--whose original was saved in `saveargv2'.  */
-      result = system (saveargv2);
+
+      /* Don't let them pass empty command lines to `system', since
+	 with some shells it will try to invoke an interactive shell,
+	 which will hang Emacs.  */
+      for (cmnd = saveargv2; *cmnd && isspace (*cmnd); cmnd++)
+	;
+      if (*cmnd)
+	{
+	  extern char **environ;
+	  int save_system_flags = __system_flags;
+
+	  /* Request the most powerful version of `system'.  We need
+	     all the help we can get to avoid calling stock DOS shells.  */
+	  __system_flags =  (__system_redirect
+			     | __system_use_shell
+			     | __system_allow_multiple_cmds
+			     | __system_allow_long_cmds
+			     | __system_handle_null_commands
+			     | __system_emulate_chdir);
+
+	  environ = envv;
+	  result = system (cmnd);
+	  __system_flags = save_system_flags;
+	}
+      else
+	result = 0;	/* emulate Unixy shell behavior with empty cmd line */
     }
   else
 
@@ -3192,10 +3306,10 @@ sigsetmask (x) int x; { return 0; }
 sigblock (mask) int mask; { return 0; } 
 #endif
 
-request_sigio () {}
+void request_sigio (void) {}
 setpgrp () {return 0; }
 setpriority (x,y,z) int x,y,z; { return 0; }
-unrequest_sigio () {}
+void unrequest_sigio (void) {}
 
 #if __DJGPP__ > 1
 
@@ -3316,6 +3430,25 @@ sigblock (mask) int mask; { return 0; }
        && (long)(time).tv_usec <= 0))
 #endif
 
+/* This yields the rest of the current time slice to the task manager.
+   It should be called by any code which knows that it has nothing
+   useful to do except idle.
+
+   I don't use __dpmi_yield here, since versions of library before 2.02
+   called Int 2Fh/AX=1680h there in a way that would wedge the DOS box
+   on some versions of Windows 9X.  */
+
+void
+dos_yield_time_slice (void)
+{
+  _go32_dpmi_registers r;
+
+  r.x.ax = 0x1680;
+  r.x.ss = r.x.sp = r.x.flags = 0;
+  _go32_dpmi_simulate_int (0x2f, &r);
+  if (r.h.al == 0x80)
+    errno = ENOSYS;
+}
 
 /* Only event queue is checked.  */
 /* We don't have to call timer_check here
@@ -3349,9 +3482,7 @@ sys_select (nfds, rfds, wfds, efds, timeout)
     {
       while (!detect_input_pending ())
 	{
-#if __DJGPP__ >= 2
-	  __dpmi_yield ();
-#endif	  
+	  dos_yield_time_slice ();
 	}
     }
   else
@@ -3377,9 +3508,7 @@ sys_select (nfds, rfds, wfds, efds, timeout)
 	  if (EMACS_TIME_ZERO_OR_NEG_P (*timeout))
 	    return 0;
 	  cllast = clnow;
-#if __DJGPP__ >= 2
-	  __dpmi_yield ();
-#endif	  
+	  dos_yield_time_slice ();
 	}
     }
   
@@ -3473,6 +3602,10 @@ abort ()
   ScreenSetCursor (10, 0);
   cputs ("\r\n\nEmacs aborted!\r\n");
 #if __DJGPP__ > 1
+#if __DJGPP__ == 2 && __DJGPP_MINOR__ < 2
+  if (screen_virtual_segment)
+    dosv_refresh_virtual_screen (2 * 10 * screen_size_X, 4 * screen_size_X);
+#endif /* __DJGPP_MINOR__ < 2 */
   /* Generate traceback, so we could tell whodunit.  */
   signal (SIGINT, SIG_DFL);
   __asm__ __volatile__ ("movb $0x1b,%al;call ___djgpp_hw_exception");
@@ -3520,3 +3653,4 @@ nil means don't delete them until `list-processes' is run.");
 }
 
 #endif /* MSDOS */
+ 

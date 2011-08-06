@@ -32,7 +32,9 @@
  'hebrew-iso-8bit 2 ?8
  "ISO 2022 based 8-bit encoding for Hebrew (MIME:ISO-8859-8)"
  '((ascii t) (hebrew-iso8859-8 t) nil nil
-   nil ascii-eol ascii-cntl nil nil nil nil nil t))
+   nil ascii-eol ascii-cntl nil nil nil nil nil t)
+ '((safe-charsets ascii hebrew-iso8859-8)
+   (mime-charset . iso-8859-8)))
 
 (define-coding-system-alias 'iso-8859-8 'hebrew-iso-8bit)
 
@@ -40,14 +42,15 @@
   "Setup multilingual environment (MULE) for Hebrew.
 But, please note that right-to-left writing is not yet supported."
   (interactive)
-  (setup-8-bit-environment "Hebrew" 'hebrew-iso8859-8 'hebrew-iso-8bit
-			   "hebrew"))
+  (set-language-environment "Hebrew"))
 
 (set-language-info-alist
- "Hebrew" '((setup-function . setup-hebrew-environment)
-	    (describe-function . describe-hebrew-support)
-	    (charset . (hebrew-iso8859-8))
+ "Hebrew" '((charset . (hebrew-iso8859-8))
+	    (coding-priority hebrew-iso-8bit)
 	    (coding-system . (hebrew-iso-8bit))
+	    (nonascii-translation . hebrew-iso8859-8)
+	    (input-method . "hebrew")
+	    (unibyte-display . hebrew-iso-8bit)
 	    (sample-text . "Hebrew	,Hylem(B")
 	    (documentation . "Right-to-left writing is not yet supported.")
 	    ))

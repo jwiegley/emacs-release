@@ -1,5 +1,5 @@
 /* Asynchronous subprocess control for GNU Emacs.
-   Copyright (C) 1985, 86, 87, 88, 93, 94, 95, 1996
+   Copyright (C) 1985, 86, 87, 88, 93, 94, 95, 96, 1998
       Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -106,6 +106,8 @@ Boston, MA 02111-1307, USA.  */
 #include "commands.h"
 #include "frame.h"
 #include "blockinput.h"
+#include "keyboard.h"
+#include "dispextern.h"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
@@ -266,7 +268,7 @@ extern int timers_run;
 /* Maximum number of bytes to send to a pty without an eof.  */
 static int pty_max_bytes;
 
-extern Lisp_Object Vfile_name_coding_system;
+extern Lisp_Object Vfile_name_coding_system, Vdefault_file_name_coding_system;
 
 #ifdef HAVE_PTYS
 /* The file name of the pty opened by allocate_pty.  */
@@ -279,6 +281,7 @@ static char pty_name[24];
 
 Lisp_Object status_convert ();
 
+void
 update_status (p)
      struct Lisp_Process *p;
 {
@@ -391,7 +394,7 @@ int
 allocate_pty ()
 {
   struct stat stb;
-  register c, i;
+  register int c, i;
   int fd;
 
   /* Some systems name their pseudoterminals so that there are gaps in
@@ -512,6 +515,7 @@ make_process (name)
   return val;
 }
 
+void
 remove_process (proc)
      register Lisp_Object proc;
 {
@@ -843,6 +847,45 @@ DEFUN ("set-process-window-size", Fset_process_window_size,
     return Qt;
 }
 
+DEFUN ("set-process-inherit-coding-system-flag",
+  Fset_process_inherit_coding_system_flag,
+  Sset_process_inherit_coding_system_flag, 2, 2, 0,
+  "Determine whether buffer of PROCESS will inherit coding-system.\n\
+If the second argument FLAG is non-nil, then the variable\n\
+`buffer-file-coding-system' of the buffer associated with PROCESS\n\
+will be bound to the value of the coding system used to decode\n\
+the process output.\n\
+\n\
+This is useful when the coding system specified for the process buffer\n\
+leaves either the character code conversion or the end-of-line conversion\n\
+unspecified, or if the coding system used to decode the process output\n\
+is more appropriate for saving the process buffer.\n\
+\n\
+Binding the variable `inherit-process-coding-system' to non-nil before\n\
+starting the process is an alternative way of setting the inherit flag\n\
+for the process which will run.")
+  (process, flag)
+     register Lisp_Object process, flag;
+{
+  CHECK_PROCESS (process, 0);
+  XPROCESS (process)->inherit_coding_system_flag = flag;
+  return flag;
+}
+
+DEFUN ("process-inherit-coding-system-flag",
+  Fprocess_inherit_coding_system_flag, Sprocess_inherit_coding_system_flag,
+  1, 1, 0,
+  "Return the value of inherit-coding-system flag for PROCESS.\n\
+If this flag is t, `buffer-file-coding-system' of the buffer\n\
+associated with PROCESS will inherit the coding system used to decode\n\
+the process output.")
+  (process)
+     register Lisp_Object process;
+{
+  CHECK_PROCESS (process, 0);
+  return XPROCESS (process)->inherit_coding_system_flag;
+}
+
 DEFUN ("process-kill-without-query", Fprocess_kill_without_query,
   Sprocess_kill_without_query, 1, 2, 0,
   "Say no query needed if PROCESS is running when Emacs is exited.\n\
@@ -1033,7 +1076,7 @@ BUFFER is the buffer or (buffer-name) to associate with the process.\n\
  an output stream or filter function to handle the output.\n\
  BUFFER may be also nil, meaning that this process is not associated\n\
  with any buffer.\n\
-Third arg is program file name.  It is searched for as in the shell.\n\
+Third arg is program file name.  It is searched for in PATH.\n\
 Remaining arguments are strings to give program as arguments.")
   (nargs, args)
      int nargs;
@@ -1089,12 +1132,12 @@ Remaining arguments are strings to give program as arguments.")
 #ifdef VMS
   /* Make a one member argv with all args concatenated
      together separated by a blank.  */
-  len = XSTRING (program)->size + 2;
+  len = STRING_BYTES (XSTRING (program)) + 2;
   for (i = 3; i < nargs; i++)
     {
       tem = args[i];
       CHECK_STRING (tem, i);
-      len += XSTRING (tem)->size + 1;	/* count the blank */
+      len += STRING_BYTES (XSTRING (tem)) + 1;	/* count the blank */
     }
   new_argv = (unsigned char *) alloca (len);
   strcpy (new_argv, XSTRING (program)->data);
@@ -1159,74 +1202,66 @@ Remaining arguments are strings to give program as arguments.")
 
   /* Make the process marker point into the process buffer (if any).  */
   if (!NILP (buffer))
-    Fset_marker (XPROCESS (proc)->mark,
-		 make_number (BUF_ZV (XBUFFER (buffer))), buffer);
+    set_marker_both (XPROCESS (proc)->mark, buffer,
+		     BUF_ZV (XBUFFER (buffer)),
+		     BUF_ZV_BYTE (XBUFFER (buffer)));
 
-  if (!NILP (buffer) && NILP (XBUFFER (buffer)->enable_multibyte_characters)
-      || NILP (buffer) && NILP (buffer_defaults.enable_multibyte_characters))
-    {
-      XPROCESS (proc)->decode_coding_system = Qnil;
-      XPROCESS (proc)->encode_coding_system = Qnil;
-    }
-  else
-    {
-      /* Setup coding systems for communicating with the process.  */
-      /* Qt denotes we have not yet called Ffind_operation_coding_system.  */
-      Lisp_Object coding_systems = Qt;
-      Lisp_Object val, *args2;
-      struct gcpro gcpro1;
+  {
+    /* Decide coding systems for communicating with the process.  Here
+       we don't setup the structure coding_system nor pay attention to
+       unibyte mode.  They are done in create_process.  */
 
-      if (!NILP (Vcoding_system_for_read))
-	val = Vcoding_system_for_read;
-      else if (NILP (current_buffer->enable_multibyte_characters))
-	val = Qemacs_mule;
-      else
-	{
-	  args2 = (Lisp_Object *) alloca ((nargs + 1) * sizeof *args2);
-	  args2[0] = Qstart_process;
-	  for (i = 0; i < nargs; i++) args2[i + 1] = args[i];
-	  GCPRO1 (proc);
-	  coding_systems = Ffind_operation_coding_system (nargs + 1, args2);
-	  UNGCPRO;
-	  if (CONSP (coding_systems))
-	    val = XCONS (coding_systems)->car;
-	  else if (CONSP (Vdefault_process_coding_system))
-	    val = XCONS (Vdefault_process_coding_system)->car;
-	  else
-	    val = Qnil;
-	}
-      XPROCESS (proc)->decode_coding_system = val;
+    /* Qt denotes we have not yet called Ffind_operation_coding_system.  */
+    Lisp_Object coding_systems = Qt;
+    Lisp_Object val, *args2;
+    struct gcpro gcpro1;
 
-      if (!NILP (Vcoding_system_for_write))
-	val = Vcoding_system_for_write;
-      else if (NILP (current_buffer->enable_multibyte_characters))
-	val = Qnil;
-      else
-	{
-	  if (EQ (coding_systems, Qt))
-	    {
-	      args2 = (Lisp_Object *) alloca ((nargs + 1) * sizeof args2);
-	      args2[0] = Qstart_process;
-	      for (i = 0; i < nargs; i++) args2[i + 1] = args[i];
-	      GCPRO1 (proc);
-	      coding_systems =
-		Ffind_operation_coding_system (nargs + 1, args2);
-	      UNGCPRO;
-	    }
-	  if (CONSP (coding_systems))
-	    val = XCONS (coding_systems)->cdr;
-	  else if (CONSP (Vdefault_process_coding_system))
-	    val = XCONS (Vdefault_process_coding_system)->cdr;
-	  else
-	    val = Qnil;
-	}
-      XPROCESS (proc)->encode_coding_system = val;
-    }
+    val = Vcoding_system_for_read;
+    if (NILP (val))
+      {
+	args2 = (Lisp_Object *) alloca ((nargs + 1) * sizeof *args2);
+	args2[0] = Qstart_process;
+	for (i = 0; i < nargs; i++) args2[i + 1] = args[i];
+	GCPRO1 (proc);
+	coding_systems = Ffind_operation_coding_system (nargs + 1, args2);
+	UNGCPRO;
+	if (CONSP (coding_systems))
+	  val = XCONS (coding_systems)->car;
+	else if (CONSP (Vdefault_process_coding_system))
+	  val = XCONS (Vdefault_process_coding_system)->car;
+      }
+    XPROCESS (proc)->decode_coding_system = val;
+
+    val = Vcoding_system_for_write;
+    if (NILP (val))
+      {
+	if (EQ (coding_systems, Qt))
+	  {
+	    args2 = (Lisp_Object *) alloca ((nargs + 1) * sizeof args2);
+	    args2[0] = Qstart_process;
+	    for (i = 0; i < nargs; i++) args2[i + 1] = args[i];
+	    GCPRO1 (proc);
+	    coding_systems = Ffind_operation_coding_system (nargs + 1, args2);
+	    UNGCPRO;
+	  }
+	if (CONSP (coding_systems))
+	  val = XCONS (coding_systems)->cdr;
+	else if (CONSP (Vdefault_process_coding_system))
+	  val = XCONS (Vdefault_process_coding_system)->cdr;
+      }
+    XPROCESS (proc)->encode_coding_system = val;
+  }
 
   XPROCESS (proc)->decoding_buf = make_uninit_string (0);
+  XPROCESS (proc)->decoding_carryover = make_number (0);
   XPROCESS (proc)->encoding_buf = make_uninit_string (0);
+  XPROCESS (proc)->encoding_carryover = make_number (0);
 
-  create_process (proc, new_argv, current_dir);
+  XPROCESS (proc)->inherit_coding_system_flag
+    = (NILP (buffer) || !inherit_process_coding_system
+       ? Qnil : Qt);
+
+  create_process (proc, (char **) new_argv, current_dir);
 
   return unbind_to (count, proc);
 }
@@ -1281,6 +1316,7 @@ create_process_sigchld ()
 #endif
 
 #ifndef VMS /* VMS version of this function is in vmsproc.c.  */
+void
 create_process (process, new_argv, current_dir)
      Lisp_Object process;
      char **new_argv;
@@ -1305,6 +1341,7 @@ create_process (process, new_argv, current_dir)
   volatile int forkin, forkout;
   volatile int pty_flag = 0;
   extern char **environ;
+  Lisp_Object buffer = XPROCESS (process)->buffer;
 
   inchannel = outchannel = -1;
 
@@ -1394,10 +1431,52 @@ create_process (process, new_argv, current_dir)
   setup_coding_system (XPROCESS (process)->decode_coding_system,
 		       proc_decode_coding_system[inchannel]);
   if (!proc_encode_coding_system[outchannel])
-      proc_encode_coding_system[outchannel]
-	= (struct coding_system *) xmalloc (sizeof (struct coding_system));
+    proc_encode_coding_system[outchannel]
+      = (struct coding_system *) xmalloc (sizeof (struct coding_system));
   setup_coding_system (XPROCESS (process)->encode_coding_system,
 		       proc_encode_coding_system[outchannel]);
+
+  if (!NILP (buffer) && NILP (XBUFFER (buffer)->enable_multibyte_characters)
+      || (NILP (buffer) && NILP (buffer_defaults.enable_multibyte_characters)))
+    {
+      /* In unibyte mode, character code conversion should not take
+	 place but EOL conversion should.  So, setup raw-text or one
+	 of the subsidiary according to the information just setup.  */
+      if (NILP (Vcoding_system_for_read)
+	  && !NILP (XPROCESS (process)->decode_coding_system))
+	setup_raw_text_coding_system (proc_decode_coding_system[inchannel]);
+      if (NILP (Vcoding_system_for_write)
+	  && !NILP (XPROCESS (process)->encode_coding_system))
+	setup_raw_text_coding_system (proc_encode_coding_system[outchannel]);
+    }
+
+  if (CODING_REQUIRE_ENCODING (proc_encode_coding_system[outchannel]))
+    {
+      /* Here we encode arguments by the coding system used for
+	 sending data to the process.  We don't support using
+	 different coding systems for encoding arguments and for
+	 encoding data sent to the process.  */
+      struct gcpro gcpro1;
+      int i = 1;
+      struct coding_system *coding = proc_encode_coding_system[outchannel];
+
+      coding->mode |= CODING_MODE_LAST_BLOCK;
+      GCPRO1 (process);
+      while (new_argv[i] != 0)
+	{
+	  int len = strlen (new_argv[i]);
+	  int size = encoding_buffer_size (coding, len);
+	  unsigned char *buf = (unsigned char *) alloca (size);
+
+	  encode_coding (coding, (unsigned char *)new_argv[i], buf, len, size);
+	  buf[coding->produced] = 0;
+	  /* We don't have to free new_argv[i] because it points to a
+             Lisp string given as an argument to `start-process'.  */
+	  new_argv[i++] = (char *) buf;
+	}
+      UNGCPRO;
+      coding->mode &= ~CODING_MODE_LAST_BLOCK;
+    }
 
   /* Delay interrupts until we have a chance to store
      the new fork's pid in its process structure */
@@ -1455,8 +1534,7 @@ create_process (process, new_argv, current_dir)
        Protect it from permanent change.  */
     char **save_environ = environ;
 
-    current_dir
-      = Fencode_coding_string (current_dir, Vfile_name_coding_system, Qt);
+    current_dir = ENCODE_FILE (current_dir);
 
 #ifndef WINDOWSNT
     pid = vfork ();
@@ -1910,67 +1988,61 @@ Fourth arg SERVICE is name of the service desired, or an integer\n\
   if (inch > max_process_desc)
     max_process_desc = inch;
 
-  if (!NILP (buffer) && NILP (XBUFFER (buffer)->enable_multibyte_characters)
-      || NILP (buffer) && NILP (buffer_defaults.enable_multibyte_characters))
-    {
-      XPROCESS (proc)->decode_coding_system = Qnil;
-      XPROCESS (proc)->encode_coding_system = Qnil;
-    }
-  else
-    {
-      /* Setup coding systems for communicating with the network stream.  */
-      struct gcpro gcpro1;
-      /* Qt denotes we have not yet called Ffind_operation_coding_system.  */
-      Lisp_Object coding_systems = Qt;
-      Lisp_Object args[5], val;
+  {
+    /* Setup coding systems for communicating with the network stream.  */
+    struct gcpro gcpro1;
+    /* Qt denotes we have not yet called Ffind_operation_coding_system.  */
+    Lisp_Object coding_systems = Qt;
+    Lisp_Object args[5], val;
 
-      if (!NILP (Vcoding_system_for_read))
-	val = Vcoding_system_for_read;
-      else if (NILP (current_buffer->enable_multibyte_characters))
-	/* We dare not decode end-of-line format by setting VAL to
-           Qemacs_mule, because the existing Emacs Lisp libraries
-           assume that they receive bare code including a sequene of
-           CR LF.  */
-	val = Qnil;
-      else
-	{
-	  args[0] = Qopen_network_stream, args[1] = name,
-	    args[2] = buffer, args[3] = host, args[4] = service;
-	  GCPRO1 (proc);
-	  coding_systems = Ffind_operation_coding_system (5, args);
-	  UNGCPRO;
-	  if (CONSP (coding_systems))
-	    val = XCONS (coding_systems)->car;
-	  else if (CONSP (Vdefault_process_coding_system))
-	    val = XCONS (Vdefault_process_coding_system)->car;
-	  else
-	    val = Qnil;
-	}
-      XPROCESS (proc)->decode_coding_system = val;
+    if (!NILP (Vcoding_system_for_read))
+      val = Vcoding_system_for_read;
+    else if (!NILP (buffer) && NILP (XBUFFER (buffer)->enable_multibyte_characters)
+	     || NILP (buffer) && NILP (buffer_defaults.enable_multibyte_characters))
+      /* We dare not decode end-of-line format by setting VAL to
+	 Qraw_text, because the existing Emacs Lisp libraries
+	 assume that they receive bare code including a sequene of
+	 CR LF.  */
+      val = Qnil;
+    else
+      {
+	args[0] = Qopen_network_stream, args[1] = name,
+	  args[2] = buffer, args[3] = host, args[4] = service;
+	GCPRO1 (proc);
+	coding_systems = Ffind_operation_coding_system (5, args);
+	UNGCPRO;
+	if (CONSP (coding_systems))
+	  val = XCONS (coding_systems)->car;
+	else if (CONSP (Vdefault_process_coding_system))
+	  val = XCONS (Vdefault_process_coding_system)->car;
+	else
+	  val = Qnil;
+      }
+    XPROCESS (proc)->decode_coding_system = val;
 
-      if (!NILP (Vcoding_system_for_write))
-	val = Vcoding_system_for_write;
-      else if (NILP (current_buffer->enable_multibyte_characters))
-	val = Qnil;
-      else
-	{
-	  if (EQ (coding_systems, Qt))
-	    {
-	      args[0] = Qopen_network_stream, args[1] = name,
-		args[2] = buffer, args[3] = host, args[4] = service;
-	      GCPRO1 (proc);
-	      coding_systems = Ffind_operation_coding_system (5, args);
-	      UNGCPRO;
-	    }
-	  if (CONSP (coding_systems))
-	    val = XCONS (coding_systems)->cdr;
-	  else if (CONSP (Vdefault_process_coding_system))
-	    val = XCONS (Vdefault_process_coding_system)->cdr;
-	  else
-	    val = Qnil;
-	}
-      XPROCESS (proc)->encode_coding_system = val;
-    }
+    if (!NILP (Vcoding_system_for_write))
+      val = Vcoding_system_for_write;
+    else if (NILP (current_buffer->enable_multibyte_characters))
+      val = Qnil;
+    else
+      {
+	if (EQ (coding_systems, Qt))
+	  {
+	    args[0] = Qopen_network_stream, args[1] = name,
+	      args[2] = buffer, args[3] = host, args[4] = service;
+	    GCPRO1 (proc);
+	    coding_systems = Ffind_operation_coding_system (5, args);
+	    UNGCPRO;
+	  }
+	if (CONSP (coding_systems))
+	  val = XCONS (coding_systems)->cdr;
+	else if (CONSP (Vdefault_process_coding_system))
+	  val = XCONS (Vdefault_process_coding_system)->cdr;
+	else
+	  val = Qnil;
+      }
+    XPROCESS (proc)->encode_coding_system = val;
+  }
 
   if (!proc_decode_coding_system[inch])
     proc_decode_coding_system[inch]
@@ -1984,13 +2056,20 @@ Fourth arg SERVICE is name of the service desired, or an integer\n\
 		       proc_encode_coding_system[outch]);
 
   XPROCESS (proc)->decoding_buf = make_uninit_string (0);
+  XPROCESS (proc)->decoding_carryover = make_number (0);
   XPROCESS (proc)->encoding_buf = make_uninit_string (0);
+  XPROCESS (proc)->encoding_carryover = make_number (0);
+
+  XPROCESS (proc)->inherit_coding_system_flag
+    = (NILP (buffer) || !inherit_process_coding_system
+       ? Qnil : Qt);
 
   UNGCPRO;
   return proc;
 }
 #endif	/* HAVE_SOCKETS */
 
+void
 deactivate_process (proc)
      Lisp_Object proc;
 {
@@ -2040,6 +2119,7 @@ deactivate_process (proc)
    with subprocess.  This is used in a newly-forked subprocess
    to get rid of irrelevant descriptors.  */
 
+void
 close_process_descs ()
 {
 #ifndef WINDOWSNT
@@ -2138,7 +2218,7 @@ Return non-nil iff we received any output before the timeout expired.")
 static int waiting_for_user_input_p;
 
 /* This is here so breakpoints can be put on it.  */
-static
+static void
 wait_reading_process_input_1 ()
 {
 }
@@ -2175,6 +2255,7 @@ wait_reading_process_input_1 ()
      before the timeout elapsed.
    Otherwise, return true iff we received input from any process.  */
 
+int
 wait_reading_process_input (time_limit, microsecs, read_kbd, do_display)
      int time_limit, microsecs;
      Lisp_Object read_kbd;
@@ -2595,9 +2676,13 @@ wait_reading_process_input (time_limit, microsecs, read_kbd, do_display)
 		 Therefore, if we get an error reading and errno =
 		 EIO, just continue, because the child process has
 		 exited and should clean itself up soon (e.g. when we
-		 get a SIGCHLD). */
+		 get a SIGCHLD).
+
+		 However, it has been known to happen that the SIGCHLD
+		 got lost.  So raise the signl again just in case.
+		 It can't hurt.  */
 	      else if (nread == -1 && errno == EIO)
-		;
+		kill (getpid (), SIGCHLD);
 #endif				/* HAVE_PTYS */
 	      /* If we can detect process termination, don't consider the process
 		 gone just because its pipe is closed.  */
@@ -2673,11 +2758,12 @@ read_process_output_error_handler (error)
    The characters read are decoded according to PROC's coding-system
    for decoding.  */
 
+int
 read_process_output (proc, channel)
      Lisp_Object proc;
      register int channel;
 {
-  register int nchars;
+  register int nchars, nbytes;
   char *chars;
 #ifdef VMS
   int chars_allocated = 0;	/* If 1, `chars' should be freed later.  */
@@ -2691,6 +2777,7 @@ read_process_output (proc, channel)
   struct coding_system *coding = proc_decode_coding_system[channel];
   int chars_in_decoding_buf = 0; /* If 1, `chars' points
 				    XSTRING (p->decoding_buf)->data.  */
+  int carryover = XINT (p->decoding_carryover);
 
 #ifdef VMS
   VMS_PROC_STUFF *vs, *get_vms_process_pointer();
@@ -2706,66 +2793,90 @@ read_process_output (proc, channel)
   else
     error ("Could not get VMS process pointer");
   chars = vs->inputBuffer;
-  nchars = clean_vms_buffer (chars, vs->iosb[1]);
-  if (nchars <= 0)
+  nbytes = clean_vms_buffer (chars, vs->iosb[1]);
+  if (nbytes <= 0)
     {
       start_vms_process_read (vs); /* Crank up the next read on the process */
       return 1;			/* Nothing worth printing, say we got 1 */
     }
-  if (coding->carryover_size)
+  if (carryover > 0)
     {
-      /* The data carried over in the previous decoding should be
-         prepended to the new data read to decode all together.  */
-      char *buf = (char *) xmalloc (nchars + coding->carryover_size);
+      /* The data carried over in the previous decoding (which are at
+         the tail of decoding buffer) should be prepended to the new
+         data read to decode all together.  */
+      char *buf = (char *) xmalloc (nbytes + carryover);
 
-      bcopy (coding->carryover, buf, coding->carryover_size);
-      bcopy (chars, buf + coding->carryover_size, nchars);
+      bcopy (XSTRING (p->decoding_buf)->data
+	     + STRING_BYTES (XSTRING (p->decoding_buf)) - carryover,
+	     buf, carryover);
+      bcopy (chars, buf + carryover, nbytes);
       chars = buf;
       chars_allocated = 1;
     }
 #else /* not VMS */
 
-  if (coding->carryover_size)
-    /* The data carried over in the previous decoding should be
-       prepended to the new data read to decode all together.  */
-    bcopy (coding->carryover, buf, coding->carryover_size);
+  if (carryover)
+    /* See the comment above.  */
+    bcopy (XSTRING (p->decoding_buf)->data
+	   + STRING_BYTES (XSTRING (p->decoding_buf)) - carryover,
+	   buf, carryover);
 
   if (proc_buffered_char[channel] < 0)
-    nchars = read (channel, buf + coding->carryover_size,
-		   (sizeof buf) - coding->carryover_size);
+    nbytes = read (channel, buf + carryover, (sizeof buf) - carryover);
   else
     {
-      buf[coding->carryover_size] = proc_buffered_char[channel];
+      buf[carryover] = proc_buffered_char[channel];
       proc_buffered_char[channel] = -1;
-      nchars = read (channel, buf + coding->carryover_size + 1,
-		     (sizeof buf) - coding->carryover_size - 1);
-      if (nchars < 0)
-	nchars = 1;
+      nbytes = read (channel, buf + carryover + 1,
+		     (sizeof buf) - carryover - 1);
+      if (nbytes < 0)
+	nbytes = 1;
       else
-	nchars = nchars + 1;
+	nbytes = nbytes + 1;
     }
   chars = buf;
 #endif /* not VMS */
 
-  /* At this point, NCHARS holds number of characters just received
+  XSETINT (p->decoding_carryover, 0);
+
+  /* At this point, NBYTES holds number of characters just received
      (including the one in proc_buffered_char[channel]).  */
-  if (nchars <= 0) return nchars;
+  if (nbytes <= 0) return nbytes;
 
-  /* Now set NCHARS how many bytes we must decode.  */
-  nchars += coding->carryover_size;
+  /* Now set NBYTES how many bytes we must decode.  */
+  nbytes += carryover;
+  nchars = nbytes;
 
-  if (! CODING_REQUIRE_NO_CONVERSION (coding))
+  if (CODING_MAY_REQUIRE_DECODING (coding))
     {
-      int require = decoding_buffer_size (coding, nchars);
-      int consumed, produced;
+      int require = decoding_buffer_size (coding, nbytes);
+      int result;
       
-      if (XSTRING (p->decoding_buf)->size < require)
+      if (STRING_BYTES (XSTRING (p->decoding_buf)) < require)
 	p->decoding_buf = make_uninit_string (require);
-      produced = decode_coding (coding, chars, XSTRING (p->decoding_buf)->data,
-				nchars, XSTRING (p->decoding_buf)->size,
-				&consumed);
+      result = decode_coding (coding, chars, XSTRING (p->decoding_buf)->data,
+			      nbytes, STRING_BYTES (XSTRING (p->decoding_buf)));
+      carryover = nbytes - coding->consumed;
+      if (carryover > 0)
+	{
+	  /* Copy the carryover bytes to the end of p->decoding_buf, to
+	     be processed on the next read.  Since decoding_buffer_size
+	     asks for an extra amount of space beyond the maximum
+	     expected for the output, there should always be sufficient
+	     space for the carryover (which is by definition a sequence
+	     of bytes that was not long enough to be decoded, and thus
+	     has a bounded length).  */
+	  if (STRING_BYTES (XSTRING (p->decoding_buf))
+	      < coding->produced + carryover)
+	    abort ();
+	  bcopy (chars + coding->consumed,
+		 XSTRING (p->decoding_buf)->data
+		 + STRING_BYTES (XSTRING (p->decoding_buf)) - carryover,
+		 carryover);
+	  XSETINT (p->decoding_carryover, carryover);
+	}
 
-      /* New coding-system might be found by `decode_coding'.  */
+      /* A new coding system might be found by `decode_coding'.  */
       if (!EQ (p->decode_coding_system, coding->symbol))
 	{
 	  p->decode_coding_system = coding->symbol;
@@ -2774,41 +2885,71 @@ read_process_output (proc, channel)
              proc_decode_coding_system[channel] here.  It is done in
              detect_coding called via decode_coding above.  */
 
-	  /* If coding-system for encoding is not yet decided, we set it
-	     as the same as coding-system for decoding.  */
-	  if (NILP (p->encode_coding_system))
+	  /* If a coding system for encoding is not yet decided, we set
+	     it as the same as coding-system for decoding.
+
+	     But, before doing that we must check if
+	     proc_encode_coding_system[p->outfd] surely points to a
+	     valid memory because p->outfd will be changed once EOF is
+	     sent to the process.  */
+	  if (NILP (p->encode_coding_system)
+	      && proc_encode_coding_system[XINT (p->outfd)])
 	    {
 	      p->encode_coding_system = coding->symbol;
 	      setup_coding_system (coding->symbol,
-				   proc_encode_coding_system[p->outfd]);
+				   proc_encode_coding_system[XINT (p->outfd)]);
 	    }
 	}
+
 #ifdef VMS
       /*  Now we don't need the contents of `chars'.  */
       if (chars_allocated)
 	free (chars);
 #endif
-      if (produced == 0)
+      if (coding->produced == 0)
 	return 0;
       chars = (char *) XSTRING (p->decoding_buf)->data;
-      nchars = produced;
+      nbytes = coding->produced;
+      nchars = (coding->fake_multibyte
+		? multibyte_chars_in_text (chars, nbytes)
+		: coding->produced_char);
       chars_in_decoding_buf = 1;
     }
-#ifdef VMS
-  else if (chars_allocated)
+  else
     {
-      /* Although we don't have to decode the received data, we must
-         move it to an area which we don't have to free.  */
-      if (! STRINGP (p->decoding_buf)
-	  || XSTRING (p->decoding_buf)->size < nchars)
-	p->decoding_buf = make_uninit_string (nchars);
-      bcopy (chars, XSTRING (p->decoding_buf)->data, nchars);
-      free (chars);
-      chars = XSTRING (p->decoding_buf)->data;
-      chars_in_decoding_buf = 1;
-    }
+#ifdef VMS
+      if (chars_allocated)
+	{
+	  /* Although we don't have to decode the received data, we
+	     must move it to an area which we don't have to free.  */
+	  if (! STRINGP (p->decoding_buf)
+	      || STRING_BYTES (XSTRING (p->decoding_buf)) < nbytes)
+	    p->decoding_buf = make_uninit_string (nbytes);
+	  bcopy (chars, XSTRING (p->decoding_buf)->data, nbytes);
+	  free (chars);
+	  chars = XSTRING (p->decoding_buf)->data;
+	  chars_in_decoding_buf = 1;
+	}
 #endif
+      nchars = multibyte_chars_in_text (chars, nbytes);
+    }
 
+  Vlast_coding_system_used = coding->symbol;
+
+  /* If the caller required, let the process associated buffer
+     inherit the coding-system used to decode the process output.  */
+  if (! NILP (p->inherit_coding_system_flag)
+      && !NILP (p->buffer) && !NILP (XBUFFER (p->buffer)->name))
+    {
+      struct buffer *prev_buf = current_buffer;
+
+      Fset_buffer (p->buffer);
+      call1 (intern ("after-insert-file-set-buffer-file-coding-system"),
+	     make_number (nbytes));
+      set_buffer_internal (prev_buf);
+    }
+
+  /* Read and dispose of the process output.  */
   outstream = p->filter;
   if (!NILP (outstream))
     {
@@ -2818,6 +2959,7 @@ read_process_output (proc, channel)
       int count = specpdl_ptr - specpdl;
       Lisp_Object odeactivate;
       Lisp_Object obuffer, okeymap;
+      Lisp_Object text;
       int outer_running_asynch_code = running_asynch_code;
 
       /* No need to gcpro these, because all we do with them later
@@ -2838,21 +2980,18 @@ read_process_output (proc, channel)
 	  /* Don't clobber the CURRENT match data, either!  */
 	  tem = Fmatch_data (Qnil, Qnil);
 	  restore_match_data ();
-	  record_unwind_protect (Fstore_match_data, Fmatch_data (Qnil, Qnil));
-	  Fstore_match_data (tem);
+	  record_unwind_protect (Fset_match_data, Fmatch_data (Qnil, Qnil));
+	  Fset_match_data (tem);
 	}
 
       /* For speed, if a search happens within this code,
 	 save the match data in a special nonrecursive fashion.  */
       running_asynch_code = 1;
 
-      /* Read and dispose of the process output.  */
+      text = make_string_from_bytes (chars, nchars, nbytes);
       internal_condition_case_1 (read_process_output_call,
 				 Fcons (outstream,
-					Fcons (proc,
-					       Fcons (make_string (chars,
-								   nchars),
-						      Qnil))),
+					Fcons (proc, Fcons (text, Qnil))),
 				 !NILP (Vdebug_on_error) ? Qnil : Qerror,
 				 read_process_output_error_handler);
 
@@ -2887,16 +3026,21 @@ read_process_output (proc, channel)
     {
       Lisp_Object old_read_only;
       int old_begv, old_zv;
+      int old_begv_byte, old_zv_byte;
       Lisp_Object odeactivate;
-      int before;
+      int before, before_byte;
+      int opoint_byte;
 
       odeactivate = Vdeactivate_mark;
 
       Fset_buffer (p->buffer);
       opoint = PT;
+      opoint_byte = PT_BYTE;
       old_read_only = current_buffer->read_only;
       old_begv = BEGV;
       old_zv = ZV;
+      old_begv_byte = BEGV_BYTE;
+      old_zv_byte = ZV_BYTE;
 
       current_buffer->read_only = Qnil;
 
@@ -2904,34 +3048,57 @@ read_process_output (proc, channel)
 	 at the current end-of-output marker,
 	 thus preserving logical ordering of input and output.  */
       if (XMARKER (p->mark)->buffer)
-	SET_PT (clip_to_bounds (BEGV, marker_position (p->mark), ZV));
+	SET_PT_BOTH (clip_to_bounds (BEGV, marker_position (p->mark), ZV),
+		     clip_to_bounds (BEGV_BYTE, marker_byte_position (p->mark),
+				     ZV_BYTE));
       else
-	SET_PT (ZV);
+	SET_PT_BOTH (ZV, ZV_BYTE);
       before = PT;
+      before_byte = PT_BYTE;
 
       /* If the output marker is outside of the visible region, save
 	 the restriction and widen.  */
       if (! (BEGV <= PT && PT <= ZV))
 	Fwiden ();
 
+      if (NILP (current_buffer->enable_multibyte_characters))
+	nchars = nbytes;
+
       /* Insert before markers in case we are inserting where
 	 the buffer's mark is, and the user's next command is Meta-y.  */
       if (chars_in_decoding_buf)
-	insert_from_string_before_markers (p->decoding_buf, 0, nchars, 0);
+	{
+	  /* Since multibyteness of p->docoding_buf is corrupted, we
+             can't use insert_from_string_before_markers.  */
+	  char *temp_buf;
+
+	  temp_buf = (char *) alloca (nbytes);
+	  bcopy (XSTRING (p->decoding_buf)->data, temp_buf, nbytes);
+	  insert_before_markers (temp_buf, nbytes);
+	}
       else
-	insert_before_markers (chars, nchars);
-      Fset_marker (p->mark, make_number (PT), p->buffer);
+	insert_1_both (chars, nchars, nbytes, 0, 1, 1);
+      set_marker_both (p->mark, p->buffer, PT, PT_BYTE);
 
       update_mode_lines++;
 
       /* Make sure opoint and the old restrictions
 	 float ahead of any new text just as point would.  */
       if (opoint >= before)
-	opoint += PT - before;
+	{
+	  opoint += PT - before;
+	  opoint_byte += PT_BYTE - before_byte;
+	}
       if (old_begv > before)
-	old_begv += PT - before;
+	{
+	  old_begv += PT - before;
+	  old_begv_byte += PT_BYTE - before_byte;
+	}
       if (old_zv >= before)
-	old_zv += PT - before;
+	{
+	  old_zv += PT - before;
+	  old_zv_byte += PT_BYTE - before_byte;
+	}
 
       /* If the restriction isn't what it should be, set it.  */
       if (old_begv != BEGV || old_zv != ZV)
@@ -2941,13 +3108,13 @@ read_process_output (proc, channel)
       Vdeactivate_mark = odeactivate;
 
       current_buffer->read_only = old_read_only;
-      SET_PT (opoint);
+      SET_PT_BOTH (opoint, opoint_byte);
       set_buffer_internal (old);
     }
 #ifdef VMS
   start_vms_process_read (vs);
 #endif
-  return nchars;
+  return nbytes;
 }
 
 DEFUN ("waiting-for-user-input-p", Fwaiting_for_user_input_p, Swaiting_for_user_input_p,
@@ -2983,6 +3150,7 @@ send_process_trap ()
    being encoded.  Should we store them in a buffer to prepend them to
    the data send later?  */
 
+void
 send_process (proc, buf, len, object)
      volatile Lisp_Object proc;
      unsigned char *buf;
@@ -2994,6 +3162,7 @@ send_process (proc, buf, len, object)
   volatile unsigned char *procname = XSTRING (XPROCESS (proc)->name)->data;
   struct coding_system *coding;
   struct gcpro gcpro1;
+  int carryover = XINT (XPROCESS (proc)->encoding_carryover);
 
   GCPRO1 (object);
 
@@ -3010,7 +3179,9 @@ send_process (proc, buf, len, object)
     error ("Output file descriptor of %s is closed", procname);
 
   coding = proc_encode_coding_system[XINT (XPROCESS (proc)->outfd)];
-  if (! CODING_MAY_REQUIRE_NO_CONVERSION (coding))
+  Vlast_coding_system_used = coding->symbol;
+
+  if (CODING_REQUIRE_ENCODING (coding))
     {
       int require = encoding_buffer_size (coding, len);
       int offset, dummy;
@@ -3020,44 +3191,49 @@ send_process (proc, buf, len, object)
          be relocated.  Setting OFFSET to -1 means we don't have to
          care relocation.  */
       offset = (BUFFERP (object)
-		? BUF_PTR_CHAR_POS (XBUFFER (object), buf)
+		? BUF_PTR_BYTE_POS (XBUFFER (object), buf)
 		: (STRINGP (object)
 		   ? offset = buf - XSTRING (object)->data
 		   : -1));
 
-      if (coding->carryover_size > 0)
+      if (carryover > 0)
 	{
-	  temp_buf = (unsigned char *) xmalloc (len + coding->carryover_size);
+	  temp_buf = (unsigned char *) xmalloc (len + carryover);
 
 	  if (offset >= 0)
 	    {
 	      if (BUFFERP (object))
-		buf = BUF_CHAR_ADDRESS (XBUFFER (object), offset);
+		buf = BUF_BYTE_ADDRESS (XBUFFER (object), offset);
 	      else if (STRINGP (object))
 		buf = offset + XSTRING (object)->data;
 	      /* Now we don't have to care relocation.  */
 	      offset = -1;
 	    }
-	  bcopy (coding->carryover, temp_buf, coding->carryover_size);
-	  bcopy (buf, temp_buf + coding->carryover_size, len);
+	  bcopy ((XSTRING (XPROCESS (proc)->encoding_buf)->data
+		  + STRING_BYTES (XSTRING (XPROCESS (proc)->encoding_buf))
+		  - carryover),
+		 temp_buf,
+		 carryover);
+	  bcopy (buf, temp_buf + carryover, len);
 	  buf = temp_buf;
 	}
 
-      if (XSTRING (XPROCESS (proc)->encoding_buf)->size < require)
+      if (STRING_BYTES (XSTRING (XPROCESS (proc)->encoding_buf)) < require)
 	{
 	  XPROCESS (proc)->encoding_buf = make_uninit_string (require);
 
 	  if (offset >= 0)
 	    {
 	      if (BUFFERP (object))
-		buf = BUF_CHAR_ADDRESS (XBUFFER (object), offset);
+		buf = BUF_BYTE_ADDRESS (XBUFFER (object), offset);
 	      else if (STRINGP (object))
 		buf = offset + XSTRING (object)->data;
 	    }
 	}
       object = XPROCESS (proc)->encoding_buf;
-      len = encode_coding (coding, buf, XSTRING (object)->data,
-			   len, XSTRING (object)->size, &dummy);
+      encode_coding (coding, buf, XSTRING (object)->data,
+		     len, STRING_BYTES (XSTRING (object)));
+      len = coding->produced;
       buf = XSTRING (object)->data;
       if (temp_buf)
 	xfree (temp_buf);
@@ -3147,7 +3323,7 @@ send_process (proc, buf, len, object)
 		    /* Running filters might relocate buffers or strings.
 		       Arrange to relocate BUF.  */
 		    if (BUFFERP (object))
-		      offset = BUF_PTR_CHAR_POS (XBUFFER (object), buf);
+		      offset = BUF_PTR_BYTE_POS (XBUFFER (object), buf);
 		    else if (STRINGP (object))
 		      offset = buf - XSTRING (object)->data;
 
@@ -3159,7 +3335,7 @@ send_process (proc, buf, len, object)
 #endif
 
 		    if (BUFFERP (object))
-		      buf = BUF_CHAR_ADDRESS (XBUFFER (object), offset);
+		      buf = BUF_BYTE_ADDRESS (XBUFFER (object), offset);
 		    else if (STRINGP (object))
 		      buf = offset + XSTRING (object)->data;
 
@@ -3210,7 +3386,7 @@ Output from processes can arrive in between bunches.")
      Lisp_Object process, start, end;
 {
   Lisp_Object proc;
-  int start1;
+  int start1, end1;
 
   proc = get_process (process);
   validate_region (&start, &end);
@@ -3218,8 +3394,9 @@ Output from processes can arrive in between bunches.")
   if (XINT (start) < GPT && XINT (end) > GPT)
     move_gap (XINT (start));
 
-  start1 = XINT (start);
-  send_process (proc, POS_ADDR (start1), XINT (end) - XINT (start),
+  start1 = CHAR_TO_BYTE (XINT (start));
+  end1 = CHAR_TO_BYTE (XINT (end));
+  send_process (proc, BYTE_POS_ADDR (start1), end1 - start1,
 		Fcurrent_buffer ());
 
   return Qnil;
@@ -3239,7 +3416,8 @@ Output from processes can arrive in between bunches.")
   Lisp_Object proc;
   CHECK_STRING (string, 1);
   proc = get_process (process);
-  send_process (proc, XSTRING (string)->data, XSTRING (string)->size, string);
+  send_process (proc, XSTRING (string)->data,
+		STRING_BYTES (XSTRING (string)), string);
   return Qnil;
 }
 
@@ -3676,6 +3854,8 @@ text to PROCESS after you call this function.")
     send_process (proc, "\004", 1, Qnil);
   else
     {
+      int old_outfd, new_outfd;
+
 #ifdef HAVE_SHUTDOWN
       /* If this is a network connection, or socketpair is used
 	 for communication with the subprocess, call shutdown to cause EOF.
@@ -3690,7 +3870,19 @@ text to PROCESS after you call this function.")
 #else /* not HAVE_SHUTDOWN */
       close (XINT (XPROCESS (proc)->outfd));
 #endif /* not HAVE_SHUTDOWN */
-      XSETINT (XPROCESS (proc)->outfd, open (NULL_DEVICE, O_WRONLY));
+      new_outfd = open (NULL_DEVICE, O_WRONLY);
+      old_outfd = XINT (XPROCESS (proc)->outfd);
+
+      if (!proc_encode_coding_system[new_outfd])
+	proc_encode_coding_system[new_outfd]
+	  = (struct coding_system *) xmalloc (sizeof (struct coding_system));
+      bcopy (proc_encode_coding_system[old_outfd],
+	     proc_encode_coding_system[new_outfd],
+	     sizeof (struct coding_system));
+      bzero (proc_encode_coding_system[old_outfd],
+	     sizeof (struct coding_system));
+
+      XSETINT (XPROCESS (proc)->outfd, new_outfd);
     }
 #endif /* VMS */
   return process;
@@ -3699,6 +3891,7 @@ text to PROCESS after you call this function.")
 /* Kill all processes associated with `buffer'.
  If `buffer' is nil, kill all processes  */
 
+void
 kill_buffer_processes (buffer)
      Lisp_Object buffer;
 {
@@ -3948,8 +4141,8 @@ exec_sentinel (proc, reason)
       Lisp_Object tem;
       tem = Fmatch_data (Qnil, Qnil);
       restore_match_data ();
-      record_unwind_protect (Fstore_match_data, Fmatch_data (Qnil, Qnil));
-      Fstore_match_data (tem);
+      record_unwind_protect (Fset_match_data, Fmatch_data (Qnil, Qnil));
+      Fset_match_data (tem);
     }
 
   /* For speed, if a search happens within this code,
@@ -3984,6 +4177,7 @@ exec_sentinel (proc, reason)
    (either run the sentinel or output a message).
    This is done while Emacs is waiting for keyboard input.  */
 
+void
 status_notify ()
 {
   register Lisp_Object proc, buffer;
@@ -4054,8 +4248,8 @@ status_notify ()
 	    {
 	      Lisp_Object ro, tem;
 	      struct buffer *old = current_buffer;
-	      int opoint;
-	      int before;
+	      int opoint, opoint_byte;
+	      int before, before_byte;
 
 	      ro = XBUFFER (buffer)->read_only;
 
@@ -4066,15 +4260,17 @@ status_notify ()
 	      Fset_buffer (buffer);
 
 	      opoint = PT;
+	      opoint_byte = PT_BYTE;
 	      /* Insert new output into buffer
 		 at the current end-of-output marker,
 		 thus preserving logical ordering of input and output.  */
 	      if (XMARKER (p->mark)->buffer)
-		SET_PT (marker_position (p->mark));
+		Fgoto_char (p->mark);
 	      else
-		SET_PT (ZV);
+		SET_PT_BOTH (ZV, ZV_BYTE);
 
 	      before = PT;
+	      before_byte = PT_BYTE;
 
 	      tem = current_buffer->read_only;
 	      current_buffer->read_only = Qnil;
@@ -4083,12 +4279,13 @@ status_notify ()
 	      insert_string (" ");
 	      Finsert (1, &msg);
 	      current_buffer->read_only = tem;
-	      Fset_marker (p->mark, make_number (PT), p->buffer);
+	      set_marker_both (p->mark, p->buffer, PT, PT_BYTE);
 
 	      if (opoint >= before)
-		SET_PT (opoint + (PT - before));
+		SET_PT_BOTH (opoint + (PT - before),
+			     opoint_byte + (PT_BYTE - before_byte));
 	      else
-		SET_PT (opoint);
+		SET_PT_BOTH (opoint, opoint_byte);
 
 	      set_buffer_internal (old);
 	    }
@@ -4195,6 +4392,7 @@ keyboard_bit_set (mask)
   return 0;
 }
 
+void
 init_process ()
 {
   register int i;
@@ -4221,8 +4419,14 @@ init_process ()
     }
   bzero (proc_decode_coding_system, sizeof proc_decode_coding_system);
   bzero (proc_encode_coding_system, sizeof proc_encode_coding_system);
+
+  Vdefault_process_coding_system
+    = (NILP (buffer_defaults.enable_multibyte_characters)
+       ? Fcons (Qraw_text, Qnil)
+       : Fcons (Qemacs_mule, Qnil));
 }
 
+void
 syms_of_process ()
 {
   Qprocessp = intern ("processp");
@@ -4282,6 +4486,8 @@ The value takes effect when `start-process' is called.");
   defsubr (&Sset_process_sentinel);
   defsubr (&Sprocess_sentinel);
   defsubr (&Sset_process_window_size);
+  defsubr (&Sset_process_inherit_coding_system_flag);
+  defsubr (&Sprocess_inherit_coding_system_flag);
   defsubr (&Sprocess_kill_without_query);
   defsubr (&Sprocess_contact);
   defsubr (&Slist_processes);
@@ -4314,6 +4520,8 @@ The value takes effect when `start-process' is called.");
 
 #include "lisp.h"
 #include "systime.h"
+#include "charset.h"
+#include "coding.h"
 #include "termopts.h"
 #include "sysselect.h"
 
@@ -4352,6 +4560,7 @@ wait_reading_process_input (time_limit, microsecs, read_kbd, do_display)
      Lisp_Object read_kbd;
      int do_display;
 {
+  register int nfds;
   EMACS_TIME end_time, timeout;
   SELECT_TYPE waitchannels;
   int xerrno;
@@ -4367,27 +4576,17 @@ wait_reading_process_input (time_limit, microsecs, read_kbd, do_display)
   /* What does time_limit really mean?  */
   if (time_limit || microsecs)
     {
-      if (time_limit == -1)
-	/* In fact, it's zero.  */
-	EMACS_SET_SECS_USECS (timeout, 0, 0);
-      else
-	EMACS_SET_SECS_USECS (timeout, time_limit, microsecs);
-
-      /* How far in the future is that?  */
       EMACS_GET_TIME (end_time);
+      EMACS_SET_SECS_USECS (timeout, time_limit, microsecs);
       EMACS_ADD_TIME (end_time, end_time, timeout);
     }
-  else
-    /* It's infinite.  */
-    EMACS_SET_SECS_USECS (timeout, 100000, 0);
 
   /* Turn off periodic alarms (in case they are in use)
      because the select emulator uses alarms.  */
   stop_polling ();
 
-  for (;;)
+  while (1)
     {
-      int nfds;
       int timeout_reduced_for_timers = 0;
 
       /* If calling from keyboard input, do not quit
@@ -4402,12 +4601,24 @@ wait_reading_process_input (time_limit, microsecs, read_kbd, do_display)
 
       /* Compute time from now till when time limit is up */
       /* Exit if already run out */
-      if (time_limit > 0 || microsecs)
+      if (time_limit == -1)
+	{
+	  /* -1 specified for timeout means
+	     gobble output available now
+	     but don't wait at all. */
+
+	  EMACS_SET_SECS_USECS (timeout, 0, 0);
+	}
+      else if (time_limit || microsecs)
 	{
 	  EMACS_GET_TIME (timeout);
 	  EMACS_SUB_TIME (timeout, end_time, timeout);
 	  if (EMACS_TIME_NEG_P (timeout))
 	    break;
+	}
+      else
+	{
+	  EMACS_SET_SECS_USECS (timeout, 100000, 0);
 	}
 
       /* If our caller will not immediately handle keyboard events,
@@ -4429,6 +4640,11 @@ wait_reading_process_input (time_limit, microsecs, read_kbd, do_display)
 		 and that could alter the time delay.  */
 	      goto retry;
 	    }
+
+	  /* If there is unread keyboard input, also return.  */
+	  if (XINT (read_kbd) != 0
+	      && requeued_events_pending_p ())
+	    break;
 
 	  if (! EMACS_TIME_NEG_P (timer_delay) && time_limit != -1)
 	    {
@@ -4514,6 +4730,11 @@ wait_reading_process_input (time_limit, microsecs, read_kbd, do_display)
 	    break;
 	}
 
+      /* If there is unread keyboard input, also return.  */
+      if (XINT (read_kbd) != 0
+	  && requeued_events_pending_p ())
+	break;
+
       /* If wait_for_cell. check for keyboard input
 	 but don't run any timers.
 	 ??? (It seems wrong to me to check for keyboard
@@ -4549,22 +4770,40 @@ DEFUN ("get-buffer-process", Fget_buffer_process, Sget_buffer_process, 1, 1, 0,
   return Qnil;
 }
 
+DEFUN ("process-inherit-coding-system-flag",
+  Fprocess_inherit_coding_system_flag, Sprocess_inherit_coding_system_flag,
+  1, 1, 0,
+  /* Don't confuse make-docfile by having two doc strings for this function.
+     make-docfile does not pay attention to #if, for good reason!  */
+  0)
+  (process)
+     register Lisp_Object process;
+{
+  /* Ignore the argument and return the value of
+     inherit-process-coding-system.  */
+  return inherit_process_coding_system ? Qt : Qnil;
+}
+
 /* Kill all processes associated with `buffer'.
    If `buffer' is nil, kill all processes.
    Since we have no subprocesses, this does nothing.  */
 
+void
 kill_buffer_processes (buffer)
      Lisp_Object buffer;
 {
 }
 
+void
 init_process ()
 {
 }
 
+void
 syms_of_process ()
 {
   defsubr (&Sget_buffer_process);
+  defsubr (&Sprocess_inherit_coding_system_flag);
 }
 
 

@@ -10,6 +10,11 @@
 @end iftex
 @setchapternewpage odd
 
+@dircategory Editors
+@direntry
+* Message: (message).	Mail and news composition mode that goes with Gnus.
+@end direntry
+
 @ifinfo
 
 This file documents Message, the Emacs message composition mode.

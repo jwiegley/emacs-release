@@ -40,16 +40,16 @@ a file name as a string."
 			       sexp)))
   :group 'rmail-output)
 
-;;; There are functions elsewhere in Emacs that use this function; check
-;;; them out before you change the calling method.
+;;; There are functions elsewhere in Emacs that use this function;
+;;; look at them before you change the calling method.
 ;;;###autoload
 (defun rmail-output-to-rmail-file (file-name &optional count)
   "Append the current message to an Rmail file named FILE-NAME.
 If the file does not exist, ask if it should be created.
 If file is being visited, the message is appended to the Emacs
 buffer visiting that file.
-If the file exists and is not an Rmail file, 
-the message is appended in inbox format.
+If the file exists and is not an Rmail file, the message is
+appended in inbox format, the same way `rmail-output' does it.
 
 The default file name comes from `rmail-default-rmail-file',
 which is updated to the name you use in this command.
@@ -68,21 +68,24 @@ starting with the current one.  Deleted messages are skipped and don't count."
 		     (setq answer (eval (cdr (car tail)))))
 		 (setq tail (cdr tail))))
 	     ;; If not suggestions, use same file as last time.
-	     (or answer rmail-default-rmail-file))))
-     (list (setq rmail-default-rmail-file
-		 (let ((read-file
-			(read-file-name
-			 (concat "Output message to Rmail file: (default "
-				 (file-name-nondirectory default-file)
-				 ") ")
-			 (file-name-directory default-file)
-			 default-file)))
-		   (if (file-directory-p read-file)
-		       (expand-file-name (file-name-nondirectory default-file)
-					 read-file)
-		     (expand-file-name
-		      (or read-file default-file)
-		      (file-name-directory default-file)))))
+	     (expand-file-name (or answer rmail-default-rmail-file)))))
+     (let ((read-file
+	    (expand-file-name
+	     (read-file-name
+	      (concat "Output message to Rmail file: (default "
+		      (file-name-nondirectory default-file)
+		      ") ")
+	      (file-name-directory default-file)
+	      default-file)
+	     (file-name-directory default-file))))
+       ;; If the user enters just a directory,
+       ;; use the name within that directory chosen by the default.
+       (setq rmail-default-rmail-file
+	     (if (file-directory-p read-file)
+		 (expand-file-name (file-name-nondirectory default-file)
+				   read-file)
+	       read-file)))
+     (list rmail-default-rmail-file
 	   (prefix-numeric-value current-prefix-arg))))
   (or count (setq count 1))
   (setq file-name
@@ -121,7 +124,10 @@ starting with the current one.  Deleted messages are skipped and don't count."
 		  (let ((buf (find-buffer-visiting file-name))
 			(cur (current-buffer))
 			(beg (1+ (rmail-msgbeg rmail-current-message)))
-			(end (1+ (rmail-msgend rmail-current-message))))
+			(end (1+ (rmail-msgend rmail-current-message)))
+			(coding-system-for-write
+			 (or rmail-file-coding-system
+			     'emacs-mule-unix)))
 		    (if (not buf)
 			;; Output to a file.
 			(if rmail-fields-not-to-output
@@ -163,11 +169,11 @@ starting with the current one.  Deleted messages are skipped and don't count."
 				  (rmail-select-summary
 				    (rmail-update-summary)))
 			      (rmail-show-message msg))
-		;; Output file not in rmail mode => just insert at the end.
-		(narrow-to-region (point-min) (1+ (buffer-size)))
-		(goto-char (point-max))
-		(insert-buffer-substring cur beg end)
-		(rmail-delete-unwanted-fields)))))))
+			  ;; Output file not in rmail mode => just insert at the end.
+			  (narrow-to-region (point-min) (1+ (buffer-size)))
+			  (goto-char (point-max))
+			  (insert-buffer-substring cur beg end)
+			  (rmail-delete-unwanted-fields)))))))
 	      (rmail-set-attribute "filed" t))
 	  (if redelete (rmail-set-attribute "deleted" t))))
       (setq count (1- count))
@@ -200,8 +206,8 @@ starting with the current one.  Deleted messages are skipped and don't count."
 		(delete-region (point)
 			       (progn (forward-line 1) (point)))))))))
 
-;;; There are functions elsewhere in Emacs that use this function; check
-;;; them out before you change the calling method.
+;;; There are functions elsewhere in Emacs that use this function;
+;;; look at them before you change the calling method.
 ;;;###autoload
 (defun rmail-output (file-name &optional count noattribute from-gnus)
   "Append this message to system-inbox-format mail file named FILE-NAME.
@@ -231,7 +237,7 @@ The optional fourth argument FROM-GNUS is set when called from GNUS."
 		 (if (re-search-forward (car (car tail)) nil t)
 		     (setq answer (eval (cdr (car tail)))))
 		 (setq tail (cdr tail))))
-	     ;; If not suggestions, use same file as last time.
+	     ;; If no suggestion, use same file as last time.
 	     (or answer rmail-default-file))))
      (list (setq rmail-default-file
 		 (let ((read-file
@@ -239,13 +245,13 @@ The optional fourth argument FROM-GNUS is set when called from GNUS."
 			 (concat "Output message to Unix mail file: (default "
 				 (file-name-nondirectory default-file)
 				 ") ")
-			 (file-name-directory default-file)
-			 default-file)))
+			 (file-name-directory (expand-file-name default-file))
+			 (expand-file-name default-file))))
 		   (if (file-directory-p read-file)
 		       (expand-file-name (file-name-nondirectory default-file)
 					 read-file)
 		     (expand-file-name
-		      (or read-file default-file)
+		      (or read-file (file-name-nondirectory default-file))
 		      (file-name-directory default-file)))))
 	   (prefix-numeric-value current-prefix-arg))))
   (or count (setq count 1))
@@ -268,18 +274,22 @@ The optional fourth argument FROM-GNUS is set when called from GNUS."
 		    (forward-line 1)
 		    (= (following-char) ?0)))))
 	  header-beginning
-	  mail-from)
+	  mail-from mime-version)
       (while (> count 0)
+	;; Preserve the Mail-From and MIME-Version fields
+	;; even if they have been pruned.
 	(or from-gnus
-	    (setq mail-from
-		  (save-excursion
-		    (save-restriction
-		      (widen)
-		      (goto-char (rmail-msgbeg rmail-current-message))
-		      (setq header-beginning (point))
-		      (search-forward "\n*** EOOH ***\n")
-		      (narrow-to-region header-beginning (point))
-		      (mail-fetch-field "Mail-From")))))
+	    (save-excursion
+	      (save-restriction
+		(widen)
+		(goto-char (rmail-msgbeg rmail-current-message))
+		(setq header-beginning (point))
+		(search-forward "\n*** EOOH ***\n")
+		(narrow-to-region header-beginning (point))
+		(setq mail-from
+		      (mail-fetch-field "Mail-From")
+		      mime-version
+		      (mail-fetch-field "MIME-Version")))))
 	(save-excursion
 	  (set-buffer tembuf)
 	  (erase-buffer)
@@ -295,6 +305,8 @@ The optional fourth argument FROM-GNUS is set when called from GNUS."
 						 (mail-fetch-field "sender")
 						 "unknown"))
 		    " " (current-time-string) "\n"))
+	  (if mime-version
+	      (insert "MIME-Version: " mime-version "\n"))
 	  ;; ``Quote'' "\nFrom " as "\n>From "
 	  ;;  (note that this isn't really quoting, as there is no requirement
 	  ;;   that "\n[>]+From " be quoted in the same transparent way.)
@@ -333,12 +345,18 @@ The optional fourth argument FROM-GNUS is set when called from GNUS."
 FILE-NAME defaults, interactively, from the Subject field of the message."
   (interactive
    (let ((default-file
-	   (mail-fetch-field "Subject")))
-     (list (read-file-name
-	    "Output message body to file: "
-	    (file-name-directory default-file)
-	    default-file
-	    nil default-file))))
+	   (or (mail-fetch-field "Subject")
+	       rmail-default-body-file)))
+     (list (setq rmail-default-body-file
+		 (read-file-name
+		  "Output message body to file: "
+		  (and default-file (file-name-directory default-file))
+		  default-file
+		  nil default-file)))))
+  (setq file-name
+	(expand-file-name file-name
+			  (and rmail-default-body-file
+			       (file-name-directory rmail-default-body-file))))
   (save-excursion
     (goto-char (point-min))
     (search-forward "\n\n")

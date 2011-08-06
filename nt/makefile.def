@@ -142,9 +142,6 @@ CFLAGS          = $(CFLAGS_COMMON) -D_CRTAPI1=_cdecl
 !else
 CFLAGS          = $(CFLAGS_COMMON) -D_CRTAPI1=_cdecl
 !endif
-!ifdef NTGUI
-CFLAGS          = $(CFLAGS) -DHAVE_NTGUI=1
-!endif
 
 !ifdef BUILD_TYPE
 OBJDIR          = obj-$(BUILD_TYPE)
@@ -157,7 +154,7 @@ $(BLD):         $(OBJDIR)
 		-mkdir $(BLD)
 
 CP		= copy
-CP_DIR		= xcopy /f/r/i/e/d
+CP_DIR		= xcopy /f/r/i/e/d/k
 
 !if "$(OS_TYPE)" == "windows95"
 DEL		= deltree /y

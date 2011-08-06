@@ -1,6 +1,38 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
 
 File: emacs,  Node: Variable Index,  Next: Concept Index,  Prev: Command Index,  Up: Top
 
@@ -16,8 +48,11 @@ Variable Index
 * adaptive-fill-function:                Adaptive Fill.
 * adaptive-fill-mode:                    Adaptive Fill.
 * adaptive-fill-regexp:                  Adaptive Fill.
+* ange-ftp-default-user:                 Remote Files.
 * appt-display-diary:                    Appointments.
 * appt-issue-message:                    Appointments.
+* apropos-do-all:                        Apropos.
+* auto-coding-alist:                     Recognize Coding.
 * auto-mode-alist:                       Choosing Modes.
 * auto-save-default:                     Auto Save Control.
 * auto-save-interval:                    Auto Save Control.
@@ -82,9 +117,11 @@ Variable Index
 * comment-line-start:                    Fortran Comments.
 * comment-line-start-skip:               Fortran Comments.
 * comment-multi-line:                    Options for Comments.
+* comment-padding:                       Multi-Line Comments.
 * comment-start:                         Options for Comments.
 * comment-start-skip:                    Options for Comments.
 * compare-ignore-case:                   Comparing Files.
+* compilation-scroll-output:             Compilation.
 * compile-command:                       Compilation.
 * completion-auto-help:                  Completion Options.
 * completion-ignored-extensions:         Completion Options.
@@ -106,9 +143,11 @@ Variable Index
 * default-major-mode:                    Choosing Modes.
 * delete-auto-save-files:                Auto Save Files.
 * delete-old-versions:                   Backup Deletion.
+* desktop-enable:                        Saving Emacs Sessions.
 * desktop-files-not-to-save:             Saving Emacs Sessions.
 * diary-file:                            Format of Diary File.
 * diary-hook:                            Appointments.
+* diary-mail-days:                       Diary Commands.
 * diff-switches:                         Comparing Files.
 * dired-chown-program:                   Operating on Files.
 * dired-copy-preserve-time:              Operating on Files.
@@ -133,6 +172,7 @@ Variable Index
 * enriched-translations:                 Requesting Formatted Text.
 * esc-map:                               Prefix Keymaps.
 * european-calendar-style:               Date Formats.
+* exit-language-environment-hook:        Language Environments.
 * explicit-shell-file-name:              Interactive Shell.
 * fast-lock-cache-directories:           Fast Lock Mode.
 * fast-lock-minimum-size:                Fast Lock Mode.
@@ -149,6 +189,7 @@ Variable Index
 * find-file-run-dired:                   Visiting.
 * find-file-visit-truename:              File Aliases.
 * find-ls-option:                        Dired and Find.
+* find-tag-marker-ring-length:           Find Tag.
 * font-lock-beginning-of-syntax-function: Font Lock.
 * font-lock-mark-block-function:         Font Lock.
 * font-lock-maximum-decoration:          Font Lock.
@@ -188,6 +229,7 @@ Variable Index
 * inverse-video:                         Display Vars.
 * isearch-mode-map:                      Incremental Search.
 * ispell-dictionary:                     Spelling.
+* jdb-mode-hook:                         GUD Customization.
 * kept-new-versions:                     Backup Deletion.
 * kept-old-versions:                     Backup Deletion.
 * kill-buffer-hook:                      Kill Buffer.
@@ -225,7 +267,6 @@ Variable Index
 * mail-archive-file-name:                Mail Headers.
 * mail-default-reply-to:                 Mail Headers.
 * mail-from-style:                       Mail Headers.
-* mail-header-separator:                 Mail Format.
 * mail-mode-hook:                        Mail Mode Misc.
 * mail-personal-alias-file:              Mail Aliases.
 * mail-self-blind:                       Mail Headers.
@@ -239,10 +280,13 @@ Variable Index
 * mark-ring:                             Mark Ring.
 * mark-ring-max:                         Mark Ring.
 * message-log-max:                       Echo Area.
+* midnight-hook:                         Kill Buffer.
+* midnight-mode:                         Kill Buffer.
 * minibuffer-local-completion-map:       Minibuffer Maps.
 * minibuffer-local-map:                  Minibuffer Maps.
 * minibuffer-local-must-match-map:       Minibuffer Maps.
 * minibuffer-local-ns-map:               Minibuffer Maps.
+* minibuffer-scroll-overlap:             Minibuffer Edit.
 * mode-line-inverse-video:               Display Vars.
 * mode-specific-map:                     Prefix Keymaps.
 * mouse-scroll-min-lines:                Mouse Commands.
@@ -260,11 +304,13 @@ Variable Index
 * paragraph-separate:                    Paragraphs.
 * paragraph-start:                       Paragraphs.
 * parens-require-spaces:                 Balanced Editing.
+* pdb-mode-hook:                         GUD Customization.
 * perldb-mode-hook:                      GUD Customization.
 * picture-mode-hook:                     Picture.
 * picture-tab-chars:                     Tabs in Picture.
 * plain-tex-mode-hook:                   TeX Print.
 * print-region-function (MS-DOS):        MS-DOS Printing.
+* printer-name:                          Hardcopy.
 * ps-font-family:                        Postscript Variables.
 * ps-font-info-database:                 Postscript Variables.
 * ps-font-size:                          Postscript Variables.
@@ -278,6 +324,7 @@ Variable Index
 * ps-paper-type:                         Postscript Variables.
 * ps-print-color-p:                      Postscript Variables.
 * ps-print-header:                       Postscript Variables.
+* ps-printer-name:                       Postscript Variables.
 * read-quoted-char-radix:                Inserting Text.
 * require-final-newline:                 Saving.
 * revert-without-query:                  Reverting.
@@ -291,6 +338,8 @@ Variable Index
 * rmail-highlighted-headers:             Rmail Display.
 * rmail-ignored-headers:                 Rmail Display.
 * rmail-mail-new-frame:                  Rmail Reply.
+* rmail-mode-hook:                       Rmail.
+* rmail-movemail-flags:                  Movemail.
 * rmail-output-file-alist:               Rmail Output.
 * rmail-pop-password:                    Movemail.
 * rmail-pop-password-required:           Movemail.
@@ -318,6 +367,7 @@ Variable Index
 * sentence-end-double-space:             Fill Commands.
 * server-temp-file-regexp:               Emacs Server.
 * server-window:                         Emacs Server.
+* set-language-environment-hook:         Language Environments.
 * shell-cd-regexp:                       Interactive Shell.
 * shell-command-execonly:                Shell Options.
 * shell-command-regexp:                  Shell Mode.
@@ -360,17 +410,22 @@ Variable Index
 * truncate-partial-width-windows:        Split Window.
 * undo-limit:                            Undo.
 * undo-strong-limit:                     Undo.
+* unibyte-display-via-language-environment: Single-Byte European Support.
 * user-mail-address:                     Init Examples.
 * vc-command-messages:                   VC Command Execution.
 * vc-comment-alist:                      Version Headers.
 * vc-consult-headers:                    VC Status Retrieval.
 * vc-default-back-end:                   Registering.
+* vc-default-init-version:               Registering.
+* vc-directory-exclusion-list:           VC Dired Mode.
+* vc-dired-recurse:                      VC Dired Mode.
+* vc-dired-terse-display:                VC Dired Mode.
 * vc-follow-symlinks:                    VC Workfile Handling.
-* vc-handle-cvs:                         CVS and VC.
+* vc-handle-cvs:                         Backend Options.
 * vc-header-alist:                       Version Headers.
 * vc-initial-comment:                    Registering.
 * vc-keep-workfiles:                     VC Workfile Handling.
-* vc-log-mode-hook:                      Log Entries.
+* vc-log-mode-hook:                      Log Buffer.
 * vc-make-backup-files:                  VC Workfile Handling.
 * vc-mistrust-permissions:               VC Status Retrieval.
 * vc-path:                               VC Command Execution.
@@ -379,6 +434,7 @@ Variable Index
 * version-control:                       Backup Names.
 * visible-bell:                          Display Vars.
 * w32-pass-alt-to-system:                Windows System Menu.
+* which-func-modes:                      Which Function.
 * window-min-height:                     Change Window.
 * window-min-width:                      Change Window.
 * x-cut-buffer-max:                      Mouse Commands.

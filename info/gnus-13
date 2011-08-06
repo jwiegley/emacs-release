@@ -1,6 +1,11 @@
 This is Info file ../info/gnus, produced by Makeinfo version 1.68 from
 the input file gnus.texi.
 
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Gnus: (gnus).		The news reader Gnus.
+END-INFO-DIR-ENTRY
+
    This file documents Gnus, the GNU Emacs newsreader.
 
    Copyright (C) 1995,96 Free Software Foundation, Inc.

@@ -1,6 +1,5 @@
 ;;; etags.el --- etags facility for Emacs
-
-;; Copyright (C) 1985, 1986, 1988, 1989, 1992, 1993, 1994, 1995
+;; Copyright (C) 1985, 1986, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1998
 ;;	Free Software Foundation, Inc.
 
 ;; Author: Roland McGrath <roland@gnu.ai.mit.edu>
@@ -25,6 +24,8 @@
 
 ;;; Code:
 
+(require 'ring)
+
 ;;;###autoload
 (defvar tags-file-name nil
   "*File name of tags table.
@@ -34,21 +35,35 @@ Use the `etags' program to make a tags table file.")
 ;; Make M-x set-variable tags-file-name like M-x visit-tags-table.
 ;;;###autoload (put 'tags-file-name 'variable-interactive "fVisit tags table: ")
 
+(defgroup etags nil "Tags tables"
+  :group 'tools)
+
 ;;;###autoload
 ;; Use `visit-tags-table-buffer' to cycle through tags tables in this list.
-(defvar tags-table-list nil
+(defcustom tags-table-list nil
   "*List of file names of tags tables to search.
 An element that is a directory means the file \"TAGS\" in that directory.
 To switch to a new list of tags tables, setting this variable is sufficient.
 If you set this variable, do not also set `tags-file-name'.
-Use the `etags' program to make a tags table file.")
+Use the `etags' program to make a tags table file."
+  :group 'etags
+  :type '(repeat file))
 
 ;;;###autoload
-(defvar tags-add-tables 'ask-user
+(defcustom tags-add-tables 'ask-user
   "*Control whether to add a new tags table to the current list.
 t means do; nil means don't (always start a new list).
 Any other value means ask the user whether to add a new tags table
-to the current list (as opposed to starting a new list).")
+to the current list (as opposed to starting a new list)."
+  :group 'etags
+  :type '(choice (const :tag "Do" t)
+		 (const :tag "Don't" nil)
+		 (other :tag "Ask" ask-user)))
+
+(defcustom tags-revert-without-query nil
+  "*Non-nil means reread a TAGS table without querying, if it has changed."
+  :group 'etags
+  :type 'boolean)
 
 (defvar tags-table-computed-list nil
   "List of tags tables to search, computed from `tags-table-list'.
@@ -76,25 +91,38 @@ Use `visit-tags-table-buffer' to cycle through tags tables in this list.")
 Each element is a list of strings which are file names.")
 
 ;;;###autoload
-(defvar find-tag-hook nil
+(defcustom find-tag-hook nil
   "*Hook to be run by \\[find-tag] after finding a tag.  See `run-hooks'.
 The value in the buffer in which \\[find-tag] is done is used,
-not the value in the buffer \\[find-tag] goes to.")
+not the value in the buffer \\[find-tag] goes to."
+  :group 'etags
+  :type 'hook)
 
 ;;;###autoload
-(defvar find-tag-default-function nil
+(defcustom find-tag-default-function nil
   "*A function of no arguments used by \\[find-tag] to pick a default tag.
 If nil, and the symbol that is the value of `major-mode'
 has a `find-tag-default-function' property (see `put'), that is used.
-Otherwise, `find-tag-default' is used.")
+Otherwise, `find-tag-default' is used."
+  :group 'etags
+  :type 'function)
+
+(defcustom find-tag-marker-ring-length 16
+  "*Length of marker rings `find-tag-marker-ring' and `tags-location-ring'."
+  :group 'etags
+  :type 'integer
+  :version "20.3")
+
+(defvar find-tag-marker-ring (make-ring find-tag-marker-ring-length)
+  "Ring of markers which are locations from which \\[find-tag] was invoked.")
 
 (defvar default-tags-table-function nil
   "If non-nil, a function to choose a default tags file for a buffer.
 This function receives no arguments and should return the default
 tags table file to use for the current buffer.")
 
-(defvar tags-location-stack nil
-  "List of markers which are locations visited by \\[find-tag].
+(defvar tags-location-ring (make-ring find-tag-marker-ring-length)
+  "Ring of markers which are locations visited by \\[find-tag].
 Pop back to the last location with \\[negative-argument] \\[find-tag].")
 
 ;; Tags table state.
@@ -117,8 +145,8 @@ nil means it has not yet been computed; use `tags-table-files' to do so.")
 
 (defvar tags-table-format-hooks '(etags-recognize-tags-table
 				  recognize-empty-tags-table)
-  "List of functions to be called in a tags table buffer to identify
-the type of tags table.  The functions are called in order, with no arguments,
+  "List of functions to be called in a tags table buffer to identify the type of tags table.  
+The functions are called in order, with no arguments,
 until one returns non-nil.  The function should make buffer-local bindings
 of the format-parsing tags function variables if successful.")
 
@@ -162,6 +190,8 @@ One argument, the tag info returned by `snarf-tag-function'.")
   (set (make-local-variable 'tags-table-files) nil)
   (set (make-local-variable 'tags-completion-table) nil)
   (set (make-local-variable 'tags-included-tables) nil)
+  (setq find-tag-marker-ring (make-ring find-tag-marker-ring-length))
+  (setq tags-location-ring (make-ring find-tag-marker-ring-length))
   ;; Value is t if we have found a valid tags table buffer.
   (let ((hooks tags-table-format-hooks))
     (while (and hooks
@@ -323,6 +353,7 @@ Returns non-nil iff it is a valid table."
 				 (setq found t))
 			     (setq tail (cdr tail)))
 			   found)
+			 tags-revert-without-query
 			 (yes-or-no-p
 			  (format "Tags file %s has changed, read new contents? "
 				  file)))))
@@ -580,11 +611,19 @@ Returns t if it visits a tags table, or nil if there are no more in the list."
 	(error "File %s is not a valid tags table" local-tags-file-name)))))
 
 (defun tags-reset-tags-tables ()
-  "Reset tags state to cancel effect of any previous \\[visit-tags-table]
-or \\[find-tag]."
+  "Reset tags state to cancel effect of any previous \\[visit-tags-table] or \\[find-tag]."
   (interactive)
   (setq tags-file-name nil
-	tags-location-stack nil
+	tags-location-ring (progn
+			     (mapcar (lambda (m)
+				       (set-marker m nil))
+				     tags-location-ring)
+			     (make-ring find-tag-marker-ring-length))
+	find-tag-marker-ring (progn
+			       (mapcar (lambda (m)
+					 (set-marker m nil))
+				       find-tag-marker-ring)
+			       (make-ring find-tag-marker-ring-length))
 	tags-table-list nil
 	tags-table-computed-list nil
 	tags-table-computed-list-for nil
@@ -719,6 +758,10 @@ or just \\[negative-argument]), pop back to the previous tag gone to.
 
 If third arg REGEXP-P is non-nil, treat TAGNAME as a regexp.
 
+A marker representing the point when this command is onvoked is pushed
+onto a ring and may be popped back to with \\[pop-tag-mark].
+Contrast this with the ring of marks gone to by the command.
+
 See documentation of variable `tags-file-name'."
   (interactive (find-tag-interactive "Find tag: "))
 
@@ -728,19 +771,20 @@ See documentation of variable `tags-file-name'."
   (let ((local-find-tag-hook find-tag-hook))
     (if (eq '- next-p)
 	;; Pop back to a previous location.
-	(if (null tags-location-stack)
+	(if (ring-empty-p tags-location-ring)
 	    (error "No previous tag locations")
-	  (let ((marker (car tags-location-stack)))
-	    ;; Pop the stack.
-	    (setq tags-location-stack (cdr tags-location-stack))
+	  (let ((marker (ring-remove tags-location-ring 0)))
 	    (prog1
 		;; Move to the saved location.
-		(set-buffer (marker-buffer marker))
+		(set-buffer (or (marker-buffer marker)
+                                (error "The marked buffer has been deleted")))
 	      (goto-char (marker-position marker))
 	      ;; Kill that marker so it doesn't slow down editing.
 	      (set-marker marker nil nil)
 	      ;; Run the user's hook.  Do we really want to do this for pop?
 	      (run-hooks 'local-find-tag-hook))))
+      ;; Record whence we came.
+      (ring-insert find-tag-marker-ring (point-marker))
       (if next-p
 	  ;; Find the same table we last used.
 	  (visit-tags-table-buffer 'same)
@@ -768,8 +812,7 @@ See documentation of variable `tags-file-name'."
 	    (not next-p)))
 	  (set-marker marker (point))
 	  (run-hooks 'local-find-tag-hook)
-	  (setq tags-location-stack
-		(cons marker tags-location-stack))
+	  (ring-insert tags-location-ring marker)
 	  (current-buffer))))))
 
 ;;;###autoload
@@ -783,6 +826,12 @@ another tag that matches the last tagname or regexp used.  When there are
 multiple matches for a tag, more exact matches are found first.  If NEXT-P
 is the atom `-' (interactively, with prefix arg that is a negative number
 or just \\[negative-argument]), pop back to the previous tag gone to.
+
+If third arg REGEXP-P is non-nil, treat TAGNAME as a regexp.
+
+A marker representing the point when this command is onvoked is pushed
+onto a ring and may be popped back to with \\[pop-tag-mark].
+Contrast this with the ring of marks gone to by the command.
 
 See documentation of variable `tags-file-name'."
   (interactive (find-tag-interactive "Find tag: "))
@@ -801,6 +850,12 @@ another tag that matches the last tagname or regexp used.  When there are
 multiple matches for a tag, more exact matches are found first.  If NEXT-P
 is negative (interactively, with prefix arg that is a negative number or
 just \\[negative-argument]), pop back to the previous tag gone to.
+
+If third arg REGEXP-P is non-nil, treat TAGNAME as a regexp.
+
+A marker representing the point when this command is onvoked is pushed
+onto a ring and may be popped back to with \\[pop-tag-mark].
+Contrast this with the ring of marks gone to by the command.
 
 See documentation of variable `tags-file-name'."
   (interactive (find-tag-interactive "Find tag other window: "))
@@ -837,6 +892,12 @@ multiple matches for a tag, more exact matches are found first.  If NEXT-P
 is negative (interactively, with prefix arg that is a negative number or
 just \\[negative-argument]), pop back to the previous tag gone to.
 
+If third arg REGEXP-P is non-nil, treat TAGNAME as a regexp.
+
+A marker representing the point when this command is onvoked is pushed
+onto a ring and may be popped back to with \\[pop-tag-mark].
+Contrast this with the ring of marks gone to by the command.
+
 See documentation of variable `tags-file-name'."
   (interactive (find-tag-interactive "Find tag other frame: "))
   (let ((pop-up-frames t))
@@ -856,12 +917,34 @@ just \\[negative-argument]), pop back to the previous tag gone to.
 
 If third arg OTHER-WINDOW is non-nil, select the buffer in another window.
 
+A marker representing the point when this command is onvoked is pushed
+onto a ring and may be popped back to with \\[pop-tag-mark].
+Contrast this with the ring of marks gone to by the command.
+
 See documentation of variable `tags-file-name'."
   (interactive (find-tag-interactive "Find tag regexp: " t))
   ;; We go through find-tag-other-window to do all the display hair there.
   (funcall (if other-window 'find-tag-other-window 'find-tag)
 	   regexp next-p t))
 ;;;###autoload (define-key esc-map [?\C-.] 'find-tag-regexp)
+
+;;;###autoload (define-key esc-map "*" 'pop-tag-mark)
+
+;;;###autoload
+(defun pop-tag-mark ()
+  "Pop back to where \\[find-tag] was last invoked.
+
+This is distinct from invoking \\[find-tag] with a negative argument
+since that pops a stack of markers at which tags were found, not from
+where they were found."
+  (interactive)
+  (if (ring-empty-p find-tag-marker-ring)
+      (error "No previous locations for find-tag invocation"))
+  (let ((marker (ring-remove find-tag-marker-ring 0)))
+    (switch-to-buffer (or (marker-buffer marker)
+                          (error "The marked buffer has been deleted")))
+    (goto-char (marker-position marker))
+    (set-marker marker nil nil)))
 
 ;; Internal tag finding function.
 
@@ -1568,9 +1651,7 @@ see the doc of that variable if you want to add names to the list."
 (defun select-tags-table-quit ()
   "Kill the buffer and delete the selected window."
   (interactive)
-  (kill-buffer (current-buffer))
-  (or (one-window-p)
-      (delete-window)))
+  (quit-window t (selected-window)))
 
 ;;; Note, there is another definition of this function in bindings.el.
 ;;;###autoload

@@ -63,24 +63,24 @@
 ;;============================================================================
 ;; Comint Mode Commands: (common to shell and all comint-derived modes)
 ;;
-;; m-p	    comint-previous-input    	    Cycle backwards in input history
-;; m-n	    comint-next-input  	    	    Cycle forwards
+;; m-p	   comint-previous-input    	   Cycle backwards in input history
+;; m-n	   comint-next-input  	    	   Cycle forwards
 ;; m-r     comint-previous-matching-input  Previous input matching a regexp
 ;; m-s     comint-next-matching-input      Next input that matches
-;; m-c-l   comint-show-output		    Show last batch of process output
+;; m-c-l   comint-show-output		   Show last batch of process output
 ;; return  comint-send-input
-;; c-d	    comint-delchar-or-maybe-eof	    Delete char unless at end of buff.
+;; c-d	   comint-delchar-or-maybe-eof	   Delete char unless at end of buff.
 ;; c-c c-a comint-bol                      Beginning of line; skip prompt
-;; c-c c-u comint-kill-input	    	    ^u
-;; c-c c-w backward-kill-word    	    ^w
-;; c-c c-c comint-interrupt-subjob 	    ^c
-;; c-c c-z comint-stop-subjob	    	    ^z
-;; c-c c-\ comint-quit-subjob	    	    ^\
-;; c-c c-o comint-kill-output		    Delete last batch of process output
-;; c-c c-r comint-show-output		    Show last batch of process output
+;; c-c c-u comint-kill-input	    	   ^u
+;; c-c c-w backward-kill-word    	   ^w
+;; c-c c-c comint-interrupt-subjob 	   ^c
+;; c-c c-z comint-stop-subjob	    	   ^z
+;; c-c c-\ comint-quit-subjob	    	   ^\
+;; c-c c-o comint-kill-output		   Delete last batch of process output
+;; c-c c-r comint-show-output		   Show last batch of process output
 ;; c-c c-h comint-dynamic-list-input-ring  List input history
 ;;         send-invisible                  Read line w/o echo & send to proc
-;;         comint-continue-subjob	    Useful if you accidentally suspend
+;;         comint-continue-subjob	   Useful if you accidentally suspend
 ;;					        top-level job
 ;; comint-mode-hook is the comint mode hook.
 
@@ -91,8 +91,8 @@
 ;;					List completions in help buffer
 ;; m-c-f   shell-forward-command	Forward a shell command
 ;; m-c-b   shell-backward-command	Backward a shell command
-;; 	    dirs			Resync the buffer's dir stack
-;; 	    dirtrack-toggle		Turn dir tracking on/off
+;; 	   dirs				Resync the buffer's dir stack
+;; 	   dirtrack-mode		Turn dir tracking on/off
 ;;         comint-strip-ctrl-m		Remove trailing ^Ms from output
 ;;
 ;; The shell mode hook is shell-mode-hook
@@ -152,7 +152,7 @@ This is a fine thing to set in your `.emacs' file.")
 
 (defvar shell-file-name-chars
   (if (memq system-type '(ms-dos windows-nt))
-      "~/A-Za-z0-9_^$!#%&{}@`'.()-"
+      "~/A-Za-z0-9_^$!#%&{}@`'.,:()-"
     "~/A-Za-z0-9+@:_.$#%,={}-")
   "String of characters valid in a file name.
 This variable is used to initialize `comint-file-name-chars' in the
@@ -342,7 +342,7 @@ While directory tracking is enabled, the shell's working directory is displayed
 by \\[list-buffers] or \\[mouse-buffer-menu] in the `File' field.
 \\[dirs] queries the shell and resyncs Emacs' idea of what the current 
     directory stack is.
-\\[dirtrack-toggle] turns directory tracking on and off.
+\\[dirtrack-mode] turns directory tracking on and off.
 
 \\{shell-mode-map}
 Customization: Entry to this mode runs the hooks on `comint-mode-hook' and
@@ -513,7 +513,7 @@ This function is called on each input passed to the shell.
 It watches for cd, pushd and popd commands and sets the buffer's
 default directory to track these commands.
 
-You may toggle this tracking on and off with M-x dirtrack-toggle.
+You may toggle this tracking on and off with M-x dirtrack-mode.
 If emacs gets confused, you can resync with the shell with M-x dirs.
 
 See variables `shell-cd-regexp', `shell-chdrive-regexp', `shell-pushd-regexp',
@@ -638,7 +638,7 @@ Environment variables are expanded, see function `substitute-in-file-name'."
        (string-to-int str)))
 
 
-(defun shell-dirtrack-toggle ()
+(defun shell-dirtrack-mode ()
   "Turn directory tracking on and off in a shell buffer."
   (interactive)
   (if (setq shell-dirtrackp (not shell-dirtrackp))
@@ -647,7 +647,9 @@ Environment variables are expanded, see function `substitute-in-file-name'."
   (message "Directory tracking %s" (if shell-dirtrackp "ON" "OFF")))
 
 ;;; For your typing convenience:
-(defalias 'dirtrack-toggle 'shell-dirtrack-toggle)
+(defalias 'shell-dirtrack-toggle 'shell-dirtrack-mode)
+(defalias 'dirtrack-toggle 'shell-dirtrack-mode)
+(defalias 'dirtrack-mode 'shell-dirtrack-mode)
 
 (defun shell-cd (dir)
   "Do normal `cd' to DIR, and set `list-buffers-directory'."
@@ -756,7 +758,7 @@ command again."
   "Copy the environment variable VARIABLE from the subshell to Emacs.
 This command reads the value of the specified environment variable
 in the shell, and sets the same environment variable in Emacs
-\(what `getenv' in Emacvs would return) to that value.
+\(what `getenv' in Emacs would return) to that value.
 That value will affect any new subprocesses that you subsequently start
 from Emacs."
   (interactive (list (read-envvar-name "\

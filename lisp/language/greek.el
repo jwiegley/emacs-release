@@ -31,22 +31,25 @@
 (make-coding-system
  'greek-iso-8bit 2 ?7
  "ISO 2022 based 8-bit encoding for Greek (MIME:ISO-8859-7)"
- '((ascii t) (greek-iso8859-7 t) nil nil
-   nil ascii-eol ascii-cntl nil nil nil nil))
+ '(ascii greek-iso8859-7 nil nil
+   nil nil nil nil nil nil nil)
+ '((safe-charsets ascii greek-iso8859-7)
+   (mime-charset . iso-8859-7)))
 
 (define-coding-system-alias 'iso-8859-7 'greek-iso-8bit)
 
 (defun setup-greek-environment ()
   "Setup multilingual environment (MULE) for Greek."
   (interactive)
-  (setup-8-bit-environment "Greek" 'greek-iso8859-7 'greek-iso-8bit
-			   "greek"))
+  (set-language-environment "Greek"))
 
 (set-language-info-alist
- "Greek" '((setup-function . setup-greek-environment)
-	   (charset . (greek-iso8859-7))
+ "Greek" '((charset . (greek-iso8859-7))
 	   (coding-system . (greek-iso-8bit))
-	   (sample-text . "Greek (,FGkk]mija(B)	,FCei\(B ,Fsar(B")
+	   (coding-priority greek-iso-8bit)
+	   (nonascii-translation . greek-iso8859-7)
+	   (input-method . "greek")
+	   (unibyte-display . greek-iso-8bit)
 	   (documentation . t)))
 
 ;;; greek.el ends here

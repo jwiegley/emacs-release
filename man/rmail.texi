@@ -6,12 +6,17 @@
 @cindex Rmail
 @cindex reading mail
 @findex rmail
+@findex rmail-mode
+@vindex rmail-mode-hook
 
   Rmail is an Emacs subsystem for reading and disposing of mail that you
 receive.  Rmail stores mail messages in files called Rmail files.
 Reading the message in an Rmail file is done in a special major mode,
 Rmail mode, which redefines most letters to run commands for managing
-mail.
+mail.  The command @code{rmail-mode} is used to switch into Rmail mode,
+and it runs the hook @code{rmail-mode-hook} as usual, but don't run this
+command by hand; it can't do a reasonable job unless unless the buffer
+is visiting a proper Rmail file.
 
 @menu
 * Basic: Rmail Basics.       Basic concepts of Rmail, and simple use.
@@ -433,6 +438,11 @@ specified file.  This file may be an Rmail file or it may be in system
 inbox format; the output commands ascertain the file's format and write
 the copied message in that format.
 
+  When copying a message to a file in Unix mail file format, these
+commands include whichever header fields are currently visible.  Use the
+@kbd{t} command first, if you wish, to specify which headers to show
+(and copy).
+
   The @kbd{o} and @kbd{C-o} commands differ in two ways: each has its
 own separate default file name, and each specifies a choice of format to
 use when the file does not already exist.  The @kbd{o} command uses
@@ -675,7 +685,7 @@ headers and then send it.  The variable
 @code{rmail-retry-ignored-headers}, in the same format as
 @code{rmail-ignored-headers} (@pxref{Rmail Display}), controls which
 headers are stripped from the failed message when retrying it; it
-defaults to nil.
+defaults to @code{nil}.
 
 @kindex f @r{(Rmail)}
 @findex rmail-forward
@@ -770,7 +780,7 @@ automatically update the summary.
 Summarize all messages (@code{rmail-summary}).
 @item l @var{labels} @key{RET}
 @itemx C-M-l @var{labels} @key{RET}
-Summarize message that have one or more of the specified labels
+Summarize messages that have one or more of the specified labels
 (@code{rmail-summary-by-labels}).
 @item C-M-r @var{rcpts} @key{RET}
 Summarize messages that have one or more of the specified recipients
@@ -872,11 +882,11 @@ Rmail buffer.  If the variable @code{rmail-redisplay-summary} is
 non-@code{nil}, these actions also bring the summary buffer back onto
 the screen.
 
-@kindex w @r{(Rmail summary)}
+@kindex Q @r{(Rmail summary)}
 @findex rmail-summary-wipe
 @kindex q @r{(Rmail summary)}
 @findex rmail-summary-quit
-  When you are finished using the summary, type @kbd{w}
+  When you are finished using the summary, type @kbd{Q}
 (@code{rmail-summary-wipe}) to delete the summary buffer's window.  You
 can also exit Rmail while in the summary: @kbd{q}
 (@code{rmail-summary-quit}) deletes the summary window, then exits from
@@ -1008,7 +1018,10 @@ editing that you have done, by typing @kbd{C-c C-]}.
 @vindex rmail-edit-mode-hook
   Entering Rmail Edit mode runs the hook @code{text-mode-hook}; then it
 runs the hook @code{rmail-edit-mode-hook} (@pxref{Hooks}).  It adds the
-attribute @samp{edited} to the message.
+attribute @samp{edited} to the message.  It also displays the full
+headers of the message, so that you can edit the headers as well as the
+body of the message, and your changes in the the headers will be
+permanent.
 
 @node Rmail Digest
 @section Digest Messages
@@ -1111,3 +1124,19 @@ variable specifies the machine to look for the server on.
 @code{rmail-pop-password} is non-@code{nil}, it specifies the password
 to use for POP.  Alternatively, if @code{rmail-pop-password-required} is
 non-@code{nil}, then Rmail asks you for the password to use.
+
+@vindex rmail-movemail-flags
+  If you need to pass additional command-line flags to @code{movemail},
+set the variable @code{rmail-movemail-flags} a list of the flags you
+wish to use.  Do not use this variable to pass the @samp{-p} flag to
+preserve your inbox contents; use @code{rmail-preserve-inbox} instead.
+
+@cindex Kerberos POP authentication
+@cindex GSS-API POP authentication
+  The @code{movemail} program installed at your site may support
+Kerberos and/or GSS-API authentication.  If only Kerberos or GSS-API is
+supported, it is used by default whenever you attempt to retrieve
+POP mail when @code{rmail-pop-password} and
+@code{rmail-pop-password-required} are unset.  If both are supported,
+then Kerberos is used by default; to use GSS-API instead, set
+@code{rmail-movemail-flags} to pass the flag @samp{-g} to @code{movemail}.

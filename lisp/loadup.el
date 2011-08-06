@@ -33,36 +33,43 @@
 ;;; We don't want to have any undo records in the dumped Emacs.
 (buffer-disable-undo "*scratch*")
 
+(load "byte-run")
 (load "subr")
 
 ;; We specify .el in case someone compiled version.el by mistake.
 (load "version.el")
 
-(load "byte-run")
 (load "map-ynp")
 (load "widget")
 (load "custom")
 (load "cus-start")
 (load "international/mule")
 (load "international/mule-conf.el") ;Don't get confused if someone compiled this by mistake.
+(load "format")
 (load "bindings")
 (setq load-source-file-function 'load-with-code-conversion)
 (load "simple")
 (load "help")
 (load "files")
-(load "format")
 ;; Any Emacs Lisp source file (*.el) loaded here after can contain
 ;; multilingual text.
 (load "international/mule-cmds")
 (load "case-table")
 (load "international/characters")
+
+(message "Lists of integers (garbage collection statistics) are normal output")
+(message "while building Emacs; they do not indicate a problem.")
+(message "%s" (garbage-collect))
+(load "loaddefs.el")  ;Don't get confused if someone compiled this by mistake.
+(message "%s" (garbage-collect))
+
 (let ((set-case-syntax-set-multibyte t))
   (load "international/latin-1")
   (load "international/latin-2")
   (load "international/latin-3")
   (load "international/latin-4")
   (load "international/latin-5"))
-;; Load langauge specific files.
+;; Load language-specific files.
 (load "language/chinese")
 (load "language/cyrillic")
 (load "language/indian")
@@ -70,6 +77,9 @@
 (load "language/english")
 (load "language/ethiopic")
 (load "language/european")
+(load "language/czech")
+(load "language/slovak")
+(load "language/romanian")
 (load "language/greek")
 (load "language/hebrew")
 (load "language/japanese")
@@ -79,6 +89,8 @@
 (load "language/tibetan")
 (load "language/vietnamese")
 (load "language/misc-lang")
+(update-coding-systems-internal)
+
 (load "indent")
 (load "isearch")
 (load "window")
@@ -92,6 +104,8 @@
       (load "mouse")
       (load "scroll-bar")
       (load "select")))
+
+(message "%s" (garbage-collect))
 (load "menu-bar")
 (load "paths.el")  ;Don't get confused if someone compiled paths by mistake.
 (load "startup")
@@ -102,7 +116,8 @@
 (load "emacs-lisp/lisp-mode")
 (load "textmodes/text-mode")
 (load "textmodes/fill")
-(garbage-collect)
+(message "%s" (garbage-collect))
+
 (load "replace")
 (if (eq system-type 'vax-vms)
     (progn
@@ -123,16 +138,16 @@
       (load "ls-lisp")
       (load "dos-w32")
       (load "dos-fns")
+      (load "dos-vars")
       (load "disp-table"))) ; needed to setup ibm-pc char set, see internal.el
 (if (fboundp 'atan)	; preload some constants and 
     (progn		; floating pt. functions if we have float support.
       (load "float-sup")))
-(garbage-collect)
-(load "loaddefs.el")  ;Don't get confused if someone compiled this by mistake.
+(message "%s" (garbage-collect))
 
-(garbage-collect)
 (load "vc-hooks")
 (load "ediff-hook")
+(message "%s" (garbage-collect))
 
 ;If you want additional libraries to be preloaded and their
 ;doc strings kept in the DOC file rather than in core,
@@ -189,9 +204,9 @@
     (Snarf-documentation "DOC"))
 (message "Finding pointers to doc strings...done")
 
-;Note: You can cause additional libraries to be preloaded
-;by writing a site-init.el that loads them.
-;See also "site-load" above.
+;;;Note: You can cause additional libraries to be preloaded
+;;;by writing a site-init.el that loads them.
+;;;See also "site-load" above.
 (load "site-init" t)
 (setq current-load-list nil)
 (garbage-collect)
@@ -220,7 +235,7 @@
       ;; We used to dump under the name xemacs, but that occasionally
       ;; confused people installing Emacs (they'd install the file
       ;; under the name `xemacs'), and it's inconsistent with every
-      ;; other GNU product's build process.
+      ;; other GNU program's build process.
       (dump-emacs "emacs" "temacs")
       (message "%d pure bytes used" pure-bytes-used)
       ;; Recompute NAME now, so that it isn't set when we dump.
@@ -238,13 +253,12 @@
 
 ;; For machines with CANNOT_DUMP defined in config.h,
 ;; this file must be loaded each time Emacs is run.
-;; So run the startup code now.
+;; So run the startup code now.  First, remove `-l loadup' from args.
 
-(or (equal (nth 3 command-line-args) "dump")
-    (equal (nth 4 command-line-args) "dump")
-    (progn
-      ;; Avoid loading loadup.el a second time!
-      (setq command-line-args (cdr (cdr command-line-args)))
-      (eval top-level)))
+(if (and (equal (nth 1 command-line-args) "-l")
+	 (equal (nth 2 command-line-args) "loadup"))
+    (setcdr command-line-args (nthcdr 3 command-line-args)))
+
+(eval top-level)
 
 ;;; loadup.el ends here

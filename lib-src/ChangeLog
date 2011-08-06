@@ -1,3 +1,171 @@
+1998-08-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Version 20.3 released.
+
+1998-08-11  Paul Eggert  <eggert@twinsun.com>
+
+	* rcs2log: Update copyright date and bug report address.
+	(initialize_fullname): Prefer getent if available.
+
+1998-07-30  Paul Eggert  <eggert@twinsun.com>
+
+	* lib-src/Makefile.in (REGEXPDEPS, regex.o):
+	Prepend $(srcdir)/ to rule dependencies outside this dir.
+	
+1998-06-09  Andrew Innes  <andrewi@harlequin.co.uk>
+
+	* etags.c (etags_getcwd) [WINDOWSNT]: Use getcwd on Windows.
+
+1998-06-06  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Makefile.in: Properly terminate a comment.
+
+1998-06-01  Andrew Innes  <andrewi@mescaline.gnu.org>
+
+	* movemail.c (sys_wait): Rename to wait.
+
+	* ntlib.h: Undefine _WINSOCKAPI_.
+
+	* makefile.nt (LOCAL_FLAGS): Define HAVE_CONFIG_H.
+
+1998-05-30  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* ntlib.c (getppid): Look for EM_PARENT_PROCESS_ID.
+
+1998-05-01  Andrew Innes  <andrewi@harlequin.co.uk>
+
+	* movemail.c [WINDOWSNT]: Undefine DISABLE_DIRECT_ACCESS.  Force
+	all file i/o to be in binary mode.  Include ntlib.h.
+
+1998-04-27  Andreas Schwab  <schwab@delysid.gnu.org>
+
+	* make-docfile.c: Include <unistd.h> for chdir.
+
+1998-04-25  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* etags.c (TEX_decode_env): Don't free the value getenv returns.
+
+1998-04-17  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* makefile.nt (obj): Update with new files in src.
+	(clean): Delete patch scratch files, optimized compilation dir.
+
+1998-04-08  Dave Love  <fx@gnu.org>
+
+	* emacsclient.c: Move inclusion of unistd.h to top, else fails on
+	Irix6, at least.
+
+1998-04-06  Andreas Schwab  <schwab@gnu.org>
+
+	Silence -Wimplicit:
+	* movemail.c: Move cancelations up.  Include <stdlib.h> if
+	available.
+	* fakemail.c (_XOPEN_SOURCE): Define for declaration of cuserid.
+	(parse_header): Explicitly declare return type.
+	* emacsserver.c: Include <unistd.h> if available.
+	(main, handle_signals, perror_1, fatal_error): Explicitly declare
+	return types.  Add forward declarations.
+	* emacsclient.c: Include <stdlib.h> and <unistd.h> if available.
+	Don't declare geteuid.
+	(print_help_and_exit): Change return type to void.  Forward
+	declare it.
+	* b2m.c: Include <stdlib.h> if available.
+	(main): Explicitly declare return type.
+
+1998-04-03  Richard Stallman  <rms@delysid.gnu.org>
+
+	* etags.c (put_entries): Use %ld.
+
+	* b2m.c (fatal): Declare the arg.
+
+1998-04-03  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* etags.c (put_entries): Use %ld.
+
+	* b2m.c (fatal): Declare the arg.
+
+1998-03-26  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* pop.c (pop_getline): Renamed from getline.
+
+1998-03-05  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* Makefile.in (install): Use INSTALL_STRIP with INSTALL_PROGRAM
+	for the utilities.
+
+1998-01-23  Dave Love  <d.love@dl.ac.uk>
+
+	* etags.c (getit, Cobol_paragraphs, Pascal_functions,
+	Postscript_functions, prolog_pred, erlang_func, erlang_attribute):
+	Always make named tags.
+	(Fortran_functions): Grok BLOCK DATA.
+
+1998-01-23  Andreas Schwab  <schwab@gnu.org>
+
+	* movemail.c (main): Fix interwoven brace and cpp conditional
+	nesting.
+
+1997-12-04  Karl Heuer  <kwzh@delysid.gnu.org>
+
+	* movemail.c, pop.c, pop.h: Allow messages retrieved from the POP
+	server to contain embedded nulls.
+
+1997-12-03  Paul Eggert  <eggert@delysid.gnu.org>
+
+	* movemail.c:
+	(mbx_write) [MAIL_USE_POP]: Disable the code which quotes with a
+	'>' any lines starting with "From " read from the POP server, but
+	leave the code in place, wrapped in #ifdef
+	MOVEMAIL_QUOTE_POP_FROM_LINES, in case we have to restore it later
+	because it turns out that something is depending on it.  Change
+	suggested by Paul Eggert <eggert@twinsun.com>.
+	Convert the character \037 (^_) at the beginning of a line into
+	the character '^' followed by the character '_', because otherwise
+	Emacs can't parse the resulting file as a valid BABYL file.
+	Change suggested by Paul Eggert <eggert@twinsun.com>.
+
+1997-12-03  Jonathan I. Kamens  <jik@kamens.brookline.ma.us>
+
+	* movemail.c, pop.c, pop.h: Allow messages retrieved from the POP
+	server to contain embedded nulls.
+
+1997-12-02  Jonathan I. Kamens  <jik@kamens.brookline.ma.us>
+	 
+	* movemail.c (mbx_write) [MAIL_USE_POP]: Disable the code which
+	quotes with a '>' any lines starting with "From " read from the
+	POP server, but leave the code in place, wrapped in #ifdef
+	MOVEMAIL_QUOTE_POP_FROM_LINES, in case we have to restore it later
+	because it turns out that something is depending on it.  Change
+	suggested by Paul Eggert <eggert@twinsun.com>.
+
+	Convert the character \037 (^_) at the beginning of a line into
+	the character '^' followed by the character '_', because otherwise
+	Emacs can't parse the resulting file as a valid BABYL file.
+	Change suggested by Paul Eggert <eggert@twinsun.com>.
+
+1997-11-22  Richard Stallman  <rms@gnu.org>
+
+	* b2m.c: Include getopt.h.
+	(main): Use getopt_long to handle --version and --help.
+
+	* Makefile.in (b2m): Define VERSION.  Link with $(GETOPTOBJS).
+
+1997-10-31  Jonathan I. Kamens  <jik@kamens.brookline.ma.us>
+
+	* pop.c (fullwrite): Get rid of an extra call to write.  Problem
+	pointed out by Chiaki Ishikawa.
+
+1997-10-16  Dave Love  <d.love@dl.ac.uk>
+
+   	* etags.c (L_getit): Always make named tags so that Emacs
+   	completion on symbols containing `:' etc. works.
+   	(get_scheme): Likewise.
+
+1997-09-24  Jonathan I. Kamens  <jik@kamens.brookline.ma.us>
+
+	* pop.c: Use system header files instead of declaring C-library
+	functions explicitly.
+
 1997-09-19  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 20.2 released.

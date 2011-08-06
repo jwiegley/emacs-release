@@ -95,6 +95,7 @@ Normally nil in most modes, since there is no process to display.")
    'mode-name 'mode-line-process 'minor-mode-alist
    (purecopy "%n")
    (purecopy ")%]--")
+   '(which-func-mode ("" which-func-format "--"))
    (purecopy '(line-number-mode "L%l--"))
    (purecopy '(column-number-mode "C%c--"))
    (purecopy '(-3 . "%p"))
@@ -137,6 +138,12 @@ is okay.  See `mode-line-format'.")
 	 ".glo" ".idx" ".lot"
 	 ;; TeX-related
 	 ".dvi" ".fmt"
+	 ;; Java compiled
+	 ".class"
+	 ;; Clisp
+	 ".fas" ".lib"
+	 ;; CMUCL
+	 ".x86f"
 	 ;; Texinfo-related
 	 ".toc" ".log" ".aux"
 	 ".cp" ".fn" ".ky" ".pg" ".tp" ".vr"
@@ -145,6 +152,7 @@ is okay.  See `mode-line-format'.")
 (setq debug-ignored-errors
       '(beginning-of-line beginning-of-buffer end-of-line
 	end-of-buffer end-of-file buffer-read-only
+	file-supersession
       	"^Previous command was not a yank$"
 	"^Minibuffer window is not active$"
 	"^End of history; no next item$"
@@ -155,6 +163,7 @@ is okay.  See `mode-line-format'.")
 	"^No further undo information$"
 	"^Save not confirmed$"
 	"^Recover-file cancelled\\.$"
+	"^Cannot switch buffers in a dedicated window$"
 
 	;; comint
 	"^Not at command line$"
@@ -180,6 +189,8 @@ is okay.  See `mode-line-format'.")
 
 	;; info
 	"^Node has no Previous$"
+	"^No menu in this node$"
+	"^Node has no Next$"
 	"^No \".*\" in index$"
 
 	;; imenu
@@ -196,6 +207,7 @@ is okay.  See `mode-line-format'.")
 
 	;; man
 	"^No manpage [0-9]* found$"
+	"^Can't find the .* manpage$"
 
 	;; etags
 	"^No tags table in use; use .* to select one$"
@@ -221,7 +233,6 @@ is okay.  See `mode-line-format'.")
 	"^This command is inapplicable in the present context$"
 	"^This session group has no parent$"
 	"^Can't hide active session, $"
-	"^Sorry, I don't do this for everyone...$"
 	"^Ediff: something wrong--no multiple diffs buffer$"
 	"^Can't make context diff for Session $"
 	"^The patch buffer wasn't found$"
@@ -258,6 +269,9 @@ is okay.  See `mode-line-format'.")
 	"^Buffer .* doesn't exist$"
 	"^There is no file to merge$"
 	"^Version control package .*.el not found. Use vc.el instead$"
+	
+	;; cus-edit
+	"^No user options have changed defaults in recent Emacs versions$"
 
 	;; BBDB
 	"^no previous record$"
@@ -286,13 +300,16 @@ for \\[find-tag] (which see)."
 ;; that we will not need to keep permanently.
 (garbage-collect)
 
-;; Make Latin-1, Latin-2, Latin-3 and Latin-4 characters self-insert.
-(aset (nth 1 global-map) (make-char 'latin-iso8859-1) 'self-insert-command)
-(aset (nth 1 global-map) (make-char 'latin-iso8859-2) 'self-insert-command)
-(aset (nth 1 global-map) (make-char 'latin-iso8859-3) 'self-insert-command)
-(aset (nth 1 global-map) (make-char 'latin-iso8859-4) 'self-insert-command)
+;; Make all multibyte characters self-insert.
+(let ((l (generic-character-list))
+      (table (nth 1 global-map)))
+  (while l
+    (set-char-table-default table (car l) 'self-insert-command)
+    (setq l (cdr l))))
 
 (setq help-event-list '(help f1))
+
+(make-variable-buffer-local 'minor-mode-overriding-map-alist)
 
 ;These commands are defined in editfns.c
 ;but they are not assigned to keys there.
@@ -369,10 +386,10 @@ for \\[find-tag] (which see)."
 
 (define-key global-map "\C-@" 'set-mark-command)
 ;; Many people are used to typing C-SPC and getting C-@.
-(define-key global-map [?\C-\ ] 'set-mark-command)
+(define-key global-map [?\C- ] 'set-mark-command)
 (define-key ctl-x-map "\C-x" 'exchange-point-and-mark)
 (define-key ctl-x-map "\C-@" 'pop-global-mark)
-(define-key ctl-x-map [?\C-\ ] 'pop-global-mark)
+(define-key ctl-x-map [?\C- ] 'pop-global-mark)
 
 (define-key global-map "\C-n" 'next-line)
 (define-key global-map "\C-p" 'previous-line)
@@ -567,6 +584,8 @@ for \\[find-tag] (which see)."
 (define-key ctl-x-map "ri" 'insert-register)
 (define-key ctl-x-map "rg" 'insert-register)
 (define-key ctl-x-map "rr" 'copy-rectangle-to-register)
+(define-key ctl-x-map "rn" 'number-to-register)
+(define-key ctl-x-map "r+" 'increment-register)
 (define-key ctl-x-map "rc" 'clear-rectangle)
 (define-key ctl-x-map "rk" 'kill-rectangle)
 (define-key ctl-x-map "rd" 'delete-rectangle)
@@ -623,6 +642,8 @@ for \\[find-tag] (which see)."
 ;; (define-key ctl-x-map "\-" 'inverse-add-global-abbrev)
 (define-key esc-map "'" 'abbrev-prefix-mark)
 (define-key ctl-x-map "'" 'expand-abbrev)
+
+(define-key ctl-x-map "z" 'repeat)
 
 ;;; Don't compile this file; it contains no large function definitions.
 ;;; Don't look for autoload cookies in this file.

@@ -295,7 +295,7 @@ chapter."
     ("@\\(file\\|kbd\\|key\\|url\\|email\\){\\([^}]+\\)" 2 font-lock-string-face)
     ("@\\(samp\\|code\\|var\\|math\\){\\([^}]+\\)"
      2 font-lock-variable-name-face)
-    ("@\\(cite\\|xref\\|pxref\\){\\([^}]+\\)" 2 font-lock-reference-face)
+    ("@\\(cite\\|xref\\|pxref\\){\\([^}]+\\)" 2 font-lock-constant-face)
     ("@\\(end\\|itemx?\\) +\\(.+\\)" 2 font-lock-function-name-face keep)
     )
   "Additional expressions to highlight in TeXinfo mode.")
@@ -515,6 +515,7 @@ value of texinfo-mode-hook."
   (setq words-include-escapes t)
   (make-local-variable 'imenu-generic-expression)
   (setq imenu-generic-expression texinfo-imenu-generic-expression)
+  (setq imenu-case-fold-search nil)
   (make-local-variable 'font-lock-defaults)
   (setq font-lock-defaults '(texinfo-font-lock-keywords t))
   (make-local-variable 'outline-regexp)
@@ -561,7 +562,9 @@ value of texinfo-mode-hook."
    "macro\\|"
    "multitable\\|"
    "quotation\\|"
+   "smalldisplay\\|"
    "smallexample\\|"
+   "smallformat\\|"
    "smalllisp\\|"
    "tex"
    "\\)")

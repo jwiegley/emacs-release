@@ -296,10 +296,10 @@
 (provide 'forms)			;;; official
 (provide 'forms-mode)			;;; for compatibility
 
-(defconst forms-version (substring "$Revision: 2.34 $" 11 -2)
+(defconst forms-version (substring "$Revision: 2.35 $" 11 -2)
   "The version number of forms-mode (as string).  The complete RCS id is:
 
-  $Id: forms.el,v 2.34 1997/08/27 23:10:59 rms Exp $")
+  $Id: forms.el,v 2.35 1998/07/17 14:01:15 stephen Exp $")
 
 (defcustom forms-mode-hooks nil
   "Hook functions to be run upon entering Forms mode."
@@ -446,19 +446,19 @@ Also, initial position is at last record."
 
 Commands:                        Equivalent keys in read-only mode:
  TAB            forms-next-field          TAB
- \\C-c TAB       forms-next-field          
- \\C-c <         forms-first-record         <
- \\C-c >         forms-last-record          >
- \\C-c ?         describe-mode              ?
- \\C-c \\C-k      forms-delete-record
- \\C-c \\C-q      forms-toggle-read-only     q
- \\C-c \\C-o      forms-insert-record
- \\C-c \\C-l      forms-jump-record          l
- \\C-c \\C-n      forms-next-record          n
- \\C-c \\C-p      forms-prev-record          p
- \\C-c \\C-r      forms-search-reverse       r
- \\C-c \\C-s      forms-search-forward       s
- \\C-c \\C-x      forms-exit                 x
+ C-c TAB        forms-next-field          
+ C-c <          forms-first-record         <
+ C-c >          forms-last-record          >
+ C-c ?          describe-mode              ?
+ C-c C-k        forms-delete-record
+ C-c C-q        forms-toggle-read-only     q
+ C-c C-o        forms-insert-record
+ C-c C-l        forms-jump-record          l
+ C-c C-n        forms-next-record          n
+ C-c C-p        forms-prev-record          p
+ C-c C-r        forms-search-reverse       r
+ C-c C-s        forms-search-forward       s
+ C-c C-x        forms-exit                 x
 "
   (interactive)
 

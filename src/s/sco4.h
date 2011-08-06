@@ -73,6 +73,11 @@ Boston, MA 02111-1307, USA.  */
 #undef LIBX11_SYSTEM
 #define LIBX11_SYSTEM -lpt -lnls -lnsl_s -lc_s -lsocket
 
+/* Motif needs -lintl on some (maybe all) ofthese systems.  */
+#ifdef HAVE_LIBINTL
+#define LIB_MOTIF -lXm -lintl
+#endif
+
 #ifdef HAVE_INET_SOCKETS /* This comes from autoconf.  */
 #define HAVE_SOCKETS
 #endif

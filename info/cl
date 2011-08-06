@@ -1,6 +1,11 @@
 This is Info file ../info/cl, produced by Makeinfo version 1.68 from
 the input file cl.texi.
 
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* CL: (cl).		Partial Common Lisp support for Emacs Lisp.
+END-INFO-DIR-ENTRY
+
    This file documents the GNU Emacs Common Lisp emulation package.
 
    Copyright (C) 1993 Free Software Foundation, Inc.
@@ -24,79 +29,79 @@ the original English.
 
 
 Indirect:
-cl-1: 1050
-cl-2: 46664
-cl-3: 90163
-cl-4: 139837
-cl-5: 184109
-cl-6: 227042
+cl-1: 1173
+cl-2: 46787
+cl-3: 90286
+cl-4: 139960
+cl-5: 184232
+cl-6: 227165
 
 Tag Table:
 (Indirect)
-Node: Top1050
-Node: Overview2597
-Node: Usage4875
-Node: Organization5520
-Node: Installation7338
-Node: Naming Conventions8486
-Node: Program Structure10632
-Node: Argument Lists11095
-Node: Time of Evaluation21148
-Node: Function Aliases27123
-Node: Predicates27702
-Node: Type Predicates28017
-Node: Equality Predicates32823
-Node: Control Structure36056
-Node: Assignment36855
-Node: Generalized Variables38092
-Node: Basic Setf39394
-Node: Modify Macros46664
-Node: Customizing Setf53869
-Node: Variable Bindings61154
-Node: Dynamic Bindings61730
-Node: Lexical Bindings62615
-Node: Function Bindings66714
-Node: Macro Bindings69877
-Node: Conditionals72796
-Node: Blocks and Exits75872
-Node: Iteration78923
-Node: Loop Facility84392
-Node: Loop Basics85314
-Node: Loop Examples87909
-Node: For Clauses90163
-Node: Iteration Clauses102049
-Node: Accumulation Clauses103885
-Node: Other Clauses106224
-Node: Multiple Values112288
-Node: Macros114176
-Node: Declarations117389
-Node: Symbols125874
-Node: Property Lists126169
-Node: Creating Symbols129365
-Node: Numbers131412
-Node: Predicates on Numbers131887
-Node: Numerical Functions132911
-Node: Random Numbers137133
-Node: Implementation Parameters139837
-Node: Sequences143404
-Node: Sequence Basics144072
-Node: Mapping over Sequences147646
-Node: Sequence Functions153495
-Node: Searching Sequences159665
-Node: Sorting Sequences162698
-Node: Lists165241
-Node: List Functions165662
-Node: Substitution of Expressions170033
-Node: Lists as Sets171914
-Node: Association Lists175971
-Node: Hash Tables177669
-Node: Structures184109
-Node: Assertions198887
-Node: Efficiency Concerns201824
-Node: Common Lisp Compatibility208144
-Node: Old CL Compatibility211297
-Node: Porting Common Lisp215675
-Node: Function Index227042
-Node: Variable Index238678
+Node: Top1173
+Node: Overview2720
+Node: Usage4998
+Node: Organization5643
+Node: Installation7461
+Node: Naming Conventions8609
+Node: Program Structure10755
+Node: Argument Lists11218
+Node: Time of Evaluation21271
+Node: Function Aliases27246
+Node: Predicates27825
+Node: Type Predicates28140
+Node: Equality Predicates32946
+Node: Control Structure36179
+Node: Assignment36978
+Node: Generalized Variables38215
+Node: Basic Setf39517
+Node: Modify Macros46787
+Node: Customizing Setf53992
+Node: Variable Bindings61277
+Node: Dynamic Bindings61853
+Node: Lexical Bindings62738
+Node: Function Bindings66837
+Node: Macro Bindings70000
+Node: Conditionals72919
+Node: Blocks and Exits75995
+Node: Iteration79046
+Node: Loop Facility84515
+Node: Loop Basics85437
+Node: Loop Examples88032
+Node: For Clauses90286
+Node: Iteration Clauses102172
+Node: Accumulation Clauses104008
+Node: Other Clauses106347
+Node: Multiple Values112411
+Node: Macros114299
+Node: Declarations117512
+Node: Symbols125997
+Node: Property Lists126292
+Node: Creating Symbols129488
+Node: Numbers131535
+Node: Predicates on Numbers132010
+Node: Numerical Functions133034
+Node: Random Numbers137256
+Node: Implementation Parameters139960
+Node: Sequences143527
+Node: Sequence Basics144195
+Node: Mapping over Sequences147769
+Node: Sequence Functions153618
+Node: Searching Sequences159788
+Node: Sorting Sequences162821
+Node: Lists165364
+Node: List Functions165785
+Node: Substitution of Expressions170156
+Node: Lists as Sets172037
+Node: Association Lists176094
+Node: Hash Tables177792
+Node: Structures184232
+Node: Assertions199010
+Node: Efficiency Concerns201947
+Node: Common Lisp Compatibility208267
+Node: Old CL Compatibility211420
+Node: Porting Common Lisp215798
+Node: Function Index227165
+Node: Variable Index238801
 
 End Tag Table

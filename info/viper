@@ -1,5 +1,12 @@
-This is Info file ../info/viper, produced by Makeinfo-1.64 from the
-input file viper.texi.
+This is Info file ../info/viper, produced by Makeinfo version 1.68 from
+the input file viper.texi.
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* VIPER: (viper).       The newest Emacs VI-emulation mode.
+                          (also, A VI Plan for Emacs Rescue
+                           or the VI PERil.)
+END-INFO-DIR-ENTRY
 
 Distribution
 ************
@@ -21,67 +28,67 @@ versions.
 
 
 Indirect:
-viper-1: 750
-viper-2: 49097
-viper-3: 89454
-viper-4: 138871
-viper-5: 179980
+viper-1: 989
+viper-2: 50399
+viper-3: 90731
+viper-4: 140503
+viper-5: 183596
 
 Tag Table:
 (Indirect)
-Node: Top750
-Node: Overview3153
-Node: Emacs Preliminaries4161
-Node: Loading Viper9083
-Node: States in Viper11241
-Node: Emacs State15863
-Node: Vi State17412
-Node: Insert State24192
-Node: Replace State27044
-Node: The Minibuffer28683
-Node: Multiple Files in Viper30326
-Node: Unimplemented Features33681
-Node: Improvements over Vi34430
-Node: Basics35514
-Node: Undo and Backups37951
-Node: History39107
-Node: Macros and Registers40700
-Node: Completion42370
-Node: Improved Search42789
-Node: Abbreviation Facilities45098
-Node: Movement and Markers46066
-Node: New Commands49097
-Node: Useful Packages54781
-Node: Customization56831
-Node: Rudimentary Changes58436
-Node: Keybindings74027
-Node: Packages that Change Keymaps83337
-Node: Viper Specials89454
-Node: Vi Macros106907
-Node: Commands120508
-Node: Groundwork121252
-Node: Text Handling126926
-Node: Move Commands127480
-Node: Marking131208
-Node: Appending Text132161
-Node: Editing in Insert State134478
-Node: Deleting Text135054
-Node: Changing Text136383
-Node: Search and Replace138871
-Node: Yanking140734
-Node: Undoing141640
-Node: Display141970
-Node: File and Buffer Handling143271
-Node: Mapping147086
-Node: Shell Commands148767
-Node: Options150304
-Node: Emacs Related Commands152498
-Node: Mouse-bound Commands154058
-Node: Acknowledgments155028
-Node: Key Index157317
-Node: Function Index168270
-Node: Variable Index175411
-Node: Package Index179450
-Node: Concept Index179980
+Node: Top989
+Node: Overview3386
+Node: Emacs Preliminaries4394
+Node: Loading Viper9744
+Node: States in Viper11906
+Node: Emacs State16972
+Node: Vi State18526
+Node: Insert State25358
+Node: Replace State28224
+Node: The Minibuffer29879
+Node: Multiple Files in Viper31531
+Node: Unimplemented Features34905
+Node: Improvements over Vi35655
+Node: Basics36740
+Node: Undo and Backups39186
+Node: History40354
+Node: Macros and Registers41955
+Node: Completion43634
+Node: Improved Search44057
+Node: Abbreviation Facilities46377
+Node: Movement and Markers47352
+Node: New Commands50399
+Node: Useful Packages56220
+Node: Customization58275
+Node: Rudimentary Changes59887
+Node: Keybindings75578
+Node: Packages that Change Keymaps85346
+Node: Viper Specials90731
+Node: Vi Macros108075
+Node: Commands121407
+Node: Groundwork122153
+Node: Text Handling128434
+Node: Move Commands128988
+Node: Marking132719
+Node: Appending Text133679
+Node: Editing in Insert State136004
+Node: Deleting Text136581
+Node: Changing Text137914
+Node: Search and Replace140503
+Node: Yanking142467
+Node: Undoing143376
+Node: Display143707
+Node: File and Buffer Handling145011
+Node: Mapping148849
+Node: Shell Commands150539
+Node: Options152079
+Node: Emacs Related Commands154274
+Node: Mouse-bound Commands155842
+Node: Acknowledgments156704
+Node: Key Index159238
+Node: Function Index171500
+Node: Variable Index178760
+Node: Package Index183059
+Node: Concept Index183596
 
 End Tag Table

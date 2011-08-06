@@ -47,7 +47,7 @@ in the file it applies to.  See also outline-heading-end-regexp."
 ;; already assigned a local value to it.
 (or (default-value 'outline-regexp)
     (setq-default outline-regexp "[*\^L]+"))
-  
+
 (defcustom outline-heading-end-regexp "\n"
   "*Regular expression to match the end of a heading line.
 You can assume that point is at the beginning of a heading when this
@@ -147,18 +147,32 @@ in the file it applies to."
 				   (list '(outline-minor-mode " Outl")))))
 
 (defvar outline-font-lock-keywords
-  '(;; Highlight headings according to the level.
-    ("^\\(\\*+\\)[ \t]*\\(.+\\)?[ \t]*$"
-     (1 font-lock-string-face)
-     (2 (let ((len (- (match-end 1) (match-beginning 1))))
-	  (or (cdr (assq len '((1 . font-lock-function-name-face)
-			       (2 . font-lock-keyword-face)
-			       (3 . font-lock-comment-face))))
-	      font-lock-variable-name-face))
-	nil t))
-    ;; Highlight citations of the form [1] and [Mar94].
-    ("\\[\\([A-Z][A-Za-z]+\\)*[0-9]+\\]" . font-lock-type-face))
+  '(;;
+    ;; Highlight headings according to the level.
+    (eval . (list (concat "^" outline-regexp ".+")
+		  0 '(or (cdr (assq (outline-font-lock-level)
+				    '((1 . font-lock-function-name-face)
+				      (2 . font-lock-variable-name-face)
+				      (3 . font-lock-keyword-face)
+				      (4 . font-lock-builtin-face)
+				      (5 . font-lock-comment-face)
+				      (6 . font-lock-constant-face)
+				      (7 . font-lock-type-face)
+				      (8 . font-lock-string-face))))
+			 font-lock-warning-face)
+		  nil t)))
   "Additional expressions to highlight in Outline mode.")
+
+(defun outline-font-lock-level ()
+  (let ((count 1))
+    (save-excursion
+      (outline-back-to-heading)
+      (condition-case nil
+	  (while (not (bobp))
+	    (outline-up-heading 1)
+	    (setq count (1+ count)))
+	(error)))
+    count))
 
 (defvar outline-view-change-hook nil
   "Normal hook to be run after outline visibility changes.")
@@ -167,10 +181,10 @@ in the file it applies to."
 (defun outline-mode ()
   "Set major mode for editing outlines with selective display.
 Headings are lines which start with asterisks: one for major headings,
-two for subheadings, etc.  Lines not starting with asterisks are body lines. 
+two for subheadings, etc.  Lines not starting with asterisks are body lines.
 
 Body text or subheadings under a heading can be made temporarily
-invisible, or visible again.  Invisible lines are attached to the end 
+invisible, or visible again.  Invisible lines are attached to the end
 of the heading, so they move with it, if the line is killed and yanked
 back.  A heading with text hidden under it is marked with an ellipsis (...).
 
@@ -306,7 +320,7 @@ at the end of the buffer."
   (if (re-search-forward (concat "\n\\(" outline-regexp "\\)")
 			 nil 'move)
       (goto-char (match-beginning 0)))
-  (if (bolp)
+  (if (and (bolp) (not (bobp)))
       (forward-char -1)))
 
 (defun outline-next-heading ()
@@ -320,26 +334,27 @@ at the end of the buffer."
   "Non-nil if the character after point is visible."
   (not (get-char-property (point) 'invisible)))
 
-(defun outline-back-to-heading ()
+(defun outline-back-to-heading (&optional invisible-ok)
   "Move to previous heading line, or beg of this line if it's a heading.
-Only visible heading lines are considered."
+Only visible heading lines are considered, unless INVISIBLE-OK is non-nil."
   (beginning-of-line)
-  (or (outline-on-heading-p)
+  (or (outline-on-heading-p t)
       (let (found)
 	(save-excursion
 	  (while (not found)
 	    (or (re-search-backward (concat "^\\(" outline-regexp "\\)")
 				    nil t)
 		(error "before first heading"))
-	    (setq found (and (outline-visible) (point)))))
+	    (setq found (and (or invisible-ok (outline-visible)) (point)))))
 	(goto-char found)
 	found)))
 
-(defun outline-on-heading-p ()
-  "Return t if point is on a (visible) heading line."
+(defun outline-on-heading-p (&optional invisible-ok)
+  "Return t if point is on a (visible) heading line.
+If INVISIBLE-OK is non-nil, an invisible heading line is ok too."
   (save-excursion
     (beginning-of-line)
-    (and (bolp) (outline-visible)
+    (and (bolp) (or invisible-ok (outline-visible))
 	 (looking-at outline-regexp))))
 
 (defun outline-end-of-heading ()
@@ -401,16 +416,27 @@ If FLAG is nil then text is shown, while if FLAG is t the text is hidden."
       (end-of-line)
       (outline-discard-overlays (point) to 'outline)
       (if flag
-	  (let ((o (make-overlay (point) to)))
-	    (overlay-put o 'invisible 'outline)
-	    (overlay-put o 'outline t)))))
+          (let ((o (make-overlay (point) to)))
+            (overlay-put o 'invisible 'outline)
+	    (overlay-put o 'isearch-open-invisible
+			 'outline-isearch-open-invisible)))))
   (run-hooks 'outline-view-change-hook))
 
+
+;; Function to be set as an outline-isearch-open-invisible' property
+;; to the overlay that makes the outline invisible (see
+;; `outline-flag-region').
+(defun outline-isearch-open-invisible (overlay)
+  (save-excursion
+    (goto-char (overlay-start overlay))
+    (show-entry)))
+
+
 ;; Exclude from the region BEG ... END all overlays
-;; with a non-nil PROP property.
+;; which have PROP as the value of the `invisible' property.
 ;; Exclude them by shrinking them to exclude BEG ... END,
 ;; or even by splitting them if necessary.
-;; Overlays without a non-nil PROP property are not touched.
+;; Overlays without such an `invisible' property are not touched.
 (defun outline-discard-overlays (beg end prop)
   (if (< end beg)
       (setq beg (prog1 end (setq end beg))))
@@ -420,13 +446,13 @@ If FLAG is nil then text is shown, while if FLAG is t the text is hidden."
 	  o1)
       (while overlays
 	(setq o (car overlays))
-	(if (overlay-get o prop)
+	(if (eq (overlay-get o 'invisible) prop)
 	    ;; Either push this overlay outside beg...end
 	    ;; or split it to exclude beg...end
 	    ;; or delete it entirely (if it is contained in beg...end).
 	    (if (< (overlay-start o) beg)
 		(if (> (overlay-end o) end)
-		    (progn 
+		    (progn
 		      (setq o1 (outline-copy-overlay o))
 		      (move-overlay o1 (overlay-start o1) beg)
 		      (move-overlay o end (overlay-end o)))
@@ -455,10 +481,13 @@ If FLAG is nil then text is shown, while if FLAG is t the text is hidden."
    (outline-flag-region (point) (progn (outline-next-preface) (point)) t)))
 
 (defun show-entry ()
-  "Show the body directly following this heading."
+  "Show the body directly following this heading.
+Show the heading too, if it is currently invisible."
   (interactive)
   (save-excursion
-   (outline-flag-region (point) (progn (outline-next-preface) (point)) nil)))
+    (outline-back-to-heading t)
+    (outline-flag-region (1- (point))
+			 (progn (outline-next-preface) (point)) nil)))
 
 (defun hide-body ()
   "Hide all of buffer except headings."
@@ -526,22 +555,16 @@ If FLAG is nil then text is shown, while if FLAG is t the text is hidden."
 	(goto-char end)))))
 
 (defun hide-other ()
-  "Hide everything except for the current body and the parent headings."
+  "Hide everything except current body and parent and top-level headings."
   (interactive)
   (hide-sublevels 1)
-  (let ((last (point))
-	(pos (point)))
-    (while (save-excursion
-	     (and (end-of-line 0)
-		  (not (outline-visible))))
-      (save-excursion
-	(beginning-of-line)
-	(if (eq last (point))
-	    (progn
-	      (outline-next-heading)
-	      (outline-flag-region last (point) nil))
-	  (show-children)
-	  (setq last (point)))))))
+  (save-excursion
+    (outline-back-to-heading t)
+    (show-entry)
+    (while (condition-case nil (progn (outline-up-heading 1) t) (error nil))
+      (outline-flag-region (1- (point))
+			   (save-excursion (forward-line 1) (point))
+			   nil))))
 
 (defun outline-flag-subtree (flag)
   (save-excursion
@@ -632,7 +655,7 @@ Stop at the first and last subheadings of a superior heading."
   (outline-back-to-heading)
   (while (> arg 0)
     (let ((point-to-move-to (save-excursion
-			      (outline-get-next-sibling))))  
+			      (outline-get-next-sibling))))
       (if point-to-move-to
 	  (progn
 	    (goto-char point-to-move-to)
@@ -651,7 +674,7 @@ Stop at the first and last subheadings of a superior heading."
     (if (< (funcall outline-level) level)
 	nil
       (point))))
-	
+
 (defun outline-backward-same-level (arg)
   "Move backward to the ARG'th subheading at same level as this one.
 Stop at the first and last subheadings of a superior heading."

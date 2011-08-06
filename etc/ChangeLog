@@ -1,3 +1,28 @@
+1998-08-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Version 20.3 released.
+
+	* TUTORIAL.ro: New file.
+
+1998-04-10  Ken'ichi Handa  <handa@melange.gnu.org>
+
+	* TUTORIAL.sl: Renamed back to the original.
+
+1998-04-10  Kenichi Handa  <handa@etl.go.jp>
+
+	* TUTORIAL.cs: Renamed from TUTORIAL.cz.
+	* TUTORIAL.ja: Renamed from TUTORIAL.jp.
+	* TUTORIAL.ka: Renamed from TUTORIAL.kr.
+	* TUTORIAL.sk: Renamed from TUTORIAL.sl.
+
+1998-04-06  Kenichi Handa  <handa@etl.go.jp>
+
+	* TUTORIAL.jp: Re-translated for the latest TUTORIAL.
+
+1998-03-26  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* TUTORIAL.sl: New file.
+
 1997-09-19  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 20.2 released.

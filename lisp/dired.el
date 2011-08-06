@@ -67,10 +67,8 @@ may contain even `F', `b', `i' and `s'.  See also the variable
       "/etc/chown"))
   "Name of chown command (usually `chown' or `/etc/chown').")
 
-(defvar dired-chmod-program
-  (if (eq system-type 'windows-nt)
-      "chmode" "chmod")
-  "Name of chmod command (usually `chmod' or `chmode').")
+(defvar dired-chmod-program "chmod"
+  "Name of chmod command (usually `chmod').")
 
 ;;;###autoload
 (defcustom dired-ls-F-marks-symlinks nil
@@ -259,7 +257,7 @@ Subexpression 2 must end right before the \\n or \\r.")
    ;;
    ;; Dired marks.
    (list dired-re-mark
-	 '(0 font-lock-reference-face)
+	 '(0 font-lock-constant-face)
 	 '(".+" (dired-move-to-filename) nil (0 font-lock-warning-face)))
    ;; People who are paranoid about security would consider this more
    ;; important than other things such as whether it is a directory.
@@ -525,8 +523,8 @@ If DIRNAME is already in a dired buffer, that buffer is used without refresh."
 	    ;; if it was the name of a directory at all.
 	    (file-name-directory dirname))
       (or switches (setq switches dired-listing-switches))
-      (dired-mode dirname switches)
-      (if mode (funcall mode))
+      (if mode (funcall mode)
+        (dired-mode dirname switches))
       ;; default-directory and dired-actual-switches are set now
       ;; (buffer-local), so we can call dired-readin:
       (let ((failed t))
@@ -599,7 +597,8 @@ If DIRNAME is already in a dired buffer, that buffer is used without refresh."
 	;; We need this to make the root dir have a header line as all
 	;; other subdirs have:
 	(goto-char (point-min))
-	(dired-insert-headerline default-directory)
+        (if (not (looking-at "^  /.*:$"))
+            (dired-insert-headerline default-directory))
 	;; can't run dired-after-readin-hook here, it may depend on the subdir
 	;; alist to be OK.
 	)
@@ -855,6 +854,7 @@ If DIRNAME is already in a dired buffer, that buffer is used without refresh."
     (define-key map "%u" 'dired-upcase)
     (define-key map "%l" 'dired-downcase)
     (define-key map "%d" 'dired-flag-files-regexp)
+    (define-key map "%g" 'dired-mark-files-containing-regexp)
     (define-key map "%m" 'dired-mark-files-regexp)
     (define-key map "%r" 'dired-do-rename-regexp)
     (define-key map "%C" 'dired-do-copy-regexp)
@@ -876,6 +876,7 @@ If DIRNAME is already in a dired buffer, that buffer is used without refresh."
     (define-key map "*\177" 'dired-unmark-backward)
     (define-key map "*\C-n" 'dired-next-marked-file)
     (define-key map "*\C-p" 'dired-prev-marked-file)
+    (define-key map "*t" 'dired-do-toggle)
     ;; Lower keys for commands not operating on all the marked files
     (define-key map "d" 'dired-flag-file-deletion)
     (define-key map "e" 'dired-find-file)
@@ -891,8 +892,9 @@ If DIRNAME is already in a dired buffer, that buffer is used without refresh."
     (define-key map "o" 'dired-find-file-other-window)
     (define-key map "\C-o" 'dired-display-file)
     (define-key map "p" 'dired-previous-line)
-    (define-key map "q" 'dired-quit)
+    (define-key map "q" 'quit-window)
     (define-key map "s" 'dired-sort-toggle-or-edit)
+    (define-key map "t" 'dired-do-toggle)
     (define-key map "u" 'dired-unmark)
     (define-key map "v" 'dired-view-file)
     (define-key map "x" 'dired-do-flagged-delete)
@@ -987,6 +989,8 @@ If DIRNAME is already in a dired buffer, that buffer is used without refresh."
       '("Flag..." . dired-flag-files-regexp))
     (define-key map [menu-bar regexp mark]
       '("Mark..." . dired-mark-files-regexp))
+    (define-key map [menu-bar regexp mark]
+      '("Mark Containing..." . dired-mark-files-containing-regexp))
 
     (define-key map [menu-bar mark]
       (cons "Mark" (make-sparse-keymap "Mark")))
@@ -1019,6 +1023,8 @@ If DIRNAME is already in a dired buffer, that buffer is used without refresh."
       '("Unmark" . dired-unmark))
     (define-key map [menu-bar mark mark]
       '("Mark" . dired-mark))
+    (define-key map [menu-bar mark toggle-marks]
+      '("Toggle Marks" . dired-do-toggle))
 
     (define-key map [menu-bar operate]
       (cons "Operate" (make-sparse-keymap "Operate")))
@@ -1150,11 +1156,6 @@ Keybindings:
   (run-hooks 'dired-mode-hook))
 
 ;; Idiosyncratic dired commands that don't deal with marks.
-
-(defun dired-quit ()
-  "Bury the current dired buffer."
-  (interactive)
-  (bury-buffer))
 
 (defun dired-summary ()
   "Summarize basic Dired commands and show recent Dired errors."
@@ -1301,6 +1302,7 @@ Optional arg NO-ERROR-IF-NOT-FILEP means return nil if no filename on
 			 "\"")))))
     (and file buffer-file-coding-system
 	 (not file-name-coding-system)
+	 (not default-file-name-coding-system)
 	 (setq file (encode-coding-string file buffer-file-coding-system)))
     (if (eq localp 'no-dir)
 	file
@@ -1351,9 +1353,29 @@ DIR must be a directory name, not a file name."
 ;;; Functions for finding the file name in a dired buffer line.
 
 (defvar dired-move-to-filename-regexp
-  " [A-Za-z\xa0-\xff][A-Za-z\xa0-\xff][A-Za-z\xa0-\xff] [0-3 ][0-9]\
- [ 0-9][0-9][:0-9][0-9][ 0-9] "
-  "Regular expression to match a month abbreviation followed date/time.")
+  (let* ((l "\\([A-Za-z]\\|[^\0-\177]\\)")
+	 ;; In some locales, month abbreviations are as short as 2 letters,
+	 ;; and they can be padded on the right with spaces.
+	 (month (concat l l "+ *"))
+	 ;; Recognize any non-ASCII character.  
+	 ;; The purpose is to match a Kanji character.
+	 (k "[^\0-\177]")
+	 ;; (k "[^\x00-\x7f\x80-\xff]")
+	 (s " ")
+	 (yyyy "[0-9][0-9][0-9][0-9]")
+	 (mm "[ 0-1][0-9]")
+	 (dd "[ 0-3][0-9]")
+	 (HH:MM "[ 0-2][0-9]:[0-5][0-9]")
+	 (western (concat "\\(" month s dd "\\|" dd s month "\\)"
+			  s "\\(" HH:MM "\\|" s yyyy "\\|" yyyy s "\\)"))
+	 (japanese (concat mm k s dd k s "\\(" s HH:MM "\\|" yyyy k "\\)")))
+	 ;; Require the previous column to end in a digit.
+	 ;; This avoids recognizing `1 may 1997' as a date in the line:
+	 ;; -r--r--r--   1 may      1997        1168 Oct 19 16:49 README
+    (concat "[0-9]" s "\\(" western "\\|" japanese "\\)" s))
+  "Regular expression to match up to the file name in a directory listing.
+The default value is designed to recognize dates and times
+regardless of the language.")
 
 (defvar dired-permission-flags-regexp
   "\\([^ ]\\)[-r][-w]\\([^ ]\\)[-r][-w]\\([^ ]\\)[-r][-w]\\([^ ]\\)"
@@ -2079,6 +2101,29 @@ If on a subdir headerline, mark all its files except `.' and `..'."
 Optional prefix ARG says how many lines to unflag; default is one line."
   (interactive "p")
   (dired-unmark (- arg)))
+
+(defun dired-do-toggle ()
+  "Toggle marks.
+That is, currently marked files become unmarked and vice versa.
+Files marked with other flags (such as `D') are not affected.
+`.' and `..' are never toggled.
+As always, hidden subdirs are not affected."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (let (buffer-read-only)
+      (while (not (eobp))
+        (or (dired-between-files)
+            (looking-at dired-re-dot)
+            ;; use subst instead of insdel because it does not move
+            ;; the gap and thus should be faster and because
+            ;; other characters are left alone automatically
+            (apply 'subst-char-in-region
+                   (point) (1+ (point))
+                   (if (eq ?\040 (following-char)) ; SPC
+                       (list ?\040 dired-marker-char)
+                     (list dired-marker-char ?\040))))
+        (forward-line 1)))))
 
 ;;; Commands to mark or flag files based on their characteristics or names.
 
@@ -2105,6 +2150,32 @@ object files--just `.o' will mark more than you might think."
 	  (not (eolp))			; empty line
 	  (let ((fn (dired-get-filename nil t)))
 	    (and fn (string-match regexp (file-name-nondirectory fn)))))
+     "matching file")))
+
+(defun dired-mark-files-containing-regexp (regexp &optional marker-char)
+  "Mark all files with contents containing REGEXP for use in later commands.
+A prefix argument means to unmark them instead.
+`.' and `..' are never marked."
+  (interactive
+   (list (dired-read-regexp (concat (if current-prefix-arg "Unmark" "Mark")
+				    " files containing (regexp): "))
+	 (if current-prefix-arg ?\040)))
+  (let ((dired-marker-char (or marker-char dired-marker-char)))
+    (dired-mark-if
+     (and (not (looking-at dired-re-dot))
+	  (not (eolp))			; empty line
+	  (let ((fn (dired-get-filename nil t)))
+	    (and fn (save-excursion
+		      ;; For now we do it inside emacs
+		      ;; Grep might be better if there are a lot of files
+		      (message "Checking %s" fn)
+		      (let* ((prebuf (get-file-buffer fn)))
+			(find-file fn)
+			(goto-char (point-min))
+			(prog1 
+			    (re-search-forward regexp nil t)
+			  (if (not prebuf) (kill-buffer nil))))
+		      ))))
      "matching file")))
 
 (defun dired-flag-files-regexp (regexp)
@@ -2167,7 +2238,7 @@ A prefix argument says to unflag those files instead."
      "auto save file")))
 
 (defvar dired-garbage-files-regexp
-  "\\.log$\\|\\.toc$\\|.dvi$|\\.bak$\\|\\.orig$\\|\\.rej$" 
+  "\\.log$\\|\\.toc$\\|\\.dvi$\\|\\.bak$\\|\\.orig$\\|\\.rej$" 
   "*Regular expression to match \"garbage\" files for `dired-flag-garbage-files'.")
 
 (defun dired-flag-garbage-files ()
@@ -2349,16 +2420,22 @@ With a prefix argument you can edit the current listing switches instead."
   ;; Toggle between sort by date/name.  Reverts the buffer.
   (setq dired-actual-switches
 	(let (case-fold-search)
-	  (concat
-	   "-l"
-	   (dired-replace-in-string (concat "[-lt"
-					    dired-ls-sorting-switches "]")
-				    ""
-				    dired-actual-switches)
-	   (if (string-match (concat "[t" dired-ls-sorting-switches "]")
-			     dired-actual-switches)
-	       ""
-	     "t"))))
+	  (if (string-match " " dired-actual-switches)
+	      ;; New toggle scheme: add/remove a trailing " -t"
+	      (if (string-match " -t\\'" dired-actual-switches)
+		  (dired-replace-in-string " -t\\'" "" dired-actual-switches)
+		(concat dired-actual-switches " -t"))
+	    ;; old toggle scheme: look for some 't' switch and add/remove it
+	    (concat
+	     "-l"
+	     (dired-replace-in-string (concat "[-lt"
+					      dired-ls-sorting-switches "]")
+				      ""
+				      dired-actual-switches)
+	     (if (string-match (concat "[t" dired-ls-sorting-switches "]")
+			       dired-actual-switches)
+		 ""
+	       "t")))))
   (dired-sort-set-modeline)
   (revert-buffer))
 

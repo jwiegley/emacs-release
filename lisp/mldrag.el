@@ -153,18 +153,23 @@ usefully bound with the `vertical-line' or the `vertical-scroll-bar'
 prefix.  Holding down a mouse button and moving the mouse left and
 right will make the clicked-on window thinner or wider."
   (interactive "e")
-  (let ((done nil)
-	(echo-keystrokes 0)
-	(start-event-frame (window-frame (car (car (cdr start-event)))))
-	(start-event-window (car (car (cdr start-event))))
-	(start-nwindows (count-windows t))
-	(old-selected-window (selected-window))
-	event mouse x left right edges wconfig growth)
+  (let* ((done nil)
+	 (echo-keystrokes 0)
+	 (start-event-frame (window-frame (car (car (cdr start-event)))))
+	 (scroll-bar-left
+	  (eq (cdr (assq 'vertical-scroll-bars (frame-parameters))) 'left))
+	 (start-event-window (car (car (cdr start-event))))
+	 (start-nwindows (count-windows t))
+	 (old-selected-window (selected-window))
+	 event mouse x left right edges wconfig growth)
     (if (one-window-p t)
 	(error "Attempt to resize sole ordinary window"))
-    (if (= (nth 2 (window-edges start-event-window))
-	   (frame-width start-event-frame))
-	(error "Attempt to drag rightmost scrollbar"))
+    (if scroll-bar-left
+	(when (= (nth 0 (window-edges start-event-window)) 0)
+	  (error "Attempt to drag leftmost scrollbar"))
+      (when (>= (nth 2 (window-edges start-event-window))
+		(frame-width start-event-frame))
+	(error "Attempt to drag rightmost scrollbar")))
     (unwind-protect
 	(track-mouse
 	  (progn
@@ -206,10 +211,15 @@ right will make the clicked-on window thinner or wider."
 			   right (nth 2 edges))
 		     ;; scale back a move that would make the
 		     ;; window too thin.
-		     (cond ((< (- x left -1) window-min-width)
-			    (setq x (+ left window-min-width -1))))
+		     (if scroll-bar-left
+			 (cond ((< (- right x) window-min-width)
+			      (setq x (- right window-min-width))))
+		       (cond ((< (- x left -1) window-min-width)
+			      (setq x (+ left window-min-width -1)))))
 		     ;; compute size change needed
-		     (setq growth (- x right -1)
+		     (setq growth (if scroll-bar-left
+				      (- left x)
+				    (- x right -1))
 			   wconfig (current-window-configuration))
 		     (enlarge-window growth t)
 		     ;; if this window's growth caused another
@@ -220,7 +230,9 @@ right will make the clicked-on window thinner or wider."
 		     ;; from a window to the left of this one,
 		     ;; rescind the change.
 		     (if (or (/= start-nwindows (count-windows t))
-			     (/= left (nth 0 (window-edges))))
+			     (if scroll-bar-left
+				 (/= right (nth 2 (window-edges)))
+			       (/= left (nth 0 (window-edges)))))
 			 (set-window-configuration wconfig)))))))
       ;; restore the old selected window
       (select-window old-selected-window))))

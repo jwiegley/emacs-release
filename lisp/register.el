@@ -33,12 +33,15 @@
 
 (defvar register-alist nil
   "Alist of elements (NAME . CONTENTS), one for each Emacs register.
-NAME is a character (a number).  CONTENTS is a string, number,
-frame configuration, mark or list.
+NAME is a character (a number).  CONTENTS is a string, number, marker or list.
 A list of strings represents a rectangle.
 A list of the form (file . NAME) represents the file named NAME.
 A list of the form (file-query NAME POSITION) represents position POSITION
- in the file named NAME, but query before visiting it.")
+ in the file named NAME, but query before visiting it.
+A list of the form (WINDOW-CONFIGURATION POSITION)
+ represents a saved window configuration plus a saved value of point.
+A list of the form (FRAME-CONFIGURATION POSITION)
+ represents a saved frame configuration plus a saved value of point.")
 
 (defun get-register (reg)
   "Return contents of Emacs register named REG, or nil if none."
@@ -61,21 +64,26 @@ Use \\[jump-to-register] to go to that location or restore that configuration.
 Argument is a character, naming the register."
   (interactive "cPoint to register: \nP")
   (set-register register
-		(if arg (current-frame-configuration) (point-marker))))
+		(if arg (list (current-frame-configuration) (point-marker))
+		  (point-marker))))
 
 (defun window-configuration-to-register (register &optional arg)
   "Store the window configuration of the selected frame in register REGISTER.
 Use \\[jump-to-register] to restore the configuration.
 Argument is a character, naming the register."
   (interactive "cWindow configuration to register: \nP")
-  (set-register register (current-window-configuration)))
+  ;; current-window-configuration does not include the value
+  ;; of point in the current buffer, so record that separately.
+  (set-register register (list (current-window-configuration) (point-marker))))
 
 (defun frame-configuration-to-register (register &optional arg)
   "Store the window configuration of all frames in register REGISTER.
 Use \\[jump-to-register] to restore the configuration.
 Argument is a character, naming the register."
   (interactive "cFrame configuration to register: \nP")
-  (set-register register (current-frame-configuration)))
+  ;; current-frame-configuration does not include the value
+  ;; of point in the current buffer, so record that separately.
+  (set-register register (list (current-frame-configuration) (point-marker))))
 
 (defalias 'register-to-point 'jump-to-register)
 (defun jump-to-register (register &optional delete)
@@ -91,11 +99,12 @@ delete any existing frames that the frame configuration doesn't mention.
   (interactive "cJump to register: \nP")
   (let ((val (get-register register)))
     (cond
-     ((and (fboundp 'frame-configuration-p)
-	   (frame-configuration-p val))
-      (set-frame-configuration val (not delete)))
-     ((window-configuration-p val)
-      (set-window-configuration val))
+     ((and (consp val) (frame-configuration-p (car val)))
+      (set-frame-configuration (car val) (not delete))
+      (goto-char (cadr val)))
+     ((and (consp val) (window-configuration-p (car val)))
+      (set-window-configuration (car val))
+      (goto-char (cadr val)))
      ((markerp val)
       (or (marker-buffer val)
 	  (error "That register's buffer no longer exists"))
@@ -127,33 +136,29 @@ delete any existing frames that the frame configuration doesn't mention.
 
 (add-hook 'kill-buffer-hook 'register-swap-out)
 
-;(defun number-to-register (arg char)
-;  "Store a number in a register.
-;Two args, NUMBER and REGISTER (a character, naming the register).
-;If NUMBER is nil, digits in the buffer following point are read
-;to get the number to store.
-;Interactively, NUMBER is the prefix arg (none means nil)."
-;  (interactive "P\ncNumber to register: ")
-;  (set-register char 
-;		(if arg
-;		    (prefix-numeric-value arg)
-;		  (if (looking-at "[0-9][0-9]*")
-;		      (save-excursion
-;		       (save-restriction
-;			(narrow-to-region (point)
-;					  (progn (skip-chars-forward "0-9")
-;						 (point)))
-;			(goto-char (point-min))
-;			(read (current-buffer))))
-;		    0))))
+(defun number-to-register (number register)
+  "Store a number in a register.
+Two args, NUMBER and REGISTER (a character, naming the register).
+If NUMBER is nil, a decimal number is read from the buffer starting
+at point, and point moves to the end of that number.
+Interactively, NUMBER is the prefix arg (none means nil)."
+  (interactive "P\ncNumber to register: ")
+  (set-register register 
+		(if number
+		    (prefix-numeric-value number)
+		  (if (looking-at "\\s-*-?[0-9]+")
+		      (progn
+			(goto-char (match-end 0))
+			(string-to-int (match-string 0)))
+		    0))))
 
-;(defun increment-register (arg char)
-;  "Add NUMBER to the contents of register REGISTER.
-;Interactively, NUMBER is the prefix arg (none means nil)." 
-;  (interactive "p\ncNumber to register: ")
-;  (or (integerp (get-register char))
-;      (error "Register does not contain a number"))
-;  (set-register char (+ arg (get-register char))))
+(defun increment-register (number register)
+  "Add NUMBER to the contents of register REGISTER.
+Interactively, NUMBER is the prefix arg."
+  (interactive "p\ncIncrement register: ")
+  (or (numberp (get-register register))
+      (error "Register does not contain a number"))
+  (set-register register (+ number (get-register register))))
 
 (defun view-register (register)
   "Display what is contained in register named REGISTER.
@@ -167,7 +172,7 @@ The Lisp value REGISTER is a character."
 	(princ (single-key-description register))
 	(princ " contains ")
 	(cond
-	 ((integerp val)
+	 ((numberp val)
 	  (princ val))
 
 	 ((markerp val)
@@ -179,15 +184,22 @@ The Lisp value REGISTER is a character."
 	      (princ ", position ")
 	      (princ (marker-position val)))))
 
-	 ((window-configuration-p val)
+	 ((and (consp val) (window-configuration-p (car val)))
 	  (princ "a window configuration."))
 
-	 ((frame-configuration-p val)
+	 ((and (consp val) (frame-configuration-p (car val)))
 	  (princ "a frame configuration."))
 
 	 ((and (consp val) (eq (car val) 'file))
 	  (princ "the file ")
 	  (prin1 (cdr val))
+	  (princ "."))
+
+	 ((and (consp val) (eq (car val) 'file-query))
+	  (princ "a file-query reference:\nfile ")
+	  (prin1 (car (cdr val)))
+	  (princ ",\nposition ")
+	  (princ (car (cdr (cdr val))))
 	  (princ "."))
 
 	 ((consp val)
@@ -218,7 +230,7 @@ Interactively, second arg is non-nil if prefix arg is supplied."
       (insert-rectangle val))
      ((stringp val)
       (insert val))
-     ((integerp val)
+     ((numberp val)
       (princ val (current-buffer)))
      ((and (markerp val) (marker-position val))
       (princ (marker-position val) (current-buffer)))

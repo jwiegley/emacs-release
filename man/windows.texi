@@ -118,11 +118,14 @@ independent of the buffer being displayed and its value for
 @xref{Display}.
 
 @vindex split-window-keep-point
-  If @code{split-window-keep-point} is non-nil, @kbd{C-x 2} tries to
-avoid shifting any text on the screen by putting point in whichever
-window happens to contain the screen line the cursor is already on.  The
-default is that @code{split-window-keep-point} is non-nil on slow
-terminals.
+  If @code{split-window-keep-point} is non-@code{nil}, the default, both
+of the windows resulting from @kbd{C-x 2} inherit the value of point
+from the window that was split.  This means that scrolling is
+inevitable.  If this variable is @code{nil}, then @kbd{C-x 2} tries to
+avoid shifting any text the screen, by putting point in each window at a
+position already visible in the window.  It also selects whichever
+window contain the screen line that the cursor was previously on.  Some
+users prefer the latter mode slow terminals.
 
 @node Other Window
 @section Using Other Windows
@@ -137,7 +140,7 @@ Find next place where the text in the selected window does not match
 the text in the next window.
 @item Mouse-1
 @kbd{Mouse-1}, in a window's mode line, selects that window
-but does not move point in it (@code{mouse-select-region}).
+but does not move point in it (@code{mouse-select-window}).
 @end table
 
 @kindex C-x o
@@ -225,12 +228,13 @@ element @code{"*grep*"} to the list, the @code{grep} command will
 display its output buffer in the selected window.
 
   The default value of @code{same-window-buffer-names} is not
-@code{nil}.  It specifies the buffers @samp{*info*}, @samp{*mail*} and
-@samp{*shell*}.  This is why @kbd{M-x shell} normally switches to the
-@samp{*shell*} buffer in the selected window.  If you delete this
-element from the value of @code{same-window-buffer-names}, the behavior
-of @kbd{M-x shell} will change---it will pop up the buffer in another
-window instead.
+@code{nil}: it specifies buffer names @samp{*info*}, @samp{*mail*} and
+@samp{*shell*} (as well as others used by more obscure Emacs packages).
+This is why @kbd{M-x shell} normally switches to the @samp{*shell*}
+buffer in the selected window.  If you delete this element from the
+value of @code{same-window-buffer-names}, the behavior of @kbd{M-x
+shell} will change---it will pop up the buffer in another window
+instead.
 
 @vindex same-window-regexps
   You can specify these buffers more generally with the variable
@@ -262,6 +266,8 @@ sequence is a zero.
 Make selected window taller (@code{enlarge-window}).
 @item C-x @}
 Make selected window wider (@code{enlarge-window-horizontally}).
+@item C-x @{
+Make selected window narrower (@code{shrink-window-horizontally}).
 @item C-x -
 Shrink this window if its buffer doesn't need so many lines
 (@code{shrink-window-if-larger-than-buffer}).
@@ -322,7 +328,9 @@ selected window get one line bigger, or as many lines as is specified
 with a numeric argument.  With a negative argument, it makes the
 selected window smaller.  @kbd{C-x @}}
 (@code{enlarge-window-horizontally}) makes the selected window wider by
-the specified number of columns.
+the specified number of columns.  @kbd{C-x @{}
+(@code{shrink-window-horizontally}) makes the selected window narrower
+by the specified number of columns.
 
   When you make a window bigger, the space comes from one of its
 neighbors.  If this makes any window too small, it is deleted and its

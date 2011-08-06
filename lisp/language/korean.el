@@ -31,42 +31,40 @@
 (make-coding-system
  'korean-iso-8bit 2 ?K
  "ISO 2022 based EUC encoding for Korean KSC5601 (MIME:EUC-KR)"
- '((ascii t) korean-ksc5601 nil nil
-   nil ascii-eol ascii-cntl))
+ '(ascii korean-ksc5601 nil nil
+   nil ascii-eol ascii-cntl)
+ '((safe-charsets ascii korean-ksc5601)
+   (mime-charset . euc-kr)))
 
 (define-coding-system-alias 'euc-kr 'korean-iso-8bit)
 (define-coding-system-alias 'euc-korea 'korean-iso-8bit)
 
 (make-coding-system
- 'korean-iso-7bit-lock 2 ?k
+ 'iso-2022-kr 2 ?k
  "ISO 2022 based 7-bit encoding for Korean KSC5601 (MIME:ISO-2022-KR)."
  '(ascii (nil korean-ksc5601) nil nil
 	 nil ascii-eol ascii-cntl seven locking-shift nil nil nil nil nil
-	 designation-bol))
+	 designation-bol)
+ '((safe-charsets ascii korean-ksc5601)
+   (mime-charset . iso-2022-kr)))
 
-(define-coding-system-alias 'iso-2022-kr 'korean-iso-7bit-lock)
-
-(defun setup-korean-environment ()
-  "Setup multilingual environment (MULE) for Korean."
-  (interactive)
-  (setup-english-environment)
-  (setq coding-category-iso-8-2 'korean-iso-8bit)
-
-  (set-coding-priority
-   '(coding-category-iso-7
-     coding-category-iso-8-2
-     coding-category-iso-8-1))
-
-  (set-default-coding-systems 'korean-iso-8bit)
-
-  (setq default-input-method "korean-hangul"))
+(define-coding-system-alias 'korean-iso-7bit-lock 'iso-2022-kr)
 
 (set-language-info-alist
- "Korean" '((setup-function . setup-korean-environment)
-	    (tutorial . "TUTORIAL.kr")
-	    (charset . (korean-ksc5601))
-	    (coding-system . (korean-iso-7bit-lock korean-iso-8bit))
+ "Korean" '((setup-function . setup-korean-environment-internal)
+	    (exit-function . exit-korean-environment)
+	    (tutorial . "TUTORIAL.ko")
+	    (charset korean-ksc5601)
+	    (coding-system iso-2022-kr korean-iso-8bit)
+	    (input-method . "korean-hangul")
+	    (features korea-util)
+	    (coding-priority korean-iso-8bit iso-2022-kr)
 	    (sample-text . "Hangul (한글)	안녕하세요, 안녕하십니까")
-	    (documentation . t)))
+	    (documentation . "\
+The following key bindings are available while using Korean input methods:
+  Shift-SPC:	toggle-korean-input-mthod
+  Control-F9:	quail-hangul-switch-symbol-ksc
+  F9:		quail-hangul-switch-hanja")
+	    ))
 
 ;;; korean.el ends here

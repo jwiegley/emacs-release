@@ -414,6 +414,8 @@ These supersede the values given in `default-frame-alist'."
   "Make a frame on display DISPLAY.
 The optional second argument PARAMETERS specifies additional frame parameters."
   (interactive "sMake frame on display: ")
+  (or (string-match "\\`[^:]*:[0-9]+\\(\\.[0-9]+\\)?\\'" display)
+      (error "Invalid display, not HOST:SERVER or HOST:SERVER.SCREEN"))
   (make-frame (cons (cons 'display display) parameters)))
 
 (defun make-frame-command ()
@@ -497,6 +499,12 @@ the user during startup."
   (cdr param-list))
 
 
+(defcustom focus-follows-mouse t
+  "*Non-nil if window system changes focus when you move the mouse."
+  :type 'boolean
+  :group 'frames
+  :version "20.3")
+
 (defun other-frame (arg)
   "Select the ARG'th different visible frame, and raise it.
 All frames are arranged in a cyclic order.
@@ -519,7 +527,41 @@ A negative ARG moves in the opposite order."
     ;; Ensure, if possible, that frame gets input focus.
     (if (eq window-system 'w32)
 	(w32-focus-frame frame)
-      (set-mouse-position (selected-frame) (1- (frame-width)) 0))))
+      (when focus-follows-mouse
+	(set-mouse-position (selected-frame) (1- (frame-width)) 0)))))
+
+(defun make-frame-names-alist ()
+  (let* ((current-frame (selected-frame))
+	 (falist
+	  (cons
+	   (cons (frame-parameter current-frame 'name) current-frame) nil))
+	 (frame (next-frame nil t)))
+    (while (not (eq frame current-frame))
+      (progn
+	(setq falist (cons (cons (frame-parameter frame 'name) frame) falist))
+	(setq frame (next-frame frame t))))
+    falist))
+
+(defvar frame-name-history nil)
+(defun select-frame-by-name (name)
+  "Select the frame whose name is NAME and raise it.
+If there is no frame by that name, signal an error."
+  (interactive
+   (let* ((frame-names-alist (make-frame-names-alist))
+	   (default (car (car frame-names-alist)))
+	   (input (completing-read
+		   (format "Select Frame (default %s): " default)
+		   frame-names-alist nil t nil 'frame-name-history)))
+     (if (= (length input) 0)
+	 (list default)
+       (list input))))
+  (let* ((frame-names-alist (make-frame-names-alist))
+	 (frame (cdr (assoc name frame-names-alist))))
+    (or frame
+	(error "There is no frame named `%s'" name))
+    (make-frame-visible frame)
+    (raise-frame frame)
+    (select-frame frame)))
 
 ;;;; Frame configurations
 
@@ -675,6 +717,14 @@ that is beyond the control of Emacs and this command has no effect on it."
 		-1 1)))
   (modify-frame-parameters (selected-frame)
 			   (list (cons 'auto-lower (> arg 0)))))
+(defun set-frame-name (name)
+  "Set the name of the selected frame to NAME.
+When called interactively, prompt for the name of the frame.
+The frame name is displayed on the modeline if the terminal displays only
+one frame, otherwise the name is displayed on the frame's caption bar."
+  (interactive "sFrame name: ")
+  (modify-frame-parameters (selected-frame)
+			   (list (cons 'name name))))
 
 ;;;; Aliases for backward compatibility with Emacs 18.
 (defalias 'screen-height 'frame-height)

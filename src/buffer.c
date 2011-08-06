@@ -1,5 +1,5 @@
 /* Buffer manipulation primitives for GNU Emacs.
-   Copyright (C) 1985, 1986, 1987, 1988, 1989, 1993, 1994, 1995, 1997
+   Copyright (C) 1985, 1986, 1987, 1988, 1989, 1993, 1994, 1995, 1997, 1998
 	Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -33,6 +33,12 @@ extern int errno;
 #endif /* not MAXPATHLEN */
 
 #include <config.h>
+#ifdef STDC_HEADERS
+#include <stdlib.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include "lisp.h"
 #include "intervals.h"
 #include "window.h"
@@ -100,8 +106,11 @@ static Lisp_Object Vbuffer_local_symbols;
    buffer-local slots.  If a slot contains Qnil, then the
    corresponding buffer slot may contain a value of any type.  If a
    slot contains an integer, then prospective values' tags must be
-   equal to that integer.  When a tag does not match, the function
-   buffer_slot_type_mismatch will signal an error.  */
+   equal to that integer (except nil is always allowed).
+   When a tag does not match, the function
+   buffer_slot_type_mismatch will signal an error.
+
+   If a slot here contains -1, the corresponding variable is read-only.  */
 struct buffer buffer_local_types;
 
 /* Flags indicating which built-in buffer-local variables
@@ -165,6 +174,7 @@ Lisp_Object Qinsert_behind_hooks;
 /* For debugging; temporary.  See set_buffer_internal.  */
 /* Lisp_Object Qlisp_mode, Vcheck_symbol; */
 
+void
 nsberror (spec)
      Lisp_Object spec;
 {
@@ -342,6 +352,11 @@ The value is never nil.")
   BUF_BEGV (b) = 1;
   BUF_ZV (b) = 1;
   BUF_Z (b) = 1;
+  BUF_PT_BYTE (b) = 1;
+  BUF_GPT_BYTE (b) = 1;
+  BUF_BEGV_BYTE (b) = 1;
+  BUF_ZV_BYTE (b) = 1;
+  BUF_Z_BYTE (b) = 1;
   BUF_MODIFF (b) = 1;
   BUF_OVERLAY_MODIFF (b) = 1;
   BUF_SAVE_MODIFF (b) = 1;
@@ -422,6 +437,9 @@ NAME should be a string which is not the name of an existing buffer.")
   BUF_BEGV (b) = BUF_BEGV (b->base_buffer);
   BUF_ZV (b) = BUF_ZV (b->base_buffer);
   BUF_PT (b) = BUF_PT (b->base_buffer);
+  BUF_BEGV_BYTE (b) = BUF_BEGV_BYTE (b->base_buffer);
+  BUF_ZV_BYTE (b) = BUF_ZV_BYTE (b->base_buffer);
+  BUF_PT_BYTE (b) = BUF_PT_BYTE (b->base_buffer);
 
   b->newline_cache = 0;
   b->width_run_cache = 0;
@@ -449,31 +467,33 @@ NAME should be a string which is not the name of an existing buffer.")
   if (NILP (b->base_buffer->pt_marker))
     {
       b->base_buffer->pt_marker = Fmake_marker ();
-      Fset_marker (b->base_buffer->pt_marker,
-		   make_number (BUF_PT (b->base_buffer)), base_buffer);
+      set_marker_both (b->base_buffer->pt_marker, base_buffer,
+		       BUF_PT (b->base_buffer),
+		       BUF_PT_BYTE (b->base_buffer));
     }
   if (NILP (b->base_buffer->begv_marker))
     {
       b->base_buffer->begv_marker = Fmake_marker ();
-      Fset_marker (b->base_buffer->begv_marker,
-		   make_number (BUF_BEGV (b->base_buffer)), base_buffer);
+      set_marker_both (b->base_buffer->begv_marker, base_buffer,
+		       BUF_BEGV (b->base_buffer),
+		       BUF_BEGV_BYTE (b->base_buffer));
     }
   if (NILP (b->base_buffer->zv_marker))
     {
       b->base_buffer->zv_marker = Fmake_marker ();
-      Fset_marker (b->base_buffer->zv_marker,
-		   make_number (BUF_ZV (b->base_buffer)), base_buffer);
+      set_marker_both (b->base_buffer->zv_marker, base_buffer,
+		       BUF_ZV (b->base_buffer),
+		       BUF_ZV_BYTE (b->base_buffer));
       XMARKER (b->base_buffer->zv_marker)->insertion_type = 1;
     }
 
   /* Give the indirect buffer markers for its narrowing.  */
   b->pt_marker = Fmake_marker ();
-  Fset_marker (b->pt_marker, make_number (BUF_PT (b)), buf);
+  set_marker_both (b->pt_marker, buf, BUF_PT (b), BUF_PT_BYTE (b));
   b->begv_marker = Fmake_marker ();
-  Fset_marker (b->begv_marker, make_number (BUF_BEGV (b)), buf);
+  set_marker_both (b->begv_marker, buf, BUF_BEGV (b), BUF_BEGV_BYTE (b));
   b->zv_marker = Fmake_marker ();
-  Fset_marker (b->zv_marker, make_number (BUF_ZV (b)), buf);
-
+  set_marker_both (b->zv_marker, buf, BUF_ZV (b), BUF_ZV_BYTE (b));
   XMARKER (b->zv_marker)->insertion_type = 1;
 
   return buf;
@@ -507,8 +527,10 @@ reset_buffer (b)
   b->file_format = Qnil;
   b->last_selected_window = Qnil;
   XSETINT (b->display_count, 0);
+  b->display_time = Qnil;
   b->extra2 = Qnil;
   b->extra3 = Qnil;
+  b->enable_multibyte_characters = buffer_defaults.enable_multibyte_characters;
 }
 
 /* Reset buffer B's local variables info.
@@ -868,26 +890,31 @@ This does not change the name of the visited file (if any).")
   return current_buffer->name;
 }
 
-DEFUN ("other-buffer", Fother_buffer, Sother_buffer, 0, 2, 0,
+DEFUN ("other-buffer", Fother_buffer, Sother_buffer, 0, 3, 0,
   "Return most recently selected buffer other than BUFFER.\n\
 Buffers not visible in windows are preferred to visible buffers,\n\
 unless optional second argument VISIBLE-OK is non-nil.\n\
+If the optional third argument FRAME is non-nil, use that frame's\n\
+buffer list instead of the selected frame's buffer list.\n\
 If no other buffer exists, the buffer `*scratch*' is returned.\n\
 If BUFFER is omitted or nil, some interesting buffer is returned.")
-  (buffer, visible_ok)
-     register Lisp_Object buffer, visible_ok;
+  (buffer, visible_ok, frame)
+     register Lisp_Object buffer, visible_ok, frame;
 {
   Lisp_Object Fset_buffer_major_mode ();
   register Lisp_Object tail, buf, notsogood, tem, pred, add_ons;
   notsogood = Qnil;
 
+  if (NILP (frame))
+    frame = Fselected_frame ();
+
   tail = Vbuffer_alist;
-  pred = frame_buffer_predicate ();
+  pred = frame_buffer_predicate (frame);
 
   /* Consider buffers that have been seen in the selected frame
      before other buffers.  */
     
-  tem = frame_buffer_list ();
+  tem = frame_buffer_list (frame);
   add_ons = Qnil;
   while (CONSP (tem))
     {
@@ -1089,7 +1116,7 @@ with SIGHUP.")
      and give up if so.  */
   if (b == current_buffer)
     {
-      tem = Fother_buffer (buf, Qnil);
+      tem = Fother_buffer (buf, Qnil, Qnil);
       Fset_buffer (tem);
       if (b == current_buffer)
 	return Qnil;
@@ -1114,7 +1141,7 @@ with SIGHUP.")
   /* Delete any auto-save file, if we saved it in this session.  */
   if (STRINGP (b->auto_save_file_name)
       && b->auto_save_modified != 0
-      && SAVE_MODIFF < b->auto_save_modified)
+      && BUF_SAVE_MODIFF (b) < b->auto_save_modified)
     {
       Lisp_Object tem;
       tem = Fsymbol_value (intern ("delete-auto-save-files"));
@@ -1192,10 +1219,13 @@ with SIGHUP.")
    selected buffers are always closer to the front of the list.  This
    means that other_buffer is more likely to choose a relevant buffer.  */
 
+void
 record_buffer (buf)
      Lisp_Object buf;
 {
   register Lisp_Object link, prev;
+  Lisp_Object frame;
+  frame = Fselected_frame ();
 
   prev = Qnil;
   for (link = Vbuffer_alist; CONSP (link); link = XCONS (link)->cdr)
@@ -1219,7 +1249,8 @@ record_buffer (buf)
   /* Now move this buffer to the front of frame_buffer_list also.  */
 
   prev = Qnil;
-  for (link = frame_buffer_list (); CONSP (link); link = XCONS (link)->cdr)
+  for (link = frame_buffer_list (frame); CONSP (link);
+       link = XCONS (link)->cdr)
     {
       if (EQ (XCONS (link)->car, buf))
 	break;
@@ -1231,15 +1262,16 @@ record_buffer (buf)
   if (CONSP (link))
     {
       if (NILP (prev))
-	set_frame_buffer_list (XCONS (frame_buffer_list ())->cdr);
+	set_frame_buffer_list (frame,
+			       XCONS (frame_buffer_list (frame))->cdr);
       else
 	XCONS (prev)->cdr = XCONS (XCONS (prev)->cdr)->cdr;
 	
-      XCONS (link)->cdr = frame_buffer_list ();
-      set_frame_buffer_list (link);
+      XCONS (link)->cdr = frame_buffer_list (frame);
+      set_frame_buffer_list (frame, link);
     }
   else
-    set_frame_buffer_list (Fcons (buf, frame_buffer_list ()));
+    set_frame_buffer_list (frame, Fcons (buf, frame_buffer_list (frame)));
 }
 
 DEFUN ("set-buffer-major-mode", Fset_buffer_major_mode, Sset_buffer_major_mode, 1, 1, 0,
@@ -1294,7 +1326,7 @@ the window-buffer correspondences.")
     error ("Cannot switch buffers in a dedicated window");
 
   if (NILP (buffer))
-    buf = Fother_buffer (Fcurrent_buffer (), Qnil);
+    buf = Fother_buffer (Fcurrent_buffer (), Qnil, Qnil);
   else
     {
       buf = Fget_buffer (buffer);
@@ -1332,7 +1364,7 @@ do not put this buffer at the front of the list of recently selected ones.")
 {
   register Lisp_Object buf;
   if (NILP (buffer))
-    buf = Fother_buffer (Fcurrent_buffer (), Qnil);
+    buf = Fother_buffer (Fcurrent_buffer (), Qnil, Qnil);
   else
     {
       buf = Fget_buffer (buffer);
@@ -1345,7 +1377,7 @@ do not put this buffer at the front of the list of recently selected ones.")
   Fset_buffer (buf);
   if (NILP (norecord))
     record_buffer (buf);
-  Fselect_window (Fdisplay_buffer (buf, other_window));
+  Fselect_window (Fdisplay_buffer (buf, other_window, Qnil));
   return buf;
 }
 
@@ -1406,22 +1438,22 @@ set_buffer_internal_1 (b)
 	{
 	  Lisp_Object obuf;
 	  XSETBUFFER (obuf, old_buf);
-	  Fset_marker (old_buf->pt_marker, make_number (BUF_PT (old_buf)),
-		       obuf);
+	  set_marker_both (old_buf->pt_marker, obuf,
+			   BUF_PT (old_buf), BUF_PT_BYTE (old_buf));
 	}
       if (! NILP (old_buf->begv_marker))
 	{
 	  Lisp_Object obuf;
 	  XSETBUFFER (obuf, old_buf);
-	  Fset_marker (old_buf->begv_marker, make_number (BUF_BEGV (old_buf)),
-		       obuf);
+	  set_marker_both (old_buf->begv_marker, obuf,
+			   BUF_BEGV (old_buf), BUF_BEGV_BYTE (old_buf));
 	}
       if (! NILP (old_buf->zv_marker))
 	{
 	  Lisp_Object obuf;
 	  XSETBUFFER (obuf, old_buf);
-	  Fset_marker (old_buf->zv_marker, make_number (BUF_ZV (old_buf)),
-		       obuf);
+	  set_marker_both (old_buf->zv_marker, obuf,
+			   BUF_ZV (old_buf), BUF_ZV_BYTE (old_buf));
 	}
     }
 
@@ -1433,11 +1465,20 @@ set_buffer_internal_1 (b)
   /* If the new current buffer has markers to record PT, BEGV and ZV
      when it is not current, fetch them now.  */
   if (! NILP (b->pt_marker))
-    BUF_PT (b) = marker_position (b->pt_marker);
+    {
+      BUF_PT (b) = marker_position (b->pt_marker);
+      BUF_PT_BYTE (b) = marker_byte_position (b->pt_marker);
+    }
   if (! NILP (b->begv_marker))
-    BUF_BEGV (b) = marker_position (b->begv_marker);
+    {
+      BUF_BEGV (b) = marker_position (b->begv_marker);
+      BUF_BEGV_BYTE (b) = marker_byte_position (b->begv_marker);
+    }
   if (! NILP (b->zv_marker))
-    BUF_ZV (b) = marker_position (b->zv_marker);
+    {
+      BUF_ZV (b) = marker_position (b->zv_marker);
+      BUF_ZV_BYTE (b) = marker_byte_position (b->zv_marker);
+    }
 
   /* Look down buffer's list of local Lisp variables
      to find and update any that forward into C variables. */
@@ -1447,7 +1488,7 @@ set_buffer_internal_1 (b)
       valcontents = XSYMBOL (XCONS (XCONS (tail)->car)->car)->value;
       if ((BUFFER_LOCAL_VALUEP (valcontents)
 	   || SOME_BUFFER_LOCAL_VALUEP (valcontents))
-	  && (tem = XBUFFER_LOCAL_VALUE (valcontents)->car,
+	  && (tem = XBUFFER_LOCAL_VALUE (valcontents)->realvalue,
 	      (BOOLFWDP (tem) || INTFWDP (tem) || OBJFWDP (tem))))
 	/* Just reference the variable
 	     to cause it to become set for this buffer.  */
@@ -1462,7 +1503,7 @@ set_buffer_internal_1 (b)
 	valcontents = XSYMBOL (XCONS (XCONS (tail)->car)->car)->value;
 	if ((BUFFER_LOCAL_VALUEP (valcontents)
 	     || SOME_BUFFER_LOCAL_VALUEP (valcontents))
-	    && (tem = XBUFFER_LOCAL_VALUE (valcontents)->car,
+	    && (tem = XBUFFER_LOCAL_VALUE (valcontents)->realvalue,
 		(BOOLFWDP (tem) || INTFWDP (tem) || OBJFWDP (tem))))
 	  /* Just reference the variable
                to cause it to become set for this buffer.  */
@@ -1493,33 +1534,42 @@ set_buffer_temp (b)
 	{
 	  Lisp_Object obuf;
 	  XSETBUFFER (obuf, old_buf);
-	  Fset_marker (old_buf->pt_marker, make_number (BUF_PT (old_buf)),
-		       obuf);
+	  set_marker_both (old_buf->pt_marker, obuf,
+			   BUF_PT (old_buf), BUF_PT_BYTE (old_buf));
 	}
       if (! NILP (old_buf->begv_marker))
 	{
 	  Lisp_Object obuf;
 	  XSETBUFFER (obuf, old_buf);
-	  Fset_marker (old_buf->begv_marker, make_number (BUF_BEGV (old_buf)),
-		       obuf);
+	  set_marker_both (old_buf->begv_marker, obuf,
+			   BUF_BEGV (old_buf), BUF_BEGV_BYTE (old_buf));
 	}
       if (! NILP (old_buf->zv_marker))
 	{
 	  Lisp_Object obuf;
 	  XSETBUFFER (obuf, old_buf);
-	  Fset_marker (old_buf->zv_marker, make_number (BUF_ZV (old_buf)),
-		       obuf);
+	  set_marker_both (old_buf->zv_marker, obuf,
+			   BUF_ZV (old_buf), BUF_ZV_BYTE (old_buf));
 	}
     }
 
   /* If the new current buffer has markers to record PT, BEGV and ZV
      when it is not current, fetch them now.  */
   if (! NILP (b->pt_marker))
-    BUF_PT (b) = marker_position (b->pt_marker);
+    {
+      BUF_PT (b) = marker_position (b->pt_marker);
+      BUF_PT_BYTE (b) = marker_byte_position (b->pt_marker);
+    }
   if (! NILP (b->begv_marker))
-    BUF_BEGV (b) = marker_position (b->begv_marker);
+    {
+      BUF_BEGV (b) = marker_position (b->begv_marker);
+      BUF_BEGV_BYTE (b) = marker_byte_position (b->begv_marker);
+    }
   if (! NILP (b->zv_marker))
-    BUF_ZV (b) = marker_position (b->zv_marker);
+    {
+      BUF_ZV (b) = marker_position (b->zv_marker);
+      BUF_ZV_BYTE (b) = marker_byte_position (b->zv_marker);
+    }
 }
 
 DEFUN ("set-buffer", Fset_buffer, Sset_buffer, 1, 1, 0,
@@ -1540,6 +1590,17 @@ Use `switch-to-buffer' or `pop-to-buffer' to switch buffers permanently.")
     error ("Selecting deleted buffer");
   set_buffer_internal (XBUFFER (buf));
   return buf;
+}
+
+/* Set the current buffer to BUFFER provided it is alive.  */
+
+Lisp_Object
+set_buffer_if_live (buffer)
+     Lisp_Object buffer;
+{
+  if (! NILP (XBUFFER (buffer)->name))
+    Fset_buffer (buffer);
+  return Qnil;
 }
 
 DEFUN ("barf-if-buffer-read-only", Fbarf_if_buffer_read_only,
@@ -1569,7 +1630,7 @@ selected window if it is displayed there.")
       XSETBUFFER (buffer, current_buffer);
 
       /* If we're burying the current buffer, unshow it.  */
-      Fswitch_to_buffer (Fother_buffer (buffer, Qnil), Qnil);
+      Fswitch_to_buffer (Fother_buffer (buffer, Qnil, Qnil), Qnil);
     }
   else
     {
@@ -1613,6 +1674,7 @@ so the buffer is truly empty after this.")
   return Qnil;
 }
 
+void
 validate_region (b, e)
      register Lisp_Object *b, *e;
 {
@@ -1628,6 +1690,162 @@ validate_region (b, e)
   if (!(BEGV <= XINT (*b) && XINT (*b) <= XINT (*e)
         && XINT (*e) <= ZV))
     args_out_of_range (*b, *e);
+}
+
+/* Advance BYTE_POS up to a character boundary
+   and return the adjusted position.  */
+
+static int
+advance_to_char_boundary (byte_pos)
+     int byte_pos;
+{
+  int c;
+
+  if (byte_pos == BEG)
+    /* Beginning of buffer is always a character boundary.  */
+    return 1;
+
+  c = FETCH_BYTE (byte_pos);
+  if (! CHAR_HEAD_P (c))
+    {
+      /* We should advance BYTE_POS only when C is a constituen of a
+         multibyte sequence.  */
+      DEC_POS (byte_pos);
+      INC_POS (byte_pos);
+      /* If C is a constituent of a multibyte sequence, BYTE_POS was
+         surely advance to the correct character boundary.  If C is
+         not, BYTE_POS was unchanged.  */
+    }
+
+  return byte_pos;
+}
+
+DEFUN ("set-buffer-multibyte", Fset_buffer_multibyte, Sset_buffer_multibyte,
+       1, 1, 0,
+  "Set the multibyte flag of the current buffer to FLAG.\n\
+If FLAG is t, this makes the buffer a multibyte buffer.\n\
+If FLAG is nil, this makes the buffer a single-byte buffer.\n\
+The buffer contents remain unchanged as a sequence of bytes\n\
+but the contents viewed as characters do change.")
+  (flag)
+     Lisp_Object flag;
+{
+  Lisp_Object tail, markers;
+
+  /* Do nothing if nothing actually changes.  */
+  if (NILP (flag) == NILP (current_buffer->enable_multibyte_characters))
+    return flag;
+
+  /* It would be better to update the list,
+     but this is good enough for now.  */
+  if (! EQ (current_buffer->undo_list, Qt))
+    current_buffer->undo_list = Qnil;
+
+  /* If the cached position is for this buffer, clear it out.  */
+  clear_charpos_cache (current_buffer);
+
+  if (NILP (flag))
+    {
+      /* Do this first, so it can use CHAR_TO_BYTE
+	 to calculate the old correspondences.  */
+      set_intervals_multibyte (0);
+
+      current_buffer->enable_multibyte_characters = Qnil;
+
+      Z = Z_BYTE;
+      BEGV = BEGV_BYTE;
+      ZV = ZV_BYTE;
+      GPT = GPT_BYTE;
+      TEMP_SET_PT_BOTH (PT_BYTE, PT_BYTE);
+
+      tail = BUF_MARKERS (current_buffer);
+      while (XSYMBOL (tail) != XSYMBOL (Qnil))
+	{
+	  XMARKER (tail)->charpos = XMARKER (tail)->bytepos;
+	  tail = XMARKER (tail)->chain;
+	}
+    }
+  else
+    {
+      /* Be sure not to have a multibyte sequence striding over the GAP.
+	 Ex: We change this: "...abc\201\241\241 _GAP_ \241\241\241..."
+	     to: "...abc _GAP_ \201\241\241\241\241\241..."  */
+
+      if (GPT_BYTE > 1 && GPT_BYTE < Z_BYTE
+	  && ! CHAR_HEAD_P (*(GAP_END_ADDR)))
+	{
+	  unsigned char *p = GPT_ADDR - 1;
+
+	  while (! CHAR_HEAD_P (*p) && p > BEG_ADDR) p--;
+	  if (BASE_LEADING_CODE_P (*p))
+	    {
+	      int new_gpt = GPT_BYTE - (GPT_ADDR - p);
+
+	      move_gap_both (new_gpt, new_gpt);
+	    }
+	}
+
+      /* Do this first, so that chars_in_text asks the right question.
+	 set_intervals_multibyte needs it too.  */
+      current_buffer->enable_multibyte_characters = Qt;
+
+      GPT_BYTE = advance_to_char_boundary (GPT_BYTE);
+      GPT = chars_in_text (BEG_ADDR, GPT_BYTE - BEG_BYTE) + BEG;
+
+      Z = chars_in_text (GAP_END_ADDR, Z_BYTE - GPT_BYTE) + GPT;
+
+      BEGV_BYTE = advance_to_char_boundary (BEGV_BYTE);
+      if (BEGV_BYTE > GPT_BYTE)
+	BEGV = chars_in_text (GAP_END_ADDR, BEGV_BYTE - GPT_BYTE) + GPT;
+      else
+	BEGV = chars_in_text (BEG_ADDR, BEGV_BYTE - BEG_BYTE) + BEG;
+
+      ZV_BYTE = advance_to_char_boundary (ZV_BYTE);
+      if (ZV_BYTE > GPT_BYTE)
+	ZV = chars_in_text (GAP_END_ADDR, ZV_BYTE - GPT_BYTE) + GPT;
+      else
+	ZV = chars_in_text (BEG_ADDR, ZV_BYTE - BEG_BYTE) + BEG;
+
+      {
+	int pt_byte = advance_to_char_boundary (PT_BYTE);
+	int pt;
+
+	if (pt_byte > GPT_BYTE)
+	  pt = chars_in_text (GAP_END_ADDR, pt_byte - GPT_BYTE) + GPT;
+	else
+	  pt = chars_in_text (BEG_ADDR, pt_byte - BEG_BYTE) + BEG;
+	TEMP_SET_PT_BOTH (pt, pt_byte);
+      }
+
+      tail = markers = BUF_MARKERS (current_buffer);
+
+      /* This prevents BYTE_TO_CHAR (that is, buf_bytepos_to_charpos) from
+	 getting confused by the markers that have not yet been updated.
+	 It is also a signal that it should never create a marker.  */
+      BUF_MARKERS (current_buffer) = Qnil;
+
+      while (XSYMBOL (tail) != XSYMBOL (Qnil))
+	{
+	  XMARKER (tail)->bytepos
+	    = advance_to_char_boundary (XMARKER (tail)->bytepos);
+	  XMARKER (tail)->charpos = BYTE_TO_CHAR (XMARKER (tail)->bytepos);
+
+	  tail = XMARKER (tail)->chain;
+	}
+
+      /* Make sure no markers were put on the chain
+	 while the chain value was incorrect.  */
+      if (! EQ (BUF_MARKERS (current_buffer), Qnil))
+	abort ();
+
+      BUF_MARKERS (current_buffer) = markers;
+
+      /* Do this last, so it can calculate the new correspondences
+	 between chars and bytes.  */
+      set_intervals_multibyte (1);
+    }
+
+  return flag;
 }
 
 DEFUN ("kill-all-local-variables", Fkill_all_local_variables, Skill_all_local_variables,
@@ -1706,26 +1924,26 @@ swap_out_buffer_local_variables (b)
       sym = XCONS (XCONS (alist)->car)->car;
 
       /* Need not do anything if some other buffer's binding is now encached.  */
-      tem = XCONS (XBUFFER_LOCAL_VALUE (XSYMBOL (sym)->value)->cdr)->car;
+      tem = XBUFFER_LOCAL_VALUE (XSYMBOL (sym)->value)->buffer;
       if (XBUFFER (tem) == current_buffer)
 	{
 	  /* Symbol is set up for this buffer's old local value.
 	     Set it up for the current buffer with the default value.  */
 
-	  tem = XCONS (XBUFFER_LOCAL_VALUE (XSYMBOL (sym)->value)->cdr)->cdr;
+	  tem = XBUFFER_LOCAL_VALUE (XSYMBOL (sym)->value)->cdr;
 	  /* Store the symbol's current value into the alist entry
 	     it is currently set up for.  This is so that, if the
 	     local is marked permanent, and we make it local again
 	     later in Fkill_all_local_variables, we don't lose the value.  */
 	  XCONS (XCONS (tem)->car)->cdr
-	    = do_symval_forwarding (XBUFFER_LOCAL_VALUE (XSYMBOL (sym)->value)->car);
+	    = do_symval_forwarding (XBUFFER_LOCAL_VALUE (XSYMBOL (sym)->value)->realvalue);
 	  /* Switch to the symbol's default-value alist entry.  */
 	  XCONS (tem)->car = tem;
 	  /* Mark it as current for buffer B.  */
-	  XCONS (XBUFFER_LOCAL_VALUE (XSYMBOL (sym)->value)->cdr)->car
-	    = buffer;
+	  XBUFFER_LOCAL_VALUE (XSYMBOL (sym)->value)->buffer = buffer;
 	  /* Store the current value into any forwarding in the symbol.  */
-	  store_symval_forwarding (sym, XBUFFER_LOCAL_VALUE (XSYMBOL (sym)->value)->car,
+	  store_symval_forwarding (sym,
+				   XBUFFER_LOCAL_VALUE (XSYMBOL (sym)->value)->realvalue,
 				   XCONS (tem)->cdr);
 	}
     }
@@ -2038,9 +2256,11 @@ struct sortvec
 };
 
 static int
-compare_overlays (s1, s2)
-     struct sortvec *s1, *s2;
+compare_overlays (v1, v2)
+     const void *v1, *v2;
 {
+  const struct sortvec *s1 = (const struct sortvec *) v1;
+  const struct sortvec *s2 = (const struct sortvec *) v2;
   if (s1->priority != s2->priority)
     return s1->priority - s2->priority;
   if (s1->beg != s2->beg)
@@ -2155,6 +2375,8 @@ record_overlay_string (ssl, str, str2, pri, size)
      Lisp_Object str, str2, pri;
      int size;
 {
+  int nbytes;
+
   if (ssl->used == ssl->size)
     {
       if (ssl->buf)
@@ -2169,9 +2391,29 @@ record_overlay_string (ssl, str, str2, pri, size)
   ssl->buf[ssl->used].size = size;
   ssl->buf[ssl->used].priority = (INTEGERP (pri) ? XINT (pri) : 0);
   ssl->used++;
-  ssl->bytes += XSTRING (str)->size;
+
+  if (NILP (current_buffer->enable_multibyte_characters))
+    nbytes = XSTRING (str)->size;
+  else if (! STRING_MULTIBYTE (str))
+    nbytes = count_size_as_multibyte (XSTRING (str)->data,
+				      STRING_BYTES (XSTRING (str)));
+  else
+    nbytes = STRING_BYTES (XSTRING (str));
+
+  ssl->bytes += nbytes;
+
   if (STRINGP (str2))
-    ssl->bytes += XSTRING (str2)->size;
+    {
+      if (NILP (current_buffer->enable_multibyte_characters))
+	nbytes = XSTRING (str2)->size;
+      else if (! STRING_MULTIBYTE (str2))
+	nbytes = count_size_as_multibyte (XSTRING (str2)->data,
+					  STRING_BYTES (XSTRING (str2)));
+      else
+	nbytes = STRING_BYTES (XSTRING (str2));
+
+      ssl->bytes += nbytes;
+    }
 }
 
 /* Return the concatenation of the strings associated with overlays that
@@ -2194,6 +2436,7 @@ overlay_strings (pos, w, pstr)
 {
   Lisp_Object ov, overlay, window, str;
   int startpos, endpos;
+  int multibyte = ! NILP (current_buffer->enable_multibyte_characters);
 
   overlay_heads.used = overlay_heads.bytes = 0;
   overlay_tails.used = overlay_tails.bytes = 0;
@@ -2277,20 +2520,28 @@ overlay_strings (pos, w, pstr)
       p = overlay_str_buf;
       for (i = overlay_tails.used; --i >= 0;)
 	{
+	  int nbytes;
 	  tem = overlay_tails.buf[i].string;
-	  bcopy (XSTRING (tem)->data, p, XSTRING (tem)->size);
-	  p += XSTRING (tem)->size;
+	  nbytes = copy_text (XSTRING (tem)->data, p,
+			      STRING_BYTES (XSTRING (tem)),
+			      STRING_MULTIBYTE (tem), multibyte);
+	  p += nbytes;
 	}
       for (i = 0; i < overlay_heads.used; ++i)
 	{
+	  int nbytes;
 	  tem = overlay_heads.buf[i].string;
-	  bcopy (XSTRING (tem)->data, p, XSTRING (tem)->size);
-	  p += XSTRING (tem)->size;
+	  nbytes = copy_text (XSTRING (tem)->data, p,
+			      STRING_BYTES (XSTRING (tem)),
+			      STRING_MULTIBYTE (tem), multibyte);
+	  p += nbytes;
 	  tem = overlay_heads.buf[i].string2;
 	  if (STRINGP (tem))
 	    {
-	      bcopy (XSTRING (tem)->data, p, XSTRING (tem)->size);
-	      p += XSTRING (tem)->size;
+	      nbytes = copy_text (XSTRING (tem)->data, p,
+				  STRING_BYTES (XSTRING (tem)),
+				  STRING_MULTIBYTE (tem), multibyte);
+	      p += nbytes;
 	    }
 	}
       if (p != overlay_str_buf + total)
@@ -2617,6 +2868,7 @@ fix_overlays_in_range (start, end)
    `overlays_before' of the buffer *BP.  Before the insertion, `point'
    was at PREV, and now is at POS.  */
 
+void
 fix_overlays_before (bp, prev, pos)
      struct buffer *bp;
      int prev, pos;
@@ -2932,8 +3184,8 @@ DEFUN ("delete-overlay", Fdelete_overlay, Sdelete_overlay, 1, 1, 0,
   b->overlays_after  = Fdelq (overlay, b->overlays_after);
 
   modify_overlay (b,
-		    marker_position (OVERLAY_START (overlay)),
-		    marker_position (OVERLAY_END   (overlay)));
+		  marker_position (OVERLAY_START (overlay)),
+		  marker_position (OVERLAY_END   (overlay)));
 
   Fset_marker (OVERLAY_START (overlay), Qnil, Qnil);
   Fset_marker (OVERLAY_END   (overlay), Qnil, Qnil);
@@ -3526,7 +3778,8 @@ evaporate_overlays (pos)
 }
 
 /* Somebody has tried to store a value with an unacceptable type
-   into the buffer-local slot with offset OFFSET.  */
+   in the slot with offset OFFSET.  */
+
 void
 buffer_slot_type_mismatch (offset)
      int offset;
@@ -3539,14 +3792,16 @@ buffer_slot_type_mismatch (offset)
     case Lisp_Int:	type_name = "integers";  break;
     case Lisp_String:	type_name = "strings";   break;
     case Lisp_Symbol:	type_name = "symbols";   break;
+
     default:
       abort ();
     }
 
-  error ("only %s should be stored in the buffer-local variable %s",
+  error ("Only %s should be stored in the buffer-local variable %s",
 	 type_name, XSYMBOL (sym)->name->data);
 }
 
+void
 init_buffer_once ()
 {
   register Lisp_Object tem;
@@ -3606,6 +3861,7 @@ init_buffer_once ()
   buffer_defaults.cache_long_line_scans = Qnil;
   buffer_defaults.file_truename = Qnil;
   XSETFASTINT (buffer_defaults.display_count, 0);
+  buffer_defaults.display_time = Qnil;
 
   /* Assign the local-flags to the slots that have default values.
      The local flag is a bit that is used in the buffer
@@ -3632,6 +3888,8 @@ init_buffer_once ()
   XSETINT (buffer_local_flags.invisibility_spec, -1);
   XSETINT (buffer_local_flags.file_format, -1);
   XSETINT (buffer_local_flags.display_count, -1);
+  XSETINT (buffer_local_flags.display_time, -1);
+  XSETINT (buffer_local_flags.enable_multibyte_characters, -1);
 
   XSETFASTINT (buffer_local_flags.mode_line_format, 1);
   XSETFASTINT (buffer_local_flags.abbrev_mode, 2);
@@ -3658,12 +3916,9 @@ init_buffer_once ()
   XSETFASTINT (buffer_local_flags.cache_long_line_scans, 0x10000);
   XSETFASTINT (buffer_local_flags.category_table, 0x20000);
   XSETFASTINT (buffer_local_flags.direction_reversed, 0x40000);
-  XSETFASTINT (buffer_local_flags.enable_multibyte_characters, 0x80000);
+  XSETFASTINT (buffer_local_flags.buffer_file_coding_system, 0x80000);
   /* Make this one a permanent local.  */
   buffer_permanent_local_flags |= 0x80000;
-  XSETFASTINT (buffer_local_flags.buffer_file_coding_system, 0x100000);
-  /* Make this one a permanent local.  */
-  buffer_permanent_local_flags |= 0x100000;
   
   Vbuffer_alist = Qnil;
   current_buffer = 0;
@@ -3690,6 +3945,7 @@ init_buffer_once ()
   Fset_buffer (Fget_buffer_create (build_string ("*scratch*")));
 }
 
+void
 init_buffer ()
 {
   char buf[MAXPATHLEN+1];
@@ -3699,10 +3955,13 @@ init_buffer ()
   int rc;
 
   Fset_buffer (Fget_buffer_create (build_string ("*scratch*")));
+  if (NILP (buffer_defaults.enable_multibyte_characters))
+    Fset_buffer_multibyte (Qnil);
 
   /* If PWD is accurate, use it instead of calling getwd.  This is faster
      when PWD is right, and may avoid a fatal error.  */
-  if ((pwd = getenv ("PWD")) != 0 && IS_DIRECTORY_SEP (*pwd)
+  if ((pwd = getenv ("PWD")) != 0
+      && (IS_DIRECTORY_SEP (*pwd) || (*pwd && IS_DEVICE_SEP (pwd[1])))
       && stat (pwd, &pwdstat) == 0
       && stat (".", &dotstat) == 0
       && dotstat.st_ino == pwdstat.st_ino
@@ -3733,7 +3992,12 @@ init_buffer ()
   /* Add /: to the front of the name
      if it would otherwise be treated as magic.  */
   temp = Ffind_file_name_handler (current_buffer->directory, Qt);
-  if (! NILP (temp))
+  if (! NILP (temp)
+      /* If the default dir is just /, TEMP is non-nil
+	 because of the ange-ftp completion handler.
+	 However, it is not necessary to turn / into /:/.
+	 So avoid doing that.  */
+      && strcmp ("/", XSTRING (current_buffer->directory)->data))
     current_buffer->directory
       = concat2 (build_string ("/:"), current_buffer->directory);
 
@@ -3742,6 +4006,7 @@ init_buffer ()
 }
 
 /* initialize the buffer routines */
+void
 syms_of_buffer ()
 {
   extern Lisp_Object Qdisabled;
@@ -3882,6 +4147,7 @@ A string is printed verbatim in the mode line except for %-constructs:\n\
   (%-constructs are allowed when the string is the entire mode-line-format\n\
    or when it is found in a cons-cell or a list)\n\
   %b -- print buffer name.      %f -- print visited file name.\n\
+  %F -- print frame name.\n\
   %* -- print %, * or hyphen.   %+ -- print *, % or hyphen.\n\
 	% means buffer is read-only and * means it is modified.\n\
 	For a modified read-only buffer, %* gives % and %+ gives *.\n\
@@ -3944,7 +4210,8 @@ This variable does not apply to characters whose display is specified\n\
 in the current display table (if there is one).");
 
   DEFVAR_PER_BUFFER ("enable-multibyte-characters",
-		     &current_buffer->enable_multibyte_characters, Qnil,
+		     &current_buffer->enable_multibyte_characters,
+		     make_number (-1),
     "*Non-nil means the buffer contents are regarded as multi-byte form\n\
 of characters, not a binary code.  This affects the display, file I/O,\n\
 and behaviors of various editing commands.");
@@ -3953,7 +4220,7 @@ and behaviors of various editing commands.");
 		     &current_buffer->buffer_file_coding_system, Qnil,
     "Coding system to be used for encoding the buffer contents on saving.\n\
 If it is nil, the buffer is saved without any code conversion unless\n\
-some coding system is specified in file-coding-system-alist\n\
+some coding system is specified in `file-coding-system-alist'\n\
 for the buffer file.\n\
 \n\
 This variable is never applied to a way of decoding\n\
@@ -4162,6 +4429,7 @@ The functions are run using the `run-hooks' function.");
 	 but make-docfile can find it in this comment.  */
   DEFVAR_PER_BUFFER ("buffer-undo-list", &current_buffer->undo_list, Qnil,
     "List of undo entries in current buffer.\n\
+This variable is always local in all buffers.\n\
 Recent changes come first; older changes follow newer.\n\
 \n\
 An entry (BEG . END) represents an insertion which begins at\n\
@@ -4230,16 +4498,19 @@ the cache should not affect the behavior of any of the motion\n\
 functions; it should only affect their performance.");
 
   DEFVAR_PER_BUFFER ("point-before-scroll", &current_buffer->point_before_scroll, Qnil,
-  "Value of point before the last series of scroll operations, or nil.");
+  "Value of point before the last series of scroll operations, or nil.\n\
+This variable is always local in all buffers.");
 
   DEFVAR_PER_BUFFER ("buffer-file-format", &current_buffer->file_format, Qnil,
     "List of formats to use when saving this buffer.\n\
+This variable is always local in all buffers.\n\
 Formats are defined by `format-alist'.  This variable is\n\
 set when a file is visited.  Automatically local in all buffers.");
 
   DEFVAR_PER_BUFFER ("buffer-invisibility-spec",
 		     &current_buffer->invisibility_spec, Qnil,
   "Invisibility spec of this buffer.\n\
+This variable is always local in all buffers.\n\
 The default is t, which means that text is invisible\n\
 if it has a non-nil `invisible' property.\n\
 If the value is a list, a text character is invisible if its `invisible'\n\
@@ -4250,7 +4521,17 @@ and they have an ellipsis as well if ELLIPSIS is non-nil.");
 
   DEFVAR_PER_BUFFER ("buffer-display-count",
 		     &current_buffer->display_count, Qnil,
-  "A number incremented each time the buffer is displayed in a window.");
+  "A number incremented each time this buffer is displayed in a window.\n\
+This variable is always local in all buffers.\n\
+The function `set-window-buffer increments it.");
+
+  DEFVAR_PER_BUFFER ("buffer-display-time",
+		     &current_buffer->display_time, Qnil,
+  "Time stamp updated each time this buffer is displayed in a window.\n\
+This variable is always local in all buffers.\n\
+The function `set-window-buffer' updates this variable\n\
+to the value obtained by calling `current-time'.\n\
+If the buffer has never been shown in a window, the value is nil.");
 
   DEFVAR_LISP ("transient-mark-mode", &Vtransient_mark_mode,
     "*Non-nil means deactivate the mark when the buffer contents change.\n\
@@ -4291,7 +4572,6 @@ is a member of the list.");
   defsubr (&Sbuffer_disable_undo);
   defsubr (&Sbuffer_enable_undo);
   defsubr (&Skill_buffer);
-  defsubr (&Serase_buffer);
   defsubr (&Sset_buffer_major_mode);
   defsubr (&Sswitch_to_buffer);
   defsubr (&Spop_to_buffer);
@@ -4299,6 +4579,8 @@ is a member of the list.");
   defsubr (&Sset_buffer);
   defsubr (&Sbarf_if_buffer_read_only);
   defsubr (&Sbury_buffer);
+  defsubr (&Serase_buffer);
+  defsubr (&Sset_buffer_multibyte);
   defsubr (&Skill_all_local_variables);
 
   defsubr (&Soverlayp);
@@ -4319,6 +4601,7 @@ is a member of the list.");
   defsubr (&Soverlay_put);
 }
 
+void
 keys_of_buffer ()
 {
   initial_define_key (control_x_map, 'b', "switch-to-buffer");

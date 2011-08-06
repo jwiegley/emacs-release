@@ -1,3 +1,200 @@
+1998-08-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Version 20.3 released.
+
+1998-07-30  Paul Eggert  <eggert@twinsun.com>
+
+	* Makefile.in (Makefile, src/Makefile, src/config.stamp)
+	(lib-src/Makefile, man/Makefile, oldXMenu/Makefile)
+	(lwlib/Makefile, leim/Makefile):
+	Prepend $(srcdir)/ to rule dependencies outside this dir.
+
+1998-06-30  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* configure.in: Use unset CDPATH instead of making it empty.
+
+1998-06-20  Karl Heuer  <kwzh@gnu.org>
+
+	* configure.in: Assume unspecified Solaris is 2.5, not 2.4.
+
+1998-06-07  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* make-dist (MANIFEST): Include most subdirs, but exclude subdirs.el
+	and default.el.  Sort the results.
+
+1998-05-31  Karl Heuer  <kwzh@gnu.org>
+
+	* Makefile.in (install-arch-indep): Don't die if site-lisp/ isn't
+	writable.
+
+1998-05-14  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Makefile.in (install-arch-indep):
+	Don't alter site-lisp/subdirs.el if it exists.
+
+1998-05-12  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Makefile.in (install-arch-indep): Put `-' on commands to create
+	subdirs.el in site-lisp dirs.
+
+1998-05-07  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* Makefile.in (install-arch-indep): Fix typo in previous change.
+
+1998-05-06  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* Makefile.in (install-arch-indep): Pass --dir-file to install-info.
+
+1998-04-28  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* Makefile.in (mkdir): Create the site-lisp dirs.
+	(install-arch-indep): Make site-lisp/subdirs files world-readable.
+
+1998-04-26  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* Makefile.in (INSTALL_INFO): New variable.
+	(install-arch-indep): Don't replace the dir file if it already exists.
+	Use the install-info program, via INSTALL_INFO, to add entries.
+	Make the `info' subdir and the Info files world-readable.
+
+1998-04-16  Eli Zaretskii  <eliz@delysid.gnu.org>
+
+	* config.bat: Make sure the environment is large enough to support
+	all the "set foo=bar" commands.  Update pointers to DJGPP FTP
+	sites.
+
+1998-04-10  Karl Heuer  <kwzh@gnu.org>
+
+	* make-dist: Don't accept EMACS=t when testing for $EMACS set.
+
+1998-04-06  Jonathan I. Kamens  <jik@kamens.brookline.ma.us>
+
+	* configure.in: Add --with-gssapi to specify GSS-API
+	authentication support for movemail.
+
+1998-04-02  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Makefile.in (install-arch-indep): Fix previous change.
+
+1998-03-30  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Makefile.in (info): Run man in build dir, not srcdir.
+
+1998-03-28  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Makefile.in (install-arch-indep): Fix previous change.
+
+1998-03-23  Kenichi Handa  <handa@etl.go.jp>
+
+	* Makefile.in (top_distclean): Check the existence of `lock'
+	subdir.
+
+1998-03-22  Richard Stallman  <rms@gnu.org>
+
+	* Makefile.in (install-arch-indep): Put special subdirs.el files
+	in site-lisp dirs.  Use normal-top-level-add-subdirs-to-load-path.
+
+1998-03-21  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* make-dist: Fix shell syntax in check for missing .el or .elc files.
+
+1998-03-09  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* configure.in (hppa-hp-hpux1[0-9]*): Handle versions 1X like 10.
+	(m68*-hp-hpux*): Handle versions 1X like 10.
+
+1998-03-07  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* make-dist: PROBLEMS is now in etc, not top level dir.
+
+	* Makefile.in (SOURCES): Delete PROBLEMS.
+
+1998-02-25  Richard Stallman  <rms@gnu.org>
+
+	* configure.in (hppa*-hp-hpux*): Use hpux10 by default.
+
+	* Makefile.in (install-arch-indep): Do chmod a+x on subdirs.
+
+1998-01-17  Richard Stallman  <rms@gnu.org>
+
+	* Makefile.in (install-arch-indep): Add semicolon before `else'.
+
+1998-01-02  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* make-dist (tempparent): New option --no-check.
+
+	* make-dist: Don't do anything with cpp directory.
+
+1997-12-20  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* configure.in (sparc-fujitsu-sysv4*): New target.
+
+1997-12-17  Andreas Schwab  <schwab@gnu.org>
+
+	* configure.in: Cache more tests.  Add missing quotes around
+	message with embedded comma.
+
+1997-12-04  Karl Heuer  <kwzh@gnu.org>
+
+	* Makefile.in (unlock, relock): Don't reference cpp/ directory.
+
+1997-11-26  Joel N. Weber II  <devnull@gnu.org>
+
+	* make-dist: Changed the comment about `umask 0' to say `Don't
+ 	restrict access to any files.'; previously it said `Don't protect
+ 	any files', which may have implied that we think fascism is good.
+
+1997-11-24  Paul Eggert  <eggert@twinsun.com>
+
+	* configure.in (AC_CHECK_FUNCS): Add strftime.  The new GNU C library
+	strftime needs the underlying host's strftime for locale dependent
+	formats.
+
+1997-11-20  Abraham Nahum  <miko@uxsrvc.tti.co.il>
+
+	* configure.in (i586-dg-dguxR4.*): New name in case branch.
+
+1997-11-20  Eli Zaretskii  <eliz@is.elta.co.il>
+
+	* config.bat: Configure the man subdirectory.
+
+1997-11-07  Paul Eggert  <eggert@twinsun.com>
+
+	* configure.in (AC_CHECK_LIB): Add -lintl.
+
+1997-11-07  Karl Heuer  <kwzh@gnu.org>
+
+	* make-dist (check for .elc files): Avoid bash-specific syntax.
+	(check for overflow 14-char limit): Simplify.
+
+1997-11-07  Richard Stallman  <rms@gnu.org>
+
+	* Makefile.in (install): Move blessmail last.
+
+1997-10-02  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* configure.in (gettimeofday, one arg or two):
+	Clarify messages by avoiding double negative.
+
+1997-09-30  Karl Eichwalder  <ke@suse.de>
+
+	* Makefile.in (install-arch-indep): install the widget info file.
+
+1997-09-24  Jonathan I. Kamens  <jik@kamens.brookline.ma.us>
+
+	* configure.in (with-pop, with-kerberos): Need to check Kerberos
+	libraries in reverse order, so that libraries will appear in the
+	correct dependency order on the link line (and so that the
+	configure checks themselves will work properly when early
+	libraries depend on later ones).
+
+1997-09-21  Erik Naggum  <erik@naggum.no>
+
+	* make-dist (making links to `src'): Keep timestamp on copied
+	files.
+
+	* make-delta: New script to produce delta distributions.
+
 1997-09-19  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 20.2 released.

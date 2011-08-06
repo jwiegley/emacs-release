@@ -102,7 +102,7 @@ buffer.
 @findex picture-open-line
   To do actual insertion, you must use special commands.  @kbd{C-o}
 (@code{picture-open-line}) creates a blank line after the current line;
-it never splits a line.  @kbd{C-M-o}, @code{split-line}, makes sense in
+it never splits a line.  @kbd{C-M-o} (@code{split-line}) makes sense in
 Picture mode, so it is not changed.  @kbd{C-j}
 (@code{picture-duplicate-line}) inserts below the current line another
 line with the same contents.@refill
@@ -198,7 +198,7 @@ argument it clears the text that it moves over.
 @kindex C-c TAB @r{(Picture mode)}
 @findex picture-set-tab-stops
   The context-based and tab-stop-based forms of tabbing are brought
-together by the command @kbd{C-c @key{TAB}}, @code{picture-set-tab-stops}.
+together by the command @kbd{C-c @key{TAB}} (@code{picture-set-tab-stops}).
 This command sets the tab stops to the positions which @kbd{M-@key{TAB}}
 would consider significant in the current line.  The use of this command,
 together with @key{TAB}, can get the effect of context-based tabbing.  But

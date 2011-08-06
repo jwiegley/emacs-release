@@ -7,6 +7,11 @@
 
 @setchapternewpage odd
 
+@dircategory Editors
+@direntry
+* MH-E: (mh-e).		Emacs interface to the MH mail system.
+@end direntry
+
 @c Version variables.
 @set EDITION 1.2
 @set VERSION 5.0.2
@@ -2068,7 +2073,7 @@ not, you can order a printed manual, which has the desirable side-effect
 of helping to support the Free Software Foundation which made all this
 great software available.  You can find an order form by running
 @kbd{C-h C-d}, or you can request an order form from
-@i{gnu@@prep.ai.mit.edu}.}
+@i{gnu@@gnu.org}.}
 @end iftex
 @ifinfo
 @footnote{Perhaps you can find the online version of @ref{Top, The GNU
@@ -2077,7 +2082,7 @@ If not, you can order a printed manual, which has the desirable
 side-effect of helping to support the Free Software Foundation which
 made all this great software available.  You can find an order form by
 running @kbd{C-h C-d}, or you can request an order form from
-@i{gnu@@prep.ai.mit.edu}.}
+@i{gnu@@gnu.org}.}
 @end ifinfo
 and you can look at the code itself for examples.  Look in the Emacs
 Lisp directory on your system (such as @file{/usr/local/lib/emacs/lisp})

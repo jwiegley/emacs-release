@@ -3,7 +3,8 @@
 #
 EMACS = emacs
 SOURCES = *.el COPYING Makefile
-lisptagsfiles = [a-zA-Z]*.el [a-zA-Z]*/[a-zA-Z]*.el
+lisptagsfiles1 = [a-zA-Z]*.el
+lisptagsfiles2 = [a-zA-Z]*/[a-zA-Z]*.el
 ETAGS = ../lib-src/etags
 
 dontcompilefiles: bindings.el blessmail.el bruce.el cus-load.el cus-start.el
@@ -17,11 +18,12 @@ doit:
 custom-deps: doit
 	subdirs=`find . -type d -print`; \
 	for file in $$subdirs; do \
-	   case $$file in */Old | */RCS) ;; \
+	   case $$file in */Old | */RCS | */=* ) ;; \
 		*) wins="$$wins $$file" ;; \
 	   esac; \
         done; \
-	$(EMACS) -batch -l cus-dep.el -f custom-make-dependencies $$wins
+	echo Directories: $$wins; \
+	$(EMACS) -batch -l cus-dep -f custom-make-dependencies $$wins
 
 finder-data: doit
 	subdirs=`find . -type d -print`; \
@@ -30,6 +32,7 @@ finder-data: doit
 		*) wins="$$wins $$file" ;; \
 	   esac; \
         done; \
+	echo Directories: $$wins; \
 	$(EMACS) -batch -l finder -f finder-compile-keywords-make-dist $$wins
 
 autoloads: doit
@@ -39,6 +42,7 @@ autoloads: doit
 		*) wins="$$wins $$file" ;; \
 	   esac; \
         done; \
+	echo Directories: $$wins; \
 	$(EMACS) -batch -f batch-update-autoloads $$wins
 
 update-subdirs: doit
@@ -62,9 +66,14 @@ updates: doit
 	for file in $$wins; do \
 	   ../update-subdirs $$file; \
 	done; \
-	$(EMACS) -batch -l cus-dep.el -f custom-make-dependencies $$wins; \
+	echo Directories: $$wins; \
+	$(EMACS) -batch -l cus-dep -f custom-make-dependencies $$wins; \
 	$(EMACS) -batch -l finder -f finder-compile-keywords-make-dist $$wins; \
 	$(EMACS) -batch -f batch-update-autoloads $$wins
 
-TAGS: $(lisptagsfiles)
-	${ETAGS} $(lisptagsfiles)
+TAGS: $(lisptagsfiles1) $(lisptagsfiles2)
+	${ETAGS} $(lisptagsfiles1) $(lisptagsfiles2)
+
+TAGS-LISP: $(lispsource)$(lisptagsfiles1) $(lispsource)$(lisptagsfiles2)
+	${ETAGS} -o TAGS-LISP \
+	  $(lispsource)$(lisptagsfiles1) $(lispsource)$(lisptagsfiles2)

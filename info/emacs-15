@@ -1,6 +1,635 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
+
+File: emacs,  Node: Electric C,  Next: Hungry Delete,  Prev: Motion in C,  Up: C/Java Modes
+
+Electric C Characters
+---------------------
+
+   In C mode and related modes, certain printing characters are
+"electric"--in addition to inserting themselves, they also reindent the
+current line and may insert newlines.  This feature is controlled by
+the variable `c-auto-newline'.  The "electric" characters are `{', `}',
+`:', `#', `;', `,', `<', `>', `/' and `*'.
+
+   Electric characters insert newlines only when the "auto-newline"
+feature is enabled (indicated by `/a' in the mode line after the mode
+name).  This feature is controlled by the variable `c-auto-newline'.
+You can turn this feature on or off with the command `C-c C-a':
+
+`C-c C-a'
+     Toggle the auto-newline feature (`c-toggle-auto-state').  With a
+     prefix argument, this command turns the auto-newline feature on if
+     the argument is positive, and off if it is negative.
+
+   The colon character is electric because that is appropriate for a
+single colon.  But when you want to insert a double colon in C++, the
+electric behavior of colon is inconvenient.  You can insert a double
+colon with no reindentation or newlines by typing `C-c :':
+
+`C-c :'
+     Insert a double colon scope operator at point, without reindenting
+     the line or adding any newlines (`c-scope-operator').
+
+   The electric `#' key reindents the line if it appears to be the
+beginning of a preprocessor directive.  This happens when the value of
+`c-electric-pound-behavior' is `(alignleft)'.  You can turn this
+feature off by setting `c-electric-pound-behavior' to `nil'.
+
+   The variable `c-hanging-braces-alist' controls the insertion of
+newlines before and after inserted braces.  It is an association list
+with elements of the following form: `(SYNTACTIC-SYMBOL . NL-LIST)'.
+Most of the syntactic symbols that appear in `c-offsets-alist' are
+meaningful here as well.
+
+   The list NL-LIST may contain either of the symbols `before' or
+`after', or both; or it may be `nil'.  When a brace is inserted, the
+syntactic context it defines is looked up in `c-hanging-braces-alist';
+if it is found, the NL-LIST is used to determine where newlines are
+inserted: either before the brace, after, or both.  If not found, the
+default is to insert a newline both before and after braces.
+
+   The variable `c-hanging-colons-alist' controls the insertion of
+newlines before and after inserted colons.  It is an association list
+with elements of the following form: `(SYNTACTIC-SYMBOL . NL-LIST)'.
+The list NL-LIST may contain either of the symbols `before' or `after',
+or both; or it may be `nil'.
+
+   When a colon is inserted, the syntactic symbol it defines is looked
+up in this list, and if found, the NL-LIST is used to determine where
+newlines are inserted: either before the brace, after, or both.  If the
+syntactic symbol is not found in this list, no newlines are inserted.
+
+   Electric characters can also delete newlines automatically when the
+auto-newline feature is enabled.  This feature makes auto-newline more
+acceptable, by deleting the newlines in the most common cases where you
+do not want them.  Emacs can recognize several cases in which deleting a
+newline might be desirable; by setting the variable `c-cleanup-list',
+you can specify *which* of these cases that should happen.  The
+variable's value is a list of symbols, each describing one case for
+possible deletion of a newline.  Here are the meaningful symbols, and
+their meanings:
+
+`brace-else-brace'
+     Clean up `} else {' constructs by placing the entire construct on
+     a single line.  The clean-up occurs when you type the `{' after
+     the `else', but only if there is nothing but white space between
+     the braces and the `else'.
+
+`brace-elseif-brace'
+     Clean up `} else if (...) {' constructs by placing the entire
+     construct on a single line.  The clean-up occurs when you type the
+     `{', if there is nothing but white space between the `}' and `{'
+     aside from the keywords and the `if'-condition.
+
+`empty-defun-braces'
+     Clean up empty defun braces by placing the braces on the same
+     line.  Clean-up occurs when you type the closing brace.
+
+`defun-close-semi'
+     Clean up the semicolon after a `struct' or similar type
+     declaration, by placing the semicolon on the same line as the
+     closing brace.  Clean-up occurs when you type the semicolon.
+
+`list-close-comma'
+     Clean up commas following braces in array and aggregate
+     initializers.  Clean-up occurs when you type the comma.
+
+`scope-operator'
+     Clean up double colons which may designate a C++ scope operator, by
+     placing the colons together.  Clean-up occurs when you type the
+     second colon, but only when the two colons are separated by
+     nothing but whitespace.
+
+
+File: emacs,  Node: Hungry Delete,  Next: Other C Commands,  Prev: Electric C,  Up: C/Java Modes
+
+Hungry Delete Feature in C
+--------------------------
+
+   When the "hungry-delete" feature is enabled (indicated by `/h' or
+`/ah' in the mode line after the mode name), a single <DEL> command
+deletes all preceding whitespace, not just one space.  To turn this
+feature on or off, use `C-c C-d':
+
+`C-c C-d'
+     Toggle the hungry-delete feature (`c-toggle-hungry-state').  With a
+     prefix argument, this command turns the hungry-delete feature on
+     if the argument is positive, and off if it is negative.
+
+`C-c C-t'
+     Toggle the auto-newline and hungry-delete features, both at once
+     (`c-toggle-auto-hungry-state').
+
+   The variable `c-hungry-delete-key' controls whether the
+hungry-delete feature is enabled.
+
+
+File: emacs,  Node: Other C Commands,  Next: Comments in C,  Prev: Hungry Delete,  Up: C/Java Modes
+
+Other Commands for C Mode
+-------------------------
+
+`C-M-h'
+     Put mark at the end of a function definition, and put point at the
+     beginning (`c-mark-function').
+
+`M-q'
+     Fill a paragraph, handling C and C++ comments (`c-fill-paragraph').
+     If any part of the current line is a comment or within a comment,
+     this command fills the comment or the paragraph of it that point
+     is in, preserving the comment indentation and comment delimiters.
+
+`C-c C-e'
+     Run the C preprocessor on the text in the region, and show the
+     result, which includes the expansion of all the macro calls
+     (`c-macro-expand').  The buffer text before the region is also
+     included in preprocessing, for the sake of macros defined there,
+     but the output from this part isn't shown.
+
+     When you are debugging C code that uses macros, sometimes it is
+     hard to figure out precisely how the macros expand.  With this
+     command, you don't have to figure it out; you can see the
+     expansions.
+
+`C-c C-\'
+     Insert or align `\' characters at the ends of the lines of the
+     region (`c-backslash-region').  This is useful after writing or
+     editing a C macro definition.
+
+     If a line already ends in `\', this command adjusts the amount of
+     whitespace before it.  Otherwise, it inserts a new `\'.  However,
+     the last line in the region is treated specially; no `\' is
+     inserted on that line, and any `\' there is deleted.
+
+`M-x cpp-highlight-buffer'
+     Highlight parts of the text according to its preprocessor
+     conditionals.  This command displays another buffer named `*CPP
+     Edit*', which serves as a graphic menu for selecting how to
+     display particular kinds of conditionals and their contents.
+     After changing various settings, click on `[A]pply these settings'
+     (or go to that buffer and type `a') to rehighlight the C mode
+     buffer accordingly.
+
+`C-c C-s'
+     Display the syntactic information about the current source line
+     (`c-show-syntactic-information').  This is the information that
+     directs how the line is indented.
+
+
+File: emacs,  Node: Comments in C,  Prev: Other C Commands,  Up: C/Java Modes
+
+Comments in C Modes
+-------------------
+
+   C mode and related modes use a number of variables for controlling
+comment format.
+
+`c-comment-only-line-offset'
+     Extra offset for line which contains only the start of a comment.
+     It can be either an integer or a cons cell of the form
+     `(NON-ANCHORED-OFFSET . ANCHORED-OFFSET)', where
+     NON-ANCHORED-OFFSET is the amount of offset given to
+     non-column-zero anchored comment-only lines, and ANCHORED-OFFSET
+     is the amount of offset to give column-zero anchored comment-only
+     lines.  Just an integer as value is equivalent to `(VAL . 0)'.
+
+`c-comment-start-regexp'
+     This buffer-local variable specifies how to recognize the start of
+     a comment.
+
+`c-hanging-comment-ender-p'
+     If this variable is `nil', `c-fill-paragraph' leaves the comment
+     terminator of a block comment on a line by itself.  The default
+     value is `t', which puts the comment-end delimiter `*/' at the end
+     of the last line of the comment text.
+
+`c-hanging-comment-starter-p'
+     If this variable is `nil', `c-fill-paragraph' leaves the starting
+     delimiter of a block comment on a line by itself.  The default
+     value is `t', which puts the comment-start delimiter `/*' at the
+     beginning of the first line of the comment text.
+
+
+File: emacs,  Node: Fortran,  Next: Asm Mode,  Prev: C/Java Modes,  Up: Programs
+
+Fortran Mode
+============
+
+   Fortran mode provides special motion commands for Fortran statements
+and subprograms, and indentation commands that understand Fortran
+conventions of nesting, line numbers and continuation statements.
+Fortran mode has its own Auto Fill mode that breaks long lines into
+proper Fortran continuation lines.
+
+   Special commands for comments are provided because Fortran comments
+are unlike those of other languages.  Built-in abbrevs optionally save
+typing when you insert Fortran keywords.
+
+   Use `M-x fortran-mode' to switch to this major mode.  This command
+runs the hook `fortran-mode-hook' (*note Hooks::.).
+
+* Menu:
+
+* Motion: Fortran Motion.	 Moving point by statements or subprograms.
+* Indent: Fortran Indent.	 Indentation commands for Fortran.
+* Comments: Fortran Comments.	 Inserting and aligning comments.
+* Autofill: Fortran Autofill.	 Auto fill minor mode for Fortran.
+* Columns: Fortran Columns.	 Measuring columns for valid Fortran.
+* Abbrev: Fortran Abbrev.	 Built-in abbrevs for Fortran keywords.
+* Misc: Fortran Misc.            Other Fortran mode features.
+
+
+File: emacs,  Node: Fortran Motion,  Next: Fortran Indent,  Up: Fortran
+
+Motion Commands
+---------------
+
+   Fortran mode provides special commands to move by subprograms
+(functions and subroutines) and by statements.  There is also a command
+to put the region around one subprogram, convenient for killing it or
+moving it.
+
+`C-M-a'
+     Move to beginning of subprogram
+     (`beginning-of-fortran-subprogram').
+
+`C-M-e'
+     Move to end of subprogram (`end-of-fortran-subprogram').
+
+`C-M-h'
+     Put point at beginning of subprogram and mark at end
+     (`mark-fortran-subprogram').
+
+`C-c C-n'
+     Move to beginning of current or next statement
+     (`fortran-next-statement').
+
+`C-c C-p'
+     Move to beginning of current or previous statement
+     (`fortran-previous-statement').
+
+
+File: emacs,  Node: Fortran Indent,  Next: Fortran Comments,  Prev: Fortran Motion,  Up: Fortran
+
+Fortran Indentation
+-------------------
+
+   Special commands and features are needed for indenting Fortran code
+in order to make sure various syntactic entities (line numbers, comment
+line indicators and continuation line flags) appear in the columns that
+are required for standard Fortran.
+
+* Menu:
+
+* Commands: ForIndent Commands.  Commands for indenting Fortran.
+* Contline: ForIndent Cont.      How continuation lines indent.
+* Numbers:  ForIndent Num.       How line numbers auto-indent.
+* Conv:     ForIndent Conv.      Conventions you must obey to avoid trouble.
+* Vars:     ForIndent Vars.      Variables controlling Fortran indent style.
+
+
+File: emacs,  Node: ForIndent Commands,  Next: ForIndent Cont,  Up: Fortran Indent
+
+Fortran Indentation Commands
+............................
+
+`<TAB>'
+     Indent the current line (`fortran-indent-line').
+
+`C-j'
+     Indent the current and start a new indented line
+     (`fortran-indent-new-line').
+
+`C-M-j'
+     Break the current line and set up a continuation line.
+
+`M-^'
+     Join this line to the previous line.
+
+`C-M-q'
+     Indent all the lines of the subprogram point is in
+     (`fortran-indent-subprogram').
+
+   Fortran mode redefines <TAB> to reindent the current line for
+Fortran (`fortran-indent-line').  This command indents line numbers and
+continuation markers to their required columns, and independently
+indents the body of the statement based on its nesting in the program.
+
+   The key `C-j' runs the command `fortran-indent-new-line', which
+reindents the current line then makes and indents a new line.  This
+command is useful to reindent the closing statement of `do' loops and
+other blocks before starting a new line.
+
+   The key `C-M-q' runs `fortran-indent-subprogram', a command to
+reindent all the lines of the Fortran subprogram (function or
+subroutine) containing point.
+
+   The key `C-M-j' runs `fortran-split-line', which splits a line in
+the appropriate fashion for Fortran.  In a non-comment line, the second
+half becomes a continuation line and is indented accordingly.  In a
+comment line, both halves become separate comment lines.
+
+   `M-^' runs the command `fortran-join-line', which is more or less
+the inverse of `fortran-split-line'.  It joins the current line to the
+previous line in a suitable way for Fortran code.
+
+
+File: emacs,  Node: ForIndent Cont,  Next: ForIndent Num,  Prev: ForIndent Commands,  Up: Fortran Indent
+
+Continuation Lines
+..................
+
+   Most modern Fortran compilers allow two ways of writing continuation
+lines.  If the first non-space character on a line is in column 5, then
+that line is a continuation of the previous line.  We call this "fixed
+format".  (In GNU Emacs we always count columns from 0.)  The variable
+`fortran-continuation-string' specifies what character to put on column
+5.  A line that starts with a tab character followed by any digit
+except `0' is also a continuation line.  We call this style of
+continuation "tab format".
+
+   Fortran mode can make either style of continuation line, but you
+must specify which one you prefer.  The value of the variable
+`indent-tabs-mode' controls the choice: `nil' for fixed format, and
+non-`nil' for tab format.  You can tell which style is presently in
+effect by the presence or absence of the string `Tab' in the mode line.
+
+   If the text on a line starts with the conventional Fortran
+continuation marker `$', or if it begins with any non-whitespace
+character in column 5, Fortran mode treats it as a continuation line.
+When you indent a continuation line with <TAB>, it converts the line to
+the current continuation style.  When you split a Fortran statement
+with `C-M-j', the continuation marker on the newline is created
+according to the continuation style.
+
+   The setting of continuation style affects several other aspects of
+editing in Fortran mode.  In fixed format mode, the minimum column
+number for the body of a statement is 6.  Lines inside of Fortran
+blocks that are indented to larger column numbers always use only the
+space character for whitespace.  In tab format mode, the minimum column
+number for the statement body is 8, and the whitespace before column 8
+must always consist of one tab character.
+
+   When you enter Fortran mode for an existing file, it tries to deduce
+the proper continuation style automatically from the file contents.
+The first line that begins with either a tab character or six spaces
+determines the choice.  The variable `fortran-analyze-depth' specifies
+how many lines to consider (at the beginning of the file); if none of
+those lines indicates a style, then the variable
+`fortran-tab-mode-default' specifies the style.  If it is `nil', that
+specifies fixed format, and non-`nil' specifies tab format.
+
+
+File: emacs,  Node: ForIndent Num,  Next: ForIndent Conv,  Prev: ForIndent Cont,  Up: Fortran Indent
+
+Line Numbers
+............
+
+   If a number is the first non-whitespace in the line, Fortran
+indentation assumes it is a line number and moves it to columns 0
+through 4.  (Columns always count from 0 in GNU Emacs.)
+
+   Line numbers of four digits or less are normally indented one space.
+The variable `fortran-line-number-indent' controls this; it specifies
+the maximum indentation a line number can have.  Line numbers are
+indented to right-justify them to end in column 4 unless that would
+require more than this maximum indentation.  The default value of the
+variable is 1.
+
+   Simply inserting a line number is enough to indent it according to
+these rules.  As each digit is inserted, the indentation is recomputed.
+To turn off this feature, set the variable
+`fortran-electric-line-number' to `nil'.  Then inserting line numbers
+is like inserting anything else.
+
+
+File: emacs,  Node: ForIndent Conv,  Next: ForIndent Vars,  Prev: ForIndent Num,  Up: Fortran Indent
+
+Syntactic Conventions
+.....................
+
+   Fortran mode assumes that you follow certain conventions that
+simplify the task of understanding a Fortran program well enough to
+indent it properly:
+
+   * Two nested `do' loops never share a `continue' statement.
+
+   * Fortran keywords such as `if', `else', `then', `do' and others are
+     written without embedded whitespace or line breaks.
+
+     Fortran compilers generally ignore whitespace outside of string
+     constants, but Fortran mode does not recognize these keywords if
+     they are not contiguous.  Constructs such as `else if' or `end do'
+     are acceptable, but the second word should be on the same line as
+     the first and not on a continuation line.
+
+If you fail to follow these conventions, the indentation commands may
+indent some lines unaesthetically.  However, a correct Fortran program
+retains its meaning when reindented even if the conventions are not
+followed.
+
+
+File: emacs,  Node: ForIndent Vars,  Prev: ForIndent Conv,  Up: Fortran Indent
+
+Variables for Fortran Indentation
+.................................
+
+   Several additional variables control how Fortran indentation works:
+
+`fortran-do-indent'
+     Extra indentation within each level of `do' statement (default 3).
+
+`fortran-if-indent'
+     Extra indentation within each level of `if' statement (default 3).
+     This value is also used for extra indentation within each level of
+     the Fortran 90 `where' statement.
+
+`fortran-structure-indent'
+     Extra indentation within each level of `structure', `union', or
+     `map' statements (default 3).
+
+`fortran-continuation-indent'
+     Extra indentation for bodies of continuation lines (default 5).
+
+`fortran-check-all-num-for-matching-do'
+     If this is `nil', indentation assumes that each `do' statement
+     ends on a `continue' statement.  Therefore, when computing
+     indentation for a statement other than `continue', it can save time
+     by not checking for a `do' statement ending there.  If this is
+     non-`nil', indenting any numbered statement must check for a `do'
+     that ends there.  The default is `nil'.
+
+`fortran-blink-matching-if'
+     If this is `t', indenting an `endif' statement moves the cursor
+     momentarily to the matching `if' statement to show where it is.
+     The default is `nil'.
+
+`fortran-minimum-statement-indent-fixed'
+     Minimum indentation for fortran statements when using fixed format
+     continuation line style.  Statement bodies are never indented less
+     than this much.  The default is 6.
+
+`fortran-minimum-statement-indent-tab'
+     Minimum indentation for fortran statements for tab format
+     continuation line style.  Statement bodies are never indented less
+     than this much.  The default is 8.
+
+
+File: emacs,  Node: Fortran Comments,  Next: Fortran Autofill,  Prev: Fortran Indent,  Up: Fortran
+
+Fortran Comments
+----------------
+
+   The usual Emacs comment commands assume that a comment can follow a
+line of code.  In Fortran, the standard comment syntax requires an
+entire line to be just a comment.  Therefore, Fortran mode replaces the
+standard Emacs comment commands and defines some new variables.
+
+   Fortran mode can also handle a nonstandard comment syntax where
+comments start with `!' and can follow other text.  Because only some
+Fortran compilers accept this syntax, Fortran mode will not insert such
+comments unless you have said in advance to do so.  To do this, set the
+variable `comment-start' to `"!"' (*note Variables::.).
+
+`M-;'
+     Align comment or insert new comment (`fortran-comment-indent').
+
+`C-x ;'
+     Applies to nonstandard `!' comments only.
+
+`C-c ;'
+     Turn all lines of the region into comments, or (with argument)
+     turn them back into real code (`fortran-comment-region').
+
+   `M-;' in Fortran mode is redefined as the command
+`fortran-comment-indent'.  Like the usual `M-;' command, this
+recognizes any kind of existing comment and aligns its text
+appropriately; if there is no existing comment, a comment is inserted
+and aligned.  But inserting and aligning comments are not the same in
+Fortran mode as in other modes.
+
+   When a new comment must be inserted, if the current line is blank, a
+full-line comment is inserted.  On a non-blank line, a nonstandard `!'
+comment is inserted if you have said you want to use them.  Otherwise a
+full-line comment is inserted on a new line before the current line.
+
+   Nonstandard `!' comments are aligned like comments in other
+languages, but full-line comments are different.  In a standard
+full-line comment, the comment delimiter itself must always appear in
+column zero.  What can be aligned is the text within the comment.  You
+can choose from three styles of alignment by setting the variable
+`fortran-comment-indent-style' to one of these values:
+
+`fixed'
+     Align the text at a fixed column, which is the sum of
+     `fortran-comment-line-extra-indent' and the minimum statement
+     indentation.  This is the default.
+
+     The minimum statement indentation is
+     `fortran-minimum-statement-indent-fixed' for fixed format
+     continuation line style and `fortran-minimum-statement-indent-tab'
+     for tab format style.
+
+`relative'
+     Align the text as if it were a line of code, but with an additional
+     `fortran-comment-line-extra-indent' columns of indentation.
+
+`nil'
+     Don't move text in full-line columns automatically at all.
+
+   In addition, you can specify the character to be used to indent
+within full-line comments by setting the variable
+`fortran-comment-indent-char' to the single-character string you want
+to use.
+
+   Fortran mode introduces two variables `comment-line-start' and
+`comment-line-start-skip', which play for full-line comments the same
+roles played by `comment-start' and `comment-start-skip' for ordinary
+text-following comments.  Normally these are set properly by Fortran
+mode, so you do not need to change them.
+
+   The normal Emacs comment command `C-x ;' has not been redefined.  If
+you use `!' comments, this command can be used with them.  Otherwise it
+is useless in Fortran mode.
+
+   The command `C-c ;' (`fortran-comment-region') turns all the lines
+of the region into comments by inserting the string `C$$$' at the front
+of each one.  With a numeric argument, it turns the region back into
+live code by deleting `C$$$' from the front of each line in it.  The
+string used for these comments can be controlled by setting the
+variable `fortran-comment-region'.  Note that here we have an example
+of a command and a variable with the same name; these two uses of the
+name never conflict because in Lisp and in Emacs it is always clear
+from the context which one is meant.
+
+
+File: emacs,  Node: Fortran Autofill,  Next: Fortran Columns,  Prev: Fortran Comments,  Up: Fortran
+
+Fortran Auto Fill Mode
+----------------------
+
+   Fortran Auto Fill mode is a minor mode which automatically splits
+Fortran statements as you insert them when they become too wide.
+Splitting a statement involves making continuation lines using
+`fortran-continuation-string' (*Note ForIndent Cont::).  This splitting
+happens when you type <SPC>, <RET>, or <TAB>, and also in the Fortran
+indentation commands.
+
+   `M-x fortran-auto-fill-mode' turns Fortran Auto Fill mode on if it
+was off, or off if it was on.  This command works the same as `M-x
+auto-fill-mode' does for normal Auto Fill mode (*note Filling::.).  A
+positive numeric argument turns Fortran Auto Fill mode on, and a
+negative argument turns it off.  You can see when Fortran Auto Fill mode
+is in effect by the presence of the word `Fill' in the mode line,
+inside the parentheses.  Fortran Auto Fill mode is a minor mode, turned
+on or off for each buffer individually.  *Note Minor Modes::.
+
+   Fortran Auto Fill mode breaks lines at spaces or delimiters when the
+lines get longer than the desired width (the value of `fill-column').
+The delimiters that Fortran Auto Fill mode may break at are `,', `'',
+`+', `-', `/', `*', `=', and `)'.  The line break comes after the
+delimiter if the variable `fortran-break-before-delimiters' is `nil'.
+Otherwise (and by default), the break comes before the delimiter.
+
+   By default, Fortran Auto Fill mode is not enabled.  If you want this
+feature turned on permanently, add a hook function to
+`fortran-mode-hook' to execute `(fortran-auto-fill-mode 1)'.  *Note
+Hooks::.
+
 
 File: emacs,  Node: Fortran Columns,  Next: Fortran Abbrev,  Prev: Fortran Autofill,  Up: Fortran
 
@@ -42,7 +671,7 @@ columns wide.  By editing in this window you can immediately see when
 you make a line too wide to be correct Fortran.
 
 
-File: emacs,  Node: Fortran Abbrev,  Prev: Fortran Columns,  Up: Fortran
+File: emacs,  Node: Fortran Abbrev,  Next: Fortran Misc,  Prev: Fortran Columns,  Up: Fortran
 
 Fortran Keyword Abbrevs
 -----------------------
@@ -63,6 +692,20 @@ Abbrev mode is enabled.
 
    Type `;?' or `;C-h' to display a list of all the built-in Fortran
 abbrevs and what they stand for.
+
+
+File: emacs,  Node: Fortran Misc,  Prev: Fortran Abbrev,  Up: Fortran
+
+Other Fortran Mode Commands
+---------------------------
+
+`C-x n d'
+     Narrow to the current Fortran subprogram.
+
+   Fortran mode redefines the key `C-x n d' to run the command
+`fortran-narrow-to-subprogram', which is the Fortran analogue of the
+key's usual definition.  It narrows the buffer to the subprogram
+containing point.
 
 
 File: emacs,  Node: Asm Mode,  Prev: Fortran,  Up: Programs
@@ -103,6 +746,7 @@ assist in the larger process of developing and maintaining programs.
 
 * Compilation::         Compiling programs in languages other
                           than Lisp (C, Pascal, etc.).
+* Grep Searching::      Running grep as if it were a compiler.
 * Compilation Mode::    The mode for visiting compiler errors.
 * Compilation Shell::   Customizing your shell properly
                           for use in the compilation buffer.
@@ -116,7 +760,7 @@ assist in the larger process of developing and maintaining programs.
 * External Lisp::         Communicating through Emacs with a separate Lisp.
 
 
-File: emacs,  Node: Compilation,  Next: Compilation Mode,  Up: Building
+File: emacs,  Node: Compilation,  Next: Grep Searching,  Up: Building
 
 Running Compilations under Emacs
 ================================
@@ -173,6 +817,10 @@ point, which remains at the end.  If point is not at the end of the
 buffer, it remains fixed while more compilation output is added at the
 end of the buffer.
 
+   If you set the variable `compilation-scroll-output' to a non-`nil'
+value, then the compilation buffer always scrolls to follow output as
+it comes in.
+
    To kill the compilation process, do `M-x kill-compilation'.  When
 the compiler process terminates, the mode line of the `*compilation*'
 buffer changes to say `signal' instead of `run'.  Starting a new
@@ -180,14 +828,28 @@ compilation also kills any running compilation, as only one can exist
 at any time.  However, `M-x compile' asks for confirmation before
 actually killing a compilation that is running.
 
-   Just as you can run a compiler, you can also run `grep' and then
-visit the lines on which matches were found.  To do this, type `M-x
-grep' with an argument line that contains the same arguments you would
-give `grep' when running it normally: a `grep'-style regexp (usually in
+
+File: emacs,  Node: Grep Searching,  Next: Compilation Mode,  Prev: Compilation,  Up: Building
+
+Searching with Grep under Emacs
+===============================
+
+   Just as you can run a compiler from Emacs and then visit the lines
+where there were compilation errors, you can also run `grep' and then
+visit the lines on which matches were found.  This works by treating
+the matches reported by `grep' as if they were "errors."
+
+   To do this, type `M-x grep', then enter a command line that
+specifies how to run `grep'.  Use the same arguments you would give
+`grep' when running it normally: a `grep'-style regexp (usually in
 single-quotes to quote the shell's special characters) followed by file
-names which may use wildcards.  The output from `grep' goes in the
-`*grep*' buffer, and you can find the matching lines in the source with
-`C-x `' and <RET> just like compiler errors.
+names, which may use wildcards.  The output from `grep' goes in the
+`*grep*' buffer.  You can find the corresponding lines in the original
+files using `C-x `' and <RET>, as with compilation errors.
+
+   If you specify a prefix argument for `M-x grep', it figures out the
+tag (*note Tags::.) around point, and puts that into the default `grep'
+command.
 
    The command `M-x grep-find' is similar to `M-x grep', but it
 supplies a different initial default for the command--one that runs
@@ -195,7 +857,7 @@ both `find' and `grep', so as to search every file in a directory tree.
 See also the `find-grep-dired' command, in *Note Dired and Find::.
 
 
-File: emacs,  Node: Compilation Mode,  Next: Compilation Shell,  Prev: Compilation,  Up: Building
+File: emacs,  Node: Compilation Mode,  Next: Compilation Shell,  Prev: Grep Searching,  Up: Building
 
 Compilation Mode
 ================
@@ -245,9 +907,12 @@ an error message for a different source file.
 called Compilation Minor mode.  This lets you parse error messages in
 any buffer, not just a normal compilation output buffer.  Type `M-x
 compilation-minor-mode' to enable the minor mode.  This defines the keys
-<RET> and `Mouse-2', as in the Compilation major mode.  In an Rlogin
-buffer (*note Remote Host::.), Compilation minor mode automatically
-accesses remote source files by FTP (*note File Names::.).
+<RET> and `Mouse-2', as in the Compilation major mode.
+
+   Compilation minor mode works in any buffer, as long as the contents
+are in a format that it understands.  In an Rlogin buffer (*note Remote
+Host::.), Compilation minor mode automatically accesses remote source
+files by FTP (*note File Names::.).
 
 
 File: emacs,  Node: Compilation Shell,  Next: Debuggers,  Prev: Compilation Mode,  Up: Building
@@ -255,23 +920,22 @@ File: emacs,  Node: Compilation Shell,  Next: Debuggers,  Prev: Compilation Mode
 Subshells for Compilation
 =========================
 
-   Note: Emacs uses a shell to run the compilation command, but
-specifies the option for a noninteractive shell.  This means, in
-particular, that the shell should start with no prompt.  If you find
-your usual shell prompt making an unsightly appearance in the
-`*compilation*' buffer, it means you have made a mistake in your
-shell's init file by setting the prompt unconditionally.  (This init
-file's name may be `.profile', `.cshrc', `.shrc', or various other
-things, depending on the shell you use.)  The shell init file should
-set the prompt only if there already is a prompt.  In csh, here is how
-to do it:
+   Emacs uses a shell to run the compilation command, but specifies the
+option for a noninteractive shell.  This means, in particular, that the
+shell should start with no prompt.  If you find your usual shell prompt
+making an unsightly appearance in the `*compilation*' buffer, it means
+you have made a mistake in your shell's init file by setting the prompt
+unconditionally.  (This init file's name may be `.bashrc', `.profile',
+`.cshrc', `.shrc', or various other things, depending on the shell you
+use.)  The shell init file should set the prompt only if there already
+is a prompt.  In csh, here is how to do it:
 
      if ($?prompt) set prompt = ...
 
 And here's how to do it in bash:
 
      if [ "${PS1+set}" = set ]
-     then prompt=...
+     then PS1=...
      fi
 
    There may well be other things that your shell's init file ought to
@@ -294,7 +958,7 @@ Running Debuggers Under Emacs
 various symbolic debuggers from within Emacs.  We recommend the debugger
 GDB, which is free software, but you can also run DBX, SDB or XDB if you
 have them.  GUD can also serve as an interface to the Perl's debugging
-mode.
+mode, the Python debugger PDB, and to JDB, the Java Debugger.
 
 * Menu:
 
@@ -309,8 +973,8 @@ File: emacs,  Node: Starting GUD,  Next: Debugger Operation,  Up: Debuggers
 Starting GUD
 ------------
 
-   There are five commands for starting a debugger, each corresponding
-to a particular debugger program.
+   There are several commands for starting a debugger, each
+corresponding to a particular debugger program.
 
 `M-x gdb <RET> FILE <RET>'
      Run GDB as a subprocess of Emacs.  This command creates a buffer
@@ -340,6 +1004,12 @@ to a particular debugger program.
 `M-x perldb <RET> FILE <RET>'
      Run the Perl interpreter in debug mode to debug FILE, a Perl
      program.
+
+`M-x jdb <RET> FILE <RET>'
+     Run the Java debugger to debug FILE.
+
+`M-x pdb <RET> FILE <RET>'
+     Run the Python debugger to debug FILE.
 
    Each of these commands takes one argument: a command line to invoke
 the debugger.  In the simplest case, specify just the name of the
@@ -483,8 +1153,9 @@ GUD Customization
    On startup, GUD runs one of the following hooks: `gdb-mode-hook', if
 you are using GDB; `dbx-mode-hook', if you are using DBX;
 `sdb-mode-hook', if you are using SDB; `xdb-mode-hook', if you are
-using XDB; `perldb-mode-hook', for Perl debugging mode.  You can use
-these hooks to define custom key bindings for the debugger interaction
+using XDB; `perldb-mode-hook', for Perl debugging mode;
+`jdb-mode-hook', for PDB; `jdb-mode-hook', for JDB.  You can use these
+hooks to define custom key bindings for the debugger interaction
 buffer.  *Note Hooks::.
 
    Here is a convenient way to define a command that sends a particular
@@ -566,559 +1237,4 @@ Inferior Scheme mode
 
    Most editing commands for working with Lisp programs are in fact
 available globally.  *Note Programs::.
-
-
-File: emacs,  Node: Lisp Libraries,  Next: Lisp Interaction,  Prev: Executing Lisp,  Up: Building
-
-Libraries of Lisp Code for Emacs
-================================
-
-   Lisp code for Emacs editing commands is stored in files whose names
-conventionally end in `.el'.  This ending tells Emacs to edit them in
-Emacs-Lisp mode (*note Executing Lisp::.).
-
-   To execute a file of Emacs Lisp code, use `M-x load-file'.  This
-command reads a file name using the minibuffer and then executes the
-contents of that file as Lisp code.  It is not necessary to visit the
-file first; in any case, this command reads the file as found on disk,
-not text in an Emacs buffer.
-
-   Once a file of Lisp code is installed in the Emacs Lisp library
-directories, users can load it using `M-x load-library'.  Programs can
-load it by calling `load-library', or with `load', a more primitive
-function that is similar but accepts some additional arguments.
-
-   `M-x load-library' differs from `M-x load-file' in that it searches
-a sequence of directories and tries three file names in each directory.
-Suppose your argument is LIB; the three names are `LIB.elc', `LIB.el',
-and lastly just `LIB'.  If `LIB.elc' exists, it is by convention the
-result of compiling `LIB.el'; it is better to load the compiled file,
-since it will load and run faster.
-
-   If `load-library' finds that `LIB.el' is newer than `LIB.elc' file,
-it prints a warning, because it's likely that somebody made changes to
-the `.el' file and forgot to recompile it.
-
-   Because the argument to `load-library' is usually not in itself a
-valid file name, file name completion is not available.  Indeed, when
-using this command, you usually do not know exactly what file name will
-be used.
-
-   The sequence of directories searched by `M-x load-library' is
-specified by the variable `load-path', a list of strings that are
-directory names.  The default value of the list contains the directory
-where the Lisp code for Emacs itself is stored.  If you have libraries
-of your own, put them in a single directory and add that directory to
-`load-path'.  `nil' in this list stands for the current default
-directory, but it is probably not a good idea to put `nil' in the list.
-If you find yourself wishing that `nil' were in the list, most likely
-what you really want to do is use `M-x load-file' this once.
-
-   Often you do not have to give any command to load a library, because
-the commands defined in the library are set up to "autoload" that
-library.  Trying to run any of those commands calls `load' to load the
-library; this replaces the autoload definitions with the real ones from
-the library.
-
-   Emacs Lisp code can be compiled into byte-code which loads faster,
-takes up less space when loaded, and executes faster.  *Note Byte
-Compilation: (elisp)Byte Compilation.  By convention, the compiled code
-for a library goes in a separate file whose name consists of the
-library source file with `c' appended.  Thus, the compiled code for
-`foo.el' goes in `foo.elc'.  That's why `load-library' searches for
-`.elc' files first.
-
-
-File: emacs,  Node: Lisp Eval,  Next: External Lisp,  Prev: Lisp Interaction,  Up: Building
-
-Evaluating Emacs-Lisp Expressions
-=================================
-
-   Lisp programs intended to be run in Emacs should be edited in
-Emacs-Lisp mode; this happens automatically for file names ending in
-`.el'.  By contrast, Lisp mode itself is used for editing Lisp programs
-intended for other Lisp systems.  To switch to Emacs-Lisp mode
-explicitly, use the command `M-x emacs-lisp-mode'.
-
-   For testing of Lisp programs to run in Emacs, it is often useful to
-evaluate part of the program as it is found in the Emacs buffer.  For
-example, after changing the text of a Lisp function definition,
-evaluating the definition installs the change for future calls to the
-function.  Evaluation of Lisp expressions is also useful in any kind of
-editing, for invoking noninteractive functions (functions that are not
-commands).
-
-`M-:'
-     Read a single Lisp expression in the minibuffer, evaluate it, and
-     print the value in the echo area (`eval-expression').
-
-`C-x C-e'
-     Evaluate the Lisp expression before point, and print the value in
-     the echo area (`eval-last-sexp').
-
-`C-M-x'
-     Evaluate the defun containing or after point, and print the value
-     in the echo area (`eval-defun').
-
-`M-x eval-region'
-     Evaluate all the Lisp expressions in the region.
-
-`M-x eval-current-buffer'
-     Evaluate all the Lisp expressions in the buffer.
-
-   `M-:' (`eval-expression') is the most basic command for evaluating a
-Lisp expression interactively.  It reads the expression using the
-minibuffer, so you can execute any expression on a buffer regardless of
-what the buffer contains.  When the expression is evaluated, the current
-buffer is once again the buffer that was current when `M-:' was typed.
-
-   In Emacs-Lisp mode, the key `C-M-x' is bound to the command
-`eval-defun', which parses the defun containing or following point as a
-Lisp expression and evaluates it.  The value is printed in the echo
-area.  This command is convenient for installing in the Lisp environment
-changes that you have just made in the text of a function definition.
-
-   `C-M-x' treats `defvar' expressions specially.  Normally, evaluating
-a `defvar' expression does nothing if the variable it defines already
-has a value.  But `C-M-x' unconditionally resets the variable to the
-initial value specified in the `defvar' expression.  This special
-feature is convenient for debugging Lisp programs.
-
-   The command `C-x C-e' (`eval-last-sexp') evaluates the Lisp
-expression preceding point in the buffer, and displays the value in the
-echo area.  It is available in all major modes, not just Emacs-Lisp
-mode.  It does not treat `defvar' specially.
-
-   If `C-M-x' or `C-x C-e' is given a numeric argument, it inserts the
-value into the current buffer at point, rather than displaying it in
-the echo area.  The argument's value does not matter.
-
-   The most general command for evaluating Lisp expressions from a
-buffer is `eval-region'.  `M-x eval-region' parses the text of the
-region as one or more Lisp expressions, evaluating them one by one.
-`M-x eval-current-buffer' is similar but evaluates the entire buffer.
-This is a reasonable way to install the contents of a file of Lisp code
-that you are just ready to test.  Later, as you find bugs and change
-individual functions, use `C-M-x' on each function that you change.
-This keeps the Lisp world in step with the source file.
-
-
-File: emacs,  Node: Lisp Interaction,  Next: Lisp Eval,  Prev: Lisp Libraries,  Up: Building
-
-Lisp Interaction Buffers
-========================
-
-   The buffer `*scratch*' which is selected when Emacs starts up is
-provided for evaluating Lisp expressions interactively inside Emacs.
-
-   The simplest way to use the `*scratch*' buffer is to insert Lisp
-expressions and type `C-j' after each expression.  This command reads
-the Lisp expression before point, evaluates it, and inserts the value
-in printed representation before point.  The result is a complete
-typescript of the expressions you have evaluated and their values.
-
-   The `*scratch*' buffer's major mode is Lisp Interaction mode, which
-is the same as Emacs-Lisp mode except for the binding of `C-j'.
-
-   The rationale for this feature is that Emacs must have a buffer when
-it starts up, but that buffer is not useful for editing files since a
-new buffer is made for every file that you visit.  The Lisp interpreter
-typescript is the most useful thing I can think of for the initial
-buffer to do.  Type `M-x lisp-interaction-mode' to put the current
-buffer in Lisp Interaction mode.
-
-   An alternative way of evaluating Emacs Lisp expressions interactively
-is to use Inferior Emacs-Lisp mode, which provides an interface rather
-like Shell mode (*note Shell Mode::.) for evaluating Emacs Lisp
-expressions.  Type `M-x ielm' to create an `*ielm*' buffer which uses
-this mode.
-
-
-File: emacs,  Node: External Lisp,  Prev: Lisp Eval,  Up: Building
-
-Running an External Lisp
-========================
-
-   Emacs has facilities for running programs in other Lisp systems.
-You can run a Lisp process as an inferior of Emacs, and pass
-expressions to it to be evaluated.  You can also pass changed function
-definitions directly from the Emacs buffers in which you edit the Lisp
-programs to the inferior Lisp process.
-
-   To run an inferior Lisp process, type `M-x run-lisp'.  This runs the
-program named `lisp', the same program you would run by typing `lisp'
-as a shell command, with both input and output going through an Emacs
-buffer named `*lisp*'.  That is to say, any "terminal output" from Lisp
-will go into the buffer, advancing point, and any "terminal input" for
-Lisp comes from text in the buffer.  (You can change the name of the
-Lisp executable file by setting the variable `inferior-lisp-program'.)
-
-   To give input to Lisp, go to the end of the buffer and type the
-input, terminated by <RET>.  The `*lisp*' buffer is in Inferior Lisp
-mode, which combines the special characteristics of Lisp mode with most
-of the features of Shell mode (*note Shell Mode::.).  The definition of
-<RET> to send a line to a subprocess is one of the features of Shell
-mode.
-
-   For the source files of programs to run in external Lisps, use Lisp
-mode.  This mode can be selected with `M-x lisp-mode', and is used
-automatically for files whose names end in `.l', `.lsp', or `.lisp', as
-most Lisp systems usually expect.
-
-   When you edit a function in a Lisp program you are running, the
-easiest way to send the changed definition to the inferior Lisp process
-is the key `C-M-x'.  In Lisp mode, this runs the function
-`lisp-eval-defun', which finds the defun around or following point and
-sends it as input to the Lisp process.  (Emacs can send input to any
-inferior process regardless of what buffer is current.)
-
-   Contrast the meanings of `C-M-x' in Lisp mode (for editing programs
-to be run in another Lisp system) and Emacs-Lisp mode (for editing Lisp
-programs to be run in Emacs): in both modes it has the effect of
-installing the function definition that point is in, but the way of
-doing so is different according to where the relevant Lisp environment
-is found.  *Note Executing Lisp::.
-
-
-File: emacs,  Node: Abbrevs,  Next: Picture,  Prev: Building,  Up: Top
-
-Abbrevs
-*******
-
-   A defined "abbrev" is a word which "expands", if you insert it, into
-some different text.  Abbrevs are defined by the user to expand in
-specific ways.  For example, you might define `foo' as an abbrev
-expanding to `find outer otter'.  Then you would be able to insert
-`find outer otter ' into the buffer by typing `f o o <SPC>'.
-
-   A second kind of abbreviation facility is called "dynamic abbrev
-expansion".  You use dynamic abbrev expansion with an explicit command
-to expand the letters in the buffer before point by looking for other
-words in the buffer that start with those letters.  *Note Dynamic
-Abbrevs::.
-
-* Menu:
-
-* Abbrev Concepts::   Fundamentals of defined abbrevs.
-* Defining Abbrevs::  Defining an abbrev, so it will expand when typed.
-* Expanding Abbrevs:: Controlling expansion: prefixes, canceling expansion.
-* Editing Abbrevs::   Viewing or editing the entire list of defined abbrevs.
-* Saving Abbrevs::    Saving the entire list of abbrevs for another session.
-* Dynamic Abbrevs::   Abbreviations for words already in the buffer.
-* Dabbrev Customization:: What is a word, for dynamic abbrevs.  Case handling.
-
-
-File: emacs,  Node: Abbrev Concepts,  Next: Defining Abbrevs,  Up: Abbrevs
-
-Abbrev Concepts
-===============
-
-   An "abbrev" is a word which has been defined to "expand" into a
-specified "expansion".  When you insert a word-separator character
-following the abbrev, that expands the abbrev--replacing the abbrev
-with its expansion.  For example, if `foo' is defined as an abbrev
-expanding to `find outer otter', then you can insert `find outer
-otter.'  into the buffer by typing `f o o .'.
-
-   Abbrevs expand only when Abbrev mode (a minor mode) is enabled.
-Disabling Abbrev mode does not cause abbrev definitions to be forgotten,
-but they do not expand until Abbrev mode is enabled again.  The command
-`M-x abbrev-mode' toggles Abbrev mode; with a numeric argument, it
-turns Abbrev mode on if the argument is positive, off otherwise.  *Note
-Minor Modes::.  `abbrev-mode' is also a variable; Abbrev mode is on
-when the variable is non-`nil'.  The variable `abbrev-mode'
-automatically becomes local to the current buffer when it is set.
-
-   Abbrev definitions can be "mode-specific"--active only in one major
-mode.  Abbrevs can also have "global" definitions that are active in
-all major modes.  The same abbrev can have a global definition and
-various mode-specific definitions for different major modes.  A
-mode-specific definition for the current major mode overrides a global
-definition.
-
-   Abbrevs can be defined interactively during the editing session.
-Lists of abbrev definitions can also be saved in files and reloaded in
-later sessions.  Some users keep extensive lists of abbrevs that they
-load in every session.
-
-
-File: emacs,  Node: Defining Abbrevs,  Next: Expanding Abbrevs,  Prev: Abbrev Concepts,  Up: Abbrevs
-
-Defining Abbrevs
-================
-
-`C-x a g'
-     Define an abbrev, using one or more words before point as its
-     expansion (`add-global-abbrev').
-
-`C-x a l'
-     Similar, but define an abbrev specific to the current major mode
-     (`add-mode-abbrev').
-
-`C-x a i g'
-     Define a word in the buffer as an abbrev
-     (`inverse-add-global-abbrev').
-
-`C-x a i l'
-     Define a word in the buffer as a mode-specific abbrev
-     (`inverse-add-mode-abbrev').
-
-`M-x kill-all-abbrevs'
-     This command discards all abbrev definitions currently in effect,
-     leaving a blank slate.
-
-   The usual way to define an abbrev is to enter the text you want the
-abbrev to expand to, position point after it, and type `C-x a g'
-(`add-global-abbrev').  This reads the abbrev itself using the
-minibuffer, and then defines it as an abbrev for one or more words
-before point.  Use a numeric argument to say how many words before
-point should be taken as the expansion.  For example, to define the
-abbrev `foo' as mentioned above, insert the text `find outer otter' and
-then type `C-u 3 C-x a g f o o <RET>'.
-
-   An argument of zero to `C-x a g' means to use the contents of the
-region as the expansion of the abbrev being defined.
-
-   The command `C-x a l' (`add-mode-abbrev') is similar, but defines a
-mode-specific abbrev.  Mode-specific abbrevs are active only in a
-particular major mode.  `C-x a l' defines an abbrev for the major mode
-in effect at the time `C-x a l' is typed.  The arguments work the same
-as for `C-x a g'.
-
-   If the text already in the buffer is the abbrev, rather than its
-expansion, use command `C-x a i g' (`inverse-add-global-abbrev')
-instead of `C-x a g', or use `C-x a i l' (`inverse-add-mode-abbrev')
-instead of `C-x a l'.  These commands are called "inverse" because they
-invert the meaning of the two text strings they use (one from the
-buffer and one read with the minibuffer).
-
-   To change the definition of an abbrev, just define a new definition.
-When the abbrev has a prior definition, the abbrev definition commands
-ask for confirmation for replacing it.
-
-   To remove an abbrev definition, give a negative argument to the
-abbrev definition command: `C-u - C-x a g' or `C-u - C-x a l'.  The
-former removes a global definition, while the latter removes a
-mode-specific definition.
-
-   `M-x kill-all-abbrevs' removes all the abbrev definitions there are,
-both global and local.
-
-
-File: emacs,  Node: Expanding Abbrevs,  Next: Editing Abbrevs,  Prev: Defining Abbrevs,  Up: Abbrevs
-
-Controlling Abbrev Expansion
-============================
-
-   An abbrev expands whenever it is present in the buffer just before
-point and you type a self-inserting whitespace or punctuation character
-(<SPC>, comma, etc.).  More precisely, any character that is not a word
-constituent expands an abbrev, and any word-constituent character can
-be part of an abbrev.  The most common way to use an abbrev is to
-insert it and then insert a punctuation character to expand it.
-
-   Abbrev expansion preserves case; thus, `foo' expands into `find
-outer otter'; `Foo' into `Find outer otter', and `FOO' into `FIND OUTER
-OTTER' or `Find Outer Otter' according to the variable
-`abbrev-all-caps' (a non-`nil' value chooses the first of the two
-expansions).
-
-   These commands are used to control abbrev expansion:
-
-`M-''
-     Separate a prefix from a following abbrev to be expanded
-     (`abbrev-prefix-mark').
-
-`C-x a e'
-     Expand the abbrev before point (`expand-abbrev').  This is
-     effective even when Abbrev mode is not enabled.
-
-`M-x expand-region-abbrevs'
-     Expand some or all abbrevs found in the region.
-
-   You may wish to expand an abbrev with a prefix attached; for example,
-if `cnst' expands into `construction', you might want to use it to
-enter `reconstruction'.  It does not work to type `recnst', because
-that is not necessarily a defined abbrev.  What you can do is use the
-command `M-'' (`abbrev-prefix-mark') in between the prefix `re' and the
-abbrev `cnst'.  First, insert `re'.  Then type `M-''; this inserts a
-hyphen in the buffer to indicate that it has done its work.  Then
-insert the abbrev `cnst'; the buffer now contains `re-cnst'.  Now
-insert a non-word character to expand the abbrev `cnst' into
-`construction'.  This expansion step also deletes the hyphen that
-indicated `M-'' had been used.  The result is the desired
-`reconstruction'.
-
-   If you actually want the text of the abbrev in the buffer, rather
-than its expansion, you can accomplish this by inserting the following
-punctuation with `C-q'.  Thus, `foo C-q ,' leaves `foo,' in the buffer.
-
-   If you expand an abbrev by mistake, you can undo the expansion and
-bring back the abbrev itself by typing `C-_' to undo (*note Undo::.).
-This also undoes the insertion of the non-word character that expanded
-the abbrev.  If the result you want is the terminating non-word
-character plus the unexpanded abbrev, you must reinsert the terminating
-character, quoting it with `C-q'.
-
-   `M-x expand-region-abbrevs' searches through the region for defined
-abbrevs, and for each one found offers to replace it with its expansion.
-This command is useful if you have typed in text using abbrevs but
-forgot to turn on Abbrev mode first.  It may also be useful together
-with a special set of abbrev definitions for making several global
-replacements at once.  This command is effective even if Abbrev mode is
-not enabled.
-
-   Expanding an abbrev runs the hook `pre-abbrev-expand-hook' (*note
-Hooks::.).
-
-
-File: emacs,  Node: Editing Abbrevs,  Next: Saving Abbrevs,  Prev: Expanding Abbrevs,  Up: Abbrevs
-
-Examining and Editing Abbrevs
-=============================
-
-`M-x list-abbrevs'
-     Display a list of all abbrev definitions.
-
-`M-x edit-abbrevs'
-     Edit a list of abbrevs; you can add, alter or remove definitions.
-
-   The output from `M-x list-abbrevs' looks like this:
-
-     (lisp-mode-abbrev-table)
-     "dk"	       0    "define-key"
-     (global-abbrev-table)
-     "dfn"	       0    "definition"
-
-(Some blank lines of no semantic significance, and some other abbrev
-tables, have been omitted.)
-
-   A line containing a name in parentheses is the header for abbrevs in
-a particular abbrev table; `global-abbrev-table' contains all the global
-abbrevs, and the other abbrev tables that are named after major modes
-contain the mode-specific abbrevs.
-
-   Within each abbrev table, each nonblank line defines one abbrev.  The
-word at the beginning of the line is the abbrev.  The number that
-follows is the number of times the abbrev has been expanded.  Emacs
-keeps track of this to help you see which abbrevs you actually use, so
-that you can eliminate those that you don't use often.  The string at
-the end of the line is the expansion.
-
-   `M-x edit-abbrevs' allows you to add, change or kill abbrev
-definitions by editing a list of them in an Emacs buffer.  The list has
-the same format described above.  The buffer of abbrevs is called
-`*Abbrevs*', and is in Edit-Abbrevs mode.  Type `C-c C-c' in this
-buffer to install the abbrev definitions as specified in the
-buffer--and delete any abbrev definitions not listed.
-
-   The command `edit-abbrevs' is actually the same as `list-abbrevs'
-except that it selects the buffer `*Abbrevs*' whereas `list-abbrevs'
-merely displays it in another window.
-
-
-File: emacs,  Node: Saving Abbrevs,  Next: Dynamic Abbrevs,  Prev: Editing Abbrevs,  Up: Abbrevs
-
-Saving Abbrevs
-==============
-
-   These commands allow you to keep abbrev definitions between editing
-sessions.
-
-`M-x write-abbrev-file <RET> FILE <RET>'
-     Write a file FILE describing all defined abbrevs.
-
-`M-x read-abbrev-file <RET> FILE <RET>'
-     Read the file FILE and define abbrevs as specified therein.
-
-`M-x quietly-read-abbrev-file <RET> FILE <RET>'
-     Similar but do not display a message about what is going on.
-
-`M-x define-abbrevs'
-     Define abbrevs from definitions in current buffer.
-
-`M-x insert-abbrevs'
-     Insert all abbrevs and their expansions into current buffer.
-
-   `M-x write-abbrev-file' reads a file name using the minibuffer and
-then writes a description of all current abbrev definitions into that
-file.  This is used to save abbrev definitions for use in a later
-session.  The text stored in the file is a series of Lisp expressions
-that, when executed, define the same abbrevs that you currently have.
-
-   `M-x read-abbrev-file' reads a file name using the minibuffer and
-then reads the file, defining abbrevs according to the contents of the
-file.  `M-x quietly-read-abbrev-file' is the same except that it does
-not display a message in the echo area saying that it is doing its
-work; it is actually useful primarily in the `.emacs' file.  If an
-empty argument is given to either of these functions, they use the file
-name specified in the variable `abbrev-file-name', which is by default
-`"~/.abbrev_defs"'.
-
-   Emacs will offer to save abbrevs automatically if you have changed
-any of them, whenever it offers to save all files (for `C-x s' or `C-x
-C-c').  This feature can be inhibited by setting the variable
-`save-abbrevs' to `nil'.
-
-   The commands `M-x insert-abbrevs' and `M-x define-abbrevs' are
-similar to the previous commands but work on text in an Emacs buffer.
-`M-x insert-abbrevs' inserts text into the current buffer before point,
-describing all current abbrev definitions; `M-x define-abbrevs' parses
-the entire current buffer and defines abbrevs accordingly.
-
-
-File: emacs,  Node: Dynamic Abbrevs,  Next: Dabbrev Customization,  Prev: Saving Abbrevs,  Up: Abbrevs
-
-Dynamic Abbrev Expansion
-========================
-
-   The abbrev facility described above operates automatically as you
-insert text, but all abbrevs must be defined explicitly.  By contrast,
-"dynamic abbrevs" allow the meanings of abbrevs to be determined
-automatically from the contents of the buffer, but dynamic abbrev
-expansion happens only when you request it explicitly.
-
-`M-/'
-     Expand the word in the buffer before point as a "dynamic abbrev",
-     by searching in the buffer for words starting with that
-     abbreviation (`dabbrev-expand').
-
-`C-M-/'
-     Complete the word before point as a dynamic abbrev
-     (`dabbrev-completion').
-
-   For example, if the buffer contains `does this follow ' and you type
-`f o M-/', the effect is to insert `follow' because that is the last
-word in the buffer that starts with `fo'.  A numeric argument to `M-/'
-says to take the second, third, etc. distinct expansion found looking
-backward from point.  Repeating `M-/' searches for an alternative
-expansion by looking farther back.  After scanning all the text before
-point, it searches the text after point.  The variable `dabbrev-limit',
-if non-`nil', specifies how far in the buffer to search for an
-expansion.
-
-   After scanning the current buffer, `M-/' normally searches other
-buffers, unless you have set `dabbrev-check-all-buffers' to `nil'.
-
-   A negative argument to `M-/', as in `C-u - M-/', says to search
-first for expansions after point, and second for expansions before
-point.  If you repeat the `M-/' to look for another expansion, do not
-specify an argument.  This tries all the expansions after point and
-then the expansions before point.
-
-   After you have expanded a dynamic abbrev, you can copy additional
-words that follow the expansion in its original context.  Simply type
-`<SPC> M-/' for each word you want to copy.  The spacing and
-punctuation between words is copied along with the words.
-
-   The command `C-M-/' (`dabbrev-completion') performs completion of a
-dynamic abbreviation.  Instead of trying the possible expansions one by
-one, it finds all of them, then inserts the text that they have in
-common.  If they have nothing in common, `C-M-/' displays a list of
-completions, from which you can select a choice in the usual manner.
-*Note Completion::.
-
-   Dynamic abbrev expansion is completely independent of Abbrev mode;
-the expansion of a word with `M-/' is completely independent of whether
-it has a definition as an ordinary abbrev.
 

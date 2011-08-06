@@ -27,6 +27,7 @@ use the tutorial, run Emacs and type @kbd{Control-h t}
 * Continuation Lines::  Lines too wide for the screen.
 * Position Info::       What page, line, row, or column is point on?
 * Arguments::	        Numeric arguments for repeating a command.
+* Repeating::           A short-cut for repeating the previous command.
 @end menu
 
 @node Inserting Text
@@ -274,6 +275,8 @@ tedious.
 Undo one batch of changes---usually, one command worth (@code{undo}).
 @item C-_
 The same.
+@item C-u C-x u
+Undo one batch of changes in the region.
 @end table
 
 @kindex C-x u
@@ -293,6 +296,18 @@ commands.  Starting from that moment, the previous undo commands become
 ordinary changes that you can undo.  Thus, to redo changes you have
 undone, type @kbd{C-f} or any other command that will harmlessly break
 the sequence of undoing, then type more undo commands.
+
+@cindex selective undo
+@kindex C-u C-x u
+  Ordinary undo applies to all changes made in the current buffer.  You
+can also perform @dfn{selective undo}, limited to the current region.
+To do this, specify the region you want, then run the @code{undo}
+command with a prefix argument (the value does not matter): @kbd{C-u C-x
+u} or @kbd{C-u C-_}.  This undoes the most recent change in the region.
+To undo further changes in the same region, repeat the @code{undo}
+command (no prefix argument is needed).  In Transient Mark mode, any use
+of @code{undo} when there is an active region performs selective undo;
+you do not need a prefix argument.
 
   If you notice that a buffer has been modified accidentally, the
 easiest way to recover is to type @kbd{C-_} repeatedly until the stars
@@ -664,3 +679,25 @@ digit to insert from the argument, type another @kbd{C-u}; for example,
 emphasize that you type the argument before the command, and to
 distinguish these arguments from minibuffer arguments that come after
 the command.
+
+@node Repeating
+@section Repeating a Command
+@cindex repeating a command
+
+@kindex C-x z
+@findex repeat
+  The command @kbd{C-x z} (@code{repeat}) provides another way to repeat
+an Emacs command many times.  This command repeats the previous Emacs
+command, whatever that was.  Repeating a command uses the same arguments
+that were used before; it does not read new arguments each time.
+
+  To repeat the command more than once, type additional @kbd{z}'s: each
+@kbd{z} repeats the command one more time.  Repetition ends when you
+type a character other than @kbd{z}, or press a mouse button.
+
+  For example, suppose you type @kbd{C-u 2 0 C-d} to delete 20
+characters.  You can repeat that command (including its argument) three
+additional times, to delete a total of 80 characters, by typing @kbd{C-x
+z z z}.  The first @kbd{C-x z} repeats the command once, and each
+subsequent @kbd{z} repeats it once again.
+

@@ -37,7 +37,7 @@ a specified @dfn{expansion}.  When you insert a word-separator character
 following the abbrev, that expands the abbrev---replacing the abbrev
 with its expansion.  For example, if @samp{foo} is defined as an abbrev
 expanding to @samp{find outer otter}, then you can insert @samp{find
-outer otter.}  into the buffer by typing @kbd{f o o .}.
+outer otter.} into the buffer by typing @kbd{f o o .}.
 
 @findex abbrev-mode
 @vindex abbrev-mode
@@ -181,12 +181,15 @@ its expansion, you can accomplish this by inserting the following
 punctuation with @kbd{C-q}.  Thus, @kbd{foo C-q ,} leaves @samp{foo,} in
 the buffer.
 
+@findex unexpand-abbrev
   If you expand an abbrev by mistake, you can undo the expansion and
 bring back the abbrev itself by typing @kbd{C-_} to undo (@pxref{Undo}).
 This also undoes the insertion of the non-word character that expanded
 the abbrev.  If the result you want is the terminating non-word
 character plus the unexpanded abbrev, you must reinsert the terminating
-character, quoting it with @kbd{C-q}.
+character, quoting it with @kbd{C-q}.  You can also use the command
+@kbd{M-x unexpand-abbrev} to cancel the last expansion without
+deleting the terminating character.
 
 @findex expand-region-abbrevs
   @kbd{M-x expand-region-abbrevs} searches through the region for defined

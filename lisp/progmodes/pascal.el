@@ -1,6 +1,6 @@
 ;;; pascal.el --- major mode for editing pascal source in Emacs
 
-;; Copyright (C) 1993, 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1994, 95, 96, 97, 1998 Free Software Foundation, Inc.
 
 ;; Author: Espen Skoglund <espensk@stud.cs.uit.no>
 ;; Keywords: languages
@@ -164,7 +164,7 @@
    (cons (concat "\\<\\(array\\|boolean\\|c\\(har\\|onst\\)\\|file\\|"
 		 "integer\\|re\\(al\\|cord\\)\\|type\\|var\\)\\>")
 	 'font-lock-type-face)
-   '("\\<\\(label\\|external\\|forward\\)\\>" . font-lock-reference-face)
+   '("\\<\\(label\\|external\\|forward\\)\\>" . font-lock-constant-face)
    '("\\<\\([0-9]+\\)[ \t]*:" 1 font-lock-function-name-face)
 ;   ("of" "to" "for" "if" "then" "else" "case" "while"
 ;    "do" "until" "and" "or" "not" "in" "with" "repeat" "begin" "end")
@@ -371,6 +371,7 @@ no args, if that value is non-nil."
   ;; Imenu support
   (make-local-variable 'imenu-generic-expression)
   (setq imenu-generic-expression pascal-imenu-generic-expression)
+  (setq imenu-case-fold-search t)
   (run-hooks 'pascal-mode-hook))
 
 
@@ -480,11 +481,10 @@ no args, if that value is non-nil."
 (defun pascal-insert-block ()
   "Insert Pascal begin ... end; block in the code with right indentation."
   (interactive)
-  (pascal-indent-line)
   (insert "begin")
   (electric-pascal-terminate-line)
   (save-excursion
-    (electric-pascal-terminate-line)
+    (newline)
     (insert "end;")
     (beginning-of-line)
     (pascal-indent-line)))
@@ -609,7 +609,7 @@ area.  See also `pascal-comment-area'."
 		   (setq func (1+ func)))
 	       (setq nest (1- nest)))
 	      ((match-end 3)                       ; function|procedure
-	       (if (= 0 func)
+	       (if (or (> nest 0) (= 0 func))
 		   (throw 'found t)
 		 (setq func (1- func)))))))
     nil))

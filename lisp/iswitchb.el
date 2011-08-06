@@ -4,7 +4,8 @@
 
 ;; Author: Stephen Eglen <stephen@cns.ed.ac.uk>
 ;; Maintainer: Stephen Eglen <stephen@cns.ed.ac.uk>
-;; Keywords: extensions
+;; Keywords: extensions convenience
+;; location: http://www.cns.ed.ac.uk/people/stephen/emacs/
 
 ;; This file is part of GNU Emacs.
 
@@ -23,12 +24,11 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-;;; Installation:
+;;; Commentary:
 
+;; Installation:
 ;; To get the functions in this package bound to keys, do
 ;; (iswitchb-default-keybindings)
-
-;;; Commentary:
 
 ;; As you type in a substring, the list of buffers currently matching
 ;; the substring are displayed as you type.  The list is ordered so
@@ -42,7 +42,7 @@
 ;; common to all of the matching buffers as you type.
 
 ;; This code is similar to a couple of other packages.  Michael R Cook
-;; <mcook@cognex.com wrote a similar buffer switching package, but
+;; <mcook@cognex.com> wrote a similar buffer switching package, but
 ;; does exact matching rather than substring matching on buffer names.
 ;; I also modified a couple of functions from icomplete.el to provide
 ;; the completion feedback in the minibuffer.
@@ -88,12 +88,13 @@
 ;; Of course, where this function comes in really useful is when you
 ;; can specify the buffer using only a few keystrokes.  In the above
 ;; example, the quickest way to get to the "123456" buffer would be
-;; just to type 4 and then RET (assuming there isnt any newer buffer
+;; just to type 4 and then RET (assuming there isn't any newer buffer
 ;; with 4 in its name).
 
 ;; To see a full list of all matching buffers in a separate buffer,
 ;; hit ? or press TAB when there are no further completions to the
-;; substring.
+;; substring.  Repeated TAB presses will scroll you through this
+;; separate buffer.
 
 ;; The buffer at the head of the list can be killed by pressing C-k.
 ;; If the buffer needs saving, you will be queried before the buffer
@@ -116,11 +117,11 @@
 ;;	  'iswitchb-my-keys)
 ;;
 ;;(defun iswitchb-my-keys ()
-;;  "Add my keybings for iswitchb."
+;;  "Add my keybindings for iswitchb."
 ;;  (define-key iswitchb-mode-map " " 'iswitchb-next-match)
 ;;  )
 ;;
-;; Seeing all the matching buffers.
+;; Seeing all the matching buffers
 ;;
 ;; If you have many matching buffers, they may not all fit onto one
 ;; line of the minibuffer.  In this case, you should use rsz-mini
@@ -128,8 +129,7 @@
 ;; only shows a certain number of lines -- see the documentation for
 ;; `iswitchb-minibuffer-setup-hook'.
 
-
-;; Changing the list of buffers.
+;; Changing the list of buffers
 
 ;; By default, the list of current buffers is most recent first,
 ;; oldest last, with the exception that the buffers visible in the
@@ -153,30 +153,31 @@
 ;; this is too harsh, let me know.  Colouring of the matching buffer
 ;; name was suggested by Carsten Dominik (dominik@strw.leidenuniv.nl)
 
-;;; Comparison with iswitch-buffer
+;; Replacement for read-buffer
 
-;; This package is a rewrite of iswitch-buffer, using the minibuffer
-;; rather than the echo area.  The advantages of using the minibuffer
-;; are several:
-;; o minibuffer has more powerful editing facilities
-;; o doesnt interfere with other packages that use the echo area
-;; o *Messages* buffer doesnt get filled up with all of the messages that
-;;   go to the modeline
-;; o cursor is in the minibuffer, which somehow looks right.
-;; o minibuffer can be resized dynamically to show all the possible matching
-;;   buffers rather than just the first line's worth (using rsz-mini).
-;;
-;; Disadvantages:
-;; o cant change the prompt to indicate status of searching (eg whether
-;;   regexp searching is currently on).
+;; iswitchb-read-buffer has been written to be a drop in replacement
+;; for the normal buffer selection routine `read-buffer'.  To use
+;; iswitch for all buffer selections in Emacs, add:
+;; (setq read-buffer-function 'iswitchb-read-buffer)
+;; (This variable should be present in Emacs 20.3+)
+;; XEmacs users can get the same behaviour by doing:
+;; (defalias 'read-buffer 'iswitchb-read-buffer) 
+;; since `read-buffer' is defined in lisp.
 
+;; Regexp matching
+
+;; There is limited provision for regexp matching within iswitchb,
+;; enabled through `iswitchb-regexp'.  This allows you to type `c$'
+;; for example and see all buffer names ending in `c'.  This facility
+;; is quite limited though in two respects.  First, you can't
+;; currently type in expressions like `[0-9]' directly -- you have to
+;; type them in when iswitchb-regexp is nil and then toggle on the
+;; regexp functionality.  Likewise, don't enter an expression
+;; containing `\' in regexp mode.  If you try, iswitchb gets confused,
+;; so just hit C-g and try again.  Secondly, no completion mechanism
+;; is currently offered when regexp searching.
 
 ;;; TODO
-;; Could this selection also be used for other buffer selection
-;; routines, such as append-to-buffer and kill-buffer?
-
-;; Pressing Tab key twice (without completion) does not scroll the
-;; list of buffers.
 
 ;;; Acknowledgements
 
@@ -185,6 +186,11 @@
 ;; others for testing earlier versions.
 
 ;;; Code:
+
+;; CL needed for cadr and last
+(if (not (and (fboundp 'cadr)
+	      (fboundp 'last)))
+    (require 'cl))
 
 ;; Set up the custom library.
 ;; taken from http://www.dina.kvl.dk/~abraham/custom/
@@ -205,14 +211,13 @@
 ;; These are some things you might want to change.
 
 (defgroup iswitchb nil
-  "switch between buffers using substrings."
+  "Switch between buffers using substrings."
   :group 'extensions
+  :group 'convenience
   ;; These links are to be added in later versions of custom and
   ;; so are currently commented out.
   :link '(emacs-commentary-link :tag "Commentary" "iswitchb.el")
-  :link '(emacs-library-link :tag "Lisp File" "iswitchb.el")
-)
-
+  :link '(emacs-library-link :tag "Lisp File" "iswitchb.el"))
 
 (defcustom iswitchb-case case-fold-search
   "*Non-nil if searching of buffer names should ignore case."
@@ -228,15 +233,14 @@ example functions that filter buffernames."
   :type '(repeat regexp)
   :group 'iswitchb)
 
-
 ;;; Examples for setting the value of iswitchb-buffer-ignore
-;(defun -c-mode (name)
+;(defun iswitchb-ignore-c-mode (name)
 ;  "Ignore all c mode buffers -- example function for iswitchb."
 ;  (save-excursion
 ;    (set-buffer name)
 ;    (string-match "^C$" mode-name)))
 
-;(setq iswitchb-buffer-ignore '("^ " ignore-c-mode))
+;(setq iswitchb-buffer-ignore '("^ " iswitchb-ignore-c-mode))
 ;(setq iswitchb-buffer-ignore '("^ " "\\.c$" "\\.h$"))
 
 (defcustom iswitchb-default-method  'always-frame
@@ -249,23 +253,21 @@ Possible values:
 `maybe-frame'	If a buffer is visible in another frame, prompt to ask if you
 		you want to see the buffer in the same window of the current
   		frame or in the other frame.
-`always-frame'   If a buffer is visible in another frame, raise that
+`always-frame'  If a buffer is visible in another frame, raise that
 		frame.  Otherwise, visit the buffer in the same window."
-    :type '(choice (const :tag "samewindow" samewindow) 
-		   (const :tag "otherwindow" otherwindow)
-		   (const :tag "display" display)
-		   (const :tag "otherframe" otherframe) 
-		   (const :tag "maybe-frame" maybe-frame)
-		   (const :tag "always-frame" always-frame))
+    :type '(choice (const samewindow) 
+		   (const otherwindow)
+		   (const display)
+		   (const otherframe) 
+		   (const maybe-frame)
+		   (const always-frame))
     :group 'iswitchb)
-
 
 (defcustom iswitchb-regexp nil
   "*Non-nil means that `iswitchb' will do regexp matching.
-Value can be toggled within `iswitchb'."
+Value can be toggled within `iswitchb' using `iswitchb-toggle-regexp'."
   :type 'boolean
   :group 'iswitchb)
-
 
 (defcustom iswitchb-newbuffer t
   "*Non-nil means create new buffer if no buffer matches substring.
@@ -273,52 +275,33 @@ See also `iswitchb-prompt-newbuffer'."
   :type 'boolean
   :group 'iswitchb)
 
-
 (defcustom iswitchb-prompt-newbuffer t
   "*Non-nil means prompt user to confirm before creating new buffer.
 See also `iswitchb-newbuffer'."
   :type 'boolean
   :group 'iswitchb)
 
-
 (defcustom iswitchb-define-mode-map-hook  nil
   "*Hook to define keys in `iswitchb-mode-map' for extra keybindings."
   :type 'hook
   :group 'iswitchb)
 
-
-
 (defcustom iswitchb-use-fonts t
-  "*Non-nil means use fonts for showing first match."
+  "*Non-nil means use font-lock fonts for showing first match."
   :type 'boolean
   :group 'iswitchb)
-
 
 (defcustom iswitchb-make-buflist-hook  nil
   "*Hook to run when list of matching buffers is created."
   :type 'hook
   :group 'iswitchb)
 
-
-
-(defvar iswitchb-method nil
-  "*Stores the method for viewing the selected buffer.  
-Its value is one of `samewindow', `otherwindow', `display', `otherframe',
-`maybe-frame' or `always-frame'.  See `iswitchb-default-method' for
-details of values.")
-
 (defvar iswitchb-all-frames 'visible
   "*Argument to pass to `walk-windows' when finding visible buffers.
 See documentation of `walk-windows' for useful values.")
 
-
-
-;; Do we need the variable iswitchb-use-mycompletion?
-
-
-;;; Internal Variables
-(defvar iswitchb-minibuffer-setup-hook nil
-  "Iswitchb-specific customization of minibuffer setup.
+(defcustom iswitchb-minibuffer-setup-hook nil
+  "*Iswitchb-specific customization of minibuffer setup.
 
 This hook is run during minibuffer setup iff `iswitchb' will be active.
 It is intended for use in customizing iswitchb for interoperation
@@ -331,13 +314,24 @@ with other packages.  For instance:
 	       \(setq resize-minibuffer-window-max-height 3))))
 
 will constrain rsz-mini to a maximum minibuffer height of 3 lines when
-iswitchb is running.  Copied from `icomplete-minibuffer-setup-hook'.")
+iswitchb is running.  Copied from `icomplete-minibuffer-setup-hook'."
+  :type 'hook
+  :group 'iswitchb)
+
+;; Do we need the variable iswitchb-use-mycompletion?
+
+;;; Internal Variables
+
+(defvar iswitchb-method nil
+  "Stores the method for viewing the selected buffer.  
+Its value is one of `samewindow', `otherwindow', `display', `otherframe',
+`maybe-frame' or `always-frame'.  See `iswitchb-default-method' for
+details of values.")
 
 (defvar iswitchb-eoinput 1
   "Point where minibuffer input ends and completion info begins.
 Copied from `icomplete-eoinput'.")
 (make-variable-buffer-local 'iswitchb-eoinput)
-
 
 (defvar iswitchb-buflist nil
   "Stores the current list of buffers that will be searched through.
@@ -355,10 +349,8 @@ interfere with other minibuffer usage.")
 (defvar iswitchb-change-word-sub nil 
   "Private variable used by `iswitchb-word-matching-substring'.")
 
-
 (defvar iswitchb-common-match-string  nil
   "Stores the string that is common to all matching buffers.")
-
 
 (defvar iswitchb-rescan nil
   "Non-nil means we need to regenerate the list of matching buffers.")
@@ -367,7 +359,7 @@ interfere with other minibuffer usage.")
   "Stores the users string as it is typed in.")
 
 (defvar iswitchb-matches nil
-  "List of buffers currenly matching `iswitchb-text'.")
+  "List of buffers currently matching `iswitchb-text'.")
 
 (defvar iswitchb-mode-map nil
   "Keymap for `iswitchb-buffer'.")
@@ -386,16 +378,27 @@ selected.")
 (defvar iswitchb-xemacs  (string-match "XEmacs" (emacs-version))
   "Non-nil if we are running XEmacs.  Otherwise, assume we are running Emacs.")
 
+(defvar iswitchb-default nil
+  "Default buffer for iswitchb.")
+
+;; The following variables are needed to keep the byte compiler quiet.
+(defvar iswitchb-require-match nil
+  "Non-nil if matching buffer must be selected.")
+
+(defvar iswitchb-temp-buflist nil
+  "Stores a temporary version of the buffer list being created.")
+
+(defvar iswitchb-bufs-in-frame nil
+  "List of the buffers visible in the current frame.")
 
 ;;; FUNCTIONS
-
 
 ;;; ISWITCHB KEYMAP 
 (defun iswitchb-define-mode-map ()
   "Set up the keymap for `iswitchb-buffer'."
   (interactive)
   (let (map)
-    ;; generated every time so that it can inheret new functions.
+    ;; generated every time so that it can inherit new functions.
     ;;(or iswitchb-mode-map
 
     (setq map (copy-keymap minibuffer-local-map))
@@ -409,12 +412,10 @@ selected.")
     ;;(define-key map "\C-a" 'iswitchb-toggle-ignore)
     (define-key map "\C-c" 'iswitchb-toggle-case)
     (define-key map "\C-k" 'iswitchb-kill-buffer)
+    (define-key map "\C-m" 'iswitchb-exit-minibuffer)
     (setq iswitchb-mode-map map)
-    (run-hooks 'iswitchb-define-mode-map-hook)
-    ))
+    (run-hooks 'iswitchb-define-mode-map-hook)))
   
-
-
 ;;; MAIN FUNCTION
 (defun iswitchb ()
   "Switch to buffer matching a substring.
@@ -436,7 +437,7 @@ If no buffer is found, prompt for a new one.
 matches all buffers.  If there is only one match, select that buffer.
 If there is no common suffix, show a list of all matching buffers
 in a separate window.
-\\[iswitchb-toggle-regexp] Toggle rexep searching.
+\\[iswitchb-toggle-regexp] Toggle regexp searching.
 \\[iswitchb-toggle-case] Toggle case-sensitive searching of buffer names.
 \\[iswitchb-completion-help] Show list of matching buffers in separate window.
 \\[iswitchb-find-file] Exit iswitchb and drop into find-file.
@@ -445,36 +446,12 @@ in a separate window.
   ;;`iswitchb-buffer-ignore')
   	
   (let
-      (
-       prompt
-       buf-sel
-       iswitchb-final-text
-       (minibuffer-confirm-incomplete nil) ;XEmacs todo: prevent `;confirm'
-       (icomplete-mode nil) ;; prevent icomplete starting up
-       ;; can only use fonts if they have been bound.
-       (iswitchb-use-fonts (and iswitchb-use-fonts
-				(boundp 'font-lock-comment-face)
-				(boundp 'font-lock-function-name-face)))
-       )
+      (prompt buf)
     
-    (iswitchb-define-mode-map)
-    (setq iswitchb-exit nil)
-    (setq iswitchb-rescan t)
-    (setq iswitchb-text "")
-    (iswitchb-set-matches)
     (setq prompt (format "iswitch "))
-    (iswitchb-make-buflist)
-    (let 
-	((minibuffer-local-completion-map iswitchb-mode-map))
-      ;; prompt the user for the buffer name
-      (setq iswitchb-final-text (completing-read prompt
-						 ;;nil
-						 '(("dummy".1))
-						 ;;("2".2)  ("3".3))
-						 nil nil
-						 nil;init string
-						 'iswitchb-history)))
-      
+
+    (setq buf (iswitchb-read-buffer prompt))
+
     ;;(message "chosen text %s" iswitchb-final-text)
     ;; Choose the buffer name: either the text typed in, or the head
     ;; of the list of matches
@@ -483,30 +460,77 @@ in a separate window.
 	    (call-interactively 'find-file))
 
 	  (t
-	   (if (or 
-		(eq iswitchb-exit 'takeprompt)
-		(null iswitchb-matches))
-	       (setq buf-sel iswitchb-final-text)
-	     ;; else take head of list
-	     (setq buf-sel (car iswitchb-matches)))
-    
-	   ;; Or possibly choose the default buffer
-	   (if  (equal iswitchb-final-text "")
-	       (setq buf-sel (car iswitchb-matches)))
-    
 	   ;; View the buffer
-	   (message "go to buf %s" buf-sel)
-	   ;; Check buf-sel is non-nil.
-	   (if buf-sel
-	       (if (get-buffer buf-sel)
+	   ;;(message "go to buf %s" buf)
+	   ;; Check buf is non-nil.
+	   (if buf
+	       (if (get-buffer buf)
 		   ;; buffer exists, so view it and then exit
-		   (iswitchb-visit-buffer buf-sel)
-		 ;; else buffer doesnt exist
-		 (iswitchb-possible-new-buffer buf-sel)))
-	   ))
-    
-    ))
+		   (iswitchb-visit-buffer buf)
+		 ;; else buffer doesn't exist
+		 (iswitchb-possible-new-buffer buf)))
+	   ))))
 
+;;;###autoload
+(defun iswitchb-read-buffer (prompt &optional default require-match)
+  "Replacement for the built-in `read-buffer'.
+Return the name of a buffer selected.  
+PROMPT is the prompt to give to the user.  DEFAULT if given is the default
+buffer to be selected, which will go to the front of the list.
+If REQUIRE-MATCH is non-nil, an existing-buffer must be selected."
+  (let
+      (
+       buf-sel
+       iswitchb-final-text
+       (icomplete-mode nil) ;; prevent icomplete starting up
+       ;; can only use fonts if they have been bound.
+       (iswitchb-use-fonts (and iswitchb-use-fonts
+				(boundp 'font-lock-comment-face)
+				(boundp 'font-lock-function-name-face))))
+
+    (iswitchb-define-mode-map)
+    (setq iswitchb-exit nil)
+    (setq iswitchb-rescan t)
+    (setq iswitchb-text "")
+    (setq iswitchb-default
+	  (if (bufferp default)
+	      (buffer-name default)
+	    default))
+    (iswitchb-make-buflist iswitchb-default)
+    (iswitchb-set-matches)
+    (let 
+	((minibuffer-local-completion-map iswitchb-mode-map)
+	 (iswitchb-prepost-hooks t)
+	 (iswitchb-require-match require-match))
+      ;; prompt the user for the buffer name
+      (setq iswitchb-final-text (completing-read 
+				 prompt	;the prompt
+				 '(("dummy".1))	;table
+				 nil	;predicate
+				 nil	;require-match [handled elsewhere]
+				 nil	;initial-contents
+				 'iswitchb-history)))
+    ;; Handling the require-match must be done in a better way.
+    (if (and require-match (not (iswitchb-existing-buffer-p)))
+	(error "must specify valid buffer"))
+
+    (if (or 
+	 (eq iswitchb-exit 'takeprompt)
+	 (null iswitchb-matches))
+	(setq buf-sel iswitchb-final-text)
+      ;; else take head of list
+      (setq buf-sel (car iswitchb-matches)))
+    
+    ;; Or possibly choose the default buffer
+    (if  (equal iswitchb-final-text "")	
+	(setq buf-sel 
+	      (car iswitchb-matches)))
+
+    buf-sel))
+
+(defun iswitchb-existing-buffer-p ()
+  "Return non-nil if there is a matching buffer."
+  (not (null iswitchb-matches)))
 
 ;;; COMPLETION CODE
 
@@ -517,46 +541,38 @@ The result is stored in `iswitchb-common-match-string'."
   (let* (val)
     (setq  iswitchb-common-match-string nil)
     (if (and iswitchb-matches
+	     (not iswitchb-regexp) ;; testing
              (stringp iswitchb-text)
              (> (length iswitchb-text) 0))
         (if (setq val (iswitchb-find-common-substring
                        iswitchb-matches iswitchb-text))
             (setq iswitchb-common-match-string val)))
-    val
-    ))
-
+    val))
 
 (defun iswitchb-complete ()
   "Try and complete the current pattern amongst the buffer names."
   (interactive)
   (let (res)
     (cond ((not  iswitchb-matches)
-	   (iswitchb-completion-help)
-	   )
+	   (iswitchb-completion-help))
 	  
-	  ((eq 1 (length iswitchb-matches))
+	  ((= 1 (length iswitchb-matches))
 	   ;; only one choice, so select it.
 	   (exit-minibuffer))
 	  
 	  (t
 	   ;; else there could be some completions
-	   
-	   (setq res (iswitchb-find-common-substring
-		      iswitchb-matches iswitchb-text))
+	   (setq res iswitchb-common-match-string)
 	   (if (and (not (memq res '(t nil)))
 		    (not (equal res iswitchb-text)))
-	       ;; found something to complete, so put it in the minibuff.
+	       ;; found something to complete, so put it in the minibuffer.
 	       (progn
 		 (setq iswitchb-rescan nil)
 		 (delete-region (point-min) (point))
 		 (insert  res))
 	     ;; else nothing to complete
 	     (iswitchb-completion-help)
-	     )
-	   )
-	  )))
-
-
+	     )))))
 
 ;;; TOGGLE FUNCTIONS
 
@@ -565,17 +581,14 @@ The result is stored in `iswitchb-common-match-string'."
   (interactive)
   (setq iswitchb-case (not iswitchb-case))
   ;; ask for list to be regenerated.
-  (setq iswitchb-rescan t)
-  )
+  (setq iswitchb-rescan t))
 
 (defun iswitchb-toggle-regexp ()
   "Toggle the value of `iswitchb-regexp'."
   (interactive)
   (setq iswitchb-regexp (not iswitchb-regexp))
   ;; ask for list to be regenerated.
-  (setq iswitchb-rescan t)
-  )
-
+  (setq iswitchb-rescan t))
 
 (defun iswitchb-toggle-ignore ()
   "Toggle ignoring buffers specified with `iswitchb-buffer-ignore'."
@@ -583,15 +596,19 @@ The result is stored in `iswitchb-common-match-string'."
   (if iswitchb-buffer-ignore
       (progn
         (setq iswitchb-buffer-ignore-orig iswitchb-buffer-ignore)
-        (setq iswitchb-buffer-ignore nil)
-        )
+        (setq iswitchb-buffer-ignore nil))
     ;; else
-    (setq iswitchb-buffer-ignore iswitchb-buffer-ignore-orig)
-    )
+    (setq iswitchb-buffer-ignore iswitchb-buffer-ignore-orig))
+  (iswitchb-make-buflist iswitchb-default)
   ;; ask for list to be regenerated.
-  (setq iswitchb-rescan t)
-  )
+  (setq iswitchb-rescan t))
 
+(defun iswitchb-exit-minibuffer ()
+  "Exit minibuffer, but make sure we have a match if one is needed."
+  (interactive)
+  (if (or (not iswitchb-require-match)
+	   (iswitchb-existing-buffer-p))
+      (throw 'exit nil)))
 
 (defun iswitchb-select-buffer-text ()
   "Select the buffer named by the prompt.
@@ -599,8 +616,6 @@ If no buffer exactly matching the prompt exists, maybe create a new one."
   (interactive)
   (setq iswitchb-exit 'takeprompt)
   (exit-minibuffer))
-
-
 
 (defun iswitchb-find-file ()
   "Drop into find-file from buffer switching."
@@ -613,19 +628,14 @@ If no buffer exactly matching the prompt exists, maybe create a new one."
   (interactive)
   (let ((next  (cadr iswitchb-matches)))
     (setq iswitchb-buflist (iswitchb-chop iswitchb-buflist next))
-    (setq iswitchb-rescan t)
-    ))
+    (setq iswitchb-rescan t)))
 
 (defun iswitchb-prev-match () 
   "Put last element of `iswitchb-matches' at the front of the list."
   (interactive)
   (let ((prev  (car (last iswitchb-matches))))
     (setq iswitchb-buflist (iswitchb-chop iswitchb-buflist prev))
-    (setq iswitchb-rescan t)
-    ))
-
-
-
+    (setq iswitchb-rescan t)))
 
 (defun iswitchb-chop (list elem)
   "Remove all elements before ELEM and put them at the end of LIST."
@@ -642,21 +652,18 @@ If no buffer exactly matching the prompt exists, maybe create a new one."
 	  (setq sofar (cons next sofar)))))
     ret))
 
-
-
-
 ;;; CREATE LIST OF ALL CURRENT BUFFERS
 
-
-(defun iswitchb-make-buflist ()
+(defun iswitchb-make-buflist (default)
   "Set `iswitchb-buflist' to the current list of buffers.
 Currently visible buffers are put at the end of the list.
 The hook `iswitchb-make-buflist-hook' is run after the list has been 
 created to allow the user to further modify the order of the buffer names
-in this list."
+in this list.  If DEFAULT is non-nil, and corresponds to an existing buffer,
+it is put to the start of the list."
   (setq iswitchb-buflist 
 	(let* ((iswitchb-current-buffers (iswitchb-get-buffers-in-frames))
-	      (buflist 
+	      (iswitchb-temp-buflist
 	       (delq nil 
 		     (mapcar
 		      (lambda (x)
@@ -667,19 +674,25 @@ in this list."
 				(memq b-name iswitchb-current-buffers)))
 			      b-name)))
 		      (buffer-list)))))
-	  (nconc buflist iswitchb-current-buffers)
+	  (nconc iswitchb-temp-buflist iswitchb-current-buffers)
 	  (run-hooks 'iswitchb-make-buflist-hook)
-	  buflist)))
+	  ;; Should this be after the hooks, or should the hooks be the
+	  ;; final thing to be run?
+	  (if default
+	      (progn
+		(setq iswitchb-temp-buflist 
+		      (delete default iswitchb-temp-buflist))
+		(setq iswitchb-temp-buflist 
+		      (cons default iswitchb-temp-buflist))))
+	  iswitchb-temp-buflist)))
 
 (defun iswitchb-to-end (lst)
-  "Move the elements from LST to the end of BUFLIST."
+  "Move the elements from LST to the end of `iswitchb-temp-buflist'."
   (mapcar 
    (lambda (elem)  
-     (setq buflist (delq elem buflist)))
+     (setq iswitchb-temp-buflist (delq elem iswitchb-temp-buflist)))
    lst)
-  (nconc buflist lst))
-
-
+  (nconc iswitchb-temp-buflist lst))
 
 (defun iswitchb-get-buffers-in-frames (&optional current)
   "Return the list of buffers that are visible in the current frame.
@@ -693,7 +706,6 @@ current frame, rather than all frames, regardless of value of
 		    iswitchb-all-frames))
     iswitchb-bufs-in-frame))
 
-
 (defun iswitchb-get-bufname (win)
   "Used by `iswitchb-get-buffers-in-frames' to walk through all windows."
   (let ((buf (buffer-name (window-buffer win))))
@@ -704,31 +716,27 @@ current frame, rather than all frames, regardless of value of
 	    (setq iswitchb-bufs-in-frame
 		  (cons buf iswitchb-bufs-in-frame)))))
 
-
 ;;; FIND MATCHING BUFFERS
-
 
 (defun iswitchb-set-matches ()
   "Set `iswitchb-matches' to the list of buffers matching prompt."
   (if iswitchb-rescan
       (setq iswitchb-matches
-	    (let* ((buflist iswitchb-buflist)
-		   )
+	    (let* ((buflist iswitchb-buflist))
 	      (iswitchb-get-matched-buffers iswitchb-text iswitchb-regexp
-						buflist)))))
+					    buflist)))))
 
 (defun iswitchb-get-matched-buffers (regexp
 				     &optional string-format buffer-list)
-  "Return  buffers matching REGEXP.
-If STRING-FORMAT is non-nil, consider REGEXP as string.
+  "Return buffers matching REGEXP.
+If STRING-FORMAT is nil, consider REGEXP as just a string.
 BUFFER-LIST can be list of buffers or list of strings."
   (let* ((case-fold-search  iswitchb-case)
 	 ;; need reverse since we are building up list backwards
 	 (list              (reverse buffer-list))
-         (do-string          (stringp (car list)))
+         (do-string         (stringp (car list)))
          name
-         ret
-         )
+         ret)
     (mapcar
      (lambda (x)
        
@@ -741,24 +749,18 @@ BUFFER-LIST can be list of buffers or list of strings."
 		  (and (null string-format)
 		       (string-match (regexp-quote regexp) name)))
 	      
-	      ;; todo (not (iswitchb-ignore-buffername-p name))
-	      )
+	      (not (iswitchb-ignore-buffername-p name)))
 	 (setq ret (cons name ret))
           )))
      list)
-    ret
-    ))
-
-
-
+    ret))
 
 (defun iswitchb-ignore-buffername-p (bufname)
   "Return t if the buffer BUFNAME should be ignored."
   (let ((data       (match-data))
         (re-list    iswitchb-buffer-ignore)
         ignorep
-        nextstr
-        )
+        nextstr)
     (while re-list
       (setq nextstr (car re-list))
       (cond
@@ -771,17 +773,12 @@ BUFFER-LIST can be list of buffers or list of strings."
         (if (funcall nextstr bufname)
             (progn
               (setq ignorep t)
-              (setq re-list nil))
-          ))
-       )
+              (setq re-list nil)))))
       (setq re-list (cdr re-list)))
-    (store-match-data data)
+    (set-match-data data)
 
     ;; return the result
-    ignorep)
-  )
-
-
+    ignorep))
 
 (defun iswitchb-word-matching-substring (word)
   "Return part of WORD before 1st match to `iswitchb-change-word-sub'.
@@ -793,31 +790,23 @@ If `iswitchb-change-word-sub' cannot be found in WORD, return nil."
         ;; else no match
         nil))))
 
-
-
-
-
-
 (defun iswitchb-find-common-substring (lis subs)
   "Return common string following SUBS in each element of LIS."
   (let (res
         alist
-        iswitchb-change-word-sub
-        )
+        iswitchb-change-word-sub)
     (setq iswitchb-change-word-sub
           (if iswitchb-regexp
               subs
             (regexp-quote subs)))
     (setq res (mapcar 'iswitchb-word-matching-substring lis))
-    (setq res (delq nil res)) ;; remove any nil elements (shouldnt happen)
+    (setq res (delq nil res)) ;; remove any nil elements (shouldn't happen)
     (setq alist (mapcar 'iswitchb-makealist res)) ;; could use an  OBARRAY
 
     ;; try-completion returns t if there is an exact match.
     (let ((completion-ignore-case iswitchb-case))
 
-    (try-completion subs alist)   
-    )))
-
+    (try-completion subs alist))))
 
 (defun iswitchb-makealist (res)
   "Return dotted pair (RES . 1)."
@@ -835,9 +824,7 @@ Return the modified list with the last element prepended to it."
         (setq prev las
               las (cdr las)))
       (setcdr prev nil)
-      (cons (car las) lis))
-    ))
-
+      (cons (car las) lis))))
 
 (defun iswitchb-completion-help ()
   "Show possible completions in a *Buffer Completions* buffer."
@@ -847,30 +834,43 @@ Return the modified list with the last element prepended to it."
   (interactive)
   (setq iswitchb-rescan nil)
   (let ((completion-setup-hook nil)	;disable fancy highlight/selection.
-	)
-    (with-output-to-temp-buffer "*Buffer Completions*"
-      (if iswitchb-xemacs 
-	  
-	  ;; XEmacs extents are put on by default, doesn't seem to be
-	  ;; any way of switching them off.
-	  (display-completion-list (if iswitchb-matches
-				       iswitchb-matches
-				     iswitchb-buflist)
-				   :help-string "iswitchb "
+	(buf (current-buffer))
+	(temp-buf "*Buffer Completions*")
+	(win)
+	(again (eq last-command this-command)))
+
+    (if again
+	;; scroll buffer
+	(progn
+	  (set-buffer temp-buf)
+	  (setq win (get-buffer-window temp-buf))
+	  (if (pos-visible-in-window-p (point-max) win)
+	      (set-window-start win (point-min))
+	    (scroll-other-window))
+	  (set-buffer buf))
+      
+      (with-output-to-temp-buffer temp-buf
+	(if iswitchb-xemacs 
+	    
+	    ;; XEmacs extents are put on by default, doesn't seem to be
+	    ;; any way of switching them off.
+	    (display-completion-list (if iswitchb-matches
+					 iswitchb-matches
+				       iswitchb-buflist)
+				     :help-string "iswitchb "
 				   :activate-callback 
 				   '(lambda (x y z) 
-				      (message "doesnt work yet, sorry!")))
-	;; else running Emacs
-	(display-completion-list (if iswitchb-matches
+				      (message "doesn't work yet, sorry!")))
+	  ;; else running Emacs
+	  (display-completion-list (if iswitchb-matches
 				     iswitchb-matches
-				   iswitchb-buflist))
-	))))
-
+				     iswitchb-buflist))
+	  )))))
 
 ;;; KILL CURRENT BUFFER
 
 (defun iswitchb-kill-buffer ()
-  "Kill the buffer at the head of `iswtichb-matches'."
+  "Kill the buffer at the head of `iswitchb-matches'."
   (interactive)
   (let ( (enable-recursive-minibuffers t)
 	 buf)
@@ -889,7 +889,6 @@ Return the modified list with the last element prepended to it."
 	      (setq iswitchb-rescan t)	
 	    ;; else buffer was killed so remove name from list.
 	    (setq iswitchb-buflist  (delq buf iswitchb-buflist)))))))
-
 
 ;;; VISIT CHOSEN BUFFER
 (defun iswitchb-visit-buffer (buffer)
@@ -911,14 +910,11 @@ Return the modified list with the last element prepended to it."
 	(if (not iswitchb-xemacs)
 	    ;; reposition mouse to make frame active.  not needed in XEmacs
 	    ;; This line came from the other-frame defun in Emacs.
-	    (set-mouse-position (selected-frame) (1- (frame-width)) 0))
-	)
+	    (set-mouse-position (selected-frame) (1- (frame-width)) 0)))
        (t
 	;;  No buffer in other frames...
 	(switch-to-buffer buffer)
 	)))
-
-
 
      ((eq iswitchb-method 'otherwindow)
       (switch-to-buffer-other-window buffer))
@@ -931,8 +927,7 @@ Return the modified list with the last element prepended to it."
 	(switch-to-buffer-other-frame buffer)
 	(if (not iswitchb-xemacs)
 	    (set-mouse-position (selected-frame) (1- (frame-width)) 0))
-	)
-      ) )))
+	)))))
 
 (defun iswitchb-possible-new-buffer (buf)
   "Possibly create and visit a new buffer called BUF."
@@ -954,8 +949,7 @@ Return the modified list with the last element prepended to it."
 	      (set-buffer-major-mode newbufcreated))
 	  (iswitchb-visit-buffer newbufcreated))
       ;; else wont create new buffer
-      (message (format "no buffer matching `%s'" buf))
-      )))
+      (message (format "no buffer matching `%s'" buf)))))
 
 (defun iswitchb-window-buffer-p  (buffer)
   "Return window pointer if BUFFER is visible in another frame.
@@ -965,8 +959,8 @@ If BUFFER is visible in the current frame, return nil."
     ;;If the buffer is visible in current frame, return nil
     (if (memq buffer blist)
 	nil
-      ;;  maybe in other frame...
-      (get-buffer-window buffer 'visible)
+      ;;  maybe in other frame or icon
+      (get-buffer-window buffer 0) ; better than 'visible
       )))
 
 ;;;###autoload
@@ -979,7 +973,6 @@ Call this function to override the normal bindings."
   (global-set-key (read-kbd-macro "C-x 4 C-o")  'iswitchb-display-buffer)
   (global-set-key (read-kbd-macro "C-x 5 b")  'iswitchb-buffer-other-frame))
 
-
 ;;;###autoload
 (defun iswitchb-buffer ()
   "Switch to another buffer.
@@ -991,8 +984,7 @@ in another frame.
 For details of keybindings, do `\\[describe-function] iswitchb'."
   (interactive)
   (setq iswitchb-method iswitchb-default-method)
-  (iswitchb-entry))
-
+  (iswitchb))
 
 ;;;###autoload
 (defun iswitchb-buffer-other-window ()
@@ -1001,9 +993,7 @@ The buffer name is selected interactively by typing a substring.
 For details of keybindings, do `\\[describe-function] iswitchb'."
   (interactive)
   (setq iswitchb-method 'otherwindow)
-  (iswitchb-entry))
-
-
+  (iswitchb))
 
 ;;;###autoload
 (defun iswitchb-display-buffer ()
@@ -1012,9 +1002,7 @@ The buffer name is selected interactively by typing a substring.
 For details of keybindings, do `\\[describe-function] iswitchb'."
   (interactive)
   (setq iswitchb-method 'display)
-  (iswitchb-entry))
-
-
+  (iswitchb))
 
 ;;;###autoload
 (defun iswitchb-buffer-other-frame ()
@@ -1023,29 +1011,19 @@ The buffer name is selected interactively by typing a substring.
 For details of keybindings, do `\\[describe-function] iswitchb'."
   (interactive)
   (setq iswitchb-method 'otherframe)
-  (iswitchb-entry))
-
-
-
-(defun iswitchb-entry ()
-  "Simply fall into `iswitchb' -- the main function."
   (iswitchb))
-
-
-
-
 
 ;;; XEmacs hack for showing default buffer
 
 ;; The first time we enter the minibuffer, Emacs puts up the default
-;; buffer to switch to, but XEmacs doesnt -- presumably there is a
+;; buffer to switch to, but XEmacs doesn't -- presumably there is a
 ;; subtle difference in the two versions of post-command-hook.  The
 ;; default is shown for both whenever we delete all of our text
 ;; though, indicating its just a problem the first time we enter the
 ;; function.  To solve this, we use another entry hook for emacs to
 ;; show the default the first time we enter the minibuffer.
 
-(defun iswitchb-init-Xemacs-trick ()
+(defun iswitchb-init-XEmacs-trick ()
   "Display default buffer when first entering minibuffer.
 This is a hack for XEmacs, and should really be handled by `iswitchb-exhibit'."
   (if (iswitchb-entryfn-p)
@@ -1053,30 +1031,24 @@ This is a hack for XEmacs, and should really be handled by `iswitchb-exhibit'."
 	(iswitchb-exhibit)
 	(goto-char (point-min)))))
 
-
 ;; add this hook for XEmacs only.
 (if iswitchb-xemacs
     (add-hook 'iswitchb-minibuffer-setup-hook 
-	      'iswitchb-init-Xemacs-trick))
-
+	      'iswitchb-init-XEmacs-trick))
 
 ;;; XEmacs / backspace key
-;; For some reason, if the backspace key is pressed in xemacs, the
+;; For some reason, if the backspace key is pressed in XEmacs, the
 ;; line gets confused, so I've added a simple key definition to make
 ;; backspace act like the normal delete key.  
 
 (defun iswitchb-xemacs-backspacekey ()
   "Bind backspace to `backward-delete-char'."
   (define-key iswitchb-mode-map '[backspace] 'backward-delete-char)
-  (define-key iswitchb-mode-map '[(meta backspace)] 'backward-kill-word)
-  )
-
+  (define-key iswitchb-mode-map '[(meta backspace)] 'backward-kill-word))
 
 (if iswitchb-xemacs
     (add-hook 'iswitchb-define-mode-map-hook 
 	      'iswitchb-xemacs-backspacekey))
-
-
 
 ;;; ICOMPLETE TYPE CODE
 
@@ -1113,8 +1085,6 @@ Copied from `icomplete-exhibit' with two changes:
 	    (not minibuffer-completion-confirm)))
 	  ))))
 
-
-
 (defun iswitchb-completions
   (name candidates predicate require-match)
   "Return the string that is displayed after the user's text.
@@ -1127,20 +1097,18 @@ Modified from `icomplete-completions'."
                                         ;"-prospects" - more than one candidate
         (open-bracket-prospects "{")
         (close-bracket-prospects "}")
-	first
-        )
+	first)
 
     (if (and iswitchb-use-fonts  comps)
 	(progn
 	  (setq first (car comps))
 	  (setq first (format "%s" first))
 	  (put-text-property 0 (length first) 'face
-			     (if (eq (length comps) 1) 
+			     (if (= (length comps) 1) 
 				 'font-lock-comment-face
 			       'font-lock-function-name-face)
 			     first) 
-	  (setq comps  (cons first (cdr comps)))
-	  ))
+	  (setq comps  (cons first (cdr comps)))))
 
     (cond ((null comps) (format " %sNo match%s"
 				open-bracket-determined
@@ -1155,8 +1123,7 @@ Modified from `icomplete-completions'."
 			       (car comps)
 			       close-bracket-determined)
 		     "")
-		   (if (not iswitchb-use-fonts) " [Matched]")
-		   ))
+		   (if (not iswitchb-use-fonts) " [Matched]")))
 	  (t				;multiple matches
 	   (let* (
 		  ;;(most (try-completion name candidates predicate))
@@ -1190,8 +1157,7 @@ Modified from `icomplete-completions'."
 		  (concat open-bracket-determined
 			  (substring iswitchb-common-match-string 
 				     (length name))
-			  close-bracket-determined)
-		)
+			  close-bracket-determined))
 	      ;; end of partial matches...
 
 	      ;; think this bit can be ignored.
@@ -1205,8 +1171,7 @@ Modified from `icomplete-completions'."
 	      (if most-is-exact
 		  (concat "," alternatives)
 		alternatives)
-	      close-bracket-prospects)))
-	  )))
+	      close-bracket-prospects))))))
 
 (defun iswitchb-minibuffer-setup ()
   "Set up minibuffer for `iswitchb-buffer'.
@@ -1225,22 +1190,15 @@ Copied from `icomplete-minibuffer-setup-hook'."
 		  'iswitchb-post-command
 		  nil t)
 	
-	(run-hooks 'iswitchb-minibuffer-setup-hook) 
-	)
-    ))
-
+	(run-hooks 'iswitchb-minibuffer-setup-hook))))
 
 (defun iswitchb-pre-command ()
   "Run before command in `iswitchb-buffer'."
   (iswitchb-tidy))
 
-
 (defun iswitchb-post-command ()
   "Run after command in `iswitchb-buffer'."
-  (iswitchb-exhibit)
-  )
-
-
+  (iswitchb-exhibit))
 
 (defun iswitchb-tidy ()
   "Remove completions display, if any, prior to new user input.
@@ -1259,18 +1217,18 @@ Copied from `icomplete-tidy'."
     (make-local-variable 'iswitchb-eoinput)
     (setq iswitchb-eoinput 1)))
 
-
 (defun iswitchb-entryfn-p ()
   "Return non-nil if `this-command' shows we are using `iswitchb-buffer'."
-  (and (symbolp this-command)		; ignore lambda functions
-       (memq this-command
-	     '(iswitchb-buffer
-	       iswitchb-buffer-other-frame
-	       iswitchb-display-buffer
-	       iswitchb-buffer-other-window))))
-
-
-
+  (or (boundp 'iswitchb-prepost-hooks)
+      ;; I think the of this may be redundant, since the prepost hooks
+      ;; will always be set in the iswitchb defuns.
+      ;;(and (symbolp this-command)		; ignore lambda functions
+      ;;(memq this-command
+      ;;	 '(iswitchb-buffer
+      ;;	   iswitchb-buffer-other-frame
+      ;;       iswitchb-display-buffer
+      ;;       iswitchb-buffer-other-window))))
+  ))
 
 (defun iswitchb-summaries-to-end ()
   "Move the summaries to the end of the list.
@@ -1283,12 +1241,8 @@ This is an example function which can be hooked on to
 				      (string-match "Summary" x)
 				      (string-match "output\\*$" x))
 				     x))
-			      buflist)
-			      )))
-    
+			      iswitchb-temp-buflist))))
     (iswitchb-to-end summaries)))
-
-
 
 ;;; HOOKS
 (add-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup)

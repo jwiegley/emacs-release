@@ -173,6 +173,17 @@ tgetstr (cap, area)
   return tgetst1 (ptr, area);
 }
 
+#ifdef IS_EBCDIC_HOST
+/* Table, indexed by a character in range 0200 to 0300 with 0200 subtracted,
+   gives meaning of character following \, or a space if no special meaning.
+   Sixteen characters per line within the string.  */
+
+static char esctab[]
+  = " \057\026  \047\014         \
+     \025   \015      \
+   \005 \013          \
+                ";
+#else
 /* Table, indexed by a character in range 0100 to 0140 with 0100 subtracted,
    gives meaning of character following \, or a space if no special meaning.
    Eight characters per line within the string.  */
@@ -182,6 +193,7 @@ static char esctab[]
       \012 \
   \015 \011 \013 \
         ";
+#endif
 
 /* PTR points to a string value inside a termcap entry.
    Copy that value, processing \ and ^ abbreviations,
@@ -245,12 +257,21 @@ tgetst1 (ptr, area)
 		  p++;
 		}
 	    }
+#ifdef IS_EBCDIC_HOST
+	  else if (c >= 0200 && c < 0360)
+	    {
+	      c1 = esctab[(c & ~0100) - 0200];
+	      if (c1 != ' ')
+		c = c1;
+	    }
+#else
 	  else if (c >= 0100 && c < 0200)
 	    {
 	      c1 = esctab[(c & ~040) - 0100];
 	      if (c1 != ' ')
 		c = c1;
 	    }
+#endif
 	}
       *r++ = c;
     }
@@ -349,7 +370,7 @@ tputs (str, nlines, outfun)
 
 /* Finding the termcap entry in the termcap data base.  */
 
-struct buffer
+struct termcap_buffer
   {
     char *beg;
     int size;
@@ -422,7 +443,7 @@ tgetent (bp, name)
 {
   register char *termcap_name;
   register int fd;
-  struct buffer buf;
+  struct termcap_buffer buf;
   register char *bp1;
   char *tc_search_point;
   char *term;
@@ -585,7 +606,7 @@ static int
 scan_file (str, fd, bufp)
      char *str;
      int fd;
-     register struct buffer *bufp;
+     register struct termcap_buffer *bufp;
 {
   register char *end;
 
@@ -681,7 +702,7 @@ compare_contin (str1, str2)
 static char *
 gobble_line (fd, bufp, append_end)
      int fd;
-     register struct buffer *bufp;
+     register struct termcap_buffer *bufp;
      char *append_end;
 {
   register char *end;

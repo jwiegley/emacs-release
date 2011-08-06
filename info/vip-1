@@ -1,6 +1,11 @@
 This is Info file ../info/vip, produced by Makeinfo version 1.68 from
 the input file vip.texi.
 
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* VIP: (vip).		An older VI-emulation for Emacs.
+END-INFO-DIR-ENTRY
+
 Distribution
 ************
 

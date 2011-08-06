@@ -1,6 +1,38 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
 
 File: emacs,  Node: Acknowledgments,  Next: Screen,  Prev: Concept Index,  Up: Top
 
@@ -266,7 +298,7 @@ portions.
    * Geoff Kuenning wrote Emacs 19's `ispell.el', based on work by Ken
      Stevens and others.
 
-   * David Kågedal wrote `tempo.el', providing support for easy
+   * David K*agedal wrote `tempo.el', providing support for easy
      insertion of boilerplate text and other common constructions.
 
    * Daniel LaLiberte wrote:
@@ -367,7 +399,7 @@ portions.
    * Keith Moore wrote `aixcc.lex', a pre-processor designed to help
      Emacs parse the error messages produced by the AIX C compiler.
 
-   * Eric Naggum wrote the time-conversion functions, and has tested the
+   * Erik Naggum wrote the time-conversion functions, and has tested the
      latest source code daily.
 
    * Thomas Neumann and Eric Raymond wrote `makefile.el', a mode for

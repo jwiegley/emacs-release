@@ -1,6 +1,11 @@
 This is Info file ../info/mh-e, produced by Makeinfo version 1.68 from
 the input file mh-e.texi.
 
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* MH-E: (mh-e).		Emacs interface to the MH mail system.
+END-INFO-DIR-ENTRY
+
    This is Edition 1.2, last updated 22 August 1995, of `mh-e, The
 Emacs Interface to MH', for mh-e, Version 5.0.2.
 
@@ -403,7 +408,7 @@ Lisp Reference Manual: (elisp)Top.  If not, you can order a printed
 manual, which has the desirable side-effect of helping to support the
 Free Software Foundation which made all this great software available.
 You can find an order form by running `C-h C-d', or you can request an
-order form from gnu@prep.ai.mit.edu.
+order form from gnu@gnu.org.
 
 
 File: mh-e,  Node: Customizing Reading,  Next: Customizing Sending,  Prev: Customizing mh-e,  Up: Customizing mh-e

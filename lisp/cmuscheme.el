@@ -65,16 +65,50 @@
 ;; Cscheme-specific; you must use cmuscheme.el.  Interested parties are
 ;; invited to port xscheme functionality on top of comint mode...
 
+;;; CHANGE LOG
+;;; ===========================================================================
+;;; 8/88 Olin
+;;; Created. 
+;;;
+;;; 2/15/89 Olin
+;;; Removed -emacs flag from process invocation. It's only useful for
+;;; cscheme, and makes cscheme assume it's running under xscheme.el,
+;;; which messes things up royally. A bug.
+;;;
+;;; 5/22/90 Olin
+;;; - Upgraded to use comint-send-string and comint-send-region.
+;;; - run-scheme now offers to let you edit the command line if
+;;;   you invoke it with a prefix-arg. M-x scheme is redundant, and
+;;;   has been removed.
+;;; - Explicit references to process "scheme" have been replaced with
+;;;   (scheme-proc). This allows better handling of multiple process bufs.
+;;; - Added scheme-send-last-sexp, bound to C-x C-e. A gnu convention.
+;;; - Have not added process query facility a la cmulisp.el's lisp-show-arglist
+;;;   and friends, but interested hackers might find a useful application
+;;;   of this facility.
+;;;
+;;; 3/12/90 Olin
+;;; - scheme-load-file and scheme-compile-file no longer switch-to-scheme.
+;;;   Tale suggested this.
+
 ;;; Code:
 
 (require 'scheme)
 (require 'comint)
 
+
+(defgroup cmuscheme nil
+  "Run a scheme process in a buffer."
+  :group 'lisp)
+
 ;;; INFERIOR SCHEME MODE STUFF
 ;;;============================================================================
 
-(defvar inferior-scheme-mode-hook nil
-  "*Hook for customising inferior-scheme mode.")
+(defcustom inferior-scheme-mode-hook nil
+  "*Hook for customising inferior-scheme mode."
+  :type 'hook
+  :group 'cmuscheme)
+
 (defvar inferior-scheme-mode-map nil)
 
 (cond ((not inferior-scheme-mode-map)
@@ -118,8 +152,6 @@
     '("Evaluate Last Definition" . scheme-send-definition))
   (define-key map [send-region-go]
     '("Evaluate Region & Go" . scheme-send-region-and-go))
-  (define-key map [send-region-go]
-    '("Evaluate Region" . scheme-send-region))
   (define-key map [send-region]
     '("Evaluate Region" . scheme-send-region))
   (define-key map [send-sexp]
@@ -178,9 +210,11 @@ to continue it."
   (setq comint-get-old-input (function scheme-get-old-input))
   (run-hooks 'inferior-scheme-mode-hook))
 
-(defvar inferior-scheme-filter-regexp "\\`\\s *\\S ?\\S ?\\s *\\'"
+(defcustom inferior-scheme-filter-regexp "\\`\\s *\\S ?\\S ?\\s *\\'"
   "*Input matching this regexp are not saved on the history list.
-Defaults to a regexp ignoring all inputs of 0, 1, or 2 letters.")
+Defaults to a regexp ignoring all inputs of 0, 1, or 2 letters."
+  :type 'regexp
+  :group 'cmuscheme)
 
 (defun scheme-input-filter (str)
   "Don't save anything matching inferior-scheme-filter-regexp"
@@ -206,8 +240,10 @@ Defaults to a regexp ignoring all inputs of 0, 1, or 2 letters.")
 		 (scheme-args-to-list (substring string pos
 						 (length string)))))))))
 
-(defvar scheme-program-name "scheme"
-  "*Program invoked by the run-scheme command")
+(defcustom scheme-program-name "scheme"
+  "*Program invoked by the run-scheme command"
+  :type 'string
+  :group 'cmuscheme)
 
 ;;;###autoload
 (defun run-scheme (cmd)
@@ -251,8 +287,10 @@ of `scheme-program-name').  Runs the hooks `inferior-scheme-mode-hook'
   (interactive)
   (scheme-send-region (save-excursion (backward-sexp) (point)) (point)))
 
-(defvar scheme-compile-exp-command "(compile '%s)"
-  "*Template for issuing commands to compile arbitrary Scheme expressions.")
+(defcustom scheme-compile-exp-command "(compile '%s)"
+  "*Template for issuing commands to compile arbitrary Scheme expressions."
+  :type 'string
+  :group 'cmuscheme)
 
 (defun scheme-compile-region (start end)
   "Compile the current region in the inferior Scheme process.
@@ -311,11 +349,13 @@ Then switch to the process buffer."
   (scheme-compile-region start end)
   (switch-to-scheme t))
 
-(defvar scheme-source-modes '(scheme-mode)
+(defcustom scheme-source-modes '(scheme-mode)
   "*Used to determine if a buffer contains Scheme source code.
 If it's loaded into a buffer that is in one of these major modes, it's
 considered a scheme source file by scheme-load-file and scheme-compile-file.
-Used by these commands to determine defaults.")
+Used by these commands to determine defaults."
+  :type '(repeat function)
+  :group 'cmuscheme)
 
 (defvar scheme-prev-l/c-dir/file nil
   "Caches the last (directory . file) pair.
@@ -401,38 +441,13 @@ for a minimal, simple implementation. Feel free to extend it.")
 
 ;;; Do the user's customisation...
 
-(defvar cmuscheme-load-hook nil
+(defcustom cmuscheme-load-hook nil
   "This hook is run when cmuscheme is loaded in.
-This is a good place to put keybindings.")
+This is a good place to put keybindings."
+  :type 'hook
+  :group 'cmuscheme)
 	
 (run-hooks 'cmuscheme-load-hook)
-
-
-;;; CHANGE LOG
-;;; ===========================================================================
-;;; 8/88 Olin
-;;; Created. 
-;;;
-;;; 2/15/89 Olin
-;;; Removed -emacs flag from process invocation. It's only useful for
-;;; cscheme, and makes cscheme assume it's running under xscheme.el,
-;;; which messes things up royally. A bug.
-;;;
-;;; 5/22/90 Olin
-;;; - Upgraded to use comint-send-string and comint-send-region.
-;;; - run-scheme now offers to let you edit the command line if
-;;;   you invoke it with a prefix-arg. M-x scheme is redundant, and
-;;;   has been removed.
-;;; - Explicit references to process "scheme" have been replaced with
-;;;   (scheme-proc). This allows better handling of multiple process bufs.
-;;; - Added scheme-send-last-sexp, bound to C-x C-e. A gnu convention.
-;;; - Have not added process query facility a la cmulisp.el's lisp-show-arglist
-;;;   and friends, but interested hackers might find a useful application
-;;;   of this facility.
-;;;
-;;; 3/12/90 Olin
-;;; - scheme-load-file and scheme-compile-file no longer switch-to-scheme.
-;;;   Tale suggested this.
 
 (provide 'cmuscheme)
 

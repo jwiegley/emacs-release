@@ -266,6 +266,11 @@
 
 ;;; Code:
 
+(defgroup tpu nil
+  "Emacs emulating TPU emulating EDT."
+  :prefix "tpu-"
+  :group 'emulations)
+
 
 ;;;
 ;;;  Version Information
@@ -276,17 +281,25 @@
 ;;;
 ;;;  User Configurable Variables
 ;;;
-(defconst tpu-have-ispell t
-  "*If non-nil (default), TPU-edt uses ispell for spell checking.")
+(defcustom tpu-have-ispell t
+  "*If non-nil (default), TPU-edt uses ispell for spell checking."
+  :type 'boolean
+  :group 'tpu)
 
-(defconst tpu-kill-buffers-silently nil
-  "*If non-nil, TPU-edt kills modified buffers without asking.")
+(defcustom tpu-kill-buffers-silently nil
+  "*If non-nil, TPU-edt kills modified buffers without asking."
+  :type 'boolean
+  :group 'tpu)
 
-(defvar tpu-percent-scroll 75
-  "*Percentage of the screen to scroll for next/previous screen commands.")
+(defcustom tpu-percent-scroll 75
+  "*Percentage of the screen to scroll for next/previous screen commands."
+  :type 'integer
+  :group 'tpu)
 
-(defvar tpu-pan-columns 16
-  "*Number of columns the tpu-pan functions scroll left or right.")
+(defcustom tpu-pan-columns 16
+  "*Number of columns the tpu-pan functions scroll left or right."
+  :type 'integer
+  :group 'tpu)
 
 
 ;;;
@@ -731,9 +744,8 @@ This is useful for inserting control characters."
 (defun tpu-include (file)
   "TPU-like include file"
   (interactive "fInclude file: ")
-  (save-excursion
-    (insert-file file)
-    (message "")))
+  (insert-file-contents file)
+  (message ""))
 
 (defun tpu-get (file)
   "TPU-like get file"
@@ -1297,15 +1309,15 @@ corners of a rectangle."
 		  (exchange-point-and-mark))       ; point -> upper-left
 
 		 (t	                           ; point @  lower-left
-		  (move-to-column-force mc)        ; point -> lower-right
+		  (move-to-column mc t)            ; point -> lower-right
 		  (exchange-point-and-mark)        ; point -> upper-right
-		  (move-to-column-force pc))))     ; point -> upper-left
+		  (move-to-column pc t))))         ; point -> upper-left
 
 	  (t                                       ; point on upper line
 	   (cond ((> pc mc)                        ; point @  upper-right
-		  (move-to-column-force mc)        ; point -> upper-left
+		  (move-to-column mc t)            ; point -> upper-left
 		  (exchange-point-and-mark)        ; point -> lower-left
-		  (move-to-column-force pc)        ; point -> lower-right
+		  (move-to-column pc t)            ; point -> lower-right
 		  (exchange-point-and-mark)))))))  ; point -> upper-left
 
 (defun tpu-cut-text nil

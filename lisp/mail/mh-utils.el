@@ -599,7 +599,9 @@ Set the `mh-progs' and `mh-lib' variables to the file names."
 				  "/usr/local/bin/"
 				  )
 				"inc"))))
+
   (or (and mh-lib (mh-file-command-p (expand-file-name "mhl" mh-lib)))
+      (null mh-progs)
       (setq mh-lib
 	    ;; Look for a lib directory roughly parallel to the bin
 	    ;; directory:  Strip any trailing `mh' or `bin' path
@@ -808,7 +810,7 @@ Set the `mh-progs' and `mh-lib' variables to the file names."
 		  (cons (list new-folder)
 			mh-folder-list-temp)))
 	  (setq position (1+ line-end)))
-      (store-match-data prevailing-match-data))
+      (set-match-data prevailing-match-data))
     (setq mh-folder-list-partial-line (substring output position))))
 
 

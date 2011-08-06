@@ -108,6 +108,8 @@ bitmapdir=@bitmapdir@
 # expected to be in ${srcdir}/src, and the source code for Emacs's
 # utility programs is expected to be in ${srcdir}/lib-src.  This is
 # set by the configure script's `--srcdir' option.
+
+# We use $(srcdir) explicitly in dependencies so as not to depend on VPATH.
 srcdir=@srcdir@
 
 # Tell make where to find source files; this is needed for the makefiles.
@@ -174,6 +176,7 @@ docdir=@docdir@
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
+INSTALL_INFO = install-info
 # By default, we uphold the dignity of our programs.
 INSTALL_STRIP =
 
@@ -237,29 +240,29 @@ blessmail: ${SUBDIR_MAKEFILES} src FRC
 	cd lib-src; $(MAKE) maybe-blessmail $(MFLAGS) \
 	  MAKE='${MAKE}' archlibdir='$(archlibdir)'
 
-Makefile: Makefile.in config.status
+Makefile: $(srcdir)/Makefile.in config.status
 	./config.status
 
-src/Makefile: src/Makefile.in config.status
+src/Makefile: $(srcdir)/src/Makefile.in config.status
 	./config.status
 
-src/config.stamp: src/config.in config.status
+src/config.stamp: $(srcdir)/src/config.in config.status
 	./config.status
 	touch src/config.stamp
 
-lib-src/Makefile: lib-src/Makefile.in config.status
+lib-src/Makefile: $(srcdir)/lib-src/Makefile.in config.status
 	./config.status
 
-man/Makefile: man/Makefile.in config.status
+man/Makefile: $(srcdir)/man/Makefile.in config.status
 	./config.status
 
-oldXMenu/Makefile: oldXMenu/Makefile.in config.status
+oldXMenu/Makefile: $(srcdir)/oldXMenu/Makefile.in config.status
 	./config.status
 
-lwlib/Makefile: lwlib/Makefile.in config.status
+lwlib/Makefile: $(srcdir)/lwlib/Makefile.in config.status
 	./config.status
 
-leim/Makefile: leim/Makefile.in config.status
+leim/Makefile: $(srcdir)/leim/Makefile.in config.status
 	./config.status
 
 # ==================== Installation ====================
@@ -280,7 +283,7 @@ leim/Makefile: leim/Makefile.in config.status
 ## source exists and is distinct from the destination.
 ### We do install-arch-indep first because
 ### the executable needs the Lisp files and DOC file to work properly.
-install: all install-arch-indep install-arch-dep blessmail install-leim
+install: all install-arch-indep install-arch-dep install-leim blessmail
 	@true
 
 ### Install the executables that were compiled specifically for this machine.
@@ -323,6 +326,7 @@ install-arch-indep: mkdir
 	      (cd $${dir}; tar -cf - . ) \
 		|(cd $${dest};umask 022; tar -xvf - && cat > /dev/null); \
 	      for subdir in `find $${dest} -type d ! -name RCS -print` ; do \
+		chmod a+rx $${subdir} ; \
 		rm -rf $${subdir}/RCS ; \
 		rm -rf $${subdir}/CVS ; \
 		rm -f  $${subdir}/\#* ; \
@@ -336,13 +340,28 @@ install-arch-indep: mkdir
 	done
 	-rm -f ${lispdir}/subdirs.el
 	$(srcdir)/update-subdirs ${lispdir}
-	-chmod -R a+r ${COPYDESTS}
+	if [ -f ${datadir}/emacs/${version}/site-lisp/subdirs.el ]; \
+	then true; \
+	else \
+	  (echo "(if (fboundp 'normal-top-level-add-subdirs-to-load-path)"; \
+	   echo "    (normal-top-level-add-subdirs-to-load-path))") \
+	    > ${datadir}/emacs/${version}/site-lisp/subdirs.el; \
+	fi
+	chmod a+r ${datadir}/emacs/${version}/site-lisp/subdirs.el
+	-if [ -f ${datadir}/emacs/site-lisp/subdirs.el ]; \
+	then true; \
+	else \
+	  (echo "(if (fboundp 'normal-top-level-add-subdirs-to-load-path)"; \
+	   echo "    (normal-top-level-add-subdirs-to-load-path))") \
+	    > ${datadir}/emacs/site-lisp/subdirs.el; \
+	fi
+	-chmod a+r ${datadir}/emacs/site-lisp/subdirs.el
 	if [ `(cd ./etc; /bin/pwd)` != `(cd ${docdir}; /bin/pwd)` ]; \
 	then \
 	   echo "Copying etc/DOC-* to ${docdir} ..." ; \
 	   (cd ./etc; tar -cf - DOC*) \
 	     |(cd ${docdir}; umask 0; tar -xvf - && cat > /dev/null); \
-	   (cd $(docdir); chmod a+r DOC*; rm DOC) \
+	   (cd $(docdir); chmod a+r DOC*; rm DOC); \
 	else true; fi
 	if [ -r ./lisp ] \
 	   && [ -r ./lisp/simple.el ] \
@@ -357,19 +376,28 @@ install-arch-indep: mkdir
 	if [ `(cd ${srcdir}/info && /bin/pwd)` != `(cd ${infodir} && /bin/pwd)` ]; \
 	then \
 	  (cd ${infodir};  \
-	   if [ -f dir ]; then \
-	     if [ ! -f dir.old ]; then mv -f dir dir.old; \
-	     else mv -f dir dir.bak; fi; \
+	   if [ -f dir ]; then true; \
+	   else	\
+	     (cd $${thisdir}; \
+	      ${INSTALL_DATA} ${srcdir}/info/dir ${infodir}/dir; \
+	      chmod a+r ${infodir}/dir); \
 	   fi; \
 	   cd ${srcdir}/info ; \
-	   (cd $${thisdir}; ${INSTALL_DATA} ${srcdir}/info/dir ${infodir}/dir); \
-	   (cd $${thisdir}; chmod a+r ${infodir}/dir); \
-	   for f in ccmode* cl* dired-x* ediff* emacs* forms* gnus* info* message* mh-e* sc* vip*; do \
+	   for f in ccmode* cl* customize* dired-x* ediff* emacs* forms* gnus* info* message* mh-e* reftex* sc* vip* widget*; do \
 	     (cd $${thisdir}; \
 	      ${INSTALL_DATA} ${srcdir}/info/$$f ${infodir}/$$f; \
 	      chmod a+r ${infodir}/$$f); \
 	   done); \
 	else true; fi
+	-thisdir=`/bin/pwd`; \
+	if [ `(cd ${srcdir}/info && /bin/pwd)` != `(cd ${infodir} && /bin/pwd)` ]; \
+	then \
+	  for f in ccmode cl customize dired-x ediff emacs forms gnus info message mh-e reftex sc vip widget; do \
+	    (cd $${thisdir}; \
+	     ${INSTALL_INFO} --dir-file=${infodir}/dir --info-file=${infodir}/$$f); \
+	  done; \
+	else true; fi
+	-chmod -R a+r ${COPYDESTS} ${infodir}
 	thisdir=`/bin/pwd`; \
 	cd ${srcdir}/etc; \
 	for page in emacs etags ctags ; do \
@@ -396,6 +424,8 @@ install-strip:
 mkdir: FRC
 	$(srcdir)/mkinstalldirs ${COPYDESTS} ${infodir} ${man1dir} \
 	  ${bindir} ${datadir} ${docdir} ${libexecdir} \
+	  ${datadir}/emacs/site-lisp \
+	  ${datadir}/emacs/${version}/site-lisp \
 	  `echo ${locallisppath} | sed 's/:/ /g'`
 
 ### Delete all the installed files that the `install' target would
@@ -470,7 +500,7 @@ clean: FRC
 top_distclean=\
 	rm -f config.status config.cache config.log ; \
 	rm -f Makefile ${SUBDIR_MAKEFILES} ; \
-	(cd lock && (rm -f * || true))
+	if [ -d lock ] ; then (cd lock && (rm -f * || true)); else true; fi
 distclean: FRC
 	(cd src;      $(MAKE) $(MFLAGS) distclean)
 	(cd oldXMenu; $(MAKE) $(MFLAGS) distclean)
@@ -520,13 +550,13 @@ extraclean:
 ### Note: it's no disaster if these productions miss a file or two; tar
 ### and VC will swiftly let you know if this happens, and it is easily
 ### corrected.
-SOURCES = ChangeLog GETTING.GNU.SOFTWARE INSTALL Makefile.in PROBLEMS \
+SOURCES = ChangeLog GETTING.GNU.SOFTWARE INSTALL Makefile.in \
 	README configure make-dist move-if-change
 
 .PHONY: unlock relock
 
 unlock:
-	chmod u+w $(SOURCES) cpp/*
+	chmod u+w $(SOURCES)
 	-(cd elisp; chmod u+w Makefile README *.texi)
 	(cd etc; $(MAKE) $(MFLAGS) unlock)
 	(cd lib-src; $(MAKE) $(MFLAGS) unlock)
@@ -538,7 +568,7 @@ unlock:
 	(cd src; $(MAKE) $(MFLAGS) unlock)
 
 relock:
-	chmod u-w $(SOURCES) cpp/*
+	chmod u-w $(SOURCES)
 	-(cd elisp; chmod u-w Makefile README *.texi)
 	(cd etc; $(MAKE) $(MFLAGS) relock)
 	(cd lib-src; $(MAKE) $(MFLAGS) relock)
@@ -563,6 +593,9 @@ dist:
 .PHONY: info dvi dist check
 force-info:
 info: force-info
-	(cd ${srcdir}/man; $(MAKE) $(MFLAGS) info)
+	# Note that man/Makefile knows how to
+	# put the info files in $(srcdir),
+	# so we can do ok running make in the build dir.
+	(cd man; $(MAKE) $(MFLAGS) info)
 dvi:
 	(cd man; $(MAKE) $(MFLAGS) dvi)

@@ -21,13 +21,20 @@ Boston, MA 02111-1307, USA.  */
 #include <config.h>
 
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 #include "lisp.h"
 #include "charset.h"
 #ifdef HAVE_WINDOW_SYSTEM
 #include "fontset.h"
 #endif
+#ifdef HAVE_X_WINDOWS
+#include "xterm.h"
+#endif
 #include "frame.h"
 #include "termhooks.h"
+#include "dispextern.h"
 #include "window.h"
 #ifdef MSDOS
 #include "msdos.h"
@@ -167,7 +174,7 @@ set_menu_bar_lines_1 (window, n)
     }
 }
 
-static void
+void
 set_menu_bar_lines (f, value, oldval)
      struct frame *f;
      Lisp_Object value, oldval;
@@ -349,7 +356,7 @@ make_frame (mini_p)
     /* If buf is a 'hidden' buffer (i.e. one whose name starts with
        a space), try to find another one.  */
     if (XSTRING (Fbuffer_name (buf))->data[0] == ' ')
-      buf = Fother_buffer (buf, Qnil);
+      buf = Fother_buffer (buf, Qnil, Qnil);
     Fset_window_buffer (root_window, buf);
 
     f->buffer_list = Fcons (buf, Qnil);
@@ -377,6 +384,7 @@ make_frame (mini_p)
   return f;
 }
 
+#ifdef HAVE_WINDOW_SYSTEM
 /* Make a frame using a separate minibuffer window on another frame.
    MINI_WINDOW is the minibuffer window to use.  nil means use the
    default (the global minibuffer).  */
@@ -470,6 +478,7 @@ make_minibuffer_frame ()
 		       : Fcar (Vminibuffer_list)));
   return f;
 }
+#endif /* HAVE_WINDOW_SYSTEM */
 
 /* Construct a frame that refers to the terminal (stdin and stdout).  */
 
@@ -1303,7 +1312,7 @@ and nil for X and Y.")
 #ifdef HAVE_MOUSE
   /* It's okay for the hook to refrain from storing anything.  */
   if (mouse_position_hook)
-    (*mouse_position_hook) (&f, 0,
+    (*mouse_position_hook) (&f, -1,
 			    &lispy_dummy, &party_dummy,
 			    &x, &y,
 			    &long_dummy);
@@ -1343,7 +1352,7 @@ and nil for X and Y.")
 #ifdef HAVE_MOUSE
   /* It's okay for the hook to refrain from storing anything.  */
   if (mouse_position_hook)
-    (*mouse_position_hook) (&f, 0,
+    (*mouse_position_hook) (&f, -1,
 			    &lispy_dummy, &party_dummy,
 			    &x, &y,
 			    &long_dummy);
@@ -1369,7 +1378,7 @@ before calling this function on it, like this.\n\
 #ifdef HAVE_WINDOW_SYSTEM
   if (FRAME_WINDOW_P (XFRAME (frame)))
     /* Warping the mouse will cause  enternotify and focus events. */
-    x_set_mouse_position (XFRAME (frame), x, y);
+    x_set_mouse_position (XFRAME (frame), XINT (x), XINT (y));
 #else
 #if defined (MSDOS) && defined (HAVE_MOUSE)
   if (FRAME_MSDOS_P (XFRAME (frame)))
@@ -1401,7 +1410,7 @@ before calling this function on it, like this.\n\
 #ifdef HAVE_WINDOW_SYSTEM
   if (FRAME_WINDOW_P (XFRAME (frame)))
     /* Warping the mouse will cause  enternotify and focus events. */
-    x_set_mouse_pixel_position (XFRAME (frame), x, y);
+    x_set_mouse_pixel_position (XFRAME (frame), XINT (x), XINT (y));
 #else
 #if defined (MSDOS) && defined (HAVE_MOUSE)
   if (FRAME_MSDOS_P (XFRAME (frame)))
@@ -1415,6 +1424,8 @@ before calling this function on it, like this.\n\
   return Qnil;
 }
 
+static void make_frame_visible_1 P_ ((Lisp_Object));
+
 DEFUN ("make-frame-visible", Fmake_frame_visible, Smake_frame_visible,
        0, 1, "",
   "Make the frame FRAME visible (assuming it is an X-window).\n\
@@ -1436,10 +1447,35 @@ If omitted, FRAME defaults to the currently selected frame.")
     }
 #endif
 
+  make_frame_visible_1 (XFRAME (frame)->root_window);
+
   /* Make menu bar update for the Buffers and Frams menus.  */
   windows_or_buffers_changed++;
 
   return frame;
+}
+
+/* Update the display_time slot of the buffers shown in WINDOW
+   and all its descendents.  */
+
+static void
+make_frame_visible_1 (window)
+     Lisp_Object window;
+{
+  struct window *w;
+
+  for (;!NILP (window); window = w->next)
+    {
+      w = XWINDOW (window);
+
+      if (!NILP (w->buffer))
+	XBUFFER (w->buffer)->display_time = Fcurrent_time ();
+
+      if (!NILP (w->vchild))
+	make_frame_visible_1 (w->vchild);
+      if (!NILP (w->hchild))
+	make_frame_visible_1 (w->hchild);
+    }
 }
 
 DEFUN ("make-frame-invisible", Fmake_frame_invisible, Smake_frame_invisible,
@@ -1687,26 +1723,28 @@ get_frame_param (frame, prop)
 /* Return the buffer-predicate of the selected frame.  */
 
 Lisp_Object
-frame_buffer_predicate ()
+frame_buffer_predicate (frame)
+     Lisp_Object frame;
 {
-  return selected_frame->buffer_predicate;
+  return XFRAME (frame)->buffer_predicate;
 }
 
 /* Return the buffer-list of the selected frame.  */
 
 Lisp_Object
-frame_buffer_list ()
+frame_buffer_list (frame)
+     Lisp_Object frame;
 {
-  return selected_frame->buffer_list;
+  return XFRAME (frame)->buffer_list;
 }
 
 /* Set the buffer-list of the selected frame.  */
 
 void
-set_frame_buffer_list (list)
-     Lisp_Object list;
+set_frame_buffer_list (frame, list)
+     Lisp_Object frame, list;
 {
-  selected_frame->buffer_list = list;
+  XFRAME (frame)->buffer_list = list;
 }
 
 /* Discard BUFFER from the buffer-list of each frame.  */
@@ -1757,6 +1795,65 @@ store_in_alist (alistptr, prop, val)
     Fsetcdr (tem, val);
 }
 
+static int
+frame_name_fnn_p (str, len)
+     char *str;
+     int len;
+{
+  if (len > 1 && str[0] == 'F')
+    {
+      char *end_ptr;
+      long num = strtol (str + 1, &end_ptr, 10);
+
+      if (end_ptr == str + len)
+	return 1;
+    }
+  return 0;
+}
+
+/* Set the name of the terminal frame.  Also used by MSDOS frames.
+   Modeled after x_set_name which is used for WINDOW frames.  */
+
+void
+set_term_frame_name (f, name)
+     struct frame *f;
+     Lisp_Object name;
+{
+  f->explicit_name = ! NILP (name);
+
+  /* If NAME is nil, set the name to F<num>.  */
+  if (NILP (name))
+    {
+      char namebuf[20];
+
+      /* Check for no change needed in this very common case
+	 before we do any consing.  */
+      if (frame_name_fnn_p (XSTRING (f->name)->data,
+			    STRING_BYTES (XSTRING (f->name))))
+	return;
+
+      terminal_frame_count++;
+      sprintf (namebuf, "F%d", terminal_frame_count);
+      name = build_string (namebuf);
+    }
+  else
+    {
+      CHECK_STRING (name, 0);
+
+      /* Don't change the name if it's already NAME.  */
+      if (! NILP (Fstring_equal (name, f->name)))
+	return;
+
+      /* Don't allow the user to set the frame name to F<num>, so it
+	 doesn't clash with the names we generate for terminal frames.  */
+      if (frame_name_fnn_p (XSTRING (name)->data, STRING_BYTES (XSTRING (name))))
+	error ("Frame names of the form F<num> are usurped by Emacs");
+    }
+
+  f->name = name;
+  update_mode_lines = 1;
+}
+
 void
 store_frame_param (f, prop, val)
      struct frame *f;
@@ -1780,8 +1877,12 @@ store_frame_param (f, prop, val)
     f->buffer_predicate = val;
 
   if (! FRAME_WINDOW_P (f))
-    if (EQ (prop, Qmenu_bar_lines))
-      set_menu_bar_lines (f, val, make_number (FRAME_MENU_BAR_LINES (f)));
+    {
+      if (EQ (prop, Qmenu_bar_lines))
+	set_menu_bar_lines (f, val, make_number (FRAME_MENU_BAR_LINES (f)));
+      else if (EQ (prop, Qname))
+	set_term_frame_name (f, val);
+    }
 
   if (EQ (prop, Qminibuffer) && WINDOWP (val))
     {
@@ -1848,7 +1949,8 @@ If FRAME is omitted, return information on the currently selected frame.")
 		   : FRAME_MINIBUF_ONLY_P (f) ? Qonly
 		   : FRAME_MINIBUF_WINDOW (f)));
   store_in_alist (&alist, Qunsplittable, (FRAME_NO_SPLIT_P (f) ? Qt : Qnil));
-  store_in_alist (&alist, Qbuffer_list, frame_buffer_list ());
+  store_in_alist (&alist, Qbuffer_list,
+		  frame_buffer_list (Fselected_frame ()));
 
   /* I think this should be done with a hook.  */
 #ifdef HAVE_WINDOW_SYSTEM
@@ -2156,6 +2258,7 @@ the rightmost or bottommost possible position (that stays within the screen).")
 }
 
 
+void
 syms_of_frame ()
 {
   syms_of_frame_1 ();
@@ -2228,6 +2331,7 @@ displayed.");
   defsubr (&Sset_frame_position);
 }
 
+void
 keys_of_frame ()
 {
   initial_define_lispy_key (global_map, "switch-frame", "handle-switch-frame");

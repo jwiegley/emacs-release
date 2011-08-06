@@ -144,6 +144,29 @@
 (global-set-key [mouse-wheel] 'mouse-wheel-scroll-line)
 (global-set-key [C-mouse-wheel] 'mouse-wheel-scroll-screen)
 
+(defun w32-drag-n-drop-debug (event) 
+  "Print the drag-n-drop event in a readable form."
+  (interactive "e") 
+  (princ event))
+
+(defun w32-drag-n-drop (event)
+  "Edit the files listed in the drag-n-drop event.
+Switch to a buffer editing the last file dropped."
+  (interactive "e")
+  (mapcar 'find-file (car (cdr (cdr event))))
+  (raise-frame))
+
+(defun w32-drag-n-drop-other-frame (event)
+  "Edit the files listed in the drag-n-drop event, in other frames.
+May create new frames, or reuse existing ones.  The frame editing
+the last file dropped is selected."
+  (interactive "e")
+  (mapcar 'find-file-other-frame (car (cdr (cdr event)))))
+
+;; Bind the drag-n-drop event.
+(global-set-key [drag-n-drop] 'w32-drag-n-drop)
+(global-set-key [C-drag-n-drop] 'w32-drag-n-drop-other-frame)
+
 (defvar x-invocation-args)
 
 (defvar x-command-line-resources nil)
@@ -657,15 +680,23 @@ This is in addition to the primary selection.")
 		      (or (funcall fn face (selected-frame))
 			  (funcall fn 'default (selected-frame)))))
 	 (fn-win (intern (concat (symbol-name window-system) "-select-" what)))
-	 (value 
-	  (if (fboundp fn-win)
-	      (funcall fn-win)
-	    (if bool
-		(y-or-n-p (concat "Should face " (symbol-name face)
-				  " be " bool "? "))
-	      (read-string (concat prompt " " (symbol-name face) " to: ")
-			   default)))))
-	 (list face (if (equal value "") nil value))))
+	 value)
+    (setq value
+	  (cond ((fboundp fn-win)
+		 (funcall fn-win))
+		((eq bool 'color)
+		 (completing-read (concat prompt " " (symbol-name face) " to: ")
+				  (mapcar (function (lambda (color)
+						      (cons color color)))
+					  x-colors)
+				  nil nil nil nil default))
+		(bool
+		 (y-or-n-p (concat "Should face " (symbol-name face)
+				   " be " bool "? ")))
+		(t
+		 (read-string (concat prompt " " (symbol-name face) " to: ")
+			      nil nil default))))
+    (list face (if (equal value "") nil value))))
 
 ;; Redefine the font selection to use the standard W32 dialog
 

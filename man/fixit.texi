@@ -155,6 +155,8 @@ checker program Ispell, which is not part of Emacs.
 @end ifinfo
 
 @table @kbd
+@item M-x flyspell-mode
+Enable Flyspell mode, which highlights all misspelled words.
 @item M-$
 Check and correct spelling of the word at point (@code{ispell-word}).
 @item M-@key{TAB}
@@ -172,6 +174,23 @@ Restart the Ispell process, using @var{dict} as the dictionary.
 @item M-x ispell-kill-ispell
 Kill the Ispell subprocess.
 @end table
+
+  Flyspell mode is a fully-automatic way to check spelling as you edit
+in Emacs.  It operates by checking words as you change or insert them.
+When it finds a word that it does not recognize, it highlights that
+word.  This does not interfere with your editing, but when you see the
+highlighted word, you can move to it and fix it.  Type @kbd{M-x
+flyspell-mode} to enable or disable this mode in the current buffer.
+
+  When Flyspell mode highlights a word as misspelled, you can click on
+it with @kbd{Mouse-2} to display a menu of possible corrections and
+actions.  You can also correct the word by editing it manually in any
+way you like.
+
+  The other Emacs spell-checking features check or look up words when
+you give an explicit command to do so.  Checking all or part of the
+buffer is useful when you have text that was written outside of this
+Emacs session and might contain any number of misspellings.
 
 @kindex M-$
 @findex ispell-word
@@ -293,3 +312,4 @@ name of the standard dictionary to use.  A value of @code{nil} says to
 use the default dictionary.  The command @kbd{M-x
 ispell-change-dictionary} sets this variable and then restarts the
 Ispell subprocess, so that it will use a different dictionary.
+

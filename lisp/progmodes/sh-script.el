@@ -128,7 +128,17 @@ shell it really is."
    ;; the executable extension, so comparisons with the list of
    ;; known shells work.
    (and (memq system-type '(ms-dos windows-nt))
-	(file-name-sans-extension (downcase (getenv "SHELL"))))
+	(let* ((shell (getenv "SHELL"))
+	       (shell-base
+		(and shell (file-name-nondirectory shell))))
+	  ;; shell-script mode doesn't support DOS/Windows shells,
+	  ;; so use the default instead.
+	  (if (or (null shell)
+		  (member (downcase shell-base)
+			  '("command.com" "cmd.exe" "4dos.com" "ndos.com"
+			    "cmdproxy.exe")))
+	      "/bin/sh"
+	    (file-name-sans-extension (downcase shell)))))
    (getenv "SHELL")
    "/bin/sh")
   "*The executable file name for the shell being programmed."
@@ -158,6 +168,20 @@ shell it really is."
 				     (const :format "" eval)
 				     sexp))))
   :group 'sh-script)
+
+(defcustom sh-imenu-generic-expression
+  (list
+   (cons 'sh
+	 (concat
+	  "\\(^\\s-*function\\s-+[A-Za-z_][A-Za-z_0-9]*\\)"
+	  "\\|"
+	  "\\(^\\s-*[A-Za-z_][A-Za-z_0-9]*\\s-*()\\)")))
+  "*Regular expression for recognizing shell function definitions.
+See `sh-feature'."
+  :type '(repeat (cons (symbol :tag "Shell")
+		       regexp))
+  :group 'sh-script
+  :version "20.3")
 
 (defvar sh-shell-variables nil
   "Alist of shell variable names that should be included in completion.
@@ -596,8 +620,13 @@ See `sh-feature'.")
     (rc eval identity es)
 
     (sh eval sh-append shell
+	;; Variable names.
 	'("\\$\\({#?\\)?\\([A-Za-z_][A-Za-z0-9_]*\\|[-#?@!]\\)" 2
-	  font-lock-variable-name-face))
+	  font-lock-variable-name-face)
+	;; Function names.
+	'("^\\(\\sw+\\)[ \t]*(" 1 font-lock-function-name-face)
+	'("\\<\\(function\\)\\>[ \t]*\\(\\sw+\\)?"
+	  (1 font-lock-keyword-face) (2 font-lock-function-name-face nil t)))
 
     ;; The next entry is only used for defining the others
     (shell eval sh-append executable-font-lock-keywords
@@ -615,7 +644,14 @@ See `sh-feature'.")
 
 (defconst sh-font-lock-syntactic-keywords
   ;; Mark a `#' character as having punctuation syntax in a variable reference.
-  '(("\\$[({]?\\(#\\)" 1 (1 . nil))))
+  ;; Really we should do this properly.  From Chet Ramey and Brian Fox:
+  ;; "A `#' begins a comment when it is unquoted and at the beginning of a
+  ;; word.  In the shell, words are separated by metacharacters."
+  ;; To do this in a regexp would be slow as it would be anchored to the right.
+  ;; But I can't be bothered to write a function to do it properly and
+  ;; efficiently.  So we only do it properly for `#' in variable references and
+  ;; do it efficiently by anchoring the regexp to the left.
+  '(("\\${?[^}#\n\t ]*\\(##?\\)" 1 (1 . nil))))
 
 ;; mode-command and utility functions
 
@@ -690,6 +726,7 @@ with your script for an edit-interpret-debug cycle."
   (make-local-variable 'skeleton-newline-indent-rigidly)
   (make-local-variable 'sh-shell-variables)
   (make-local-variable 'sh-shell-variables-initialized)
+  (make-local-variable 'imenu-generic-expression)
   (setq major-mode 'sh-mode
 	mode-name "Shell-script"
 	indent-line-function 'sh-indent-line
@@ -722,6 +759,8 @@ with your script for an edit-interpret-debug cycle."
 						(current-column)))))
 	skeleton-filter 'sh-feature
 	skeleton-newline-indent-rigidly t)
+  (make-local-variable 'parse-sexp-ignore-comments)
+  (setq parse-sexp-ignore-comments t)
   ;; Parse or insert magic number for exec, and set all variables depending
   ;; on the shell thus determined.
   (let ((interpreter
@@ -731,9 +770,12 @@ with your script for an edit-interpret-debug cycle."
 	       (match-string 2)))))
     (if interpreter
 	(sh-set-shell interpreter nil nil)
-      ;; If we don't know the shell for this file,
-      ;; set the syntax table anyway, for the user's normal choice of shell.
-      (set-syntax-table (sh-feature sh-mode-syntax-table))))
+      (progn
+        ;; If we don't know the shell for this file, set the syntax
+        ;; table anyway, for the user's normal choice of shell.
+        (set-syntax-table (sh-feature sh-mode-syntax-table))
+        ;; And avoid indent-new-comment-line (at least) losing.
+        (setq comment-start-skip "#+[\t ]*"))))
   (run-hooks 'sh-mode-hook))
 ;;;###autoload
 (defalias 'shell-script-mode 'sh-mode)
@@ -804,8 +846,11 @@ Calls the value of `sh-set-shell-hook' if set."
 	mode-line-process (format "[%s]" sh-shell)
 	sh-shell-variables nil
 	sh-shell-variables-initialized nil
+	imenu-generic-expression (sh-feature sh-imenu-generic-expression)
+	imenu-case-fold-search nil
 	shell (sh-feature sh-variables))
-  (set-syntax-table (sh-feature sh-mode-syntax-table))
+  (set-syntax-table (or (sh-feature sh-mode-syntax-table)
+			(standard-syntax-table)))
   (while shell
     (sh-remember-variable (car shell))
     (setq shell (cdr shell)))
@@ -1005,44 +1050,44 @@ region, clear header."
 
 (define-skeleton sh-case
   "Insert a case/switch statement.  See `sh-feature'."
-  ((csh "expression: "
-	"switch( " str " )" \n
-	> "case " (read-string "pattern: ") ?: \n
-	> _ \n
-	"breaksw" \n
-	( "other pattern, %s: "
-	  < "case " str ?: \n
-	  > _ \n
-	  "breaksw" \n)
-	< "default:" \n
-	> _ \n
-	resume:
-	< < "endsw")
-   (es)
-   (rc "expression: "
-       "switch( " str " ) {" \n
-       > "case " (read-string "pattern: ") \n
+  (csh "expression: "
+       "switch( " str " )" \n
+       > "case " (read-string "pattern: ") ?: \n
        > _ \n
+       "breaksw" \n
        ( "other pattern, %s: "
-	 < "case " str \n
-	 > _ \n)
-       < "case *" \n
-       > _ \n
-       resume:
-       < < ?})
-   (sh "expression: "
-       "case " str " in" \n
-       > (read-string "pattern: ") ?\) \n
-       > _ \n
-       ";;" \n
-       ( "other pattern, %s: "
-	 < str ?\) \n
+	 < "case " str ?: \n
 	 > _ \n
-	 ";;" \n)
-       < "*)" \n
+	 "breaksw" \n)
+       < "default:" \n
        > _ \n
        resume:
-       < < "esac")))
+       < < "endsw")
+  (es)
+  (rc "expression: "
+      "switch( " str " ) {" \n
+      > "case " (read-string "pattern: ") \n
+      > _ \n
+      ( "other pattern, %s: "
+	< "case " str \n
+	> _ \n)
+      < "case *" \n
+      > _ \n
+      resume:
+      < < ?})
+  (sh "expression: "
+      "case " str " in" \n
+      > (read-string "pattern: ") ?\) \n
+      > _ \n
+      ";;" \n
+      ( "other pattern, %s: "
+	< str ?\) \n
+	> _ \n
+	";;" \n)
+      < "*)" \n
+      > _ \n
+      resume:
+      < < "esac"))
 
 (define-skeleton sh-for
   "Insert a for loop.  See `sh-feature'."

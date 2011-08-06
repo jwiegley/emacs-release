@@ -49,9 +49,14 @@
       (cons (cons "ethiopic" ccl-encode-ethio-font) font-ccl-encoder-alist))
 
 (set-language-info-alist
- "Ethiopic" '((setup-function . setup-ethiopic-environment)
-	      (charset . (ethiopic))
-	      (sample-text . "$(3$O#U!.(B")
+ "Ethiopic" '((setup-function . setup-ethiopic-environment-internal)
+	      (exit-function . exit-ethiopic-environment)
+	      (charset ethiopic)
+	      (coding-system iso-2022-7bit)
+	      (coding-priority iso-2022-7bit)
+	      (input-method . "ethiopic")
+	      (features ethio-util)
+	      (sample-text . "$(3$Q#U!.(B")
 	      (documentation . t)))
 
 ;;; ethiopic.el ends here

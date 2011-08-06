@@ -83,11 +83,11 @@
 (defvar lisp-imenu-generic-expression
       '(
 	(nil 
-	 "^\\s-*(def\\(un\\|subst\\|macro\\|advice\\)\\s-+\\([-A-Za-z0-9+*|:]+\\)" 2)
+	 "^\\s-*(def\\(un\\|subst\\|macro\\|advice\\)\\s-+\\([-A-Za-z0-9+*|:/]+\\)" 2)
 	("Variables" 
-	 "^\\s-*(def\\(var\\|const\\|custom\\)\\s-+\\([-A-Za-z0-9+*|:]+\\)" 2)
+	 "^\\s-*(def\\(var\\|const\\|custom\\)\\s-+\\([-A-Za-z0-9+*|:/]+\\)" 2)
 	("Types" 
-	 "^\\s-*(def\\(group\\|type\\|struct\\|class\\|ine-condition\\)\\s-+\\([-A-Za-z0-9+*|:]+\\)" 
+	 "^\\s-*(def\\(group\\|type\\|struct\\|class\\|ine-condition\\)\\s-+\\([-A-Za-z0-9+*|:/]+\\)" 
 	 2))
 
   "Imenu generic expression for Lisp mode.  See `imenu-generic-expression'.")
@@ -109,6 +109,8 @@
   ;; because lisp-fill-paragraph should do the job.
   (make-local-variable 'adaptive-fill-mode)
   (setq adaptive-fill-mode nil)
+  (make-local-variable 'normal-auto-fill-function)
+  (setq normal-auto-fill-function 'lisp-mode-auto-fill)
   (make-local-variable 'indent-line-function)
   (setq indent-line-function 'lisp-indent-line)
   (make-local-variable 'indent-region-function)
@@ -146,8 +148,8 @@ All commands in `shared-lisp-mode-map' are inherited by this map.")
 (if emacs-lisp-mode-map
     ()
   (let ((map (make-sparse-keymap "Emacs-Lisp")))
-    (setq emacs-lisp-mode-map
-	  (nconc (make-sparse-keymap) shared-lisp-mode-map))
+    (setq emacs-lisp-mode-map (make-sparse-keymap))
+    (set-keymap-parent emacs-lisp-mode-map shared-lisp-mode-map)
     (define-key emacs-lisp-mode-map "\e\t" 'lisp-complete-symbol)
     (define-key emacs-lisp-mode-map "\e\C-x" 'eval-defun)
     (define-key emacs-lisp-mode-map [menu-bar] (make-sparse-keymap))
@@ -210,6 +212,7 @@ if that value is non-nil."
   (setq major-mode 'emacs-lisp-mode)
   (setq mode-name "Emacs-Lisp")
   (lisp-mode-variables nil)
+  (setq imenu-case-fold-search nil)
   (run-hooks 'emacs-lisp-mode-hook))
 
 (defvar lisp-mode-map ()
@@ -218,8 +221,8 @@ All commands in `shared-lisp-mode-map' are inherited by this map.")
 
 (if lisp-mode-map
     ()
-  (setq lisp-mode-map
-	(nconc (make-sparse-keymap) shared-lisp-mode-map))
+  (setq lisp-mode-map (make-sparse-keymap))
+  (set-keymap-parent lisp-mode-map shared-lisp-mode-map)
   (define-key lisp-mode-map "\e\C-x" 'lisp-eval-defun)
   (define-key lisp-mode-map "\C-c\C-z" 'run-lisp))
 
@@ -240,6 +243,7 @@ if that value is non-nil."
   (setq major-mode 'lisp-mode)
   (setq mode-name "Lisp")
   (lisp-mode-variables t)
+  (setq imenu-case-fold-search t)
   (set-syntax-table lisp-mode-syntax-table)
   (run-hooks 'lisp-mode-hook))
 
@@ -255,8 +259,8 @@ All commands in `shared-lisp-mode-map' are inherited by this map.")
 
 (if lisp-interaction-mode-map
     ()
-  (setq lisp-interaction-mode-map
-	(nconc (make-sparse-keymap) shared-lisp-mode-map))
+  (setq lisp-interaction-mode-map (make-sparse-keymap))
+  (set-keymap-parent lisp-interaction-mode-map shared-lisp-mode-map)
   (define-key lisp-interaction-mode-map "\e\C-x" 'eval-defun)
   (define-key lisp-interaction-mode-map "\e\t" 'lisp-complete-symbol)
   (define-key lisp-interaction-mode-map "\n" 'eval-print-last-sexp))
@@ -338,10 +342,15 @@ Print value in minibuffer.
 With argument, insert value in current buffer after the defun."
   (interactive "P")
   (let ((standard-output (if eval-defun-arg-internal (current-buffer) t))
-	(form (save-excursion
-		(end-of-defun)
-		(beginning-of-defun)
-		(read (current-buffer)))))
+	 beg end form)
+    ;; Read the form from the buffer, and record where it ends.
+    (save-excursion
+      (end-of-defun)
+      (beginning-of-defun)
+      (setq beg (point))
+      (setq form (read (current-buffer)))
+      (setq end (point)))
+    ;; Alter the form if necessary.
     (cond ((and (eq (car form) 'defvar)
 		(cdr-safe (cdr-safe form)))
 	   ;; Force variable to be bound.
@@ -350,7 +359,15 @@ With argument, insert value in current buffer after the defun."
 		(default-boundp (nth 1 form)))
 	   ;; Force variable to be bound.
 	   (set-default (nth 1 form) (eval (nth 2 form)))))
-    (prin1 (eval form))))
+    ;; Now arrange for eval-region to "read" the (possibly) altered form.
+    ;; eval-region handles recording which file defines a function or variable.
+    (save-excursion
+      (eval-region beg end standard-output
+		   #'(lambda (ignore)
+		       ;; Skipping to the end of the specified region
+		       ;; will make eval-region return.
+		       (goto-char end)
+		       form)))))
 
 (defun lisp-comment-indent ()
   (if (looking-at "\\s<\\s<\\s<")
@@ -361,6 +378,17 @@ With argument, insert value in current buffer after the defun."
       (skip-chars-backward " \t")
       (max (if (bolp) 0 (1+ (current-column)))
 	   comment-column))))
+
+(defun lisp-mode-auto-fill ()
+  (if (> (current-column) (current-fill-column))
+      (if (save-excursion
+	    (nth 4 (parse-partial-sexp (save-excursion
+					 (beginning-of-defun)
+					 (point))
+				       (point))))
+	  (do-auto-fill)
+	(let ((comment-start nil) (comment-start-skip nil))
+	  (do-auto-fill)))))
 
 (defvar lisp-indent-offset nil "")
 (defvar lisp-indent-function 'lisp-indent-function "")
@@ -787,7 +815,17 @@ and initial semicolons."
 		      (buffer-substring (match-beginning 0) (match-end 0)))))))
 
     (if (not has-comment)
-	(fill-paragraph justify)
+        ;; `paragraph-start' is set here (not in the buffer-local
+        ;; variable so that `forward-paragraph' et al work as
+        ;; expected) so that filling (doc) strings works sensibly.
+        ;; Adding the opening paren to avoid the following sexp being
+        ;; filled means that sexps generally aren't filled as normal
+        ;; text, which is probably sensible.  The `;' and `:' stop the
+        ;; filled para at following comment lines and keywords
+        ;; (typically in `defcustom').
+	(let ((paragraph-start (concat paragraph-start
+                                       "\\|\\s-*[\(;:\"]")))
+          (fill-paragraph justify))
 
       ;; Narrow to include only the comment, and then fill the region.
       (save-excursion

@@ -36,6 +36,7 @@
 
 
 (require 'regi)
+(require 'sendmail)	;; For mail-header-end.
 
 ;; start user configuration variables
 ;; vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -253,9 +254,9 @@ The gathering of attribution information is not affected by the value
 of this variable.  The number of lines in the region is calculated
 *after* all mail headers are removed.  This variable is only consulted
 during the initial citing via `sc-cite-original'."
-  :type '(choice (const :tag "always cite" t)
-		 (const :tag "do not cite" nil)
-		 (integer :tag "citation threshold"))
+  :type '(choice (const :tag "do not cite" nil)
+		 (integer :tag "citation threshold")
+		 (other :tag "always cite" t))
   :group 'supercite-cite)
 
 (defcustom sc-confirm-always-p t
@@ -498,7 +499,7 @@ string."
 
 (defconst sc-version "3.1"
   "Supercite version number.")
-(defconst sc-help-address "supercite-help@anthem.nlm.nih.gov"
+(defconst sc-help-address "bug-supercite@gnu.org"
   "Address accepting submissions of bug reports.")
 
 (defvar sc-mail-info nil
@@ -1577,8 +1578,7 @@ non-nil."
   (if (not (bobp))
       (if (and (eolp)
 	       (progn (forward-line -1)
-		      (or (looking-at
-			   (concat "^" (regexp-quote mail-header-separator) "$"))
+		      (or (= (point) (mail-header-end))
 			  (and (eq major-mode 'mh-letter-mode)
 			       (mh-in-header-p)))))
 	  (progn (forward-line)

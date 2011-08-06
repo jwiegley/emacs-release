@@ -60,19 +60,29 @@
 ;;; Code:
 
 (require 'ada-mode)
-(load "skeleton") ;; bug in 19.28 through 19.30 skeleton.el, not provided.
+(require 'skeleton)
 (require 'easymenu)
 
-(defvar ada-stmt-use-debug t
-  "*Toggle to insert ada debug code parts.")
+(defgroup ada-stmt nil
+  "Extension to Ada mode for inserting statement templates"
+  :group 'ada)
+
+(defcustom ada-stmt-use-debug t
+  "*Toggle to insert ada debug code parts."
+  :type 'boolean
+  :group 'ada-stmt)
 
 
-(defvar ada-debug-call-str "pragma Debug (%s);"
-  "*Debug call code to insert.")
+(defcustom ada-debug-call-str "pragma Debug (%s);"
+  "*Debug call code to insert."
+  :type 'string
+  :group 'ada-stmt)
 
 
-(defvar ada-debug-exception-str "pragma Debug (%s);"
-  "*Debug exception code to insert." )
+(defcustom ada-debug-exception-str "pragma Debug (%s);"
+  "*Debug exception code to insert."
+  :type 'string
+  :group 'ada-stmt)
 
   
 

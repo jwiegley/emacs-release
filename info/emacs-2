@@ -1,6 +1,38 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
 
 File: emacs,  Node: Copying,  Next: Intro,  Prev: Distrib,  Up: Top
 
@@ -440,7 +472,7 @@ to display your editing.  Emacs normally starts out with just one frame,
 but you can create additional frames if you wish.  *Note Frames::.
 
    When you start Emacs, the entire frame except for the first and last
-lines is devoted to the text you are editing.  This area is called
+lines is devoted to the text you are editing.  This area is called the
 "window".  The first line is a "menu bar", and the last line is a
 special "echo area" or "minibuffer window" where prompts appear and
 where you can enter responses.  See below for more information about
@@ -485,12 +517,12 @@ Many Emacs commands move point through the text, so that you can edit at
 different places in it.  You can also place point by clicking mouse
 button 1.
 
-   While the cursor appears to point AT a character, you should think
-of point as BETWEEN two characters; it points BEFORE the character that
-appears under the cursor.  For example, if your text looks like `frob'
-with the cursor over the `b', then point is between the `o' and the
-`b'.  If you insert the character `!' at that position, the result is
-`fro!b', with point between the `!' and the `b'.  Thus, the cursor
+   While the cursor appears to point *at* a character, you should think
+of point as *between* two characters; it points *before* the character
+that appears under the cursor.  For example, if your text looks like
+`frob' with the cursor over the `b', then point is between the `o' and
+the `b'.  If you insert the character `!' at that position, the result
+is `fro!b', with point between the `!' and the `b'.  Thus, the cursor
 remains over the `b', as before.
 
    Sometimes people speak of "the cursor" when they mean "point," or
@@ -850,11 +882,11 @@ an independent meaning as a command.  `C-f C-k' is two key sequences,
 not one.
 
    All told, the prefix keys in Emacs are `C-c', `C-h', `C-x', `C-x
-<RET>', `C-x C-a', `C-x n', `C-x r', `C-x v', `C-x 4', `C-x 5', `C-x
-6', <ESC>, `M-g' and `M-j'.  But this list is not cast in concrete; it
-is just a matter of Emacs's standard key bindings.  If you customize
-Emacs, you can make new prefix keys, or eliminate these.  *Note Key
-Bindings::.
+<RET>', `C-x @', `C-x a', `C-x n', `C-x r', `C-x v', `C-x 4', `C-x 5',
+`C-x 6', <ESC>, `M-g' and `M-j'.  But this list is not cast in
+concrete; it is just a matter of Emacs's standard key bindings.  If you
+customize Emacs, you can make new prefix keys, or eliminate these.
+*Note Key Bindings::.
 
    If you do make or eliminate prefix keys, that changes the set of
 possible key sequences.  For example, if you redefine `C-f' as a

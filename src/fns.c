@@ -1,5 +1,5 @@
 /* Random utility Lisp functions.
-   Copyright (C) 1985, 86, 87, 93, 94, 95 Free Software Foundation, Inc.
+   Copyright (C) 1985, 86, 87, 93, 94, 95, 97, 1998 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -21,6 +21,11 @@ Boston, MA 02111-1307, USA.  */
 
 #include <config.h>
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#include <time.h>
+
 /* Note on some machines this defines `vector' as a typedef,
    so make sure we don't use that name in this file.  */
 #undef vector
@@ -35,6 +40,9 @@ Boston, MA 02111-1307, USA.  */
 #include "intervals.h"
 #include "frame.h"
 #include "window.h"
+#if defined (HAVE_MENUS) && defined (HAVE_X_WINDOWS)
+#include "xterm.h"
+#endif
 
 #ifndef NULL
 #define NULL (void *)0
@@ -44,16 +52,24 @@ Boston, MA 02111-1307, USA.  */
    asked by mouse commands.  */
 int use_dialog_box;
 
-extern Lisp_Object Flookup_key ();
-
 extern int minibuffer_auto_raise;
 extern Lisp_Object minibuf_window;
 
 Lisp_Object Qstring_lessp, Qprovide, Qrequire;
 Lisp_Object Qyes_or_no_p_history;
 Lisp_Object Qcursor_in_echo_area;
+Lisp_Object Qwidget_type;
+
+extern Lisp_Object Qinput_method_function;
 
 static int internal_equal ();
+
+extern long get_random ();
+extern void seed_random ();
+
+#ifndef HAVE_UNISTD_H
+extern long time ();
+#endif
 
 DEFUN ("identity", Fidentity, Sidentity, 1, 1, 0,
   "Return the argument unchanged.")
@@ -62,10 +78,6 @@ DEFUN ("identity", Fidentity, Sidentity, 1, 1, 0,
 {
   return arg;
 }
-
-extern long get_random ();
-extern void seed_random ();
-extern long time ();
 
 DEFUN ("random", Frandom, Srandom, 0, 1, 0,
   "Return a pseudo-random number.\n\
@@ -108,8 +120,8 @@ DEFUN ("length", Flength, Slength, 1, 1, 0,
   "Return the length of vector, list or string SEQUENCE.\n\
 A byte-code function object is also allowed.\n\
 If the string contains multibyte characters, this is not the necessarily\n\
-the number of characters in the string; it is the number of bytes.\n\
-To get the number of characters, use `chars-in-string'")
+the number of bytes in the string; it is the number of characters.\n\
+To get the number of bytes, use `string-bytes'")
   (sequence)
      register Lisp_Object sequence;
 {
@@ -122,7 +134,9 @@ To get the number of characters, use `chars-in-string'")
   else if (VECTORP (sequence))
     XSETFASTINT (val, XVECTOR (sequence)->size);
   else if (CHAR_TABLE_P (sequence))
-    XSETFASTINT (val, CHAR_TABLE_ORDINARY_SLOTS);
+    XSETFASTINT (val, (MIN_CHAR_COMPOSITION
+		       + (CHAR_FIELD2_MASK | CHAR_FIELD3_MASK)
+		       - 1));
   else if (BOOL_VECTOR_P (sequence))
     XSETFASTINT (val, XBOOL_VECTOR (sequence)->size);
   else if (COMPILEDP (sequence))
@@ -155,7 +169,7 @@ DEFUN ("safe-length", Fsafe_length, Ssafe_length, 1, 1, 0,
 This function never gets an error.  If LIST is not really a list,\n\
 it returns 0.  If LIST is circular, it returns a finite value\n\
 which is at least the number of distinct elements.")
- (list)
+  (list)
      Lisp_Object list;
 {
   Lisp_Object tail, halftail, length;
@@ -176,8 +190,18 @@ which is at least the number of distinct elements.")
   return length;
 }
 
+DEFUN ("string-bytes", Fstring_bytes, Sstring_bytes, 1, 1, 0,
+  "Return the number of bytes in STRING.\n\
+If STRING is a multibyte string, this is greater than the length of STRING.")
+  (string)
+     Lisp_Object string;
+{
+  CHECK_STRING (string, 1);
+  return make_number (STRING_BYTES (XSTRING (string)));
+}
+
 DEFUN ("string-equal", Fstring_equal, Sstring_equal, 2, 2, 0,
-  "T if two strings have identical contents.\n\
+  "Return t if two strings have identical contents.\n\
 Case is significant, but text properties are ignored.\n\
 Symbols are also allowed; their print names are used instead.")
   (s1, s2)
@@ -190,22 +214,125 @@ Symbols are also allowed; their print names are used instead.")
   CHECK_STRING (s1, 0);
   CHECK_STRING (s2, 1);
 
-  if (XSTRING (s1)->size != XSTRING (s2)->size ||
-      bcmp (XSTRING (s1)->data, XSTRING (s2)->data, XSTRING (s1)->size))
+  if (XSTRING (s1)->size != XSTRING (s2)->size
+      || STRING_BYTES (XSTRING (s1)) != STRING_BYTES (XSTRING (s2))
+      || bcmp (XSTRING (s1)->data, XSTRING (s2)->data, STRING_BYTES (XSTRING (s1))))
     return Qnil;
   return Qt;
 }
 
+DEFUN ("compare-strings", Fcompare_strings,
+       Scompare_strings, 6, 7, 0,
+  "Compare the contents of two strings, converting to multibyte if needed.\n\
+In string STR1, skip the first START1 characters and stop at END1.\n\
+In string STR2, skip the first START2 characters and stop at END2.\n\
+END1 and END2 default to the full lengths of the respective strings.\n\
+\n\
+Case is significant in this comparison if IGNORE-CASE is nil.\n\
+Unibyte strings are converted to multibyte for comparison.\n\
+\n\
+The value is t if the strings (or specified portions) match.\n\
+If string STR1 is less, the value is a negative number N;\n\
+  - 1 - N is the number of characters that match at the beginning.\n\
+If string STR1 is greater, the value is a positive number N;\n\
+  N - 1 is the number of characters that match at the beginning.")
+  (str1, start1, end1, str2, start2, end2, ignore_case)
+     Lisp_Object str1, start1, end1, start2, str2, end2, ignore_case;
+{
+  register int end1_char, end2_char;
+  register int i1, i1_byte, i2, i2_byte;
+
+  CHECK_STRING (str1, 0);
+  CHECK_STRING (str2, 1);
+  if (NILP (start1))
+    start1 = make_number (0);
+  if (NILP (start2))
+    start2 = make_number (0);
+  CHECK_NATNUM (start1, 2);
+  CHECK_NATNUM (start2, 3);
+  if (! NILP (end1))
+    CHECK_NATNUM (end1, 4);
+  if (! NILP (end2))
+    CHECK_NATNUM (end2, 4);
+
+  i1 = XINT (start1);
+  i2 = XINT (start2);
+
+  i1_byte = string_char_to_byte (str1, i1);
+  i2_byte = string_char_to_byte (str2, i2);
+
+  end1_char = XSTRING (str1)->size;
+  if (! NILP (end1) && end1_char > XINT (end1))
+    end1_char = XINT (end1);
+
+  end2_char = XSTRING (str2)->size;
+  if (! NILP (end2) && end2_char > XINT (end2))
+    end2_char = XINT (end2);
+
+  while (i1 < end1_char && i2 < end2_char)
+    {
+      /* When we find a mismatch, we must compare the
+	 characters, not just the bytes.  */
+      int c1, c2;
+
+      if (STRING_MULTIBYTE (str1))
+	FETCH_STRING_CHAR_ADVANCE (c1, str1, i1, i1_byte);
+      else
+	{
+	  c1 = XSTRING (str1)->data[i1++];
+	  c1 = unibyte_char_to_multibyte (c1);
+	}
+
+      if (STRING_MULTIBYTE (str2))
+	FETCH_STRING_CHAR_ADVANCE (c2, str2, i2, i2_byte);
+      else
+	{
+	  c2 = XSTRING (str2)->data[i2++];
+	  c2 = unibyte_char_to_multibyte (c2);
+	}
+
+      if (c1 == c2)
+	continue;
+
+      if (! NILP (ignore_case))
+	{
+	  Lisp_Object tem;
+
+	  tem = Fupcase (make_number (c1));
+	  c1 = XINT (tem);
+	  tem = Fupcase (make_number (c2));
+	  c2 = XINT (tem);
+	}
+
+      if (c1 == c2)
+	continue;
+
+      /* Note that I1 has already been incremented
+	 past the character that we are comparing;
+	 hence we don't add or subtract 1 here.  */
+      if (c1 < c2)
+	return make_number (- i1);
+      else
+	return make_number (i1);
+    }
+
+  if (i1 < end1_char)
+    return make_number (i1 - XINT (start1) + 1);
+  if (i2 < end2_char)
+    return make_number (- i1 + XINT (start1) - 1);
+
+  return Qt;
+}
+
 DEFUN ("string-lessp", Fstring_lessp, Sstring_lessp, 2, 2, 0,
-  "T if first arg string is less than second in lexicographic order.\n\
+  "Return t if first arg string is less than second in lexicographic order.\n\
 Case is significant.\n\
 Symbols are also allowed; their print names are used instead.")
   (s1, s2)
      register Lisp_Object s1, s2;
 {
-  register int i;
-  register unsigned char *p1, *p2;
   register int end;
+  register int i1, i1_byte, i2, i2_byte;
 
   if (SYMBOLP (s1))
     XSETSTRING (s1, XSYMBOL (s1)->name);
@@ -214,18 +341,32 @@ Symbols are also allowed; their print names are used instead.")
   CHECK_STRING (s1, 0);
   CHECK_STRING (s2, 1);
 
-  p1 = XSTRING (s1)->data;
-  p2 = XSTRING (s2)->data;
+  i1 = i1_byte = i2 = i2_byte = 0;
+
   end = XSTRING (s1)->size;
   if (end > XSTRING (s2)->size)
     end = XSTRING (s2)->size;
 
-  for (i = 0; i < end; i++)
+  while (i1 < end)
     {
-      if (p1[i] != p2[i])
-	return p1[i] < p2[i] ? Qt : Qnil;
+      /* When we find a mismatch, we must compare the
+	 characters, not just the bytes.  */
+      int c1, c2;
+
+      if (STRING_MULTIBYTE (s1))
+	FETCH_STRING_CHAR_ADVANCE (c1, s1, i1, i1_byte);
+      else
+	c1 = XSTRING (s1)->data[i1++];
+
+      if (STRING_MULTIBYTE (s2))
+	FETCH_STRING_CHAR_ADVANCE (c2, s2, i2, i2_byte);
+      else
+	c2 = XSTRING (s2)->data[i2++];
+
+      if (c1 != c2)
+	return c1 < c2 ? Qt : Qnil;
     }
-  return i < XSTRING (s2)->size ? Qt : Qnil;
+  return i1 < XSTRING (s2)->size ? Qt : Qnil;
 }
 
 static Lisp_Object concat ();
@@ -378,14 +519,21 @@ concat (nargs, args, target_type, last_special)
      int last_special;
 {
   Lisp_Object val;
-  Lisp_Object len;
   register Lisp_Object tail;
   register Lisp_Object this;
   int toindex;
-  register int leni;
+  int toindex_byte;
+  register int result_len;
+  register int result_len_byte;
   register int argnum;
   Lisp_Object last_tail;
   Lisp_Object prev;
+  int some_multibyte;
+  /* When we make a multibyte string, we must pay attention to the
+     byte combining problem, i.e., a byte may be combined with a
+     multibyte charcter of the previous string.  This flag tells if we
+     must consider such a situation or not.  */
+  int maybe_combine_byte;
 
   /* In append, the last arg isn't treated like the others */
   if (last_special && nargs > 0)
@@ -396,6 +544,7 @@ concat (nargs, args, target_type, last_special)
   else
     last_tail = Qnil;
 
+  /* Canonicalize each argument.  */
   for (argnum = 0; argnum < nargs; argnum++)
     {
       this = args[argnum];
@@ -409,64 +558,98 @@ concat (nargs, args, target_type, last_special)
 	}
     }
 
-  for (argnum = 0, leni = 0; argnum < nargs; argnum++)
+  /* Compute total length in chars of arguments in RESULT_LEN.
+     If desired output is a string, also compute length in bytes
+     in RESULT_LEN_BYTE, and determine in SOME_MULTIBYTE
+     whether the result should be a multibyte string.  */
+  result_len_byte = 0;
+  result_len = 0;
+  some_multibyte = 0;
+  for (argnum = 0; argnum < nargs; argnum++)
     {
+      int len;
       this = args[argnum];
-      len = Flength (this);
-      if ((VECTORP (this) || CONSP (this)) && target_type == Lisp_String)
-
+      len = XFASTINT (Flength (this));
+      if (target_type == Lisp_String)
 	{
-	  /* We must pay attention to a multibyte character which
-             takes more than one byte in string.  */
+	  /* We must count the number of bytes needed in the string
+	     as well as the number of characters.  */
 	  int i;
 	  Lisp_Object ch;
+	  int this_len_byte;
 
 	  if (VECTORP (this))
-	    for (i = 0; i < XFASTINT (len); i++)
+	    for (i = 0; i < len; i++)
 	      {
 		ch = XVECTOR (this)->contents[i];
 		if (! INTEGERP (ch))
 		  wrong_type_argument (Qintegerp, ch);
-		leni += XFASTINT (Fchar_bytes (ch));
+		this_len_byte = XFASTINT (Fchar_bytes (ch));
+		result_len_byte += this_len_byte;
+		if (this_len_byte > 1)
+		  some_multibyte = 1;
 	      }
-	  else
+	  else if (BOOL_VECTOR_P (this) && XBOOL_VECTOR (this)->size > 0)
+	    wrong_type_argument (Qintegerp, Faref (this, make_number (0)));
+	  else if (CONSP (this))
 	    for (; CONSP (this); this = XCONS (this)->cdr)
 	      {
 		ch = XCONS (this)->car;
 		if (! INTEGERP (ch))
 		  wrong_type_argument (Qintegerp, ch);
-		leni += XFASTINT (Fchar_bytes (ch));
+		this_len_byte = XFASTINT (Fchar_bytes (ch));
+		result_len_byte += this_len_byte;
+		if (this_len_byte > 1)
+		  some_multibyte = 1;
 	      }
+	  else if (STRINGP (this))
+	    {
+	      if (STRING_MULTIBYTE (this))
+		{
+		  some_multibyte = 1;
+		  result_len_byte += STRING_BYTES (XSTRING (this));
+		}
+	      else
+		result_len_byte += count_size_as_multibyte (XSTRING (this)->data,
+							    XSTRING (this)->size);
+	    }
 	}
-      else
-	leni += XFASTINT (len);
+
+      result_len += len;
     }
 
-  XSETFASTINT (len, leni);
+  if (! some_multibyte)
+    result_len_byte = result_len;
 
+  /* Create the output object.  */
   if (target_type == Lisp_Cons)
-    val = Fmake_list (len, Qnil);
+    val = Fmake_list (make_number (result_len), Qnil);
   else if (target_type == Lisp_Vectorlike)
-    val = Fmake_vector (len, Qnil);
+    val = Fmake_vector (make_number (result_len), Qnil);
+  else if (some_multibyte)
+    val = make_uninit_multibyte_string (result_len, result_len_byte);
   else
-    val = Fmake_string (len, len);
+    val = make_uninit_string (result_len);
 
-  /* In append, if all but last arg are nil, return last arg */
+  /* In `append', if all but last arg are nil, return last arg.  */
   if (target_type == Lisp_Cons && EQ (val, Qnil))
     return last_tail;
 
+  /* Copy the contents of the args into the result.  */
   if (CONSP (val))
     tail = val, toindex = -1;		/* -1 in toindex is flag we are making a list */
   else
-    toindex = 0;
+    toindex = 0, toindex_byte = 0;
 
   prev = Qnil;
 
+  maybe_combine_byte = 0;
   for (argnum = 0; argnum < nargs; argnum++)
     {
       Lisp_Object thislen;
       int thisleni;
       register unsigned int thisindex = 0;
+      register unsigned int thisindex_byte = 0;
 
       this = args[argnum];
       if (!CONSP (this))
@@ -474,76 +657,377 @@ concat (nargs, args, target_type, last_special)
 
       if (STRINGP (this) && STRINGP (val)
 	  && ! NULL_INTERVAL_P (XSTRING (this)->intervals))
+	copy_text_properties (make_number (0), thislen, this,
+			      make_number (toindex), val, Qnil);
+
+      /* Between strings of the same kind, copy fast.  */
+      if (STRINGP (this) && STRINGP (val)
+	  && STRING_MULTIBYTE (this) == some_multibyte)
 	{
-	  copy_text_properties (make_number (0), thislen, this,
-				make_number (toindex), val, Qnil);
+	  int thislen_byte = STRING_BYTES (XSTRING (this));
+	  bcopy (XSTRING (this)->data, XSTRING (val)->data + toindex_byte,
+		 STRING_BYTES (XSTRING (this)));
+	  if (some_multibyte
+	      && toindex_byte > 0
+	      && !ASCII_BYTE_P (XSTRING (val)->data[toindex_byte - 1])
+	      && !CHAR_HEAD_P (XSTRING (this)->data[0]))
+	    maybe_combine_byte = 1;
+	  toindex_byte += thislen_byte;
+	  toindex += thisleni;
 	}
-
-      while (1)
+      /* Copy a single-byte string to a multibyte string.  */
+      else if (STRINGP (this) && STRINGP (val))
 	{
-	  register Lisp_Object elt;
+	  toindex_byte += copy_text (XSTRING (this)->data,
+				     XSTRING (val)->data + toindex_byte,
+				     XSTRING (this)->size, 0, 1);
+	  toindex += thisleni;
+	}
+      else
+	/* Copy element by element.  */
+	while (1)
+	  {
+	    register Lisp_Object elt;
 
-	  /* Fetch next element of `this' arg into `elt', or break if
-             `this' is exhausted. */
-	  if (NILP (this)) break;
-	  if (CONSP (this))
-	    elt = XCONS (this)->car, this = XCONS (this)->cdr;
-	  else
-	    {
-	      if (thisindex >= thisleni) break;
-	      if (STRINGP (this))
-		XSETFASTINT (elt, XSTRING (this)->data[thisindex++]);
-	      else if (BOOL_VECTOR_P (this))
-		{
-		  int size_in_chars
-		    = ((XBOOL_VECTOR (this)->size + BITS_PER_CHAR - 1)
-		       / BITS_PER_CHAR);
-		  int byte;
-		  byte = XBOOL_VECTOR (val)->data[thisindex / BITS_PER_CHAR];
-		  if (byte & (1 << (thisindex % BITS_PER_CHAR)))
-		    elt = Qt;
-		  else
-		    elt = Qnil;
-		}
-	      else
-		elt = XVECTOR (this)->contents[thisindex++];
-	    }
-
-	  /* Store into result */
-	  if (toindex < 0)
-	    {
-	      XCONS (tail)->car = elt;
-	      prev = tail;
-	      tail = XCONS (tail)->cdr;
-	    }
-	  else if (VECTORP (val))
-	    XVECTOR (val)->contents[toindex++] = elt;
-	  else
-	    {
-	      while (!INTEGERP (elt))
-		elt = wrong_type_argument (Qintegerp, elt);
+	    /* Fetch next element of `this' arg into `elt', or break if
+	       `this' is exhausted. */
+	    if (NILP (this)) break;
+	    if (CONSP (this))
+	      elt = XCONS (this)->car, this = XCONS (this)->cdr;
+	    else if (thisindex >= thisleni)
+	      break;
+	    else if (STRINGP (this))
 	      {
-		int c = XINT (elt);
-		unsigned char work[4], *str;
-		int i = CHAR_STRING (c, work, str);
-
-#ifdef MASSC_REGISTER_BUG
-		/* Even removing all "register"s doesn't disable this bug!
-		   Nothing simpler than this seems to work. */
-		unsigned char *p = & XSTRING (val)->data[toindex];
-		bcopy (str, p, i);
-#else
-		bcopy (str, & XSTRING (val)->data[toindex], i);
-#endif
-		toindex += i;
+		int c;
+		if (STRING_MULTIBYTE (this))
+		  {
+		    FETCH_STRING_CHAR_ADVANCE (c, this,
+					       thisindex,
+					       thisindex_byte);
+		    XSETFASTINT (elt, c);
+		  }
+		else
+		  {
+		    XSETFASTINT (elt, XSTRING (this)->data[thisindex++]);
+		    if (some_multibyte && XINT (elt) >= 0200
+			&& XINT (elt) < 0400)
+		      {
+			c = unibyte_char_to_multibyte (XINT (elt));
+			XSETINT (elt, c);
+		      }
+		  }
 	      }
-	    }
-	}
+	    else if (BOOL_VECTOR_P (this))
+	      {
+		int byte;
+		byte = XBOOL_VECTOR (this)->data[thisindex / BITS_PER_CHAR];
+		if (byte & (1 << (thisindex % BITS_PER_CHAR)))
+		  elt = Qt;
+		else
+		  elt = Qnil;
+		thisindex++;
+	      }
+	    else
+	      elt = XVECTOR (this)->contents[thisindex++];
+
+	    /* Store this element into the result.  */
+	    if (toindex < 0)
+	      {
+		XCONS (tail)->car = elt;
+		prev = tail;
+		tail = XCONS (tail)->cdr;
+	      }
+	    else if (VECTORP (val))
+	      XVECTOR (val)->contents[toindex++] = elt;
+	    else
+	      {
+		CHECK_NUMBER (elt, 0);
+		if (SINGLE_BYTE_CHAR_P (XINT (elt)))
+		  {
+		    if (some_multibyte
+			&& toindex_byte > 0
+			&& !ASCII_BYTE_P (XSTRING (val)->data[toindex_byte - 1])
+			&& !CHAR_HEAD_P (XINT (elt)))
+		      maybe_combine_byte = 1;
+		    XSTRING (val)->data[toindex_byte++] = XINT (elt);
+		    toindex++;
+		  }
+		else
+		  /* If we have any multibyte characters,
+		     we already decided to make a multibyte string.  */
+		  {
+		    int c = XINT (elt);
+		    unsigned char work[4], *str;
+		    int i = CHAR_STRING (c, work, str);
+
+		    /* P exists as a variable
+		       to avoid a bug on the Masscomp C compiler.  */
+		    unsigned char *p = & XSTRING (val)->data[toindex_byte];
+		    bcopy (str, p, i);
+		    toindex_byte += i;
+		    toindex++;
+		  }
+	      }
+	  }
     }
   if (!NILP (prev))
     XCONS (prev)->cdr = last_tail;
 
-  return val;  
+  if (maybe_combine_byte)
+    /* Character counter of the multibyte string VAL may be wrong
+       because of byte combining problem.  We must re-calculate it.  */
+    XSTRING (val)->size = multibyte_chars_in_text (XSTRING (val)->data,
+						   XSTRING (val)->size_byte);
+
+  return val;
+}
+
+static Lisp_Object string_char_byte_cache_string;
+static int string_char_byte_cache_charpos;
+static int string_char_byte_cache_bytepos;
+
+/* Return the character index corresponding to CHAR_INDEX in STRING.  */
+
+int
+string_char_to_byte (string, char_index)
+     Lisp_Object string;
+     int char_index;
+{
+  int i, i_byte;
+  int best_below, best_below_byte;
+  int best_above, best_above_byte;
+
+  if (! STRING_MULTIBYTE (string))
+    return char_index;
+
+  best_below = best_below_byte = 0;
+  best_above = XSTRING (string)->size;
+  best_above_byte = STRING_BYTES (XSTRING (string));
+
+  if (EQ (string, string_char_byte_cache_string))
+    {
+      if (string_char_byte_cache_charpos < char_index)
+	{
+	  best_below = string_char_byte_cache_charpos;
+	  best_below_byte = string_char_byte_cache_bytepos;
+	}
+      else
+	{
+	  best_above = string_char_byte_cache_charpos;
+	  best_above_byte = string_char_byte_cache_bytepos;
+	}
+    }
+
+  if (char_index - best_below < best_above - char_index)
+    {
+      while (best_below < char_index)
+	{
+	  int c;
+	  FETCH_STRING_CHAR_ADVANCE (c, string, best_below, best_below_byte);
+	}
+      i = best_below;
+      i_byte = best_below_byte;
+    }
+  else
+    {
+      while (best_above > char_index)
+	{
+	  int best_above_byte_saved = --best_above_byte;
+
+	  while (best_above_byte > 0
+		 && !CHAR_HEAD_P (XSTRING (string)->data[best_above_byte]))
+	    best_above_byte--;
+	  if (XSTRING (string)->data[best_above_byte] < 0x80)
+	    best_above_byte = best_above_byte_saved;
+	  best_above--;
+	}
+      i = best_above;
+      i_byte = best_above_byte;
+    }
+
+  string_char_byte_cache_bytepos = i_byte;
+  string_char_byte_cache_charpos = i;
+  string_char_byte_cache_string = string;
+
+  return i_byte;
+}
+
+/* Return the character index corresponding to BYTE_INDEX in STRING.  */
+
+int
+string_byte_to_char (string, byte_index)
+     Lisp_Object string;
+     int byte_index;
+{
+  int i, i_byte;
+  int best_below, best_below_byte;
+  int best_above, best_above_byte;
+
+  if (! STRING_MULTIBYTE (string))
+    return byte_index;
+
+  best_below = best_below_byte = 0;
+  best_above = XSTRING (string)->size;
+  best_above_byte = STRING_BYTES (XSTRING (string));
+
+  if (EQ (string, string_char_byte_cache_string))
+    {
+      if (string_char_byte_cache_bytepos < byte_index)
+	{
+	  best_below = string_char_byte_cache_charpos;
+	  best_below_byte = string_char_byte_cache_bytepos;
+	}
+      else
+	{
+	  best_above = string_char_byte_cache_charpos;
+	  best_above_byte = string_char_byte_cache_bytepos;
+	}
+    }
+
+  if (byte_index - best_below_byte < best_above_byte - byte_index)
+    {
+      while (best_below_byte < byte_index)
+	{
+	  int c;
+	  FETCH_STRING_CHAR_ADVANCE (c, string, best_below, best_below_byte);
+	}
+      i = best_below;
+      i_byte = best_below_byte;
+    }
+  else
+    {
+      while (best_above_byte > byte_index)
+	{
+	  int best_above_byte_saved = --best_above_byte;
+
+	  while (best_above_byte > 0
+		 && !CHAR_HEAD_P (XSTRING (string)->data[best_above_byte]))
+	    best_above_byte--;
+	  if (XSTRING (string)->data[best_above_byte] < 0x80)
+	    best_above_byte = best_above_byte_saved;
+	  best_above--;
+	}
+      i = best_above;
+      i_byte = best_above_byte;
+    }
+
+  string_char_byte_cache_bytepos = i_byte;
+  string_char_byte_cache_charpos = i;
+  string_char_byte_cache_string = string;
+
+  return i;
+}
+
+/* Convert STRING to a multibyte string.
+   Single-byte characters 0240 through 0377 are converted
+   by adding nonascii_insert_offset to each.  */
+
+Lisp_Object
+string_make_multibyte (string)
+     Lisp_Object string;
+{
+  unsigned char *buf;
+  int nbytes;
+
+  if (STRING_MULTIBYTE (string))
+    return string;
+
+  nbytes = count_size_as_multibyte (XSTRING (string)->data,
+				    XSTRING (string)->size);
+  /* If all the chars are ASCII, they won't need any more bytes
+     once converted.  In that case, we can return STRING itself.  */
+  if (nbytes == STRING_BYTES (XSTRING (string)))
+    return string;
+
+  buf = (unsigned char *) alloca (nbytes);
+  copy_text (XSTRING (string)->data, buf, STRING_BYTES (XSTRING (string)),
+	     0, 1);
+
+  return make_multibyte_string (buf, XSTRING (string)->size, nbytes);
+}
+
+/* Convert STRING to a single-byte string.  */
+
+Lisp_Object
+string_make_unibyte (string)
+     Lisp_Object string;
+{
+  unsigned char *buf;
+
+  if (! STRING_MULTIBYTE (string))
+    return string;
+
+  buf = (unsigned char *) alloca (XSTRING (string)->size);
+
+  copy_text (XSTRING (string)->data, buf, STRING_BYTES (XSTRING (string)),
+	     1, 0);
+
+  return make_unibyte_string (buf, XSTRING (string)->size);
+}
+
+DEFUN ("string-make-multibyte", Fstring_make_multibyte, Sstring_make_multibyte,
+       1, 1, 0,
+  "Return the multibyte equivalent of STRING.\n\
+The function `unibyte-char-to-multibyte' is used to convert\n\
+each unibyte character to a multibyte character.")
+  (string)
+     Lisp_Object string;
+{
+  CHECK_STRING (string, 0);
+
+  return string_make_multibyte (string);
+}
+
+DEFUN ("string-make-unibyte", Fstring_make_unibyte, Sstring_make_unibyte,
+       1, 1, 0,
+  "Return the unibyte equivalent of STRING.\n\
+Multibyte character codes are converted to unibyte\n\
+by using just the low 8 bits.")
+  (string)
+     Lisp_Object string;
+{
+  CHECK_STRING (string, 0);
+
+  return string_make_unibyte (string);
+}
+
+DEFUN ("string-as-unibyte", Fstring_as_unibyte, Sstring_as_unibyte,
+       1, 1, 0,
+  "Return a unibyte string with the same individual bytes as STRING.\n\
+If STRING is unibyte, the result is STRING itself.")
+  (string)
+     Lisp_Object string;
+{
+  CHECK_STRING (string, 0);
+
+  if (STRING_MULTIBYTE (string))
+    {
+      string = Fcopy_sequence (string);
+      XSTRING (string)->size = STRING_BYTES (XSTRING (string));
+      SET_STRING_BYTES (XSTRING (string), -1);
+    }
+  return string;
+}
+
+DEFUN ("string-as-multibyte", Fstring_as_multibyte, Sstring_as_multibyte,
+       1, 1, 0,
+  "Return a multibyte string with the same individual bytes as STRING.\n\
+If STRING is multibyte, the result is STRING itself.")
+  (string)
+     Lisp_Object string;
+{
+  CHECK_STRING (string, 0);
+
+  if (! STRING_MULTIBYTE (string))
+    {
+      int nbytes = STRING_BYTES (XSTRING (string));
+      int newlen = multibyte_chars_in_text (XSTRING (string)->data, nbytes);
+
+      string = Fcopy_sequence (string);
+      XSTRING (string)->size = newlen;
+      XSTRING (string)->size_byte = nbytes;
+    }
+  return string;
 }
 
 DEFUN ("copy-alist", Fcopy_alist, Scopy_alist, 1, 1, 0,
@@ -585,6 +1069,9 @@ This function allows vectors as well as strings.")
 {
   Lisp_Object res;
   int size;
+  int size_byte;
+  int from_char, to_char;
+  int from_byte, to_byte;
 
   if (! (STRINGP (string) || VECTORP (string)))
     wrong_type_argument (Qarrayp, string);
@@ -592,33 +1079,93 @@ This function allows vectors as well as strings.")
   CHECK_NUMBER (from, 1);
 
   if (STRINGP (string))
-    size = XSTRING (string)->size;
+    {
+      size = XSTRING (string)->size;
+      size_byte = STRING_BYTES (XSTRING (string));
+    }
   else
     size = XVECTOR (string)->size;
 
   if (NILP (to))
-    XSETINT (to, size);
+    {
+      to_char = size;
+      to_byte = size_byte;
+    }
   else
-    CHECK_NUMBER (to, 2);
+    {
+      CHECK_NUMBER (to, 2);
 
-  if (XINT (from) < 0)
-    XSETINT (from, XINT (from) + size);
-  if (XINT (to) < 0)
-    XSETINT (to, XINT (to) + size);
-  if (!(0 <= XINT (from) && XINT (from) <= XINT (to)
-        && XINT (to) <= size))
-    args_out_of_range_3 (string, from, to);
+      to_char = XINT (to);
+      if (to_char < 0)
+	to_char += size;
+
+      if (STRINGP (string))
+	to_byte = string_char_to_byte (string, to_char);
+    }
+
+  from_char = XINT (from);
+  if (from_char < 0)
+    from_char += size;
+  if (STRINGP (string))
+    from_byte = string_char_to_byte (string, from_char);
+
+  if (!(0 <= from_char && from_char <= to_char && to_char <= size))
+    args_out_of_range_3 (string, make_number (from_char),
+			 make_number (to_char));
 
   if (STRINGP (string))
     {
-      res = make_string (XSTRING (string)->data + XINT (from),
-			 XINT (to) - XINT (from));
-      copy_text_properties (from, to, string, make_number (0), res, Qnil);
+      res = make_specified_string (XSTRING (string)->data + from_byte,
+				   to_char - from_char, to_byte - from_byte,
+				   STRING_MULTIBYTE (string));
+      copy_text_properties (make_number (from_char), make_number (to_char),
+			    string, make_number (0), res, Qnil);
     }
   else
-    res = Fvector (XINT (to) - XINT (from),
-		   XVECTOR (string)->contents + XINT (from));
-		   
+    res = Fvector (to_char - from_char,
+		   XVECTOR (string)->contents + from_char);
+
+  return res;
+}
+
+/* Extract a substring of STRING, giving start and end positions
+   both in characters and in bytes.  */
+
+Lisp_Object
+substring_both (string, from, from_byte, to, to_byte)
+     Lisp_Object string;
+     int from, from_byte, to, to_byte;
+{
+  Lisp_Object res;
+  int size;
+  int size_byte;
+
+  if (! (STRINGP (string) || VECTORP (string)))
+    wrong_type_argument (Qarrayp, string);
+
+  if (STRINGP (string))
+    {
+      size = XSTRING (string)->size;
+      size_byte = STRING_BYTES (XSTRING (string));
+    }
+  else
+    size = XVECTOR (string)->size;
+
+  if (!(0 <= from && from <= to && to <= size))
+    args_out_of_range_3 (string, make_number (from), make_number (to));
+
+  if (STRINGP (string))
+    {
+      res = make_specified_string (XSTRING (string)->data + from_byte,
+				   to - from, to_byte - from_byte,
+				   STRING_MULTIBYTE (string));
+      copy_text_properties (make_number (from), make_number (to),
+			    string, make_number (0), res, Qnil);
+    }
+  else
+    res = Fvector (to - from,
+		   XVECTOR (string)->contents + from);
+
   return res;
 }
 
@@ -1042,9 +1589,9 @@ otherwise the new PROP VAL pair is added.  The new plist is returned;\n\
 use `(setq x (plist-put x prop val))' to be sure to use the new value.\n\
 The PLIST is modified by side effects.")
   (plist, prop, val)
-    Lisp_Object plist;
-    register Lisp_Object prop;
-    Lisp_Object val;
+     Lisp_Object plist;
+     register Lisp_Object prop;
+     Lisp_Object val;
 {
   register Lisp_Object tail, prev;
   Lisp_Object newcell;
@@ -1080,7 +1627,7 @@ It can be retrieved with `(get SYMBOL PROPNAME)'.")
 }
 
 DEFUN ("equal", Fequal, Sequal, 2, 2, 0,
-  "T if two Lisp objects have similar structure and contents.\n\
+  "Return t if two Lisp objects have similar structure and contents.\n\
 They must have the same data type.\n\
 Conses are compared by comparing the cars and the cdrs.\n\
 Vectors and strings are compared element by element.\n\
@@ -1140,7 +1687,7 @@ internal_equal (o1, o2, depth)
 	{
 	  return (XMARKER (o1)->buffer == XMARKER (o2)->buffer
 		  && (XMARKER (o1)->buffer == 0
-		      || XMARKER (o1)->bufpos == XMARKER (o2)->bufpos));
+		      || XMARKER (o1)->bytepos == XMARKER (o2)->bytepos));
 	}
       break;
 
@@ -1166,6 +1713,8 @@ internal_equal (o1, o2, depth)
 	      return 0;
 	    return 1;
 	  }
+	if (WINDOW_CONFIGURATIONP (o1))
+	  return compare_window_configurations (o1, o2, 0);
 
 	/* Aside from them, only true vectors, char-tables, and compiled
 	   functions are sensible to compare, so eliminate the others now.  */
@@ -1190,8 +1739,10 @@ internal_equal (o1, o2, depth)
     case Lisp_String:
       if (XSTRING (o1)->size != XSTRING (o2)->size)
 	return 0;
+      if (STRING_BYTES (XSTRING (o1)) != STRING_BYTES (XSTRING (o2)))
+	return 0;
       if (bcmp (XSTRING (o1)->data, XSTRING (o2)->data,
-		XSTRING (o1)->size))
+		STRING_BYTES (XSTRING (o1))))
 	return 0;
       return 1;
     }
@@ -1249,14 +1800,14 @@ ARRAY is a vector, string, char-table, or bool-vector.")
     }
   return array;
 }
-
+
 DEFUN ("char-table-subtype", Fchar_table_subtype, Schar_table_subtype,
        1, 1, 0,
   "Return the subtype of char-table CHAR-TABLE.   The value is a symbol.")
   (char_table)
      Lisp_Object char_table;
 {
-  CHECK_CHAR_TABLE (char_table, 0);  
+  CHECK_CHAR_TABLE (char_table, 0);
 
   return XCHAR_TABLE (char_table)->purpose;
 }
@@ -1271,7 +1822,7 @@ then the actual applicable value is inherited from the parent char-table\n\
   (char_table)
      Lisp_Object char_table;
 {
-  CHECK_CHAR_TABLE (char_table, 0);  
+  CHECK_CHAR_TABLE (char_table, 0);
 
   return XCHAR_TABLE (char_table)->parent;
 }
@@ -1285,11 +1836,11 @@ PARENT must be either nil or another char-table.")
 {
   Lisp_Object temp;
 
-  CHECK_CHAR_TABLE (char_table, 0);  
+  CHECK_CHAR_TABLE (char_table, 0);
 
   if (!NILP (parent))
     {
-      CHECK_CHAR_TABLE (parent, 0);  
+      CHECK_CHAR_TABLE (parent, 0);
 
       for (temp = parent; !NILP (temp); temp = XCHAR_TABLE (temp)->parent)
 	if (EQ (temp, char_table))
@@ -1331,28 +1882,40 @@ DEFUN ("set-char-table-extra-slot", Fset_char_table_extra_slot,
 
   return XCHAR_TABLE (char_table)->extras[XINT (n)] = value;
 }
-
+
 DEFUN ("char-table-range", Fchar_table_range, Schar_table_range,
        2, 2, 0,
   "Return the value in CHAR-TABLE for a range of characters RANGE.\n\
-RANGE should be t (for all characters), nil (for the default value)\n\
+RANGE should be nil (for the default value)\n\
 a vector which identifies a character set or a row of a character set,\n\
-or a character code.")
+a character set name, or a character code.")
   (char_table, range)
      Lisp_Object char_table, range;
 {
   int i;
 
   CHECK_CHAR_TABLE (char_table, 0);
-  
+
   if (EQ (range, Qnil))
     return XCHAR_TABLE (char_table)->defalt;
   else if (INTEGERP (range))
     return Faref (char_table, range);
+  else if (SYMBOLP (range))
+    {
+      Lisp_Object charset_info;
+
+      charset_info = Fget (range, Qcharset);
+      CHECK_VECTOR (charset_info, 0);
+
+      return Faref (char_table,
+		    make_number (XINT (XVECTOR (charset_info)->contents[0])
+				 + 128));
+    }
   else if (VECTORP (range))
     {
       if (XVECTOR (range)->size == 1)
-	return Faref (char_table, XVECTOR (range)->contents[0]);
+	return Faref (char_table,
+		      make_number (XINT (XVECTOR (range)->contents[0]) + 128));
       else
 	{
 	  int size = XVECTOR (range)->size;
@@ -1372,25 +1935,39 @@ DEFUN ("set-char-table-range", Fset_char_table_range, Sset_char_table_range,
   "Set the value in CHAR-TABLE for a range of characters RANGE to VALUE.\n\
 RANGE should be t (for all characters), nil (for the default value)\n\
 a vector which identifies a character set or a row of a character set,\n\
-or a character code.")
+a coding system, or a character code.")
   (char_table, range, value)
      Lisp_Object char_table, range, value;
 {
   int i;
 
   CHECK_CHAR_TABLE (char_table, 0);
-  
+
   if (EQ (range, Qt))
     for (i = 0; i < CHAR_TABLE_ORDINARY_SLOTS; i++)
       XCHAR_TABLE (char_table)->contents[i] = value;
   else if (EQ (range, Qnil))
     XCHAR_TABLE (char_table)->defalt = value;
+  else if (SYMBOLP (range))
+    {
+      Lisp_Object charset_info;
+
+      charset_info = Fget (range, Qcharset);
+      CHECK_VECTOR (charset_info, 0);
+
+      return Faset (char_table,
+		    make_number (XINT (XVECTOR (charset_info)->contents[0])
+				 + 128),
+		    value);
+    }
   else if (INTEGERP (range))
     Faset (char_table, range, value);
   else if (VECTORP (range))
     {
       if (XVECTOR (range)->size == 1)
-	return Faset (char_table, XVECTOR (range)->contents[0], value);
+	return Faset (char_table,
+		      make_number (XINT (XVECTOR (range)->contents[0]) + 128),
+		      value);
       else
 	{
 	  int size = XVECTOR (range)->size;
@@ -1423,15 +2000,19 @@ See also the documentation of make-char.")
 
   c = XINT (ch);
   SPLIT_NON_ASCII_CHAR (c, charset, code1, code2);
-  if (! CHARSET_DEFINED_P (charset))
-    error ("Invalid character: %d", c);
+
+  /* Since we may want to set the default value for a character set
+     not yet defined, we check only if the character set is in the
+     valid range or not, instead of it is already defined or not.  */
+  if (! CHARSET_VALID_P (charset))
+    invalid_character (c);
 
   if (charset == CHARSET_ASCII)
     return (XCHAR_TABLE (char_table)->defalt = value);
 
   /* Even if C is not a generic char, we had better behave as if a
      generic char is specified.  */
-  if (CHARSET_DIMENSION (charset) == 1)
+  if (charset == CHARSET_COMPOSITION || CHARSET_DIMENSION (charset) == 1)
     code1 = 0;
   temp = XCHAR_TABLE (char_table)->contents[charset + 128];
   if (!code1)
@@ -1454,6 +2035,22 @@ See also the documentation of make-char.")
   return value;
 }
 
+/* Look up the element in TABLE at index CH,
+   and return it as an integer.
+   If the element is nil, return CH itself.
+   (Actually we do that for any non-integer.)  */
+
+int
+char_table_translate (table, ch)
+     Lisp_Object table;
+     int ch;
+{
+  Lisp_Object value;
+  value = Faref (table, make_number (ch));
+  if (! INTEGERP (value))
+    return ch;
+  return XINT (value);
+}
 
 /* Map C_FUNCTION or FUNCTION over SUBTABLE, calling it for each
    character or group of characters that share a value.
@@ -1465,7 +2062,8 @@ See also the documentation of make-char.")
 
 void
 map_char_table (c_function, function, subtable, arg, depth, indices)
-     Lisp_Object (*c_function) (), function, subtable, arg, *indices;
+     void (*c_function) P_ ((Lisp_Object, Lisp_Object, Lisp_Object));
+     Lisp_Object function, subtable, arg, *indices;
      int depth;
 {
   int i, to;
@@ -1481,11 +2079,16 @@ map_char_table (c_function, function, subtable, arg, depth, indices)
 	  else
 	    call2 (function, make_number (i), elt);
 	}
+#if 0 /* If the char table has entries for higher characters,
+	 we should report them.  */
+      if (NILP (current_buffer->enable_multibyte_characters))
+	return;
+#endif
       to = CHAR_TABLE_ORDINARY_SLOTS;
     }
   else
     {
-      i = 0;
+      i = 32;
       to = SUB_CHAR_TABLE_ORDINARY_SLOTS;
     }
 
@@ -1515,7 +2118,7 @@ map_char_table (c_function, function, subtable, arg, depth, indices)
 	      else
 		call2 (function, make_number (c), elt);
 	    }
-  	}	  
+  	}
     }
 }
 
@@ -1593,9 +2196,9 @@ Only the last argument is not altered, and need not be a list.")
 }
 
 /* This is the guts of all mapping functions.
- Apply fn to each element of seq, one by one,
- storing the results into elements of vals, a C vector of Lisp_Objects.
- leni is the length of vals, which should also be the length of seq. */
+ Apply FN to each element of SEQ, one by one,
+ storing the results into elements of VALS, a C vector of Lisp_Objects.
+ LENI is the length of VALS, which should also be the length of SEQ.  */
 
 static void
 mapcar1 (leni, vals, fn, seq)
@@ -1626,12 +2229,43 @@ mapcar1 (leni, vals, fn, seq)
 	  vals[i] = call1 (fn, dummy);
 	}
     }
-  else if (STRINGP (seq))
+  else if (BOOL_VECTOR_P (seq))
     {
+      for (i = 0; i < leni; i++)
+	{
+	  int byte;
+	  byte = XBOOL_VECTOR (seq)->data[i / BITS_PER_CHAR];
+	  if (byte & (1 << (i % BITS_PER_CHAR)))
+	    dummy = Qt;
+	  else
+	    dummy = Qnil;
+
+	  vals[i] = call1 (fn, dummy);
+	}
+    }
+  else if (STRINGP (seq) && ! STRING_MULTIBYTE (seq))
+    {
+      /* Single-byte string.  */
       for (i = 0; i < leni; i++)
 	{
 	  XSETFASTINT (dummy, XSTRING (seq)->data[i]);
 	  vals[i] = call1 (fn, dummy);
+	}
+    }
+  else if (STRINGP (seq))
+    {
+      /* Multi-byte string.  */
+      int len_byte = STRING_BYTES (XSTRING (seq));
+      int i_byte;
+
+      for (i = 0, i_byte = 0; i < leni;)
+	{
+	  int c;
+	  int i_before = i;
+
+	  FETCH_STRING_CHAR_ADVANCE (c, seq, i, i_byte);
+	  XSETFASTINT (dummy, c);
+	  vals[i_before] = call1 (fn, dummy);
 	}
     }
   else   /* Must be a list, since Flength did not get an error */
@@ -1650,7 +2284,8 @@ mapcar1 (leni, vals, fn, seq)
 DEFUN ("mapconcat", Fmapconcat, Smapconcat, 3, 3, 0,
   "Apply FUNCTION to each element of SEQUENCE, and concat the results as strings.\n\
 In between each pair of results, stick in SEPARATOR.  Thus, \" \" as\n\
-SEPARATOR results in spaces between the values returned by FUNCTION.")
+SEPARATOR results in spaces between the values returned by FUNCTION.\n\
+SEQUENCE may be a list, a vector, a bool-vector, or a string.")
   (function, sequence, separator)
      Lisp_Object function, sequence, separator;
 {
@@ -1674,7 +2309,7 @@ SEPARATOR results in spaces between the values returned by FUNCTION.")
 
   for (i = leni - 1; i >= 0; i--)
     args[i + i] = args[i];
-      
+
   for (i = 1; i < nargs; i += 2)
     args[i] = separator;
 
@@ -1684,7 +2319,7 @@ SEPARATOR results in spaces between the values returned by FUNCTION.")
 DEFUN ("mapcar", Fmapcar, Smapcar, 2, 2, 0,
   "Apply FUNCTION to each element of SEQUENCE, and make a list of the results.\n\
 The result is a list just as long as SEQUENCE.\n\
-SEQUENCE may be a list, a vector or a string.")
+SEQUENCE may be a list, a vector, a bool-vector, or a string.")
   (function, sequence)
      Lisp_Object function, sequence;
 {
@@ -1729,7 +2364,6 @@ Also accepts Space to mean yes, or Delete to mean no.")
 
   while (1)
     {
-      
 
 #ifdef HAVE_MENUS
       if ((NILP (last_nonmenu_event) || CONSP (last_nonmenu_event))
@@ -1749,7 +2383,7 @@ Also accepts Space to mean yes, or Delete to mean no.")
 #endif /* HAVE_MENUS */
       cursor_in_echo_area = 1;
       choose_minibuf_frame ();
-      message_nolog ("%s(y or n) ", XSTRING (xprompt)->data);
+      message_with_string ("%s(y or n) ", xprompt, 0);
 
       if (minibuffer_auto_raise)
 	{
@@ -1760,7 +2394,7 @@ Also accepts Space to mean yes, or Delete to mean no.")
 	  Fraise_frame (mini_frame);
 	}
 
-      obj = read_filtered_event (1, 0, 0);
+      obj = read_filtered_event (1, 0, 0, 0);
       cursor_in_echo_area = 0;
       /* If we need to quit, quit with cursor_in_echo_area = 0.  */
       QUIT;
@@ -1812,8 +2446,8 @@ Also accepts Space to mean yes, or Delete to mean no.")
   if (! noninteractive)
     {
       cursor_in_echo_area = -1;
-      message_nolog ("%s(y or n) %c",
-		     XSTRING (xprompt)->data, answer ? 'y' : 'n');
+      message_with_string (answer ? "%s(y or n) y" : "%s(y or n) n",
+			   xprompt, 0);
     }
 
   unbind_to (count, Qnil);
@@ -1851,7 +2485,7 @@ and can edit it until it has been confirmed.")
   CHECK_STRING (prompt, 0);
 
 #ifdef HAVE_MENUS
-  if ((NILP (last_nonmenu_event) || CONSP (last_nonmenu_event)) 
+  if ((NILP (last_nonmenu_event) || CONSP (last_nonmenu_event))
       && use_dialog_box
       && have_menus_p ())
     {
@@ -1897,24 +2531,31 @@ and can edit it until it has been confirmed.")
     }
 }
 
-DEFUN ("load-average", Fload_average, Sload_average, 0, 0, 0,
+DEFUN ("load-average", Fload_average, Sload_average, 0, 1, 0,
   "Return list of 1 minute, 5 minute and 15 minute load averages.\n\
 Each of the three load averages is multiplied by 100,\n\
 then converted to integer.\n\
+When USE-FLOATS is non-nil, floats will be used instead of integers.\n\
+These floats are not multiplied by 100.\n\n\
 If the 5-minute or 15-minute load averages are not available, return a\n\
 shortened list, containing only those averages which are available.")
-  ()
+  (use_floats)
+     Lisp_Object use_floats;
 {
   double load_ave[3];
   int loads = getloadavg (load_ave, 3);
-  Lisp_Object ret;
+  Lisp_Object ret = Qnil;
 
   if (loads < 0)
     error ("load-average not implemented for this operating system");
 
-  ret = Qnil;
-  while (loads > 0)
-    ret = Fcons (make_number ((int) (load_ave[--loads] * 100.0)), ret);
+  while (loads-- > 0)
+    {
+      Lisp_Object load = (NILP (use_floats) ?
+			  make_number ((int) (100.0 * load_ave[loads]))
+			  : make_float (load_ave[loads]));
+      ret = Fcons (load, ret);
+    }
 
   return ret;
 }
@@ -1927,7 +2568,7 @@ Use this to conditionalize execution of lisp code based on the presence or\n\
 absence of emacs or environment extensions.\n\
 Use `provide' to declare that a feature is available.\n\
 This function looks at the value of the variable `features'.")
-     (feature)
+  (feature)
      Lisp_Object feature;
 {
   register Lisp_Object tem;
@@ -1938,7 +2579,7 @@ This function looks at the value of the variable `features'.")
 
 DEFUN ("provide", Fprovide, Sprovide, 1, 1, 0,
   "Announce that FEATURE is a feature of the current Emacs.")
-     (feature)
+  (feature)
      Lisp_Object feature;
 {
   register Lisp_Object tem;
@@ -1956,8 +2597,9 @@ DEFUN ("require", Frequire, Srequire, 1, 2, 0,
   "If feature FEATURE is not loaded, load it from FILENAME.\n\
 If FEATURE is not a member of the list `features', then the feature\n\
 is not loaded; so load the file FILENAME.\n\
-If FILENAME is omitted, the printname of FEATURE is used as the file name.")
-     (feature, file_name)
+If FILENAME is omitted, the printname of FEATURE is used as the file name,\n\
+but in this case `load' insists on adding the suffix `.el' or `.elc'.")
+  (feature, file_name)
      Lisp_Object feature, file_name;
 {
   register Lisp_Object tem;
@@ -1987,6 +2629,91 @@ If FILENAME is omitted, the printname of FEATURE is used as the file name.")
   return feature;
 }
 
+/* Primitives for work of the "widget" library.
+   In an ideal world, this section would not have been necessary.
+   However, lisp function calls being as slow as they are, it turns
+   out that some functions in the widget library (wid-edit.el) are the
+   bottleneck of Widget operation.  Here is their translation to C,
+   for the sole reason of efficiency.  */
+
+DEFUN ("widget-plist-member", Fwidget_plist_member, Swidget_plist_member, 2, 2, 0,
+  "Return non-nil if PLIST has the property PROP.\n\
+PLIST is a property list, which is a list of the form\n\
+\(PROP1 VALUE1 PROP2 VALUE2 ...\).  PROP is a symbol.\n\
+Unlike `plist-get', this allows you to distinguish between a missing\n\
+property and a property with the value nil.\n\
+The value is actually the tail of PLIST whose car is PROP.")
+  (plist, prop)
+     Lisp_Object plist, prop;
+{
+  while (CONSP (plist) && !EQ (XCAR (plist), prop))
+    {
+      QUIT;
+      plist = XCDR (plist);
+      plist = CDR (plist);
+    }
+  return plist;
+}
+
+DEFUN ("widget-put", Fwidget_put, Swidget_put, 3, 3, 0,
+  "In WIDGET, set PROPERTY to VALUE.\n\
+The value can later be retrieved with `widget-get'.")
+  (widget, property, value)
+     Lisp_Object widget, property, value;
+{
+  CHECK_CONS (widget, 1);
+  XCDR (widget) = Fplist_put (XCDR (widget), property, value);
+}
+
+DEFUN ("widget-get", Fwidget_get, Swidget_get, 2, 2, 0,
+  "In WIDGET, get the value of PROPERTY.\n\
+The value could either be specified when the widget was created, or\n\
+later with `widget-put'.")
+  (widget, property)
+     Lisp_Object widget, property;
+{
+  Lisp_Object tmp;
+
+  while (1)
+    {
+      if (NILP (widget))
+	return Qnil;
+      CHECK_CONS (widget, 1);
+      tmp = Fwidget_plist_member (XCDR (widget), property);
+      if (CONSP (tmp))
+	{
+	  tmp = XCDR (tmp);
+	  return CAR (tmp);
+	}
+      tmp = XCAR (widget);
+      if (NILP (tmp))
+	return Qnil;
+      widget = Fget (tmp, Qwidget_type);
+    }
+}
+
+DEFUN ("widget-apply", Fwidget_apply, Swidget_apply, 2, MANY, 0,
+  "Apply the value of WIDGET's PROPERTY to the widget itself.\n\
+ARGS are passed as extra arguments to the function.")
+  (nargs, args)
+     int nargs;
+     Lisp_Object *args;
+{
+  /* This function can GC. */
+  Lisp_Object newargs[3];
+  struct gcpro gcpro1, gcpro2;
+  Lisp_Object result;
+
+  newargs[0] = Fwidget_get (args[0], args[1]);
+  newargs[1] = args[0];
+  newargs[2] = Flist (nargs - 2, args + 2);
+  GCPRO2 (newargs[0], newargs[2]);
+  result = Fapply (3, newargs);
+  UNGCPRO;
+  return result;
+}
+
+void
 syms_of_fns ()
 {
   Qstring_lessp = intern ("string-lessp");
@@ -1999,6 +2726,11 @@ syms_of_fns ()
   staticpro (&Qyes_or_no_p_history);
   Qcursor_in_echo_area = intern ("cursor-in-echo-area");
   staticpro (&Qcursor_in_echo_area);
+  Qwidget_type = intern ("widget-type");
+  staticpro (&Qwidget_type);
+
+  staticpro (&string_char_byte_cache_string);
+  string_char_byte_cache_string = Qnil;
 
   Fset (Qyes_or_no_p_history, Qnil);
 
@@ -2017,12 +2749,18 @@ invoked by mouse clicks and mouse menu items.");
   defsubr (&Srandom);
   defsubr (&Slength);
   defsubr (&Ssafe_length);
+  defsubr (&Sstring_bytes);
   defsubr (&Sstring_equal);
+  defsubr (&Scompare_strings);
   defsubr (&Sstring_lessp);
   defsubr (&Sappend);
   defsubr (&Sconcat);
   defsubr (&Svconcat);
   defsubr (&Scopy_sequence);
+  defsubr (&Sstring_make_multibyte);
+  defsubr (&Sstring_make_unibyte);
+  defsubr (&Sstring_as_multibyte);
+  defsubr (&Sstring_as_unibyte);
   defsubr (&Scopy_alist);
   defsubr (&Ssubstring);
   defsubr (&Snthcdr);
@@ -2063,4 +2801,8 @@ invoked by mouse clicks and mouse menu items.");
   defsubr (&Sfeaturep);
   defsubr (&Srequire);
   defsubr (&Sprovide);
+  defsubr (&Swidget_plist_member);
+  defsubr (&Swidget_put);
+  defsubr (&Swidget_get);
+  defsubr (&Swidget_apply);
 }

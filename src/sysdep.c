@@ -147,7 +147,7 @@ extern int errno;
 #undef TIOCSWINSZ
 #endif
 
-#ifdef USG
+#if defined(USG) || defined(DGUX)
 #include <sys/utsname.h>
 #include <string.h>
 #ifndef MEMORY_IN_STRING_H
@@ -162,7 +162,7 @@ extern int errno;
 #include <sys/ptem.h>
 #endif
 #endif /* TIOCGWINSZ or ISC4_0 */
-#endif /* USG */
+#endif /* USG or DGUX */
 
 extern int quit_char;
 
@@ -243,6 +243,14 @@ extern short ospeed;
    Under Unix, this is normally zero except when using X;
    under VMS, we place the input channel number here.  */
 int input_fd;
+
+void croak P_ ((char *));
+
+#ifdef AIXHFT
+void hft_init ();
+void hft_reset ();
+#endif
+
 
 /* Specify a different file descriptor for further input operations.  */
 
@@ -255,6 +263,7 @@ change_input_fd (fd)
 
 /* Discard pending input on descriptor input_fd.  */
 
+void
 discard_tty_input ()
 {
 #ifndef WINDOWSNT
@@ -297,6 +306,7 @@ discard_tty_input ()
 /* Arrange for character C to be read as the next input from
    the terminal.  */
 
+void
 stuff_char (c)
      char c;
 {
@@ -313,6 +323,7 @@ stuff_char (c)
 
 #endif /* SIGTSTP */
 
+void
 init_baud_rate ()
 {
   if (noninteractive)
@@ -375,6 +386,7 @@ init_baud_rate ()
 }
 
 /*ARGSUSED*/
+void
 set_exclusive_use (fd)
      int fd;
 {
@@ -408,6 +420,7 @@ wait_for_termination_signal ()
 /* Wait for subprocess with process id `pid' to terminate and
    make sure it will get eliminated (not remain forever as a zombie) */
 
+void
 wait_for_termination (pid)
      int pid;
 {
@@ -505,6 +518,7 @@ wait_for_termination (pid)
  *      (may flush input as well; it does not matter the way we use it)
  */
  
+void
 flush_pending_output (channel)
      int channel;
 {
@@ -532,6 +546,7 @@ flush_pending_output (channel)
     It should not echo or do line-editing, since that is done
     in Emacs.  No padding needed for insertion into an Emacs buffer.  */
 
+void
 child_setup_tty (out)
      int out;
 {
@@ -637,11 +652,15 @@ child_setup_tty (out)
 struct save_signal
 {
   int code;
-  SIGTYPE (*handler) ();
+  SIGTYPE (*handler) P_ ((int));
 };
+
+static void save_signal_handlers P_ ((struct save_signal *));
+static void restore_signal_handlers P_ ((struct save_signal *));
 
 /* Suspend the Emacs process; give terminal to its superior.  */
 
+void
 sys_suspend ()
 {
 #ifdef VMS
@@ -711,6 +730,7 @@ sys_suspend ()
 
 /* Fork a subshell.  */
 
+void
 sys_subshell ()
 {
 #ifndef VMS
@@ -780,7 +800,7 @@ sys_subshell ()
 
       /* Use our buffer's default directory for the subshell.  */
       if (str)
-	chdir (str);
+	chdir ((char *) str);
 
 #ifdef subprocesses
       close_process_descs ();	/* Close Emacs's pipes/ptys */
@@ -831,17 +851,19 @@ sys_subshell ()
 #endif /* !VMS */
 }
 
+static void
 save_signal_handlers (saved_handlers)
      struct save_signal *saved_handlers;
 {
   while (saved_handlers->code)
     {
       saved_handlers->handler
-	= (SIGTYPE (*) ()) signal (saved_handlers->code, SIG_IGN);
+	= (SIGTYPE (*) P_ ((int))) signal (saved_handlers->code, SIG_IGN);
       saved_handlers++;
     }
 }
 
+static void
 restore_signal_handlers (saved_handlers)
      struct save_signal *saved_handlers;
 {
@@ -856,6 +878,7 @@ restore_signal_handlers (saved_handlers)
 
 int old_fcntl_flags;
 
+void
 init_sigio (fd)
      int fd;
 {
@@ -866,6 +889,7 @@ init_sigio (fd)
   interrupts_deferred = 0;
 }
 
+void
 reset_sigio ()
 {
   unrequest_sigio ();
@@ -873,6 +897,7 @@ reset_sigio ()
 
 #ifdef FASYNC		/* F_SETFL does not imply existence of FASYNC */
 
+void
 request_sigio ()
 {
   if (read_socket_hook)
@@ -886,6 +911,7 @@ request_sigio ()
   interrupts_deferred = 0;
 }
 
+void
 unrequest_sigio ()
 {
   if (read_socket_hook)
@@ -901,6 +927,7 @@ unrequest_sigio ()
 #else /* no FASYNC */
 #ifdef STRIDE		/* Stride doesn't have FASYNC - use FIOASYNC */
 
+void
 request_sigio ()
 {
   int on = 1;
@@ -912,6 +939,7 @@ request_sigio ()
   interrupts_deferred = 0;
 }
 
+void
 unrequest_sigio ()
 {
   int off = 0;
@@ -929,6 +957,7 @@ unrequest_sigio ()
 
 #include <termios.h>
 
+void
 request_sigio ()
 {
   int on = 1;
@@ -944,6 +973,7 @@ request_sigio ()
   sigprocmask(SIG_UNBLOCK, &st, (sigset_t *)0);
 }
 
+void
 unrequest_sigio ()
 {
   int off = 0;
@@ -957,6 +987,7 @@ unrequest_sigio ()
 
 #else /* ! _CX_UX */
 
+void
 request_sigio ()
 {
   if (read_socket_hook)
@@ -965,6 +996,7 @@ request_sigio ()
   croak ("request_sigio");
 }
  
+void
 unrequest_sigio ()
 {
   if (read_socket_hook)
@@ -1006,6 +1038,7 @@ int inherited_pgroup;
    When we are in the foreground, but not started in our own process
    group, redirect the TTY to point to our own process group.  We need
    to be in our own process group to receive SIGIO properly.  */
+void
 narrow_foreground_group ()
 {
   int me = getpid ();
@@ -1017,6 +1050,7 @@ narrow_foreground_group ()
 }
 
 /* Set the tty to our original foreground group.  */
+void
 widen_foreground_group ()
 {
   if (inherited_pgroup != getpid ())
@@ -1039,6 +1073,7 @@ emacs_get_tty (fd, settings)
   /* Retrieve the primary parameters - baud rate, character size, etcetera.  */
 #ifdef HAVE_TCATTR
   /* We have those nifty POSIX tcmumbleattr functions.  */
+  bzero (&settings->main, sizeof (settings->main));
   if (tcgetattr (fd, &settings->main) < 0)
     return -1;
 
@@ -1117,6 +1152,7 @@ emacs_set_tty (fd, settings, flushp)
       {
 	struct termios new;
 
+	bzero (&new, sizeof (new));
 	/* Get the current settings, and see if they're what we asked for.  */
 	tcgetattr (fd, &new);
 	/* We cannot use memcmp on the whole structure here because under
@@ -1214,6 +1250,7 @@ static struct ltchars new_ltchars = {-1,-1,-1,-1,-1,-1};
 static struct tchars new_tchars = {-1,-1,-1,-1,-1,-1};
 #endif 
 
+void
 init_sys_modes ()
 {
   struct emacs_tty tty;
@@ -1419,7 +1456,7 @@ init_sys_modes ()
       tty.main.tt2_char |= TT2$M_PASTHRU | TT2$M_XON;
 #else /* not VMS (BSD, that is) */
 #ifndef DOS_NT
-      Vtty_erase_char = tty.main.sg_erase;
+      XSETINT (Vtty_erase_char, tty.main.sg_erase);
       tty.main.sg_flags &= ~(ECHO | CRMOD | XTABS);
       if (meta_key)
 	tty.main.sg_flags |= ANYP;
@@ -1537,9 +1574,9 @@ init_sys_modes ()
   /* This symbol is defined on recent USG systems.
      Someone says without this call USG won't really buffer the file
      even with a call to setbuf. */
-  setvbuf (stdout, _sobuf, _IOFBF, sizeof _sobuf);
+  setvbuf (stdout, (char *) _sobuf, _IOFBF, sizeof _sobuf);
 #else
-  setbuf (stdout, _sobuf);
+  setbuf (stdout, (char *) _sobuf);
 #endif
 #ifdef HAVE_WINDOW_SYSTEM
   /* Emacs' window system on MSDOG uses the `internal terminal' and therefore
@@ -1572,6 +1609,7 @@ init_sys_modes ()
 /* Return nonzero if safe to use tabs in output.
    At the time this is called, init_sys_modes has not been done yet.  */
    
+int
 tabs_safe_p ()
 {
   struct emacs_tty tty;
@@ -1584,6 +1622,7 @@ tabs_safe_p ()
    Store number of lines into *HEIGHTP and width into *WIDTHP.
    We store 0 if there's no valid information.  */
 
+void
 get_frame_size (widthp, heightp)
      int *widthp, *heightp;
 {
@@ -1679,6 +1718,7 @@ set_window_size (fd, height, width)
 
 /* Prepare the terminal for exiting Emacs; move the cursor to the
    bottom of the frame, turn off interrupt-driven I/O, etc.  */
+void
 reset_sys_modes ()
 {
   if (noninteractive)
@@ -1771,6 +1811,7 @@ reset_sys_modes ()
 
 /* Set up the proper status flags for use of a pty.  */
 
+void
 setup_pty (fd)
      int fd;
 {
@@ -1822,6 +1863,7 @@ setup_pty (fd)
    This is called each time Emacs is resumed, also, but does nothing
    because input_chain is no longer zero.  */
 
+void
 init_vms_input ()
 {
   int status;
@@ -1836,6 +1878,7 @@ init_vms_input ()
 
 /* Deassigning the input channel is done before exiting.  */
 
+void
 stop_vms_input ()
 {
   return SYS$DASSGN (input_fd);
@@ -1846,6 +1889,7 @@ short input_buffer;
 /* Request reading one character into the keyboard buffer.
    This is done as soon as the buffer becomes empty.  */
 
+void
 queue_kbd_input ()
 {
   int status;
@@ -1863,6 +1907,7 @@ int input_count;
 /* Ast routine that is called when keyboard input comes in
    in accord with the SYS$QIO above.  */
 
+void
 kbd_input_ast ()
 {
   register int c = -1;
@@ -1910,6 +1955,7 @@ kbd_input_ast ()
 
 /* Wait until there is something in kbd_buffer.  */
 
+void
 wait_for_kbd_input ()
 {
   extern int have_process_input, process_exited;
@@ -1956,6 +2002,7 @@ wait_for_kbd_input ()
    and therefore there is no I/O request queued when we return.
    SYS$SETAST is used to avoid a timing error.  */
 
+void
 end_kbd_input ()
 {
 #ifdef ASTDEBUG
@@ -1982,6 +2029,7 @@ end_kbd_input ()
 
 /* Wait for either input available or time interval expiry.  */
 
+void
 input_wait_timeout (timeval)
      int timeval;		/* Time to wait, in seconds */
 {
@@ -2028,6 +2076,7 @@ sys_sleep (timeval)
     SYS$WAITFR (timer_ef);	  /* Wait for timer expiry only */
 }
 
+void
 init_sigio (fd)
      int fd;
 {
@@ -2039,11 +2088,13 @@ reset_sigio ()
   unrequest_sigio ();
 }
 
+void
 request_sigio ()
 {
   croak ("request sigio");
 }
 
+void
 unrequest_sigio ()
 {
   croak ("unrequest sigio");
@@ -2241,58 +2292,61 @@ init_system_name ()
 #ifndef CANNOT_DUMP
   if (initialized)
 #endif /* not CANNOT_DUMP */
-    {
-      struct hostent *hp;
-      int count;
-      for (count = 0;; count++)
-	{
+    if (! index (hostname, '.'))
+      {
+	struct hostent *hp;
+	int count;
+	for (count = 0;; count++)
+	  {
 #ifdef TRY_AGAIN
-	  h_errno = 0;
+	    h_errno = 0;
 #endif
-	  hp = gethostbyname (hostname);
+	    hp = gethostbyname (hostname);
 #ifdef TRY_AGAIN
-	  if (! (hp == 0 && h_errno == TRY_AGAIN))
+	    if (! (hp == 0 && h_errno == TRY_AGAIN))
 #endif
-	    break;
-	  if (count >= 5)
-	    break;
-	  Fsleep_for (make_number (1), Qnil);
-	}
-      if (hp)
-	{
-	  char *fqdn = (char *) hp->h_name;
-	  char *p;
+	      break;
+	    if (count >= 5)
+	      break;
+	    Fsleep_for (make_number (1), Qnil);
+	  }
+	if (hp)
+	  {
+	    char *fqdn = (char *) hp->h_name;
+	    char *p;
 
-	  if (!index (fqdn, '.'))
-	    {
-	      /* We still don't have a fully qualified domain name.
-		 Try to find one in the list of alternate names */
-	      char **alias = hp->h_aliases;
-	      while (*alias && !index (*alias, '.'))
-		alias++;
-	      if (*alias)
-		fqdn = *alias;
-	    }
-	  hostname = fqdn;
+	    if (!index (fqdn, '.'))
+	      {
+		/* We still don't have a fully qualified domain name.
+		   Try to find one in the list of alternate names */
+		char **alias = hp->h_aliases;
+		while (*alias && !index (*alias, '.'))
+		  alias++;
+		if (*alias)
+		  fqdn = *alias;
+	      }
+	    hostname = fqdn;
 #if 0
-	  /* Convert the host name to lower case.  */
-	  /* Using ctype.h here would introduce a possible locale
-	     dependence that is probably wrong for hostnames.  */
-	  p = hostname;
-	  while (*p)
-	    {
-	      if (*p >= 'A' && *p <= 'Z')
-		*p += 'a' - 'A';
-	      p++;
-	    }
+	    /* Convert the host name to lower case.  */
+	    /* Using ctype.h here would introduce a possible locale
+	       dependence that is probably wrong for hostnames.  */
+	    p = hostname;
+	    while (*p)
+	      {
+		if (*p >= 'A' && *p <= 'Z')
+		  *p += 'a' - 'A';
+		p++;
+	      }
 #endif
-	}
-    }
+	  }
+      }
 #endif /* HAVE_SOCKETS */
-  /* We used to try using getdomainname as an alternative
-     to sysinfo, here, but NIIBE Yutaka <gniibe@etl.go.jp> says that
+  /* We used to try using getdomainname here,
+     but NIIBE Yutaka <gniibe@etl.go.jp> says that
      getdomainname gets the NIS/YP domain which often is not the same
      as in Internet domain name.  */
+#if 0 /* Turned off because sysinfo is not really likely to return the
+	 correct Internet domain.  */
 #if (HAVE_SYSINFO && defined (SI_SRPC_DOMAIN))
   if (! index (hostname, '.'))
     {
@@ -2326,6 +2380,7 @@ init_system_name ()
 	}
     }
 #endif /* HAVE_SYSINFO && defined (SI_SRPC_DOMAIN) */
+#endif /* 0 */
   Vsystem_name = build_string (hostname);
 #endif /* HAVE_GETHOSTNAME */
 #endif /* VMS */
@@ -2531,6 +2586,7 @@ sys_select (nfds, rfds, wfds, efds, timeout)
 #define BUFFER_SIZE_FACTOR 1
 #endif
 
+void
 read_input_waiting ()
 {
   struct input_event e;
@@ -2614,6 +2670,7 @@ sys_open (path, oflag, mode)
     return open (path, oflag);
 }
 
+void
 init_sigio (fd)
      int fd;
 {
@@ -2623,6 +2680,7 @@ init_sigio (fd)
   ioctl (fd, TIOCLSET, &lmode);
 }
 
+void
 reset_sigio ()
 {
   if (noninteractive)
@@ -2631,6 +2689,7 @@ reset_sigio ()
   ioctl (0, TIOCLSET, &lmode);
 }
 
+void
 request_sigio ()
 {
   sigrelse (SIGTINT);
@@ -2638,6 +2697,7 @@ request_sigio ()
   interrupts_deferred = 0;
 }
 
+void
 unrequest_sigio ()
 {
   sighold (SIGTINT);
@@ -2650,6 +2710,7 @@ unrequest_sigio ()
 
 int sigheld; /* Mask of held signals */
 
+void
 sigholdx (signum)
      int signum;
 {
@@ -2657,12 +2718,14 @@ sigholdx (signum)
   sighold (signum);
 }
 
+void
 sigisheld (signum)
      int signum;
 {
   sigheld |= sigbit (signum);
 }
 
+void
 sigunhold (signum)
      int signum;
 {
@@ -2670,6 +2733,7 @@ sigunhold (signum)
   sigrelse (signum);
 }
 
+void
 sigfree ()    /* Free all held signals */
 {
   int i;
@@ -2679,6 +2743,7 @@ sigfree ()    /* Free all held signals */
   sigheld = 0;
 }
 
+int
 sigbit (i)
 {
   return 1 << (i - 1);
@@ -2691,9 +2756,9 @@ sigbit (i)
 
 #ifdef POSIX_SIGNALS
 
-sigset_t old_mask, empty_mask, full_mask, temp_mask;
-static struct sigaction new_action, old_action;
+sigset_t empty_mask, full_mask;
 
+void
 init_signals ()
 {
   sigemptyset (&empty_mask);
@@ -2703,6 +2768,7 @@ init_signals ()
 signal_handler_t
 sys_signal (int signal_number, signal_handler_t action)
 {
+  struct sigaction new_action, old_action;
   sigemptyset (&new_action.sa_mask);
   new_action.sa_handler = action;
 #ifdef SA_RESTART
@@ -2729,14 +2795,6 @@ sys_sigmask (int sig)
   return mask;
 }
 #endif
-
-int
-sys_sigpause (sigset_t new_mask)
-{
-  /* pause emulating berk sigpause... */
-  sigsuspend (&new_mask);
-  return (EINTR);
-}
 
 /* I'd like to have these guys return pointers to the mask storage in here,
    but there'd be trouble if the code was saving multiple masks.  I'll be
@@ -2995,6 +3053,7 @@ sys_open (path, oflag, mode)
 
 #ifdef INTERRUPTIBLE_CLOSE
 
+int
 sys_close (fd)
      int fd;
 {
@@ -3298,6 +3357,7 @@ dup2 (oldd, newd)
 #ifdef HAVE_TIMEVAL
  
 /* ARGSUSED */
+int
 gettimeofday (tp, tzp)
      struct timeval *tp;
      struct timezone *tzp;
@@ -3308,6 +3368,7 @@ gettimeofday (tp, tzp)
   tp->tv_usec = 0;
   if (tzp != 0)
     tzp->tz_minuteswest = -1;
+  return 0;
 }
  
 #endif
@@ -3319,6 +3380,7 @@ gettimeofday (tp, tzp)
  *	This function will go away as soon as all the stubs fixed. (fnf)
  */
 
+void
 croak (badfunc)
      char *badfunc;
 {
@@ -3843,6 +3905,7 @@ static unsigned int uic;
 
 /* Called from init_sys_modes, so it happens not very often
    but at least each time Emacs is loaded.  */
+void
 sys_access_reinit ()
 {
   uic = 0;
@@ -4095,6 +4158,7 @@ getwd (pathname)
  return pathname;
 }
 
+int
 getppid ()
 {
   long item_code = JPI$_OWNER;
@@ -4290,6 +4354,7 @@ creat_copy_attrs (old, new)
 #endif
 #endif
 
+int
 sys_creat (va_alist)
      va_dcl
 {
@@ -4406,6 +4471,7 @@ sys_creat (va_alist)
 #endif /* creat */
 
 /* fwrite to stdout is S L O W.  Speed it up by using fputc...*/
+int
 sys_fwrite (ptr, size, num, fp)
      register char * ptr;
      FILE * fp;
@@ -4414,6 +4480,7 @@ sys_fwrite (ptr, size, num, fp)
 
   while (tot--)
     fputc (*ptr++, fp);
+  return num;
 }
 
 /*
@@ -4701,6 +4768,7 @@ getpwuid (uid)
 /* return total address space available to the current process.  This is
    the sum of the current p0 size, p1 size and free page table entries
    available. */
+int
 vlimit ()
 {
   int item_code;
@@ -4736,6 +4804,7 @@ vlimit ()
   return free_pages + frep0va + (0x7fffffff - frep1va);
 }
 
+int
 define_logical_name (varname, string)
      char *varname;
      char *string;
@@ -4750,6 +4819,7 @@ define_logical_name (varname, string)
   return LIB$SET_LOGICAL (&envdsc, &strdsc, &lnmdsc, 0, 0);
 }
 
+int
 delete_logical_name (varname)
      char *varname;
 {
@@ -4761,15 +4831,23 @@ delete_logical_name (varname)
   return LIB$DELETE_LOGICAL (&envdsc, &lnmdsc);
 }
 
+int
 ulimit ()
-{}
+{
+  return 0;
+}
 
+int
 setpgrp ()
-{}
+{
+  return 0;
+}
 
+int
 execvp ()
 {
   error ("execvp system call not implemented");
+  return -1;
 }
 
 int
@@ -4892,6 +4970,7 @@ rename_sans_version (from,to)
   return 0;
 }
 
+int
 link (file, new)
      char * file, * new;
 {
@@ -4959,6 +5038,7 @@ link (file, new)
   return 0;
 }
 
+void
 croak (badfunc)
      char *badfunc;
 {
@@ -4974,6 +5054,7 @@ random ()
   return rand () - (1 << 30);
 }
 
+void
 srandom (seed)
 {
   srand (seed);
@@ -4983,6 +5064,7 @@ srandom (seed)
 #ifdef AIXHFT
 
 /* Called from init_sys_modes.  */
+void
 hft_init ()
 {
   int junk;
@@ -5036,6 +5118,7 @@ hft_init ()
 
 /* Reset the rubout key to backspace. */
 
+void
 hft_reset ()
 {
   struct hfbuf buf;
@@ -5155,7 +5238,7 @@ bcopy (b1, b2, length)
     *b2++ = *b1++;
 #endif /* not VMS */
 }
-#endif /* (defined (BSTRING) && !defined (bcopy)) || defined (NEED_BCOPY) */
+#endif /* (!defined (BSTRING) && !defined (bcopy)) || defined (NEED_BCOPY) */
 
 #ifndef BSTRING
 #ifndef bcmp

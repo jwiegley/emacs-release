@@ -3,7 +3,7 @@
 ;; Copyright (C) 1990, 1991, 1992, 1993 Free Software Foundation, Inc.
 
 ;; Author: Dave Gillespie <daveg@synaptics.com>
-;; Keywords: abbrev
+;; Keywords: abbrev convenience
 ;; Version: 2.03
 ;; Special thanks to Hallvard Furuseth for his many ideas and contributions.
 
@@ -47,7 +47,7 @@
 ;; and the partial completer will use the Meta versions of the keys.
 
 
-;; Usage:  M-x PC-mode.  Now, during completable minibuffer entry,
+;; Usage:  M-x partial-completion-mode.  During completable minibuffer entry,
 ;;
 ;;     TAB    means to do a partial completion;
 ;;     SPC    means to do a partial complete-word;
@@ -62,7 +62,7 @@
 ;;
 ;; in your .emacs file.  To load partial completion automatically, put
 ;;
-;;       (PC-mode t)
+;;       (partial-completion-mode t)
 ;;
 ;; in your .emacs file, too.  Things will be faster if you byte-compile
 ;; this file when you install it.
@@ -101,7 +101,8 @@
 (defgroup partial-completion nil
   "Partial Completion of items."
   :prefix "pc-"
-  :group 'minibuffer)
+  :group 'minibuffer
+  :group 'convenience)
 
 (defcustom partial-completion-mode nil
   "Toggle Partial Completion mode.
@@ -127,7 +128,7 @@ If non-nil and non-t, the first character is taken literally only for file name
 completion."
   :type '(choice (const :tag "delimiter" nil)
 		 (const :tag "literal" t)
-		 (sexp :tag "find-file" :format "%t\n" find-file))
+		 (other :tag "find-file" find-file))
   :group 'partial-completion)
 
 (defcustom PC-meta-flag t
@@ -561,10 +562,12 @@ of `minibuffer-completion-table' and the minibuffer contents.")
 				  "\\|")
 				 "\\)\\'")))
 
-	       ;; Check if there are any without an ignored extension
+	       ;; Check if there are any without an ignored extension.
+	       ;; Also ignore `.' and `..'.
 	       (setq p nil)
 	       (while p2
 		 (or (string-match PC-ignored-regexp (car p2))
+		     (string-match "\\(\\`\\|/\\)[.][.]?/?\\'" (car p2))
 		     (setq p (cons (car p2) p)))
 		 (setq p2 (cdr p2)))
 
@@ -781,16 +784,17 @@ or properties are considered."
       (let* ((pat buffer-file-name)
 	     (files (PC-expand-many-files pat))
 	     (first (car files))
-	     (next files))
+	     (next (reverse (cdr files))))
 	(kill-buffer (current-buffer))
 	(or files
 	    (error "No matching files"))
 	;; Bring the other files (not the first) into buffers.
 	(save-window-excursion
-	  (while (setq next (cdr next))
+	  (while next
 	    (let ((buf (find-file-noselect (car next))))
 	      ;; Put this buffer at the front of the buffer list.
-	      (switch-to-buffer buf))))
+	      (switch-to-buffer buf))
+	    (setq next (cdr next))))
 	;; This modifies the `buf' variable inside find-file-noselect.
 	(setq buf (get-file-buffer first))
 	(if buf
@@ -835,9 +839,23 @@ or properties are considered."
       (delete-backward-char 1)
       (insert "\")")
       (goto-char (point-min))
-      (let ((files (read (current-buffer))))
+      (let ((files (read (current-buffer))) (p nil))
 	(kill-buffer (current-buffer))
-	files))))
+	(or (equal completion-ignored-extensions PC-ignored-extensions)
+	    (setq PC-ignored-regexp
+		  (concat "\\("
+			  (mapconcat
+			   'regexp-quote
+			   (setq PC-ignored-extensions
+				 completion-ignored-extensions)
+			   "\\|")
+			  "\\)\\'")))
+	(setq p nil)
+	(while files
+	  (or (string-match PC-ignored-regexp (car files))
+	      (setq p (cons (car files) p)))
+	  (setq files (cdr files)))
+	p))))
 
 ;;; Facilities for loading C header files.  This is independent from the
 ;;; main completion code.  See also the variable `PC-include-file-path'

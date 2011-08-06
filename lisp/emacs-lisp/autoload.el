@@ -51,31 +51,43 @@ read and an autoload made for it.  If there is further text on the line,
 that text will be copied verbatim to `generated-autoload-file'.")
 
 (defconst generate-autoload-section-header "\f\n;;;### "
-  "String inserted before the form identifying
-the section of autoloads for a file.")
+  "String that marks the form at the start of a new file's autoload section.")
 
 (defconst generate-autoload-section-trailer "\n;;;***\n"
   "String which indicates the end of the section of autoloads for a file.")
 
+(defconst generate-autoload-section-continuation ";;;;;; "
+  "String to add on each continuation of the section header form.")
+
 (defun make-autoload (form file)
   "Turn FORM into an autoload or defvar for source file FILE.
-Returns nil if FORM is not a defun, define-skeleton, defmacro or defcustom."
+Returns nil if FORM is not a `defun', `define-skeleton',
+`define-derived-mode', `define-generic-mode', `defmacro', `defcustom'
+or `easy-mmode-define-minor-mode'."
   (let ((car (car-safe form)))
-    (if (memq car '(defun define-skeleton defmacro))
+    (if (memq car '(defun define-skeleton defmacro define-derived-mode 
+		     define-generic-mode easy-mmode-define-minor-mode))
 	(let ((macrop (eq car 'defmacro))
 	      name doc)
 	  (setq form (cdr form)
 		name (car form)
 		;; Ignore the arguments.
-		form (cdr (if (eq car 'define-skeleton)
-			      form
-			    (cdr form)))
+		form (cdr (cond 
+			   ((memq car '(define-skeleton 
+					 easy-mmode-define-minor-mode)) form)
+			   ((eq car 'define-derived-mode) (cdr (cdr form)))
+			   ((eq car 'define-generic-mode) 
+			    (cdr (cdr (cdr (cdr (cdr form))))))
+			   (t (cdr form))))
 		doc (car form))
 	  (if (stringp doc)
 	      (setq form (cdr form))
 	    (setq doc nil))
-	  (list 'autoload (list 'quote name) file doc
-		(or (eq car 'define-skeleton)
+	  ;; `define-generic-mode' quotes the name, so take care of that
+	  (list 'autoload (if (listp name) name (list 'quote name)) file doc
+		(or (eq car 'define-skeleton) (eq car 'define-derived-mode)
+		    (eq car 'define-generic-mode) 
+		    (eq car 'easy-mmode-define-minor-mode)
 		    (eq (car-safe (car form)) 'interactive))
 		(if macrop (list 'quote 'macro) nil)))
       ;; Convert defcustom to a simpler (and less space-consuming) defvar,
@@ -94,8 +106,6 @@ Returns nil if FORM is not a defun, define-skeleton, defmacro or defcustom."
 		 (custom-add-load ',varname
 				  ,(plist-get rest :require)))))
 	nil))))
-
-(put 'define-skeleton 'doc-string-elt 3)
 
 ;;; Forms which have doc-strings which should be printed specially.
 ;;; A doc-string-elt property of ELT says that (nth ELT FORM) is
@@ -121,6 +131,11 @@ Returns nil if FORM is not a defun, define-skeleton, defmacro or defcustom."
 (put 'defcustom 'doc-string-elt 3)
 (put 'defconst 'doc-string-elt 3)
 (put 'defmacro 'doc-string-elt 3)
+(put 'define-skeleton 'doc-string-elt 3)
+(put 'define-derived-mode 'doc-string-elt 4)
+(put 'easy-mmode-define-minor-mode 'doc-string-elt 3)
+(put 'define-generic-mode 'doc-string-elt 3)
+
 
 (defun autoload-trim-file-name (file)
   ;; Returns a relative pathname of FILE
@@ -131,6 +146,27 @@ Returns nil if FORM is not a defun, define-skeleton, defmacro or defcustom."
   (setq file (expand-file-name file))
   (file-relative-name file
 		      (file-name-directory generated-autoload-file)))
+
+(defun autoload-read-section-header ()
+  "Read a section header form.
+Since continuation lines have been marked as comments,
+we must copy the text of the form and remove those comment
+markers before we call `read'."
+  (save-match-data
+    (let ((beginning (point))
+	  string)
+      (forward-line 1)
+      (while (looking-at generate-autoload-section-continuation)
+	(forward-line 1))
+      (setq string (buffer-substring beginning (point)))
+      (with-current-buffer (get-buffer-create " *autoload*")
+	(erase-buffer)
+	(insert string)
+	(goto-char (point-min))
+	(while (search-forward generate-autoload-section-continuation nil t)
+	  (replace-match " "))
+	(goto-char (point-min))
+	(read (current-buffer))))))
 
 (defun generate-file-autoloads (file)
   "Insert at point a loaddefs autoload section for FILE.
@@ -197,7 +233,10 @@ are used."
 			;; Read the next form and make an autoload.
 			(let* ((form (prog1 (read (current-buffer))
 				       (or (bolp) (forward-line 1))))
-			       (autoload (make-autoload form load-name))
+			       (autoload-1 (make-autoload form load-name))
+			       (autoload (if (eq (car autoload-1) 'progn)
+					     (cadr autoload-1)
+					   autoload-1))
 			       (doc-string-elt (get (car-safe form)
 						    'doc-string-elt)))
 			  (if autoload
@@ -214,7 +253,8 @@ are used."
 				     (elt (cdr p)))
 				(setcdr p nil)
 				(princ "\n(" outbuf)
-				(let ((print-escape-newlines t))
+				(let ((print-escape-newlines t)
+				      (print-escape-nonascii t))
 				  (mapcar (function (lambda (elt)
 						      (prin1 elt outbuf)
 						      (princ " " outbuf)))
@@ -243,8 +283,16 @@ are used."
 					    1)
 					   outbuf))
 				  (terpri outbuf)))
-			    (let ((print-escape-newlines t))
-			      (print autoload outbuf))))
+			    (let ((print-escape-newlines t)
+				  (print-escape-nonascii t))
+			      (print autoload outbuf)))
+			  (if (eq (car autoload-1) 'progn)
+			      ;; Print the rest of the form
+			      (let ((print-escape-newlines t)
+				    (print-escape-nonascii t))
+				(mapcar (function (lambda (elt)
+						    (print elt outbuf)))
+					(cddr autoload-1)))))
 			  ;; Copy the rest of the line to the output.
 		      (princ (buffer-substring
 			      (progn
@@ -269,12 +317,24 @@ are used."
 	(setq output-end (point-marker))))
     (if done-any
 	(progn
+	  ;; Insert the section-header line
+	  ;; which lists the file name and which functions are in it, etc.
 	  (insert generate-autoload-section-header)
 	  (prin1 (list 'autoloads autoloads-done load-name
 		       (autoload-trim-file-name file)
 		       (nth 5 (file-attributes file)))
 		 outbuf)
 	  (terpri outbuf)
+	  ;; Break that line at spaces, to avoid very long lines.
+	  ;; Make each sub-line into a comment.
+	  (with-current-buffer outbuf
+	    (save-excursion
+	      (forward-line -1)
+	      (while (not (eolp))
+		(move-to-column 64)
+		(skip-chars-forward "^ \n")
+		(or (eolp)
+		    (insert "\n" generate-autoload-section-continuation)))))
 	  (insert ";;; Generated autoloads from "
 		  (autoload-trim-file-name file) "\n")
 	  ;; Warn if we put a line in loaddefs.el
@@ -314,6 +374,10 @@ are used."
 		     (expand-file-name generated-autoload-file
 				       (expand-file-name "lisp"
 							 source-directory)))))
+      (or (> (buffer-size) 0)
+	  (error "Autoloads file %s does not exist" buffer-file-name))
+      (or (file-writable-p buffer-file-name)
+	  (error "Autoloads file %s is not writable" buffer-file-name))
       (save-excursion
 	(save-restriction
 	  (widen)
@@ -321,9 +385,7 @@ are used."
 	  ;; Look for the section for LOAD-NAME.
 	  (while (and (not found)
 		      (search-forward generate-autoload-section-header nil t))
-	    (let ((form (condition-case ()
-			    (read (current-buffer))
-			  (end-of-file nil))))
+	    (let ((form (autoload-read-section-header)))
 	      (cond ((string= (nth 2 form) load-name)
 		     ;; We found the section for this file.
 		     ;; Check if it is up to date.
@@ -390,7 +452,9 @@ Autoload section for %s is up to date."
 			   (or existing-buffer
 			       (kill-buffer (current-buffer))))))))
 	      (generate-file-autoloads file))))
-      (if (interactive-p) (save-buffer)))))
+      (and (interactive-p)
+	   (buffer-modified-p)
+	   (save-buffer)))))
 
 ;;;###autoload
 (defun update-autoloads-from-directories (&rest dirs)
@@ -416,9 +480,7 @@ This uses `update-file-autoloads' (which see) do its work."
       (save-excursion
 	(goto-char (point-min))
 	(while (search-forward generate-autoload-section-header nil t)
-	  (let* ((form (condition-case ()
-			   (read (current-buffer))
-			 (end-of-file nil)))
+	  (let* ((form (autoload-read-section-header))
 		 (file (nth 3 form)))
 	    (cond ((not (stringp file)))
 		  ((not (file-exists-p (expand-file-name file top-dir)))

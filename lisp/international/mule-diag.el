@@ -46,32 +46,39 @@
 (defun list-character-sets (&optional arg)
   "Display a list of all character sets.
 
-The ID column contains a charset identification number for internal use.
-The B column contains a number of bytes occupied in a buffer.
-The W column contains a number of columns occupied in a screen.
+The ID column contains a charset identification number for internal Emacs use.
+The B column contains a number of bytes occupied in a buffer
+  by any character in this character set.
+The W column contains a number of columns occupied on the screen
+  by any character in this character set.
 
-With prefix arg, the output format gets more cryptic
-but contains full information about each character sets."
+With prefix arg, the output format gets more cryptic,
+but still shows the full information."
   (interactive "P")
   (sort-charset-list)
   (with-output-to-temp-buffer "*Help*"
     (save-excursion
       (set-buffer standard-output)
-      (let ((l charset-list)
-	    charset)
-	(if (null arg)
-	    (progn
-	      (insert "ID  Name		    B W Description\n")
-	      (insert "--  ----		    - - -----------\n")
-	      (while l
-		(setq charset (car l) l (cdr l))
-		(insert (format "%03d %s" (charset-id charset) charset))
-		(indent-to 28)
-		(insert (format "%d %d %s\n"
-				(charset-bytes charset)
-				(charset-width charset)
-				(charset-description charset)))))
-	  (insert "\
+      (list-character-sets-1 arg)
+      (help-mode)
+      (setq truncate-lines t))))
+
+(defun list-character-sets-1 (arg)
+  (let ((l charset-list)
+	charset)
+    (if (null arg)
+	(progn
+	  (insert "ID  Name		    B W Description\n")
+	  (insert "--  ----		    - - -----------\n")
+	  (while l
+	    (setq charset (car l) l (cdr l))
+	    (insert (format "%03d %s" (charset-id charset) charset))
+	    (indent-to 28)
+	    (insert (format "%d %d %s\n"
+			    (charset-bytes charset)
+			    (charset-width charset)
+			    (charset-description charset)))))
+      (insert "\
 #########################
 ## LIST OF CHARSETS
 ## Each line corresponds to one charset.
@@ -88,21 +95,19 @@ but contains full information about each character sets."
 ##	ISO-GRAPHIC-PLANE (ISO-2022's graphic plane, 0:GL, 1:GR)
 ##	DESCRIPTION (describing string of the charset)
 ")
-	  (while l
-	    (setq charset (car l) l (cdr l))
-	    (princ (format "%03d:%s:%d:%d:%d:%d:%d:%d:%d:%s\n" 
-			   (charset-id charset)
-			   charset
-			   (charset-dimension charset)
-			   (charset-chars charset)
-			   (charset-bytes charset)
-			   (charset-width charset)
-			   (charset-direction charset)
-			   (charset-iso-final-char charset)
-			   (charset-iso-graphic-plane charset)
-			   (charset-description charset))))))
-      (help-mode)
-      (setq truncate-lines t))))
+      (while l
+	(setq charset (car l) l (cdr l))
+	(princ (format "%03d:%s:%d:%d:%d:%d:%d:%d:%d:%s\n" 
+		       (charset-id charset)
+		       charset
+		       (charset-dimension charset)
+		       (charset-chars charset)
+		       (charset-bytes charset)
+		       (charset-width charset)
+		       (charset-direction charset)
+		       (charset-iso-final-char charset)
+		       (charset-iso-graphic-plane charset)
+		       (charset-description charset)))))))
 
 ;;; CODING-SYSTEM
 
@@ -148,7 +153,7 @@ but contains full information about each character sets."
 
 ;;;###autoload
 (defun describe-coding-system (coding-system)
-  "Display information of CODING-SYSTEM."
+  "Display information about CODING-SYSTEM."
   (interactive "zDescribe coding system (default, current choices): ")
   (if (null coding-system)
       (describe-current-coding-system)
@@ -189,7 +194,7 @@ but contains full information about each character sets."
 		((eq type 5)
 		 (princ " (text with random binary characters)"))
 		(t (princ ": invalid coding-system."))))
-	(princ "\nEOL type:\n  ")
+	(princ "\nEOL type: ")
 	(let ((eol-type (coding-system-eol-type coding-system)))
 	  (cond ((vectorp eol-type)
 		 (princ "Automatic selection from:\n\t")
@@ -199,6 +204,30 @@ but contains full information about each character sets."
 		((eq eol-type 1) (princ "CRLF\n"))
 		((eq eol-type 2) (princ "CR\n"))
 		(t (princ "invalid\n")))))
+      (let ((postread (coding-system-get coding-system 'post-read-conversion)))
+	(when postread
+	  (princ "After decoding a text normally,")
+	  (princ " perform post-conversion by the function: ")
+	  (princ "\n  ")
+	  (princ postread)
+	  (princ "\n")))
+      (let ((prewrite (coding-system-get coding-system 'pre-write-conversion)))
+	(when prewrite
+	  (princ "Before encoding a text normally,")
+	  (princ " perform pre-conversion by the function: ")
+	  (princ "\n  ")
+	  (princ prewrite)
+	  (princ "\n")))
+      (let ((charsets (coding-system-get coding-system 'safe-charsets)))
+	(when charsets
+	  (if (eq charsets t)
+	      (princ "This coding system can encode charsets:\n")	      
+	    (princ "This coding system encode the following charsets:\n")
+	    (princ " ")
+	    (while charsets
+	      (princ " ")
+	      (princ (car charsets))
+	      (setq charsets (cdr charsets))))))
       (save-excursion
 	(set-buffer standard-output)
 	(help-mode)))))
@@ -210,21 +239,21 @@ but contains full information about each character sets."
 The format is \"F[..],K[..],T[..],P>[..],P<[..], default F[..],P<[..],P<[..]\",
 where mnemonics of the following coding systems come in this order
 at the place of `..':
-  buffer-file-coding-system (of the current buffer)
+  `buffer-file-coding-system` (of the current buffer)
   eol-type of buffer-file-coding-system (of the current buffer)
-  (keyboard-coding-system)
+  Value returned by `keyboard-coding-system'
   eol-type of (keyboard-coding-system)
-  (terminal-coding-system)
+  Value returned by `terminal-coding-system.
   eol-type of (terminal-coding-system)
-  process-coding-system for read (of the current buffer, if any)
+  `process-coding-system' for read (of the current buffer, if any)
   eol-type of process-coding-system for read (of the current buffer, if any)
-  process-coding-system for write (of the current buffer, if any)
+  `process-coding-system' for write (of the current buffer, if any)
   eol-type of process-coding-system for write (of the current buffer, if any)
-  default-buffer-file-coding-system
+  `default-buffer-file-coding-system'
   eol-type of default-buffer-file-coding-system
-  default-process-coding-system for read
+  `default-process-coding-system' for read
   eol-type of default-process-coding-system for read
-  default-process-coding-system for write
+  `default-process-coding-system' for write
   eol-type of default-process-coding-system"
   (interactive)
   (let* ((proc (get-buffer-process (current-buffer)))
@@ -249,19 +278,19 @@ at the place of `..':
      (coding-system-eol-type-mnemonic (cdr default-process-coding-system))
      )))
 
-;; Print symbol name and mnemonic letter of CODING-SYSTEM by `princ'.
+;; Print symbol name and mnemonic letter of CODING-SYSTEM with `princ'.
 (defun print-coding-system-briefly (coding-system &optional doc-string)
   (if (not coding-system)
       (princ "nil\n")
     (princ (format "%c -- %s"
 		   (coding-system-mnemonic coding-system)
 		   coding-system))
-    (let ((parent (coding-system-parent coding-system)))
-      (if parent
-	  (princ (format " (alias of %s)" parent))))
-    (let ((aliases (get coding-system 'alias-coding-systems)))
-      (if aliases
-	  (princ (format " %S" (cons 'alias: aliases)))))
+    (let ((aliases (coding-system-get coding-system 'alias-coding-systems)))
+      (if (eq coding-system (car aliases))
+	  (if (cdr aliases)
+	      (princ (format " %S" (cons 'alias: (cdr aliases)))))
+	(if (memq coding-system aliases)
+	    (princ (format " (alias of %s)" (car aliases))))))
     (princ "\n")
     (if (and doc-string
 	     (setq doc-string (coding-system-doc-string coding-system)))
@@ -269,7 +298,7 @@ at the place of `..':
 
 ;;;###autoload
 (defun describe-current-coding-system ()
-  "Display coding systems currently used in a detailed format."
+  "Display coding systems currently used, in detail."
   (interactive)
   (with-output-to-temp-buffer "*Help*"
     (let* ((proc (get-buffer-process (current-buffer)))
@@ -306,15 +335,20 @@ at the place of `..':
 	    coding aliases)
 	(while l
 	  (setq coding (symbol-value (car l)))
-	  (when (not (memq coding coding-list))
+	  ;; Do not list up the same coding system twice.
+	  (when (and coding (not (memq coding coding-list)))
 	    (setq coding-list (cons coding coding-list))
-	    (princ (format "  %d. %s" i coding))
-	    (when (setq aliases (get coding 'alias-coding-systems))
-	      (princ " ")
-	      (princ (cons 'alias: aliases)))
+	    (princ (format "  %d. %s " i coding))
+	    (setq aliases (coding-system-get coding 'alias-coding-systems))
+	    (if (eq coding (car aliases))
+		(if (cdr aliases)
+		    (princ (cons 'alias: (cdr aliases))))
+	      (if (memq coding aliases)
+		  (princ (list 'alias 'of (car aliases)))))
 	    (terpri)
 	    (setq i (1+ i)))
 	  (setq l (cdr l))))
+
       (princ "\n  Other coding systems cannot be distinguished automatically
   from these, and therefore cannot be recognized automatically
   with the present coding system priorities.\n\n")
@@ -327,7 +361,7 @@ at the place of `..':
 	   (function
 	    (lambda (x)
 	      (if (and (not (eq x coding-system))
-		       (get x 'no-initial-designation)
+		       (coding-system-get x 'no-initial-designation)
 		       (let ((flags (coding-system-flags x)))
 			 (not (or (aref flags 10) (aref flags 11)))))
 		  (setq codings (cons x codings)))))
@@ -359,6 +393,8 @@ at the place of `..':
 		      (while alist
 			(indent-to 16)
 			(prin1 (car (car alist)))
+			(if (>= (current-column) 40)
+			    (newline))
 			(indent-to 40)
 			(princ (cdr (car alist)))
 			(princ "\n")
@@ -369,14 +405,15 @@ at the place of `..':
       (help-mode))))
 
 ;; Print detailed information on CODING-SYSTEM.
-(defun print-coding-system (coding-system &optional aliases)
+(defun print-coding-system (coding-system)
   (let ((type (coding-system-type coding-system))
 	(eol-type (coding-system-eol-type coding-system))
 	(flags (coding-system-flags coding-system))
-	(base (coding-system-base coding-system)))
-    (if (not (eq base coding-system))
-	(princ (format "%s (alias of %s)\n" coding-system base))
+	(aliases (coding-system-get coding-system 'alias-coding-systems)))
+    (if (not (eq (car aliases) coding-system))
+	(princ (format "%s (alias of %s)\n" coding-system (car aliases)))
       (princ coding-system)
+      (setq aliases (cdr aliases))
       (while aliases
 	(princ ",")
 	(princ (car aliases))
@@ -414,15 +451,19 @@ at the place of `..':
 	       (princ (if (aref flags idx) 1 0))))
 	    ((eq type 4)		; CCL
 	     (let (i len)
-	       (setq i 0 len (length (car flags)))
-	       (while (< i len)
-		 (princ (format " %x" (aref (car flags) i)))
-		 (setq i (1+ i)))
+	       (if (symbolp (car flags))
+		   (princ (format " %s" (car flags)))
+		 (setq i 0 len (length (car flags)))
+		 (while (< i len)
+		   (princ (format " %x" (aref (car flags) i)))
+		   (setq i (1+ i))))
 	       (princ ",")
-	       (setq i 0 len (length (cdr flags)))
-	       (while (< i len)
-		 (princ (format " %x" (aref (cdr flags) i)))
-		 (setq i (1+ i)))))
+	       (if (symbolp (cdr flags))
+		   (princ (format "%s" (cdr flags)))
+		 (setq i 0 len (length (cdr flags)))
+		 (while (< i len)
+		   (princ (format " %x" (aref (cdr flags) i)))
+		   (setq i (1+ i))))))
 	    (t (princ 0)))
       (princ ":")
       (princ (coding-system-doc-string coding-system))
@@ -431,20 +472,23 @@ at the place of `..':
 ;;;###autoload
 (defun list-coding-systems (&optional arg)
   "Display a list of all coding systems.
-It prints mnemonic letter, name, and description of each coding systems.
+This shows the mnemonic letter, name, and description of each coding system.
 
 With prefix arg, the output format gets more cryptic,
-but contains full information about each coding systems."
+but still contains full information about each coding system."
   (interactive "P")
   (with-output-to-temp-buffer "*Help*"
-    (if (null arg)
-	(princ "\
+    (list-coding-systems-1 arg)))
+
+(defun list-coding-systems-1 (arg)
+  (if (null arg)
+      (princ "\
 ###############################################
 # List of coding systems in the following format:
 # MNEMONIC-LETTER -- CODING-SYSTEM-NAME
 #	DOC-STRING
 ")
-      (princ "\
+    (princ "\
 #########################
 ## LIST OF CODING SYSTEMS
 ## Each line corresponds to one coding system
@@ -469,14 +513,14 @@ but contains full information about each coding systems."
 ##  POST-READ-CONVERSION, PRE-WRITE-CONVERSION = function name to be called
 ##
 "))
-    (let ((bases (coding-system-list 'base-only))
-	  coding-system)
-      (while bases
-	(setq coding-system (car bases))
-	(if (null arg)
-	    (print-coding-system-briefly coding-system 'doc-string)
-	  (print-coding-system coding-system))
-	(setq bases (cdr bases))))))
+  (let ((bases (coding-system-list 'base-only))
+	coding-system)
+    (while bases
+      (setq coding-system (car bases))
+      (if (null arg)
+	  (print-coding-system-briefly coding-system 'doc-string)
+	(print-coding-system coding-system))
+      (setq bases (cdr bases)))))
 
 ;;;###automatic
 (defun list-coding-categories ()
@@ -510,9 +554,9 @@ but contains full information about each coding systems."
 ;;;###autoload
 (defun describe-font (fontname)
   "Display information about fonts which partially match FONTNAME."
-  (interactive "sFontname (default, current choise for ASCII chars): ")
-  (or window-system
-      (error "No window system being used"))
+  (interactive "sFontname (default, current choice for ASCII chars): ")
+  (or (and window-system (boundp 'global-fontset-alist))
+      (error "No fontsets being used"))
   (when (or (not fontname) (= (length fontname) 0))
     (setq fontname (cdr (assq 'font (frame-parameters))))
     (if (query-fontset fontname)
@@ -577,8 +621,7 @@ but contains full information about each coding systems."
 ;;;###autoload
 (defun describe-fontset (fontset)
   "Display information of FONTSET.
-
-It prints name, size, and style of FONTSET, and lists up fonts
+This shows the name, size, and style of FONTSET, and the list of fonts
 contained in FONTSET.
 
 The column WDxHT contains width and height (pixels) of each fontset
@@ -586,17 +629,17 @@ The column WDxHT contains width and height (pixels) of each fontset
 column means that the corresponding fontset is not yet used in any
 frame.
 
-The O column of each font contains one of the following letters.
+The O column for each font contains one of the following letters:
  o -- font already opened
  - -- font not yet opened
  x -- font can't be opened
  ? -- no font specified
 
-The Charset column of each font contains a name of character set
-displayed by the font."
+The Charset column for each font contains a name of character set
+displayed (for this fontset) using that font."
   (interactive
-   (if (not window-system)
-       (error "No window system being used")
+   (if (not (and window-system (boundp 'global-fontset-alist)))
+       (error "No fontsets being used")
      (let ((fontset-list (mapcar '(lambda (x) (list x)) (fontset-list)))
 	   (completion-ignore-case t))
        (list (completing-read
@@ -617,26 +660,42 @@ displayed by the font."
 ;;;###autoload
 (defun list-fontsets (arg)
   "Display a list of all fontsets.
-
-It prints name, size, and style of each fontset.
-With prefix arg, it also lists up fonts contained in each fontset.
-See the function `describe-fontset' for the format of the list."
+This shows the name, size, and style of each fontset.
+With prefix arg, it also list the fonts contained in each fontset;
+see the function `describe-fontset' for the format of the list."
   (interactive "P")
-  (with-output-to-temp-buffer "*Help*"
-    (save-excursion
-      (set-buffer standard-output)
-      (insert "Fontset-Name\t\t\t\t\t\t  WDxHT Style\n")
-      (insert "------------\t\t\t\t\t\t  ----- -----\n")
-      (let ((fontsets (fontset-list)))
-	(while fontsets
-	  (print-fontset (car fontsets) arg)
-	  (setq fontsets (cdr fontsets)))))))
+  (if (not (and window-system (boundp 'global-fontset-alist)))
+      (error "No fontsets being used")
+    (with-output-to-temp-buffer "*Help*"
+      (save-excursion
+	;; This code is duplicated near the end of mule-diag.
+	(set-buffer standard-output)
+	(insert "Fontset-Name\t\t\t\t\t\t  WDxHT Style\n")
+	(insert "------------\t\t\t\t\t\t  ----- -----\n")
+	(let ((fontsets (fontset-list)))
+	  (while fontsets
+	    (print-fontset (car fontsets) arg)
+	    (setq fontsets (cdr fontsets))))))))
 
 ;;;###autoload
 (defun list-input-methods ()
-  "Print information of all input methods."
+  "Display information about all input methods."
   (interactive)
   (with-output-to-temp-buffer "*Help*"
+    (list-input-methods-1)))
+
+(defun list-input-methods-1 ()
+  (if (not input-method-alist)
+      (progn
+	(princ "
+No input method is available, perhaps because you have not yet
+installed LEIM (Libraries of Emacs Input Method).
+
+LEIM is available from the same ftp directory as Emacs.  For instance,
+if there exists an archive file `emacs-20.N.tar.gz', there should also
+be a file `leim-20.N.tar.gz'.  When you extract this file, LEIM files
+are put under the subdirectory `emacs-20.N/leim'.  When you install
+Emacs again, you should be able to use various input methods."))
     (princ "LANGUAGE\n  NAME (`TITLE' in mode line)\n")
     (princ "    SHORT-DESCRIPTION\n------------------------------\n")
     (setq input-method-alist
@@ -651,10 +710,14 @@ See the function `describe-fontset' for the format of the list."
 	  (princ language)
 	  (terpri))
 	(princ (format "  %s (`%s' in mode line)\n    %s\n"
-		       (car elt) (nth 3 elt)
-		       (let ((title (nth 4 elt)))
-			 (string-match ".*" title)
-			 (match-string 0 title))))))))
+		       (car elt)
+		       (let ((title (nth 3 elt)))
+			 (if (and (consp title) (stringp (car title)))
+			     (car title)
+			   title))
+		       (let ((description (nth 4 elt)))
+			 (string-match ".*" description)
+			 (match-string 0 description))))))))
 
 ;;; DIAGNOSIS
 
@@ -668,23 +731,23 @@ See the function `describe-fontset' for the format of the list."
 (defun mule-diag ()
   "Display diagnosis of the multilingual environment (MULE).
 
-It prints various information related to the current multilingual
+This shows various information related to the current multilingual
 environment, including lists of input methods, coding systems,
-character sets, and fontsets (if Emacs running under some window
-system)."
+character sets, and fontsets (if Emacs is running under a window
+system which uses fontsets)."
   (interactive)
   (with-output-to-temp-buffer "*Mule-Diagnosis*"
     (save-excursion
       (set-buffer standard-output)
-      (insert "\t###############################\n"
-	      "\t### Diagnosis of your Emacs ###\n"
-	      "\t###############################\n\n"
+      (insert "###############################################\n"
+	      "### Current Status of Multilingual Features ###\n"
+	      "###############################################\n\n"
 	      "CONTENTS: Section 1.  General Information\n"
 	      "          Section 2.  Display\n"
 	      "          Section 3.  Input methods\n"
 	      "          Section 4.  Coding systems\n"
 	      "          Section 5.  Character sets\n")
-      (if window-system
+      (if (and window-system (boundp 'global-fontset-alist))
 	  (insert "          Section 6.  Fontsets\n"))
       (insert "\n")
 
@@ -709,37 +772,47 @@ system)."
       (insert "\n\n")
 
       (insert-section 3 "Input methods")
-      (save-excursion (list-input-methods))
-      (insert-buffer-substring "*Help*")
+      (list-input-methods-1)
       (insert "\n")
       (if default-input-method
 	  (insert "Default input method: " default-input-method "\n")
 	(insert "No default input method is specified\n"))
 
       (insert-section 4 "Coding systems")
-      (save-excursion (list-coding-systems t))
-      (insert-buffer-substring "*Help*")
-      (save-excursion (list-coding-categories))
-      (insert-buffer-substring "*Help*")
+      (list-coding-systems-1 t)
+      (princ "\
+############################
+## LIST OF CODING CATEGORIES (ordered by priority)
+## CATEGORY:CODING-SYSTEM
+##
+")
+      (let ((l coding-category-list))
+	(while l
+	  (princ (format "%s:%s\n" (car l) (symbol-value (car l))))
+	  (setq l (cdr l))))
       (insert "\n")
 
       (insert-section 5 "Character sets")
-      (save-excursion (list-character-sets t))
-      (insert-buffer-substring "*Help*")
+      (list-character-sets-1 t)
       (insert "\n")
 
-      (when window-system
+      (when (and window-system (boundp 'global-fontset-alist))
+	;; This code duplicates most of list-fontsets.
 	(insert-section 6 "Fontsets")
-	(save-excursion (list-fontsets t))
-	(insert-buffer-substring "*Help*"))
-      (help-mode))))
+	(insert "Fontset-Name\t\t\t\t\t\t  WDxHT Style\n")
+	(insert "------------\t\t\t\t\t\t  ----- -----\n")
+	(let ((fontsets (fontset-list)))
+	  (while fontsets
+	    (print-fontset (car fontsets) t)
+	    (setq fontsets (cdr fontsets)))))
+      (print-help-return-message))))
 
 
 ;;; DUMP DATA FILE
 
 ;;;###autoload
 (defun dump-charsets ()
-  "Dump information of all charsets into the file \"CHARSETS\".
+  "Dump information about all charsets into the file `CHARSETS'.
 The file is saved in the directory `data-directory'."
   (let ((file (expand-file-name "CHARSETS" data-directory))
 	buf)
@@ -762,7 +835,7 @@ The file is saved in the directory `data-directory'."
 
 ;;;###autoload
 (defun dump-codings ()
-  "Dump information of all coding systems into the file \"CODINGS\".
+  "Dump information about all coding systems into the file `CODINGS'.
 The file is saved in the directory `data-directory'."
   (let ((file (expand-file-name "CODINGS" data-directory))
 	buf)

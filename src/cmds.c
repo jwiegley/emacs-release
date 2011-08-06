@@ -1,5 +1,5 @@
 /* Simple built-in editing commands.
-   Copyright (C) 1985, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1985, 93, 94, 95, 96, 97, 1998 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -27,6 +27,7 @@ Boston, MA 02111-1307, USA.  */
 #include "syntax.h"
 #include "window.h"
 #include "keyboard.h"
+#include "dispextern.h"
 
 Lisp_Object Qkill_forward_chars, Qkill_backward_chars, Vblink_paren_function;
 
@@ -39,40 +40,8 @@ Lisp_Object Vself_insert_face;
 /* This is the command that set up Vself_insert_face.  */
 Lisp_Object Vself_insert_face_command;
 
-/* Offset to add to a non-ASCII value when inserting it.  */
-int nonascii_insert_offset;
-
 extern Lisp_Object Qface;
 
-/* Return buffer position which is N characters after `point'.  */
-int
-forward_point (n)
-     int n;
-{
-  int pos = PT, c;
-
-  if (!NILP (current_buffer->enable_multibyte_characters))
-    {
-      /* Simply adding N to `point' doesn't work because of multi-byte
-	 form.  We had better not use INC_POS and DEC_POS because they
-	 check the gap position every time.  But, for the moment, we
-	 need working code.  */
-      if (n > 0)
-	{
-	  while (pos < ZV && n--) INC_POS (pos);
-	  if (pos < ZV) n++;
-	}
-      else
-	{
-	  while (pos > BEGV && n++) DEC_POS (pos);
-	  if (pos > BEGV) n--;
-	}
-    }
-  pos += n;
-
-  return pos;
-}
-
 DEFUN ("forward-point", Fforward_point, Sforward_point, 1, 1, 0,
   "Return buffer position N characters after (before if N negative) point.")
   (n)
@@ -80,7 +49,7 @@ DEFUN ("forward-point", Fforward_point, Sforward_point, 1, 1, 0,
 {
   CHECK_NUMBER (n, 0);
 
-  return make_number (forward_point (XINT (n)));
+  return make_number (PT + XINT (n));
 }
 
 DEFUN ("forward-char", Fforward_char, Sforward_char, 0, 1, "p",
@@ -100,7 +69,7 @@ On reaching end of buffer, stop and signal error.")
      hooks, etcetera), that's not a good approach.  So we validate the
      proposed position, then set point.  */
   {
-    int new_point = forward_point (XINT (n));
+    int new_point = PT + XINT (n);
 
     if (new_point < BEGV)
       {
@@ -145,9 +114,10 @@ With positive N, a non-empty line at the end counts as one line\n\
   (n)
      Lisp_Object n;
 {
-  int pos2 = PT;
-  int pos;
-  int count, shortage, negp;
+  int opoint = PT, opoint_byte = PT_BYTE;
+  int pos, pos_byte;
+  int count, shortage;
+  int temp;
 
   if (NILP (n))
     count = 1;
@@ -157,16 +127,27 @@ With positive N, a non-empty line at the end counts as one line\n\
       count = XINT (n);
     }
 
-  negp = count <= 0;
-  pos = scan_buffer ('\n', pos2, 0, count - negp, &shortage, 1);
+  if (count <= 0)
+    shortage = scan_newline (PT, PT_BYTE, BEGV, BEGV_BYTE, count - 1, 1);
+  else
+    shortage = scan_newline (PT, PT_BYTE, ZV, ZV_BYTE, count, 1);
+
+  /* Since scan_newline does TEMP_SET_PT_BOTH,
+     and we want to set PT "for real",
+     go back to the old point and then come back here.  */
+  pos = PT;
+  pos_byte = PT_BYTE;
+  TEMP_SET_PT_BOTH (opoint, opoint_byte);
+  SET_PT_BOTH (pos, pos_byte);
+
   if (shortage > 0
-      && (negp
+      && (count <= 0
 	  || (ZV > BEGV
-	      && pos != pos2
-	      && FETCH_BYTE (pos - 1) != '\n')))
+	      && PT != opoint
+	      && (FETCH_BYTE (PT_BYTE - 1) != '\n'))))
     shortage--;
-  SET_PT (pos);
-  return make_number (negp ? - shortage : shortage);
+
+  return make_number (count <= 0 ? - shortage : shortage);
 }
 
 DEFUN ("beginning-of-line", Fbeginning_of_line, Sbeginning_of_line,
@@ -219,7 +200,7 @@ N was explicitly specified.")
 
   CHECK_NUMBER (n, 0);
 
-  pos = forward_point (XINT (n));
+  pos = PT + XINT (n);
   if (NILP (killflag))
     {
       if (XINT (n) < 0)
@@ -255,18 +236,19 @@ N was explicitly specified.")
 {
   Lisp_Object value;
   int deleted_special = 0;
-  int pos, i;
+  int pos, pos_byte, i;
 
   CHECK_NUMBER (n, 0);
 
   /* See if we are about to delete a tab or newline backwards.  */
   pos = PT;
-  for (i = 0; i < XINT (n) && pos > BEGV; i++)
+  pos_byte = PT_BYTE;
+  for (i = 0; i < XINT (n) && pos_byte > BEGV_BYTE; i++)
     {
       int c;
 
-      DEC_POS (pos);
-      c = FETCH_BYTE (pos);
+      DEC_BOTH (pos, pos_byte);
+      c = FETCH_BYTE (pos_byte);
       if (c == '\t' || c == '\n')
 	{
 	  deleted_special = 1;
@@ -279,14 +261,15 @@ N was explicitly specified.")
   if (XINT (n) > 0
       && ! NILP (current_buffer->overwrite_mode)
       && ! deleted_special
-      && ! (PT == ZV || FETCH_BYTE (PT) == '\n'))
+      && ! (PT == ZV || FETCH_BYTE (PT_BYTE) == '\n'))
     {
       int column = current_column ();
 
       value = Fdelete_char (make_number (-XINT (n)), killflag);
       i = column - current_column ();
       Finsert_char (make_number (' '), make_number (i), Qnil);
-      SET_PT (PT - i);
+      /* Whitespace chars are ASCII chars, so we can simply subtract.  */
+      SET_PT_BOTH (PT - i, PT_BYTE - i);
     }
   else
     value = Fdelete_char (make_number (-XINT (n)), killflag);
@@ -313,9 +296,8 @@ Whichever character you type to run this command is inserted.")
       /* Add the offset to the character, for Finsert_char.
 	 We pass internal_self_insert the unmodified character
 	 because it itself does this offsetting.  */
-      if (modified_char >= 0200 && modified_char <= 0377
-	  && ! NILP (current_buffer->enable_multibyte_characters))
-	modified_char += nonascii_insert_offset;
+      if (! NILP (current_buffer->enable_multibyte_characters))
+	modified_char = unibyte_char_to_multibyte (modified_char);
 
       XSETFASTINT (n, XFASTINT (n) - 2);
       /* The first one might want to expand an abbrev.  */
@@ -345,6 +327,7 @@ Whichever character you type to run this command is inserted.")
    return 0.  A value of 1 indicates this *might* not have been simple.
    A value of 2 means this did things that call for an undo boundary.  */
 
+int
 internal_self_insert (c, noautofill)
      int c;
      int noautofill;
@@ -358,12 +341,8 @@ internal_self_insert (c, noautofill)
   int len;
   /* Working buffer and pointer for multi-byte form of C.  */
   unsigned char workbuf[4], *str;
-  int number_to_delete = 0;
+  int chars_to_delete = 0;
   int spaces_to_insert = 0;
-
-  if (c >= 0200 && c <= 0377
-      && ! NILP (current_buffer->enable_multibyte_characters))
-    c += nonascii_insert_offset;
 
   overwrite = current_buffer->overwrite_mode;
   if (!NILP (Vbefore_change_function) || !NILP (Vafter_change_function)
@@ -372,10 +351,18 @@ internal_self_insert (c, noautofill)
 
   /* At first, get multi-byte form of C in STR.  */
   if (!NILP (current_buffer->enable_multibyte_characters))
-    len = CHAR_STRING (c, workbuf, str);
+    {
+      c = unibyte_char_to_multibyte (c);
+      len = CHAR_STRING (c, workbuf, str);
+    }
   else
-    workbuf[0] = c, str = workbuf, len = 1;
-
+    {
+      workbuf[0] = (SINGLE_BYTE_CHAR_P (c)
+		    ? c
+		    : multibyte_char_to_unibyte (c, Qnil));
+      str = workbuf;
+      len = 1;
+    }
   if (!NILP (overwrite)
       && PT < ZV)
     {
@@ -388,11 +375,10 @@ internal_self_insert (c, noautofill)
 	 we fill columns with spaces, if C is wider than C2, we delete
 	 C2 and several characters following C2.  */
 
-      /* A code at `point'.  Since this is checked only against
-         NEWLINE and TAB, we don't need a character code but only the
-         first byte of multi-byte form.  */
-      unsigned char c2 = FETCH_BYTE (PT);
-      /* A column the cursor should be placed at after this insertion.
+      /* This is the character after point.  */
+      int c2 = FETCH_CHAR (PT_BYTE);
+
+      /* Column the cursor should be placed at after this insertion.
          The correct value should be calculated only when necessary.  */
       int target_clm = 0;
 
@@ -407,15 +393,15 @@ internal_self_insert (c, noautofill)
 	      && ! (c2 == '\t'
 		    && XINT (current_buffer->tab_width) > 0
 		    && XFASTINT (current_buffer->tab_width) < 20
-		    && ((NILP (current_buffer->enable_multibyte_characters)
-			 ? (target_clm = current_column () + 1)
-			 : (target_clm = current_column () + WIDTH_BY_CHAR_HEAD (str[0]))),
+		    && (target_clm = (current_column () 
+				      + XINT (Fchar_width (make_number (c2)))),
 			target_clm % XFASTINT (current_buffer->tab_width)))))
 	{
 	  int pos = PT;
+	  int pos_byte = PT_BYTE;
 
 	  if (target_clm == 0)
-	    number_to_delete = forward_point (1) - PT;
+	    chars_to_delete = 1;
 	  else
 	    {
 	      /* The actual cursor position after the trial of moving
@@ -426,7 +412,7 @@ internal_self_insert (c, noautofill)
 	      int actual_clm
 		= XFASTINT (Fmove_to_column (make_number (target_clm), Qnil));
 
-	      number_to_delete = PT - pos;
+	      chars_to_delete = PT - pos;
 
 	      if (actual_clm > target_clm)
 		{
@@ -435,7 +421,7 @@ internal_self_insert (c, noautofill)
 		  spaces_to_insert = actual_clm - target_clm;
 		}
 	    }
-	  SET_PT (pos);
+	  SET_PT_BOTH (pos, pos_byte);
 	  hairy = 2;
 	}
       hairy = 2;
@@ -466,9 +452,9 @@ internal_self_insert (c, noautofill)
 	hairy = 2;
     }
 
-  if (number_to_delete)
+  if (chars_to_delete)
     {
-      string = make_string (str, len);
+      string = make_string_from_bytes (str, 1, len);
       if (spaces_to_insert)
 	{
 	  tem = Fmake_string (make_number (spaces_to_insert),
@@ -476,8 +462,8 @@ internal_self_insert (c, noautofill)
 	  string = concat2 (tem, string);
 	}
 
-      replace_range (PT, PT + number_to_delete, string, 1, 1);
-      SET_PT (PT + XSTRING (string)->size);
+      replace_range (PT, PT + chars_to_delete, string, 1, 1, 1);
+      Fforward_char (make_number (1 + spaces_to_insert));
     }
   else
     insert_and_inherit (str, len);
@@ -489,13 +475,13 @@ internal_self_insert (c, noautofill)
       Lisp_Object tem;
 
       if (c == '\n')
-	/* After inserting a newline, move to previous line and fill */
-	/* that.  Must have the newline in place already so filling and */
-	/* justification, if any, know where the end is going to be. */
-	SET_PT (PT - 1);
+	/* After inserting a newline, move to previous line and fill
+	   that.  Must have the newline in place already so filling and
+	   justification, if any, know where the end is going to be.  */
+	SET_PT_BOTH (PT - 1, PT_BYTE - 1);
       tem = call0 (current_buffer->auto_fill_function);
       if (c == '\n')
-	SET_PT (PT + 1);
+	SET_PT_BOTH (PT + 1, PT_BYTE + 1);
       if (!NILP (tem))
 	hairy = 2;
     }
@@ -505,10 +491,8 @@ internal_self_insert (c, noautofill)
   if (!NILP (Vself_insert_face)
       && EQ (current_kboard->Vlast_command, Vself_insert_face_command))
     {
-      Lisp_Object before, after;
-      XSETINT (before, PT - len);
-      XSETINT (after, PT);
-      Fput_text_property (before, after, Qface, Vself_insert_face, Qnil);
+      Fput_text_property (make_number (PT - 1), make_number (PT),
+			  Qface, Vself_insert_face, Qnil);
       Vself_insert_face = Qnil;
     }
 #endif
@@ -526,6 +510,7 @@ internal_self_insert (c, noautofill)
 
 /* module initialization */
 
+void
 syms_of_cmds ()
 {
   Qkill_backward_chars = intern ("kill-backward-chars");
@@ -552,13 +537,6 @@ If `last-command' does not equal this value, we ignore `self-insert-face'.");
 More precisely, a char with closeparen syntax is self-inserted.");
   Vblink_paren_function = Qnil;
 
-  DEFVAR_INT ("nonascii-insert-offset", &nonascii_insert_offset,
-    "Offset to add to a non-ascii code 0200...0377 when inserting it.\n\
-This applies only when multibyte characters are enabled, and it serves\n\
-to convert a Latin-1 or similar 8-bit character code to the corresponding\n\
-Emacs character code.");
-  nonascii_insert_offset = 0;
-
   defsubr (&Sforward_point);
   defsubr (&Sforward_char);
   defsubr (&Sbackward_char);
@@ -572,6 +550,7 @@ Emacs character code.");
   defsubr (&Sself_insert_command);
 }
 
+void
 keys_of_cmds ()
 {
   int n;

@@ -24,15 +24,15 @@
 
 ;;; Code:
 
-(defconst mule-version "3.0 (MOMIJINOGA)" "\
+(defconst mule-version "4.0 (HANANOEN)" "\
 Version number and name of this version of MULE (multilingual environment).")
 
-(defconst mule-version-date "1998.1.1" "\
+(defconst mule-version-date "1998.7.1" "\
 Distribution date of this version of MULE (multilingual environment).")
 
 (defun load-with-code-conversion (fullname file &optional noerror nomessage)
-  "Execute a file of Lisp code named FILE whose absolute path is FULLNAME.
-The FILE is decoded before evaluation if necessary.
+  "Execute a file of Lisp code named FILE whose absolute name is FULLNAME.
+The file contents are decoded before evaluation if necessary.
 If optional second arg NOERROR is non-nil,
  report no error if FILE doesn't exist.
 Print messages at start and end of loading unless
@@ -45,30 +45,48 @@ Return t if file exists."
     (let* ((buffer
 	    ;; To avoid any autoloading, set default-major-mode to
 	    ;; fundamental-mode.
-	    (let ((default-major-mode 'fundamental-mode))
+	    ;; So that we don't get completely screwed if the
+	    ;; file is encoded in some complicated character set,
+	    ;; read it with real decoding, as a multibyte buffer,
+	    ;; even if this is a --unibyte Emacs session.
+	    (let ((default-major-mode 'fundamental-mode)
+		  (default-enable-multibyte-characters t))
 	      ;; We can't use `generate-new-buffer' because files.el
 	      ;; is not yet loaded.
 	      (get-buffer-create (generate-new-buffer-name " *load*"))))
-	   (load-in-progress t))
-      (or nomessage (message "Loading %s..." file))
+	   (load-in-progress t)
+	   (source (save-match-data (string-match "\\.el\\'" fullname))))
+      (unless nomessage
+	(if source
+	    (message "Loading %s (source)..." file)
+	  (message "Loading %s..." file)))
+      (when purify-flag
+	(setq preloaded-file-list (cons file preloaded-file-list)))
       (unwind-protect
-	  (progn
+	  (let ((load-file-name fullname)
+		(set-auto-coding-for-load t)
+		(inhibit-file-name-operation nil))
 	    (save-excursion
 	      (set-buffer buffer)
-	      ;; This is buffer-local.
-	      (setq enable-multibyte-characters t)
 	      (insert-file-contents fullname)
 	      ;; Make `kill-buffer' quiet.
 	      (set-buffer-modified-p nil))
-	    ;; Eval in the original buffer.
-	    (eval-buffer buffer nil file))
+	    ;; Have the original buffer current while we eval.
+	    (eval-buffer buffer nil file
+			 ;; If this Emacs is running with --unibyte,
+			 ;; convert multibyte strings to unibyte
+			 ;; after reading them.
+;;			 (not default-enable-multibyte-characters)
+			 ))
 	(let (kill-buffer-hook kill-buffer-query-functions)
 	  (kill-buffer buffer)))
       (let ((hook (assoc file after-load-alist)))
-	      (if hook
-		  (mapcar (function eval) (cdr hook))))
-      (or nomessage noninteractive
-	  (message "Loading %s...done" file))
+	(when hook
+	  (mapcar (function eval) (cdr hook))))
+      (unless (or nomessage noninteractive)
+	(if source
+	    (message "Loading %s (source)...done" file)
+	  (message "Loading %s...done" file)))
       t)))
 
 ;; API (Application Program Interface) for charsets.
@@ -220,148 +238,247 @@ See the function `charset-info' for more detail."
   "Set CHARSET's property list to PLIST, and retrun PLIST."
   (aset (charset-info  charset) 14 plist))
 
-(defmacro make-char (charset &optional c1 c2)
+(defun make-char (charset &optional c1 c2)
   "Return a character of CHARSET and position-codes CODE1 and CODE2.
 CODE1 and CODE2 are optional, but if you don't supply
 sufficient position-codes, return a generic character which stands for
 all characters or group of characters in the character sets.
 A generic character can be used to index a char table (e.g. syntax-table)."
-  (if (charset-quoted-standard-p charset)
-      `(make-char-internal ,(charset-id (nth 1 charset)) ,c1 ,c2)
-    `(make-char-internal (charset-id ,charset) ,c1 ,c2)))
+  (make-char-internal (charset-id charset) c1 c2))
 
-(defmacro charset-list ()
+(put 'make-char 'byte-compile
+     (function 
+      (lambda (form)
+	(let ((charset (nth 1 form)))
+	  (if (charset-quoted-standard-p charset)
+	      (byte-compile-normal-call
+	       (cons 'make-char-internal
+		     (cons (charset-id (nth 1 charset)) (nthcdr 2 form))))
+	    (byte-compile-normal-call
+	     (cons 'make-char-internal
+		   (cons (list 'charset-id charset) (nthcdr 2 form)))))))))
+
+(defun charset-list ()
   "Return list of charsets ever defined.
 
-This macro is provided for backward compatibility.
+This function is provided for backward compatibility.
 Now we have the variable `charset-list'."
-  'charset-list)
+  charset-list)
 
 (defsubst generic-char-p (char)
   "Return t if and only if CHAR is a generic character.
 See also the documentation of make-char."
-  (let ((l (split-char char)))
-    (and (or (= (nth 1 l) 0) (eq (nth 2 l) 0))
-	 (not (eq (car l) 'composition)))))
+  (and (>= char 0400)
+       (let ((l (split-char char)))
+	 (and (or (= (nth 1 l) 0) (eq (nth 2 l) 0))
+	      (not (eq (car l) 'composition))))))
 
+
 ;; Coding system staffs
 
 ;; Coding system is a symbol that has the property `coding-system'.
 ;;
 ;; The value of the property `coding-system' is a vector of the
 ;; following format:
-;;	[TYPE MNEMONIC DOC-STRING NOT-USED-NOW FLAGS]
+;;	[TYPE MNEMONIC DOC-STRING PLIST FLAGS]
 ;; We call this vector as coding-spec.  See comments in src/coding.c
-;; for more detail.  The property value may be another coding system,
-;; in which case, the coding-spec should be taken from that
-;; coding-system.  The 4th element NOT-USED-NOW is kept just for
-;; backward compatibility with old version of Mule.
+;; for more detail.  
 
 (defconst coding-spec-type-idx 0)
 (defconst coding-spec-mnemonic-idx 1)
 (defconst coding-spec-doc-string-idx 2)
+(defconst coding-spec-plist-idx 3)
 (defconst coding-spec-flags-idx 4)
 
-;; Coding system may have proerpty `eol-type'.  The value of the
-;; property `eol-type' is integer 0..2 or a vector of three coding
-;; systems.  The integer value 0, 1, and 2 indicate the format of
-;; end-of-line LF, CRLF, and CR respectively.  The vector value
-;; indicates that the format of end-of-line should be detected
-;; automatically.  Nth element of the vector is the subsidiary coding
-;; system whose `eol-type' property is N.
+;; PLIST is a property list of a coding system.  To share PLIST among
+;; alias coding systems, a coding system has PLIST in coding-spec
+;; instead of having it in normal property list of Lisp symbol.
+;; Here's a list of coding system properties currently being used.
 ;;
-;; Coding system may also have properties `post-read-conversion' and
-;; `pre-write-conversion.  Values of these properties are functions.
+;; o coding-category
 ;;
-;; The function in `post-read-conversion' is called after some text is
-;; inserted and decoded along the coding system and before any
-;; functions in `after-insert-functions' are called.  The arguments to
-;; this function is the same as those of a function in
+;; The value is a coding category the coding system belongs to.  The
+;; function `make-coding-system' and `define-coding-system-alias' sets
+;; this value automatically.
+;;
+;; o alias-coding-systems
+;;
+;; The value is a list of coding systems of the same alias group.  The
+;; first element is the coding system made at first, which we call as
+;; `base coding system'.  The function `make-coding-system' and
+;; `define-coding-system-alias' set this value automatically.
+;;
+;; o post-read-conversion
+;;
+;; The value is a function to call after some text is inserted and
+;; decoded by the coding system itself and before any functions in
+;; `after-insert-functions' are called.  The arguments to this
+;; function is the same as those of a function in
 ;; `after-insert-functions', i.e. LENGTH of a text while putting point
 ;; at the head of the text to be decoded
 ;;
-;; The function in `pre-write-conversion' is called after all
-;; functions in `write-region-annotate-functions' and
-;; `buffer-file-format' are called, and before the text is encoded by
-;; the coding system.  The arguments to this function is the same as
-;; those of a function in `write-region-annotate-functions', i.e. FROM
-;; and TO specifying region of a text.
+;; o pre-write-conversion
+;;
+;; The value is a function to call after all functions in
+;; `write-region-annotate-functions' and `buffer-file-format' are
+;; called, and before the text is encoded by the coding system itself.
+;; The arguments to this function is the same as those of a function
+;; in `write-region-annotate-functions', i.e. FROM and TO specifying
+;; region of a text.
+;;
+;; o translation-table-for-decode
+;;
+;; The value is a translation table to be applied on decoding.  See
+;; the function `make-translation-table' for the format of translation
+;; table.
+;;
+;; o translation-table-for-encode
+;;
+;; The value is a translation table to be applied on encoding.
+;;
+;; o safe-charsets
+;;
+;; The value is a list of charsets safely supported by the coding
+;; system.  The value t means that all charsets Emacs handles are
+;; supported.  Even if some charset is not in this list, it doesn't
+;; mean that the charset can't be encoded in the coding system,
+;; instead, it just means that some other receiver of a text encoded
+;; in the coding system won't be able to handle that charset.
+;;
+;; o mime-charset
+;;
+;; The value is a symbol of which name is `MIME-charset' parameter of
+;; the coding system.
+;;
+;; o valid-codes (meaningful only for a coding system based on CCL)
+;;
+;; The value is a list to indicate valid byte ranges of the encoded
+;; file.  Each element of the list is an integer or a cons of integer.
+;; In the former case, the integer value is a valid byte code.  In the
+;; latter case, the integers specifies the range of valie byte codes.
 
-;; Return Nth element of coding-spec of CODING-SYSTEM.
-(defun coding-system-spec-ref (coding-system n)
-  (check-coding-system coding-system)
-  (let ((vec (coding-system-spec coding-system)))
-    (and vec (aref vec n))))
+
+;; Return coding-spec of CODING-SYSTEM
+(defsubst coding-system-spec (coding-system)
+  (get (check-coding-system coding-system) 'coding-system))
 
 (defun coding-system-type (coding-system)
-  "Return TYPE element in coding-spec of CODING-SYSTEM."
-  (coding-system-spec-ref coding-system coding-spec-type-idx))
+  "Return the coding type of CODING-SYSTEM.
+A coding type is an integer value indicating the encoding method
+of CODING-SYSTEM.  See the function `make-coding-system' for more detail."
+  (aref (coding-system-spec coding-system) coding-spec-type-idx))
 
 (defun coding-system-mnemonic (coding-system)
-  "Return MNEMONIC element in coding-spec of CODING-SYSTEM."
-  (or (coding-system-spec-ref coding-system coding-spec-mnemonic-idx)
-      ?-))
+  "Return the mnemonic character of CODING-SYSTEM.
+The mnemonic character of a coding system is used in mode line
+to indicate the coding system.  If the arg is nil, return ?-."
+  (let ((spec (coding-system-spec coding-system)))
+    (if spec (aref spec coding-spec-mnemonic-idx) ?-)))
 
 (defun coding-system-doc-string (coding-system)
-  "Return DOC-STRING element in coding-spec of CODING-SYSTEM."
-  (coding-system-spec-ref coding-system coding-spec-doc-string-idx))
+  "Return the documentation string for CODING-SYSTEM."
+  (aref (coding-system-spec coding-system) coding-spec-doc-string-idx))
+
+(defun coding-system-plist (coding-system)
+  "Return the property list of CODING-SYSTEM."
+  (aref (coding-system-spec coding-system) coding-spec-plist-idx))
 
 (defun coding-system-flags (coding-system)
-  "Return FLAGS element in coding-spec of CODING-SYSTEM."
-  (coding-system-spec-ref coding-system coding-spec-flags-idx))
+  "Return `flags' of CODING-SYSTEM.
+A `flags' of a coding system is a vector of length 32 indicating detailed
+information of a coding system.  See the function `make-coding-system'
+for more detail."
+  (aref (coding-system-spec coding-system) coding-spec-flags-idx))
 
-(defun coding-system-eol-type (coding-system)
-  "Return eol-type property of CODING-SYSTEM."
-  (check-coding-system coding-system)
-  (and coding-system
-       (or (get coding-system 'eol-type)
-	   (coding-system-eol-type (get coding-system 'coding-system)))))
+(defun coding-system-get (coding-system prop)
+  "Extract a value from CODING-SYSTEM's property list for property PROP."
+  (plist-get (coding-system-plist coding-system) prop))
+
+(defun coding-system-put (coding-system prop val)
+  "Change value in CODING-SYSTEM's property list PROP to VAL."
+  (let ((plist (coding-system-plist coding-system)))
+    (if plist
+	(plist-put plist prop val)
+      (aset (coding-system-spec coding-system) coding-spec-plist-idx
+	    (list prop val)))))
 
 (defun coding-system-category (coding-system)
-  "Return coding category of CODING-SYSTEM."
-  (and coding-system
-       (symbolp coding-system)
-       (or (get coding-system 'coding-category)
-	   (coding-system-category (get coding-system 'coding-system)))))
+  "Return the coding category of CODING-SYSTEM."
+  (coding-system-get coding-system 'coding-category))
 
-(defun coding-system-parent (coding-system)
-  "Return parent of CODING-SYSTEM."
-  (let ((parent (get coding-system 'parent-coding-system)))
-    (and parent
-	 (or (coding-system-parent parent)
-	     parent))))
+(defun coding-system-base (coding-system)
+  "Return the base coding system of CODING-SYSTEM.
+A base coding system is what made by `make-coding-system'.
+Any alias nor subsidiary coding systems are not base coding system."
+  (car (coding-system-get coding-system 'alias-coding-systems)))
+
+(defalias 'coding-system-parent 'coding-system-base)
+(make-obsolete 'coding-system-parent 'coding-system-base)
+
+;; Coding system also has a property `eol-type'.
+;;
+;; This property indicates how the coding system handles end-of-line
+;; format.  The value is integer 0, 1, 2, or a vector of three coding
+;; systems.  Each integer value 0, 1, and 2 indicates the format of
+;; end-of-line LF, CRLF, and CR respectively.  A vector value
+;; indicates that the format of end-of-line should be detected
+;; automatically.  Nth element of the vector is the subsidiary coding
+;; system whose `eol-type' property is N.
+
+(defun coding-system-eol-type (coding-system)
+  "Return eol-type of CODING-SYSTEM.
+An eol-type is integer 0, 1, 2, or a vector of coding systems.
+
+Integer values 0, 1, and 2 indicate a format of end-of-line; LF,
+CRLF, and CR respectively.
+
+A vector value indicates that a format of end-of-line should be
+detected automatically.  Nth element of the vector is the subsidiary
+coding system whose eol-type is N."
+  (get coding-system 'eol-type))
 
 ;; Make subsidiary coding systems (eol-type variants) of CODING-SYSTEM.
 (defun make-subsidiary-coding-system (coding-system)
-  (let ((subsidiaries (vector (intern (format "%s-unix" coding-system))
+  (let ((coding-spec (coding-system-spec coding-system))
+	(subsidiaries (vector (intern (format "%s-unix" coding-system))
 			      (intern (format "%s-dos" coding-system))
 			      (intern (format "%s-mac" coding-system))))
-	(i 0))
+	(i 0)
+	temp)
     (while (< i 3)
-      (put (aref subsidiaries i) 'coding-system coding-system)
+      (put (aref subsidiaries i) 'coding-system coding-spec)
       (put (aref subsidiaries i) 'eol-type i)
-      (put (aref subsidiaries i) 'eol-variant t)
+      (setq coding-system-list
+	    (cons (aref subsidiaries i) coding-system-list))
+      (setq coding-system-alist
+	    (cons (list (symbol-name (aref subsidiaries i)))
+		  coding-system-alist))
       (setq i (1+ i)))
     subsidiaries))
 
 (defun make-coding-system (coding-system type mnemonic doc-string
-					 &optional flags)
-  "Define a new CODING-SYSTEM (symbol).
-Remaining arguments are TYPE, MNEMONIC, DOC-STRING, and FLAGS (optional) which
-construct a coding-spec of CODING-SYSTEM in the following format:
-	[TYPE MNEMONIC DOC-STRING nil FLAGS]
-TYPE is an integer value indicating the type of coding-system as follows:
+					 &optional flags properties)
+  "Define a new coding system CODING-SYSTEM (symbol).
+Remaining arguments are TYPE, MNEMONIC, DOC-STRING, FLAGS (optional), 
+and PROPERTIES (optional) which construct a coding-spec of CODING-SYSTEM
+in the following format:
+	[TYPE MNEMONIC DOC-STRING PLIST FLAGS]
+
+TYPE is an integer value indicating the type of the coding system as follows:
   0: Emacs internal format,
   1: Shift-JIS (or MS-Kanji) used mainly on Japanese PC,
   2: ISO-2022 including many variants,
   3: Big5 used mainly on Chinese PC,
   4: private, CCL programs provide encoding/decoding algorithm,
   5: Raw-text, which means that text contains random 8-bit codes. 
-MNEMONIC is a character to be displayed on mode line for the coding-system.
-DOC-STRING is a documentation string for the coding-system.
-FLAGS specifies more precise information of each TYPE.
 
-  If TYPE is 2 (ISO-2022), FLAGS should be a list of:
+MNEMONIC is a character to be displayed on mode line for the coding system.
+
+DOC-STRING is a documentation string for the coding system.
+
+FLAGS specifies more detailed information of the coding system as follows:
+
+  If TYPE is 2 (ISO-2022), FLAGS is a list of these elements:
       CHARSET0, CHARSET1, CHARSET2, CHARSET3, SHORT-FORM,
       ASCII-EOL, ASCII-CNTL, SEVEN, LOCKING-SHIFT, SINGLE-SHIFT,
       USE-ROMAN, USE-OLDJIS, NO-ISO6429, INIT-BOL, DESIGNATION-BOL,
@@ -385,26 +502,44 @@ FLAGS specifies more precise information of each TYPE.
       to initial at each beginning of line on output.
     DESIGNATION-BOL non-nil means designation sequences should be placed
       at beginning of line on output.
-    SAFE non-nil means convert unexpected characters to `?' on output.
-      Unexpected characters are what not specified in CHARSETn directly.
+    SAFE non-nil means convert unsafe characters to `?' on output.
+      Unsafe characters are what not specified in SAFE-CHARSET.
     ACCEPT-LATIN-EXTRA-CODE non-nil means code-detection routine accepts
       a code specified in `latin-extra-code-table' (which see) as a valid
       code of the coding system.
 
-  If TYPE is 4 (private), FLAGS should be a cons of CCL programs,
-    for decoding and encoding.  See the documentation of CCL for more detail."
+  If TYPE is 4 (private), FLAGS should be a cons of CCL programs, for
+    decoding and encoding.  CCL programs should be specified by their
+    symbols.
 
-  ;; At first, set a value of `coding-system' property.
+PROPERTIES is an alist of properties vs the corresponding values.
+These properties are set in PLIST, a property list.  This function
+also sets properties `coding-category' and `alias-coding-systems'
+automatically.
+
+Kludgy features for backward compatibility:
+
+1. If TYPE is 4 and car or cdr of FLAGS is a vector, the vector is
+treated as a compiled CCL code.
+
+2. If PROPERTIES is just a list of character sets, the list is set as
+a value of `safe-charsets' in PLIST."
+  (if (memq coding-system coding-system-list)
+      (error "Coding system %s already exists" coding-system))
+
+  ;; Set a value of `coding-system' property.
   (let ((coding-spec (make-vector 5 nil))
+	(no-initial-designation t)
+	(no-alternative-designation t)
 	coding-category)
     (if (or (not (integerp type)) (< type 0) (> type 5))
-	(error "TYPE argument must be 0..4"))
+	(error "TYPE argument must be 0..5"))
     (if (or (not (integerp mnemonic)) (<= mnemonic ? ) (> mnemonic 127))
-	(error "MNEMONIC arguemnt must be a printable character."))
-    (aset coding-spec 0 type)
-    (aset coding-spec 1 mnemonic)
-    (aset coding-spec 2 (if (stringp doc-string) doc-string ""))
-    (aset coding-spec 3 nil)		; obsolete element
+	(error "MNEMONIC arguemnt must be an ASCII printable character."))
+    (aset coding-spec coding-spec-type-idx type)
+    (aset coding-spec coding-spec-mnemonic-idx mnemonic)
+    (aset coding-spec coding-spec-doc-string-idx
+	  (if (stringp doc-string) doc-string ""))
     (cond ((= type 0)
 	   (setq coding-category 'coding-category-emacs-mule))
 	  ((= type 1)
@@ -412,7 +547,6 @@ FLAGS specifies more precise information of each TYPE.
 	  ((= type 2)			; ISO2022
 	   (let ((i 0)
 		 (vec (make-vector 32 nil))
-		 (no-initial-designation t)
 		 (g1-designation nil))
 	     (while (< i 4)
 	       (let ((charset (car flags)))
@@ -429,20 +563,22 @@ FLAGS specifies more precise information of each TYPE.
 			     elt)
 			 (while tail
 			   (setq elt (car tail))
-			   (or (not elt) (eq elt t) (charsetp elt)
-			       (error "Invalid charset: %s" elt))
+			   (if (eq elt t)
+			       (setq no-alternative-designation nil)
+			     (if (and elt (not (charsetp elt)))
+				 (error "Invalid charset: %s" elt)))
 			   (setq tail (cdr tail)))
 			 (setq g1-designation (car charset)))
-		     (if (and charset (not (eq charset t)))
-			 (error "Invalid charset: %s" charset))))
+		     (if charset
+			 (if (eq charset t)
+			     (setq no-alternative-designation nil)
+			   (error "Invalid charset: %s" charset)))))
 		 (aset vec i charset))
 	       (setq flags (cdr flags) i (1+ i)))
 	     (while (and (< i 32) flags)
 	       (aset vec i (car flags))
 	       (setq flags (cdr flags) i (1+ i)))
 	     (aset coding-spec 4 vec)
-	     (if no-initial-designation
-		 (put coding-system 'no-initial-designation t))
 	     (setq coding-category
 		   (if (aref vec 8)	; Use locking-shift.
 		       (or (and (aref vec 7) 'coding-category-iso-7-else)
@@ -450,8 +586,11 @@ FLAGS specifies more precise information of each TYPE.
 		     (if (aref vec 7)	; 7-bit only.
 			 (if (aref vec 9) ; Use single-shift.
 			     'coding-category-iso-7-else
-			   'coding-category-iso-7)
-		       (if no-initial-designation
+			   (if no-alternative-designation
+			       'coding-category-iso-7-tight
+			     'coding-category-iso-7))
+		       (if (or no-initial-designation
+			       (not no-alternative-designation))
 			   'coding-category-iso-8-else
 			 (if (and (charsetp g1-designation)
 				  (= (charset-dimension g1-designation) 2))
@@ -460,16 +599,36 @@ FLAGS specifies more precise information of each TYPE.
 	  ((= type 3)
 	   (setq coding-category 'coding-category-big5))
 	  ((= type 4)			; private
-	   (setq coding-category 'coding-category-binary)
-	   (if (and (consp flags)
-		    (vectorp (car flags))
-		    (vectorp (cdr flags)))
-	       (aset coding-spec 4 flags)
-	     (error "Invalid FLAGS argument for TYPE 4 (CCL)")))
+	   (setq coding-category 'coding-category-ccl)
+	   (if (not (consp flags))
+	       (error "Invalid FLAGS argument for TYPE 4 (CCL)")
+	     (let ((decoder (check-ccl-program
+			     (car flags)
+			     (intern (format "%s-decoder" coding-system))))
+		   (encoder (check-ccl-program
+			     (cdr flags)
+			     (intern (format "%s-encoder" coding-system)))))
+	       (if (and decoder encoder)
+		   (aset coding-spec 4 (cons decoder encoder))
+		 (error "Invalid FLAGS argument for TYPE 4 (CCL)")))))
 	  (t				; i.e. (= type 5)
 	   (setq coding-category 'coding-category-raw-text)))
+
+    (let ((plist (list 'coding-category coding-category
+		       'alias-coding-systems (list coding-system))))
+      (if no-initial-designation
+	  (plist-put plist 'no-initial-designation t))
+      (if (and properties
+	       (or (eq properties t)
+		   (not (consp (car properties)))))
+	  ;; In the old version, the arg PROPERTIES is a list to be
+	  ;; set in PLIST as a value of property `safe-charsets'.
+	  (plist-put plist 'safe-charsets properties)
+	(while properties
+	  (plist-put plist (car (car properties)) (cdr (car properties)))
+	  (setq properties (cdr properties))))
+      (aset coding-spec coding-spec-plist-idx plist))
     (put coding-system 'coding-system coding-spec)
-    (put coding-system 'coding-category coding-category)
     (put coding-category 'coding-systems
 	 (cons coding-system (get coding-category 'coding-systems))))
 
@@ -479,30 +638,26 @@ FLAGS specifies more precise information of each TYPE.
   (put coding-system 'eol-type
        (if (or (<= type 3) (= type 5))
 	   (make-subsidiary-coding-system coding-system)
-	 0)))
+	 0))
+
+  ;; At last, register CODING-SYSTEM in `coding-system-list' and
+  ;; `coding-system-alist'.
+  (setq coding-system-list (cons coding-system coding-system-list))
+  (setq coding-system-alist (cons (list (symbol-name coding-system))
+				  coding-system-alist))
+  coding-system)
 
 (defun define-coding-system-alias (alias coding-system)
   "Define ALIAS as an alias for coding system CODING-SYSTEM."
-  (check-coding-system coding-system)
-  (let ((parent (coding-system-parent coding-system)))
-    (if parent
-	(setq coding-system parent)))
-  (put alias 'coding-system coding-system)
-  (put alias 'parent-coding-system coding-system)
-  (put coding-system 'alias-coding-systems
-       (cons alias (get coding-system 'alias-coding-systems)))
-  (let ((eol-variants (coding-system-eol-type coding-system))
-	subsidiaries)
-    (if (vectorp eol-variants)
-	(let ((i 0))
-	  (setq subsidiaries (make-subsidiary-coding-system alias))
-	  (while (< i 3)
-	    (put (aref subsidiaries i) 'parent-coding-system
-		 (aref eol-variants i))
-	    (put (aref eol-variants i) 'alias-coding-systems
-		 (cons (aref subsidiaries i) (get (aref eol-variants i)
-						  'alias-coding-systems)))
-	    (setq i (1+ i)))))))
+  (put alias 'coding-system (coding-system-spec coding-system))
+  (nconc (coding-system-get alias 'alias-coding-systems) (list alias))
+  (setq coding-system-list (cons alias coding-system-list))
+  (setq coding-system-alist (cons (list (symbol-name alias))
+				  coding-system-alist))
+  (let ((eol-type (coding-system-eol-type coding-system)))
+    (if (vectorp eol-type)
+	(put alias 'eol-type (make-subsidiary-coding-system alias))
+      (put alias 'eol-type eol-type))))
 
 (defun set-buffer-file-coding-system (coding-system &optional force)
   "Set the file coding-system of the current buffer to CODING-SYSTEM.
@@ -514,8 +669,8 @@ If the buffer's previous file coding-system value specifies end-of-line
 conversion, and CODING-SYSTEM does not specify one, CODING-SYSTEM is
 merged with the already-specified end-of-line conversion.
 However, if the optional prefix argument FORCE is non-nil,
-them CODING-SYSTEM is used exactly as specified."
-  (interactive "zCoding system for visited file: \nP")
+then CODING-SYSTEM is used exactly as specified."
+  (interactive "zCoding system for visited file (default, nil): \nP")
   (check-coding-system coding-system)
   (if (null force)
       (let ((x (coding-system-eol-type buffer-file-coding-system))
@@ -562,7 +717,7 @@ See also the command `set-keyboard-coding-system'.")
 (defun set-keyboard-coding-system (coding-system)
   "Set coding system for keyboard input to CODING-SYSTEM.
 In addition, this command enables Encoded-kbd minor mode.
-\(If CODING-SYSTEM is nil, Encoded-bkd mode is turned off.)
+\(If CODING-SYSTEM is nil, Encoded-kbd mode is turned off.)
 For a list of possible values of CODING-SYSTEM, use \\[list-coding-systems].
 The default is determined by the selected language environment
 or by the previous use of this command."
@@ -598,100 +753,176 @@ For a list of possible values of CODING-SYSTEM, use \\[list-coding-systems]."
       (set-process-coding-system proc decoding encoding)))
   (force-mode-line-update))
 
+(defalias 'set-clipboard-coding-system 'set-selection-coding-system)
+
+(defun set-selection-coding-system (coding-system)
+  "Make CODING-SYSTEM used for communicating with other X clients .
+When sending or receiving text via cut_buffer, selection, and clipboard,
+the text is encoded or decoded by CODING-SYSTEM."
+  (interactive "zCoding system for X selection: ")
+  (check-coding-system coding-system)
+  (setq selection-coding-system coding-system))
+
+;; Coding system lastly specfied by the command
+;; set-next-selection-coding-system.
+(defvar last-next-selection-coding-system nil)
+
+(defun set-next-selection-coding-system (coding-system)
+  "Make CODING-SYSTEM used for the next communication with other X clients.
+This setting is effective for the next communication only."
+  (interactive
+   (list (read-coding-system
+	  (if last-next-selection-coding-system
+	      (format "Coding system for the next X selection (default, %S): "
+		      last-next-selection-coding-system)
+	    "Coding system for the next X selection: ")
+	  last-next-selection-coding-system)))
+  (if coding-system
+      (setq last-next-selection-coding-system coding-system)
+    (setq coding-system last-next-selection-coding-system))
+  (check-coding-system coding-system)
+
+  (setq next-selection-coding-system coding-system))
+
 (defun set-coding-priority (arg)
-  "Set priority of coding-category according to LIST.
-LIST is a list of coding-categories ordered by priority."
-  (let (l)
-    ;; Put coding-categories listed in ARG to L while checking the
-    ;; validity.  We assume that `coding-category-list' contains whole
-    ;; coding-categories.
-    (while arg
-      (if (null (memq (car arg) coding-category-list))
-	  (error "Invalid element in argument: %s" (car arg)))
-      (setq l (cons (car arg) l))
-      (setq arg (cdr arg)))
-    ;; Put coding-category not listed in ARG to L.
-    (while coding-category-list
-      (if (null (memq (car coding-category-list) l))
-	  (setq l (cons (car coding-category-list) l)))
-      (setq coding-category-list (cdr coding-category-list)))
+  "Set priority of coding categories according to LIST.
+LIST is a list of coding categories ordered by priority."
+  (let ((l arg)
+	(current-list (copy-sequence coding-category-list)))
+    ;; Check the varidity of ARG while deleting coding categories in
+    ;; ARG from CURRENT-LIST.  We assume that CODING-CATEGORY-LIST
+    ;; contains all coding categories.
+    (while l
+      (if (or (null (get (car l) 'coding-category-index))
+	      (null (memq (car l) current-list)))
+	  (error "Invalid or duplicated element in argument: %s" arg))
+      (setq current-list (delq (car l) current-list))
+      (setq l (cdr l)))
     ;; Update `coding-category-list' and return it.
-    (setq coding-category-list (nreverse l))))
+    (setq coding-category-list (append arg current-list))
+    (set-coding-priority-internal)))
 
 ;;; FILE I/O
 
-(defun set-auto-coding (string)
-  "Return coding system for a file which has STRING at the head and tail.
-STRING is a concatination of the first 1K-byte and
- the last 3K-byte of the file.
+(defvar auto-coding-alist
+  '(("\\.\\(arc\\|zip\\|lzh\\|zoo\\|jar\\|tar\\)\\'" . no-conversion)
+    ("\\.\\(ARC\\|ZIP\\|LZH\\|ZOO\\|JAR\\|TAR\\)\\'" . no-conversion))
+  "Alist of filename patterns vs corresponding coding systems.
+Each element looks like (REGEXP . CODING-SYSTEM).
+A file whose name matches REGEXP is decoded by CODING-SYSTEM on reading.
 
-It checks for a -*- coding: tag in the first one or two lines of STRING.
-If there's no coding: tag in the head, it checks local variables spec
-in the tailing 3K-byte oof STRING.
+The settings in this alist take priority over `coding:' tags
+in the file (see the function `set-auto-coding')
+and the contents of `file-coding-system-alist'.")
+
+(defvar set-auto-coding-for-load nil
+  "Non-nil means look for `load-coding' property instead of `coding'.
+This is used for loading and byte-compiling Emacs Lisp files.")
+
+(defun set-auto-coding (filename size)
+  "Return coding system for a file FILENAME of which SIZE bytes follow point.
+These bytes should include at least the first 1k of the file
+and the last 3k of the file, but the middle may be omitted.
+
+It checks FILENAME against the variable `auto-coding-alist'.
+If FILENAME doesn't match any entries in the variable,
+it checks for a `coding:' tag in the first one or two lines following
+point.  If no `coding:' tag is found, it checks for alocal variables
+list in the last 3K bytes out of the SIZE bytes.
 
 The return value is the specified coding system,
 or nil if nothing specified.
 
-The variable `auto-file-coding-system' (which see) is set to this
+The variable `set-auto-coding-function' (which see) is set to this
 function by default."
-  (condition-case nil
-      (let ((case-fold-search t)
-	    (len (length string))
-	    (limit (string-match "\n" string))
-	    (coding-system nil))
-
-	;; At first check the head.
-	(if limit
-	    (when (string-match "^#!" string)
-	      ;; If the file begins with "#!" (exec interpreter
-	      ;; magic), look for coding frobs in the first two lines.
-	      ;; You cannot necessarily put them in the first line of
-	      ;; such a file without screwing up the interpreter
-	      ;; invocation.
-	      (setq limit (string-match "\n" string limit))
-	      (or limit
-		  (setq limit len)))
-	  (setq limit len))
-	(when (and (string-match "-\\*-\\(.*;\\)?[ \t]*coding:[ \t]*\\([^ ;]+\\)" string)
-		   (< (match-beginning 2) limit))
-	  (setq coding-system
-		(intern (substring string (match-beginning 2) (match-end 2))))
-	  (if (not (coding-system-p coding-system))
-	      (setq coding-system nil)))
-
-	;; If no coding system is specified in the head, check the tail.
-	(when (and (not coding-system)
-		   (let ((idx (if (> len 3000) (- len 3000) 0))
-			 start)
-		     (while (setq start (string-match "\n\^L" string idx))
-		       (setq idx (+ start 2)))
-		     (string-match
-		      "^\\(.*\\)[ \t]*Local Variables:[ \t]*\\(.*\\)$"
-		      string idx)))
-	  ;; The prefix is what comes before "local variables:" in its line.
-	  ;; The suffix is what comes after "local variables:" in its line.
-	  (let* ((idx (1+ (match-end 0)))
-		 (prefix (regexp-quote
-			  (substring string
-				     (match-beginning 1) (match-end 1))))
-		 (suffix (regexp-quote
-			  (substring string
-				     (match-beginning 2) (match-end 2))))
-		 (re-coding (concat "^" prefix
-				    "coding[ \t]*:[ \t]*\\([^ \t]+\\)[ \t]*"
-				    suffix "$"))
-		 (re-end (concat "^" prefix "end *:[ \t]*" suffix "$"))
-		 (limit (or (string-match re-end string idx) len)))
-	    (when (and (setq idx (string-match re-coding string idx))
-		       (< idx limit))
-	      (setq coding-system
-		    (intern (substring string
-				       (match-beginning 1) (match-end 1))))
-	      (or (coding-system-p coding-system)
-		  (setq coding-system nil)))))
-
+  (let ((alist auto-coding-alist)
+	(case-fold-search (memq system-type '(vax-vms windows-nt)))
 	coding-system)
-    (error nil)))
+    (while (and alist (not coding-system))
+      (if (string-match (car (car alist)) filename)
+	  (setq coding-system (cdr (car alist)))
+	(setq alist (cdr alist))))
+
+    (or coding-system
+	(let* ((case-fold-search t)
+	       (head-start (point))
+	       (head-end (+ head-start (min size 1024)))
+	       (tail-start (+ head-start (max (- size 3072) 0)))
+	       (tail-end (+ head-start size))
+	       coding-system head-found tail-found pos)
+	  ;; Try a short cut by searching for the string "coding:"
+	  ;; and for "unibyte:" at th ehead and tail of SIZE bytes.
+	  (setq head-found (or (search-forward "coding:" head-end t)
+			       (search-forward "unibyte:" head-end t)))
+	  (if (and head-found (> head-found tail-start))
+	      ;; Head and tail are overlapped.
+	      (setq tail-found head-found)
+	    (goto-char tail-start)
+	    (setq tail-found (or (search-forward "coding:" tail-end t)
+				 (search-forward "unibyte:" tail-end t))))
+
+	  ;; At first check the head.
+	  (when head-found
+	    (goto-char head-start)
+	    (setq pos (re-search-forward "[\n\r]" head-end t))
+	    (if (and pos
+		     (= (char-after head-start) ?#)
+		     (= (char-after (1+ head-start)) ?!))
+		;; If the file begins with "#!" (exec interpreter magic),
+		;; look for coding frobs in the first two lines.  You cannot
+		;; necessarily put them in the first line of such a file
+		;; without screwing up the interpreter invocation.
+		(setq pos (search-forward "\n" head-end t)))
+	    (if pos (setq head-end pos))
+	    (when (< head-found head-end)
+	      (goto-char head-start)
+	      (when (and set-auto-coding-for-load
+			 (re-search-forward
+			  "-\\*-\\(.*;\\)?[ \t]*unibyte:[ \t]*\\([^ ;]+\\)"
+			  head-end t))
+		(setq coding-system 'raw-text))
+	      (when (and (not coding-system)
+			 (re-search-forward
+			  "-\\*-\\(.*;\\)?[ \t]*coding:[ \t]*\\([^ ;]+\\)"
+			  head-end t))
+		(setq coding-system (intern (match-string 2)))
+		(or (coding-system-p coding-system)
+		    (setq coding-system nil)))))
+
+	  ;; If no coding: tag in the head, check the tail.
+	  (when (and tail-found (not coding-system))
+	    (goto-char tail-start)
+	    (search-forward "\n\^L" nil t)
+	    (if (re-search-forward
+		 "^\\(.*\\)[ \t]*Local Variables:[ \t]*\\(.*\\)$" tail-end t)
+		;; The prefix is what comes before "local variables:" in its
+		;; line.  The suffix is what comes after "local variables:"
+		;; in its line.
+		(let* ((prefix (regexp-quote (match-string 1)))
+		       (suffix (regexp-quote (match-string 2)))
+		       (re-coding (concat
+				   "^" prefix
+				   "coding[ \t]*:[ \t]*\\([^ \t]+\\)[ \t]*"
+				   suffix "$"))
+		       (re-unibyte (concat
+				    "^" prefix
+				    "unibyte[ \t]*:[ \t]*\\([^ \t]+\\)[ \t]*"
+				    suffix "$"))
+		       (re-end (concat
+				"^" prefix "end *:[ \t]*" suffix "$"))
+		       (pos (point)))
+		  (re-search-forward re-end tail-end 'move)
+		  (setq tail-end (point))
+		  (goto-char pos)
+		  (when (and set-auto-coding-for-load
+			     (re-search-forward re-unibyte tail-end t))
+		    (setq coding-system 'raw-text))
+		  (when (and (not coding-system)
+			     (re-search-forward re-coding tail-end t))
+		    (setq coding-system (intern (match-string 1)))
+		    (or (coding-system-p coding-system)
+			(setq coding-system nil))))))
+	  coding-system))))
 
 (setq set-auto-coding-function 'set-auto-coding)
 
@@ -702,20 +933,20 @@ function by default."
       (let ((coding-system
 	     (find-new-buffer-file-coding-system last-coding-system-used))
 	    (modified-p (buffer-modified-p)))
-	(if coding-system
-	    (set-buffer-file-coding-system coding-system))
-	(if (or (eq coding-system 'no-conversion)
-		(eq (coding-system-type coding-system) 5))
-	    ;; It seems that random 8-bit codes are read.  We had
-	    ;; better edit this buffer without multibyte character
-	    ;; facility.
-	    (setq enable-multibyte-characters nil))
-	(set-buffer-modified-p modified-p)))
+	(when coding-system
+	  (set-buffer-file-coding-system coding-system)
+	  (if (and (or (eq coding-system 'no-conversion)
+		       (eq (coding-system-type coding-system) 5))
+		   ;; If buffer was unmodified, we must be visiting it.
+		   (not modified-p))
+	      ;; For coding systems no-conversion and raw-text...,
+	      ;; edit the buffer as unibyte.
+	      (set-buffer-multibyte nil))
+	  (set-buffer-modified-p modified-p))))
   nil)
 
-(setq after-insert-file-functions
-      (cons 'after-insert-file-set-buffer-file-coding-system
-	    after-insert-file-functions))
+(add-hook 'after-insert-file-functions
+	  'after-insert-file-set-buffer-file-coding-system)
 
 ;; The coding-spec and eol-type of coding-system returned is decided
 ;; independently in the following order.
@@ -740,12 +971,10 @@ Return nil if there's no need of setting new buffer-file-coding-system."
       (if (null (numberp local-eol))
 	  ;; But eol-type is not yet set.
 	  (setq local-eol nil))
-      (when (and buffer-file-coding-system
-		 (not (eq (coding-system-type buffer-file-coding-system) t)))
-	;; This is not `undecided'.
-	(setq local-coding buffer-file-coding-system)
-	(while (symbolp (get local-coding 'coding-system))
-	  (setq local-coding (get local-coding 'coding-system))))
+      (if (and buffer-file-coding-system
+	       (not (eq (coding-system-type buffer-file-coding-system) t)))
+	  ;; This is not `undecided'.
+	  (setq local-coding (coding-system-base buffer-file-coding-system)))
 
       (if (and (local-variable-p 'buffer-file-coding-system)
 	       local-eol local-coding)
@@ -755,33 +984,31 @@ Return nil if there's no need of setting new buffer-file-coding-system."
 
 	(setq found-eol (coding-system-eol-type coding))
 	(if (null (numberp found-eol))
-	    ;; But eol-type is not found.
-	    (setq found-eol nil))
-	(unless (eq (coding-system-type coding) t)
-	  ;; This is not `undecided'.
-	  (setq found-coding coding)
-	  (while (symbolp (get found-coding 'coding-system))
-	    (setq found-coding (get found-coding 'coding-system))))
+  	    ;; But eol-type is not found.
+	    ;; If EOL conversions are inhibited, force unix eol-type.
+	    (setq found-eol (if inhibit-eol-conversion 0)))
+	(if (eq (coding-system-type coding) t)
+	    (setq found-coding 'undecided)
+	  (setq found-coding (coding-system-base coding)))
 
-	;; The local setting takes precedence over the found one.
-	(setq new-coding (or (and (local-variable-p 'buffer-file-coding-system)
-				  local-coding)
-			     found-coding
-			     local-coding))
-	(setq new-eol (or (and (local-variable-p 'buffer-file-coding-system)
-			       local-eol)
-			  found-eol
-			  local-eol))
-	(when (numberp new-eol)
-	  (or new-coding
-	      (setq new-coding 'undecided))
-	  (if (vectorp (coding-system-eol-type new-coding))
-	      (setq new-coding
-		    (aref (coding-system-eol-type new-coding) new-eol))))
-	;; Return a new coding system only when it is different from
-	;; the current one.
-	(if (not (eq buffer-file-coding-system new-coding))
-	    new-coding)))))
+	(if (and (not found-eol) (eq found-coding 'undecided))
+	    ;; No valid coding information found.
+	    nil
+
+	  ;; Some coding information (eol or text) found.
+
+	  ;; The local setting takes precedence over the found one.
+	  (setq new-coding (if (local-variable-p 'buffer-file-coding-system)
+			       (or local-coding found-coding)
+			     (or found-coding local-coding)))
+	  (setq new-eol (if (local-variable-p 'buffer-file-coding-system)
+			    (or local-eol found-eol)
+			  (or found-eol local-eol)))
+
+	  (let ((eol-type (coding-system-eol-type new-coding)))
+	    (if (and (numberp new-eol) (vectorp eol-type))
+		(aref eol-type new-eol)
+	      new-coding)))))))
 
 (defun modify-coding-system-alist (target-type regexp coding-system)
   "Modify one of look up tables for finding a coding system on I/O operation.
@@ -836,17 +1063,35 @@ or a function symbol which, when called, returns such a cons cell."
 		   (cons (cons regexp coding-system)
 			 network-coding-system-alist)))))))
 
-(defun make-unification-table (&rest args)
-  "Make a unification table (char table) from arguments.
-Each argument is a list of the form (FROM . TO),
-where FROM is a character to be unified to TO.
+(defvar charset-origin-alist nil
+  "Alist of Emacs charset vs the information of the origin of the charset.
+Each element looks like (CHARSET ORIGIN-NAME GET-ORIGIN-CODE-FUNCTION).
+CHARSET is Emacs character set (symbol).
+ORIGIN-NAME is a name of original (external) character set (string).
+GET-ORIGIN-CODE-FUNCTION is a function which returns an original
+\(external) code.  This function is called with one argument, Emacs
+character code.
 
-FROM can be a generic character (see make-char).  In this case, TO is
-a generic character containing the same number of charcters or a
-oridinal character.  If FROM and TO are both generic characters, all
-characters belonging to FROM are unified to characters belonging to TO
+The command \\[what-cursor-position] when called with prefix argument
+shows a character set name and character code based on this alist.  If
+a character set of a character at point is not listed here, the
+character set is regarded as identical with the original (external)
+character set.
+
+Setting specific language environment will change the value of this
+variable.")
+
+(defun make-translation-table (&rest args)
+  "Make a translation table (char table) from arguments.
+Each argument is a list of the form (FROM . TO),
+where FROM is a character to be translated to TO.
+
+FROM can be a generic character (see `make-char').  In this case, TO is
+a generic character containing the same number of characters, or a
+ordinary character.  If FROM and TO are both generic characters, all
+characters belonging to FROM are translated to characters belonging to TO
 without changing their position code(s)."
-  (let ((table (make-char-table 'character-unification-table))
+  (let ((table (make-char-table 'translation-table))
 	revlist)
     (while args
       (let ((elts (car args)))
@@ -864,9 +1109,9 @@ without changing their position code(s)."
 	      (setq to-i (1+ to-i) to-rev (cdr to-rev)))
 	    (if (and (/= from-i to-i) (/= to-i 0))
 		(error "Invalid character pair (%d . %d)" from to))
-	    ;; If we have already unified TO to TO-ALT, FROM should
-	    ;; also be unified to TO-ALT.  But, this is only if TO is
-	    ;; a generic character or TO-ALT is not a generic
+	    ;; If we have already translated TO to TO-ALT, FROM should
+	    ;; also be translated to TO-ALT.  But, this is only if TO
+	    ;; is a generic character or TO-ALT is not a generic
 	    ;; character.
 	    (let ((to-alt (aref table to)))
 	      (if (and to-alt
@@ -875,8 +1120,8 @@ without changing their position code(s)."
 	    (if (> from-i 0)
 		(set-char-table-default table from to)
 	      (aset table from to))
-	    ;; If we have already unified some chars to FROM, they
-	    ;; should also be unified to TO.
+	    ;; If we have already translated some chars to FROM, they
+	    ;; should also be translated to TO.
 	    (let ((l (assq from revlist)))
 	      (if l
 		  (let ((ch (car l)))
@@ -894,6 +1139,51 @@ without changing their position code(s)."
       (setq args (cdr args)))
     ;; Return TABLE just created.
     table))
+
+(defun make-translation-table-from-vector (vec)
+  "Make translation table from decoding vector VEC.
+VEC is an array of 256 elements to map unibyte codes to multibyte characters.
+See also the variable `nonascii-translation-table'."
+  (let ((table (make-char-table 'translation-table))
+	(rev-table (make-char-table 'translation-table))
+	(i 0)
+	ch)
+    (while (< i 256)
+      (setq ch (aref vec i))
+      (aset table i ch)
+      (if (>= ch 256)
+	  (aset rev-table ch i))
+      (setq i (1+ i)))
+    (set-char-table-extra-slot table 0 rev-table)
+    table))
+
+(defun define-translation-table (symbol &rest args)
+  "Define SYMBOL as a name of translation table makde by ARGS.
+
+See the documentation of the function `make-translation-table' for the
+meaning of ARGS.
+
+This function sets properties `translation-table' and
+`translation-table-id' of SYMBOL to the created table itself and
+identification number of the table respectively."
+  (let ((table (apply 'make-translation-table args))
+	(len (length translation-table-vector))
+	(id 0)
+	(done nil))
+    (put symbol 'translation-table table)
+    (while (not done)
+      (if (>= id len)
+	  (setq translation-table-vector
+		(vconcat translation-table-vector (make-vector len nil))))
+      (let ((slot (aref translation-table-vector id)))
+	(if (or (not slot)
+		(eq (car slot) symbol))
+	    (progn
+	      (aset translation-table-vector id (cons symbol table))
+	      (setq done t))))
+      (setq id (1+ id)))
+    (put symbol 'translation-table-id id)
+    id))
 
 ;;; Initialize some variables.
 

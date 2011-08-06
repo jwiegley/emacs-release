@@ -112,7 +112,7 @@ An argument of zero means repeat until error.")
      Lisp_Object repeat;
 {
   if (NILP (current_kboard->defining_kbd_macro))
-    error ("Not defining kbd macro.");
+    error ("Not defining kbd macro");
 
   if (NILP (repeat))
     XSETFASTINT (repeat, 1);
@@ -143,6 +143,7 @@ An argument of zero means repeat until error.")
 
 /* Store character c into kbd macro being defined */
 
+void
 store_kbd_macro_char (c)
      Lisp_Object c;
 {
@@ -170,6 +171,7 @@ store_kbd_macro_char (c)
 /* Declare that all chars stored so far in the kbd macro being defined
  really belong to it.  This is done in between editor commands.  */
 
+void
 finalize_kbd_macro_chars ()
 {
   current_kboard->kbd_macro_end = current_kboard->kbd_macro_ptr;
@@ -206,7 +208,7 @@ defining others, use \\[name-last-kbd-macro].")
 {
   /* Don't interfere with recognition of the previous command
      from before this macro started.  */
-  this_command = current_kboard->Vlast_command;
+  Vthis_command = current_kboard->Vlast_command;
 
   if (! NILP (current_kboard->defining_kbd_macro))
     error ("Can't execute anonymous macro while defining one");
@@ -218,7 +220,7 @@ defining others, use \\[name-last-kbd-macro].")
   /* command_loop_1 sets this to nil before it returns;
      get back the last command within the macro
      so that it can be last, again, after we return.  */
-  this_command = current_kboard->Vlast_command;
+  Vthis_command = current_kboard->Vlast_command;
 
   return Qnil;
 }
@@ -259,7 +261,7 @@ COUNT is a repeat count, or nil for once, or 0 for infinite loop.")
 
   final = indirect_function (macro);
   if (!STRINGP (final) && !VECTORP (final))
-    error ("Keyboard macros must be strings or vectors.");
+    error ("Keyboard macros must be strings or vectors");
 
   XSETFASTINT (tem, executing_macro_index);
   tem = Fcons (Vexecuting_macro, tem);
@@ -288,12 +290,14 @@ COUNT is a repeat count, or nil for once, or 0 for infinite loop.")
   return unbind_to (pdlcount, Qnil);
 }
 
+void
 init_macros ()
 {
   Vexecuting_macro = Qnil;
   executing_macro = Qnil;
 }
 
+void
 syms_of_macros ()
 {
   Qexecute_kbd_macro = intern ("execute-kbd-macro");
@@ -319,6 +323,7 @@ syms_of_macros ()
     "Last kbd macro defined, as a string or vector; nil if none defined.");
 }
 
+void
 keys_of_macros ()
 {
   initial_define_key (control_x_map, ('e'), "call-last-kbd-macro");

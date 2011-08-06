@@ -4,6 +4,7 @@
 
 ;; Author: Roland McGrath <roland@gnu.ai.mit.edu>,
 ;;	   Sebastian Kremer <sk@thp.uni-koeln.de>
+;; Maintainer: FSF
 ;; Keywords: unix
 
 ;; This file is part of GNU Emacs.
@@ -27,25 +28,36 @@
 
 (require 'dired)
 
+(defgroup find-dired nil
+  "Run a `find' command and dired the output."
+  :group 'dired
+  :prefix "find-")
+
 ;; find's -ls corresponds to these switches.
 ;; Note -b, at least GNU find quotes spaces etc. in filenames
 ;;;###autoload
-(defvar find-ls-option (if (eq system-type 'berkeley-unix) '("-ls" . "-gilsb")
-			 '("-exec ls -ld {} \\;" . "-ld"))
+(defcustom find-ls-option
+  (if (eq system-type 'berkeley-unix) '("-ls" . "-gilsb")
+    '("-exec ls -ld {} \\;" . "-ld"))
   "*Description of the option to `find' to produce an `ls -l'-type listing.
 This is a cons of two strings (FIND-OPTION . LS-SWITCHES).  FIND-OPTION
 gives the option (or options) to `find' that produce the desired output.
-LS-SWITCHES is a list of `ls' switches to tell dired how to parse the output.")
+LS-SWITCHES is a list of `ls' switches to tell dired how to parse the output."
+  :type '(cons (string :tag "Find Option")
+	       (string :tag "Ls Switches"))
+  :group 'find-dired)
 
 ;;;###autoload
-(defvar find-grep-options
+(defcustom find-grep-options
   (if (or (eq system-type 'berkeley-unix)
 	  (string-match "solaris2" system-configuration)
 	  (string-match "irix" system-configuration))
       "-s" "-q")
   "*Option to grep to be as silent as possible.
 On Berkeley systems, this is `-s'; on Posix, and with GNU grep, `-q' does it.
-On other systems, the closest you can come is to use `-l'.")
+On other systems, the closest you can come is to use `-l'."
+  :type 'string
+  :group 'find-dired)
 
 (defvar find-args nil
   "Last arguments given to `find' by \\[find-dired].")
@@ -55,7 +67,7 @@ On other systems, the closest you can come is to use `-l'.")
 
 ;;;###autoload
 (defun find-dired (dir args)
-  "Run `find' and go into dired-mode on a buffer of the output.
+  "Run `find' and go into Dired mode on a buffer of the output.
 The command run (after changing into DIR) is
 
     find . \\( ARGS \\) -ls
@@ -65,53 +77,55 @@ as the final argument."
   (interactive (list (read-file-name "Run find in directory: " nil "" t)
 		     (read-string "Run find (with args): " find-args
 				  '(find-args-history . 1))))
-  ;; Expand DIR ("" means default-directory), and make sure it has a
-  ;; trailing slash.
-  (setq dir (file-name-as-directory (expand-file-name dir)))
-  ;; Check that it's really a directory.
-  (or (file-directory-p dir)
-      (error "find-dired needs a directory: %s" dir))
-  (switch-to-buffer (get-buffer-create "*Find*"))
-  (widen)
-  (kill-all-local-variables)
-  (setq buffer-read-only nil)
-  (erase-buffer)
-  (setq default-directory dir
-	find-args args			; save for next interactive call
-	args (concat "find . "
-		     (if (string= args "")
-			 ""
-		       (concat "\\( " args " \\) "))
-		     (car find-ls-option)))
-  ;; The next statement will bomb in classic dired (no optional arg allowed)
-  (dired-mode dir (cdr find-ls-option))
-  ;; This really should rerun the find command, but I don't
-  ;; have time for that.
-  (use-local-map (append (make-sparse-keymap) (current-local-map)))
-  (define-key (current-local-map) "g" 'undefined)
-  ;; Set subdir-alist so that Tree Dired will work:
-  (if (fboundp 'dired-simple-subdir-alist)
-      ;; will work even with nested dired format (dired-nstd.el,v 1.15
-      ;; and later)
-      (dired-simple-subdir-alist)
-    ;; else we have an ancient tree dired (or classic dired, where
-    ;; this does no harm) 
-    (set (make-local-variable 'dired-subdir-alist)
-	 (list (cons default-directory (point-min-marker)))))
-  (setq buffer-read-only nil)
-  ;; Subdir headlerline must come first because the first marker in
-  ;; subdir-alist points there.
-  (insert "  " dir ":\n")
-  ;; Make second line a ``find'' line in analogy to the ``total'' or
-  ;; ``wildcard'' line. 
-  (insert "  " args "\n")
-  ;; Start the find process.
-  (let ((proc (start-process-shell-command "find" (current-buffer) args)))
-    (set-process-filter proc (function find-dired-filter))
-    (set-process-sentinel proc (function find-dired-sentinel))
-    ;; Initialize the process marker; it is used by the filter.
-    (move-marker (process-mark proc) 1 (current-buffer)))
-  (setq mode-line-process '(":%s")))
+  (let ((dired-buffers dired-buffers))
+    ;; Expand DIR ("" means default-directory), and make sure it has a
+    ;; trailing slash.
+    (setq dir (abbreviate-file-name
+	       (file-name-as-directory (expand-file-name dir))))
+    ;; Check that it's really a directory.
+    (or (file-directory-p dir)
+	(error "find-dired needs a directory: %s" dir))
+    (switch-to-buffer (get-buffer-create "*Find*"))
+    (widen)
+    (kill-all-local-variables)
+    (setq buffer-read-only nil)
+    (erase-buffer)
+    (setq default-directory dir
+	  find-args args		; save for next interactive call
+	  args (concat "find . "
+		       (if (string= args "")
+			   ""
+			 (concat "\\( " args " \\) "))
+		       (car find-ls-option)))
+    ;; The next statement will bomb in classic dired (no optional arg allowed)
+    (dired-mode dir (cdr find-ls-option))
+    ;; This really should rerun the find command, but I don't
+    ;; have time for that.
+    (use-local-map (append (make-sparse-keymap) (current-local-map)))
+    (define-key (current-local-map) "g" 'undefined)
+    ;; Set subdir-alist so that Tree Dired will work:
+    (if (fboundp 'dired-simple-subdir-alist)
+	;; will work even with nested dired format (dired-nstd.el,v 1.15
+	;; and later)
+	(dired-simple-subdir-alist)
+      ;; else we have an ancient tree dired (or classic dired, where
+      ;; this does no harm) 
+      (set (make-local-variable 'dired-subdir-alist)
+	   (list (cons default-directory (point-min-marker)))))
+    (setq buffer-read-only nil)
+    ;; Subdir headlerline must come first because the first marker in
+    ;; subdir-alist points there.
+    (insert "  " dir ":\n")
+    ;; Make second line a ``find'' line in analogy to the ``total'' or
+    ;; ``wildcard'' line. 
+    (insert "  " args "\n")
+    ;; Start the find process.
+    (let ((proc (start-process-shell-command "find" (current-buffer) args)))
+      (set-process-filter proc (function find-dired-filter))
+      (set-process-sentinel proc (function find-dired-sentinel))
+      ;; Initialize the process marker; it is used by the filter.
+      (move-marker (process-mark proc) 1 (current-buffer)))
+    (setq mode-line-process '(":%s"))))
 
 ;;;###autoload
 (defun find-name-dired (dir pattern)

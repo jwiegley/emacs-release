@@ -1,6 +1,497 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
+
+File: emacs,  Node: Fontsets,  Next: Defining Fontsets,  Prev: Specify Coding,  Up: International
+
+Fontsets
+========
+
+   A font for X Windows typically defines shapes for one alphabet or
+script.  Therefore, displaying the entire range of scripts that Emacs
+supports requires a collection of many fonts.  In Emacs, such a
+collection is called a "fontset".  A fontset is defined by a list of
+fonts, each assigned to handle a range of character codes.
+
+   Each fontset has a name, like a font.  The available X fonts are
+defined by the X server; fontsets, however, are defined within Emacs
+itself.  Once you have defined a fontset, you can use it within Emacs by
+specifying its name, anywhere that you could use a single font.  Of
+course, Emacs fontsets can use only the fonts that the X server
+supports; if certain characters appear on the screen as hollow boxes,
+this means that the fontset in use for them has no font for those
+characters.
+
+   Emacs creates two fontsets automatically: the "standard fontset" and
+the "startup fontset".  The standard fontset is most likely to have
+fonts for a wide variety of non-ASCII characters; however, this is not
+the default for Emacs to use.  (By default, Emacs tries to find a font
+which has bold and italic variants.)  You can specify use of the
+standard fontset by starting Emacs in this way:
+
+     emacs -fn fontset-standard
+
+   A fontset does not necessarily specify a font for all character
+codes.  If a fontset specifies no font for a certain character, or if it
+specifies a font that does not exist on your system, then it cannot
+display that character.  It will display an empty box instead.
+
+   The fontset height and width are determined by the ASCII characters
+(that is, by the font used for ASCII characters in that fontset).  If
+another font in the fontset has a different height, or a different
+width, then characters assigned to that font are clipped to the
+fontset's size.  If `highlight-wrong-size-font' is non-`nil', a box is
+displayed around these wrong-size characters as well.
+
+
+File: emacs,  Node: Defining Fontsets,  Next: Single-Byte European Support,  Prev: Fontsets,  Up: International
+
+Defining fontsets
+=================
+
+   Emacs creates a standard fontset automatically according to the value
+of `standard-fontset-spec'.  This fontset's name is
+
+     -*-fixed-medium-r-normal-*-16-*-*-*-*-*-fontset-standard
+
+or just `fontset-standard' for short.
+
+   Bold, italic, and bold-italic variants of the standard fontset are
+created automatically.  Their names have `bold' instead of `medium', or
+`i' instead of `r', or both.
+
+   If you specify a default ASCII font with the `Font' resource or the
+`-fn' argument, Emacs generates a fontset from it automatically.  This
+is the "startup fontset" and its name is `fontset-startup'.  It does
+this by replacing the FOUNDRY, FAMILY, ADD_STYLE, and AVERAGE_WIDTH
+fields of the font name with `*', replacing CHARSET_REGISTRY field with
+`fontset', and replacing CHARSET_ENCODING field with `startup', then
+using the resulting string to specify a fontset.
+
+   For instance, if you start Emacs this way,
+
+     emacs -fn "*courier-medium-r-normal--14-140-*-iso8859-1"
+
+Emacs generates the following fontset and uses it for the initial X
+window frame:
+
+     -*-*-medium-r-normal-*-14-140-*-*-*-*-fontset-startup
+
+   With the X resource `Emacs.Font', you can specify a fontset name
+just like an actual font name.  But be careful not to specify a fontset
+name in a wildcard resource like `Emacs*Font'--that wildcard
+specification applies to various other purposes, such as menus, and
+menus cannot handle fontsets.
+
+   You can specify additional fontsets using X resources named
+`Fontset-N', where N is an integer starting from 0.  The resource value
+should have this form:
+
+     FONTPATTERN, [CHARSETNAME:FONTNAME]...
+
+FONTPATTERN should have the form of a standard X font name, except for
+the last two fields.  They should have the form `fontset-ALIAS'.
+
+   The fontset has two names, one long and one short.  The long name is
+FONTPATTERN.  The short name is `fontset-ALIAS'.  You can refer to the
+fontset by either name.
+
+   The construct `CHARSET:FONT' specifies which font to use (in this
+fontset) for one particular character set.  Here, CHARSET is the name
+of a character set, and FONT is the font to use for that character set.
+You can use this construct any number of times in defining one fontset.
+
+   For the other character sets, Emacs chooses a font based on
+FONTPATTERN.  It replaces `fontset-ALIAS' with values that describe the
+character set.  For the ASCII character font, `fontset-ALIAS' is
+replaced with `ISO8859-1'.
+
+   In addition, when several consecutive fields are wildcards, Emacs
+collapses them into a single wildcard.  This is to prevent use of
+auto-scaled fonts.  Fonts made by scaling larger fonts are not usable
+for editing, and scaling a smaller font is not useful because it is
+better to use the smaller font in its own size, which Emacs does.
+
+   Thus if FONTPATTERN is this,
+
+     -*-fixed-medium-r-normal-*-24-*-*-*-*-*-fontset-24
+
+the font specification for ASCII characters would be this:
+
+     -*-fixed-medium-r-normal-*-24-*-ISO8859-1
+
+and the font specification for Chinese GB2312 characters would be this:
+
+     -*-fixed-medium-r-normal-*-24-*-gb2312*-*
+
+   You may not have any Chinese font matching the above font
+specification.  Most X distributions include only Chinese fonts that
+have `song ti' or `fangsong ti' in FAMILY field.  In such a case,
+`Fontset-N' can be specified as below:
+
+     Emacs.Fontset-0: -*-fixed-medium-r-normal-*-24-*-*-*-*-*-fontset-24,\
+             chinese-gb2312:-*-*-medium-r-normal-*-24-*-gb2312*-*
+
+Then, the font specifications for all but Chinese GB2312 characters have
+`fixed' in the FAMILY field, and the font specification for Chinese
+GB2312 characters has a wild card `*' in the FAMILY field.
+
+   The function that processes the fontset resource value to create the
+fontset is called `create-fontset-from-fontset-spec'.  You can also
+call this function explicitly to create a fontset.
+
+   *Note Font X::, for more information about font naming in X.
+
+
+File: emacs,  Node: Single-Byte European Support,  Prev: Defining Fontsets,  Up: International
+
+Single-byte European Character Support
+======================================
+
+   The ISO 8859 Latin-N character sets define character codes in the
+range 160 to 255 to handle the accented letters and punctuation needed
+by various European languages.  If you disable multibyte characters
+with `--unibyte', Emacs can still handle *one* of these character codes
+at a time.  To specify *which* of these codes to use, invoke `M-x
+set-language-environment' and specify a suitable language environment
+such as `Latin-N'.
+
+   Emacs can also display those characters, provided the terminal or
+font in use supports them.  This works automatically.  Alternatively,
+if you are using a window system, Emacs can also display single-byte
+characters through fontsets, in effect by displaying the equivalent
+multibyte characters according to the current language environment.  To
+request this, set the variable
+`unibyte-display-via-language-environment' to a non-`nil' value.
+
+   If your terminal does not support display of the Latin-1 character
+set, Emacs can display these characters as ASCII sequences which at
+least give you a clear idea of what the characters are.  To do this,
+load the library `iso-ascii'.  Similar libraries for other Latin-N
+character sets could be implemented, but we don't have them yet.
+
+   There are three different ways you can input single-byte non-ASCI
+characters characters:
+
+   * If your keyboard can generate character codes 128 and up,
+     representing non-ASCII characters, execute the following
+     expression to enable Emacs to understand them:
+
+          (set-input-mode (car (current-input-mode))
+                          (nth 1 (current-input-mode))
+                          0)
+
+   * You can use an input method for the selected language environment.
+     When you use an input method in a unibyte buffer, the non-ASCII
+     character you specify with it is converted to unibyte.
+
+   * For Latin-1 only, you can load the library `iso-transl' to turn the
+     key `C-x 8' into a "compose character" prefix for entry of
+     non-ASCII Latin-1 printing characters.  `C-x 8' is good for
+     insertion (in the minibuffer as well as other buffers), for
+     searching, and in any other context where a key sequence is
+     allowed.  The <ALT> modifier key, if you have one, serves the same
+     purpose as `C-x 8'; use <ALT> together with an accent character to
+     modify the following letter.
+
+
+File: emacs,  Node: Major Modes,  Next: Indentation,  Prev: International,  Up: Top
+
+Major Modes
+***********
+
+   Emacs provides many alternative "major modes", each of which
+customizes Emacs for editing text of a particular sort.  The major modes
+are mutually exclusive, and each buffer has one major mode at any time.
+The mode line normally shows the name of the current major mode, in
+parentheses (*note Mode Line::.).
+
+   The least specialized major mode is called "Fundamental mode".  This
+mode has no mode-specific redefinitions or variable settings, so that
+each Emacs command behaves in its most general manner, and each option
+is in its default state.  For editing text of a specific type that
+Emacs knows about, such as Lisp code or English text, you should switch
+to the appropriate major mode, such as Lisp mode or Text mode.
+
+   Selecting a major mode changes the meanings of a few keys to become
+more specifically adapted to the language being edited.  The ones that
+are changed frequently are <TAB>, <DEL>, and `C-j'.  The prefix key
+`C-c' normally contains mode-specific commands.  In addition, the
+commands which handle comments use the mode to determine how comments
+are to be delimited.  Many major modes redefine the syntactical
+properties of characters appearing in the buffer.  *Note Syntax::.
+
+   The major modes fall into three major groups.  Lisp mode (which has
+several variants), C mode, Fortran mode and others are for specific
+programming languages.  Text mode, Nroff mode, TeX mode and Outline
+mode are for editing English text.  The remaining major modes are not
+intended for use on users' files; they are used in buffers created for
+specific purposes by Emacs, such as Dired mode for buffers made by Dired
+(*note Dired::.), Mail mode for buffers made by `C-x m' (*note Sending
+Mail::.), and Shell mode for buffers used for communicating with an
+inferior shell process (*note Interactive Shell::.).
+
+   Most programming-language major modes specify that only blank lines
+separate paragraphs.  This is to make the paragraph commands useful.
+(*Note Paragraphs::.)  They also cause Auto Fill mode to use the
+definition of <TAB> to indent the new lines it creates.  This is
+because most lines in a program are usually indented.  (*Note
+Indentation::.)
+
+* Menu:
+
+* Choosing Modes::     How major modes are specified or chosen.
+
+
+File: emacs,  Node: Choosing Modes,  Prev: Major Modes,  Up: Major Modes
+
+How Major Modes are Chosen
+==========================
+
+   You can select a major mode explicitly for the current buffer, but
+most of the time Emacs determines which mode to use based on the file
+name or on special text in the file.
+
+   Explicit selection of a new major mode is done with a `M-x' command.
+From the name of a major mode, add `-mode' to get the name of a command
+to select that mode.  Thus, you can enter Lisp mode by executing `M-x
+lisp-mode'.
+
+   When you visit a file, Emacs usually chooses the right major mode
+based on the file's name.  For example, files whose names end in `.c'
+are edited in C mode.  The correspondence between file names and major
+modes is controlled by the variable `auto-mode-alist'.  Its value is a
+list in which each element has this form,
+
+     (REGEXP . MODE-FUNCTION)
+
+or this form,
+
+     (REGEXP MODE-FUNCTION FLAG)
+
+For example, one element normally found in the list has the form
+`("\\.c\\'" . c-mode)', and it is responsible for selecting C mode for
+files whose names end in `.c'.  (Note that `\\' is needed in Lisp
+syntax to include a `\' in the string, which is needed to suppress the
+special meaning of `.' in regexps.)  If the element has the form
+`(REGEXP MODE-FUNCTION FLAG)' and FLAG is non-`nil', then after calling
+FUNCTION, the suffix that matched REGEXP is discarded and the list is
+searched again for another match.
+
+   You can specify which major mode should be used for editing a certain
+file by a special sort of text in the first nonblank line of the file.
+The mode name should appear in this line both preceded and followed by
+`-*-'.  Other text may appear on the line as well.  For example,
+
+     ;-*-Lisp-*-
+
+tells Emacs to use Lisp mode.  Such an explicit specification overrides
+any defaulting based on the file name.  Note how the semicolon is used
+to make Lisp treat this line as a comment.
+
+   Another format of mode specification is
+
+     -*- mode: MODENAME;-*-
+
+which allows you to specify local variables as well, like this:
+
+     -*- mode: MODENAME; VAR: VALUE; ... -*-
+
+*Note File Variables::, for more information about this.
+
+   When a file's contents begin with `#!', it can serve as an
+executable shell command, which works by running an interpreter named on
+the file's first line.  The rest of the file is used as input to the
+interpreter.
+
+   When you visit such a file in Emacs, if the file's name does not
+specify a major mode, Emacs uses the interpreter name on the first line
+to choose a mode.  If the first line is the name of a recognized
+interpreter program, such as `perl' or `tcl', Emacs uses a mode
+appropriate for programs for that interpreter.  The variable
+`interpreter-mode-alist' specifies the correspondence between
+interpreter program names and major modes.
+
+   When you visit a file that does not specify a major mode to use, or
+when you create a new buffer with `C-x b', the variable
+`default-major-mode' specifies which major mode to use.  Normally its
+value is the symbol `fundamental-mode', which specifies Fundamental
+mode.  If `default-major-mode' is `nil', the major mode is taken from
+the previously selected buffer.
+
+   If you change the major mode of a buffer, you can go back to the
+major mode Emacs would choose automatically: use the command `M-x
+normal-mode' to do this.  This is the same function that `find-file'
+calls to choose the major mode.  It also processes the file's local
+variables list if any.
+
+   The commands `C-x C-w' and `set-visited-file-name' change to a new
+major mode if the new file name implies a mode (*note Saving::.).
+However, this does not happen if the buffer contents specify a major
+mode, and certain "special" major modes do not allow the mode to
+change.  You can turn off this mode-changing feature by setting
+`change-major-mode-with-file-name' to `nil'.
+
+
+File: emacs,  Node: Indentation,  Next: Text,  Prev: Major Modes,  Up: Top
+
+Indentation
+***********
+
+   This chapter describes the Emacs commands that add, remove, or
+adjust indentation.
+
+`<TAB>'
+     Indent current line "appropriately" in a mode-dependent fashion.
+
+`C-j'
+     Perform <RET> followed by <TAB> (`newline-and-indent').
+
+`M-^'
+     Merge two lines (`delete-indentation').  This would cancel out the
+     effect of `C-j'.
+
+`C-M-o'
+     Split line at point; text on the line after point becomes a new
+     line indented to the same column that it now starts in
+     (`split-line').
+
+`M-m'
+     Move (forward or back) to the first nonblank character on the
+     current line (`back-to-indentation').
+
+`C-M-\'
+     Indent several lines to same column (`indent-region').
+
+`C-x <TAB>'
+     Shift block of lines rigidly right or left (`indent-rigidly').
+
+`M-i'
+     Indent from point to the next prespecified tab stop column
+     (`tab-to-tab-stop').
+
+`M-x indent-relative'
+     Indent from point to under an indentation point in the previous
+     line.
+
+   Most programming languages have some indentation convention.  For
+Lisp code, lines are indented according to their nesting in
+parentheses.  The same general idea is used for C code, though many
+details are different.
+
+   Whatever the language, to indent a line, use the <TAB> command.  Each
+major mode defines this command to perform the sort of indentation
+appropriate for the particular language.  In Lisp mode, <TAB> aligns
+the line according to its depth in parentheses.  No matter where in the
+line you are when you type <TAB>, it aligns the line as a whole.  In C
+mode, <TAB> implements a subtle and sophisticated indentation style that
+knows about many aspects of C syntax.
+
+   In Text mode, <TAB> runs the command `tab-to-tab-stop', which
+indents to the next tab stop column.  You can set the tab stops with
+`M-x edit-tab-stops'.
+
+* Menu:
+
+* Indentation Commands::  Various commands and techniques for indentation.
+* Tab Stops::             You can set arbitrary "tab stops" and then
+                            indent to the next tab stop when you want to.
+* Just Spaces::           You can request indentation using just spaces.
+
+
+File: emacs,  Node: Indentation Commands,  Next: Tab Stops,  Prev: Indentation,  Up: Indentation
+
+Indentation Commands and Techniques
+===================================
+
+   To move over the indentation on a line, do `M-m'
+(`back-to-indentation').  This command, given anywhere on a line,
+positions point at the first nonblank character on the line.
+
+   To insert an indented line before the current line, do `C-a C-o
+<TAB>'.  To make an indented line after the current line, use `C-e C-j'.
+
+   If you just want to insert a tab character in the buffer, you can
+type `C-q <TAB>'.
+
+   `C-M-o' (`split-line') moves the text from point to the end of the
+line vertically down, so that the current line becomes two lines.
+`C-M-o' first moves point forward over any spaces and tabs.  Then it
+inserts after point a newline and enough indentation to reach the same
+column point is on.  Point remains before the inserted newline; in this
+regard, `C-M-o' resembles `C-o'.
+
+   To join two lines cleanly, use the `M-^' (`delete-indentation')
+command.  It deletes the indentation at the front of the current line,
+and the line boundary as well, replacing them with a single space.  As
+a special case (useful for Lisp code) the single space is omitted if
+the characters to be joined are consecutive open parentheses or closing
+parentheses, or if the junction follows another newline.  To delete
+just the indentation of a line, go to the beginning of the line and use
+`M-\' (`delete-horizontal-space'), which deletes all spaces and tabs
+around the cursor.
+
+   If you have a fill prefix, `M-^' deletes the fill prefix if it
+appears after the newline that is deleted.  *Note Fill Prefix::.
+
+   There are also commands for changing the indentation of several lines
+at once.  `C-M-\' (`indent-region') applies to all the lines that begin
+in the region; it indents each line in the "usual" way, as if you had
+typed <TAB> at the beginning of the line.  A numeric argument specifies
+the column to indent to, and each line is shifted left or right so that
+its first nonblank character appears in that column.  `C-x <TAB>'
+(`indent-rigidly') moves all of the lines in the region right by its
+argument (left, for negative arguments).  The whole group of lines
+moves rigidly sideways, which is how the command gets its name.
+
+   `M-x indent-relative' indents at point based on the previous line
+(actually, the last nonempty line).  It inserts whitespace at point,
+moving point, until it is underneath an indentation point in the
+previous line.  An indentation point is the end of a sequence of
+whitespace or the end of the line.  If point is farther right than any
+indentation point in the previous line, the whitespace before point is
+deleted and the first indentation point then applicable is used.  If no
+indentation point is applicable even then, `indent-relative' runs
+`tab-to-tab-stop' (*note Tab Stops::.).
+
+   `indent-relative' is the definition of <TAB> in Indented Text mode.
+*Note Text::.
+
+   *Note Format Indentation::, for another way of specifying the
+indentation for part of your text.
+
 
 File: emacs,  Node: Tab Stops,  Next: Just Spaces,  Prev: Indentation Commands,  Up: Indentation
 
@@ -16,18 +507,16 @@ this command can be found on the key `M-i'.
 variable called `tab-stop-list', as a list of column-numbers in
 increasing order.
 
-   The convenient way to set the tab stops is with `M-x edit-tab-stops',
-which creates and selects a buffer containing a description of the tab
-stop settings.  You can edit this buffer to specify different tab
-stops, and then type `C-c C-c' to make those new tab stops take effect.
-In the tab stop buffer, `C-c C-c' runs the function
-`edit-tab-stops-note-changes' rather than its usual definition
-`save-buffer'.  `edit-tab-stops' records which buffer was current when
-you invoked it, and stores the tab stops back in that buffer; normally
-all buffers share the same tab stops and changing them in one buffer
-affects all, but if you happen to make `tab-stop-list' local in one
-buffer then `edit-tab-stops' in that buffer will edit the local
-settings.
+   The convenient way to set the tab stops is with `M-x
+edit-tab-stops', which creates and selects a buffer containing a
+description of the tab stop settings.  You can edit this buffer to
+specify different tab stops, and then type `C-c C-c' to make those new
+tab stops take effect.  `edit-tab-stops' records which buffer was
+current when you invoked it, and stores the tab stops back in that
+buffer; normally all buffers share the same tab stops and changing them
+in one buffer affects all, but if you happen to make `tab-stop-list'
+local in one buffer then `edit-tab-stops' in that buffer will edit the
+local settings.
 
    Here is what the text representing the tab stops looks like for
 ordinary tab stops every eight columns.
@@ -309,8 +798,8 @@ another regexp that should match only lines that separate paragraphs
 without being part of any paragraph (for example, blank lines).  Lines
 that start a new paragraph and are contained in it must match only
 `paragraph-start', not `paragraph-separate'.  For example, in
-Fundamental mode, `paragraph-start' is `" [ \t\n\f]"' and
-`paragraph-separate' is `" [ \t\f]*$"'.
+Fundamental mode, `paragraph-start' is `"[ \t\n\f]"' and
+`paragraph-separate' is `"[ \t\f]*$"'.
 
    Normally it is desirable for page boundaries to separate paragraphs.
 The default values of these variables recognize the usual separator for
@@ -469,7 +958,7 @@ Explicit Fill Commands
 `M-x fill-region'
      Fill each paragraph in the region (`fill-region').
 
-`M-x fill-region-as-paragraph.'
+`M-x fill-region-as-paragraph'
      Fill the region, considering it as one paragraph.
 
 `M-s'
@@ -670,491 +1159,4 @@ function.  This function is called with point after the left margin of a
 line, and it should return the appropriate fill prefix based on that
 line.  If it returns `nil', that means it sees no fill prefix in that
 line.
-
-
-File: emacs,  Node: Case,  Next: Text Mode,  Prev: Filling,  Up: Text
-
-Case Conversion Commands
-========================
-
-   Emacs has commands for converting either a single word or any
-arbitrary range of text to upper case or to lower case.
-
-`M-l'
-     Convert following word to lower case (`downcase-word').
-
-`M-u'
-     Convert following word to upper case (`upcase-word').
-
-`M-c'
-     Capitalize the following word (`capitalize-word').
-
-`C-x C-l'
-     Convert region to lower case (`downcase-region').
-
-`C-x C-u'
-     Convert region to upper case (`upcase-region').
-
-   The word conversion commands are the most useful.  `M-l'
-(`downcase-word') converts the word after point to lower case, moving
-past it.  Thus, repeating `M-l' converts successive words.  `M-u'
-(`upcase-word') converts to all capitals instead, while `M-c'
-(`capitalize-word') puts the first letter of the word into upper case
-and the rest into lower case.  All these commands convert several words
-at once if given an argument.  They are especially convenient for
-converting a large amount of text from all upper case to mixed case,
-because you can move through the text using `M-l', `M-u' or `M-c' on
-each word as appropriate, occasionally using `M-f' instead to skip a
-word.
-
-   When given a negative argument, the word case conversion commands
-apply to the appropriate number of words before point, but do not move
-point.  This is convenient when you have just typed a word in the wrong
-case: you can give the case conversion command and continue typing.
-
-   If a word case conversion command is given in the middle of a word,
-it applies only to the part of the word which follows point.  This is
-just like what `M-d' (`kill-word') does.  With a negative argument,
-case conversion applies only to the part of the word before point.
-
-   The other case conversion commands are `C-x C-u' (`upcase-region')
-and `C-x C-l' (`downcase-region'), which convert everything between
-point and mark to the specified case.  Point and mark do not move.
-
-   The region case conversion commands `upcase-region' and
-`downcase-region' are normally disabled.  This means that they ask for
-confirmation if you try to use them.  When you confirm, you may enable
-the command, which means it will not ask for confirmation again.  *Note
-Disabling::.
-
-
-File: emacs,  Node: Text Mode,  Next: Outline Mode,  Prev: Case,  Up: Text
-
-Text Mode
-=========
-
-   When you edit files of text in a human language, it's more convenient
-to use Text mode rather than Fundamental mode.  To enter Text mode, type
-`M-x text-mode'.
-
-   In Text mode, only blank lines and page delimiters separate
-paragraphs.  As a result, paragraphs can be indented, and adaptive
-filling determines what indentation to use when filling a paragraph.
-*Note Adaptive Fill::.
-
-   Text mode defines <TAB> to run `indent-relative' (*note
-Indentation::.), so that you can conveniently indent a line like the
-previous line.  When the previous line is not indented,
-`indent-relative' runs `tab-to-tab-stop', which uses Emacs tab stops
-that you can set (*note Tab Stops::.).
-
-   Text mode turns off the features concerned with comments except when
-you explicitly invoke them.  It changes the syntax table so that periods
-are not considered part of a word, while apostrophes, backspaces and
-underlines are considered part of words.
-
-   If you indent the first lines of paragraphs, then you should use
-Paragraph-Indent Text mode rather than Text mode.  In this mode, you do
-not need to have blank lines between paragraphs, because the first-line
-indentation is sufficient to start a paragraph; however paragraphs in
-which every line is indented are not supported.  Use `M-x
-paragraph-indent-text-mode' to enter this mode.
-
-   Text mode, and all the modes based on it, define `M-<TAB>' as the
-command `ispell-complete-word', which performs completion of the
-partial word in the buffer before point, using the spelling dictionary
-as the space of possible words.  *Note Spelling::.
-
-   Entering Text mode runs the hook `text-mode-hook'.  Other major
-modes related to Text mode also run this hook, followed by hooks of
-their own; this includes Paragraph-Indent Text mode, Nroff mode, TeX
-mode, Outline mode, and Mail mode.  Hook functions on `text-mode-hook'
-can look at the value of `major-mode' to see which of these modes is
-actually being entered.  *Note Hooks::.
-
-   Emacs provides two other modes for editing text that is to be passed
-through a text formatter to produce fancy formatted printed output.
-*Note Nroff Mode::, for editing input to the formatter nroff.  *Note
-TeX Mode::, for editing input to the formatter TeX.
-
-   Another mode is used for editing outlines.  It allows you to view the
-text at various levels of detail.  You can view either the outline
-headings alone or both headings and text; you can also hide some of the
-headings at lower levels from view to make the high level structure more
-visible.  *Note Outline Mode::.
-
-
-File: emacs,  Node: Outline Mode,  Next: TeX Mode,  Prev: Text Mode,  Up: Text
-
-Outline Mode
-============
-
-   Outline mode is a major mode much like Text mode but intended for
-editing outlines.  It allows you to make parts of the text temporarily
-invisible so that you can see the outline structure.  Type `M-x
-outline-mode' to switch to Outline mode as the major mode of the current
-buffer.
-
-   When Outline mode makes a line invisible, the line does not appear on
-the screen.  The screen appears exactly as if the invisible line were
-deleted, except that an ellipsis (three periods in a row) appears at the
-end of the previous visible line (only one ellipsis no matter how many
-invisible lines follow).
-
-   Editing commands that operate on lines, such as `C-n' and `C-p',
-treat the text of the invisible line as part of the previous visible
-line.  Killing an entire visible line, including its terminating
-newline, really kills all the following invisible lines along with it.
-
-   Outline minor mode provides the same commands as the major mode,
-Outline mode, but you can use it in conjunction with other major modes.
-Type `M-x outline-minor-mode' to enable the Outline minor mode in the
-current buffer.  You can also specify this in the text of a file, with
-a file local variable of the form `mode: outline-minor' (*note File
-Variables::.).
-
-   The major mode, Outline mode, provides special key bindings on the
-`C-c' prefix.  Outline minor mode provides similar bindings with `C-c
-@' as the prefix; this is to reduce the conflicts with the major mode's
-special commands.  (The variable `outline-minor-mode-prefix' controls
-the prefix used.)
-
-   Entering Outline mode runs the hook `text-mode-hook' followed by the
-hook `outline-mode-hook' (*note Hooks::.).
-
-* Menu:
-
-* Format: Outline Format.	   What the text of an outline looks like.
-* Motion: Outline Motion.	   Special commands for moving through
-                                     outlines.
-* Visibility: Outline Visibility.  Commands to control what is visible.
-* Views: Outline Views.            Outlines and multiple views.
-
-
-File: emacs,  Node: Outline Format,  Next: Outline Motion,  Up: Outline Mode
-
-Format of Outlines
-------------------
-
-   Outline mode assumes that the lines in the buffer are of two types:
-"heading lines" and "body lines".  A heading line represents a topic in
-the outline.  Heading lines start with one or more stars; the number of
-stars determines the depth of the heading in the outline structure.
-Thus, a heading line with one star is a major topic; all the heading
-lines with two stars between it and the next one-star heading are its
-subtopics; and so on.  Any line that is not a heading line is a body
-line.  Body lines belong with the preceding heading line.  Here is an
-example:
-
-     * Food
-     This is the body,
-     which says something about the topic of food.
-     
-     ** Delicious Food
-     This is the body of the second-level header.
-     
-     ** Distasteful Food
-     This could have
-     a body too, with
-     several lines.
-     
-     *** Dormitory Food
-     
-     * Shelter
-     Another first-level topic with its header line.
-
-   A heading line together with all following body lines is called
-collectively an "entry".  A heading line together with all following
-deeper heading lines and their body lines is called a "subtree".
-
-   You can customize the criterion for distinguishing heading lines by
-setting the variable `outline-regexp'.  Any line whose beginning has a
-match for this regexp is considered a heading line.  Matches that start
-within a line (not at the left margin) do not count.  The length of the
-matching text determines the level of the heading; longer matches make
-a more deeply nested level.  Thus, for example, if a text formatter has
-commands `@chapter', `@section' and `@subsection' to divide the
-document into chapters and sections, you could make those lines count
-as heading lines by setting `outline-regexp' to
-`"@chap\\|@\\(sub\\)*section"'.  Note the trick: the two words
-`chapter' and `section' are equally long, but by defining the regexp to
-match only `chap' we ensure that the length of the text matched on a
-chapter heading is shorter, so that Outline mode will know that
-sections are contained in chapters.  This works as long as no other
-command starts with `@chap'.
-
-   It is possible to change the rule for calculating the level of a
-heading line by setting the variable `outline-level'.  The value of
-`outline-level' should be a function that takes no arguments and
-returns the level of the current heading.  Some major modes such as C,
-Nroff, and Emacs Lisp mode set this variable in order to work with
-Outline minor mode.
-
-
-File: emacs,  Node: Outline Motion,  Next: Outline Visibility,  Prev: Outline Format,  Up: Outline Mode
-
-Outline Motion Commands
------------------------
-
-   Outline mode provides special motion commands that move backward and
-forward to heading lines.
-
-`C-c C-n'
-     Move point to the next visible heading line
-     (`outline-next-visible-heading').
-
-`C-c C-p'
-     Move point to the previous visible heading line
-     (`outline-previous-visible-heading').
-
-`C-c C-f'
-     Move point to the next visible heading line at the same level as
-     the one point is on (`outline-forward-same-level').
-
-`C-c C-b'
-     Move point to the previous visible heading line at the same level
-     (`outline-backward-same-level').
-
-`C-c C-u'
-     Move point up to a lower-level (more inclusive) visible heading
-     line (`outline-up-heading').
-
-   `C-c C-n' (`outline-next-visible-heading') moves down to the next
-heading line.  `C-c C-p' (`outline-previous-visible-heading') moves
-similarly backward.  Both accept numeric arguments as repeat counts.
-The names emphasize that invisible headings are skipped, but this is
-not really a special feature.  All editing commands that look for lines
-ignore the invisible lines automatically.
-
-   More powerful motion commands understand the level structure of
-headings.  `C-c C-f' (`outline-forward-same-level') and `C-c C-b'
-(`outline-backward-same-level') move from one heading line to another
-visible heading at the same depth in the outline.  `C-c C-u'
-(`outline-up-heading') moves backward to another heading that is less
-deeply nested.
-
-
-File: emacs,  Node: Outline Visibility,  Next: Outline Views,  Prev: Outline Motion,  Up: Outline Mode
-
-Outline Visibility Commands
----------------------------
-
-   The other special commands of outline mode are used to make lines
-visible or invisible.  Their names all start with `hide' or `show'.
-Most of them fall into pairs of opposites.  They are not undoable;
-instead, you can undo right past them.  Making lines visible or
-invisible is simply not recorded by the undo mechanism.
-
-`C-c C-t'
-     Make all body lines in the buffer invisible (`hide-body').
-
-`C-c C-a'
-     Make all lines in the buffer visible (`show-all').
-
-`C-c C-d'
-     Make everything under this heading invisible, not including this
-     heading itself3 (`hide-subtree').
-
-`C-c C-s'
-     Make everything under this heading visible, including body,
-     subheadings, and their bodies (`show-subtree').
-
-`C-c C-l'
-     Make the body of this heading line, and of all its subheadings,
-     invisible (`hide-leaves').
-
-`C-c C-k'
-     Make all subheadings of this heading line, at all levels, visible
-     (`show-branches').
-
-`C-c C-i'
-     Make immediate subheadings (one level down) of this heading line
-     visible (`show-children').
-
-`C-c C-c'
-     Make this heading line's body invisible (`hide-entry').
-
-`C-c C-e'
-     Make this heading line's body visible (`show-entry').
-
-`C-c C-q'
-     Hide everything except the top N levels of heading lines
-     (`hide-sublevels').
-
-`C-c C-o'
-     Hide everything except for the heading or body that point is in,
-     plus the headings leading up from there to the top level of the
-     outline (`hide-other').
-
-   Two commands that are exact opposites are `C-c C-c' (`hide-entry')
-and `C-c C-e' (`show-entry').  They are used with point on a heading
-line, and apply only to the body lines of that heading.  Subheadings
-and their bodies are not affected.
-
-   Two more powerful opposites are `C-c C-d' (`hide-subtree') and `C-c
-C-s' (`show-subtree').  Both expect to be used when point is on a
-heading line, and both apply to all the lines of that heading's
-"subtree": its body, all its subheadings, both direct and indirect, and
-all of their bodies.  In other words, the subtree contains everything
-following this heading line, up to and not including the next heading of
-the same or higher rank.
-
-   Intermediate between a visible subtree and an invisible one is having
-all the subheadings visible but none of the body.  There are two
-commands for doing this, depending on whether you want to hide the
-bodies or make the subheadings visible.  They are `C-c C-l'
-(`hide-leaves') and `C-c C-k' (`show-branches').
-
-   A little weaker than `show-branches' is `C-c C-i' (`show-children').
-It makes just the direct subheadings visible--those one level down.
-Deeper subheadings remain invisible, if they were invisible.
-
-   Two commands have a blanket effect on the whole file.  `C-c C-t'
-(`hide-body') makes all body lines invisible, so that you see just the
-outline structure.  `C-c C-a' (`show-all') makes all lines visible.
-These commands can be thought of as a pair of opposites even though
-`C-c C-a' applies to more than just body lines.
-
-   The command `C-c C-q' (`hide-sublevels') hides all but the top level
-headings.  With a numeric argument N, it hides everything except the
-top N levels of heading lines.
-
-   The command `C-c C-o' (`hide-other') hides everything except the
-heading or body text that point is in, plus its parents (the headers
-leading up from there to top level in the outline).
-
-   You can turn off the use of ellipses at the ends of visible lines by
-setting `selective-display-ellipses' to `nil'.  Then there is no
-visible indication of the presence of invisible lines.
-
-
-File: emacs,  Node: Outline Views,  Prev: Outline Visibility,  Up: Outline Mode
-
-Viewing One Outline in Multiple Views
--------------------------------------
-
-   You can display two views of a single outline at the same time, in
-different windows.  To do this, you must create an indirect buffer using
-`M-x make-indirect-buffer'.  The first argument of this command is the
-existing outline buffer name, and its second argument is the name to
-use for the new indirect buffer.  *Note Indirect Buffers::.
-
-   Once the indirect buffer exists, you can display it in a window in
-the normal fashion, with `C-x 4 b' or other Emacs commands.  The Outline
-mode commands to show and hide parts of the text operate on each buffer
-independently; as a result, each buffer can have its own view.  If you
-want more than two views on the same outline, create additional indirect
-buffers.
-
-
-File: emacs,  Node: TeX Mode,  Next: Nroff Mode,  Prev: Outline Mode,  Up: Text
-
-TeX Mode
-========
-
-   TeX is a powerful text formatter written by Donald Knuth; it is also
-free, like GNU Emacs.  LaTeX is a simplified input format for TeX,
-implemented by TeX macros; it comes with TeX.  SliTeX is a special form
-of LaTeX.
-
-   Emacs has a special TeX mode for editing TeX input files.  It
-provides facilities for checking the balance of delimiters and for
-invoking TeX on all or part of the file.
-
-   TeX mode has three variants, Plain TeX mode, LaTeX mode, and SliTeX
-mode (these three distinct major modes differ only slightly).  They are
-designed for editing the three different formats.  The command `M-x
-tex-mode' looks at the contents of the buffer to determine whether the
-contents appear to be either LaTeX input or SliTeX input; if so, it
-selects the appropriate mode.  If the file contents do not appear to be
-LaTeX or SliTeX, it selects Plain TeX mode.  If the contents are
-insufficient to determine this, the variable `tex-default-mode'
-controls which mode is used.
-
-   When `M-x tex-mode' does not guess right, you can use the commands
-`M-x plain-tex-mode', `M-x latex-mode', and `M-x slitex-mode' to select
-explicitly the particular variants of TeX mode.
-
-* Menu:
-
-* Editing: TeX Editing.   Special commands for editing in TeX mode.
-* LaTeX: LaTeX Editing.   Additional commands for LaTeX input files.
-* Printing: TeX Print.    Commands for printing part of a file with TeX.
-
-
-File: emacs,  Node: TeX Editing,  Next: LaTeX Editing,  Up: TeX Mode
-
-TeX Editing Commands
---------------------
-
-   Here are the special commands provided in TeX mode for editing the
-text of the file.
-
-`"'
-     Insert, according to context, either ```' or `"' or `'''
-     (`tex-insert-quote').
-
-`C-j'
-     Insert a paragraph break (two newlines) and check the previous
-     paragraph for unbalanced braces or dollar signs
-     (`tex-terminate-paragraph').
-
-`M-x validate-tex-region'
-     Check each paragraph in the region for unbalanced braces or dollar
-     signs.
-
-`C-c {'
-     Insert `{}' and position point between them (`tex-insert-braces').
-
-`C-c }'
-     Move forward past the next unmatched close brace (`up-list').
-
-   In TeX, the character `"' is not normally used; we use ```' to start
-a quotation and `''' to end one.  To make editing easier under this
-formatting convention, TeX mode overrides the normal meaning of the key
-`"' with a command that inserts a pair of single-quotes or backquotes
-(`tex-insert-quote').  To be precise, this command inserts ```' after
-whitespace or an open brace, `"' after a backslash, and `''' after any
-other character.
-
-   If you need the character `"' itself in unusual contexts, use `C-q'
-to insert it.  Also, `"' with a numeric argument always inserts that
-number of `"' characters.  You can turn off the feature of `"'
-expansion by eliminating that binding in the local map (*Note Key
-Bindings::).
-
-   In TeX mode, `$' has a special syntax code which attempts to
-understand the way TeX math mode delimiters match.  When you insert a
-`$' that is meant to exit math mode, the position of the matching `$'
-that entered math mode is displayed for a second.  This is the same
-feature that displays the open brace that matches a close brace that is
-inserted.  However, there is no way to tell whether a `$' enters math
-mode or leaves it; so when you insert a `$' that enters math mode, the
-previous `$' position is shown as if it were a match, even though they
-are actually unrelated.
-
-   TeX uses braces as delimiters that must match.  Some users prefer to
-keep braces balanced at all times, rather than inserting them singly.
-Use `C-c {' (`tex-insert-braces') to insert a pair of braces.  It
-leaves point between the two braces so you can insert the text that
-belongs inside.  Afterward, use the command `C-c }' (`up-list') to move
-forward past the close brace.
-
-   There are two commands for checking the matching of braces.  `C-j'
-(`tex-terminate-paragraph') checks the paragraph before point, and
-inserts two newlines to start a new paragraph.  It prints a message in
-the echo area if any mismatch is found.  `M-x validate-tex-region'
-checks a region, paragraph by paragraph.  When it finds a paragraph that
-contains a mismatch, it displays point at the beginning of the paragraph
-for a few seconds and sets the mark at that spot.  Scanning continues
-until the whole buffer has been checked or until you type another key.
-Afterward, you can use the mark ring to find the last several paragraphs
-that had mismatches (*note Mark Ring::.).
-
-   Note that Emacs commands count square brackets and parentheses in
-TeX mode, not just braces.  This is not strictly correct for the
-purpose of checking TeX syntax.  However, parentheses and square
-brackets are likely to be used in text as matching delimiters and it is
-useful for the various motion commands and automatic match display to
-work with them.
 

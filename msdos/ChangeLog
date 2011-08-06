@@ -1,3 +1,38 @@
+1998-08-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Version 20.3 released.
+
+1998-05-04  Eli Zaretskii  <eliz@mescaline.gnu.org>
+
+	* mainmake.v2 (TAGS tags): Fix file name wildcards in lisp
+	directory.
+
+1998-04-13  Eli Zaretskii  <eliz@delysid.gnu.org>
+
+	* mainmake.v2 (src): Replace topdir with top_srcdir in commands
+	which generate gdb.ini.
+
+1998-04-12  Eli Zaretskii  <eliz@delysid.gnu.org>
+
+	* mainmake.v2 (version): Determine emacs-version from
+	lisp/version.el.  Pass it to sub-Make's.
+
+1998-04-05  Eli Zaretskii  <eliz@is.elta.co.il>
+
+	* sed3v2.inp: When installing ${version},
+	do it replacing @version@.
+
+	* mainmake.v2 (version): Compute the version from lisp/version.el
+	and pass to sub-Make's.  Pass top_srcdir to sub-Make's.
+
+1997-11-20  Eli Zaretskii  <eliz@is.elta.co.il>
+
+	* sed6.inp: New file, configures the man directory for MSDOS.
+
+	* mainmake.v2 (man): New target to build the manual.
+	(all): Add the man dependency.
+	(install): Change bin\\nul to bin\nul.
+
 1997-09-19  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 20.2 released.

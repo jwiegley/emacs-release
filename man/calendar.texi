@@ -198,7 +198,7 @@ then centers the three-month calendar around that month.
 
 @kindex . @r{(Calendar mode)}
 @findex calendar-goto-today
-  You can return to today's date with @kbd{.}
+  You can return to today's date with @kbd{.}@:
 (@code{calendar-goto-today}).
 
 @node Scroll Calendar
@@ -351,7 +351,7 @@ Generate a calendar for one year
 (@code{cal-tex-cursor-year}).
 @item t Y
 Generate a sideways-printing calendar for one year
-(@code{cal-tex-cursor-landscape-year}).
+(@code{cal-tex-cursor-year-landscape}).
 @item t f y
 Generate a Filofax-style calendar for one year
 (@code{cal-tex-cursor-filofax-year}).
@@ -438,7 +438,7 @@ equinoxes.
 @findex list-holidays
    The command @kbd{M-x list-holidays} displays the list of holidays for
 a range of years.  This function asks you for the starting and stopping
-years, and allows you to chose all the holidays or one of several
+years, and allows you to choose all the holidays or one of several
 categories of holidays.  You can use this command even if you don't have
 a calendar window.
 
@@ -951,6 +951,8 @@ Unmark the calendar window (@code{calendar-unmark}).
 Print hard copy of the diary display as it appears.
 @item M-x diary
 Display all diary entries for today's date.
+@item M-x diary-mail-entries
+Mail yourself email reminders about upcoming diary entries.
 @end table
 
 @kindex d @r{(Calendar mode)}
@@ -1004,6 +1006,14 @@ and Diary,, elisp, The Emacs Lisp Reference Manual}.
 automatically displays a window with the day's diary entries, when you
 enter Emacs.  The mode line of the displayed window shows the date and
 any holidays that fall on that date.
+
+@findex diary-mail-entries
+@vindex diary-mail-days
+  Many users like to receive notice of events in their diary as email.
+To send such mail to yourself, use the command @kbd{M-x
+diary-mail-entries}.  A prefix argument specifies how many days
+(starting with today) to check; otherwise, the variable
+@code{diary-mail-days} says how many days.
 
 @node Format of Diary File
 @subsection The Diary File

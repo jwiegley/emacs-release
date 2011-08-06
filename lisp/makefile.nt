@@ -24,6 +24,14 @@
 
 all:
 
+topdontcompile = cus-load.el forms-d2.el forms-pass.el patcomp.el \
+		 subdirs.el version.el
+maildontcompile = mail\blessmail.el mail\sc.el
+playdontcompile = play\bruce.el
+interdontcompile = international\latin-1.el international\latin-2.el \
+		 international\latin-3.el international\latin-4.el \
+		 international\latin-5.el international\mule-conf.el
+
 #
 # Assuming INSTALL_DIR is defined, copy the elisp files to it
 #
@@ -31,12 +39,30 @@ install:;	- mkdir $(INSTALL_DIR)\lisp
 		- $(DEL) .\same-dir.tst
 		- $(DEL) $(INSTALL_DIR)\lisp\same-dir.tst
 		echo SameDirTest > $(INSTALL_DIR)\lisp\same-dir.tst
+!ifdef COPY_LISP_SOURCE
 		if not exist .\same-dir.tst $(CP_DIR) . $(INSTALL_DIR)\lisp
+!else
+		if not exist .\same-dir.tst $(CP_DIR) *.elc $(INSTALL_DIR)\lisp
+		if not exist .\same-dir.tst for %%f in ( $(topdontcompile) ) do $(CP) %%f $(INSTALL_DIR)\lisp
+		if not exist .\same-dir.tst for %%f in ( $(maildontcompile) ) do $(CP) %%f $(INSTALL_DIR)\lisp\mail
+		if not exist .\same-dir.tst for %%f in ( $(playdontcompile) ) do $(CP) %%f $(INSTALL_DIR)\lisp\play
+!endif
+		if not exist .\same-dir.tst for %%f in ( $(interdontcompile) ) do $(CP) %%f $(INSTALL_DIR)\lisp\international
 		- $(DEL) $(INSTALL_DIR)\lisp\same-dir.tst
-		
 
 #
 # Maintenance
 # 
-clean:;		- $(DEL) *~
+clean:;		- $(DEL) *~ term\*~
+		- $(DEL) *.orig *.rej *.crlf
+		- $(DEL) emacs-lisp\*.orig emacs-lisp\*.rej emacs-lisp\*.crlf
+		- $(DEL) emulation\*.orig emulation\*.rej emulation\*.crlf
+		- $(DEL) gnus\*.orig gnus\*.rej gnus\*.crlf
+		- $(DEL) international\*.orig international\*.rej international\*.crlf
+		- $(DEL) language\*.orig language\*.rej language\*.crlf
+		- $(DEL) mail\*.orig mail\*.rej mail\*.crlf
+		- $(DEL) play\*.orig play\*.rej play\*.crlf
+		- $(DEL) progmodes\*.orig progmodes\*.rej progmodes\*.crlf
+		- $(DEL) term\*.orig term\*.rej term\*.crlf
+		- $(DEL) textmodes\*.orig textmodes\*.rej textmodes\*.crlf
 		- $(DEL_TREE) deleted

@@ -59,6 +59,11 @@ to a shell that you are not using or, better, fix your shell's startup file."
   :type 'string
   :group 'ediff-diff)
 
+(defcustom ediff-cmp-program "cmp"
+  "*Utility to use to determine if two files are identical.
+It must return code 0, if its arguments are identical files."
+  :type 'string
+  :group 'ediff-diff)
 
 (defcustom ediff-diff-program "diff"
   "*Program to use for generating the differential of the two files."
@@ -128,14 +133,24 @@ Use `setq-default' if setting it in .emacs")
 ;;; General
 
 (defvar ediff-diff-ok-lines-regexp  
-  "^\\([0-9,]+[acd][0-9,]+$\\|[<>] \\|---\\|.*Warning *:\\|.*No +newline\\|.*missing +newline\\|^\C-m$\\)"
+  (concat
+   "^\\("
+   "[0-9,]+[acd][0-9,]+\C-m?$"
+   "\\|[<>] "
+   "\\|---"
+   "\\|.*Warning *:"
+   "\\|.*No +newline"
+   "\\|.*missing +newline"
+   "\\|^\C-m?$"
+   "\\)")
   "Regexp that matches normal output lines from `ediff-diff-program'.
 This is mostly lifted from Emerge, except that Ediff also considers
 warnings and `Missing newline'-type messages to be normal output.
 Lines that do not match are assumed to be error messages.")
 
-(defvar ediff-match-diff-line (let ((x "\\([0-9]+\\)\\(\\|,\\([0-9]+\\)\\)"))
-				(concat "^" x "\\([acd]\\)" x "$"))
+(defvar ediff-match-diff-line
+  (let ((x "\\([0-9]+\\)\\(\\|,\\([0-9]+\\)\\)"))
+    (concat "^" x "\\([acd]\\)" x "\C-m?$"))
   "Pattern to match lines produced by diff that describe differences.")
 
 (ediff-defvar-local ediff-setup-diff-regions-function nil
@@ -1234,6 +1249,11 @@ argument to `skip-chars-forward'."
       (if (and flag (> n 0))
 	  (funcall fwd-word-fun))
       (point))))
+
+(defun ediff-same-file-contents (f1 f2)
+  "T if F1 and F2 have identical contents."
+  (let ((res (call-process ediff-cmp-program nil nil nil f1 f2)))
+    (and (numberp res) (eq res 0))))
 
 
 ;;; Local Variables:

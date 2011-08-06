@@ -40,6 +40,7 @@ scroll conveniently with @key{SPC} and @key{DEL}.
 * Apropos::		Asking what pertains to a given topic.
 * Library Keywords::	Finding Lisp libraries by keywords (topics).
 * Language Help::       Help relating to international language support.
+* Help Mode::           Special features of Help mode and Help buffers.
 * Misc Help::		Other help commands.
 @end menu
 
@@ -121,7 +122,7 @@ Enter Info and go to the node where the key sequence @var{key} is
 documented (@code{Info-goto-emacs-key-command-node}).
 @item C-h C-p
 Display information about the GNU Project.
-@item C-h C-s @var{symbol} @key{RET}
+@item C-h @key{TAB} @var{symbol} @key{RET}
 Display the Info documentation on symbol @var{symbol} according to the
 programming language you are editing (@code{info-lookup-symbol}).
 @end table
@@ -218,9 +219,9 @@ so on.  With each command name appears a brief description of how to use
 the command, and what keys you can currently invoke it with.  For
 example, it would say that you can invoke @code{find-file} by typing
 @kbd{C-x C-f}.  The @kbd{a} in @kbd{C-h a} stands for `Apropos';
-@kbd{C-h a} runs the command @code{apropos-command}.  This command does
-not check user variables by default; specify a numeric argument if you
-want it to check them.
+@kbd{C-h a} runs the command @code{apropos-command}.  This command
+normally checks only commands (interactive functions); if you specify a
+prefix argument, it checks noninteractive functions as well.
 
   Because @kbd{C-h a} looks only for functions whose names contain the
 string you specify, you must use ingenuity in choosing the
@@ -244,6 +245,12 @@ mark, insert, yank, fill, indent, case, change, set, what, list, find,
 view, describe, default.
 @end quotation
 
+@findex apropos-variable
+  To list all user variables that match a regexp, use the command
+@kbd{M-x apropos-variable}. This command shows only user variables and
+customization options by default; if you specify a prefix argument, it
+checks all variables.
+
 @findex apropos
   To list all Lisp symbols that contain a match for a regexp, not just
 the ones that are defined as commands, use the command @kbd{M-x apropos}
@@ -261,6 +268,10 @@ searches symbols' values for matches for the specified regular
 expression.  This command does not check function definitions or
 property lists by default; specify a numeric argument if you want it to
 check them.
+
+@vindex apropos-do-all
+  If the variable @code{apropos-do-all} is non-@code{nil}, the commands
+above all behave as if they had been given a prefix argument.
 
   If you want more information about a function definition, variable or
 symbol property listed in the Apropos buffer, you can click on it with
@@ -333,6 +344,43 @@ default the input method in use.  @xref{Input Methods}.
 information about coding systems---either a specified coding system, or
 the ones currently in use.  @xref{Coding Systems}.
 
+@node Help Mode
+@section Help Mode Commands
+
+  Help buffers provide the commands of View mode (@pxref{Misc File
+Ops}), plus a few special commands of their own.
+
+@table @kbd
+@item @key{SPC}
+Scroll forward.
+@item @key{DEL}
+Scroll backward.
+@item @key{RET}
+Follow a cross reference at point.
+@item @key{TAB}
+Move point forward to the next cross reference.
+@item S-@key{TAB}
+Move point back to the previous cross reference.
+@item Mouse-2
+Follow a cross reference that you click on.
+@end table
+
+  When a command name (@pxref{M-x,, Running Commands by Name}) or
+variable name (@pxref{Variables}) appears in the documentation, it
+normally appears inside paired single-quotes.  You can click on the name
+with @kbd{Mouse-2}, or move point there and type @key{RET}, to view the
+documentation of that command or variable.  Use @kbd{C-c C-b} to retrace
+your steps.
+
+@kindex @key{TAB} @r{(Help mode)}
+@findex help-next-ref
+@kindex S-@key{TAB} @r{(Help mode)}
+@findex help-previous-ref
+  There are convenient commands for moving point to cross references in
+the help text.  @key{TAB} (@code{help-next-ref}) moves point down to the
+next cross reference.  Use @kbd{S-@key{TAB}} to move point up to the
+previous cross reference (@code{help-previous-ref}).
+
 @node Misc Help
 @section Other Help Commands
 
@@ -346,6 +394,12 @@ browsing through structured documentation files.  The entire Emacs manual
 is available within Info.  Eventually all the documentation of the GNU
 system will be available.  Type @kbd{h} after entering Info to run
 a tutorial on using Info.
+
+  If you specify a numeric argument, @kbd{C-h i} prompts for the name of
+a documentation file.  This way, you can browse a file which doesn't
+have an entry in the top-level Info menu.  It is also handy when you
+need to get to the documentation quickly, and you know the exact name of
+the file.
 
 @kindex C-h C-f
 @kindex C-h C-k

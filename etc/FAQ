@@ -948,7 +948,7 @@ Common Things People Want To Do
 
   If you want auto-fill mode on in all major modes, do this:
 
-    (setq-default auto-fill-hook 'do-auto-fill)
+    (setq-default auto-fill-function 'do-auto-fill)
 
 31:  How do I make Emacs use a certain major mode for certain files?
 

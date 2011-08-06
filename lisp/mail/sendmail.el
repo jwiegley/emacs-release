@@ -1,6 +1,6 @@
 ;;; sendmail.el --- mail sending commands for Emacs.
 
-;; Copyright (C) 1985, 86, 92, 93, 94, 95, 96 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 86, 92, 93, 94, 95, 96, 1998 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail
@@ -28,9 +28,13 @@
 ;; documented in the Emacs user's manual.
 
 ;;; Code:
+(defgroup sendmail nil
+  "Mail sending commands for Emacs."
+  :prefix "mail-"
+  :group 'mail)
 
 ;;;###autoload
-(defvar mail-from-style 'angles "\
+(defcustom mail-from-style 'angles "\
 *Specifies how \"From:\" fields look.
 
 If `nil', they contain just the return address like:
@@ -38,33 +42,46 @@ If `nil', they contain just the return address like:
 If `parens', they look like:
 	king@grassland.com (Elvis Parsley)
 If `angles', they look like:
-	Elvis Parsley <king@grassland.com>")
+	Elvis Parsley <king@grassland.com>
+If `system-default', Rmail allows the system to insert its default From field."
+  :type '(choice (const nil) (const parens) (const angles)
+		 (const system-default))
+  :version "20.3"
+  :group 'sendmail)
 
 ;;;###autoload
-(defvar mail-self-blind nil "\
+(defcustom mail-self-blind nil "\
 *Non-nil means insert BCC to self in messages to be sent.
 This is done when the message is initialized,
-so you can remove or alter the BCC field to override the default.")
+so you can remove or alter the BCC field to override the default."
+  :type 'boolean
+  :group 'sendmail)
 
 ;;;###autoload
-(defvar mail-interactive nil "\
+(defcustom mail-interactive nil "\
 *Non-nil means when sending a message wait for and display errors.
-nil means let mailer mail back a message to report errors.")
+nil means let mailer mail back a message to report errors."
+  :type 'boolean
+  :group 'sendmail)
 
 ;;;###autoload
-(defvar mail-yank-ignored-headers "^via:\\|^mail-from:\\|^origin:\\|^status:\\|^remailed\\|^received:\\|^message-id:\\|^summary-line:\\|^to:\\|^subject:\\|^in-reply-to:\\|^return-path:" "\
-*Delete these headers from old message when it's inserted in a reply.")
+(defcustom mail-yank-ignored-headers "^via:\\|^mail-from:\\|^origin:\\|^status:\\|^remailed\\|^received:\\|^message-id:\\|^summary-line:\\|^to:\\|^subject:\\|^in-reply-to:\\|^return-path:" "\
+*Delete these headers from old message when it's inserted in a reply."
+  :type 'regexp
+  :group 'sendmail)
 
 ;; Useful to set in site-init.el
 ;;;###autoload
 (defvar send-mail-function 'sendmail-send-it "\
 Function to call to send the current buffer as mail.
-The headers should be delimited by a line whose contents
-match the variable `mail-header-separator'.")
+The headers should be delimited by a line which is
+not a valid RFC822 header or continuation line.")
 
 ;;;###autoload
-(defvar mail-header-separator "--text follows this line--" "\
-*Line used to separate headers from text in messages being composed.")
+(defcustom mail-header-separator "--text follows this line--" "\
+*Line used to separate headers from text in messages being composed."
+  :type 'string
+  :group 'sendmail)
 
 ;; Set up mail-header-separator for use as a category text property.
 (put 'mail-header-separator 'rear-nonsticky '(category))
@@ -76,33 +93,43 @@ match the variable `mail-header-separator'.")
 ;;;(put 'mail-header-separator 'read-only t)
 
 ;;;###autoload
-(defvar mail-archive-file-name nil "\
+(defcustom mail-archive-file-name nil "\
 *Name of file to write all outgoing messages in, or nil for none.
-This can be an inbox file or an Rmail file.")
+This can be an inbox file or an Rmail file."
+  :type '(choice file (const nil))
+  :group 'sendmail)
 
 ;;;###autoload
-(defvar mail-default-reply-to nil
+(defcustom mail-default-reply-to nil
   "*Address to insert as default Reply-to field of outgoing messages.
 If nil, it will be initialized from the REPLYTO environment variable
-when you first send mail.")
+when you first send mail."
+  :type '(choice (const nil) string)
+  :group 'sendmail)
 
 ;;;###autoload
-(defvar mail-alias-file nil
+(defcustom mail-alias-file nil
   "*If non-nil, the name of a file to use instead of `/usr/lib/aliases'.
 This file defines aliases to be expanded by the mailer; this is a different
 feature from that of defining aliases in `.mailrc' to be expanded in Emacs.
-This variable has no effect unless your system uses sendmail as its mailer.")
+This variable has no effect unless your system uses sendmail as its mailer."
+  :type '(choice (const nil) file)
+  :group 'sendmail)
 
 ;;;###autoload
-(defvar mail-personal-alias-file "~/.mailrc"
+(defcustom mail-personal-alias-file "~/.mailrc"
   "*If non-nil, the name of the user's personal mail alias file.
 This file typically should be in same format as the `.mailrc' file used by
 the `Mail' or `mailx' program.
-This file need not actually exist.")
+This file need not actually exist."
+  :type '(choice (const nil) file)
+  :group 'sendmail)
 
-(defvar mail-setup-hook nil
+(defcustom mail-setup-hook nil
   "Normal hook, run each time a new outgoing mail message is initialized.
-The function `mail-setup' runs this hook.")
+The function `mail-setup' runs this hook."
+  :type 'hook
+  :group 'sendmail)
 
 (defvar mail-aliases t
   "Alist of mail address aliases,
@@ -115,12 +142,17 @@ The alias definitions in the file have this form:
 (defvar mail-alias-modtime nil
   "The modification time of your mail alias file when it was last examined.")
 
-(defvar mail-yank-prefix nil
+(defcustom mail-yank-prefix nil
   "*Prefix insert on lines of yanked message being replied to.
-nil means use indentation.")
-(defvar mail-indentation-spaces 3
+nil means use indentation."
+  :type '(choice (const nil) string)
+  :group 'sendmail)
+
+(defcustom mail-indentation-spaces 3
   "*Number of spaces to insert at the beginning of each cited line.
-Used by `mail-yank-original' via `mail-indent-citation'.")
+Used by `mail-yank-original' via `mail-indent-citation'."
+  :type 'integer
+  :group 'sendmail)
 (defvar mail-yank-hooks nil
   "Obsolete hook for modifying a citation just inserted in the mail buffer.
 Each hook function can find the citation between (point) and (mark t).
@@ -130,14 +162,32 @@ text as modified.
 This is a normal hook, misnamed for historical reasons.
 It is semi-obsolete and mail agents should no longer use it.")
 
-(defvar mail-citation-hook nil
+(defcustom mail-citation-hook nil
   "*Hook for modifying a citation just inserted in the mail buffer.
-Each hook function can find the citation between (point) and (mark t).
-And each hook function should leave point and mark around the citation
-text as modified.
+Each hook function can find the citation between (point) and (mark t),
+and should leave point and mark around the citation text as modified.
+The hook functions can find the header of the cited message
+in the variable `mail-citation-header', whether or not this is included
+in the cited portion of the message.
 
 If this hook is entirely empty (nil), a default action is taken
-instead of no action.")
+instead of no action."
+  :type 'hook
+  :group 'sendmail)
+
+(defvar mail-citation-header nil
+  "While running `mail-citation-hook', this variable holds the message header.
+This enables the hook functions to see the whole message header
+regardless of what part of it (if any) is included in the cited text.")
+
+(defcustom mail-citation-prefix-regexp "[ \t]*[-a-z0-9A-Z]*>+[ \t]*\\|[ \t]*"
+  "*Regular expression to match a citation prefix plus whitespace.
+It should match whatever sort of citation prefixes you want to handle,
+with whitespace before and after; it should also match just whitespace.
+The default value matches citations like `foo-bar>' plus whitespace."
+  :type 'regexp
+  :group 'sendmail
+  :version "20.3")
 
 (defvar mail-abbrevs-loaded nil)
 (defvar mail-mode-map nil)
@@ -154,12 +204,25 @@ removed from alias expansions."
   nil)
 
 ;;;###autoload
-(defvar mail-signature nil
+(defcustom mail-signature nil
   "*Text inserted at end of mail buffer when a message is initialized.
-If t, it means to insert the contents of the file `mail-signature-file'.")
+If t, it means to insert the contents of the file `mail-signature-file'.
+If a string, that string is inserted.
+ (To make a proper signature, the string should begin with \\n\\n-- \\n,
+  which is the standard way to delimit a signature in a message.)
+Otherwise, it should be an expression; it is evaluated
+and should insert whatever you want to insert."
+  :type '(choice (const "None" nil)
+		 (const :tag "Use `.signature' file" t)
+		 (string :tag "String to insert")
+		 (sexp :tag "Expression to evaluate"))
+  :group 'sendmail)
+(put 'mail-signature 'risky-local-variable t)
 
-(defvar mail-signature-file "~/.signature"
-  "*File containing the text inserted at end of mail buffer.")
+(defcustom mail-signature-file "~/.signature"
+  "*File containing the text inserted at end of mail buffer."
+  :type 'file
+  :group 'sendmail)
 
 (defvar mail-reply-action nil)
 (defvar mail-send-actions nil
@@ -167,25 +230,31 @@ If t, it means to insert the contents of the file `mail-signature-file'.")
 (put 'mail-reply-action 'permanent-local t)
 (put 'mail-send-actions 'permanent-local t)
 
-(defvar mail-default-headers nil
+(defcustom mail-default-headers nil
   "*A string containing header lines, to be inserted in outgoing messages.
 It is inserted before you edit the message,
-so you can edit or delete these lines.")
+so you can edit or delete these lines."
+  :type '(choice (const nil) string)
+  :group 'sendmail)
 
-(defvar mail-bury-selects-summary t
+(defcustom mail-bury-selects-summary t
   "*If non-nil, try to show RMAIL summary buffer after returning from mail.
 The functions \\[mail-send-on-exit] or \\[mail-dont-send] select
 the RMAIL summary buffer before returning, if it exists and this variable
-is non-nil.")
+is non-nil."
+  :type 'boolean
+  :group 'sendmail)
 
 ;; I find that this happens so often, for innocent reasons,
 ;; that it is not acceptable to bother the user about it -- rms.
-(defvar mail-send-nonascii t
+(defcustom mail-send-nonascii t
   "*Specify whether to allow sending non-ASCII characters in mail.
 If t, that means do allow it.  nil means don't allow it.
 `query' means ask the user each time.
 Including non-ASCII characters in a mail message can be problematical
-for the recipient, who may not know how to decode them properly.")
+for the recipient, who may not know how to decode them properly."
+  :type '(choice (const t) (const nil) (const query))
+  :group 'sendmail)
 
 ;; Note: could use /usr/ucb/mail instead of sendmail;
 ;; options -t, and -v if not interactive.
@@ -230,8 +299,10 @@ actually occur.")
 	      (1 font-lock-comment-face) (2 font-lock-type-face nil t))
 	    ;; Use EVAL to delay in case `mail-header-separator' gets changed.
 	    '(eval .
-	      (cons (concat "^" (regexp-quote mail-header-separator) "$")
-		    'font-lock-warning-face))
+	      (let ((separator (if (zerop (length mail-header-separator))
+				   " \\`\\' "
+				 (regexp-quote mail-header-separator))))
+		(cons (concat "^" separator "$") 'font-lock-warning-face)))
 	    ;; Use MATCH-ANCHORED to effectively anchor the regexp left side.
 	    `(,cite-chars
 	      (,(concat "\\=[ \t]*"
@@ -239,14 +310,16 @@ actually occur.")
 			"\\(" cite-chars "[ \t]*\\)\\)+"
 			"\\(.*\\)")
 	       (beginning-of-line) (end-of-line)
-	       (2 font-lock-reference-face nil t)
+	       (2 font-lock-constant-face nil t)
 	       (4 font-lock-comment-face nil t)))
 	    '("^\\(X-[A-Za-z0-9-]+\\|In-reply-to\\):.*"
 	      . font-lock-string-face))))
   "Additional expressions to highlight in Mail mode.")
 
-(defvar mail-send-hook nil
-  "Normal hook run before sending mail, in Mail mode.")
+(defcustom mail-send-hook nil
+  "Normal hook run before sending mail, in Mail mode."
+  :type 'hook
+  :group 'sendmail)
 
 (defun sendmail-sync-aliases ()
   (let ((modtime (nth 5 (file-attributes mail-personal-alias-file))))
@@ -280,19 +353,28 @@ actually occur.")
 	(let ((fill-prefix "\t")
 	      (address-start (point)))
 	  (insert to "\n")
-	  (fill-region-as-paragraph address-start (point-max)))
+	  (fill-region-as-paragraph address-start (point-max))
+	  (goto-char (point-max))
+	  (unless (bolp)
+	    (newline)))
       (newline))
     (if cc
 	(let ((fill-prefix "\t")
 	      (address-start (progn (insert "CC: ") (point))))
 	  (insert cc "\n")
-	  (fill-region-as-paragraph address-start (point-max))))
+	  (fill-region-as-paragraph address-start (point-max))
+	  (goto-char (point-max))
+	  (unless (bolp)
+	    (newline))))
     (if in-reply-to
-        (let ((fill-prefix "\t")
+	(let ((fill-prefix "\t")
 	      (fill-column 78)
 	      (address-start (point)))
 	  (insert "In-reply-to: " in-reply-to "\n")
-	  (fill-region-as-paragraph address-start (point-max))))
+	  (fill-region-as-paragraph address-start (point-max))
+	  (goto-char (point-max))
+	  (unless (bolp)
+	    (newline))))
     (insert "Subject: " (or subject "") "\n")
     (if mail-default-headers
 	(insert mail-default-headers))
@@ -314,8 +396,10 @@ actually occur.")
 	       (progn
 		 (insert "\n\n-- \n")
 		 (insert-file-contents mail-signature-file))))
-	  (mail-signature
-	   (insert mail-signature)))
+	  ((stringp mail-signature)
+	   (insert mail-signature))
+	  (t
+	   (eval mail-signature)))
     (goto-char (point-max))
     (or (bolp) (newline)))
   (if to (goto-char to))
@@ -327,16 +411,16 @@ actually occur.")
 (defun mail-mode ()
   "Major mode for editing mail to be sent.
 Like Text Mode but with these additional commands:
-C-c C-s  mail-send (send the message)    C-c C-c  mail-send-and-exit
-C-c C-f  move to a header field (and create it if there isn't):
-	 C-c C-f C-t  move to To:	C-c C-f C-s  move to Subject:
-	 C-c C-f C-c  move to CC:	C-c C-f C-b  move to BCC:
-	 C-c C-f C-f  move to FCC:
-C-c C-t  mail-text (move to beginning of message text).
-C-c C-w  mail-signature (insert `mail-signature-file' file).
-C-c C-y  mail-yank-original (insert current message, in Rmail).
-C-c C-q  mail-fill-yanked-message (fill what was yanked).
-C-c C-v  mail-sent-via (add a Sent-via field for each To or CC)."
+\\[mail-send]  mail-send (send the message)    \\[mail-send-and-exit]  mail-send-and-exit
+Here are commands that move to a header field (and create it if there isn't):
+	 \\[mail-to]  move to To:	\\[mail-subject]  move to Subject:
+	 \\[mail-cc]  move to CC:	\\[mail-bcc]  move to BCC:
+	 \\[mail-fcc]  move to FCC:
+\\[mail-text]  mail-text (move to beginning of message text).
+\\[mail-signature]  mail-signature (insert `mail-signature-file' file).
+\\[mail-yank-original]  mail-yank-original (insert current message, in Rmail).
+\\[mail-fill-yanked-message]  mail-fill-yanked-message (fill what was yanked).
+\\[mail-sent-via]  mail-sent-via (add a Sent-via field for each To or CC)."
   (interactive)
   (kill-all-local-variables)
   (make-local-variable 'mail-reply-action)
@@ -357,31 +441,60 @@ C-c C-v  mail-sent-via (add a Sent-via field for each To or CC)."
   (setq fill-paragraph-function 'mail-mode-fill-paragraph)
   (make-local-variable 'adaptive-fill-regexp)
   (setq adaptive-fill-regexp
-	(concat "[ \t]*[-a-z0-9A-Z]*>+[ \t]*\\|" adaptive-fill-regexp))
+	(concat "[ \t]*\\([-|#;>*]+ *\\|(?[0-9]+[.)] *\\)+"
+		"\\|[ \t]*[-a-z0-9A-Z]*>+[ \t]*"
+		"\\|[ \t]*"))
   (make-local-variable 'adaptive-fill-first-line-regexp)
   (setq adaptive-fill-first-line-regexp
-	(concat "[ \t]*[-a-z0-9A-Z]*>+[ \t]*\\|" adaptive-fill-first-line-regexp))
+	(concat adaptive-fill-first-line-regexp
+		"\\|[ \t]*[-a-z0-9A-Z]*>+[ \t]*"))
   ;; `-- ' precedes the signature.  `-----' appears at the start of the
   ;; lines that delimit forwarded messages.
   ;; Lines containing just >= 3 dashes, perhaps after whitespace,
   ;; are also sometimes used and should be separators.
   (setq paragraph-start (concat (regexp-quote mail-header-separator)
-				"$\\|[ \t]*[a-z0-9A-Z]*>+[ \t]*$\\|[ \t]*$\\|"
+				"$\\|[ \t]*\\([-|#;>*]+ *\\|(?[0-9]+[.)] *\\)*$"
+				"\\|[ \t]*[a-z0-9A-Z]*>+[ \t]*$\\|[ \t]*$\\|"
+				"-- $\\|---+$\\|"
 				page-delimiter))
   (setq paragraph-separate paragraph-start)
   (run-hooks 'text-mode-hook 'mail-mode-hook))
 
+
+(defun mail-header-end ()
+  "Return the buffer location of the end of headers, as a number."
+  (save-restriction
+    (widen)
+    (save-excursion
+      (rfc822-goto-eoh)
+      (point))))
+
+(defun mail-text-start ()
+  "Return the buffer location of the start of text, as a number."
+  (save-restriction
+    (widen)
+    (save-excursion
+      (rfc822-goto-eoh)
+      (forward-line 1)
+      (point))))
+
+(defun mail-sendmail-delimit-header ()
+  "Set up whatever header delimiter convention sendmail will use.
+Concretely: replace the first blank line in the header with the separator."
+  (rfc822-goto-eoh)
+  (insert mail-header-separator)
+  (point))
+
+(defun mail-sendmail-undelimit-header ()
+  "Remove header separator to put the message in correct form for sendmail.
+Leave point at the start of the delimiter line."
+  (rfc822-goto-eoh)
+  (delete-region (point) (progn (end-of-line) (point))))
+
 (defun mail-mode-auto-fill ()
   "Carry out Auto Fill for Mail mode.
 If within the headers, this makes the new lines into continuation lines."
-  (if (< (point)
-	 (save-excursion
-	   (goto-char (point-min))
-	   (if (re-search-forward
-		(concat "^" (regexp-quote mail-header-separator) "$")
-		nil t)
-	       (point)
-	     0)))
+  (if (< (point) (mail-header-end))
       (let ((old-line-start (save-excursion (beginning-of-line) (point))))
 	(if (do-auto-fill)
 	    (save-excursion
@@ -396,14 +509,7 @@ If within the headers, this makes the new lines into continuation lines."
 
 (defun mail-mode-fill-paragraph (arg)
   ;; Do something special only if within the headers.
-  (if (< (point)
-	 (save-excursion
-	   (goto-char (point-min))
-	   (if (re-search-forward
-		(concat "^" (regexp-quote mail-header-separator) "$")
-		nil t)
-	       (point)
-	     0)))
+  (if (< (point) (mail-header-end))
       (let (beg end fieldname) 
 	(re-search-backward "^[-a-zA-Z]+:" nil 'yes)
 	(setq beg (point))
@@ -532,7 +638,7 @@ Prefix arg means don't delete this window."
   (let ((newbuf (other-buffer (current-buffer))))
     (bury-buffer (current-buffer))
     (if (and (or (window-dedicated-p (frame-selected-window))
-		 (assq 'mail-dedicated-frame (frame-parameters)))
+		 (cdr (assq 'mail-dedicated-frame (frame-parameters))))
 	     (not (null (delq (selected-frame) (visible-frame-list)))))
 	(delete-frame (selected-frame))
       (let (rmail-flag summary-buffer)
@@ -578,7 +684,7 @@ the user from the mailer."
 		(error "Message contains non-ASCII characters"))))
 	;; Complain about any invalid line.
 	(goto-char (point-min))
-	(while (not (looking-at (regexp-quote mail-header-separator)))
+	(while (< (point) (mail-header-end))
 	  (unless (looking-at "[ \t]\\|.*:\\|$")
 	    (push-mark opoint)
 	    (error "Invalid header line (maybe a continuation line lacks initial whitespace)"))
@@ -606,7 +712,7 @@ the user from the mailer."
 
 ;;;###autoload
 (defvar sendmail-coding-system nil
-  "Coding system to which to encode the mail.")
+  "Coding system to encode the outgoing mail.")
 
 (defun sendmail-send-it ()
   (require 'mail-utils)
@@ -625,6 +731,10 @@ the user from the mailer."
 	   (or sendmail-coding-system
 	       default-buffer-file-coding-system
 	       'iso-latin-1))))
+    (if (fboundp select-safe-coding-system-function)
+	(setq sendmail-coding-system
+	      (funcall select-safe-coding-system-function
+		       (point-min) (point-max) sendmail-coding-system)))
     (unwind-protect
 	(save-excursion
 	  (set-buffer tembuf)
@@ -635,11 +745,8 @@ the user from the mailer."
 	  (or (= (preceding-char) ?\n)
 	      (insert ?\n))
 	  ;; Change header-delimiter to be what sendmail expects.
-	  (goto-char (point-min))
-	  (re-search-forward
-	    (concat "^" (regexp-quote mail-header-separator) "\n"))
-	  (replace-match "\n")
-	  (backward-char 1)
+	  (goto-char (mail-header-end))
+	  (delete-region (point) (progn (end-of-line) (point)))
 	  (setq delimline (point-marker))
 	  (sendmail-sync-aliases)
 	  (if mail-aliases
@@ -657,7 +764,9 @@ the user from the mailer."
 		    (save-restriction
 		      (narrow-to-region (point)
 					(save-excursion
-					  (end-of-line)
+					  (forward-line 1)
+					  (while (looking-at "^[ \t]")
+					    (forward-line 1))
 					  (point)))
 		      (append (mail-parse-comma-list)
 			      resend-to-addresses)))
@@ -743,7 +852,10 @@ the user from the mailer."
 			       (goto-char fullname-start))))
 			 (insert ")\n"))
 			((null mail-from-style)
-			 (insert "From: " login "\n")))))
+			 (insert "From: " login "\n"))
+			((eq mail-from-style 'system-default)
+			 nil)
+			(t (error "Invalid value for `system-default'")))))
 	    ;; Insert an extra newline if we need it to work around
 	    ;; Sun's bug that swallows newlines.
 	    (goto-char (1+ delimline))
@@ -774,10 +886,12 @@ the user from the mailer."
 				     nil errbuf nil "-oi")
 			       ;; Always specify who from,
 			       ;; since some systems have broken sendmails.
-			       (list "-f" (user-login-name))
-    ;;;			   ;; Don't say "from root" if running under su.
-    ;;;			   (and (equal (user-real-login-name) "root")
-    ;;;				(list "-f" (user-login-name)))
+			       ;; unless user has said no.
+			       (if (memq mail-from-style '(angles parens nil))
+				   (list "-f" user-mail-address))
+;;; 			       ;; Don't say "from root" if running under su.
+;;; 			       (and (equal (user-real-login-name) "root")
+;;; 				    (list "-f" (user-login-name)))
 			       (and mail-alias-file
 				    (list (concat "-oA" mail-alias-file)))
 			       (if mail-interactive
@@ -905,26 +1019,26 @@ the user from the mailer."
 		    (if max (narrow-to-region (point-min) max))))))
 	  ;; Append to the file directly,
 	  ;; unless we've already taken care of it.
-	  (if (and (not dont-write-the-file)
-		   (file-exists-p (car fcc-list))
-		   (mail-file-babyl-p (car fcc-list)))
-	      ;; If the file is a Babyl file,
-	      ;; convert the message to Babyl format.
-	      (let ((coding-system-for-write
-		     (or rmail-file-coding-system
-			 'emacs-mule)))
-		(save-excursion
-		  (set-buffer (get-buffer-create " mail-temp"))
-		  (setq buffer-read-only nil)
-		  (erase-buffer)
-		  (insert "\C-l\n0, unseen,,\n*** EOOH ***\n"
-			  "Date: " (mail-rfc822-date) "\n")
-		  (insert-buffer-substring curbuf beg2 end)
-		  (insert "\n\C-_")
-		  (write-region (point-min) (point-max) (car fcc-list) t)
-		  (erase-buffer)))
-	    (write-region
-	     (1+ (point-min)) (point-max) (car fcc-list) t))
+	  (unless dont-write-the-file
+	    (if (and (file-exists-p (car fcc-list))
+		     (mail-file-babyl-p (car fcc-list)))
+		;; If the file is a Babyl file,
+		;; convert the message to Babyl format.
+		(let ((coding-system-for-write
+		       (or rmail-file-coding-system
+			   'emacs-mule)))
+		  (save-excursion
+		    (set-buffer (get-buffer-create " mail-temp"))
+		    (setq buffer-read-only nil)
+		    (erase-buffer)
+		    (insert "\C-l\n0, unseen,,\n*** EOOH ***\n"
+			    "Date: " (mail-rfc822-date) "\n")
+		    (insert-buffer-substring curbuf beg2 end)
+		    (insert "\n\C-_")
+		    (write-region (point-min) (point-max) (car fcc-list) t)
+		    (erase-buffer)))
+	      (write-region
+	       (1+ (point-min)) (point-max) (car fcc-list) t)))
 	  (and buffer (not dont-write-the-file)
 	       (with-current-buffer buffer
 		 (set-visited-file-modtime))))
@@ -935,12 +1049,8 @@ the user from the mailer."
   "Make a Sent-via header line from each To or CC header line."
   (interactive)
   (save-excursion
-    (goto-char (point-min))
-    ;; find the header-separator
-    (search-forward (concat "\n" mail-header-separator "\n"))
-    (forward-line -1)
     ;; put a marker at the end of the header
-    (let ((end (point-marker))
+    (let ((end (make-marker (mail-header-end)))
 	  (case-fold-search t)
 	  to-line)
       (goto-char (point-min))
@@ -1003,9 +1113,7 @@ the user from the mailer."
 (defun mail-position-on-field (field &optional soft)
   (let (end
 	(case-fold-search t))
-    (goto-char (point-min))
-    (re-search-forward (concat "^" (regexp-quote mail-header-separator) "$"))
-    (setq end (match-beginning 0))
+    (setq end (mail-header-end))
     (goto-char (point-min))
     (if (re-search-forward (concat "^" (regexp-quote field) ":") end t)
 	(progn
@@ -1023,8 +1131,7 @@ the user from the mailer."
   "Move point to beginning of message text."
   (interactive)
   (expand-abbrev)
-  (goto-char (point-min))
-  (search-forward (concat "\n" mail-header-separator "\n")))
+  (goto-char (mail-text-start)))
 
 (defun mail-signature (atpoint)
   "Sign letter with contents of the file `mail-signature-file'.
@@ -1045,12 +1152,11 @@ Prefix arg means put contents at point."
 Numeric argument means justify as well."
   (interactive "P")
   (save-excursion
-    (goto-char (point-min))
-    (search-forward (concat "\n" mail-header-separator "\n") nil t)
+    (goto-char (mail-text-start))
     (fill-individual-paragraphs (point)
 				(point-max)
 				justifyp
-				t)))
+				mail-citation-prefix-regexp)))
 
 (defun mail-indent-citation ()
   "Modify text just inserted from a message to be cited.
@@ -1096,9 +1202,21 @@ and don't delete any header fields."
 	  (goto-char start)
 	  (let ((mail-indentation-spaces (if arg (prefix-numeric-value arg)
 					   mail-indentation-spaces))
+		;; Avoid error in Transient Mark mode
+		;; on account of mark's being inactive.
 		(mark-even-if-inactive t))
 	    (if mail-citation-hook
-		(run-hooks 'mail-citation-hook)
+		;; Bind mail-citation-hook to the inserted message's header.
+		(let ((mail-citation-header
+		       (buffer-substring-no-properties
+			start
+			(save-excursion
+			  (save-restriction
+			    (narrow-to-region start (point-max))
+			    (goto-char start)
+			    (rfc822-goto-eoh)
+			    (point))))))
+		(run-hooks 'mail-citation-hook))
 	      (if mail-yank-hooks
 		  (run-hooks 'mail-yank-hooks)
 		(mail-indent-citation)))))
@@ -1140,10 +1258,13 @@ and don't delete any header fields."
   (and (consp mail-reply-action)
        (eq (car mail-reply-action) 'insert-buffer)
        (let ((buffer (nth 1 mail-reply-action))
-	     (start (point)))
+	     (start (point))
+	     ;; Avoid error in Transient Mark mode
+	     ;; on account of mark's being inactive.
+	     (mark-even-if-inactive t))
 	 ;; Insert the citation text.
 	 (insert (with-current-buffer buffer
-		   (buffer-substring (point) (mark))))
+		   (buffer-substring-no-properties (point) (mark))))
 	 (push-mark start)
 	 ;; Indent or otherwise annotate the citation text.
 	 (if (consp arg)
@@ -1151,7 +1272,16 @@ and don't delete any header fields."
 	   (let ((mail-indentation-spaces (if arg (prefix-numeric-value arg)
 					    mail-indentation-spaces)))
 	     (if mail-citation-hook
-		 (run-hooks 'mail-citation-hook)
+		 ;; Bind mail-citation-hook to the original message's header.
+		 (let ((mail-citation-header
+			(with-current-buffer buffer
+			  (buffer-substring-no-properties
+			   (point-min)
+			   (save-excursion
+			     (goto-char (point-min))
+			     (rfc822-goto-eoh)
+			     (point))))))
+		   (run-hooks 'mail-citation-hook))
 	       (if mail-yank-hooks
 		   (run-hooks 'mail-yank-hooks)
 		 (mail-indent-citation))))))))
@@ -1272,7 +1402,10 @@ The seventh argument ACTIONS is a list of actions to take
   ;; to avoid any danger that it can't be written.
   (if (file-exists-p (expand-file-name "~/"))
       (setq default-directory (expand-file-name "~/")))
-  (auto-save-mode auto-save-default)
+  ;; Only call auto-save-mode if necessary, to avoid changing auto-save file.
+  (if (or (and auto-save-default (not buffer-auto-save-file-name))
+          (and (not auto-save-default) buffer-auto-save-file-name))
+      (auto-save-mode auto-save-default))
   (mail-mode)
   ;; Disconnect the buffer from its visited file
   ;; (in case the user has actually visited a file *mail*).

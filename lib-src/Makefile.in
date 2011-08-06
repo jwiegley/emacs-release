@@ -59,6 +59,8 @@ libexecdir=@libexecdir@
 # script's `--srcdir' option.  However, the value of ${srcdir} in
 # this makefile is not identical to what was specified with --srcdir,
 # since the variable here has `/lib-src' added at the end.
+
+# We use $(srcdir) explicitly in dependencies so as not to depend on VPATH.
 srcdir=@srcdir@
 VPATH=@srcdir@
 
@@ -205,7 +207,7 @@ MOVE_FLAGS=
 # ifdef HAVE_LIBCOM_ERR
 	COM_ERRLIB = -lcom_err
 # endif
-#endif /* KERBEROS
+#endif /* KERBEROS */
 
 /* If HESIOD is defined, set this to "-lhesiod". */
 HESIODLIB=
@@ -284,7 +286,7 @@ install: ${archlibdir}
 	@echo
 	@echo "Installing utilities for users to run."
 	for file in ${INSTALLABLES} ; do \
-	  $(INSTALL_PROGRAM) $${file} ${bindir}/$${file} ; \
+	  $(INSTALL_PROGRAM) $(INSTALL_STRIP) $${file} ${bindir}/$${file} ; \
 	  chmod a+rx ${bindir}/$${file}; \
 	done
 	for file in ${INSTALLABLE_SCRIPTS} ; do \
@@ -351,10 +353,10 @@ REGEXPOBJ =
 REGEXPDEPS =
 #else
 REGEXPOBJ = regex.o
-REGEXPDEPS = $(REGEXPOBJ) ../src/regex.h
+REGEXPDEPS = $(REGEXPOBJ) $(srcdir)/../src/regex.h
 #endif
 
-regex.o: ../src/regex.c ../src/regex.h ../src/config.h
+regex.o: $(srcdir)/../src/regex.c $(srcdir)/../src/regex.h ../src/config.h
 	${CC} -c ${BASE_CFLAGS} -DCONFIG_BROKETS -DINHIBIT_STRING_HEADER ${srcdir}/../src/regex.c
 
 etags: ${srcdir}/etags.c $(GETOPTDEPS) $(REGEXPDEPS) ../src/config.h
@@ -378,7 +380,8 @@ sorted-doc: ${srcdir}/sorted-doc.c ${ALLOCA}
 	$(CC) ${ALL_CFLAGS} ${srcdir}/sorted-doc.c ${ALLOCA} $(LOADLIBES) -o sorted-doc
 
 b2m: ${srcdir}/b2m.c ../src/config.h
-	$(CC) ${ALL_CFLAGS} ${srcdir}/b2m.c $(LOADLIBES) -o b2m 
+	$(CC) ${ALL_CFLAGS} ${srcdir}/b2m.c  -DVERSION="\"${version}\"" \
+	   $(GETOPTOBJS) $(LOADLIBES) -o b2m 
 
 movemail: movemail.o pop.o $(GETOPTDEPS)
 	$(CC) ${LINK_CFLAGS} ${MOVE_FLAGS} movemail.o pop.o $(GETOPTOBJS) $(LOADLIBES) $(LIBMAIL) $(MOVE_LIBS) -o movemail

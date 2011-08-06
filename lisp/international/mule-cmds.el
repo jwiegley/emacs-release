@@ -32,12 +32,13 @@
 ;; Keep "C-x C-m ..." for mule specific commands.
 (define-key ctl-x-map "\C-m" mule-keymap)
 
-(define-key mule-keymap "m" 'toggle-enable-multibyte-characters)
 (define-key mule-keymap "f" 'set-buffer-file-coding-system)
 (define-key mule-keymap "t" 'set-terminal-coding-system)
 (define-key mule-keymap "k" 'set-keyboard-coding-system)
 (define-key mule-keymap "p" 'set-buffer-process-coding-system)
-(define-key mule-keymap "\C-\\" 'select-input-method)
+(define-key mule-keymap "x" 'set-selection-coding-system)
+(define-key mule-keymap "X" 'set-next-selection-coding-system)
+(define-key mule-keymap "\C-\\" 'set-input-method)
 (define-key mule-keymap "c" 'universal-coding-system-argument)
 (define-key mule-keymap "l" 'set-language-environment)
 
@@ -51,7 +52,9 @@
 (defvar mule-menu-keymap (make-sparse-keymap "Mule")
   "Keymap for MULE (Multilingual environment) menu specific commands.")
 
-(define-key global-map [menu-bar mule] (cons "Mule" mule-menu-keymap))
+(define-key global-map [menu-bar mule]
+  `(menu-item "Mule" ,mule-menu-keymap
+	      :visible default-enable-multibyte-characters))
 
 (setq menu-bar-final-items (cons 'mule menu-bar-final-items))
 
@@ -64,9 +67,6 @@
 (defvar set-coding-system-map nil)
 (define-prefix-command 'set-coding-system-map)
 
-(define-key-after mule-menu-keymap [toggle-mule]
-  '("Toggle Multibyte Characters" . toggle-enable-multibyte-characters)
-  t)
 (define-key-after mule-menu-keymap [describe-language-environment]
   '("Describe Language Environment" . describe-language-environment-map)
   t)
@@ -82,8 +82,8 @@
 (define-key-after mule-menu-keymap [toggle-input-method]
   '("Toggle Input Method" . toggle-input-method)
   t)
-(define-key-after mule-menu-keymap [select-input-method]
-  '("Select Input Method" . select-input-method)
+(define-key-after mule-menu-keymap [set-input-method]
+  '("Select Input Method" . set-input-method)
   t)
 (define-key-after mule-menu-keymap [describe-input-method]
   '("Describe Input Method" . describe-input-method)
@@ -122,18 +122,28 @@
 (define-key-after set-coding-system-map [set-buffer-process-coding-system]
   '("Buffer Process" . set-buffer-process-coding-system)
   t)
-
+(define-key-after set-coding-system-map [set-selection-coding-system]
+  '("X Selection" . set-selection-coding-system)
+  t)
+(define-key-after set-coding-system-map [set-next-selection-coding-system]
+  '("Next X Selection" . set-next-selection-coding-system)
+  t)
 (define-key setup-language-environment-map
   [Default] '("Default" . setup-specified-language-environment))
 
 ;; These are meaningless when running under X.
 (put 'set-terminal-coding-system 'menu-enable
-     '(not (eq window-system 'x)))
+     '(not window-system))
 (put 'set-keyboard-coding-system 'menu-enable
-     '(not (eq window-system 'x)))
+     '(not window-system))
 ;; This is meaningless when the current buffer has no process.
 (put 'set-buffer-process-coding-system 'menu-enable
      '(get-buffer-process (current-buffer)))
+;; These are meaningless when running under terminal.
+(put 'set-selection-coding-system 'menu-enable
+     'window-system)
+(put 'set-next-selection-coding-system 'menu-enable
+     'window-system)
 
 ;; This should be a single character key binding because users use it
 ;; very frequently while editing multilingual text.  Now we can use
@@ -149,12 +159,22 @@
 ;;; (define-key global-map [?\S- ] 'toggle-input-method)
 
 (defun toggle-enable-multibyte-characters (&optional arg)
-  "Change whether this buffer enables multibyte characters.
-With arg, make them enable iff arg is positive."
+  "Change whether this buffer uses multibyte characters.
+With arg, use multibyte characters if the arg is positive.
+
+Note that this command does not convert the byte contents of
+the buffer; it only changes the way those bytes are interpreted.
+In general, therefore, this command *changes* the sequence of
+characters that the current buffer contains.
+
+We suggest you avoid using use this command unless you know what you
+are doing.  If you use it by mistake, and the buffer is now displayed
+wrong, use this command again to toggle back to the right mode."
   (interactive "P")
-  (setq enable-multibyte-characters
-	(if (null arg) (null enable-multibyte-characters)
-	  (> (prefix-numeric-value arg) 0)))
+  (let ((new-flag
+	 (if (null arg) (null enable-multibyte-characters)
+	   (> (prefix-numeric-value arg) 0))))
+    (set-buffer-multibyte new-flag))
   (force-mode-line-update))
 
 (defun view-hello-file ()
@@ -168,7 +188,15 @@ With arg, make them enable iff arg is positive."
 (defun universal-coding-system-argument ()
   "Execute an I/O command using the specified coding system."
   (interactive)
-  (let* ((coding-system (read-coding-system "Coding system for following command: "))
+  (let* ((default (and buffer-file-coding-system
+		       (not (eq (coding-system-type buffer-file-coding-system)
+				t))
+		       buffer-file-coding-system))
+	 (coding-system (read-coding-system
+			 (if default
+			     (format "Coding system for following command (default, %s): " default)
+			   "Coding system for following command: ")
+			 default))
 	 (keyseq (read-key-sequence
 		  (format "Command to execute with %s:" coding-system)))
 	 (cmd (key-binding keyseq)))
@@ -179,151 +207,447 @@ With arg, make them enable iff arg is positive."
 
 (defun set-default-coding-systems (coding-system)
   "Set default value of various coding systems to CODING-SYSTEM.
-The follwing coding systems are set:
+This sets the following coding systems:
   o coding system of a newly created buffer
-  o default coding system for terminal output
-  o default coding system for keyboard input
-  o default coding system for subprocess I/O"
+  o default coding system for subprocess I/O
+This also sets the following values:
+  o default value used as file-name-coding-system for converting file names.
+  o default value for the command `set-terminal-coding-system'
+  o default value for the command `set-keyboard-coding-system'"
   (check-coding-system coding-system)
   (setq-default buffer-file-coding-system coding-system)
+  (if default-enable-multibyte-characters
+      (setq default-file-name-coding-system coding-system))
   (setq default-terminal-coding-system coding-system)
   (setq default-keyboard-coding-system coding-system)
   (setq default-process-coding-system (cons coding-system coding-system)))
 
+(defalias 'update-iso-coding-systems 'update-coding-systems-internal)
+(make-obsolete 'update-iso-coding-systems 'update-coding-systems-internal)
+
 (defun prefer-coding-system (coding-system)
   "Add CODING-SYSTEM at the front of the priority list for automatic detection.
-This also sets the following coding systems to CODING-SYSTEM:
+This also sets the following coding systems:
   o coding system of a newly created buffer
-  o default coding system for terminal output
-  o default coding system for keyboard input
-  o default coding system for subprocess I/O"
+  o default coding system for subprocess I/O
+This also sets the following values:
+  o default value used as file-name-coding-system for converting file names.
+  o default value for the command `set-terminal-coding-system'
+  o default value for the command `set-keyboard-coding-system'"
   (interactive "zPrefer coding system: ")
   (if (not (and coding-system (coding-system-p coding-system)))
       (error "Invalid coding system `%s'" coding-system))
   (let ((coding-category (coding-system-category coding-system))
-	(parent (coding-system-parent coding-system)))
+	(base (coding-system-base coding-system)))
     (if (not coding-category)
 	;; CODING-SYSTEM is no-conversion or undecided.
 	(error "Can't prefer the coding system `%s'" coding-system))
-    (set coding-category (or parent coding-system))
+    (set coding-category (or base coding-system))
+    (update-coding-systems-internal)
     (if (not (eq coding-category (car coding-category-list)))
 	;; We must change the order.
 	(setq coding-category-list
 	      (cons coding-category
 		    (delq coding-category coding-category-list))))
-    (if (and parent (interactive-p))
-	(message "Highest priority is set to %s (parent of %s)"
-		 parent coding-system))
-    (set-default-coding-systems (or parent coding-system))))
+    (if (and base (interactive-p))
+	(message "Highest priority is set to %s (base of %s)"
+		 base coding-system))
+    (set-default-coding-systems (or base coding-system))))
+
+(defun find-coding-systems-region-subset-p (list1 list2)
+  "Return non-nil if all elements in LIST1 are included in LIST2.
+Comparison done with EQ."
+  (catch 'tag
+    (while list1
+      (or (memq (car list1) list2)
+	  (throw 'tag nil))
+      (setq list1 (cdr list1)))
+    t))
+
+(defun find-coding-systems-region (from to)
+  "Return a list of proper coding systems to encode a text between FROM and TO.
+All coding systems in the list can safely encode any multibyte characters
+in the text.
+
+If the text contains no multibyte charcters, return a list of a single
+element `undecided'."
+  (find-coding-systems-for-charsets (find-charset-region from to)))
+
+(defun find-coding-systems-string (string)
+  "Return a list of proper coding systems to encode STRING.
+All coding systems in the list can safely encode any multibyte characters
+in STRING.
+
+If STRING contains no multibyte charcters, return a list of a single
+element `undecided'."
+  (find-coding-systems-for-charsets (find-charset-string string)))
+
+(defun find-coding-systems-for-charsets (charsets)
+  "Return a list of proper coding systems to encode characters of CHARSETS.
+CHARSETS is a list of character sets."
+  (if (or (null charsets)
+	  (and (= (length charsets) 1)
+	       (eq 'ascii (car charsets))))
+      '(undecided)
+    (let ((l coding-system-list)
+	  (charset-prefered-codings
+	   (mapcar (function
+		    (lambda (x)
+		      (get-charset-property x 'prefered-coding-system)))
+		   charsets))
+	  (priorities (mapcar (function (lambda (x) (symbol-value x)))
+			      coding-category-list))
+	  codings coding safe)
+      (while l
+	(setq coding (car l) l (cdr l))
+	(if (and (eq coding (coding-system-base coding))
+		 (setq safe (coding-system-get coding 'safe-charsets))
+		 (or (eq safe t)
+		     (find-coding-systems-region-subset-p charsets safe)))
+	    ;; We put the higher priority to coding systems included
+	    ;; in CHARSET-PREFERED-CODINGS, and within them, put the
+	    ;; higher priority to coding systems which support smaller
+	    ;; number of charsets.
+	    (let ((priority
+		   (+ (if (coding-system-get coding 'mime-charset) 4096 0)
+		      (lsh (length (memq coding priorities)) 7)
+		      (if (memq coding charset-prefered-codings) 64 0)
+		      (if (> (coding-system-type coding) 0) 32 0)
+		      (if (consp safe) (- 32 (length safe)) 0))))
+	      (setq codings (cons (cons priority coding) codings)))))
+      (mapcar 'cdr
+	      (sort codings (function (lambda (x y) (> (car x) (car y))))))
+      )))
+
+(defun find-multibyte-characters (from to &optional maxcount excludes)
+  "Find multibyte characters in the region specified by FROM and TO.
+If FROM is a string, find multibyte characters in the string.
+The return value is an alist of the following format:
+  ((CHARSET COUNT CHAR ...) ...)
+where
+  CHARSET is a character set,
+  COUNT is a number of characters,
+  CHARs are found characters of the character set.
+Optional 3rd arg MAXCOUNT limits how many CHARs are put in the above list.
+Optioanl 4th arg EXCLUDE is a list of character sets to be ignored."
+  (let ((chars nil)
+	charset char)
+    (if (stringp from)
+	(let ((idx 0))
+	  (while (setq idx (string-match "[^\000-\177]" from idx))
+	    (setq char (aref from idx)
+		  charset (char-charset char))
+	    (if (not (memq charset excludes))
+		(let ((slot (assq charset chars)))
+		  (if slot
+		      (if (not (memq char (nthcdr 2 slot)))
+			  (let ((count (nth 1 slot)))
+			    (setcar (cdr slot) (1+ count))
+			    (if (or (not maxcount) (< count maxcount))
+				(nconc slot (list char)))))
+		    (setq chars (cons (list charset 1 char) chars)))))
+	    (setq idx (1+ idx))))
+      (save-excursion
+	(goto-char from)
+	(while (re-search-forward "[^\000-\177]" to t)
+	  (setq char (preceding-char)
+		charset (char-charset char))
+	  (if (not (memq charset excludes))
+	      (let ((slot (assq charset chars)))
+		(if slot
+		    (if (not (memq char (nthcdr 2 slot)))
+			(let ((count (nth 1 slot)))
+			  (setcar (cdr slot) (1+ count))
+			  (if (or (not maxcount) (< count maxcount))
+			      (nconc slot (list char)))))
+		  (setq chars (cons (list charset 1 char) chars))))))))
+    (nreverse chars)))
+
+(defvar last-coding-system-specified nil
+  "Most recent coding system explicitly specified by the user when asked.
+This variable is set whenever Emacs asks the user which coding system
+to use in order to write a file.  If you set it to nil explicitly,
+then call `write-region', then afterward this variable will be non-nil
+only if the user was explicitly asked and specified a coding system.")
+
+(defun select-safe-coding-system (from to &optional default-coding-system)
+  "Ask a user to select a safe coding system from candidates.
+The candidates of coding systems which can safely encode a text
+between FROM and TO are shown in a popup window.
+
+Optional arg DEFAULT-CODING-SYSTEM specifies a coding system to be
+checked at first.  If omitted, buffer-file-coding-system of the
+current buffer is used.
+
+If the text can be encoded safely by DEFAULT-CODING-SYSTEM, it is
+returned without any user interaction.
+
+Kludgy feature: if FROM is a string, the string is the target text,
+and TO is ignored."
+  (or default-coding-system
+      (setq default-coding-system buffer-file-coding-system))
+  (let* ((charsets (if (stringp from) (find-charset-string from)
+		     (find-charset-region from to)))
+	 (safe-coding-systems (find-coding-systems-for-charsets charsets)))
+    (if (or (eq (car safe-coding-systems) 'undecided)
+	    (eq default-coding-system 'no-conversion)
+	    (and default-coding-system
+		 (memq (coding-system-base default-coding-system)
+		       safe-coding-systems)))
+	default-coding-system
+
+      ;; At first, change each coding system to the corresponding
+      ;; mime-charset name if it is also a coding system.
+      (let ((l safe-coding-systems)
+	    mime-charset)
+	(while l
+	  (setq mime-charset (coding-system-get (car l) 'mime-charset))
+	  (if (and mime-charset (coding-system-p mime-charset))
+	      (setcar l mime-charset))
+	  (setq l (cdr l))))
+
+      (let ((non-safe-chars (find-multibyte-characters
+			     from to 3
+			     (and default-coding-system
+				  (coding-system-get default-coding-system
+						     'safe-charsets))))
+	    overlays)
+	(save-excursion
+	  ;; Highlight characters that default-coding-system can't encode.
+	  (when (integerp from)
+	    (goto-char from)
+	    (let ((found nil))
+	      (while (and (not found)
+			  (re-search-forward "[^\000-\177]" to t))
+		(setq found (assq (char-charset (preceding-char))
+				  non-safe-chars))))
+	    (beginning-of-line)
+	    (set-window-start (selected-window) (point))
+	    (save-excursion
+	      (while (re-search-forward "[^\000-\177]" to t)
+		(let* ((char (preceding-char))
+		       (charset (char-charset char)))
+		  (when (assq charset non-safe-chars)
+		    (setq overlays (cons (make-overlay (1- (point)) (point))
+					 overlays))
+		    (overlay-put (car overlays) 'face 'highlight))))))
+
+	  ;; At last, ask a user to select a proper coding system.  
+	  (unwind-protect
+	      (save-window-excursion
+		;; At first, show a helpful message.
+		(with-output-to-temp-buffer "*Warning*"
+		  (save-excursion
+		    (set-buffer standard-output)
+		    (insert "The target text contains the following non ASCII character(s):\n")
+		    (let ((len (length non-safe-chars))
+			  (shown 0))
+		      (while (and non-safe-chars (< shown 3))
+			(when (> (length (car non-safe-chars)) 2)
+			  (setq shown (1+ shown))
+			  (insert (format "%25s: " (car (car non-safe-chars))))
+			  (let ((l (nthcdr 2 (car non-safe-chars))))
+			    (while l
+			      (insert (car l))
+			      (setq l (cdr l))))
+			  (if (> (nth 1 (car non-safe-chars)) 3)
+			      (insert "..."))
+			  (insert "\n"))
+			(setq non-safe-chars (cdr non-safe-chars)))
+		      (if (< shown len)
+			  (insert (format "%27s\n" "..."))))
+		    (insert (format "\
+These can't be encoded safely by the coding system %s.
+
+Please select one from the following safe coding systems:\n"
+				    default-coding-system))
+		    (let ((pos (point))
+			  (fill-prefix "  "))
+		      (mapcar (function (lambda (x) (princ "  ") (princ x)))
+			      safe-coding-systems)
+		      (fill-region-as-paragraph pos (point)))))
+
+		;; Read a coding system.
+		(let* ((safe-names (mapcar (lambda (x) (list (symbol-name x)))
+					   safe-coding-systems))
+		       (name (completing-read
+			      (format "Select coding system (default %s): "
+				      (car safe-coding-systems))
+			      safe-names nil t nil nil
+			      (car (car safe-names)))))
+		  (setq last-coding-system-specified (intern name))
+		  (if (integerp (coding-system-eol-type default-coding-system))
+		      (setq last-coding-system-specified
+			    (coding-system-change-eol-conversion
+			     last-coding-system-specified
+			     (coding-system-eol-type default-coding-system))))
+		  last-coding-system-specified))
+	    (kill-buffer "*Warning*")
+	    (while overlays
+	      (delete-overlay (car overlays))
+	      (setq overlays (cdr overlays)))))))))
+
+(setq select-safe-coding-system-function 'select-safe-coding-system)
 
 
 ;;; Language support staffs.
 
 (defvar language-info-alist nil
-  "Alist of language names vs the corresponding information of various kind.
+  "Alist of language environment definitions.
 Each element looks like:
 	(LANGUAGE-NAME . ((KEY . INFO) ...))
-where LANGUAGE-NAME is a string,
-KEY is a symbol denoting the kind of information,
-INFO is any Lisp object which contains the actual information related
-to KEY.")
+where LANGUAGE-NAME is a string, the name of the language environment,
+KEY is a symbol denoting the kind of information, and
+INFO is the data associated with KEY.
+Meaningful values for KEY include
 
-(defun get-language-info (language-name key)
-  "Return the information for LANGUAGE-NAME of the kind KEY.
-KEY is a symbol denoting the kind of required information."
-  (if (symbolp language-name)
-      (setq language-name (symbol-name language-name)))
-  (let ((lang-slot (assoc-ignore-case language-name language-info-alist)))
+  documentation      value is documentation of what this language environment
+			is meant for, and how to use it.
+  charset	     value is a list of the character sets used by this
+			language environment.
+  sample-text	     value is one line of text,
+			written using those character sets,
+			appropriate for this language environment.
+  setup-function     value is a function to call to switch to this
+			language environment.
+  exit-function      value is a function to call to leave this
+		        language environment.
+  coding-system      value is a list of coding systems that are good
+			for saving text written in this language environment.
+			This list serves as suggestions to the user;
+			in effect, as a kind of documentation.
+  coding-priority    value is a list of coding systems for this language
+			environment, in order of decreasing priority.
+			This is used to set up the coding system priority
+			list when you switch to this language environment.
+  nonascii-translation
+		     value is a translation table to be set in the
+			variable `nonascii-translation-table' in this
+			language environment, or a character set from
+			which `nonascii-insert-offset' is calculated.
+  charset-origin-alist
+		     value is an alist to be set in the variable
+			`charset-origin-alist' in this language environment.
+  input-method       value is a default input method for this language
+			environment.
+  features           value is a list of features requested in this
+			language environment.
+
+The following keys take effect only when multibyte characters are
+globally disabled, i.e. the value of `default-enable-multibyte-characters'
+is nil.
+
+  unibyte-syntax     value is a library name to load to set
+			unibyte 8-bit charcater syntaxes for this
+			language environment.
+
+  unibyte-display    value is a coding system to encode characters
+			for the terminal.  Characters in the range
+			of 160 to 255 display not as octal escapes,
+			but as non-ASCII characters in this language
+			environment.")
+
+(defun get-language-info (lang-env key)
+  "Return information listed under KEY for language environment LANG-ENV.
+KEY is a symbol denoting the kind of information.
+For a list of useful values for KEY and their meanings,
+see `language-info-alist'."
+  (if (symbolp lang-env)
+      (setq lang-env (symbol-name lang-env)))
+  (let ((lang-slot (assoc-ignore-case lang-env language-info-alist)))
     (if lang-slot
 	(cdr (assq key (cdr lang-slot))))))
 
-(defun set-language-info (language-name key info)
-  "Set for LANGUAGE-NAME the information INFO under KEY.
+(defun set-language-info (lang-env key info)
+  "Modify part of the definition of language environment LANG-ENV.
+Specifically, this stores the information INFO under KEY
+in the definition of this language environment.
 KEY is a symbol denoting the kind of information.
-INFO is any Lisp object which contains the actual information.
+INFO is the value for that information.
 
-Currently, the following KEYs are used by Emacs:
-
-charset: list of symbols whose values are charsets specific to the language.
-
-coding-system: list of coding systems specific to the langauge.
-
-tutorial: a tutorial file name written in the language.
-
-sample-text: one line short text containing characters of the language.
-
-documentation: t or a string describing how Emacs supports the language.
-      If a string is specified, it is shown before any other information
-      of the language by the command `describe-language-environment'.
-
-setup-function: a function to call for setting up environment
-       convenient for a user of the language.
-
-If KEY is documentation or setup-function, you can also specify
-a cons cell as INFO, in which case, the car part should be
-a normal value as INFO for KEY (as described above),
-and the cdr part should be a symbol whose value is a menu keymap
-in which an entry for the language is defined.  But, only the car part
-is actually set as the information.
-
-We will define more KEYs in the future.  To avoid conflict,
-if you want to use your own KEY values, make them start with `user-'."
-  (if (symbolp language-name)
-      (setq language-name (symbol-name language-name)))
+For a list of useful values for KEY and their meanings,
+see `language-info-alist'."
+  (if (symbolp lang-env)
+      (setq lang-env (symbol-name lang-env)))
   (let (lang-slot key-slot)
-    (setq lang-slot (assoc language-name language-info-alist))
+    (setq lang-slot (assoc lang-env language-info-alist))
     (if (null lang-slot)		; If no slot for the language, add it.
-	(setq lang-slot (list language-name)
+	(setq lang-slot (list lang-env)
 	      language-info-alist (cons lang-slot language-info-alist)))
     (setq key-slot (assq key lang-slot))
     (if (null key-slot)			; If no slot for the key, add it.
 	(progn
 	  (setq key-slot (list key))
 	  (setcdr lang-slot (cons key-slot (cdr lang-slot)))))
-    ;; Setup menu.
-    (cond ((eq key 'documentation)
-	   (define-key-after
-	     (if (consp info)
-		 (prog1 (symbol-value (cdr info))
-		   (setq info (car info)))
-	       describe-language-environment-map)
-	     (vector (intern language-name))
-	     (cons language-name 'describe-specified-language-support)
-	     t))
-	  ((eq key 'setup-function)
-	   (define-key-after
-	     (if (consp info)
-		 (prog1 (symbol-value (cdr info))
-		   (setq info (car info)))
-	       setup-language-environment-map)
-	     (vector (intern language-name))
-	     (cons language-name 'setup-specified-language-environment)
-	     t)))
+    (setcdr key-slot info)))
 
-    (setcdr key-slot info)
-    ))
+(defun set-language-info-alist (lang-env alist &optional parents)
+  "Store ALIST as the definition of language environment LANG-ENV.
+ALIST is an alist of KEY and INFO values.  See the documentation of
+`set-language-info' for the meanings of KEY and INFO.
 
-(defun set-language-info-alist (language-name alist)
-  "Set for LANGUAGE-NAME the information in ALIST.
-ALIST is an alist of KEY and INFO.  See the documentation of
-`set-langauge-info' for the meanings of KEY and INFO."
-  (if (symbolp language-name)
-      (setq language-name (symbol-name language-name)))
-  (while alist
-    (set-language-info language-name (car (car alist)) (cdr (car alist)))
-    (setq alist (cdr alist))))
+Optional arg PARENTS is a list of parent menu names; it specifies
+where to put this language environment in the 
+Describe Language Environment and Set Language Environment menus.
+For example, (\"European\") means to put this language environment
+in the European submenu in each of those two menus."
+  (if (symbolp lang-env)
+      (setq lang-env (symbol-name lang-env)))
+  (let ((describe-map describe-language-environment-map)
+	(setup-map setup-language-environment-map))
+    (if parents
+	(let ((l parents)
+	      map parent-symbol parent)
+	  (while l
+	    (if (symbolp (setq parent-symbol (car l)))
+		(setq parent (symbol-name parent))
+	      (setq parent parent-symbol parent-symbol (intern parent)))
+	    (setq map (lookup-key describe-map (vector parent-symbol)))
+	    (if (not map)
+		(progn
+		  (setq map (intern (format "describe-%s-environment-map"
+					    (downcase parent))))
+		  (define-prefix-command map)
+		  (define-key-after describe-map (vector parent-symbol)
+		    (cons parent map) t)))
+	    (setq describe-map (symbol-value map))
+	    (setq map (lookup-key setup-map (vector parent-symbol)))
+	    (if (not map)
+		(progn
+		  (setq map (intern (format "setup-%s-environment-map"
+					    (downcase parent))))
+		  (define-prefix-command map)
+		  (define-key-after setup-map (vector parent-symbol)
+		    (cons parent map) t)))
+	    (setq setup-map (symbol-value map))
+	    (setq l (cdr l)))))
+
+    ;; Set up menu items for this language env.
+    (let ((doc (assq 'documentation alist)))
+      (when doc
+	(define-key-after describe-map (vector (intern lang-env))
+	  (cons lang-env 'describe-specified-language-support) t)))
+    (define-key-after setup-map (vector (intern lang-env))
+      (cons lang-env 'setup-specified-language-environment) t)
+
+    (while alist
+      (set-language-info lang-env (car (car alist)) (cdr (car alist)))
+      (setq alist (cdr alist)))))
 
 (defun read-language-name (key prompt &optional default)
-  "Read language name which has information for KEY, prompting with PROMPT.
-DEFAULT is the default choice of language.
-This returns a language name as a string."
+  "Read a language environment name which has information for KEY.
+If KEY is nil, read any language environment.
+Prompt with PROMPT.  DEFAULT is the default choice of language environment.
+This returns a language environment name as a string."
   (let* ((completion-ignore-case t)
 	 (name (completing-read prompt
 				language-info-alist
-				(function (lambda (elm) (assq key elm)))
+				(and key
+				     (function (lambda (elm) (assq key elm))))
 				t nil nil default)))
     (if (and (> (length name) 0)
-	     (get-language-info name key))
+	     (or (not key)
+		 (get-language-info name key)))
 	name)))
 
 ;;; Multilingual input methods.
@@ -383,10 +707,11 @@ If nil, that means no input method is activated now.")
 (put 'current-input-method-title 'permanent-local t)
 
 (defcustom default-input-method nil
-  "*Default input method for multilingual text.
+  "*Default input method for multilingual text (a string).
 This is the input method activated automatically by the command
 `toggle-input-method' (\\[toggle-input-method])."
-  :group 'mule)
+  :group 'mule
+  :type 'string)
 
 (defvar input-method-history nil
   "History list for some commands that read input methods.")
@@ -410,26 +735,27 @@ This function is called with no argument.")
 (put 'describe-current-input-method-function 'permanent-local t)
 
 (defvar input-method-alist nil
-  "Alist of input method names vs the corresponding information to use it.
+  "Alist of input method names vs how to use them.
 Each element has the form:
-	(INPUT-METHOD LANGUAGE-NAME ACTIVATE-FUNC TITLE DESCRIPTION ...)
-See the function `register-input-method' for the meanings of each elements.")
+   (INPUT-METHOD LANGUAGE-ENV ACTIVATE-FUNC TITLE DESCRIPTION ARGS...)
+See the function `register-input-method' for the meanings of the elements.")
 
-(defun register-input-method (input-method language-name &rest args)
-  "Register INPUT-METHOD as an input method for LANGUAGE-NAME.
-INPUT-METHOD and LANGUAGE-NAME are symbols or strings.
+(defun register-input-method (input-method lang-env &rest args)
+  "Register INPUT-METHOD as an input method for language environment ENV.
+INPUT-METHOD and LANG-ENV are symbols or strings.
+
 The remaining arguments are:
-	ACTIVATE-FUNC, TITLE, DESCRIPTION, and ARG ...
- where,
-ACTIVATE-FUNC is a function to call for activating this method.
-TITLE is a string shown in mode-line while this method is active,
-DESCRIPTION is a string describing about this method,
-Arguments to ACTIVATE-FUNC are INPUT-METHOD and ARGs."
-  (if (symbolp language-name)
-      (setq language-name (symbol-name language-name)))
+	ACTIVATE-FUNC, TITLE, DESCRIPTION, and ARGS...
+ACTIVATE-FUNC is a function to call to activate this method.
+TITLE is a string to show in the mode line when this method is active.
+DESCRIPTION is a string describing this method and what it is good for.
+The ARGS, if any, are passed as arguments to ACTIVATE-FUNC.
+All told, the arguments to ACTIVATE-FUNC are INPUT-METHOD and the ARGS."
+  (if (symbolp lang-env)
+      (setq lang-env (symbol-name lang-env)))
   (if (symbolp input-method)
       (setq input-method (symbol-name input-method)))
-  (let ((info (cons language-name args))
+  (let ((info (cons lang-env args))
 	(slot (assoc input-method input-method-alist)))
     (if slot
 	(setcdr slot info)
@@ -457,21 +783,31 @@ The return value is a string."
 	  (error "No valid input method is specified")))))
 
 (defun activate-input-method (input-method)
-  "Turn INPUT-METHOD on.
-If some input method is already on, turn it off at first."
-  (if (symbolp input-method)
+  "Switch to input method INPUT-METHOD for the current buffer.
+If some other input method is already active, turn it off first.
+If INPUT-METHOD is nil, deactivate any current input method."
+  (if (and input-method (symbolp input-method))
       (setq input-method (symbol-name input-method)))
   (if (and current-input-method
 	   (not (string= current-input-method input-method)))
-    (inactivate-input-method))
-  (unless current-input-method
+      (inactivate-input-method))
+  (unless (or current-input-method (null input-method))
     (let ((slot (assoc input-method input-method-alist)))
       (if (null slot)
 	  (error "Can't activate input method `%s'" input-method))
-      (apply (nth 2 slot) input-method (nthcdr 5 slot))
+      (let ((func (nth 2 slot)))
+	(if (functionp func)
+	    (apply (nth 2 slot) input-method (nthcdr 5 slot))
+	  (if (and (consp func) (symbolp (car func)) (symbolp (cdr func)))
+	      (progn
+		(require (cdr func))
+		(apply (car func) input-method (nthcdr 5 slot)))
+	    (error "Can't activate input method `%s'" input-method))))
       (setq current-input-method input-method)
       (setq current-input-method-title (nth 3 slot))
-      (run-hooks 'input-method-activate-hook))))
+      (unwind-protect
+	  (run-hooks 'input-method-activate-hook)
+	(force-mode-line-update)))))
 
 (defun inactivate-input-method ()
   "Turn off the current input method."
@@ -487,12 +823,12 @@ If some input method is already on, turn it off at first."
       (unwind-protect
 	  (run-hooks 'input-method-inactivate-hook)
 	(setq current-input-method nil
-	      current-input-method-title nil)))))
+	      current-input-method-title nil)
+	(force-mode-line-update)))))
 
-(defun select-input-method (input-method)
-  "Select and turn on INPUT-METHOD.
-This sets the default input method to what you specify,
-and turn it on for the current buffer."
+(defun set-input-method (input-method)
+  "Select and activate input method INPUT-METHOD for the current buffer.
+This also sets the default input method to the one you specify."
   (interactive
    (let* ((default (or (car input-method-history) default-input-method)))
      (list (read-input-method-name
@@ -504,28 +840,35 @@ and turn it on for the current buffer."
 (defun toggle-input-method (&optional arg)
   "Turn on or off a multilingual text input method for the current buffer.
 
-With arg, read an input method from minibuffer and turn it on.
+With no prefix argument, if some input method is currently activated,
+turn it off.  Otherwise, activate an input method--the one most recently used,
+or the one specified in `default-input-method', or one read from the
+minibuffer.
 
-Without arg, if some input method is currently activated, turn it off,
-else turn on an input method selected last time
-or the default input method (see `default-input-method').
+With a prefix arg, read an input method from minibuffer and turn it on.
+The default is the most recent input method specified
+\(not including the currently active input method, if any).
 
 When there's no input method to turn on, turn on what read from minibuffer."
   (interactive "P")
-  (let* ((default (or (car input-method-history) default-input-method)))
-    (if (and current-input-method (not arg))
-	(inactivate-input-method)
+  (if (and current-input-method (not arg))
+      (inactivate-input-method)
+    (let ((default (or (car input-method-history) default-input-method)))
+      (if (and arg default (equal current-input-method default)
+	       (> (length input-method-history) 1))
+	  (setq default (nth 1 input-method-history)))
       (activate-input-method
        (if (or arg (not default))
-	   (read-input-method-name
-	    (if default "Input method (default %s): " "Input method: " )
-	    default t)  
+	   (progn
+	     (read-input-method-name
+	      (if default "Input method (default %s): " "Input method: " )
+	      default t))
 	 default))
       (or default-input-method
 	  (setq default-input-method current-input-method)))))
 
 (defun describe-input-method (input-method)
-  "Describe  input method INPUT-METHOD."
+  "Describe input method INPUT-METHOD."
   (interactive
    (list (read-input-method-name
 	  "Describe input method (default, current choice): ")))
@@ -549,8 +892,7 @@ When there's no input method to turn on, turn on what read from minibuffer."
 	(ding))
     (error "No input method is activated now")))
 
-(defun read-multilingual-string (prompt &optional initial-input
-					input-method)
+(defun read-multilingual-string (prompt &optional initial-input input-method)
   "Read a multilingual string from minibuffer, prompting with string PROMPT.
 The input method selected last time is activated in minibuffer.
 If optional second arg INITIAL-INPUT is non-nil, insert it in the minibuffer
@@ -560,35 +902,49 @@ to be activated instead of the one selected last time.  It is a symbol
 or a string."
   (setq input-method
 	(or input-method
+	    current-input-method
 	    default-input-method
 	    (read-input-method-name "Input method: " nil t)))
   (if (and input-method (symbolp input-method))
       (setq input-method (symbol-name input-method)))
-  (let ((current-input-method input-method))
-    (read-string prompt initial-input nil nil t)))
+  (let ((prev-input-method current-input-method))
+    (unwind-protect
+	(progn
+	  (activate-input-method input-method)
+	  (read-string prompt initial-input nil nil t))
+      (activate-input-method prev-input-method))))
 
 ;; Variables to control behavior of input methods.  All input methods
 ;; should react to these variables.
 
-(defcustom input-method-verbose-flag t
-  "*If this flag is non-nil, input methods give extra guidance.
+(defcustom input-method-verbose-flag 'default
+  "*A flag to control extra guidance given by input methods.
+The value should be nil, t, `complex-only', or `default'.
 
 The extra guidance is done by showing list of available keys in echo
-area.
+area.  When you use the input method in the minibuffer, the guidance
+is shown at the bottom short window (split from the existing window).
 
-For complex input methods such as `chinese-py' and `japanese',
-when you use the input method in the minibuffer, the guidance is
-shown at the bottom short window (split from the existing window).
-For simple input methods, guidance is not shown
-when you are in the minibuffer."
-  :type 'boolean
+If the value is t, extra guidance is always given, if the value is
+nil, extra guidance is always suppressed.
+
+If the value is `complex-only', only complex input methods such as
+`chinese-py' and `japanese' give extra guidance.
+
+If the value is `default', complex input methods always give extra
+guidance, but simple input methods give it only when you are not in
+the minibuffer.
+
+See also the variable `input-method-highlight-flag'."
+  :type '(choice (const t) (const nil) (const complex-only) (const default))
   :group 'mule)
 
 (defcustom input-method-highlight-flag t
   "*If this flag is non-nil, input methods highlight partially-entered text.
 For instance, while you are in the middle of a Quail input method sequence,
 the text inserted so far is temporarily underlined.
-The underlining goes away when you finish or abort the input method sequence."
+The underlining goes away when you finish or abort the input method sequence.
+See also the variable `input-method-verbose-flag'."
   :type 'boolean
   :group 'mule)
 
@@ -602,22 +958,51 @@ just activated.")
   "Normal hook run just after an input method is inactivated.
 
 The variable `current-input-method' still keeps the input method name
-just inacitvated.")
+just inactivated.")
 
 (defvar input-method-after-insert-chunk-hook nil
   "Normal hook run just after an input method insert some chunk of text.")
+
+(defvar input-method-exit-on-first-char nil
+  "This flag controls a timing when an input method returns.
+Usually, the input method does not return while there's a possibility
+that it may find a different translation if a user types another key.
+But, it this flag is non-nil, the input method returns as soon as
+the current key sequence gets long enough to have some valid translation.")
+
+(defvar input-method-use-echo-area nil
+  "This flag controls how an input method shows an intermediate key sequence.
+Usually, the input method inserts the intermediate key sequence,
+or candidate translations corresponding to the sequence,
+at point in the current buffer.
+But, if this flag is non-nil, it displays them in echo area instead.")
 
 (defvar input-method-exit-on-invalid-key nil
   "This flag controls the behaviour of an input method on invalid key input.
 Usually, when a user types a key which doesn't start any character
 handled by the input method, the key is handled by turning off the
-input method temporalily.  After the key is handled, the input method is 
-back on.
+input method temporarily.  After that key, the input method is renabled.
 But, if this flag is non-nil, the input method is never back on.")
 
 
+(defvar set-language-environment-hook nil
+  "Normal hook run after some language environment is set.
+
+When you set some hook function here, that effect usually should not
+be inherited to another language environment.  So, you had better set
+another function in `exit-language-environment-hook' (which see) to
+cancel the effect.")
+
+(defvar exit-language-environment-hook nil
+  "Normal hook run after exiting from some language environment.
+When this hook is run, the variable `current-language-environment'
+is still bound to the language environment being exited.
+
+This hook is mainly used for cancelling the effect of
+`set-language-environment-hook' (which-see).")
+
 (defun setup-specified-language-environment ()
-  "Set up multi-lingual environment convenient for the specified language."
+  "Switch to a specified language environment."
   (interactive)
   (let (language-name)
     (if (and (symbolp last-command-event)
@@ -627,24 +1012,188 @@ But, if this flag is non-nil, the input method is never back on.")
 	(set-language-environment language-name)
       (error "Bogus calling sequence"))))
 
-(defvar current-language-environment "English"
-  "The last language environment specified with `set-language-environment'.")
+(defcustom current-language-environment "English"
+  "The last language environment specified with `set-language-environment'."
+  :set 'set-language-environment
+  :initialize 'custom-initialize-default
+  :group 'mule
+  :type 'string)
+
+(defun reset-language-environment ()
+  "Reset multilingual environment of Emacs to the default status.
+
+The default status is as follows:
+
+  The default value of buffer-file-coding-system is nil.
+  The default coding system for process I/O is nil.
+  The default value for the command `set-terminal-coding-system' is nil.
+  The default value for the command `set-keyboard-coding-system' is nil.
+
+  The order of priorities of coding categories and the coding system
+  bound to each category are as follows
+	coding category			coding system
+	--------------------------------------------------
+	coding-category-iso-8-2		iso-latin-1
+	coding-category-iso-8-1		iso-latin-1
+	coding-category-iso-7-tight	iso-2022-jp
+	coding-category-iso-7		iso-2022-7bit
+	coding-category-iso-7-else	iso-2022-7bit-lock
+	coding-category-iso-8-else	iso-2022-8bit-ss2
+	coding-category-emacs-mule 	emacs-mule
+	coding-category-raw-text	raw-text
+	coding-category-sjis		japanese-shift-jis
+	coding-category-big5		chinese-big5
+	coding-category-ccl		nil
+	coding-category-binarry		no-conversion
+"
+  (interactive)
+  ;; This function formerly set default-enable-multibyte-characters to t,
+  ;; but that is incorrect.  It should not alter the unibyte/multibyte choice.
+
+  (setq coding-category-iso-7-tight	'iso-2022-jp
+	coding-category-iso-7		'iso-2022-7bit
+	coding-category-iso-8-1		'iso-latin-1
+	coding-category-iso-8-2		'iso-latin-1
+	coding-category-iso-7-else	'iso-2022-7bit-lock
+	coding-category-iso-8-else	'iso-2022-8bit-ss2
+	coding-category-emacs-mule	'emacs-mule
+	coding-category-raw-text	'raw-text
+	coding-category-sjis		'japanese-shift-jis
+	coding-category-big5		'chinese-big5
+	coding-category-ccl		nil
+	coding-category-binary		'no-conversion)
+
+  (set-coding-priority
+   '(coding-category-iso-8-1
+     coding-category-iso-8-2
+     coding-category-iso-7-tight
+     coding-category-iso-7
+     coding-category-iso-7-else
+     coding-category-iso-8-else
+     coding-category-emacs-mule 
+     coding-category-raw-text
+     coding-category-sjis
+     coding-category-big5
+     coding-category-ccl
+     coding-category-binary))
+
+  (set-default-coding-systems nil)
+  ;; Don't alter the terminal and keyboard coding systems here.
+  ;; The terminal still supports the same coding system
+  ;; that it supported a minute ago.
+;;;  (set-terminal-coding-system-internal nil)
+;;;  (set-keyboard-coding-system-internal nil)
+
+  (setq nonascii-translation-table nil
+	nonascii-insert-offset 0))
 
 (defun set-language-environment (language-name)
   "Set up multi-lingual environment for using LANGUAGE-NAME.
 This sets the coding system priority and the default input method
-and sometimes other things."
-  (interactive (list (read-language-name 'setup-function
-					 "Set language environment: ")))
+and sometimes other things.  LANGUAGE-NAME should be a string
+which is the name of a language environment.  For example, \"Latin-1\"
+specifies the character set for the major languages of Western Europe."
+  (interactive (list (read-language-name
+		      nil
+		      "Set language environment (default, English): ")))
   (if language-name
       (if (symbolp language-name)
 	  (setq language-name (symbol-name language-name)))
     (setq language-name "English"))
-  (if (null (get-language-info language-name 'setup-function))
+  (or (assoc-ignore-case language-name language-info-alist)
       (error "Language environment not defined: %S" language-name))
-  (funcall (get-language-info language-name 'setup-function))
+  (if current-language-environment
+      (let ((func (get-language-info current-language-environment
+				     'exit-function)))
+	(run-hooks 'exit-language-environment-hook)
+	(if (fboundp func) (funcall func))))
+  (reset-language-environment)
+
   (setq current-language-environment language-name)
+  (set-language-environment-coding-systems language-name)
+  (let ((input-method (get-language-info language-name 'input-method)))
+    (when input-method
+      (setq default-input-method input-method)
+      (if input-method-history
+	  (setq input-method-history
+		(cons input-method
+		      (delete input-method input-method-history))))))
+  (let ((nonascii (get-language-info language-name 'nonascii-translation)))
+    (if (char-table-p nonascii)
+	(setq nonascii-translation-table nonascii)	
+      (if (charsetp nonascii)
+	  (setq nonascii-insert-offset (- (make-char nonascii) 128)))))
+
+  (setq charset-origin-alist
+	(get-language-info language-name 'charset-origin-alist))
+
+  ;; Unibyte setups if necessary.
+  (unless default-enable-multibyte-characters
+    ;; Syntax and case table.
+    (let ((syntax (get-language-info language-name 'unibyte-syntax)))
+      (if syntax
+	  (let ((set-case-syntax-set-multibyte nil))
+	    (load syntax nil t))
+	;; No information for syntax and case.  Reset to the defaults.
+	(let ((syntax-table (standard-syntax-table))
+	      (case-table (standard-case-table))
+	      (ch 160))
+	  (while (< ch 256)
+	    (modify-syntax-entry ch " " syntax-table)
+	    (aset case-table ch ch)
+	    (setq ch (1+ ch)))
+	  (set-char-table-extra-slot case-table 0 nil)
+	  (set-char-table-extra-slot case-table 1 nil)
+	  (set-char-table-extra-slot case-table 2 nil))
+	(set-standard-case-table (standard-case-table))
+	(let ((list (buffer-list)))
+	  (while list
+	    (with-current-buffer (car list)
+	      (set-case-table (standard-case-table)))
+	    (setq list (cdr list))))))
+    ;; Display table and coding system for terminal.
+    (let ((coding (get-language-info language-name 'unibyte-display)))
+      (if coding
+	  (progn
+	    (standard-display-european-internal)
+	    (set-terminal-coding-system coding))
+	(standard-display-default 160 255)
+	(aset standard-display-table 146 nil)
+	(set-terminal-coding-system nil))))
+
+  (let ((required-features (get-language-info language-name 'features)))
+    (while required-features
+      (require (car required-features))
+      (setq required-features (cdr required-features))))
+  (let ((func (get-language-info language-name 'setup-function)))
+    (if (fboundp func)
+	(funcall func)))
+  (run-hooks 'set-language-environment-hook)
   (force-mode-line-update t))
+
+(defun standard-display-european-internal ()
+  ;; Actually set up direct output of non-ASCII characters.
+  (standard-display-8bit 160 255)
+  ;; Make non-line-break space display as a plain space.
+  ;; Most X fonts do the wrong thing for code 160.
+  (aset standard-display-table 160 [32])
+  ;; Most Windows programs send out apostrophe's as \222.  Most X fonts
+  ;; don't contain a character at that position.  Map it to the ASCII
+  ;; apostrophe.
+  (aset standard-display-table 146 [39]))
+
+(defun set-language-environment-coding-systems (language-name)
+  "Do various coding system setups for language environment LANGUAGE-NAME."
+  (let* ((priority (get-language-info language-name 'coding-priority))
+	 (default-coding (car priority)))
+    (if priority
+	(let ((categories (mapcar 'coding-system-category priority)))
+	  (set-default-coding-systems default-coding)
+	  (set-coding-priority categories)
+	  (while priority
+	    (set (car categories) (car priority))
+	    (setq priority (cdr priority) categories (cdr categories)))
+	  (update-coding-systems-internal)))))
 
 ;; Print all arguments with `princ', then print "\n".
 (defsubst princ-list (&rest args)
@@ -670,7 +1219,7 @@ and sometimes other things."
   (interactive
    (list (read-language-name
 	  'documentation
-	  "Describe language environment (default, current choise): ")))
+	  "Describe language environment (default, current choice): ")))
   (if (null language-name)
       (setq language-name current-language-environment))
   (if (or (null language-name)
@@ -680,6 +1229,7 @@ and sometimes other things."
       (setq language-name (symbol-name language-name)))
   (let ((doc (get-language-info language-name 'documentation)))
     (with-output-to-temp-buffer "*Help*"
+      (princ-list language-name " language environment" "\n")
       (if (stringp doc)
 	  (progn
 	    (princ-list doc)
@@ -690,8 +1240,14 @@ and sometimes other things."
 	      (princ "Sample text:\n")
 	      (princ-list "  " str)
 	      (terpri))))
-      (princ "Input methods:\n")
-      (let ((l input-method-alist))
+      (let ((input-method (get-language-info language-name 'input-method))
+	    (l input-method-alist))
+	(princ "Input methods")
+	(when input-method
+	  (princ (format " (default, %s)" input-method))
+	  (setq input-method (assoc input-method input-method-alist))
+	  (setq l (cons input-method (delete input-method l))))
+	(princ ":\n")
 	(while l
 	  (if (string= language-name (nth 1 (car l)))
 	      (princ-list "  " (car (car l))
@@ -716,6 +1272,11 @@ and sometimes other things."
 			   (car l)
 			   (coding-system-mnemonic (car l))
 			   (coding-system-doc-string (car l))))
+	    (let ((aliases (coding-system-get (car l) 'alias-coding-systems)))
+	      (when aliases
+		(princ "\t")
+		(princ (cons 'alias: (cdr aliases)))
+		(terpri)))
 	    (setq l (cdr l))))))))
 
 ;;; Charset property

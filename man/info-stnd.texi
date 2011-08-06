@@ -2,7 +2,7 @@
 @c documentation that wishes to describe the info program.
 @c
 @c This file documents the use of the standalone GNU Info program,
-@c versions 2.7 and later.  It was authored by Brian Fox (bfox@ai.mit.edu).
+@c versions 2.7 and later.  It was authored by Brian Fox (bfox@gnu.org).
 
 @ifclear InfoProgVer
 @set InfoProgVer 2.10

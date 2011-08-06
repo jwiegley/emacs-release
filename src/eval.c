@@ -20,6 +20,11 @@ Boston, MA 02111-1307, USA.  */
 
 
 #include <config.h>
+
+#ifdef STDC_HEADERS
+#include <stdlib.h>
+#endif
+
 #include "lisp.h"
 #include "blockinput.h"
 
@@ -162,6 +167,7 @@ Lisp_Object run_hook_with_args ();
 Lisp_Object funcall_lambda ();
 extern Lisp_Object ml_apply (); /* Apply a mocklisp function to unevaluated argument list */
 
+void
 init_eval_once ()
 {
   specpdl_size = 50;
@@ -173,6 +179,7 @@ init_eval_once ()
   Vrun_hooks = Qnil;
 }
 
+void
 init_eval ()
 {
   specpdl_ptr = specpdl;
@@ -199,6 +206,7 @@ call_debugger (arg)
   return apply1 (Vdebugger, arg);
 }
 
+void
 do_debug_on_call (code)
      Lisp_Object code;
 {
@@ -876,7 +884,9 @@ definitions to shadow the loaded ones for use in file byte-compilation.")
 
 DEFUN ("catch", Fcatch, Scatch, 1, UNEVALLED, 0,
   "(catch TAG BODY...): eval BODY allowing nonlocal exits using `throw'.\n\
-TAG is evalled to get the tag to use.  Then the BODY is executed.\n\
+TAG is evalled to get the tag to use; it must not be nil.\n\
+\n\
+Then the BODY is executed.\n\
 Within BODY, (throw TAG) with same tag exits BODY and exits this `catch'.\n\
 If no throw happens, `catch' returns the value of the last BODY form.\n\
 If a throw happens, it specifies the value to return from `catch'.")
@@ -1219,9 +1229,7 @@ See also the function `condition-case'.")
   if (gc_in_progress || waiting_for_input)
     abort ();
 
-#ifdef HAVE_WINDOW_SYSTEM
   TOTALLY_UNBLOCK_INPUT;
-#endif
 
   if (NILP (error_symbol))
     real_error_symbol = Fcar (data);
@@ -1390,7 +1398,16 @@ find_handler_clause (handlers, conditions, sig, data, debugger_value_ptr)
 	}
 
       if (wants_debugger (Vstack_trace_on_error, conditions))
-	internal_with_output_to_temp_buffer ("*Backtrace*", Fbacktrace, Qnil);
+	{
+#ifdef __STDC__
+	  internal_with_output_to_temp_buffer ("*Backtrace*",
+					       (Lisp_Object (*) (Lisp_Object)) Fbacktrace,
+					       Qnil);
+#else
+	  internal_with_output_to_temp_buffer ("*Backtrace*",
+					       Fbacktrace, Qnil);
+#endif
+	}
       if ((EQ (sig_symbol, Qquit)
 	   ? debug_on_quit
 	   : wants_debugger (Vdebug_on_error, conditions))
@@ -1618,6 +1635,7 @@ un_autoload (oldqueue)
    FUNNAME is the symbol which is the function's name.
    FUNDEF is the autoload definition (a list).  */
 
+void
 do_autoload (fundef, funname)
      Lisp_Object fundef, funname;
 {
@@ -2692,7 +2710,7 @@ specbind (symbol, value)
 
 void
 record_unwind_protect (function, arg)
-     Lisp_Object (*function)();
+     Lisp_Object (*function) P_ ((Lisp_Object));
      Lisp_Object arg;
 {
   if (specpdl_ptr == specpdl + specpdl_size)
@@ -2892,6 +2910,7 @@ If NFRAMES is more than the number of frames, the value is nil.")
     }
 }
 
+void
 syms_of_eval ()
 {
   DEFVAR_INT ("max-specpdl-size", &max_specpdl_size,

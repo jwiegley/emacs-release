@@ -6,7 +6,7 @@
 ;; Maintainer: Noah Friedman <friedman@prep.ai.mit.edu>
 ;; Keywords: unix, comm
 
-;; $Id: rlogin.el,v 1.40 1997/06/23 08:22:53 friedman Exp $
+;; $Id: rlogin.el,v 1.42 1998/06/24 09:23:00 schwab Exp $
 
 ;; This file is part of GNU Emacs.
 
@@ -78,8 +78,8 @@ If `nil', use a pipe (if pipes are supported on the local system).
 Generally it is better not to waste ptys on systems which have a static
 number of them.  On the other hand, some implementations of `rlogin' assume
 a pty is being used, and errors will result from using a pipe instead."
-  :type '(choice (const :tag "ptys" t)
-		 (const :tag "pipes" nil))
+  :type '(choice (const :tag "pipes" nil)
+		 (other :tag "ptys" t))
   :group 'rlogin)
 
 (defcustom rlogin-directory-tracking-mode 'local
@@ -101,7 +101,7 @@ simply setting this variable, since the function does the necessary
 re-synching of directories."
   :type '(choice (const :tag "off" nil)
 		 (const :tag "ftp" t)
-		 (const :tag "local" local))
+		 (other :tag "local" local))
   :group 'rlogin)
 
 (make-variable-buffer-local 'rlogin-directory-tracking-mode)
@@ -320,7 +320,7 @@ local one share the same directories (through NFS)."
       (setq list (cons (substring line (match-beginning 0) (match-end 0))
                        list))
       (setq posn (match-end 0)))
-    (store-match-data (match-data))
+    (set-match-data (match-data))
     (nreverse list)))
 
 (defun rlogin-carriage-filter (string)

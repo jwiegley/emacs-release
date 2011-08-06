@@ -25,15 +25,6 @@
 
 ;;; Commentary:
 
-;;; This file has been censored by the Communications Decency Act.
-;;; That law was passed under the guise of a ban on pornography, but
-;;; it bans far more than that.  This file did not contain pornography,
-;;; but it was censored nonetheless.
-
-;;; For information on US government censorship of the Internet, and
-;;; what you can do to bring back freedom of the press, see the web
-;;; site http://www.vtw.org/
-
 ;; ========================================================================
 ;; "No matter how hard you try, you can't make a racehorse out of a pig.
 ;; You can, however, make a faster pig."
@@ -279,10 +270,13 @@
       (if (symbolp fn)
 	  (byte-compile-inline-expand (cons fn (cdr form)))
 	(if (byte-code-function-p fn)
-	    (progn
+	    (let (string)
 	      (fetch-bytecode fn)
+	      (setq string (aref fn 1))
+	      (if (fboundp 'string-as-unibyte)
+		  (setq string (string-as-unibyte string)))
 	      (cons (list 'lambda (aref fn 0)
-			  (list 'byte-code (aref fn 1) (aref fn 2) (aref fn 3)))
+			  (list 'byte-code string (aref fn 2) (aref fn 3)))
 		    (cdr form)))
 	  (if (not (eq (car fn) 'lambda)) (error "%s is not a lambda" name))
 	  (cons fn (cdr form)))))))
@@ -504,6 +498,14 @@
 		    (setq form (macroexpand form
 					    byte-compile-macro-environment))))
 	   (byte-optimize-form form for-effect))
+
+	  ;; Support compiler macros as in cl.el.
+	  ((and (fboundp 'compiler-macroexpand)
+		(symbolp (car-safe form))
+		(get (car-safe form) 'cl-compiler-macro)
+	        (not (eq form
+		         (setq form (compiler-macroexpand form)))))
+	   (byte-optimize-form form for-effect))
 	  
 	  ((not (symbolp fn))
 	   (or (eq 'mocklisp (car-safe fn)) ; ha!
@@ -697,7 +699,7 @@
 	((and (null (nthcdr 3 form))
 	      (or (memq (nth 1 form) '(1 -1))
 		  (memq (nth 2 form) '(1 -1))))
-	 ;; Optiize (+ x 1) into (1+ x) and (+ x -1) into (1- x).
+	 ;; Optimize (+ x 1) into (1+ x) and (+ x -1) into (1- x).
 	 (let ((integer
 		(if (memq (nth 1 form) '(1 -1))
 		    (nth 1 form)
@@ -1076,6 +1078,18 @@
       (while (>= (setq count (1- count)) 0)
 	(setq form (list 'cdr form)))
       form)))
+
+(put 'concat 'byte-optimizer 'byte-optimize-concat)
+(defun byte-optimize-concat (form)
+  (let ((args (cdr form))
+	(constant t))
+    (while (and args constant)
+      (or (byte-compile-constp (car args))
+	  (setq constant nil))
+      (setq args (cdr args)))
+    (if constant
+	(eval form)
+      form)))
 
 ;;; enumerating those functions which need not be called if the returned 
 ;;; value is not used.  That is, something like
@@ -1238,7 +1252,9 @@
 					     tags)))))))
 	    ((cond ((eq op 'byte-constant2) (setq op 'byte-constant) t)
 		   ((memq op byte-constref-ops)))
-	     (setq tmp (aref constvec offset)
+	     (setq tmp (if (>= offset (length constvec))
+			   (list 'out-of-range offset)
+			 (aref constvec offset))
 		   offset (if (eq op 'byte-constant)
 			      (byte-compile-get-constant tmp)
 			    (or (assq tmp byte-compile-variables)
@@ -1290,11 +1306,14 @@
 (defconst byte-after-unbind-ops
    '(byte-constant byte-dup
      byte-symbolp byte-consp byte-stringp byte-listp byte-numberp byte-integerp
-     byte-eq byte-equal byte-not
+     byte-eq byte-not
      byte-cons byte-list1 byte-list2	; byte-list3 byte-list4
      byte-interactive-p)
    ;; How about other side-effect-free-ops?  Is it safe to move an
    ;; error invocation (such as from nth) out of an unwind-protect?
+   ;; No, it is not, because the unwind-protect forms can alter
+   ;; the inside of the object to which nth would apply.
+   ;; For the same reason, byte-equal was deleted from this list.
    "Byte-codes that can be moved past an unbind.")
 
 (defconst byte-compile-side-effect-and-error-free-ops
@@ -1343,16 +1362,22 @@
 ;;; the BOOL variables are, and not perform this optimization on them.
 ;;;
 (defconst byte-boolean-vars
-  '(abbrev-all-caps abbrevs-changed byte-metering-on
-    cannot-suspend completion-auto-help completion-ignore-case
-    cursor-in-echo-area debug-on-next-call debug-on-quit
-    delete-exited-processes enable-recursive-minibuffers
-    highlight-nonselected-windows indent-tabs-mode inhibit-local-menu-bar-menus
-    insert-default-directory inverse-video load-force-doc-strings
-    load-in-progress menu-prompting minibuffer-auto-raise
-    mode-line-inverse-video multiple-frames no-redraw-on-reenter noninteractive
-    parse-sexp-ignore-comments pop-up-frames pop-up-windows
-    print-escape-newlines system-uses-terminfo truncate-partial-width-windows
+  '(abbrev-all-caps abbrevs-changed byte-debug-flag byte-metering-on
+    cannot-suspend check-markers-debug-flag completion-auto-help
+    completion-ignore-case cursor-in-echo-area debug-on-next-call
+    debug-on-quit delete-exited-processes enable-recursive-minibuffers
+    garbage-collection-messages highlight-nonselected-windows
+    indent-tabs-mode inherit-process-coding-system inhibit-eol-conversion
+    inhibit-local-menu-bar-menus insert-default-directory inverse-video
+    keyword-symbols-constant-flag load-convert-to-unibyte
+    load-force-doc-strings load-in-progress menu-prompting
+    minibuffer-allow-text-properties minibuffer-auto-raise
+    mode-line-inverse-video multiple-frames no-redraw-on-reenter
+    noninteractive parse-sexp-ignore-comments parse-sexp-lookup-properties
+    pop-up-frames pop-up-windows print-escape-multibyte
+    print-escape-newlines
+    print-escape-nonascii print-quoted scroll-preserve-screen-position
+    system-uses-terminfo truncate-partial-width-windows use-dialog-box
     visible-bell vms-stmlf-recfm words-include-escapes)
   "DEFVAR_BOOL variables.  Giving these any non-nil value sets them to t.
 If this does not enumerate all DEFVAR_BOOL variables, the byte-optimizer
@@ -1814,7 +1839,7 @@ may generate incorrect code.")
       (setq lap0 (car rest)
 	    lap1 (nth 1 rest))
       (if (memq (car lap0) byte-constref-ops)
-	  (if (eq (cdr lap0) 'byte-constant)
+	  (if (not (eq (car lap0) 'byte-constant))
 	      (or (memq (cdr lap0) byte-compile-variables)
 		  (setq byte-compile-variables (cons (cdr lap0)
 						     byte-compile-variables)))

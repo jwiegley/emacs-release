@@ -247,6 +247,11 @@ act as a paragraph-separator."
 					   (concat result "a"))))
 		  result)))))))
 
+(defvar fill-nobreak-predicate nil
+  "If non-nil, a predicate for recognizing places not to break a line.
+The predicate is called with no arguments, with point at the place
+to be tested.  If it returns t, fill commands do not break the line there.")
+
 (defun fill-region-as-paragraph (from to &optional justify
 				      nosqueeze squeeze-after)
   "Fill the region as one paragraph.
@@ -268,6 +273,8 @@ If `sentence-end-double-space' is non-nil, then period followed by one
 space does not end a sentence, so don't break a line there."
   (interactive (list (region-beginning) (region-end)
 		     (if current-prefix-arg 'full)))
+  (unless (memq justify '(t nil none full center left right))
+    (setq justify 'full))
   ;; Arrange for undoing the fill to restore point.
   (if (and buffer-undo-list (not (eq buffer-undo-list t)))
       (setq buffer-undo-list (cons (point) buffer-undo-list)))
@@ -295,11 +302,10 @@ space does not end a sentence, so don't break a line there."
 	(backward-char 1)
 	(setq oneleft t)))
     (setq to (point))
-
-    ;; If there was no newline, and there is text in the paragraph, then
-    ;; create a newline.
-    (if (and (not oneleft) (> to from-plus-indent))
-	(newline))
+;;;     ;; If there was no newline, and there is text in the paragraph, then
+;;;     ;; create a newline.
+;;;     (if (and (not oneleft) (> to from-plus-indent))
+;;; 	(newline))
     (goto-char from-plus-indent))
 
   (if (not (> to (point)))
@@ -419,14 +425,17 @@ space does not end a sentence, so don't break a line there."
 		;; further fills will assume it ends a sentence.
 		;; If we now know it does not end a sentence,
 		;; avoid putting it at the end of the line.
-		(if sentence-end-double-space
-		    (while (and (> (point) (+ linebeg 2))
+		(while (or (and sentence-end-double-space
+				(> (point) (+ linebeg 2))
 				(eq (preceding-char) ?\ )
 				(not (eq (following-char) ?\ ))
-				(eq (char-after (- (point) 2)) ?\.))
-		      (forward-char -2)
-		      (if (re-search-backward " \\|\\c|.\\|.\\c|" linebeg 0)
-			  (forward-char 1))))
+				(eq (char-after (- (point) 2)) ?\.)
+				(progn (forward-char -2) t))
+			   (and fill-nobreak-predicate
+				(funcall fill-nobreak-predicate)
+				(goto-char (match-beginning 0))))
+		  (if (re-search-backward " \\|\\c|.\\|.\\c|" linebeg 0)
+		      (forward-char 1)))
 		;; If the left margin and fill prefix by themselves
 		;; pass the fill-column. or if they are zero
 		;; but we have no room for even one word,
@@ -448,20 +457,29 @@ space does not end a sentence, so don't break a line there."
 					   sentence-end-double-space
 					   (save-excursion (forward-char -1)
 							   (and (looking-at "\\. ")
-								(not (looking-at "\\.  ")))))))
+								(not (looking-at "\\.  ")))))
+				      (and fill-nobreak-predicate
+					   (funcall fill-nobreak-predicate))))
+			;; Find a breakable point while ignoring the
+			;; following spaces.
 			(skip-chars-forward " \t")
-			;; Skip one \c| character or one word.
-			(if (looking-at "$\\|\\c|\\|[^ \t\n]+")
-			    (goto-char (match-end 0)))
+			(if (looking-at "\\c|")
+			    (forward-char 1)
+			  (let ((pos (save-excursion
+				       (skip-chars-forward "^ \n\t")
+				       (point))))
+			    (if (re-search-forward "\\c|" pos t)
+				(forward-char -1)
+			      (goto-char pos))))
 			(setq first nil)))
 		  ;; Normally, move back over the single space between the words.
 		  (if (= (preceding-char) ?\ ) (forward-char -1))
 		  ;; Do KINSOKU processing.
 		  (if (and enable-multibyte-characters enable-kinsoku
 			   (save-excursion
-			     (goto-char from)
-			     (skip-chars-forward "\0-\177" to)
-			     (/= (point) to)))
+			     (goto-char (point-min))
+			     (skip-chars-forward "\0-\177")
+			     (/= (point) (point-max))))
 		      (kinsoku linebeg)))
 
 		;; If the left margin and fill prefix by themselves
@@ -486,11 +504,20 @@ space does not end a sentence, so don't break a line there."
 					   sentence-end-double-space
 					   (save-excursion (forward-char -1)
 							   (and (looking-at "\\. ")
-								(not (looking-at "\\.  ")))))))
+								(not (looking-at "\\.  ")))))
+				      (and fill-nobreak-predicate
+					   (funcall fill-nobreak-predicate))))
+			;; Find a breakable point while ignoring the
+			;; following spaces.
 			(skip-chars-forward " \t")
-			;; Skip one \c| character or one word.
-			(if (looking-at "$\\|\\c|\\|[^ \t\n]+")
-			    (goto-char (match-end 0)))
+			(if (looking-at "\\c|")
+			    (forward-char 1)
+			  (let ((pos (save-excursion
+				       (skip-chars-forward "^ \n\t")
+				       (point))))
+			    (if (re-search-forward "\\c|" pos t)
+				(forward-char -1)
+			      (goto-char pos))))
 			(setq first nil))))
 		;; Check again to see if we got to the end of the paragraph.
 		(if (save-excursion (skip-chars-forward " \t") (eobp))
@@ -529,7 +556,8 @@ space does not end a sentence, so don't break a line there."
 		    (forward-line 1))))))
 	;; Leave point after final newline.
 	(goto-char (point-max)))
-    (forward-char 1))))
+      (unless (eobp)
+	(forward-char 1)))))
 
 (defun fill-paragraph (arg)
   "Fill paragraph at or after point.  Prefix arg means justify as well.
@@ -544,7 +572,10 @@ argument to it), and if it returns non-nil, we simply return its value."
 	   (let ((function fill-paragraph-function)
 		 fill-paragraph-function)
 	     (funcall function arg)))
-      (let ((before (point)))
+      (let ((before (point))
+	    ;; If fill-paragraph is called recursively,
+	    ;; don't give fill-paragraph-function a second chance.
+	    fill-paragraph-function)
 	(save-excursion
 	  (forward-paragraph)
 	  (or (bolp) (newline 1))
@@ -559,10 +590,15 @@ argument to it), and if it returns non-nil, we simply return its value."
 
 (defun fill-region (from to &optional justify nosqueeze to-eop)
   "Fill each of the paragraphs in the region.
-Prefix arg (non-nil third arg, if called from program) means justify as well.
+A prefix arg means justify as well.
 Ordinarily the variable `fill-column' controls the width.
 
-Noninteractively, fourth arg NOSQUEEZE non-nil means to leave
+Noninteractively, the third argument JUSTIFY specifies which
+kind of justification to do: `full', `left', `right', `center',
+or `none' (equivalent to nil).  t means handle each paragraph
+as specified by its text properties.
+
+The fourth arg NOSQUEEZE non-nil means to leave
 whitespace other than line breaks untouched, and fifth arg TO-EOP
 non-nil means to keep filling to the end of the paragraph (or next
 hard newline, if `use-hard-newlines' is on).
@@ -571,6 +607,8 @@ If `sentence-end-double-space' is non-nil, then period followed by one
 space does not end a sentence, so don't break a line there."
   (interactive (list (region-beginning) (region-end)
 		     (if current-prefix-arg 'full)))
+  (unless (memq justify '(t nil none full center left right))
+    (setq justify 'full))
   (let (end beg)
     (save-restriction
       (goto-char (max from to))
@@ -758,7 +796,13 @@ otherwise it is made canonical."
 	    end				; point at end of line's text
 	    indent			; column of `beg'
 	    endcol			; column of `end'
-	    ncols)			; new indent point or offset
+	    ncols			; new indent point or offset
+	    (nspaces 0)			; number of spaces between words
+					; in line (not space characters)
+	    fracspace			; fractional amount of space to be
+					; added between each words
+	    (curr-fracspace 0)		; current fractional space amount
+	    count)
 	(end-of-line)
 	;; Check if this is the last line of the paragraph.
 	(if (and use-hard-newlines (null eop) 
@@ -839,23 +883,24 @@ otherwise it is made canonical."
 		   (or nosqueeze
 		       (canonically-space-region beg end))
 		   (goto-char (point-max))
+		   ;; count word spaces in line
+		   (while (search-backward " " nil t)
+		     (setq nspaces (1+ nspaces))
+		     (skip-chars-backward " "))
 		   (setq ncols (- fc endcol))
-		   ;; Ncols is number of additional spaces needed
-		   (if (> ncols 0)
-		       (if (and (not eop)
-				(search-backward " " nil t))
-			   (while (> ncols 0)
-			     (let ((nmove (+ 3 (random 3))))
-			       (while (> nmove 0)
-				 (or (search-backward " " nil t)
-				     (progn
-				       (goto-char (point-max))
-				       (search-backward " ")))
-				 (skip-chars-backward " ")
-				 (setq nmove (1- nmove))))
-			     (insert-and-inherit " ")
-			     (skip-chars-backward " ")
-			     (setq ncols (1- ncols)))))))
+		   ;; Ncols is number of additional space chars needed
+		   (if (and (> ncols 0) (> nspaces 0) (not eop))
+		       (progn
+			 (setq curr-fracspace (+ ncols (/ (1+ nspaces) 2))
+			       count nspaces)
+			 (while (> count 0)
+			   (skip-chars-forward " ")
+			   (insert-and-inherit
+			    (make-string (/ curr-fracspace nspaces) ?\ ))
+			   (search-forward " " nil t)
+			   (setq count (1- count)
+				 curr-fracspace
+				   (+ (% curr-fracspace nspaces) ncols)))))))
 		(t (error "Unknown justification value"))))
 	(goto-char pos)
 	(move-marker pos nil)))
@@ -902,7 +947,7 @@ Arguments BEGIN and END are optional; default is the whole buffer."
 	(forward-line 1)))))
 
 
-(defun fill-nonuniform-paragraphs (min max &optional justifyp mailp)
+(defun fill-nonuniform-paragraphs (min max &optional justifyp citation-regexp)
   "Fill paragraphs within the region, allowing varying indentation within each.
 This command divides the region into \"paragraphs\",
 only at paragraph-separator lines, then fills each paragraph
@@ -913,13 +958,16 @@ When calling from a program, pass range to fill as first two arguments.
 
 Optional third and fourth arguments JUSTIFY and MAIL-FLAG:
 JUSTIFY to justify paragraphs (prefix arg),
-MAIL-FLAG for a mail message, i. e. don't fill header lines."
+When filling a mail message, pass a regexp for CITATION-REGEXP
+which will match the prefix of a line which is a citation marker
+plus whitespace, but no other kind of prefix.
+Also, if CITATION-REGEXP is non-nil,  don't fill header lines."
   (interactive (list (region-beginning) (region-end)
 		     (if current-prefix-arg 'full)))
   (let ((fill-individual-varying-indent t))
-    (fill-individual-paragraphs min max justifyp mailp)))
+    (fill-individual-paragraphs min max justifyp citation-regexp)))
 
-(defun fill-individual-paragraphs (min max &optional justify mailp)
+(defun fill-individual-paragraphs (min max &optional justify citation-regexp)
   "Fill paragraphs of uniform indentation within the region.
 This command divides the region into \"paragraphs\", 
 treating every change in indentation level or prefix as a paragraph boundary,
@@ -938,7 +986,10 @@ as the first two arguments.
 
 Optional third and fourth arguments JUSTIFY and MAIL-FLAG:
 JUSTIFY to justify paragraphs (prefix arg),
-MAIL-FLAG for a mail message, i. e. don't fill header lines."
+When filling a mail message, pass a regexp for CITATION-REGEXP
+which will match the prefix of a line which is a citation marker
+plus whitespace, but no other kind of prefix.
+Also, if CITATION-REGEXP is non-nil,  don't fill header lines."
   (interactive (list (region-beginning) (region-end)
 		     (if current-prefix-arg 'full)))
   (save-restriction
@@ -946,7 +997,7 @@ MAIL-FLAG for a mail message, i. e. don't fill header lines."
       (goto-char min)
       (beginning-of-line)
       (narrow-to-region (point) max)
-      (if mailp 
+      (if citation-regexp
 	  (while (and (not (eobp))
 		      (or (looking-at "[ \t]*[^ \t\n]+:")
 			  (looking-at "[ \t]*$")))
@@ -955,11 +1006,13 @@ MAIL-FLAG for a mail message, i. e. don't fill header lines."
 	      (forward-line 1))))
       (narrow-to-region (point) max)
       ;; Loop over paragraphs.
-      (while (progn
+      (while (let ((here (point)))
 	       ;; Skip over all paragraph-separating lines
 	       ;; so as to not include them in any paragraph.
-               (while (progn (move-to-left-margin)
-			     (and (not (eobp)) (looking-at paragraph-separate)))
+               (while (and (not (eobp))
+			   (progn (move-to-left-margin)
+				  (and (not (eobp))
+				       (looking-at paragraph-separate))))
                  (forward-line 1))
                (skip-chars-forward " \t\n") (not (eobp)))
 	(move-to-left-margin)
@@ -973,36 +1026,7 @@ MAIL-FLAG for a mail message, i. e. don't fill header lines."
 		   (if (not (and fill-prefix
 				 (looking-at fill-prefix-regexp)))
 		       (setq fill-prefix
-			     ;; Get the prefix from just the first line
-			     ;; ordinarily.
-			     ;; But if using two lines gives us a shorter
-			     ;; result, lacking some whitespace at the end,
-			     ;; use that.
-			     (or (let ((adaptive-fill-first-line-regexp "")
-				       just-one-line-prefix
-				       two-lines-prefix)
-				   (setq just-one-line-prefix
-					 (fill-context-prefix
-					  (point)
-					  (save-excursion (forward-line 1)
-							  (point))))
-				   (setq two-lines-prefix
-					 (fill-context-prefix
-					  (point)
-					  (save-excursion (forward-line 2)
-							  (point))))
-				   (if (and just-one-line-prefix
-					    two-lines-prefix
-					    (string-match (concat "\\`"
-								  (regexp-quote two-lines-prefix)
-								  "[ \t]*\\'")
-							  just-one-line-prefix))
-				       two-lines-prefix
-				     just-one-line-prefix))
-				 (buffer-substring 
-				  (point)
-				  (save-excursion (skip-chars-forward " \t")
-						  (point))))
+			     (fill-individual-paragraphs-prefix citation-regexp)
 			     fill-prefix-regexp (regexp-quote fill-prefix)))
 		   (forward-line 1)
 		   (if (bolp)
@@ -1032,5 +1056,61 @@ MAIL-FLAG for a mail message, i. e. don't fill header lines."
 	  (let ((had-newline (bolp)))
 	    (fill-region-as-paragraph start (point) justify)
 	    (or had-newline (delete-char -1))))))))
+
+(defun fill-individual-paragraphs-prefix (citation-regexp)
+  (or (let ((adaptive-fill-first-line-regexp "")
+	    just-one-line-prefix
+	    two-lines-prefix
+	    one-line-citation-part
+	    two-lines-citation-part
+	    adjusted-two-lines-citation-part)
+	(setq just-one-line-prefix
+	      (fill-context-prefix
+	       (point)
+	       (save-excursion (forward-line 1)
+			       (point))))
+	(setq two-lines-prefix
+	      (fill-context-prefix
+	       (point)
+	       (save-excursion (forward-line 2)
+			       (point))))
+	(when just-one-line-prefix
+	  (setq one-line-citation-part
+		(if citation-regexp
+		    (fill-individual-paragraphs-citation just-one-line-prefix
+							 citation-regexp)
+		  just-one-line-prefix)))
+	(when two-lines-prefix
+	  (setq two-lines-citation-part
+		(if citation-regexp
+		    (fill-individual-paragraphs-citation two-lines-prefix
+							 citation-regexp)
+		  just-one-line-prefix))
+	  (setq adjusted-two-lines-citation-part
+		(substring two-lines-citation-part 0
+			   (string-match "[ \t]*\\'"
+					 two-lines-citation-part))))
+	;; See if the citation part of JUST-ONE-LINE-PREFIX
+	;; is the same as that of TWO-LINES-PREFIX,
+	;; except perhaps with longer whitespace.
+	(if (and just-one-line-prefix
+		 two-lines-prefix
+		 (string-match (concat "\\`"
+				       (regexp-quote adjusted-two-lines-citation-part)
+				       "[ \t]*\\'")
+			       one-line-citation-part)
+		 (>= (string-width one-line-citation-part)
+		     (string-width two-lines-citation-part)))
+	    two-lines-prefix
+	  just-one-line-prefix))
+      (buffer-substring 
+       (point)
+       (save-excursion (skip-chars-forward " \t")
+		       (point)))))
+
+(defun fill-individual-paragraphs-citation (string citation-regexp)
+  (string-match citation-regexp
+		string)
+  (match-string 0 string))  
 
 ;;; fill.el ends here

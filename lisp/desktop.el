@@ -1,6 +1,6 @@
 ;;; desktop.el --- save partial status of Emacs when killed
 
-;; Copyright (C) 1993, 1994, 1995 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1994, 1995, 1997 Free Software Foundation, Inc.
 
 ;; Author: Morten Welinder <terra@diku.dk>
 ;; Keywords: customization
@@ -35,10 +35,9 @@
 ;;		- buffer-read-only
 ;;		- some local variables
 
-;; To use this, first put these three lines in the bottom of your .emacs
+;; To use this, first put these two lines in the bottom of your .emacs
 ;; file (the later the better):
 ;;
-;;	(load "desktop")
 ;;	(desktop-load-default)
 ;;	(desktop-read)
 ;;
@@ -109,9 +108,19 @@
   "Save status of Emacs when you exit."
   :group 'frames)
 
-(defconst desktop-basefilename
+(defcustom desktop-enable nil
+  "*Non-nil enable Desktop to save the state of Emacs when you exit."
+  :group 'desktop
+  :type 'boolean
+  :require 'desktop
+  :initialize 'custom-initialize-default
+  :version "20.3")
+
+(defcustom desktop-basefilename
   (convert-standard-filename ".emacs.desktop")
-  "File for Emacs desktop, not including the directory name.")
+  "File for Emacs desktop, not including the directory name."
+  :type 'file
+  :group 'desktop)
 
 (defcustom desktop-missing-file-warning nil
   "*If non-nil then desktop warns when a file no longer exists.
@@ -204,10 +213,11 @@ If the function returns t then the buffer is considered created."
   "Opening of form for creation of new buffers.")
 
 (defcustom desktop-save-hook nil
-  "Hook run before saving the desktop to allow you to cut history lists and
-the like shorter."
+  "Hook run before desktop saves the state of Emacs.
+This is useful for truncating history lists, for example."
   :type 'hook
   :group 'desktop)
+
 ;; ----------------------------------------------------------------------------
 (defvar desktop-dirname nil
   "The directory in which the current desktop file resides.")
@@ -220,6 +230,7 @@ the like shorter."
 
 (defvar desktop-delay-hook nil
   "Hooks run after all buffers are loaded; intended for internal use.")
+
 ;; ----------------------------------------------------------------------------
 (defun desktop-truncate (l n)
   "Truncate LIST to at most N elements destructively."
@@ -247,6 +258,7 @@ and those listed in `desktop-clear-preserve-buffers'."
   (let ((buffers (buffer-list)))
     (while buffers
       (or (member (buffer-name (car buffers)) desktop-clear-preserve-buffers)
+	  (null (buffer-name (car buffers)))
 	  ;; Don't kill buffers made for internal purposes.
 	  (and (not (equal (buffer-name (car buffers)) ""))
 	       (eq (aref (buffer-name (car buffers)) 0) ?\ ))
@@ -491,6 +503,7 @@ MODE is the major mode."
 	(if (file-exists-p filename)
 	    (delete-file filename)))))
 ;; ----------------------------------------------------------------------------
+;;;###autoload
 (defun desktop-read ()
   "Read the Desktop file and the files it specifies.
 This is a no-op when Emacs is running in batch mode."
@@ -513,6 +526,7 @@ This is a no-op when Emacs is running in batch mode."
 	    (message "Desktop loaded."))
 	(desktop-clear)))))
 ;; ----------------------------------------------------------------------------
+;;;###autoload
 (defun desktop-load-default ()
   "Load the `default' start-up library manually.
 Also inhibit further loading of it.  Call this from your `.emacs' file
@@ -529,12 +543,15 @@ to provide correct modes for autoloaded files."
       (progn
 	(require 'info)
 	(Info-find-node (nth 0 desktop-buffer-misc) (nth 1 desktop-buffer-misc))
-	t)))
+	(current-buffer))))
 ;; ----------------------------------------------------------------------------
 (defun desktop-buffer-rmail () "Load an RMAIL file."
   (if (eq 'rmail-mode desktop-buffer-major-mode)
       (condition-case error
-	  (progn (rmail-input desktop-buffer-file-name) t)
+	  (progn (rmail-input desktop-buffer-file-name)
+                         (if (eq major-mode 'rmail-mode)
+                             (current-buffer)
+                           rmail-buffer))
 	(file-locked
 	 (kill-buffer (current-buffer))
 	 'ignored))))
@@ -544,16 +561,16 @@ to provide correct modes for autoloaded files."
       (progn
 	(require 'mh-e)
 	(mh-find-path)
-	(mh-visit-folder desktop-buffer-name)
-	t)))
+        (mh-visit-folder desktop-buffer-name)
+	(current-buffer))))
 ;; ----------------------------------------------------------------------------
 (defun desktop-buffer-dired () "Load a directory using dired."
   (if (eq 'dired-mode desktop-buffer-major-mode)
       (if (file-directory-p (file-name-directory (car desktop-buffer-misc)))
 	  (progn
-	    (dired (car desktop-buffer-misc))
+            (dired (car desktop-buffer-misc))
 	    (mapcar 'dired-insert-subdir (cdr desktop-buffer-misc))
-	    t)
+	    (current-buffer))
 	(message "Directory %s no longer exists." (car desktop-buffer-misc))
 	(sit-for 1)
 	'ignored)))
@@ -565,7 +582,7 @@ to provide correct modes for autoloaded files."
 		   (y-or-n-p (format
 			      "File \"%s\" no longer exists. Re-create? "
 			      desktop-buffer-file-name))))
-	  (progn (find-file desktop-buffer-file-name) t)
+	  (progn (find-file desktop-buffer-file-name) (current-buffer))
 	'ignored)))
 ;; ----------------------------------------------------------------------------
 ;; Create a buffer, load its file, set is mode, ...;  called from Desktop file
@@ -580,31 +597,30 @@ to provide correct modes for autoloaded files."
       (setq handler (car hlist))
       (setq result (funcall handler))
       (setq hlist (cdr hlist)))
-    (if (eq result t)
-	(progn
-	  (if (not (equal (buffer-name) desktop-buffer-name))
-	      (rename-buffer desktop-buffer-name))
-	  (auto-fill-mode (if (nth 0 mim) 1 0))
-	  (goto-char pt)
-	  (if (consp mk)
+    (when (bufferp result)
+      (set-buffer result)
+      (if (not (equal (buffer-name) desktop-buffer-name))
+	  (rename-buffer desktop-buffer-name))
+      (auto-fill-mode (if (nth 0 mim) 1 0))
+      (goto-char pt)
+      (if (consp mk)
+	  (progn
+	    (set-mark (car mk))
+	    (setq mark-active (car (cdr mk))))
+	(set-mark mk))
+      ;; Never override file system if the file really is read-only marked.
+      (if ro (setq buffer-read-only ro))
+      (while locals
+	(let ((this (car locals)))
+	  (if (consp this)
+	      ;; an entry of this form `(symbol . value)'
 	      (progn
-		(set-mark (car mk))
-		(setq mark-active (car (cdr mk))))
-	    (set-mark mk))
-	  ;; Never override file system if the file really is read-only marked.
-	  (if ro (setq buffer-read-only ro))
-	  (while locals
-	    (let ((this (car locals)))
-	      (if (consp this)
-		  ;; an entry of this form `(symbol . value)'
-		  (progn
-		    (make-local-variable (car this))
-		    (set (car this) (cdr this)))
-		;; an entry of the form `symbol'
-		(make-local-variable this)
-		(makunbound this)))
-	    (setq locals (cdr locals)))
-	  ))))
+		(make-local-variable (car this))
+		(set (car this) (cdr this)))
+	    ;; an entry of the form `symbol'
+	    (make-local-variable this)
+	    (makunbound this)))
+	(setq locals (cdr locals))))))
 
 ;; Backward compatibility -- update parameters to 205 standards.
 (defun desktop-buffer (desktop-buffer-file-name desktop-buffer-name
@@ -619,6 +635,16 @@ to provide correct modes for autoloaded files."
 			       (cons 'case-replace cr)
 			       (cons 'overwrite-mode (car mim)))))
 ;; ----------------------------------------------------------------------------
+
+;; If the user set desktop-enable to t with Custom,
+;; do the rest of what it takes to use desktop,
+;; but do it after finishing loading the init file.
+(add-hook 'after-init-hook
+	  '(lambda ()
+	     (when desktop-enable
+	       (desktop-load-default)
+	       (desktop-read))))
+
 (provide 'desktop)
 
 ;; desktop.el ends here.

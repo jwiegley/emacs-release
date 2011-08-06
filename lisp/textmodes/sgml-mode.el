@@ -1,6 +1,6 @@
 ;;; sgml-mode.el --- SGML- and HTML-editing modes
 
-;; Copyright (C) 1992, 1995, 1996 Free Software Foundation, Inc.
+;; Copyright (C) 1992, 1995, 1996, 1998 Free Software Foundation, Inc.
 
 ;; Author: James Clark <jjc@jclark.com>
 ;; Adapted-By: ESR; Daniel.Pfeiffer@Informatik.START.dbp.de
@@ -56,7 +56,7 @@ The supported characters and potential disadvantages are:
   ?'	Makes ' in text start a string.
   ?-	Makes -- in text start a comment.
 
-When only one of ?\\\" or ?' are included, \"'\" or '\"' as it can be found in
+When only one of ?\\\" or ?' are included, \"'\" or '\"', as can be found in
 DTDs, start a string.  To partially avoid this problem this also makes these
 self insert as named entities depending on `sgml-quick-keys'.
 
@@ -205,16 +205,21 @@ separated by a space."
 Any terminating `>' or `/' is not matched.")
 
 
-(defvar sgml-font-lock-keywords
-  '(("<\\([!?][a-z0-9]+\\)" 1 font-lock-keyword-face)
-    ("<\\(/?[a-z0-9]+\\)" 1 font-lock-function-name-face)
-    ("[&%][-.A-Za-z0-9]+;?" . font-lock-variable-name-face)
-    ("<!--[^<>]*-->" . font-lock-comment-face))
+;; internal
+(defconst sgml-font-lock-keywords-1
+  '(("<\\([!?][a-z][-.a-z0-9]+\\)" 1 font-lock-keyword-face)
+    ("<\\(/?[a-z][-.a-z0-9]+\\)" 1 font-lock-function-name-face)
+    ("[&%][a-z][-.a-z0-9]+;?" . font-lock-variable-name-face)
+    ("<! *--.*-- *>" . font-lock-comment-face)))
+
+(defconst sgml-font-lock-keywords-2 ())
+
+;; for font-lock, but must be defvar'ed after
+;; sgml-font-lock-keywords-1 and sgml-font-lock-keywords-2 above
+(defvar sgml-font-lock-keywords sgml-font-lock-keywords-1
   "*Rules for highlighting SGML code.  See also `sgml-tag-face-alist'.")
 
 ;; internal
-(defvar sgml-font-lock-keywords-1 ())
-
 (defvar sgml-face-tag-alist ()
   "Alist of face and tag name for facemenu.")
 
@@ -273,15 +278,15 @@ an optional alist of possible values."
 
 (defun sgml-mode-common (sgml-tag-face-alist sgml-display-text)
   "Common code for setting up `sgml-mode' and derived modes.
-SGML-TAG-FACE-ALIST is used for calculating `sgml-font-lock-keywords-1'.
+SGML-TAG-FACE-ALIST is used for calculating `sgml-font-lock-keywords-2'.
 SGML-DISPLAY-TEXT sets up alternate text for when tags are invisible (see
 varables of same name)."
-  (kill-all-local-variables)
   (setq local-abbrev-table text-mode-abbrev-table)
   (set-syntax-table sgml-mode-syntax-table)
   (make-local-variable 'indent-line-function)
   (make-local-variable 'paragraph-start)
   (make-local-variable 'paragraph-separate)
+  (make-local-variable 'adaptive-fill-regexp)
   (make-local-variable 'sgml-saved-validate-command)
   (make-local-variable 'comment-start)
   (make-local-variable 'comment-end)
@@ -294,6 +299,7 @@ varables of same name)."
   (make-local-variable 'skeleton-end-hook)
   (make-local-variable 'font-lock-defaults)
   (make-local-variable 'sgml-font-lock-keywords-1)
+  (make-local-variable 'sgml-font-lock-keywords-2)
   (make-local-variable 'facemenu-add-face-function)
   (make-local-variable 'facemenu-end-add-face)
   ;;(make-local-variable 'facemenu-remove-face-function)
@@ -303,7 +309,8 @@ varables of same name)."
 	      `((1 (,(concat "<\\("
 			     (mapconcat 'car sgml-tag-face-alist "\\|")
 			     "\\)\\([ \t].+\\)?>\\(.+\\)</\\1>")
-		    3 (cdr (assoc (match-string 1) ',sgml-tag-face-alist)))))))
+		    3 (cdr (assoc (downcase (match-string 1))
+                                  ',sgml-tag-face-alist)))))))
   (setq indent-line-function 'indent-relative-maybe
 	;; A start or end tag by itself on a line separates a paragraph.
 	;; This is desirable because SGML discards a newline that appears
@@ -326,17 +333,19 @@ varables of same name)."
 				(not (or (eq v2 '\n)
 					 (eq (car-safe v2) '\n)))
 				(newline-and-indent)))
-	sgml-font-lock-keywords-1 (cdr (assq 1 sgml-tag-face-alist))
+	sgml-font-lock-keywords-2 (append
+				   sgml-font-lock-keywords-1
+				   (cdr (assq 1 sgml-tag-face-alist)))
 	font-lock-defaults '((sgml-font-lock-keywords
-			      sgml-font-lock-keywords-1)
+			      sgml-font-lock-keywords-1
+			      sgml-font-lock-keywords-2)
 			     nil
 			     t)
 	facemenu-add-face-function 'sgml-mode-facemenu-add-face-function)
   (while sgml-display-text
     (put (car (car sgml-display-text)) 'before-string
 	 (cdr (car sgml-display-text)))
-    (setq sgml-display-text (cdr sgml-display-text)))
-  (run-hooks 'text-mode-hook 'sgml-mode-hook))
+    (setq sgml-display-text (cdr sgml-display-text))))
 
 
 (defun sgml-mode-facemenu-add-face-function (face end)
@@ -368,11 +377,17 @@ Do \\[describe-variable] sgml- SPC to see available variables.
 Do \\[describe-key] on the following bindings to discover what they do.
 \\{sgml-mode-map}"
   (interactive)
-  (sgml-mode-common sgml-tag-face-alist sgml-display-text)
-  (use-local-map sgml-mode-map)
+  (kill-all-local-variables)
   (setq mode-name "SGML"
-	major-mode 'sgml-mode))
-
+	major-mode 'sgml-mode)
+  (sgml-mode-common sgml-tag-face-alist sgml-display-text)
+  ;; Set imenu-generic-expression here, rather than in sgml-mode-common,
+  ;; because this definition probably is not useful in HTML mode.
+  (make-local-variable 'imenu-generic-expression)
+  (setq imenu-generic-expression
+	"<!\\(element\\|entity\\)[ \t\n]+%?[ \t\n]*\\([A-Za-z][-A-Za-z.0-9]*\\)")
+  (use-local-map sgml-mode-map)
+  (run-hooks 'text-mode-hook 'sgml-mode-hook))
 
 
 (defun sgml-comment-indent ()
@@ -534,7 +549,7 @@ If QUIET, do not print a message when there are no attributes for TAG."
 						    alist)))))
 	    (if (string= "" attribute)
 		(setq i 0)
-	      (sgml-value (assoc attribute alist))
+	      (sgml-value (assoc (downcase attribute) alist))
 	      (setq i (1- i))))
 	  (if (eq (preceding-char) ? )
 	      (delete-backward-char 1)))
@@ -569,9 +584,9 @@ With prefix argument, only self insert."
       (error "No tag selected"))
   (setq tag (downcase tag))
   (message "%s"
-	   (or (cdr (assoc tag sgml-tag-help))
+	   (or (cdr (assoc (downcase tag) sgml-tag-help))
 	       (and (eq (aref tag 0) ?/)
-		    (cdr (assoc (substring tag 1) sgml-tag-help)))
+		    (cdr (assoc (downcase (substring tag 1)) sgml-tag-help)))
 	       "No description available")))
 
 
@@ -905,9 +920,8 @@ This takes effect when first loading the library.")
     (hr . "----------")
     (li . "o "))
   "Value of `sgml-display-text' for HTML mode.")
-
-
-; should code exactly HTML 3 here when that is finished
+
+;; should code exactly HTML 3 here when that is finished
 (defvar html-tag-alist
   (let* ((1-7 '(("1") ("2") ("3") ("4") ("5") ("6") ("7")))
 	 (1-9 '(,@1-7 ("8") ("9")))
@@ -1126,9 +1140,7 @@ This takes effect when first loading the library.")
     ("var" . "Math variable face")
     ("wbr" . "Enable <br> within <nobr>"))
 "*Value of `sgml-tag-help' for HTML mode.")
-
-
-
+
 ;;;###autoload
 (defun html-mode ()
   "Major mode based on SGML mode for editing HTML documents.
@@ -1167,6 +1179,9 @@ To work around that, do:
 
 \\{html-mode-map}"
   (interactive)
+  (kill-all-local-variables)
+  (setq mode-name "HTML"
+        major-mode 'html-mode)
   (sgml-mode-common html-tag-face-alist html-display-text)
   (use-local-map html-mode-map)
   (make-local-variable 'sgml-tag-alist)
@@ -1178,18 +1193,55 @@ To work around that, do:
   (make-local-variable 'sentence-end)
   (setq sentence-end
 	"[.?!][]\"')}]*\\(<[^>]*>\\)*\\($\\| $\\|\t\\|  \\)[ \t\n]*")
-  (setq mode-name "HTML"
-        major-mode 'html-mode
-	sgml-tag-alist html-tag-alist
+  (setq sgml-tag-alist html-tag-alist
 	sgml-face-tag-alist html-face-tag-alist
 	sgml-tag-help html-tag-help
 	outline-regexp "^.*<[Hh][1-6]\\>"
 	outline-heading-end-regexp "</[Hh][1-6]>"
 	outline-level (lambda ()
 			(char-after (1- (match-end 0)))))
-  (run-hooks 'html-mode-hook))
+  (setq imenu-create-index-function 'html-imenu-index)
+  (make-local-variable 'imenu-sort-function)
+  (setq imenu-sort-function nil) ; sorting the menu defeats the purpose
+  (run-hooks 'text-mode-hook 'sgml-mode-hook 'html-mode-hook))
+
+(defvar html-imenu-regexp
+  "\\s-*<h\\([1-9]\\)[^\n<>]*>\\(<[^\n<>]*>\\)*\\s-*\\([^\n<>]*\\)"
+  "*A regular expression matching a head line to be added to the menu.
+The first `match-string' should be a number from 1-9.
+The second `match-string' matches extra tags and is ignored.
+The third `match-string' will be the used in the menu.")
 
+(defun html-imenu-index ()
+  "Return an table of contents for an HTML buffer for use with Imenu."
+  (let (toc-index)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward html-imenu-regexp nil t)
+	(setq toc-index
+	      (cons (cons (concat (make-string
+				   (* 2 (1- (string-to-number (match-string 1))))
+				   ?\ )
+				  (match-string 3))
+			  (save-excursion (beginning-of-line) (point)))
+		    toc-index))))
+    (nreverse toc-index)))
 
+(defun html-autoview-mode (&optional arg)
+  "Toggle automatic viewing via `html-viewer' upon saving buffer.
+With positive prefix ARG always turns viewing on, with negative ARG always off.
+Can be used as a value for `html-mode-hook'."
+  (interactive "P")
+  (if (setq arg (if arg
+		    (< (prefix-numeric-value arg) 0)
+		  (and (boundp 'after-save-hook)
+		       (memq 'browse-url-of-buffer after-save-hook))))
+      (setq after-save-hook (delq 'browse-url-of-buffer after-save-hook))
+    (make-local-hook 'after-save-hook)
+    (add-hook 'after-save-hook 'browse-url-of-buffer nil t))
+  (message "Autoviewing turned %s."
+	   (if arg "off" "on")))
+
 (define-skeleton html-href-anchor
   "HTML anchor tag with href attribute."
   "URL: "
@@ -1305,21 +1357,5 @@ To work around that, do:
 			       (funcall skeleton-transformation "<br>")
 			     "")))
    \n))
-
-
-(defun html-autoview-mode (&optional arg)
-  "Toggle automatic viewing via `html-viewer' upon saving buffer.
-With positive prefix ARG always turns viewing on, with negative ARG always off.
-Can be used as a value for `html-mode-hook'."
-  (interactive "P")
-  (if (setq arg (if arg
-		    (< (prefix-numeric-value arg) 0)
-		  (and (boundp 'after-save-hook)
-		       (memq 'browse-url-of-buffer after-save-hook))))
-      (setq after-save-hook (delq 'browse-url-of-buffer after-save-hook))
-    (make-local-hook 'after-save-hook)
-    (add-hook 'after-save-hook 'browse-url-of-buffer nil t))
-  (message "Autoviewing turned %s."
-	   (if arg "off" "on")))
 
 ;;; sgml-mode.el ends here

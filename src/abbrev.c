@@ -1,5 +1,5 @@
 /* Primitives for word-abbrev mode.
-   Copyright (C) 1985, 1986, 1993 Free Software Foundation, Inc.
+   Copyright (C) 1985, 1986, 1993, 1996, 1998 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -218,7 +218,8 @@ Returns the abbrev symbol, if expansion took place.")
   ()
 {
   register char *buffer, *p;
-  register int wordstart, wordend, idx;
+  int wordstart, wordend;
+  register int wordstart_byte, wordend_byte, idx;
   int whitecnt;
   int uccount = 0, lccount = 0;
   register Lisp_Object sym;
@@ -243,8 +244,12 @@ Returns the abbrev symbol, if expansion took place.")
       Vabbrev_start_location = Qnil;
       if (wordstart < BEGV || wordstart > ZV)
 	wordstart = 0;
-      if (wordstart && wordstart != ZV && FETCH_BYTE (wordstart) == '-')
-	del_range (wordstart, wordstart + 1);
+      if (wordstart && wordstart != ZV)
+	{
+	  wordstart_byte = CHAR_TO_BYTE (wordstart);
+	  if (FETCH_BYTE (wordstart_byte) == '-')
+	    del_range (wordstart, wordstart + 1);
+	}
     }
   if (!wordstart)
     wordstart = scan_words (PT, -1);
@@ -252,20 +257,24 @@ Returns the abbrev symbol, if expansion took place.")
   if (!wordstart)
     return value;
 
+  wordstart_byte = CHAR_TO_BYTE (wordstart);
   wordend = scan_words (wordstart, 1);
   if (!wordend)
     return value;
 
   if (wordend > PT)
     wordend = PT;
+
+  wordend_byte = CHAR_TO_BYTE (wordend);
   whitecnt = PT - wordend;
   if (wordend <= wordstart)
     return value;
 
-  p = buffer = (char *) alloca (wordend - wordstart);
+  p = buffer = (char *) alloca (wordend_byte - wordstart_byte);
 
-  for (idx = wordstart; idx < wordend; idx++)
+  for (idx = wordstart_byte; idx < wordend_byte; idx++)
     {
+      /* ??? This loop needs to go by characters!  */
       register int c = FETCH_BYTE (idx);
       if (UPPERCASEP (c))
 	c = DOWNCASE (c), uccount++;
@@ -275,11 +284,13 @@ Returns the abbrev symbol, if expansion took place.")
     }
 
   if (VECTORP (current_buffer->abbrev_table))
-    sym = oblookup (current_buffer->abbrev_table, buffer, p - buffer);
+    sym = oblookup (current_buffer->abbrev_table, buffer,
+		    wordend - wordstart, wordend_byte - wordstart_byte);
   else
     XSETFASTINT (sym, 0);
   if (INTEGERP (sym) || NILP (XSYMBOL (sym)->value))
-    sym = oblookup (Vglobal_abbrev_table, buffer, p - buffer);
+    sym = oblookup (Vglobal_abbrev_table, buffer,
+		    wordend - wordstart, wordend_byte - wordstart_byte);
   if (INTEGERP (sym) || NILP (XSYMBOL (sym)->value))
     return value;
 
@@ -310,9 +321,10 @@ Returns the abbrev symbol, if expansion took place.")
     {
       SET_PT (wordstart);
 
-      del_range (wordstart, wordend);
+      del_range_both (wordstart, wordstart_byte, wordend, wordend_byte, 1);
 
-      insert_from_string (expansion, 0, XSTRING (expansion)->size, 1);
+      insert_from_string (expansion, 0, 0, XSTRING (expansion)->size,
+			  STRING_BYTES (XSTRING (expansion)), 1);
       SET_PT (PT + whitecnt);
 
       if (uccount && !lccount)
@@ -335,14 +347,15 @@ Returns the abbrev symbol, if expansion took place.")
       else if (uccount)
 	{
 	  /* Abbrev included some caps.  Cap first initial of expansion */
-	  int pos = wordstart;
+	  int pos = wordstart_byte;
 
 	  /* Find the initial.  */
-	  while (pos < PT
-		 && SYNTAX (*BUF_CHAR_ADDRESS (current_buffer, pos)) != Sword)
+	  while (pos < PT_BYTE
+		 && SYNTAX (*BUF_BYTE_ADDRESS (current_buffer, pos)) != Sword)
 	    pos++;
 
 	  /* Change just that.  */
+	  pos = BYTE_TO_CHAR (pos);
 	  Fupcase_initials_region (make_number (pos), make_number (pos + 1));
 	}
     }
@@ -371,22 +384,26 @@ is not undone.")
       /* This isn't correct if Vlast_abbrev->function was used
          to do the expansion */
       Lisp_Object val;
+      int zv_before;
+
       val = XSYMBOL (Vlast_abbrev)->value;
       if (!STRINGP (val))
 	error ("value of abbrev-symbol must be a string");
-      adjust = XSTRING (val)->size;
-      del_range (PT, PT + adjust);
+      zv_before = ZV;
+      del_range_byte (PT_BYTE, PT_BYTE + STRING_BYTES (XSTRING (val)), 1);
       /* Don't inherit properties here; just copy from old contents.  */
-      insert_from_string (Vlast_abbrev_text, 0,
-			  XSTRING (Vlast_abbrev_text)->size, 0);
-      adjust -= XSTRING (Vlast_abbrev_text)->size;
+      insert_from_string (Vlast_abbrev_text, 0, 0,
+			  XSTRING (Vlast_abbrev_text)->size,
+			  STRING_BYTES (XSTRING (Vlast_abbrev_text)), 0);
       Vlast_abbrev_text = Qnil;
+      /* Total number of characters deleted.  */
+      adjust = ZV - zv_before;
     }
-  SET_PT (last_abbrev_point < opoint ? opoint - adjust : opoint);
+  SET_PT (last_abbrev_point < opoint ? opoint + adjust : opoint);
   return Qnil;
 }
 
-static
+static void
 write_abbrev (sym, stream)
      Lisp_Object sym, stream;
 {
@@ -405,7 +422,7 @@ write_abbrev (sym, stream)
   insert (")\n", 2);
 }
 
-static
+static void
 describe_abbrev (sym, stream)
      Lisp_Object sym, stream;
 {
@@ -500,6 +517,7 @@ of the form (ABBREVNAME EXPANSION HOOK USECOUNT).")
   return Qnil;
 }
 
+void
 syms_of_abbrev ()
 {
   DEFVAR_LISP ("abbrev-table-name-list", &Vabbrev_table_name_list,

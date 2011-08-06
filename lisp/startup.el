@@ -1,6 +1,6 @@
 ;;; startup.el --- process Emacs shell arguments
 
-;; Copyright (C) 1985, 86, 92, 94, 95, 1996 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 86, 92, 94, 95, 96, 97, 1998 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -134,7 +134,7 @@ with the contents of the startup message."
   "*Non-nil inhibits the initial startup echo area message.
 Setting this variable takes effect
 only if you do it with the customization buffer
-or it your `.emacs' file contains a line of this form:
+or if your `.emacs' file contains a line of this form:
  (setq inhibit-startup-echo-area-message \"YOUR-USER-NAME\")
 If your `.emacs' file is byte-compiled, use the following form instead:
  (eval '(setq inhibit-startup-echo-area-message \"YOUR-USER-NAME\"))
@@ -249,7 +249,7 @@ Emacs never sets this variable itself.")
   "The brand of keyboard you are using.
 This variable is used to define
 the proper function and keypad keys for use under X.  It is used in a
-fashion analogous to the environment value TERM.")
+fashion analogous to the environment variable TERM.")
 
 (defvar window-setup-hook nil
   "Normal hook run to initialize window system display.
@@ -325,14 +325,47 @@ This is used after reading your `.emacs' file to initialize
 if you have not already set `auto-save-list-file-name' yourself.
 Set this to nil if you want to prevent `auto-save-list-file-name'
 from being initialized."
-  :type 'string
+  :type '(choice (const :tag "Don't record a session's auto save list" nil)
+		 string)
   :group 'auto-save)
+
+(defvar locale-translation-file-name "/usr/share/locale/locale.alias"
+  "*File name for the system's file of locale-name aliases.")
 
 (defvar init-file-debug nil)
 
 (defvar init-file-had-error nil)
 
-;; This function is called from the subdirs.el file.
+(defun normal-top-level-add-subdirs-to-load-path ()
+  "Add all subdirectories of current directory to `load-path'.
+More precisely, this uses only the subdirectories whose names
+start with letters or digits; it excludes any subdirectory named `RCS'
+or `CVS', and any subdirectory that contains a file named `.nosearch'."
+  (let (dirs 
+	(pending (list default-directory)))
+    ;; This loop does a breadth-first tree walk on DIR's subtree,
+    ;; putting each subdir into DIRS as its contents are examined.
+    (while pending
+      (setq dirs (cons (car pending) dirs))
+      (setq pending (cdr pending))
+      (let ((contents (directory-files (car dirs)))
+	    (default-directory (car dirs)))
+	(while contents
+	  (unless (member (car contents) '("." ".." "RCS" "CVS"))
+	    (when (and (string-match "\\`[a-zA-Z0-9]" (car contents))
+		       (file-directory-p (car contents)))
+	      (let ((expanded (expand-file-name (car contents))))
+		(unless (file-exists-p (expand-file-name ".nosearch"
+							 expanded))
+		  (setq pending (nconc pending (list expanded)))))))
+	  (setq contents (cdr contents)))))
+    (normal-top-level-add-to-load-path (cdr (nreverse dirs)))))
+
+;; This function is called from a subdirs.el file.
+;; It assumes that default-directory is the directory
+;; in which the subdirs.el file exists,
+;; and it adds to load-path the subdirs of that directory
+;; as specified in DIRS.  Normally the elements of DIRS are relative.
 (defun normal-top-level-add-to-load-path (dirs)
   (let ((tail load-path)
 	(thisdir (directory-file-name default-directory)))
@@ -353,6 +386,9 @@ from being initialized."
       (save-excursion
 	(set-buffer (get-buffer "*Messages*"))
 	(setq default-directory dir)))
+    ;; For root, preserve owner and group when editing files.
+    (if (equal (user-uid) 0)
+	(setq backup-by-copying-when-mismatch t))
     ;; Look in each dir in load-path for a subdirs.el file.
     ;; If we find one, load it, which will add the appropriate subdirs
     ;; of that dir into load-path,
@@ -435,6 +471,16 @@ from being initialized."
 (defun command-line ()
   (setq command-line-default-directory default-directory)
 
+  ;; Choose a reasonable location for temporary files.
+  (setq temporary-file-directory
+	(file-name-as-directory
+	 (cond ((memq system-type '(ms-dos windows-nt))
+		(or (getenv "TEMP") (getenv "TMPDIR") (getenv "TMP") "c:/temp"))
+	       ((memq system-type '(vax-vms axp-vms))
+		(or (getenv "TMPDIR") (getenv "TMP") (getenv "TEMP") "SYS$SCRATCH:"))
+	       (t
+		(or (getenv "TMPDIR") (getenv "TMP") (getenv "TEMP") "/tmp")))))
+
   ;; See if we should import version-control from the environment variable.
   (let ((vc (getenv "VERSION_CONTROL")))
     (cond ((eq vc nil))			;don't do anything if not set
@@ -456,16 +502,36 @@ from being initialized."
 	       (and (not (equal string "")) string))
 	     (let ((string (getenv "LANG")))
 	       (and (not (equal string "")) string)))))
+    ;; Translate "swedish" into "sv_SE.ISO-8859-1", and so on,
+    ;; using the translation file that GNU/Linux systems have.
+    (and ctype
+	 (not (string-match iso-8859-n-locale-regexp ctype))
+	 (file-exists-p locale-translation-file-name)
+	 (with-temp-buffer
+	   (insert-file-contents locale-translation-file-name)
+	   (if (re-search-forward (concat "^" ctype "[ \t]+") nil t)
+	       (setq ctype (buffer-substring (point)
+					     (progn (end-of-line) (point)))))))
+    ;; Now see if the locale specifies an ISO 8859 character set.
     (when (and ctype
 	       (string-match iso-8859-n-locale-regexp ctype))
       (let (charset (which (match-string 1 ctype)))
-	(if (equal "5" which)
-	    (setq which "9"))
+	(if (equal "9" which)
+	    (setq which "5"))
 	(setq charset (concat "latin-" which))
-	;; Set up for this character set in multibyte mode.
-	(if (string-match "latin-[12345]" charset)
-	    (set-language-environment charset))
-	(standard-display-european t charset))))
+	(when (string-match "latin-[12345]" charset)
+	  ;; Set up for this character set.
+	  ;; This is now the right way to do it
+	  ;; for both unibyte and multibyte modes.
+	  (set-language-environment charset)
+	  (unless (or noninteractive (eq window-system 'x))
+	    ;; Send those codes literally to a non-X terminal.
+	    (when default-enable-multibyte-characters
+	      ;; If this is nil, we are using single-byte characters,
+	      ;; so the terminal coding system is irrelevant.
+	      (set-terminal-coding-system
+	       (intern (downcase charset)))))
+	  (standard-display-european-internal)))))
 
   ;;! This has been commented out; I currently find the behavior when
   ;;! split-window-keep-point is nil disturbing, but if I can get used
@@ -586,7 +652,7 @@ from being initialized."
   (if site-run-file 
       (load site-run-file t t))
 
-  ;; Register avairable input methods by loading LEIM list file.
+  ;; Register available input methods by loading LEIM list file.
   (load "leim-list.el" 'noerror 'nomessage 'nosuffix)
 
   ;; Sites should not disable this.  Only individuals should disable
@@ -617,7 +683,7 @@ from being initialized."
 			    "sys$login:.emacs")
 			   (t 
 			    (concat "~" init-file-user "/.emacs"))))
-		    (load user-init-file t t t)
+		    (load user-init-file t t)
 		    (or inhibit-default-init
 			(let ((inhibit-startup-message nil))
 			  ;; Users are supposed to be told their rights.
@@ -690,6 +756,7 @@ If this is nil, no message will be displayed."
 (defun command-line-1 (command-line-args-left)
   (or noninteractive (input-pending-p) init-file-had-error
       (and inhibit-startup-echo-area-message
+	   user-init-file
 	   (or (and (get 'inhibit-startup-echo-area-message 'saved-value)
 		    (equal inhibit-startup-echo-area-message
 			   (if (string= init-file-user "")
@@ -759,77 +826,94 @@ If this is nil, no message will be displayed."
 		       (if (eq system-type 'gnu/linux)
 			   (insert ", one component of a Linux-based GNU system."))
 		       (insert "\n")
-		       ;; If keys have their default meanings,
-		       ;; use precomputed string to save lots of time.
-		       (if (and (eq (key-binding "\C-h") 'help-command)
-				(eq (key-binding "\C-xu") 'advertised-undo)
-				(eq (key-binding "\C-x\C-c") 'save-buffers-kill-emacs)
-				(eq (key-binding "\C-ht") 'help-with-tutorial)
-				(eq (key-binding "\C-hi") 'info)
-				(eq (key-binding "\C-h\C-n") 'view-emacs-news))
-			   (insert "
+		       (if (assq 'display (frame-parameters))
+			   (progn
+			     (insert "\
+The menu bar and scroll bar are sufficient for basic editing with the mouse.
+
+Useful Files menu items:
+Exit Emacs		(or type Control-x followed by Control-c)
+Recover Session		recover files you were editing before a crash
+
+Important Help menu items:
+Emacs Tutorial		Learn-by-doing tutorial for using Emacs efficiently.
+\(Non)Warranty		GNU Emacs comes with ABSOLUTELY NO WARRANTY
+Copying Conditions	Conditions for redistributing and changing Emacs.
+Getting New Versions	How to obtain the latest version of Emacs.
+")
+			     (insert "\n\n" (emacs-version)
+				     "
+Copyright (C) 1998 Free Software Foundation, Inc."))
+			 ;; If keys have their default meanings,
+			 ;; use precomputed string to save lots of time.
+			 (if (and (eq (key-binding "\C-h") 'help-command)
+				  (eq (key-binding "\C-xu") 'advertised-undo)
+				  (eq (key-binding "\C-x\C-c") 'save-buffers-kill-emacs)
+				  (eq (key-binding "\C-ht") 'help-with-tutorial)
+				  (eq (key-binding "\C-hi") 'info)
+				  (eq (key-binding "\C-h\C-n") 'view-emacs-news))
+			     (insert "
 Get help	   C-h  (Hold down CTRL and press h)
 Undo changes	   C-x u       Exit Emacs		C-x C-c
 Get a tutorial	   C-h t       Use Info to read docs	C-h i")
-			 (insert (substitute-command-keys
-				  (format "\n
+			   (insert (substitute-command-keys
+				    (format "\n
 Get help	   %s
 Undo changes	   \\[advertised-undo]
 Exit Emacs	   \\[save-buffers-kill-emacs]
 Get a tutorial	   \\[help-with-tutorial]
 Use Info to read docs	\\[info]"
-					  (let ((where (where-is-internal
-							'help-command nil t)))
-					    (if where
-						(key-description where)
-					      "M-x help"))))))
-		       ;; Say how to use the menu bar
-		       ;; if that is not with the mouse.
-		       (if (not (assq 'display (frame-parameters)))
-			   (if (and (eq (key-binding "\M-`") 'tmm-menubar)
-				    (eq (key-binding [f10]) 'tmm-menubar))
-			       (insert "
+					    (let ((where (where-is-internal
+							  'help-command nil t)))
+					      (if where
+						  (key-description where)
+						"M-x help"))))))
+			 ;; Say how to use the menu bar
+			 ;; if that is not with the mouse.
+			 (if (and (eq (key-binding "\M-`") 'tmm-menubar)
+				  (eq (key-binding [f10]) 'tmm-menubar))
+			     (insert "
 Activate menubar   F10  or  ESC `  or   M-`")
-			     (insert (substitute-command-keys "
-Activate menubar     \\[tmm-menubar]"))))
+			   (insert (substitute-command-keys "
+Activate menubar     \\[tmm-menubar]")))
 
 		       ;; Windows and MSDOS (currently) do not count as
 		       ;; window systems, but do have mouse support.
-		       (if window-system
-			   (insert "
+			 (if window-system
+			     (insert "
 Mode-specific menu   C-mouse-3 (third button, with CTRL)"))
-		       ;; Many users seem to have problems with these.
-		       (insert "
+			 ;; Many users seem to have problems with these.
+			 (insert "
 \(`C-' means use the CTRL key.  `M-' means use the Meta (or Alt) key.
 If you have no Meta key, you may instead type ESC followed by the character.)")
-		       (and auto-save-list-file-prefix
-			    (directory-files
-			     (file-name-directory auto-save-list-file-prefix)
-			     nil
-			     (concat "\\`"
-				     (regexp-quote (file-name-nondirectory
-						    auto-save-list-file-prefix)))
-			     t)
-			    (insert "\n\nIf an Emacs session crashed recently, "
-				    "type M-x recover-session RET\nto recover"
-				    " the files you were editing."))
+			 (and auto-save-list-file-prefix
+			      (directory-files
+			       (file-name-directory auto-save-list-file-prefix)
+			       nil
+			       (concat "\\`"
+				       (regexp-quote (file-name-nondirectory
+						      auto-save-list-file-prefix)))
+			       t)
+			      (insert "\n\nIf an Emacs session crashed recently, "
+				      "type M-x recover-session RET\nto recover"
+				      " the files you were editing."))
 
-		       (insert "\n\n" (emacs-version)
-			       "
-Copyright (C) 1997 Free Software Foundation, Inc.")
-		       (if (and (eq (key-binding "\C-h\C-c") 'describe-copying)
-				(eq (key-binding "\C-h\C-d") 'describe-distribution)
-				(eq (key-binding "\C-h\C-w") 'describe-no-warranty))
-			   (insert 
-			    "\n
+			 (insert "\n\n" (emacs-version)
+				 "
+Copyright (C) 1998 Free Software Foundation, Inc.")
+			 (if (and (eq (key-binding "\C-h\C-c") 'describe-copying)
+				  (eq (key-binding "\C-h\C-d") 'describe-distribution)
+				  (eq (key-binding "\C-h\C-w") 'describe-no-warranty))
+			     (insert 
+			      "\n
 GNU Emacs comes with ABSOLUTELY NO WARRANTY; type C-h C-w for full details.
 You may give out copies of Emacs; type C-h C-c to see the conditions.
 Type C-h C-d for information on getting the latest version.")
-			 (insert (substitute-command-keys
-				  "\n
+			   (insert (substitute-command-keys
+				    "\n
 GNU Emacs comes with ABSOLUTELY NO WARRANTY; type \\[describe-no-warranty] for full details.
 You may give out copies of Emacs; type \\[describe-copying] to see the conditions.
-Type \\[describe-distribution] for information on getting the latest version.")))
+Type \\[describe-distribution] for information on getting the latest version."))))
 		       (goto-char (point-min))
 
 		       (set-buffer-modified-p nil)

@@ -634,9 +634,10 @@ Buffer local variable.")
 (put 'term-scroll-show-maximum-output 'permanent-local t)
 (put 'term-ptyp 'permanent-local t)
 
-;; Do FORMS if running under Emacs-19.
+;; Do FORMS if running under Emacs 19 or later.
 (defmacro term-if-emacs19 (&rest forms)
-  (if (string-match "^19" emacs-version) (cons 'progn forms)))
+  (if (string-match "^\\(19\\|[2-9][0-9]\\)" emacs-version)
+      (cons 'progn forms)))
 ;; True if running under XEmacs (previously Lucid Emacs).
 (defmacro term-is-xemacs ()  '(string-match "Lucid" emacs-version))
 ;; Do FORM if running under XEmacs (previously Lucid Emacs).
@@ -1431,7 +1432,10 @@ buffer.  The hook term-exec-hook is run after each exec."
 	   (format "LINES=%d" term-height)
 	   (format "COLUMNS=%d" term-width))
 	  process-environment))
-	(process-connection-type t))
+	(process-connection-type t)
+	;; We should suppress conversion of end-of-line format.
+	(inhibit-eol-conversion t)
+	)
     (apply 'start-process name buffer
 	   "/bin/sh" "-c"
 	   (format "stty -nl echo rows %d columns %d sane 2>/dev/null;\
@@ -1589,8 +1593,7 @@ See also `term-read-input-ring'."
 
 (defun term-regexp-arg (prompt)
   ;; Return list of regexp and prefix arg using PROMPT.
-  (let* ((minibuffer-history-sexp-flag nil)
-	 ;; Don't clobber this.
+  (let* (;; Don't clobber this.
 	 (last-command last-command)
 	 (regexp (read-from-minibuffer prompt nil nil nil
 				       'minibuffer-history-search-history)))

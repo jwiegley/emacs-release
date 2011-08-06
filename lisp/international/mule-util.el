@@ -31,20 +31,23 @@
 (defun string-to-sequence (string type)
   "Convert STRING to a sequence of TYPE which contains characters in STRING.
 TYPE should be `list' or `vector'."
-  (or (eq type 'list) (eq type 'vector)
-      (error "Invalid type: %s" type))
-  (let* ((len (length string))
-	 (i 0)
-	 l ch)
-    (while (< i len)
-      (setq ch (if enable-multibyte-characters
-		   (sref string i) (aref string i)))
-      (setq l (cons ch l))
-      (setq i (+ i (char-bytes ch))))
-    (setq l (nreverse l))
-    (if (eq type 'list)
-	l
-      (vconcat l))))
+  (let ((len (length string))
+	(i 0)
+	val)
+    (cond ((eq type 'list)
+	   (setq val (make-list len 0))
+	   (let ((l val))
+	     (while (< i len)
+	       (setcar l (aref string i))
+	       (setq l (cdr l) i (1+ i)))))
+	  ((eq type 'vector)
+	   (setq val (make-vector len 0))
+	   (while (< i len)
+	     (aset val i (aref string i))
+	     (setq i (1+ i))))
+	  (t
+	   (error "Invalid type: %s" type)))
+    val))
 
 ;;;###autoload
 (defsubst string-to-list (string)
@@ -59,18 +62,15 @@ TYPE should be `list' or `vector'."
 ;;;###autoload
 (defun store-substring (string idx obj)
   "Embed OBJ (string or character) at index IDX of STRING."
-  (let* ((str (cond ((stringp obj) obj)
-		    ((integerp obj) (char-to-string obj))
-		    (t (error
-			"Invalid argument (should be string or character): %s"
-			obj))))
-	 (string-len (length string))
-	 (len (length str))
-	 (i 0))
-    (while (and (< i len) (< idx string-len))
-      (aset string idx (aref str i))
-      (setq idx (1+ idx) i (1+ i)))
-    string))
+  (if (integerp obj)
+      (aset string idx obj)
+    (let ((len1 (length obj))
+	  (len2 (length string))
+	  (i 0))
+      (while (< i len1)
+	(aset string (+ idx i) (aref obj i))
+	(setq i (1+ i)))))
+  string)
 
 ;;;###autoload
 (defun truncate-string-to-width (str end-column &optional start-column padding)
@@ -96,14 +96,14 @@ the resulting string may be narrower than END-COLUMN."
 	ch last-column last-idx from-idx)
     (condition-case nil
 	(while (< column start-column)
-	  (setq ch (sref str idx)
+	  (setq ch (aref str idx)
 		column (+ column (char-width ch))
-		idx (+ idx (char-bytes ch))))
+		idx (1+ idx)))
       (args-out-of-range (setq idx len)))
     (if (< column start-column)
 	(if padding (make-string end-column padding) "")
       (if (and padding (> column start-column))
-	  (setq head-padding (make-string (- column start-column) ?\ )))
+	  (setq head-padding (make-string (- column start-column) padding)))
       (setq from-idx idx)
       (if (< end-column column)
 	  (setq idx from-idx)
@@ -111,9 +111,9 @@ the resulting string may be narrower than END-COLUMN."
 	    (while (< column end-column)
 	      (setq last-column column
 		    last-idx idx
-		    ch (sref str idx)
+		    ch (aref str idx)
 		    column (+ column (char-width ch))
-		    idx (+ idx (char-bytes ch))))
+		    idx (1+ idx)))
 	  (args-out-of-range (setq idx len)))
 	(if (> column end-column)
 	    (setq column last-column idx last-idx))
@@ -211,60 +211,34 @@ Optional 3rd argument NIL-FOR-TOO-LONG non-nil means return nil
 ;; Coding system related functions.
 
 ;;;###autoload
-(defun coding-system-base (coding-system)
-  "Return a base of CODING-SYSTEM.
-The base is a coding system of which coding-system property is a
-coding-spec (see the function `make-coding-system')."
-  (let ((coding-spec (get coding-system 'coding-system)))
-    (if (vectorp coding-spec)
-	coding-system
-      (coding-system-base coding-spec))))
-
-;;;###autoload
 (defun coding-system-eol-type-mnemonic (coding-system)
   "Return mnemonic letter of eol-type of CODING-SYSTEM."
   (let ((eol-type (coding-system-eol-type coding-system)))
     (cond ((vectorp eol-type) eol-mnemonic-undecided)
 	  ((eq eol-type 0) eol-mnemonic-unix)
-	  ((eq eol-type 1) eol-mnemonic-unix)
-	  ((eq eol-type 2) eol-mnemonic-unix)
+	  ((eq eol-type 1) eol-mnemonic-dos)
+	  ((eq eol-type 2) eol-mnemonic-mac)
 	  (t ?-))))
 
 ;;;###autoload
 (defun coding-system-post-read-conversion (coding-system)
-  "Return post-read-conversion property of CODING-SYSTEM."
-  (and coding-system
-       (symbolp coding-system)
-       (or (get coding-system 'post-read-conversion)
-	   (coding-system-post-read-conversion
-	    (get coding-system 'coding-system)))))
+  "Return the value of CODING-SYSTEM's post-read-conversion property."
+  (coding-system-get coding-system 'post-read-conversion))
 
 ;;;###autoload
 (defun coding-system-pre-write-conversion (coding-system)
-  "Return pre-write-conversion property of CODING-SYSTEM."
-  (and coding-system
-       (symbolp coding-system)
-       (or (get coding-system 'pre-write-conversion)
-	   (coding-system-pre-write-conversion
-	    (get coding-system 'coding-system)))))
+  "Return the value of CODING-SYSTEM's pre-write-conversion property."
+  (coding-system-get coding-system 'pre-write-conversion))
 
 ;;;###autoload
-(defun coding-system-unification-table-for-decode (coding-system)
-  "Return unification-table-for-decode property of CODING-SYSTEM."
-  (and coding-system
-       (symbolp coding-system)
-       (or (get coding-system 'unification-table-for-decode)
-	   (coding-system-unification-table-for-decode
-	    (get coding-system 'coding-system)))))
+(defun coding-system-translation-table-for-decode (coding-system)
+  "Return the value of CODING-SYSTEM's translation-table-for-decode property."
+  (coding-system-get coding-system 'translation-table-for-decode))
 
 ;;;###autoload
-(defun coding-system-unification-table-for-encode (coding-system)
-  "Return unification-table-for-encode property of CODING-SYSTEM."
-  (and coding-system
-       (symbolp coding-system)
-       (or (get coding-system 'unification-table-for-encode)
-	   (coding-system-unification-table-for-encode
-	    (get coding-system 'coding-system)))))
+(defun coding-system-translation-table-for-encode (coding-system)
+  "Return the value of CODING-SYSTEM's translation-table-for-encode property."
+  (coding-system-get coding-system 'translation-table-for-encode))
 
 (defun coding-system-lessp (x y)
   (cond ((eq x 'no-conversion) t)
@@ -283,51 +257,22 @@ coding-spec (see the function `make-coding-system')."
 (defun coding-system-list (&optional base-only)
   "Return a list of all existing coding systems.
 If optional arg BASE-ONLY is non-nil, only base coding systems are listed."
-  (let (l)
-    (mapatoms (lambda (x) (if (get x 'coding-system) (setq l (cons x l)))))
-    (let* ((codings (sort l 'coding-system-lessp))
-	   (tail (cons nil codings))
-	   coding)
-      ;; At first, remove subsidiary coding systems (eol variants) and
-      ;; alias coding systems (if necessary).
-      (while (cdr tail)
-	(setq coding (car (cdr tail)))
-	(if (or (get coding 'eol-variant)
-		(and base-only (coding-system-parent coding)))
+  (let* ((codings (sort (copy-sequence coding-system-list)
+			'coding-system-lessp))
+	 (tail (cons nil codings)))
+    ;; Remove subsidiary coding systems (eol variants) and alias
+    ;; coding systems (if necessary).
+    (while (cdr tail)
+      (let* ((coding (car (cdr tail)))
+	     (aliases (coding-system-get coding 'alias-coding-systems)))
+	(if (or
+	     ;; CODING is an eol varinant if not in ALIASES.
+	     (not (memq coding aliases))
+	     ;; CODING is an alias if it is not car of ALISES.
+	     (and base-only (not (eq coding (car aliases)))))
 	    (setcdr tail (cdr (cdr tail)))
-	  (setq tail (cdr tail))))
-      codings)))
-
-;;;###autoload
-(defun coding-system-plist (coding-system)
-  "Return property list of CODING-SYSTEM."
-  (let ((found nil)
-	coding-spec eol-type
-	post-read-conversion pre-write-conversion
-	unification-table)
-    (while (not found)
-      (or eol-type
-	  (setq eol-type (get coding-system 'eol-type)))
-      (or post-read-conversion
-	  (setq post-read-conversion
-		(get coding-system 'post-read-conversion)))
-      (or pre-write-conversion
-	  (setq pre-write-conversion
-		(get coding-system 'pre-write-conversion)))
-      (or unification-table
-	  (setq unification-table
-		(get coding-system 'unification-table)))
-      (setq coding-spec (get coding-system 'coding-system))
-      (if (and coding-spec (symbolp coding-spec))
-	  (setq coding-system coding-spec)
-	(setq found t)))
-    (if (not coding-spec)
-	(error "Invalid coding system: %s" coding-system))
-    (list 'coding-spec coding-spec
-	  'eol-type eol-type
-	  'post-read-conversion post-read-conversion
-	  'pre-write-conversion pre-write-conversion
-	  'unification-table unification-table)))
+	  (setq tail (cdr tail)))))
+    codings))
 
 ;;;###autoload
 (defun coding-system-equal (coding-system-1 coding-system-2)
@@ -335,8 +280,83 @@ If optional arg BASE-ONLY is non-nil, only base coding systems are listed."
 Two coding systems are identical if two symbols are equal
 or one is an alias of the other."
   (or (eq coding-system-1 coding-system-2)
-      (equal (coding-system-plist coding-system-1)
-	     (coding-system-plist coding-system-2))))
+      (and (equal (coding-system-spec coding-system-1)
+		  (coding-system-spec coding-system-2))
+	   (let ((eol-type-1 (coding-system-eol-type coding-system-1))
+		 (eol-type-2 (coding-system-eol-type coding-system-2)))
+	     (or (eq eol-type-1 eol-type-2)
+		 (and (vectorp eol-type-1) (vectorp eol-type-2)))))))
+
+;;;###autoload
+(defun coding-system-change-eol-conversion (coding-system eol-type)
+  "Return a coding system which differs from CODING-SYSTEM in eol conversion.
+The returned coding system converts end-of-line by EOL-TYPE
+but text as the same way as CODING-SYSTEM.
+EOL-TYPE should be `unix', `dos', `mac', or nil.
+If EOL-TYPE is nil, the returned coding system detects
+how end-of-line is formatted automatically while decoding.
+
+EOL-TYPE can be specified by an integer 0, 1, or 2.
+They means `unix', `dos', and `mac' respectively."
+  (if (symbolp eol-type)
+      (setq eol-type (cond ((eq eol-type 'unix) 0)
+			   ((eq eol-type 'dos) 1)
+			   ((eq eol-type 'mac) 2)
+			   (t eol-type))))
+  (let ((orig-eol-type (coding-system-eol-type coding-system)))
+    (if (vectorp orig-eol-type)
+	(if (not eol-type)
+	    coding-system
+	  (aref orig-eol-type eol-type))
+      (let ((base (coding-system-base coding-system)))
+	(if (not eol-type)
+	    base
+	  (if (= eol-type orig-eol-type)
+	      coding-system
+	    (setq orig-eol-type (coding-system-eol-type base))
+	    (if (vectorp orig-eol-type)
+		(aref orig-eol-type eol-type))))))))
+
+;;;###autoload
+(defun coding-system-change-text-conversion (coding-system coding)
+  "Return a coding system which differs from CODING-SYSTEM in text conversion.
+The returned coding system converts text by CODING
+but end-of-line as the same way as CODING-SYSTEM.
+If CODING is nil, the returned coding system detects
+how text is formatted automatically while decoding."
+  (if (not coding)
+      (coding-system-base coding-system)
+    (let ((eol-type (coding-system-eol-type coding-system)))
+      (coding-system-change-eol-conversion
+       coding
+       (if (numberp eol-type) (aref [unix dos mac] eol-type))))))
+
+;;;###autoload
+(defmacro detect-coding-with-priority (from to priority-list)
+  "Detect a coding system of the text between FROM and TO with PRIORITY-LIST.
+PRIORITY-LIST is an alist of coding categories vs the corresponding
+coding systems ordered by priority."
+  `(let* ((prio-list ,priority-list)
+	  (coding-category-list coding-category-list)
+	  ,@(mapcar (function (lambda (x) (list x x))) coding-category-list))
+     (mapcar (function (lambda (x) (set (car x) (cdr x))))
+	     prio-list)
+     (set-coding-priority (mapcar (function (lambda (x) (car x))) prio-list))
+     (detect-coding-region ,from ,to)))
+
+;;;###autoload
+(defun detect-coding-with-language-environment (from to lang-env)
+  "Detect a coding system of the text between FROM and TO with LANG-ENV.
+The detection takes into accont the coding system priorities for the
+language environment LANG-ENV."
+  (let ((coding-priority (get-language-info lang-env 'coding-priority)))
+    (if coding-priority
+	(detect-coding-with-priority
+	 from to
+	 (mapcar (function (lambda (x)
+			     (cons (coding-system-get x 'coding-category) x)))
+		 coding-priority))
+      (detect-coding-region from to))))
 
 
 ;;; Composite charcater manipulations.
@@ -360,30 +380,40 @@ Composite characters are broken up into individual components.
 When called from a program, expects two arguments,
 positions (integers or markers) specifying the region."
   (interactive "r")
-  (save-restriction
-    (narrow-to-region start end)
-    (goto-char (point-min))
-    (let ((enable-multibyte-characters nil)
-	  ;; This matches the whole bytes of single composite character.
-	  (re-cmpchar "\200[\240-\377]+")
-	  p ch str)
-      (while (re-search-forward re-cmpchar nil t)
-	(setq str (buffer-substring (match-beginning 0) (match-end 0)))
-	(delete-region (match-beginning 0) (match-end 0))
-	(insert (decompose-composite-char (string-to-char str)))))))
+  (save-excursion
+    (save-restriction
+      (narrow-to-region start end)
+      (goto-char (point-min))
+      (while (not (eobp))
+	(let ((ch (following-char)))
+	  (if (>= ch min-composite-char)
+	      (progn
+		(delete-char 1)
+		(insert (decompose-composite-char ch)))
+	    (forward-char 1)))))))
 
 ;;;###autoload
 (defun decompose-string (string)
   "Decompose all composite characters in STRING."
-  (let* ((l (string-to-list string))
-	 (tail l)
-	 ch)
-    (while tail
-      (setq ch (car tail))
-      (setcar tail (if (cmpcharp ch) (decompose-composite-char ch)
-		     (char-to-string ch)))
-      (setq tail (cdr tail)))
-    (apply 'concat l)))
+  (let ((len (length string))
+	(idx 0)
+	(i 0)
+	(str-list nil)
+	ch)
+    (while (< idx len)
+      (setq ch (aref string idx))
+      (if (>= ch min-composite-char)
+	  (progn
+	    (if (> idx i)
+		(setq str-list (cons (substring string i idx) str-list)))
+	    (setq str-list (cons (decompose-composite-char ch) str-list))
+	    (setq i (1+ idx))))
+      (setq idx (1+ idx)))
+    (if (not str-list)
+	(copy-sequence string)
+      (if (> idx i)
+	  (setq str-list (cons (substring string i idx) str-list)))
+      (apply 'concat (nreverse str-list)))))
 
 ;;;###autoload
 (defconst reference-point-alist
@@ -437,7 +467,7 @@ overall glyph is updated as follows:
 (defun compose-chars-component (ch)
   (if (< ch 128)
       (format "\240%c" (+ ch 128))
-    (let ((str (char-to-string ch)))
+    (let ((str (string-as-unibyte (char-to-string ch))))
       (if (cmpcharp ch)
 	  (substring str (if (= (aref str 1) ?\xFF) 2 1))
 	(aset str 0 (+ (aref str 0) ?\x20))
@@ -473,11 +503,11 @@ See the documentation of `reference-point-alist' for more detail."
 		    args (cdr (cdr args))))
 	  (setq str (concat str (compose-chars-component (car args)))
 		args (cdr args))))
-      str)))
+      (string-as-multibyte str))))
 
 ;;;###autoload
 (defun decompose-composite-char (char &optional type with-composition-rule)
-  "Convert composite character CHAR to a string containing components of CHAR.
+  "Convert composite character CHAR to a sequence of the components.
 Optional 1st arg TYPE specifies the type of sequence returned.
 It should be `string' (default), `list', or `vector'.
 Optional 2nd arg WITH-COMPOSITION-RULE non-nil means the returned
@@ -502,7 +532,7 @@ even if WITH-COMPOSITION-RULE is t."
       (setq i (1- i)))
     (setq l (cons (composite-char-component char 0) l))
     (cond ((eq type 'string)
-	   (apply 'concat-chars l))
+	   (apply 'string l))
 	  ((eq type 'list)
 	   l)
 	  (t				; i.e. TYPE is vector

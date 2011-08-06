@@ -52,9 +52,11 @@
     (or (featurep 'ediff)
 	(load "ediff.el" nil nil 'nosuffix))
     (or (featurep 'ediff-tbar)
+	ediff-emacs-p
 	(load "ediff-tbar.el" 'noerror nil 'nosuffix))
     ))
 ;; end pacifier
+
 
 (require 'ediff-init)
 (require 'ediff-help)
@@ -63,14 +65,8 @@
 (require 'ediff-diff)
 (require 'ediff-merg)
 
-
-;; be careful with ediff-tbar
 (if ediff-xemacs-p
-    (condition-case nil
-	(require 'ediff-tbar)
-      (error
-       (defun ediff-use-toolbar-p () nil)))
-  (defun ediff-use-toolbar-p () nil))
+    (require 'ediff-tbar))
 
 
 ;;; Functions
@@ -178,7 +174,7 @@ to invocation.")
   (define-key ediff-mode-map "E" 'ediff-documentation)
   (define-key ediff-mode-map "?" 'ediff-toggle-help)
   (define-key ediff-mode-map "!" 'ediff-update-diffs)
-  (define-key ediff-mode-map "M" 'ediff-show-meta-buffer)
+  (define-key ediff-mode-map "M" 'ediff-show-current-session-meta-buffer)
   (define-key ediff-mode-map "R" 'ediff-show-registry)
   (or ediff-word-mode
       (define-key ediff-mode-map "*" 'ediff-make-or-kill-fine-diffs))
@@ -251,7 +247,8 @@ to invocation.")
 ;; STARTUP-HOOKS, but these parameters are set in the new control buffer right
 ;; after this buf is created and before any windows are set and such.
 (defun ediff-setup (buffer-A file-A buffer-B file-B buffer-C file-C
-			     startup-hooks setup-parameters)
+			     startup-hooks setup-parameters
+			     &optional merge-buffer-file)
   ;; ediff-convert-standard-filename puts file names in the form appropriate
   ;; for the OS at hand.
   (setq file-A (ediff-convert-standard-filename (expand-file-name file-A)))
@@ -259,6 +256,21 @@ to invocation.")
   (if (stringp file-C)
       (setq file-C
 	    (ediff-convert-standard-filename (expand-file-name file-C))))
+  (if (stringp merge-buffer-file)
+      (progn
+	(setq merge-buffer-file 
+	      (ediff-convert-standard-filename
+	       (expand-file-name merge-buffer-file)))
+	;; check the directory exists
+	(or (file-exists-p (file-name-directory merge-buffer-file))
+	    (error "Directory %s given as place to save the merge doesn't exist."
+		   (abbreviate-file-name 
+		    (file-name-directory merge-buffer-file))))
+	(if (and (file-exists-p merge-buffer-file)
+		 (file-directory-p merge-buffer-file))
+	    (error "The merge buffer file %s must not be a directory"
+		   (abbreviate-file-name merge-buffer-file)))
+	))
   (let* ((control-buffer-name 
 	  (ediff-unique-buffer-name "*Ediff Control Panel" "*"))
 	 (control-buffer (ediff-with-current-buffer buffer-A
@@ -327,7 +339,6 @@ to invocation.")
 	      (set-buffer buffer-C)
 	      (insert-buffer buf)
 	      (funcall (ediff-with-current-buffer buf major-mode))
-	      ;; after Stig@hackvan.com
 	      (add-hook 'local-write-file-hooks 'ediff-set-merge-mode nil t)
 	      )))
       (setq buffer-read-only nil    
@@ -489,13 +500,16 @@ to invocation.")
       (ediff-visible-region)
       
       (run-hooks 'startup-hooks)
+      (ediff-arrange-autosave-in-merge-jobs merge-buffer-file)
+
       (ediff-refresh-mode-lines)
       (setq buffer-read-only t)
       (setq ediff-session-registry
 	    (cons control-buffer ediff-session-registry))
       (ediff-update-registry)
       (if (ediff-buffer-live-p ediff-meta-buffer)
-	  (ediff-update-meta-buffer ediff-meta-buffer))
+	  (ediff-update-meta-buffer
+	   ediff-meta-buffer nil ediff-meta-session-number))
       (run-hooks 'ediff-startup-hook)
       ) ; eval in control-buffer
     control-buffer))
@@ -536,7 +550,25 @@ to invocation.")
     (goto-char (point-min))
     (skip-chars-forward ediff-whitespace)))
     
-    
+;; This executes in control buffer and sets auto-save, visited file name, etc,
+;; in the merge buffer
+(defun ediff-arrange-autosave-in-merge-jobs (merge-buffer-file)
+  (if (not ediff-merge-job)
+      ()
+    (if (stringp merge-buffer-file)
+	(setq ediff-autostore-merges t
+	      ediff-merge-store-file merge-buffer-file))
+    (if (stringp ediff-merge-store-file)
+	(progn
+	  ;; save before leaving ctl buffer
+	  (setq merge-buffer-file ediff-merge-store-file) 
+	  (ediff-with-current-buffer ediff-buffer-C
+	    (set-visited-file-name merge-buffer-file))))
+    (ediff-with-current-buffer ediff-buffer-C
+      (setq buffer-offer-save t) ; ask before killing buffer
+      ;; make sure the contents is auto-saved
+      (auto-save-mode 1))
+    ))
 
 
 ;;; Commands for working with Ediff
@@ -1017,7 +1049,7 @@ of the current buffer."
 
 ;; checkout if visited file is checked in
 (defun ediff-maybe-checkout (buf)
-  (let ((file (buffer-file-name buf))
+  (let ((file (expand-file-name (buffer-file-name buf)))
 	(checkout-function (key-binding "\C-x\C-q")))
     (if (and (ediff-file-checked-in-p file)
 	     (or (beep 1) t)
@@ -1034,31 +1066,42 @@ of the current buffer."
 ;; in and not checked out for the purpose of patching (since patch won't be
 ;; able to read such a file anyway).
 ;; FILE is a string representing file name
-(defun ediff-file-under-version-control (file)
-  (let* ((filedir (file-name-directory file))
-	 (file-nondir (file-name-nondirectory file))
-	 (trial (concat file-nondir ",v"))
-	 (full-trial (concat filedir trial))
-	 (full-rcs-trial (concat filedir "RCS/" trial)))
-    (and (stringp file)
-	 (file-exists-p file)
-	 (or
-	  (and
-	   (file-exists-p full-trial)
-	   ;; in FAT FS, `file,v' and `file' may turn out to be the same!
-	   ;; don't be fooled by this!
-	   (not (equal (file-attributes file)
-		       (file-attributes full-trial))))
-	  ;; check if a version is in RCS/ directory
-	  (file-exists-p full-rcs-trial)))
-       ))
+;;(defun ediff-file-under-version-control (file)
+;;  (let* ((filedir (file-name-directory file))
+;;	 (file-nondir (file-name-nondirectory file))
+;;	 (trial (concat file-nondir ",v"))
+;;	 (full-trial (concat filedir trial))
+;;	 (full-rcs-trial (concat filedir "RCS/" trial)))
+;;    (and (stringp file)
+;;	 (file-exists-p file)
+;;	 (or
+;;	  (and
+;;	   (file-exists-p full-trial)
+;;	   ;; in FAT FS, `file,v' and `file' may turn out to be the same!
+;;	   ;; don't be fooled by this!
+;;	   (not (equal (file-attributes file)
+;;		       (file-attributes full-trial))))
+;;	  ;; check if a version is in RCS/ directory
+;;	  (file-exists-p full-rcs-trial)))
+;;       ))
 
-(defun ediff-file-checked-out-p (file)
-  (and (ediff-file-under-version-control file)
-       (file-writable-p file)))
-(defun ediff-file-checked-in-p (file)
-  (and (ediff-file-under-version-control file)
-       (not (file-writable-p file))))
+
+(defsubst ediff-file-checked-out-p (file)
+  (or (not (featurep 'vc-hooks))
+      (and (vc-backend file)
+	   (vc-locking-user file))))
+(defsubst ediff-file-checked-in-p (file)
+  (and (featurep 'vc-hooks)
+       (vc-backend file)
+       (not (vc-locking-user file))))
+
+(defun ediff-file-compressed-p (file)
+  (condition-case nil
+      (require 'jka-compr)
+    (error))
+  (if (featurep 'jka-compr)
+      (string-match (jka-compr-build-file-regexp) file)))
+
       
 (defun ediff-swap-buffers ()
   "Rotate the display of buffers A, B, and C."
@@ -1276,7 +1319,7 @@ To change the default, set the variable `ediff-use-toolbar-p', which see."
 	       (set-specifier bottom-toolbar-visible-p (list frame t)) 
 	       (set-specifier bottom-toolbar-height
 			      (list frame ediff-toolbar-height)))
-	      (ediff-xemacs-p
+	      ((ediff-has-toolbar-support-p)
 	       (set-specifier bottom-toolbar-height (list frame 0)))
 	      ))
     ))
@@ -1330,13 +1373,15 @@ Used in ediff-windows/regions only."
 		    'C  ediff-visible-bounds))
 	  )
       (ediff-with-current-buffer ediff-buffer-A
-	(narrow-to-region
-	 (ediff-overlay-start overl-A) (ediff-overlay-end overl-A)))
+	(if (ediff-overlay-buffer overl-A)
+	    (narrow-to-region
+	     (ediff-overlay-start overl-A) (ediff-overlay-end overl-A))))
       (ediff-with-current-buffer ediff-buffer-B
-	(narrow-to-region
-	 (ediff-overlay-start overl-B) (ediff-overlay-end overl-B)))
+	(if (ediff-overlay-buffer overl-B)
+	    (narrow-to-region
+	     (ediff-overlay-start overl-B) (ediff-overlay-end overl-B))))
       
-      (if ediff-3way-job
+      (if (and ediff-3way-job (ediff-overlay-buffer overl-C))
 	  (ediff-with-current-buffer ediff-buffer-C
 	    (narrow-to-region
 	     (ediff-overlay-start overl-C) (ediff-overlay-end overl-C))))
@@ -1534,18 +1579,19 @@ the width of the A/B/C windows."
 	lines
 	))))
 
-;; get number of lines from window end to region start
-(defun ediff-get-lines-to-region-start (buf-type &optional n ctl-buf)
-  (or n (setq n ediff-current-difference))
+;; Calculate the number of lines from window end to the start of diff region
+(defun ediff-get-lines-to-region-start (buf-type &optional diff-num ctl-buf)
+  (or diff-num (setq diff-num ediff-current-difference))
   (or ctl-buf (setq ctl-buf ediff-control-buffer))
   (ediff-with-current-buffer ctl-buf
     (let* ((buf (ediff-get-buffer buf-type))
 	   (wind (eval (ediff-get-symbol-from-alist
 			buf-type ediff-window-alist)))
-	   (end (window-end wind))
-	   (beg (ediff-get-diff-posn buf-type 'beg)))
+	   (end (or (window-end wind) (window-end wind t)))
+	   (beg (ediff-get-diff-posn buf-type 'beg diff-num)))
       (ediff-with-current-buffer buf
-	(if (< beg end) (count-lines beg end) 0))
+	(if (< beg end)
+	    (count-lines (max beg (point-min)) (min end (point-max))) 0))
       )))
 
 
@@ -1585,21 +1631,21 @@ With a prefix argument, go forward that many differences."
   (ediff-barf-if-not-control-buffer)
   (if (< ediff-current-difference ediff-number-of-differences)
       (let ((n (min ediff-number-of-differences
-		    (+ ediff-current-difference arg)))
-	    regexp-skip)
+		    (+ ediff-current-difference (or arg 1))))
+	    non-clash-skip regexp-skip)
 	    
 	(ediff-visible-region)
 	(or (>= n ediff-number-of-differences)
 	    (setq regexp-skip (funcall ediff-skip-diff-region-function n))
+	    ;; this won't exec if regexp-skip is t
+	    (setq non-clash-skip (ediff-merge-region-is-non-clash n))
 	    (ediff-install-fine-diff-if-necessary n))
 	(while (and (< n ediff-number-of-differences)
 		    (or
 		     ;; regexp skip
 		     regexp-skip
 		     ;; skip clashes, if necessary
-		     (and ediff-show-clashes-only
-			  (string-match "prefer"
-					(or (ediff-get-state-of-merge n) "")))
+		     non-clash-skip
 		     ;; skip difference regions that differ in white space
 		     (and ediff-ignore-similar-regions
 			  (eq (ediff-no-fine-diffs-p n) t))))
@@ -1608,6 +1654,8 @@ With a prefix argument, go forward that many differences."
 	      (message "Skipped over region %d and counting ..."  n))
 	  (or (>= n ediff-number-of-differences)
 	      (setq regexp-skip (funcall ediff-skip-diff-region-function n))
+	      ;; this won't exec if regexp-skip is t
+	      (setq non-clash-skip (ediff-merge-region-is-non-clash n))
 	      (ediff-install-fine-diff-if-necessary n))
 	  )
 	(message "")
@@ -1622,21 +1670,21 @@ With a prefix argument, go back that many differences."
   (interactive "p")
   (ediff-barf-if-not-control-buffer)
   (if (> ediff-current-difference -1)
-      (let ((n (max -1 (- ediff-current-difference arg)))
-	    regexp-skip)
+      (let ((n (max -1 (- ediff-current-difference (or arg 1))))
+	    non-clash-skip regexp-skip)
 	    
 	(ediff-visible-region)
 	(or (< n 0)
 	    (setq regexp-skip (funcall ediff-skip-diff-region-function n))
+	    ;; this won't exec if regexp-skip is t
+	    (setq non-clash-skip (ediff-merge-region-is-non-clash n))
 	    (ediff-install-fine-diff-if-necessary n))
 	(while (and (> n -1)
 		    (or
 		     ;; regexp skip
 		     regexp-skip
 		     ;; skip clashes, if necessary
-		     (and ediff-show-clashes-only
-			  (string-match "prefer"
-					(or (ediff-get-state-of-merge n) "")))
+		     non-clash-skip
 		     ;; skip difference regions that differ in white space
 		     (and ediff-ignore-similar-regions
 			  (eq (ediff-no-fine-diffs-p n) t))))
@@ -1645,6 +1693,8 @@ With a prefix argument, go back that many differences."
 	  (setq n (1- n))
 	  (or (< n 0)
 	      (setq regexp-skip (funcall ediff-skip-diff-region-function n))
+	      ;; this won't exec if regexp-skip is t
+	      (setq non-clash-skip (ediff-merge-region-is-non-clash n))
 	      (ediff-install-fine-diff-if-necessary n))
 	  )
 	(message "")
@@ -2287,6 +2337,7 @@ temporarily reverses the meaning of this variable."
   ;; restore buffer mode line id's in buffer-A/B/C
   (let ((control-buffer ediff-control-buffer)
 	(meta-buffer ediff-meta-buffer)
+	(session-number ediff-meta-session-number)
 	;; suitable working frame
 	(warp-frame (if (and (ediff-window-display-p) (eq ediff-grab-mouse t))
 			(cond ((window-live-p ediff-window-A) 
@@ -2351,7 +2402,7 @@ temporarily reverses the meaning of this variable."
     (or ediff-keep-variants (ediff-janitor 'ask)))
 
   (run-hooks 'ediff-quit-hook)
-  (ediff-cleanup-meta-buffer meta-buffer)
+  (ediff-update-meta-buffer meta-buffer nil session-number)
 
   ;; warp mouse into a working window
   (setq warp-frame  ; if mouse is over a reasonable frame, use it
@@ -2364,7 +2415,7 @@ temporarily reverses the meaning of this variable."
 			  2 1))
 
   (if (ediff-buffer-live-p meta-buffer)
-      (ediff-show-meta-buffer meta-buffer))
+      (ediff-show-meta-buffer meta-buffer session-number))
   ))
 
 ;; Returns frame under mouse, if this frame is not a minibuffer
@@ -2387,11 +2438,11 @@ temporarily reverses the meaning of this variable."
   
   
 (defun ediff-delete-temp-files ()
-  (if (stringp ediff-temp-file-A)
+  (if (and (stringp ediff-temp-file-A) (file-exists-p ediff-temp-file-A))
       (delete-file ediff-temp-file-A))
-  (if (stringp ediff-temp-file-B)
+  (if (and (stringp ediff-temp-file-B) (file-exists-p ediff-temp-file-B))
       (delete-file ediff-temp-file-B))
-  (if (stringp ediff-temp-file-C)
+  (if (and (stringp ediff-temp-file-C) (file-exists-p ediff-temp-file-C))
       (delete-file ediff-temp-file-C)))
   
 
@@ -2534,6 +2585,7 @@ only if this merge job is part of a group, i.e., was invoked from within
 	  (if show-file
 	      (progn
 		(message "Merge buffer saved in: %s" file)
+		(set-buffer-modified-p nil)
 		(sit-for 2)))
 	  (if (and
 	       (not save-and-continue)
@@ -2929,10 +2981,6 @@ Hit \\[ediff-recenter] to reset the windows afterward."
 	  (revert-buffer t t))
       (error "Buffer out of sync for file %s" buffer-file-name))))
 
-
-(defun ediff-file-compressed-p (file)
-  (require 'jka-compr)
-  (string-match (jka-compr-build-file-regexp) file))
 
 (defun ediff-filename-magic-p (file)
   (or (ediff-file-compressed-p file)

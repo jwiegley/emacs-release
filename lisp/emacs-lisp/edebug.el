@@ -1,9 +1,10 @@
 ;;; edebug.el --- a source-level debugger for Emacs Lisp
 
-;; Copyright (C) 1988,'89,'90,'91,'92,'93,'94,'95,1997
-;;       Free Software Foundation, Inc
+;; Copyright (C) 1988, 89, 90, 91, 92, 93, 94, 95, 1997
+;;       Free Software Foundation, Inc.
 
-;; Author: Daniel LaLiberte <liberte@cs.uiuc.edu>
+;; Author: Daniel LaLiberte <dlaliberte@gte.com>
+;; Maintainer: FSF
 ;; Keywords: lisp, tools, maint
 
 ;; This file is part of GNU Emacs.
@@ -32,51 +33,24 @@
 ;; expressions, trap errors normally caught by debug, and display a
 ;; debug style backtrace.
 
-;;; Installation
-;; =============
+;;; Minimal Instructions
+;; =====================
 
-;; Put edebug.el in some directory in your load-path and
-;; byte-compile it.  Also read the beginning of edebug-epoch.el, 
-;; cl-specs.el, and edebug-cl-read.el if they apply to you.
-
-;; Unless you are using Emacs 19 which is already set up to use Edebug,
-;; put the following forms in your .emacs file.
-;; (define-key emacs-lisp-mode-map "\C-xx" 'edebug-eval-top-level-form)
-;; (autoload 'edebug-eval-top-level-form "edebug")
+;; First evaluate a defun with C-M-x, then run the function.  Step
+;; through the code with SPC, mark breakpoints with b, go until a
+;; breakpoint is reached with g, and quit execution with q.  Use the
+;; "?" command in edebug to describe other commands. 
+;; See the Emacs Lisp Reference Manual for more details.
 
 ;; If you wish to change the default edebug global command prefix, change:
 ;; (setq edebug-global-prefix "\C-xX")
 
-;; Other options, are described in the manual.
-
-;; In previous versions of Edebug, users were directed to set
-;; `debugger' to `edebug-debug'.  This is no longer necessary
-;; since Edebug automatically sets it whenever Edebug is active.
-
-;;; Minimal Instructions
-;; =====================
-
-;; First evaluate a defun with C-xx, then run the function.  Step
-;; through the code with SPC, mark breakpoints with b, go until a
-;; breakpoint is reached with g, and quit execution with q.  Use the
-;; "?" command in edebug to describe other commands.  See edebug.tex
-;; or the Emacs 19 Lisp Reference Manual for more instructions.
-
-;; Send me your enhancements, ideas, bugs, or fixes.
-;; For bugs, you can call edebug-submit-bug-report if you have reporter.el.
-;; There is an edebug mailing list if you want to keep up
-;; with the latest developments. Requests to: edebug-request@cs.uiuc.edu
-
-;; Daniel LaLiberte   217-398-4114
-;; University of Illinois, Urbana-Champaign
-;; Department of Computer Science
-;; 1304 W Springfield
-;; Urbana, IL  61801
-
-;; uiucdcs!liberte
-;; liberte@cs.uiuc.edu
-
-;; For the early revision history, see edebug-history.
+;; Edebug was written by
+;; Daniel LaLiberte
+;; GTE Labs
+;; 40 Sylvan Rd
+;; Waltham, MA  02254
+;; dlaliberte@gte.com
 
 ;;; Code:
 
@@ -92,7 +66,7 @@
 
 ;;; Bug reporting
 
-(defconst edebug-maintainer-address "liberte@cs.uiuc.edu")
+(defconst edebug-maintainer-address "bug-gnu-emacs@gnu.org")
 
 (defun edebug-submit-bug-report ()
   "Submit, via mail, a bug report on edebug."
@@ -106,7 +80,6 @@
                'edebug-all-defs
                'edebug-all-forms
                'edebug-eval-macro-args
-               'edebug-stop-before-symbols
                'edebug-save-windows
                'edebug-save-displayed-buffer-points
                'edebug-initial-mode
@@ -134,6 +107,11 @@ using but only when you also use Edebug."
   :type 'hook
   :group 'edebug)
 
+;; edebug-all-defs and edebug-all-forms need to be autoloaded
+;; because the byte compiler binds them; as a result, if edebug
+;; is first loaded for a require in a compilation, they will be left unbound.
+
+;;;###autoload
 (defcustom edebug-all-defs nil
   "*If non-nil, evaluation of any defining forms will instrument for Edebug.
 This applies to `eval-defun', `eval-region', `eval-buffer', and
@@ -147,6 +125,11 @@ variable.  You may wish to make it local to each buffer with
   :type 'boolean
   :group 'edebug)
 
+;; edebug-all-defs and edebug-all-forms need to be autoloaded
+;; because the byte compiler binds them; as a result, if edebug
+;; is first loaded for a require in a compilation, they will be left unbound.
+
+;;;###autoload
 (defcustom edebug-all-forms nil
   "*Non-nil evaluation of all forms will instrument for Edebug.
 This doesn't apply to loading or evaluations in the minibuffer.
@@ -160,17 +143,7 @@ If this variable is nil, the default, Edebug will *not* wrap
 macro call arguments as if they will be evaluated.  
 For each macro, a `edebug-form-spec' overrides this option.
 So to specify exceptions for macros that have some arguments evaluated
-and some not, you should specify an `edebug-form-spec'.
-
-This option is going away soon."
-  :type 'boolean
-  :group 'edebug)
-
-(defcustom edebug-stop-before-symbols nil
-  "*Non-nil causes Edebug to stop before symbols as well as after.  
-In any case, a breakpoint or interrupt may stop before a symbol.
-
-This option is going away soon."
+and some not, you should specify an `edebug-form-spec'."
   :type 'boolean
   :group 'edebug)
 
@@ -1284,8 +1257,6 @@ This controls how we read comma constructs.")
   ;; given FORM.  Looks like: 
   ;; (edebug-after (edebug-before BEFORE-INDEX) AFTER-INDEX FORM)
   ;; Also increment the offset index for subsequent use.
-  ;; if (not edebug-stop-before-symbols) and form is a symbol,
-  ;; then don't call edebug-before.
   (list 'edebug-after 
 	(list 'edebug-before before-index)
 	after-index form))
@@ -1478,14 +1449,6 @@ expressions; a `progn' form will be returned enclosing these forms."
 	   ((or (memq form '(t nil))
 		(and (fboundp 'edebug-keywordp) (edebug-keywordp form)))
 	    form)
-
-	   ;; This option may go away.
-	   (edebug-stop-before-symbols
-	    (edebug-make-before-and-after-form 
-	     (edebug-inc-offset (car offset))
-	     form
-	     (edebug-inc-offset (cdr offset))
-	     ))
 
 	   (t ;; just a variable
 	    (edebug-make-after-form form (edebug-inc-offset (cdr offset))))))
@@ -2924,7 +2887,7 @@ MSG is printed after `::::} '."
 	    ;; Remember selected-window after recursive-edit.
 	    ;;      (setq edebug-inside-window (selected-window))
 
-	    (store-match-data edebug-outside-match-data)
+	    (set-match-data edebug-outside-match-data)
 
 	    ;; Recursive edit may have changed buffers,
 	    ;; so set it back before exiting let.
@@ -3583,7 +3546,7 @@ Return the result of the last expression."
 
        (set-buffer edebug-buffer)  ; why?
        ;; (use-local-map edebug-outside-map)
-       (store-match-data edebug-outside-match-data)
+       (set-match-data edebug-outside-match-data)
        ;; Restore outside context.
        (let (;; (edebug-inside-map (current-local-map)) ;; restore map??
 	     (last-command-char edebug-outside-last-command-char)
@@ -3737,7 +3700,7 @@ Return the result of the last expression."
 
 (defun edebug-compute-previous-result (edebug-previous-value)
   (setq edebug-previous-result
-	(if (and (numberp edebug-previous-value)
+	(if (and (integerp edebug-previous-value)
 		 (< edebug-previous-value 256)
 		 (>= edebug-previous-value 0))
 	    (format "Result: %s = %s" edebug-previous-value
@@ -4052,7 +4015,7 @@ May only be called from within edebug-recursive-edit."
 
 
 (defvar edebug-eval-mode-map nil
-  "Keymap for edebug-eval-mode.  Superset of lisp-interaction-mode.")
+  "Keymap for Edebug Eval mode.  Superset of Lisp Interaction mode.")
 
 (if edebug-eval-mode-map
     nil
@@ -4083,7 +4046,7 @@ Global commands prefixed by global-edebug-prefix:
 "
   (lisp-interaction-mode)
   (setq major-mode 'edebug-eval-mode)
-  (setq mode-name "Edebug-Eval")
+  (setq mode-name "Edebug Eval")
   (use-local-map edebug-eval-mode-map))
 
 ;;; Interface with standard debugger.

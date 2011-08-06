@@ -1,7 +1,13 @@
 This is Info file ../info/ccmode, produced by Makeinfo version 1.68
 from the input file cc-mode.texi.
 
-   Copyright (C) 1995, 1996 Free Software Foundation, Inc.
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* CC mode: (ccmode).	The GNU Emacs mode for editing C, C++, Objective-C
+			  and Java code.
+END-INFO-DIR-ENTRY
+
+   Copyright (C) 1995,96,97,98 Free Software Foundation, Inc.
 
 
 File: ccmode,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
@@ -33,20 +39,21 @@ Introduction
 ************
 
    Welcome to CC Mode.  This is a GNU Emacs mode for editing files
-containing C, C++, Objective-C, Java, and IDL code.  This incarnation of
-the mode is descendant from `c-mode.el' (also called "Boring Old C
-Mode" or BOCM `:-)', and `c++-mode.el' version 2, which I have been
-maintaining since 1992.  CC Mode represents a significant milestone in
-the mode's life.  It has been fully merged back with Emacs 19's
-`c-mode.el'. Also a new, more intuitive and flexible mechanism for
+containing C, C++, Objective-C, Java, and CORBA IDL code.  This
+incarnation of the mode is descendant from `c-mode.el' (also called
+"Boring Old C Mode" or BOCM `:-)', and `c++-mode.el' version 2, which I
+have been maintaining since 1992.  CC Mode represents a significant
+milestone in the mode's life.  It has been fully merged back with Emacs
+19's `c-mode.el'. Also a new, more intuitive and flexible mechanism for
 controlling indentation has been developed.
 
    CC Mode supports the editing of K&R and ANSI C, "ARM" (1) C++,
-Objective-C, Java and IDL(2) files.  In this way, you can easily set up
-consistent coding styles for use in editing all C, C++, Objective-C,
-Java and IDL programs. CC Mode does *not* handle font-locking (a.k.a.
-syntax coloring, keyword highlighting) or anything of that nature, for
-any of these modes.  Font-locking is handled by other Emacs packages.
+Objective-C, Java and CORBA's Interface Definition Language files.  In
+this way, you can easily set up consistent coding styles for use in
+editing all C, C++, Objective-C, Java and IDL programs. CC Mode does
+*not* handle font-locking (a.k.a. syntax coloring, keyword
+highlighting) or anything of that nature, for any of these modes.
+Font-locking is handled by other Emacs packages.
 
    This manual will describe the following:
 
@@ -80,8 +87,6 @@ beta stages of CC Mode's development.
 
    (1) "The Annotated C++ Reference Manual", by Ellis and Stroustrup.
 
-   (2) CORBA's Interface Definition Language
-
 
 File: ccmode,  Node: Getting Connected,  Next: New Indentation Engine,  Prev: Introduction,  Up: Top
 
@@ -96,8 +101,7 @@ the latest CC Mode release and may want to upgrade your copy.
 `README' file for installation details.  CC Mode may not work with
 older versions of Emacs or XEmacs.  See the CC Mode release notes Web
 pages for the latest information on Emacs version and package
-compatibility, etc.  The Web page locations are outlined in *Note
-Getting the latest CC Mode release::.
+compatibility (see *Note Getting the latest CC Mode release::).
 
    *Note that CC Mode no longer works with Emacs 18!*  The
 `cc-mode-18.el' file is no longer distributed with CC Mode.  If you
@@ -235,10 +239,9 @@ appear in the buffer, of course!
    (3) With a universal argument (i.e. `C-u C-c C-s') the analysis is
 inserted into the buffer as a comment on the current line.
 
-   (4) A "substatement" indicates the line after a conditional
-statement, such as `if', `else', `while', `do', `switch', or `for' in
-C.  A "substatement block" is a brace block following one of those
-conditionals.
+   (4) A "substatement" is the line after a conditional statement, such
+as `if', `else', `while', `do', `switch', etc.  A "substatement block"
+is a brace block following one of these conditional statements.
 
 
 File: ccmode,  Node: Indentation Calculation,  Prev: Syntactic Analysis,  Up: New Indentation Engine
@@ -246,10 +249,10 @@ File: ccmode,  Node: Indentation Calculation,  Prev: Syntactic Analysis,  Up: Ne
 Indentation Calculation
 =======================
 
-   Indentation for the current line is calculated using the syntactic
-component list derived in step 1 above (see *Note Syntactic Analysis::).
-Each component contributes to the final total indentation of the line in
-two ways.
+   Indentation for a line is calculated using the syntactic component
+list derived in step 1 above (see *Note Syntactic Analysis::).  Each
+component contributes to the final total indentation of the line in two
+ways.
 
    First, the syntactic symbols are looked up in the `c-offsets-alist'
 variable, which is an association list of syntactic symbols and the
@@ -271,7 +274,7 @@ our first example again:
          5:     b = tmp;
          6: }
 
-   Let's say point is on line 3 and we hit the <TAB> key to re-indent
+   Let's say point is on line 3 and we hit the `TAB' key to re-indent
 the line.  Remember that the syntactic component list for that line is:
 
      ((defun-block-intro . 29))
@@ -405,9 +408,9 @@ the following conditions apply:
 
    ---------- Footnotes ----------
 
-   (1) A "literal" is defined as any comment, string, or cpp macro
-definition.  These constructs are also known as "syntactic whitespace"
-since they are usually ignored when scanning C code.
+   (1) A "literal" is defined as any comment, string, or C preprocessor
+macro definition.  These constructs are also known as "syntactic
+whitespace" since they are usually ignored when scanning C code.
 
 
 File: ccmode,  Node: Hanging Braces,  Next: Hanging Colons,  Up: Auto-newline insertion
@@ -422,7 +425,7 @@ re-indentation of the line the brace was typed on, and second, it will
 add various newlines before and/or after the typed brace.
 Re-indentation occurs automatically whenever the electric behavior is
 enabled.  If the brace ends up on a line other than the one it was typed
-on, then that line is also indented according to `c-offsets-alist'.
+on, then that line is also re-indented.
 
    The insertion of newlines is controlled by the
 `c-hanging-braces-alist' variable.  This variable contains a mapping
@@ -431,9 +434,10 @@ insert a newline.  The syntactic symbols that are useful for this list
 are: `class-open', `class-close', `defun-open', `defun-close',
 `inline-open', `inline-close', `brace-list-open', `brace-list-close',
 `brace-list-intro', `brace-list-entry', `block-open', `block-close',
-`substatement-open', `statement-case-open', `extern-lang-open', and
-`extern-lang-close'.  *Note Syntactic Symbols:: for a more detailed
-description of these syntactic symbols.
+`substatement-open', `statement-case-open', `extern-lang-open',
+`extern-lang-close', `namespace-open', and `namespace-close'.  *Note
+Syntactic Symbols:: for a more detailed description of these syntactic
+symbols.
 
    The value associated with each syntactic symbol in this association
 list is called an ACTION which can be either a function or a list.
@@ -521,8 +525,8 @@ character on a line.  In this case, the variable
 `c-electric-pound-behavior' is consulted for the electric behavior.
 This variable takes a list value, although the only element currently
 defined is `alignleft', which tells this command to force the `#'
-character into column zero.  This is useful for entering cpp macro
-definitions.
+character into column zero.  This is useful for entering C preprocessor
+macro definitions.
 
    Stars and slashes (i.e. `*' and `/', `c-electric-star' and
 `c-electric-slash' respectively) are also electric under certain
@@ -595,7 +599,7 @@ clean up, as indicated by these symbols:
               } else {
 
    * `brace-elseif-brace' -- similar to the `brace-else-brace'
-     clean-up, but cleans up `} else if (...){' constructs.  For
+     clean-up, but this cleans up `} else if (...) {' constructs.  For
      example:
 
           void spam(int i)
@@ -672,48 +676,41 @@ extremely useful.  In fact, you might find yourself wanting
 hungry-delete in *all* your editing modes!
 
    In a nutshell, when hungry-delete mode is enabled, hitting the
-`Backspace' key(1) will consume all preceding whitespace, including
+<Backspace> key(1) will consume all preceding whitespace, including
 newlines and tabs.  This can really cut down on the number of
-`Backspace''s you have to type if, for example you made a mistake on
+<Backspace>'s you have to type if, for example you made a mistake on
 the preceding line.
 
-   By default, when you hit the `Backspace' key CC Mode runs the
+   By default, when you hit the <Backspace> key CC Mode runs the
 command `c-electric-backspace', which deletes text in the backwards
-direction.  When deleting a single character, or when `Backspace' is
+direction.  When deleting a single character, or when <Backspace> is
 hit in a literal (see *Note Auto-newline insertion::), or when
 hungry-delete mode is disabled, the function contained in the
 `c-backspace-function' variable is called with one argument (the number
 of characters to delete).  This variable is set to
 `backward-delete-char-untabify' by default.
 
-   Similarly, hitting the `DEL' key runs the command
-`c-electric-delete'.  Some versions of Emacs(2) support separation of
-the `Backspace' and `DEL' keys, so that `DEL' will delete in the
-forward direction when `delete-key-deletes-forward' is non-`nil'.  If
-your Emacs supports this, and `delete-key-deletes-forward' is
-non-`nil', and hungry-delete mode is enabled, then `DEL' will consume
-all whitespace following point.  When deleting a single character, or
-when `DEL' is hit in a literal, or when hungry-delete mode is disabled,
+   Similarly, hitting the <Delete> key runs the command
+`c-electric-delete'.  When deleting a single character, or when
+<Delete> is hit in a literal, or when hungry-delete mode is disabled,
 the function contained in the `c-delete-function' variable is called
 with one argument (the number of characters to delete).  This variable
 is set to `delete-char' by default.
 
    However, if `delete-key-deletes-forward' is `nil', or your Emacs
-does not support separation of `Backspace' and `DEL', then
+does not support separation of <Backspace> and <DEL>, then
 `c-electric-delete' simply calls `c-electric-backspace'.
 
    ---------- Footnotes ----------
 
-   (1) I say "hit the `Backspace' key" but what I really mean is "when
-Emacs receives the `BackSpace' keysym event".  The difference usually
+   (1) I say "hit the <Backspace> key" but what I really mean is "when
+Emacs receives the `BackSpace' key event".  The difference usually
 isn't significant to most users, but advanced users will realize that
 under window systems such as X, any physical key (keycap) on the
-keyboard can be configured to generate any keysym.  Also, the use of
-Emacs on TTYs will affect which keycap generates which keysym.  From a
-pedantic point of view, here we are only concerned with the keysym
-event that Emacs receives.
-
-   (2) As of this writing, 20-Jun-1997, only XEmacs 20.3 supports this.
+keyboard can be configured to generate any keysym, and thus any Emacs
+key event.  Also, the use of Emacs on TTYs will affect which keycap
+generates which key event.  From a pedantic point of view, here we are
+only concerned with the key event that Emacs receives.
 
 
 File: ccmode,  Node: Auto-fill mode interaction,  Prev: Hungry-deletion of whitespace,  Up: Minor Modes
@@ -785,7 +782,9 @@ Mode, and much more radical improvements are planned, but for now you
 need to be aware of this (1).  Some provision has been made to at least
 inform you as to the progress of the re-indentation.  The variable
 `c-progress-interval' controls how often a progress message is
-displayed.  Set this variable to `nil' to inhibit progress messages.
+displayed.  Set this variable to `nil' to inhibit progress messages,
+including messages normally printed when indentation is started and
+completed.
 
    Also, except as noted below, re-indentation is always driven by the
 same mechanisms that control on-the-fly indentation of code.  *Note New
@@ -844,6 +843,30 @@ Other Commands
 
    CC Mode contains other useful command for moving around in C code.
 
+`M-x c-beginning-of-defun'
+     Moves point back to the least-enclosing brace.  This function is
+     analogous to the Emacs built-in command `beginning-of-defun',
+     except it eliminates the constraint that the top-level opening
+     brace must be in column zero.  See `beginning-of-defun' for more
+     information.
+
+     Depending on the coding style being used, you might prefer
+     `c-beginning-of-defun' to `beginning-of-defun'.  If so, consider
+     binding `C-M-a' to the former instead.  For backwards
+     compatibility reasons, the default binding remains in effect.
+
+`M-x c-end-of-defun'
+     Moves point to the end of the current top-level definition.  This
+     function is analogous to the Emacs built-in command `end-of-defun',
+     except it eliminates the constraint that the top-level opening
+     brace of the defun must be in column zero.  See
+     `beginning-of-defun' for more information.
+
+     Depending on the coding style being used, you might prefer
+     `c-end-of-defun' to `end-of-defun'.  If so, consider binding
+     `C-M-e' to the former instead.  For backwards compatibility
+     reasons, the default binding remains in effect.
+
 `C-c C-u (c-up-conditional)'
      Move point back to the containing preprocessor conditional,
      leaving the mark behind.  A prefix argument acts as a repeat
@@ -865,31 +888,34 @@ Other Commands
 `M-a (c-beginning-of-statement)'
      Move point to the beginning of the innermost C statement.  If
      point is already at the beginning of a statement, it moves to the
-     beginning of the preceding statement.  With prefix argument N,
-     move back N - 1 statements.
+     beginning of the closest preceding statement, even if that means
+     moving into a block (you can use `M-C-b' to move over a balanced
+     block).  With prefix argument N, move back N - 1 statements.
 
-     If point is within a string or comment, or at the end of a
-     comment, this command moves by sentences instead of statements.
+     If point is within a comment, or next to a comment, this command
+     moves by sentences instead of statements.
 
      When called from a program, this function takes three optional
      arguments: the numeric prefix argument, a buffer position limit
-     (don't move back before that place), and a flag to indicate
-     whether movement should be by statements (if `t') or sentence (if
-     non-`nil').
+     (used as a starting point for syntactic parsing and as a limit for
+     backward movement), and a flag to indicate whether movement should
+     be by statements (if `nil') or sentence (if non-`nil').
 
 `M-e (c-end-of-statement)'
      Move point to the end of the innermost C statement.  If point is
-     at the end of a statement, move to the end of the next statement.
-     With prefix argument N, move forward N - 1 statements.
+     at the end of a statement, move to the end of the next statement,
+     even if it's inside a nested block (use `M-C-f' to move to the
+     other side of the block).  With prefix argument N, move forward N
+     - 1 statements.
 
-     If point is within a string or comment, or at the end of a
-     comment, this command moves by sentences instead of statements.
+     If point is within a comment, or next to a comment, this command
+     moves by sentences instead of statements.
 
      When called from a program, this function takes three optional
      arguments: the numeric prefix argument, a buffer position limit
-     (don't move back before that place), and a flag to indicate
-     whether movement should be by statements (if `t') or sentence (if
-     non-`nil').
+     (used as a starting point for syntactic parsing and as a limit for
+     backward movement), and a flag to indicate whether movement should
+     be by statements (if `nil') or sentence (if non-`nil').
 
 `M-x c-forward-into-nomenclature'
      A popular programming style, especially for object-oriented
@@ -1136,7 +1162,7 @@ default.
 might want to make the CC Mode style variables have buffer local
 values.  If you do this, then you will need to set any CC Mode style
 variables in a hook function (e.g. off of `c-mode-common-hook' instead
-of at the top level of your `.emacs' file.  The recommended way to do
+of at the top level of your `.emacs' file).  The recommended way to do
 this is to set the variable `c-style-variables-are-local-p' to `t'
 *before* CC Mode is loaded into your Emacs session.
 
@@ -1206,9 +1232,7 @@ variety of coding styles, and as programmers come and go, there could
 be a number of styles in use.  For this reason, CC Mode makes it
 convenient for you to set up logical groupings of customizations called
 "styles", associate a single name for any particular style, and pretty
-easily start editing new or existing code using these styles.  This
-section describes how to set up styles and how to edit your C code
-using styles.
+easily start editing new or existing code using these styles.
 
 * Menu:
 

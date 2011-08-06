@@ -1,6 +1,38 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
 
 File: emacs,  Node: Entering Emacs,  Next: Exiting,  Prev: Text Characters,  Up: Top
 
@@ -155,6 +187,7 @@ use the tutorial, run Emacs and type `Control-h t'
 * Continuation Lines::  Lines too wide for the screen.
 * Position Info::       What page, line, row, or column is point on?
 * Arguments::	        Numeric arguments for repeating a command.
+* Repeating::           A short-cut for repeating the previous command.
 
 
 File: emacs,  Node: Inserting Text,  Next: Moving Point,  Up: Basic
@@ -374,6 +407,9 @@ tedious.
 `C-_'
      The same.
 
+`C-u C-x u'
+     Undo one batch of changes in the region.
+
    The command `C-x u' or `C-_' is how you undo.  The first time you
 give this command, it undoes the last change.  Point moves back to
 where it was before the command that made the change.
@@ -388,6 +424,16 @@ commands.  Starting from that moment, the previous undo commands become
 ordinary changes that you can undo.  Thus, to redo changes you have
 undone, type `C-f' or any other command that will harmlessly break the
 sequence of undoing, then type more undo commands.
+
+   Ordinary undo applies to all changes made in the current buffer.  You
+can also perform "selective undo", limited to the current region.  To
+do this, specify the region you want, then run the `undo' command with
+a prefix argument (the value does not matter): `C-u C-x u' or `C-u
+C-_'.  This undoes the most recent change in the region.  To undo
+further changes in the same region, repeat the `undo' command (no
+prefix argument is needed).  In Transient Mark mode, any use of `undo'
+when there is an active region performs selective undo; you do not need
+a prefix argument.
 
    If you notice that a buffer has been modified accidentally, the
 easiest way to recover is to type `C-_' repeatedly until the stars
@@ -648,7 +694,7 @@ output might look like this:
      point=26957 of 26956(100%)  column 0
 
 
-File: emacs,  Node: Arguments,  Prev: Position Info,  Up: Basic
+File: emacs,  Node: Arguments,  Next: Repeating,  Prev: Position Info,  Up: Basic
 
 Numeric Arguments
 =================
@@ -725,6 +771,27 @@ distinguish these arguments from minibuffer arguments that come after
 the command.
 
 
+File: emacs,  Node: Repeating,  Prev: Arguments,  Up: Basic
+
+Repeating a Command
+===================
+
+   The command `C-x z' (`repeat') provides another way to repeat an
+Emacs command many times.  This command repeats the previous Emacs
+command, whatever that was.  Repeating a command uses the same arguments
+that were used before; it does not read new arguments each time.
+
+   To repeat the command more than once, type additional `z''s: each
+`z' repeats the command one more time.  Repetition ends when you type a
+character other than `z', or press a mouse button.
+
+   For example, suppose you type `C-u 2 0 C-d' to delete 20 characters.
+You can repeat that command (including its argument) three additional
+times, to delete a total of 80 characters, by typing `C-x z z z'.  The
+first `C-x z' repeats the command once, and each subsequent `z' repeats
+it once again.
+
+
 File: emacs,  Node: Minibuffer,  Next: M-x,  Prev: Basic,  Up: Top
 
 The Minibuffer
@@ -746,10 +813,10 @@ colon.
 
    Sometimes a "default argument" appears in parentheses after the
 colon; it too is part of the prompt.  The default will be used as the
-argument value if you enter an empty argument (e.g., just type <RET>).
-For example, commands that read buffer names always show a default,
-which is the name of the buffer that will be used if you type just
-<RET>.
+argument value if you enter an empty argument (for example, just type
+<RET>).  For example, commands that read buffer names always show a
+default, which is the name of the buffer that will be used if you type
+just <RET>.
 
    The simplest way to enter a minibuffer argument is to type the text
 you want, terminated by <RET> which exits the minibuffer.  You can
@@ -855,6 +922,13 @@ minibuffer window expands vertically as necessary to hold the text that
 you put in the minibuffer.  Use `M-x resize-minibuffer-mode' to enable
 or disable this minor mode (*note Minor Modes::.).
 
+   Scrolling works specially in the minibuffer window.  When the
+minibuffer is just one line high, and it contains a long line of text
+that won't fit on the screen, scrolling automatically maintains an
+overlap of a certain number of characters from one continuation line to
+the next.  The variable `minibuffer-scroll-overlap' specifies how many
+characters of overlap; the default is 20.
+
    If while in the minibuffer you issue a command that displays help
 text of any sort in another window, you can use the `C-M-v' command
 while in the minibuffer to scroll the help text.  This lasts until you
@@ -916,14 +990,14 @@ Completion Example
 
    A concrete example may help here.  If you type `M-x au <TAB>', the
 <TAB> looks for alternatives (in this case, command names) that start
-with `au'.  There are only two: `auto-fill-mode' and `auto-save-mode'.
-These are the same as far as `auto-', so the `au' in the minibuffer
-changes to `auto-'.
+with `au'.  There are several, including `auto-fill-mode' and
+`auto-save-mode'--but they are all the same as far as `auto-', so the
+`au' in the minibuffer changes to `auto-'.
 
    If you type <TAB> again immediately, there are multiple
-possibilities for the very next character--it could be `s' or `f'--so
-no more characters are added; instead, <TAB> displays a list of all
-possible completions in another window.
+possibilities for the very next character--it could be any of
+`cfilrs'--so no more characters are added; instead, <TAB> displays a
+list of all possible completions in another window.
 
    If you go on to type `f <TAB>', this <TAB> sees `auto-f'.  The only
 command name starting this way is `auto-fill-mode', so completion fills

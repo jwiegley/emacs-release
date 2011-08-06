@@ -84,7 +84,6 @@ insert and edit header fields using ordinary editing commands.
 --text follows this line--
 @end example
 
-@vindex mail-header-separator
 @noindent
 is a special delimiter that separates the headers you have specified from
 the text.  Whatever follows this line is the text of the message; the
@@ -96,7 +95,7 @@ Here is an example of what the headers and text in the mail buffer
 might look like.
 
 @example
-To: gnu@@prep.ai.mit.edu
+To: gnu@@gnu.org
 CC: lungfish@@spam.org, byob@@spam.org
 Subject: The Emacs Manual
 --Text follows this line--
@@ -149,7 +148,7 @@ is in Rmail format, Emacs writes the message in Rmail format; otherwise,
 Emacs writes the message in system mail file format.
 
 @vindex mail-archive-file-name
-To put a fixed file name  in the @samp{FCC} field each time you start
+To put a fixed file name in the @samp{FCC} field each time you start
 editing an outgoing message, set the variable
 @code{mail-archive-file-name} to that file name.  Unless you remove the
 @samp{FCC} field before sending, the message will be written into that
@@ -214,13 +213,15 @@ yourself, Emacs puts in one for you.  The variable
 
 @table @code
 @item nil
-Just the email address, as in @samp{king@@grassland.com}.
+Use just the email address, as in @samp{king@@grassland.com}.
 @item parens
-Both email address and full name, as in @samp{king@@grassland.com (Elvis
+Use both email address and full name, as in @samp{king@@grassland.com (Elvis
 Parsley)}.
 @item angles
-Both email address and full name, as in @samp{Elvis Parsley
+Use both email address and full name, as in @samp{Elvis Parsley
 <king@@grassland.com>}.
+@item system-default
+Allow the system to insert the @samp{From} field.
 @end table
 
 @node Mail Aliases
@@ -249,11 +250,11 @@ spaces; if an address contains a space, quote the whole address with a
 pair of double-quotes.
 
 For instance, to make @code{maingnu} stand for
-@code{gnu@@prep.ai.mit.edu} plus a local address of your own, put in
+@code{gnu@@gnu.org} plus a local address of your own, put in
 this line:@refill
 
 @example
-alias maingnu gnu@@prep.ai.mit.edu local-gnu
+alias maingnu gnu@@gnu.org local-gnu
 @end example
 
   Emacs also recognizes include commands in @samp{.mailrc} files.
@@ -275,7 +276,7 @@ full address.  You can use it to define aliases in your @file{.emacs}
 file, like this:
 
 @example
-(define-mail-alias "maingnu" "gnu@@prep.ai.mit.edu")
+(define-mail-alias "maingnu" "gnu@@gnu.org")
 @end example
 
 @vindex mail-aliases
@@ -544,7 +545,9 @@ you send the message.
 
   You can also set @code{mail-signature} to a string; then that string
 is inserted automatically as your signature when you start editing a
-message to send.
+message to send.  If you set it to some other Lisp expression, the
+expression is evaluated each time, and its value (which should be a
+string) specifies the signature.
 
 @findex ispell-message
   You can do spelling correction on the message text you have written

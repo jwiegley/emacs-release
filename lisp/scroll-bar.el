@@ -62,7 +62,10 @@ that scroll bar position."
   "Non-nil means `set-scroll-bar-mode' should really do something.
 This is nil while loading `scroll-bar.el', and t afterward.")
 
-(defun set-scroll-bar-mode (ignore value)
+(defun set-scroll-bar-mode-1 (ignore value)
+  (set-scroll-bar-mode value))
+
+(defun set-scroll-bar-mode (value)
   "Set `scroll-bar-mode' to VALUE and put the new value into effect."
   (setq scroll-bar-mode value)
 
@@ -83,19 +86,19 @@ This is nil while loading `scroll-bar.el', and t afterward.")
 	 (list (cons 'vertical-scroll-bars scroll-bar-mode)))
 	(setq frames (cdr frames))))))
 
-(defcustom scroll-bar-mode 'left
+(defcustom scroll-bar-mode
+  (if (eq system-type 'windows-nt) 'right 'left)
   "*Specify whether to have vertical scroll bars, and on which side.
 Possible values are nil (no scroll bars), `left' (scroll bars on left)
 and `right' (scroll bars on right).
-When you set the variable in a Lisp program, it takes effect for new frames,
-and for existing frames when `toggle-scroll-bar' is used.
-When you set this with the customization buffer,
-it takes effect immediately for all frames."
+To set this variable in a Lisp program, use `set-scroll-bar-mode'
+to make it take real effect.
+Setting the variable with a customization buffer also takes effect."
   :type '(choice (const :tag "none (nil)")
 		 (const left)
 		 (const right))
   :group 'frames
-  :set 'set-scroll-bar-mode)
+  :set 'set-scroll-bar-mode-1)
 
 ;; We just set scroll-bar-mode, but that was the default.
 ;; If it is set again, that is for real.
@@ -111,10 +114,9 @@ turn off scroll bars; otherwise, turn on scroll bars."
   (if flag (setq flag (prefix-numeric-value flag)))
 
   ;; Tweedle the variable according to the argument.
-  (set-scroll-bar-mode nil
-		       (if (null flag) (not scroll-bar-mode)
+  (set-scroll-bar-mode (if (null flag) (not scroll-bar-mode)
 			 (and (or (not (numberp flag)) (>= flag 0))
-			      'left))))
+			      (if (eq system-type 'windows-nt) 'right 'left)))))
 
 (defun toggle-scroll-bar (arg)
   "Toggle whether or not the selected frame has vertical scroll bars.
@@ -126,11 +128,14 @@ when they are turned on; if it is nil, they go on the left."
       (setq arg
 	    (if (cdr (assq 'vertical-scroll-bars
 			   (frame-parameters (selected-frame))))
-		-1 1)))
-  (modify-frame-parameters (selected-frame)
-			   (list (cons 'vertical-scroll-bars
-				       (if (> arg 0)
-					   (or scroll-bar-mode 'left))))))
+		-1 1))
+    (setq arg (prefix-numeric-value arg)))
+  (modify-frame-parameters
+   (selected-frame)
+   (list (cons 'vertical-scroll-bars
+	       (if (> arg 0)
+		   (or scroll-bar-mode
+		       (if (eq system-type 'windows-nt) 'right 'left)))))))
 
 (defun toggle-horizontal-scroll-bar (arg)
   "Toggle whether or not the selected frame has horizontal scroll bars.
@@ -211,61 +216,70 @@ EVENT should be a scroll bar click or drag event."
 If you click outside the slider, the window scrolls to bring the slider there."
   (interactive "e")
   (let* (done
-	 (echo-keystrokes 0))
-    (or point-before-scroll
-	(setq point-before-scroll (point)))
-    ;; Our scrolling can move point; don't let that clear point-before-scroll.
-    (let (point-before-scroll)
-      (scroll-bar-drag-1 event)
-      (track-mouse
-	(while (not done)
-	  (setq event (read-event))
-	  (if (eq (car-safe event) 'mouse-movement)
-	      (setq event (read-event)))
-	  (cond ((eq (car-safe event) 'scroll-bar-movement)
-		 (scroll-bar-drag-1 event))
-		(t
-		 ;; Exit when we get the drag event; ignore that event.
-		 (setq done t)))))
-      (sit-for 0))))
+	 (echo-keystrokes 0)
+	 (end-position (event-end event))
+	 (window (nth 0 end-position))
+	 (before-scroll))
+    (with-current-buffer (window-buffer window)
+      (setq before-scroll point-before-scroll))
+    (save-selected-window
+      (select-window window)
+      (setq before-scroll
+	    (or before-scroll (point))))
+    (scroll-bar-drag-1 event)
+    (track-mouse
+      (while (not done)
+	(setq event (read-event))
+	(if (eq (car-safe event) 'mouse-movement)
+	    (setq event (read-event)))
+	(cond ((eq (car-safe event) 'scroll-bar-movement)
+	       (scroll-bar-drag-1 event))
+	      (t
+	       ;; Exit when we get the drag event; ignore that event.
+	       (setq done t)))))
+    (sit-for 0)
+    (with-current-buffer (window-buffer window)
+      (setq point-before-scroll before-scroll))))
 
 (defun scroll-bar-scroll-down (event)
   "Scroll the window's top line down to the location of the scroll bar click.
 EVENT should be a scroll bar click."
   (interactive "e")
-  (let ((old-selected-window (selected-window)))
-    (unwind-protect
-	(progn
-	  (let* ((end-position (event-end event))
-		 (window (nth 0 end-position))
-		 (portion-whole (nth 2 end-position)))
-	    (let (point-before-scroll)
-	      (select-window window))
-	    (or point-before-scroll
-		(setq point-before-scroll (point)))
-	    (let (point-before-scroll)
-	      (scroll-down
-	       (scroll-bar-scale portion-whole (1- (window-height)))))))
-      (select-window old-selected-window))))
+  (let* ((end-position (event-end event))
+	 (window (nth 0 end-position))
+	 (before-scroll))
+    (with-current-buffer (window-buffer window)
+      (setq before-scroll point-before-scroll))
+    (save-selected-window
+      (let ((portion-whole (nth 2 end-position)))
+	(select-window window)
+	(setq before-scroll
+	      (or before-scroll (point)))
+	(scroll-down
+	 (scroll-bar-scale portion-whole (1- (window-height))))))
+    (sit-for 0)
+    (with-current-buffer (window-buffer window)
+      (setq point-before-scroll before-scroll))))
 
 (defun scroll-bar-scroll-up (event)
   "Scroll the line next to the scroll bar click to the top of the window.
 EVENT should be a scroll bar click."
   (interactive "e")
-  (let ((old-selected-window (selected-window)))
-    (unwind-protect
-	(progn
-	  (let* ((end-position (event-end event))
-		 (window (nth 0 end-position))
-		 (portion-whole (nth 2 end-position)))
-	    (let (point-before-scroll)
-	      (select-window window))
-	    (or point-before-scroll
-		(setq point-before-scroll (point)))
-	    (let (point-before-scroll)
-	      (scroll-up
-	       (scroll-bar-scale portion-whole (1- (window-height)))))))
-      (select-window old-selected-window))))
+  (let* ((end-position (event-end event))
+	 (window (nth 0 end-position))
+	 (before-scroll))
+    (with-current-buffer (window-buffer window)
+      (setq before-scroll point-before-scroll))
+    (save-selected-window
+      (let ((portion-whole (nth 2 end-position)))
+	(select-window window)
+	(setq before-scroll
+	      (or before-scroll (point)))
+	(scroll-up
+	 (scroll-bar-scale portion-whole (1- (window-height))))))
+    (sit-for 0)
+    (with-current-buffer (window-buffer window)
+      (setq point-before-scroll before-scroll))))
 
 
 ;;;; Bindings.

@@ -29,14 +29,14 @@ Boston, MA 02111-1307, USA.  */
 
 #include <stdio.h>
 
-/* Need syssignal.h for various externs and definitions that may be required
-   by some configurations for calls to signal later in this source file.  */
-#include "syssignal.h"
-
 #ifdef HAVE_X_WINDOWS
 
 #include "lisp.h"
 #include "blockinput.h"
+
+/* Need syssignal.h for various externs and definitions that may be required
+   by some configurations for calls to signal later in this source file.  */
+#include "syssignal.h"
 
 /* This may include sys/types.h, and that somehow loses
    if this is not done before the other system files.  */
@@ -86,6 +86,7 @@ Boston, MA 02111-1307, USA.  */
 #include "window.h"
 #include "keyboard.h"
 #include "intervals.h"
+#include "process.h"
 
 #ifdef USE_X_TOOLKIT
 #include <X11/Shell.h>
@@ -147,7 +148,7 @@ Lisp_Object x_display_name_list;
    is the frame to apply to.  */
 extern struct frame *updating_frame;
 
-extern waiting_for_input;
+extern int waiting_for_input;
 
 /* This is a frame waiting to be autoraised, within XTread_socket.  */
 struct frame *pending_autoraise_frame;
@@ -265,8 +266,8 @@ static void clear_mouse_face ();
 static void show_mouse_face ();
 static void do_line_dance ();
 
-static int XTcursor_to ();
-static int XTclear_end_of_line ();
+static void XTcursor_to ();
+static void XTclear_end_of_line ();
 static int x_io_error_quitter ();
 int x_catch_errors ();
 void x_uncatch_errors ();
@@ -323,7 +324,7 @@ x_display_info_for_display (dpy)
    should never be called except during an update, the only exceptions
    being XTcursor_to, XTwrite_glyphs and XTreassert_line_highlight.  */
 
-static
+static void
 XTupdate_begin (f)
      struct frame *f;
 {
@@ -383,7 +384,7 @@ XTupdate_begin (f)
   UNBLOCK_INPUT;
 }
 
-static
+static void
 XTupdate_end (f)
      struct frame *f;
 {
@@ -413,7 +414,7 @@ XTupdate_end (f)
 
 /* This is called after a redisplay on frame F.  */
 
-static
+static void
 XTframe_up_to_date (f)
      FRAME_PTR f;
 {
@@ -421,9 +422,10 @@ XTframe_up_to_date (f)
   if (FRAME_X_DISPLAY_INFO (f)->mouse_face_deferred_gc
       || f == FRAME_X_DISPLAY_INFO (f)->mouse_face_mouse_frame)
     {
-      note_mouse_highlight (FRAME_X_DISPLAY_INFO (f)->mouse_face_mouse_frame,
-			    FRAME_X_DISPLAY_INFO (f)->mouse_face_mouse_x,
-			    FRAME_X_DISPLAY_INFO (f)->mouse_face_mouse_y);
+      if (FRAME_X_DISPLAY_INFO (f)->mouse_face_mouse_frame)
+	note_mouse_highlight (FRAME_X_DISPLAY_INFO (f)->mouse_face_mouse_frame,
+			      FRAME_X_DISPLAY_INFO (f)->mouse_face_mouse_x,
+			      FRAME_X_DISPLAY_INFO (f)->mouse_face_mouse_y);
       FRAME_X_DISPLAY_INFO (f)->mouse_face_deferred_gc = 0;
     }
   UNBLOCK_INPUT;
@@ -433,6 +435,7 @@ XTframe_up_to_date (f)
    Call this when about to modify line at position VPOS
    and not change whether it is highlighted.  */
 
+void
 XTreassert_line_highlight (new, vpos)
      int new, vpos;
 {
@@ -442,7 +445,7 @@ XTreassert_line_highlight (new, vpos)
 /* Call this when about to modify line at position VPOS
    and change whether it is highlighted.  */
 
-static
+static void
 XTchange_line_highlight (new_highlight, vpos, first_unused_hpos)
      int new_highlight, vpos, first_unused_hpos;
 {
@@ -455,7 +458,7 @@ XTchange_line_highlight (new_highlight, vpos, first_unused_hpos)
    When starting Emacs, no X window is mapped.  And nothing must be done
    to Emacs's own window if it is suspended (though that rarely happens).  */
 
-static
+static void
 XTset_terminal_modes ()
 {
 }
@@ -464,7 +467,7 @@ XTset_terminal_modes ()
    Exiting will make the X-windows go away, and suspending
    requires no action.  */
 
-static
+static void
 XTreset_terminal_modes ()
 {
 /*  XTclear_frame ();  */
@@ -474,14 +477,22 @@ XTreset_terminal_modes ()
    This is where display update commands will take effect.
    This does not affect the place where the cursor-box is displayed.  */
 
-static int
+static void
 XTcursor_to (row, col)
      register int row, col;
 {
   int mask;
   int orow = row;
+  struct frame *f;
+  
+  f = updating_frame;
+  if (f == 0)
+    f = selected_frame;
 
   curs_x = col;
+  if (curs_x >= FRAME_CURSOR_X_LIMIT (f))
+    curs_x = FRAME_CURSOR_X_LIMIT (f) - 1;
+
   curs_y = row;
 
   if (updating_frame == 0)
@@ -569,6 +580,10 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
       GLYPH_FOLLOW_ALIASES (tbase, tlen, g);
       cf = (cmpcharp ? cmpcharp->face_work : FAST_GLYPH_FACE (g));
       ch = FAST_GLYPH_CHAR (g);
+      if (unibyte_display_via_language_environment
+	  && SINGLE_BYTE_CHAR_P (ch)
+	  && ch >= 160)
+	ch = unibyte_char_to_multibyte (ch);
       if (gidx == 0) XSETFASTINT (first_ch, ch);
       charset = CHAR_CHARSET (ch);
       if (charset == CHARSET_COMPOSITION)
@@ -606,6 +621,10 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
 	  g = *gp;
 	  GLYPH_FOLLOW_ALIASES (tbase, tlen, g);
 	  ch = FAST_GLYPH_CHAR (g);
+	  if (unibyte_display_via_language_environment
+	      && SINGLE_BYTE_CHAR_P (ch)
+	      && ch >= 160)
+	    ch = unibyte_char_to_multibyte (ch);
 	  SPLIT_CHAR (ch, this_charset, c1, c2);
 	  if (this_charset != charset
 	      || (cmpcharp == NULL && FAST_GLYPH_FACE (g) != cf))
@@ -736,7 +755,7 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
 		      /* We assume that MSBs are appropriately
                          set/reset by CCL program.  */
 		      if (font->max_byte1 == 0)	/* 1-byte font */
-			cp->byte2 = ccl->reg[1];
+			cp->byte1 = 0, cp->byte2 = ccl->reg[1];
 		      else
 			cp->byte1 = ccl->reg[1], cp->byte2 = ccl->reg[2];
 		    }
@@ -749,7 +768,7 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
 		      /* We assume that MSBs are appropriately
                          set/reset by CCL program.  */
 		      if (font->max_byte1 == 0)	/* 1-byte font */
-			cp->byte2 = ccl->reg[1];
+			cp->byte1 = 0, cp->byte2 = ccl->reg[1];
 		      else
 			cp->byte1 = ccl->reg[1], cp->byte2 = ccl->reg[2];
 		    }
@@ -772,7 +791,7 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
 	    if (charset == CHARSET_ASCII || charset == charset_latin_iso8859_1)
 	      {
 		font = FACE_FONT (face);
-		if (font == (XFontStruct *) FACE_DEFAULT)
+		if (!font || font == (XFontStruct *) FACE_DEFAULT)
 		  font = f->output_data.x->font;
 		baseline = FONT_BASE (f->output_data.x->font);
 		if (charset == charset_latin_iso8859_1)
@@ -826,12 +845,14 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
 		    xgcv.background = face->foreground;
 		    xgcv.foreground = face->background;
 		  }
-		if (font)
-		  xgcv.font = font->fid;
-		else
-		  xgcv.font = FACE_FONT (face)->fid;
 		xgcv.graphics_exposures = 0;
-		mask = GCForeground | GCBackground | GCFont | GCGraphicsExposures;
+		mask = GCForeground | GCBackground | GCGraphicsExposures;
+		if (font)
+		  {
+		    xgcv.font = font->fid;
+		    mask |= GCFont;
+		  }
+
 		if (FRAME_X_DISPLAY_INFO (f)->scratch_cursor_gc)
 		  XChangeGC (FRAME_X_DISPLAY (f),
 			     FRAME_X_DISPLAY_INFO (f)->scratch_cursor_gc,
@@ -1183,7 +1204,7 @@ dumpglyphs (f, left, top, gp, n, hl, font)
    `highlight', set up by XTreassert_line_highlight or XTchange_line_highlight,
    controls the pixel values used for foreground and background.  */
 
-static
+static void
 XTwrite_glyphs (start, len)
      register GLYPH *start;
      int len;
@@ -1201,8 +1222,8 @@ XTwrite_glyphs (start, len)
       f = selected_frame;
       /* If not within an update,
 	 output at the frame's visible cursor.  */
-      curs_x = f->cursor_x;
-      curs_y = f->cursor_y;
+      curs_x = FRAME_CURSOR_X (f);
+      curs_y = FRAME_CURSOR_Y (f);
     }
 
   dumpglyphs (f,
@@ -1216,10 +1237,13 @@ XTwrite_glyphs (start, len)
       && curs_x + len > f->phys_cursor_x)
     f->phys_cursor_on = 0;
 
+  curs_x += len;
+  if (curs_x >= FRAME_CURSOR_X_LIMIT (f))
+    curs_x = FRAME_CURSOR_X_LIMIT (f) - 1;
+
   if (updating_frame == 0)
-    x_display_cursor (f, 1, FRAME_CURSOR_X (f) + len, FRAME_CURSOR_Y (f));
-  else
-    curs_x += len;
+    x_display_cursor (f, 1, curs_x, FRAME_CURSOR_Y (f));
+      
 
   UNBLOCK_INPUT;
 }
@@ -1229,7 +1253,7 @@ XTwrite_glyphs (start, len)
    to column FIRST_UNUSED (exclusive).  The idea is that everything
    from FIRST_UNUSED onward is already erased.  */
 
-static
+static void
 XTclear_end_of_line (first_unused)
      register int first_unused;
 {
@@ -1271,7 +1295,7 @@ XTclear_end_of_line (first_unused)
   UNBLOCK_INPUT;
 }
 
-static
+static void
 XTclear_frame ()
 {
   int mask;
@@ -1507,6 +1531,7 @@ timeval_subtract (result, x, y)
   return x.tv_sec < y.tv_sec;
 }
 
+void
 XTflash (f)
      struct frame *f;
 {
@@ -1634,6 +1659,7 @@ XTflash (f)
 
 #define XRINGBELL XBell (FRAME_X_DISPLAY (selected_frame), 0)
 
+void
 XTring_bell ()
 {
   if (FRAME_X_DISPLAY (selected_frame) == 0)
@@ -1656,7 +1682,7 @@ XTring_bell ()
    These are not supposed to be used because we are supposed to turn
    off the feature of using them.  */
 
-static
+static void
 XTinsert_glyphs (start, len)
      register char *start;
      register int len;
@@ -1664,7 +1690,7 @@ XTinsert_glyphs (start, len)
   abort ();
 }
 
-static
+static void
 XTdelete_glyphs (n)
      register int n;
 {
@@ -1676,7 +1702,7 @@ XTdelete_glyphs (n)
    This, and those operations, are used only within an update
    that is bounded by calls to XTupdate_begin and XTupdate_end.  */
 
-static
+static void
 XTset_terminal_window (n)
      register int n;
 {
@@ -1707,6 +1733,7 @@ static int line_dance_in_progress;
 
 /* Perform an insert-lines or delete-lines operation,
    inserting N lines or deleting -N lines at vertical position VPOS.  */
+void
 XTins_del_lines (vpos, n)
      int vpos, n;
 {
@@ -2590,7 +2617,7 @@ fast_find_position (window, pos, columnp, rowp)
       else if (charstarts[left + i] > pos)
 	break;
       else if (charstarts[left + i] > 0)
-	lastcol = left + i;
+	lastcol = left + i + 1;
     }
 
   /* If we're looking for the end of the buffer,
@@ -2692,6 +2719,7 @@ clear_mouse_face (dpyinfo)
 /* Just discard the mouse face information for frame F, if any.
    This is used when the size of F is changed.  */
 
+void
 cancel_mouse_face (f)
      FRAME_PTR f;
 {
@@ -2743,7 +2771,7 @@ XTmouse_position (fp, insist, bar_window, part, x, y, time)
 
   BLOCK_INPUT;
 
-  if (! NILP (last_mouse_scroll_bar))
+  if (! NILP (last_mouse_scroll_bar) && insist == 0)
     x_scroll_bar_report_motion (fp, bar_window, part, x, y, time);
   else
     {
@@ -2872,7 +2900,7 @@ XTmouse_position (fp, insist, bar_window, part, x, y, time)
 	      }
 	  }
 
-	if (f1 == 0 && insist)
+	if (f1 == 0 && insist > 0)
 	  f1 = selected_frame;
 
 	if (f1)
@@ -3559,6 +3587,7 @@ x_scroll_bar_report_motion (fp, bar_window, part, x, y, time)
    Clear out the scroll bars, and ask for expose events, so we can
    redraw them.  */
 
+void
 x_scroll_bar_clear (f)
      FRAME_PTR f;
 {
@@ -3826,7 +3855,7 @@ XTread_socket (sd, bufp, numchars, expected)
 #ifdef HAVE_X_I18N
 	  {
 	    struct frame *f1 = x_any_window_to_frame (dpyinfo,
-						      &event.xclient.window);
+						      event.xclient.window);
 	    /* The necessity of the following line took me
 	       a full work-day to decipher from the docs!!  */
 	    if (f1 != 0 && FRAME_XIC (f1) && XFilterEvent (&event, None))
@@ -3958,7 +3987,7 @@ XTread_socket (sd, bufp, numchars, expected)
 	      if (! x_window_to_frame (dpyinfo, event.xselection.requestor))
 		goto OTHER;
 #endif /* not USE_X_TOOLKIT */
-	      x_handle_selection_notify (&event);
+	      x_handle_selection_notify (&event.xselection);
 	      break;
 
 	    case SelectionClear:	/* Someone has grabbed ownership. */
@@ -4019,7 +4048,7 @@ XTread_socket (sd, bufp, numchars, expected)
 	      if (!x_any_window_to_frame (dpyinfo, event.xproperty.window))
 		goto OTHER;
 #endif /* not USE_X_TOOLKIT */
-	      x_handle_property_notify (&event);
+	      x_handle_property_notify (&event.xproperty);
 	      break;
 
 	    case ReparentNotify:
@@ -4228,6 +4257,7 @@ XTread_socket (sd, bufp, numchars, expected)
 #ifdef XK_ISO_Left_Tab
 			   || (keysym >= XK_ISO_Left_Tab && keysym <= XK_ISO_Enter)
 #endif
+			   || (keysym >= XK_Kanji && keysym <= XK_Eisu_toggle)
 			   || IsCursorKey (keysym) /* 0xff50 <= x < 0xff60 */
 			   || IsMiscFunctionKey (keysym) /* 0xff60 <= x < VARIES */
 #ifdef HPUX
@@ -4479,6 +4509,16 @@ XTread_socket (sd, bufp, numchars, expected)
 		      f->output_data.x->win_gravity = NorthWestGravity;
 		      x_wm_set_size_hint (f, (long) 0, 0);
 		    }
+#ifdef USE_MOTIF
+		  /* Some window managers pass (0,0) as the location of
+		     the window, and the Motif event handler stores it
+		     in the emacs widget, which messes up Motif menus.  */
+		  if (event.xconfigure.x == 0 && event.xconfigure.y == 0)
+		    {
+		      event.xconfigure.x = f->output_data.x->widget->core.x;
+		      event.xconfigure.y = f->output_data.x->widget->core.y;
+		    }
+#endif
 		}
 	      goto OTHER;
 
@@ -4885,12 +4925,17 @@ x_display_box_cursor (f, on, x, y)
 /* Display the cursor on frame F, or clear it, according to ON.
    Also set the frame's cursor position to X and Y.  */
 
+void
 x_display_cursor (f, on, x, y)
      struct frame *f;
      int on;
      int x, y;
 {
   BLOCK_INPUT;
+
+ if ((unsigned) x >= FRAME_CURSOR_X_LIMIT (f)
+      || (unsigned) y >= FRAME_HEIGHT (f))
+    abort ();
 
   if (FRAME_DESIRED_CURSOR (f) == filled_box_cursor)
     x_display_box_cursor (f, on, x, y);
@@ -4906,6 +4951,7 @@ x_display_cursor (f, on, x, y)
 /* Display the cursor on frame F, or clear it, according to ON.
    Don't change the cursor's position.  */
 
+void
 x_update_cursor (f, on)
      struct frame *f;
      int on;
@@ -4928,6 +4974,7 @@ x_update_cursor (f, on)
 /* Refresh bitmap kitchen sink icon for frame F
    when we get an expose event for it. */
 
+void
 refreshicon (f)
      struct frame *f;
 {
@@ -5375,6 +5422,7 @@ x_new_fontset (f, fontsetname)
 /* Calculate the absolute position in frame F
    from its current recorded position values and gravity.  */
 
+void
 x_calc_absolute_position (f)
      struct frame *f;
 {
@@ -5467,6 +5515,7 @@ x_calc_absolute_position (f)
    position values).  It is -1 when calling from x_set_frame_parameters,
    which means, do adjust for borders but don't change the gravity.  */
 
+void
 x_set_offset (f, xoff, yoff, change_gravity)
      struct frame *f;
      register int xoff, yoff;
@@ -5518,6 +5567,7 @@ x_set_offset (f, xoff, yoff, change_gravity)
    for this size change and subsequent size changes.
    Otherwise we leave the window gravity unchanged.  */
 
+void
 x_set_window_size (f, change_gravity, cols, rows)
      struct frame *f;
      int change_gravity;
@@ -5644,6 +5694,7 @@ x_set_mouse_pixel_position (f, pix_x, pix_y)
 
 /* focus shifting, raising and lowering.  */
 
+void
 x_focus_on_frame (f)
      struct frame *f;
 {
@@ -5659,6 +5710,7 @@ x_focus_on_frame (f)
 #endif /* ! 0 */
 }
 
+void
 x_unfocus_frame (f)
      struct frame *f;
 {
@@ -5672,6 +5724,7 @@ x_unfocus_frame (f)
 
 /* Raise frame F.  */
 
+void
 x_raise_frame (f)
      struct frame *f;
 {
@@ -5690,6 +5743,7 @@ x_raise_frame (f)
 
 /* Lower frame F.  */
 
+void
 x_lower_frame (f)
      struct frame *f;
 {
@@ -5726,6 +5780,7 @@ XTframe_raise_lower (f, raise_flag)
    but it will become visible later when the window manager
    finishes with it.  */
 
+void
 x_make_frame_visible (f)
      struct frame *f;
 {
@@ -5787,7 +5842,7 @@ x_make_frame_visible (f)
     /* This must come after we set COUNT.  */
     UNBLOCK_INPUT;
 
-    /* Arriving X events are processed here.  */
+    /* We unblock here so that arriving X events are processed.  */
 
     /* Now move the window back to where it was "supposed to be".
        But don't do it if the gravity is negative.
@@ -5802,15 +5857,27 @@ x_make_frame_visible (f)
 	&& f->output_data.x->win_gravity == NorthWestGravity
 	&& previously_visible)
       {
+	Drawable rootw;
+	int x, y;
+	unsigned int width, height, border, depth;
+
 	BLOCK_INPUT;
 
-#ifdef USE_X_TOOLKIT
-	XMoveWindow (FRAME_X_DISPLAY (f), XtWindow (f->output_data.x->widget),
-		     original_left, original_top);
-#else /* not USE_X_TOOLKIT */
-	XMoveWindow (FRAME_X_DISPLAY (f), FRAME_X_WINDOW (f),
-		     original_left, original_top);
-#endif /* not USE_X_TOOLKIT */
+	/* On some window managers (Such as FVWM) moving an existing window,
+	   even to the same place, causes the window manager to introduce
+	   an offset.  This can cause the window to move to an unexpected
+	   location.  Check the geometry (A little slow here) and then verify
+	   that the window is in the right place.  If the window is not in
+	   the right place, move it there, and take the potential window
+	   manager hit. */
+
+	XGetGeometry (FRAME_X_DISPLAY (f), FRAME_OUTER_WINDOW (f),
+		      &rootw, &x, &y, &width, &height, &border, &depth);
+
+	if (original_left != x || original_top != y)
+	  XMoveWindow (FRAME_X_DISPLAY (f), FRAME_OUTER_WINDOW (f),
+		       original_left, original_top);
+
 	UNBLOCK_INPUT;
       }
 
@@ -5836,7 +5903,7 @@ x_make_frame_visible (f)
 	    /* It could be confusing if a real alarm arrives while processing
 	       the fake one.  Turn it off and let the handler reset it.  */
 	    alarm (0);
-	    input_poll_signal ();
+	    input_poll_signal (0);
 	  }
 	/* Once we have handled input events,
 	   we should have received the MapNotify if one is coming.
@@ -5854,6 +5921,7 @@ x_make_frame_visible (f)
 
 /* Make the frame visible (mapped and not iconified).  */
 
+void
 x_make_frame_invisible (f)
      struct frame *f;
 {
@@ -5936,6 +6004,7 @@ x_make_frame_invisible (f)
 
 /* Change window state from mapped to iconified. */
 
+void
 x_iconify_frame (f)
      struct frame *f;
 {
@@ -6044,6 +6113,7 @@ x_iconify_frame (f)
 
 /* Destroy the X window of frame F.  */
 
+void
 x_destroy_window (f)
      struct frame *f;
 {
@@ -6100,6 +6170,8 @@ x_destroy_window (f)
       dpyinfo->mouse_face_end_row
 	= dpyinfo->mouse_face_end_col = -1;
       dpyinfo->mouse_face_window = Qnil;
+      dpyinfo->mouse_face_deferred_gc = 0;
+      dpyinfo->mouse_face_mouse_frame = 0;
     }
 
   UNBLOCK_INPUT;
@@ -6113,6 +6185,7 @@ x_destroy_window (f)
    If USER_POSITION is nonzero, we set the USPosition
    flag (this is useful when FLAGS is 0).  */
 
+void
 x_wm_set_size_hint (f, flags, user_position)
      struct frame *f;
      long flags;
@@ -6256,6 +6329,7 @@ x_wm_set_size_hint (f, flags, user_position)
 }
 
 /* Used for IconicState or NormalState */
+void
 x_wm_set_window_state (f, state)
      struct frame *f;
      int state;
@@ -6275,6 +6349,7 @@ x_wm_set_window_state (f, state)
 #endif /* not USE_X_TOOLKIT */
 }
 
+void
 x_wm_set_icon_pixmap (f, pixmap_id)
      struct frame *f;
      int pixmap_id;
@@ -6324,6 +6399,7 @@ x_wm_set_icon_pixmap (f, pixmap_id)
 #endif /* not USE_X_TOOLKIT */
 }
 
+void
 x_wm_set_icon_position (f, icon_x, icon_y)
      struct frame *f;
      int icon_x, icon_y;
@@ -6369,14 +6445,21 @@ x_list_fonts (f, pattern, size, maxnames)
 {
   Lisp_Object list = Qnil, patterns, newlist = Qnil, key, tem, second_best;
   Display *dpy = f != NULL ? FRAME_X_DISPLAY (f) : x_display_list->display;
+  int try_XLoadQueryFont = 0;
 
   patterns = Fassoc (pattern, Valternate_fontname_alist);
   if (NILP (patterns))
     patterns = Fcons (pattern, Qnil);
 
-  /* We try at least 10 fonts because X server will return auto-scaled
-     fonts at the head.  */
-  if (maxnames < 10) maxnames = 10;
+  if (maxnames == 1 && !size)
+    /* We can return any single font matching PATTERN.  */
+    try_XLoadQueryFont = 1;
+  else
+    {
+      /* We try at least 10 fonts because XListFonts will return
+	 auto-scaled fonts at the head.  */
+      if (maxnames < 10) maxnames = 10;
+    }
 
   for (; CONSP (patterns); patterns = XCONS (patterns)->cdr)
     {
@@ -6398,8 +6481,38 @@ x_list_fonts (f, pattern, size, maxnames)
 	}
 
       /* At first, put PATTERN in the cache.  */
+
       BLOCK_INPUT;
-      names = XListFonts (dpy, XSTRING (pattern)->data, maxnames, &num_fonts);
+      if (try_XLoadQueryFont)
+	{
+	  XFontStruct *font;
+	  unsigned long value;
+
+	  font = XLoadQueryFont (dpy, XSTRING (pattern)->data);
+	  if (font
+	      && XGetFontProperty (font, XA_FONT, &value))
+	    {
+	      char *name = (char *) XGetAtomName (dpy, (Atom) value);
+	      int len = strlen (name);
+	      char *tmp;
+
+	      num_fonts = 1;
+	      names = (char **) alloca (sizeof (char *));
+	      /* Some systems only allow alloca assigned to a simple var.  */
+	      tmp = (char *) alloca (len + 1);  names[0] = tmp;
+	      bcopy (name, names[0], len + 1);
+	      XFree (name);
+	    }
+	  else
+	    try_XLoadQueryFont = 0;
+
+	  if (font)
+	    XFreeFont (dpy, font);
+	}
+
+      if (!try_XLoadQueryFont)
+	names = XListFonts (dpy, XSTRING (pattern)->data, maxnames,
+			    &num_fonts);
       UNBLOCK_INPUT;
 
       if (names)
@@ -6445,7 +6558,8 @@ x_list_fonts (f, pattern, size, maxnames)
 		    }
 		}
 	    }
-	  XFreeFontNames (names);
+	  if (!try_XLoadQueryFont)
+	    XFreeFontNames (names);
 	}
 
       /* Now store the result in the cache.  */
@@ -6549,7 +6663,7 @@ x_load_font (f, fontname, size)
   /* Get a list of all the fonts that match this name.  Once we
      have a list of matching fonts, we compare them against the fonts
      we already have by comparing names.  */
-  font_names = x_list_fonts (f, build_string (fontname), size, 256);
+  font_names = x_list_fonts (f, build_string (fontname), size, 1);
 
   if (!NILP (font_names))
     {
@@ -6740,6 +6854,48 @@ x_query_font (f, fontname)
   return NULL;
 }
 
+/* Find a CCL program for a font specified by FONTP, and set the memer
+ `encoder' of the structure.  */
+
+void
+x_find_ccl_program (fontp)
+     struct font_info *fontp;
+{
+  extern Lisp_Object Vfont_ccl_encoder_alist, Vccl_program_table;
+  extern Lisp_Object Qccl_program_idx;
+  extern Lisp_Object resolve_symbol_ccl_program ();
+  Lisp_Object list, elt, ccl_prog, ccl_id;
+
+  for (list = Vfont_ccl_encoder_alist; CONSP (list); list = XCONS (list)->cdr)
+    {
+      elt = XCONS (list)->car;
+      if (CONSP (elt)
+	  && STRINGP (XCONS (elt)->car)
+	  && (fast_c_string_match_ignore_case (XCONS (elt)->car, fontp->name)
+	      >= 0))
+	{
+	  if (SYMBOLP (XCONS (elt)->cdr) &&
+	      (!NILP (ccl_id = Fget (XCONS (elt)->cdr, Qccl_program_idx))))
+	    {
+	      ccl_prog = XVECTOR (Vccl_program_table)->contents[XUINT (ccl_id)];
+	      if (!CONSP (ccl_prog)) continue;
+	      ccl_prog = XCONS (ccl_prog)->cdr;
+	    }
+	  else
+	    {
+	      ccl_prog = XCONS (elt)->cdr;
+	      if (!VECTORP (ccl_prog)) continue;
+	    }
+	    
+	  fontp->font_encoder
+	    = (struct ccl_program *) xmalloc (sizeof (struct ccl_program));
+	  setup_ccl_program (fontp->font_encoder,
+			     resolve_symbol_ccl_program (ccl_prog));
+	  break;
+	}
+    }
+}
+
 
 /* Initialization.  */
 
@@ -6810,7 +6966,6 @@ x_term_init (display_name, xrm_option, resource_name)
   setlocale (LC_ALL, "");
   /* In case we just overrode what init_lread did, redo it.  */
   setlocale (LC_NUMERIC, "C");
-  setlocale (LC_TIME, "C");
 #endif
 
 #ifdef USE_X_TOOLKIT
@@ -6842,7 +6997,6 @@ x_term_init (display_name, xrm_option, resource_name)
 #ifdef HAVE_X11XTR6
     /* I think this is to compensate for XtSetLanguageProc.  */
     setlocale (LC_NUMERIC, "C");
-    setlocale (LC_TIME, "C");
 #endif
   }
 
@@ -6916,8 +7070,8 @@ x_term_init (display_name, xrm_option, resource_name)
 #endif /* ! 0 */
 
   dpyinfo->x_id_name
-    = (char *) xmalloc (XSTRING (Vinvocation_name)->size
-			+ XSTRING (Vsystem_name)->size
+    = (char *) xmalloc (STRING_BYTES (XSTRING (Vinvocation_name))
+			+ STRING_BYTES (XSTRING (Vsystem_name))
 			+ 2);
   sprintf (dpyinfo->x_id_name, "%s@%s",
 	   XSTRING (Vinvocation_name)->data, XSTRING (Vsystem_name)->data);
@@ -7144,6 +7298,7 @@ x_delete_display (dpyinfo)
 
 /* Set up use of X before we make the first connection.  */
 
+void
 x_initialize ()
 {
   clear_frame_hook = XTclear_frame;

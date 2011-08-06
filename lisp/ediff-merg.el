@@ -25,12 +25,6 @@
 
 (provide 'ediff-merg)
 
-(defgroup ediff-merge nil
-  "Merging utilities"
-  :prefix "ediff-"
-  :group 'ediff)
-
-
 ;; compiler pacifier
 (defvar ediff-window-A)
 (defvar ediff-window-B)
@@ -80,6 +74,12 @@ STRING3
   "*If t, show only those diff regions where both buffers disagree with the ancestor.
 This means that regions that have status prefer-A or prefer-B will be
 skiped over. Nil means show all regions.")
+
+;; If ediff-show-clashes-only, check if there is no clash between the ancestor
+;; and one of the variants.
+(defsubst ediff-merge-region-is-non-clash (n)
+  (and ediff-show-clashes-only
+       (string-match "prefer" (or (ediff-get-state-of-merge n) ""))))
 
 	
 (defsubst ediff-get-combined-region (n)
@@ -132,7 +132,6 @@ skiped over. Nil means show all regions.")
     ))
     
 (defun ediff-set-merge-mode ()
-  ;; by Stig@hackvan.com
   (normal-mode t)
   (remove-hook 'local-write-file-hooks 'ediff-set-merge-mode))
 

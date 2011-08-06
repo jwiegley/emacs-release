@@ -1,5 +1,5 @@
 /* Call a Lisp function interactively.
-   Copyright (C) 1985, 1986, 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1985, 86, 93, 94, 95, 1997 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -34,6 +34,8 @@ extern Lisp_Object Qcursor_in_echo_area;
 Lisp_Object Vcurrent_prefix_arg, Qminus, Qplus;
 Lisp_Object Qcall_interactively;
 Lisp_Object Vcommand_history;
+
+extern Lisp_Object Vhistory_length;
 
 Lisp_Object Vcommand_debug_status, Qcommand_debug_status;
 Lisp_Object Qenable_recursive_minibuffers;
@@ -288,8 +290,9 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
     {
       /* Make a copy of string so that if a GC relocates specs,
 	 `string' will still be valid.  */
-      string = (unsigned char *) alloca (XSTRING (specs)->size + 1);
-      bcopy (XSTRING (specs)->data, string, XSTRING (specs)->size + 1);
+      string = (unsigned char *) alloca (STRING_BYTES (XSTRING (specs)) + 1);
+      bcopy (XSTRING (specs)->data, string,
+	     STRING_BYTES (XSTRING (specs)) + 1);
     }
   else if (string == 0)
     {
@@ -344,6 +347,14 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 	    }
 	  Vcommand_history
 	    = Fcons (Fcons (function, values), Vcommand_history);
+
+	  /* Don't keep command history around forever.  */
+	  if (NUMBERP (Vhistory_length) && XINT (Vhistory_length) > 0)
+	    {
+	      teml = Fnthcdr (Vhistory_length, Vcommand_history);
+	      if (CONSP (teml))
+		XCONS (teml)->cdr = Qnil;
+	    }
 	}
       single_kboard_state ();
       return apply1 (function, specs);
@@ -442,9 +453,9 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 	 corresponding to the Lisp strings in visargs.  */
       for (j = 1; j < i; j++)
 	argstrings[j]
-	  = EQ (visargs[j], Qnil)
-	    ? (unsigned char *) ""
-	      : XSTRING (visargs[j])->data;
+	  = (EQ (visargs[j], Qnil)
+	     ? (unsigned char *) ""
+	     : XSTRING (visargs[j])->data);
 
       /* Process the format-string in prompt1, putting the output
 	 into callint_message.  Make callint_message bigger if necessary.
@@ -454,7 +465,7 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 	{
 	  int nchars = doprnt (callint_message, callint_message_size,
 			       prompt1, (char *)0,
-			       j - 1, argstrings + 1);
+			       j - 1, (char **) argstrings + 1);
 	  if (nchars < callint_message_size)
 	    break;
 	  callint_message_size *= 2;
@@ -476,22 +487,18 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 	case 'b':   		/* Name of existing buffer */
 	  args[i] = Fcurrent_buffer ();
 	  if (EQ (selected_window, minibuf_window))
-	    args[i] = Fother_buffer (args[i], Qnil);
+	    args[i] = Fother_buffer (args[i], Qnil, Qnil);
 	  args[i] = Fread_buffer (build_string (callint_message), args[i], Qt);
 	  break;
 
 	case 'B':		/* Name of buffer, possibly nonexistent */
 	  args[i] = Fread_buffer (build_string (callint_message),
-				  Fother_buffer (Fcurrent_buffer (), Qnil),
+				  Fother_buffer (Fcurrent_buffer (), Qnil, Qnil),
 				  Qnil);
 	  break;
 
         case 'c':		/* Character */
-	  /* Use message_nolog rather than message1_nolog here,
-	     so that nothing bad happens if callint_message is changed
-	     within Fread_char (by a timer, for example).  */
-	  message_nolog ("%s", callint_message);
-	  args[i] = Fread_char ();
+	  args[i] = Fread_char (build_string (callint_message), Qnil);
 	  message1_nolog ((char *) 0);
 	  /* Passing args[i] directly stimulates compiler bug */
 	  teml = args[i];
@@ -508,7 +515,7 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 	  break;
 
 	case 'd':		/* Value of point.  Does not do I/O.  */
-	  Fset_marker (point_marker, make_number (PT), Qnil);
+	  set_marker_both (point_marker, Qnil, PT, PT_BYTE);
 	  args[i] = point_marker;
 	  /* visargs[i] = Qnil; */
 	  varies[i] = 1;
@@ -538,10 +545,25 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 	    int speccount1 = specpdl_ptr - specpdl;
 	    specbind (Qcursor_in_echo_area, Qt);
 	    args[i] = Fread_key_sequence (build_string (callint_message),
-					  Qnil, Qnil, Qnil);
+					  Qnil, Qnil, Qnil, Qnil);
 	    unbind_to (speccount1, Qnil);
 	    teml = args[i];
 	    visargs[i] = Fkey_description (teml);
+
+	    /* If the key sequence ends with a down-event,
+	       discard the following up-event.  */
+	    teml = Faref (args[i], make_number (XINT (Flength (args[i])) - 1));
+	    if (CONSP (teml))
+	      teml = XCONS (teml)->car;
+	    if (SYMBOLP (teml))
+	      {
+		Lisp_Object tem2;
+
+		teml = Fget (teml, intern ("event-symbol-elements"));
+		tem2 = Fmemq (intern ("down"), teml);
+		if (! NILP (tem2))
+		  Fread_event (Qnil, Qnil);
+	      }
 	  }
 	  break;
 
@@ -550,10 +572,25 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 	    int speccount1 = specpdl_ptr - specpdl;
 	    specbind (Qcursor_in_echo_area, Qt);
 	    args[i] = Fread_key_sequence (build_string (callint_message),
-					  Qnil, Qt, Qnil);
+					  Qnil, Qt, Qnil, Qnil);
 	    teml = args[i];
 	    visargs[i] = Fkey_description (teml);
 	    unbind_to (speccount1, Qnil);
+
+	    /* If the key sequence ends with a down-event,
+	       discard the following up-event.  */
+	    teml = Faref (args[i], make_number (XINT (Flength (args[i])) - 1));
+	    if (CONSP (teml))
+	      teml = XCONS (teml)->car;
+	    if (SYMBOLP (teml))
+	      {
+		Lisp_Object tem2;
+
+		teml = Fget (teml, intern ("event-symbol-elements"));
+		tem2 = Fmemq (intern ("down"), teml);
+		if (! NILP (tem2))
+		  Fread_event (Qnil, Qnil);
+	      }
 	  }
 	  break;
 
@@ -631,7 +668,7 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 
 	case 'r':		/* Region, point and mark as 2 args. */
 	  check_mark ();
-	  Fset_marker (point_marker, make_number (PT), Qnil);
+	  set_marker_both (point_marker, Qnil, PT, PT_BYTE);
 	  /* visargs[i+1] = Qnil; */
 	  foo = marker_position (current_buffer->mark);
 	  /* visargs[i] = Qnil; */
@@ -727,6 +764,13 @@ Otherwise, this is done only if an arg is read using the minibuffer.")
 	}
       Vcommand_history = Fcons (Flist (count + 1, visargs),
 				Vcommand_history);
+      /* Don't keep command history around forever.  */
+      if (NUMBERP (Vhistory_length) && XINT (Vhistory_length) > 0)
+	{
+	  teml = Fnthcdr (Vhistory_length, Vcommand_history);
+	  if (CONSP (teml))
+	    XCONS (teml)->cdr = Qnil;
+	}
     }
 
   /* If we used a marker to hold point, mark, or an end of the region,
@@ -771,6 +815,7 @@ Its numeric meaning is what you would get from `(interactive \"p\")'.")
   return val;
 }
 
+void
 syms_of_callint ()
 {
   point_marker = Fmake_marker ();
@@ -823,6 +868,10 @@ You cannot examine this variable to find the argument for this command\n\
 since it has been set to nil by the time you can look.\n\
 Instead, you should use the variable `current-prefix-arg', although\n\
 normally commands can get this prefix argument with (interactive \"P\").");
+
+  DEFVAR_KBOARD ("last-prefix-arg", Vlast_prefix_arg,
+    "The value of the prefix argument for the previous editing command.\n\
+See `prefix-arg' for the meaning of the value.");
 
   DEFVAR_LISP ("current-prefix-arg", &Vcurrent_prefix_arg,
     "The value of the prefix argument for this editing command.\n\

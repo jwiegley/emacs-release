@@ -8,6 +8,12 @@
 @cindex selfinserting text
 @cindex autotypist
 
+@dircategory Editors
+@direntry
+* Autotype: (autotype). Convenient features for text that you enter frequently
+                          in Emacs.
+@end direntry
+
   Under certain circumstances you will find yourself typing similar things
 over and over again.  This is especially true of form letters and programming
 language constructs.  Project-specific header comments, flow-control

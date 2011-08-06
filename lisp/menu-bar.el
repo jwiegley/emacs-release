@@ -97,17 +97,24 @@ A large number or nil slows down menu responsiveness."
 (define-key menu-bar-tools-menu [separator-print]
   '("--"))
 
+(defvar menu-bar-print-menu (make-sparse-keymap "Print"))
+
+(define-key menu-bar-print-menu [ps-print-region]
+  '("Postscript Print Region" . ps-print-region-with-faces))
+(define-key menu-bar-print-menu [ps-print-buffer]
+  '("Postscript Print Buffer" . ps-print-buffer-with-faces))
+(define-key menu-bar-print-menu [separator-ps-print]
+  '("--"))
+(define-key menu-bar-print-menu [print-region]
+  '("Print Region" . print-region))
+(define-key menu-bar-print-menu [print-buffer]
+  '("Print Buffer" . print-buffer))
+
+(define-key menu-bar-tools-menu [print]
+  (cons "Print" menu-bar-print-menu))
+
 (put 'print-region 'menu-enable 'mark-active)
 (put 'ps-print-region-with-faces 'menu-enable 'mark-active)
-
-(define-key menu-bar-tools-menu [ps-print-region]
-  '("Postscript Print Region" . ps-print-region-with-faces))
-(define-key menu-bar-tools-menu [ps-print-buffer]
-  '("Postscript Print Buffer" . ps-print-buffer-with-faces))
-(define-key menu-bar-tools-menu [print-region]
-  '("Print Region" . print-region))
-(define-key menu-bar-tools-menu [print-buffer]
-  '("Print Buffer" . print-buffer))
 
 (define-key menu-bar-files-menu [exit-emacs]
   '("Exit Emacs" . save-buffers-kill-emacs))
@@ -139,6 +146,8 @@ A large number or nil slows down menu responsiveness."
   '("Kill Current Buffer" . kill-this-buffer))
 (define-key menu-bar-files-menu [insert-file]
   '("Insert File..." . insert-file))
+(define-key menu-bar-files-menu [recover-session]
+  '("Recover Session..." . recover-session))
 (define-key menu-bar-files-menu [revert-buffer]
   '("Revert Buffer" . revert-buffer))
 (define-key menu-bar-files-menu [write-file]
@@ -147,6 +156,15 @@ A large number or nil slows down menu responsiveness."
 (define-key menu-bar-files-menu [dired] '("Open Directory..." . dired))
 (define-key menu-bar-files-menu [open-file] '("Open File..." . find-file))
 
+(put 'recover-session 'menu-enable
+     '(and auto-save-list-file-prefix
+	   (directory-files
+	    (file-name-directory auto-save-list-file-prefix)
+	    nil
+	    (concat "\\`"
+		    (regexp-quote (file-name-nondirectory
+				   auto-save-list-file-prefix)))
+	    t)))
 
 (defun nonincremental-search-forward (string)
   "Read a string and search for it nonincrementally."
@@ -251,11 +269,10 @@ A large number or nil slows down menu responsiveness."
 
 (define-key menu-bar-edit-menu [clear] '("Clear" . delete-region))
 
-(define-key menu-bar-edit-menu [paste] '("Paste Most Recent" . yank))
-
 (defvar yank-menu (cons "Select Yank" nil))
 (fset 'yank-menu (cons 'keymap yank-menu))
 (define-key menu-bar-edit-menu [select-paste] '("Select and Paste" . yank-menu))
+(define-key menu-bar-edit-menu [paste] '("Paste" . yank))
 (define-key menu-bar-edit-menu [copy] '("Copy" . menu-bar-kill-ring-save))
 (define-key menu-bar-edit-menu [cut] '("Cut" . kill-region))
 (define-key menu-bar-edit-menu [undo] '("Undo" . undo))
@@ -263,7 +280,7 @@ A large number or nil slows down menu responsiveness."
 (defun menu-bar-kill-ring-save (beg end)
   (interactive "r")
   (if (mouse-region-match)
-      (message "Select a region with the mouse does `copy' automatically")
+      (message "Selecting a region with the mouse does `copy' automatically")
     (kill-ring-save beg end)))
 
 (put 'fill-region 'menu-enable '(and mark-active (not buffer-read-only)))
@@ -351,6 +368,8 @@ Do the same for the keys of the same name."
   '("Specific Face..." . customize-face))
 (define-key menu-bar-custom-menu [customize-option]
   '("Specific Option..." . customize-option))
+(define-key menu-bar-custom-menu [customize-changed-options]
+  '("Changed Options..." . customize-changed-options))
 (define-key menu-bar-custom-menu [separator-3]
   '("--"))
 (define-key menu-bar-custom-menu [customize-browse]
@@ -370,41 +389,51 @@ Do the same for the keys of the same name."
 	      `(setq ,variable (not ,variable)))
 	   (message ,message "enabled")
 	 (message ,message "disabled")))
-     '(,doc . ,name)))
+     '(menu-item ,doc ,name .
+                 (:button (:toggle . (and (boundp ',variable) ,variable))))))
 
 (define-key menu-bar-options-menu [debug-on-quit]
   (menu-bar-make-toggle toggle-debug-on-quit debug-on-quit
-			"Toggle Debug on Quit" "Debug on Quit %s"))
+			"Debug on Quit" "Debug on Quit %s"))
 (define-key menu-bar-options-menu [debug-on-error]
   (menu-bar-make-toggle toggle-debug-on-error debug-on-error
-			"Toggle Debug on Error" "Debug on Error %s"))
+			"Debug on Error" "Debug on Error %s"))
 (define-key menu-bar-options-menu [options-separator]
   '("--"))
 (define-key menu-bar-options-menu [save-place]
   (menu-bar-make-toggle toggle-save-place-globally save-place
-			"Toggle Saving Place in Files between Sessions"
+			"Save Place in Files between Sessions"
 			"Saving place in files %s"
+                        (require 'saveplace)
 			(setq-default save-place (not (default-value save-place)))))
 (define-key menu-bar-options-menu [uniquify]
   (menu-bar-make-toggle toggle-uniquify-buffer-names uniquify-buffer-name-style
-			"Toggle Directory Names in Buffer Names"
+			"Use Directory Names in Buffer Names"
 			"Directory name in buffer names (uniquify) %s"
 			(require 'uniquify)
 			(setq uniquify-buffer-name-style
 			      (if (not uniquify-buffer-name-style)
 				  'forward))))
+(define-key menu-bar-options-menu [case-fold-search]
+  (menu-bar-make-toggle toggle-case-fold-search case-fold-search
+			"Case folding in searches"
+			"Case folding in searches %s"))
 (define-key menu-bar-options-menu [transient-mark-mode]
   (menu-bar-make-toggle toggle-transient-mark-mode transient-mark-mode
-			"Toggle Transient Mark Mode (highlights region)"
+			"Transient Mark Mode (highlights region)"
 			"Transient Mark mode %s"))
 (define-key menu-bar-options-menu [toggle-auto-compression]
-  '("Toggle Automatic File De/compression" . auto-compression-mode))
+  '(menu-item "Automatic File De/compression"
+             auto-compression-mode .
+             (:button (:toggle . (rassq 'jka-compr-handler
+                                        file-name-handler-alist)))))
 (define-key menu-bar-options-menu [auto-fill-mode]
-  '("Toggle Auto Fill (word wrap) in Text modes"
-    . toggle-text-mode-auto-fill))
+  '(menu-item "Auto Fill (word wrap) in Text modes"
+              toggle-text-mode-auto-fill .
+              (:button (:toggle . (member 'turn-on-auto-fill text-mode-hook)))))
 (define-key menu-bar-options-menu [toggle-global-lazy-font-lock-mode]
-  (menu-bar-make-toggle toggle-global-lazy-font-lock-mode nil
-			"Toggle Global Font Lock (highlights syntax)"
+  (menu-bar-make-toggle toggle-global-lazy-font-lock-mode global-font-lock-mode
+			"Global Font Lock (highlights syntax)"
 			"Global Font Lock mode %s"
 			;; Make sure a support mode is used;
 			;; otherwise Font Lock will be too slow.
@@ -413,35 +442,68 @@ Do the same for the keys of the same name."
 			    (or font-lock-support-mode
 				(setq font-lock-support-mode 'lazy-lock-mode)))
 			(global-font-lock-mode)))
+
+(defvar menu-bar-describe-menu (make-sparse-keymap "Describe"))
 
+(define-key menu-bar-describe-menu [describe-variable]
+  '("Describe Variable..." . describe-variable))
+(define-key menu-bar-describe-menu [describe-function]
+  '("Describe Function..." . describe-function))
+(define-key menu-bar-describe-menu [describe-key]
+  '("Describe Key..." . describe-key))
+(define-key menu-bar-describe-menu [list-keybindings]
+  '("List Key Bindings" . describe-bindings))
+(define-key menu-bar-describe-menu [apropos-variables]
+  '("Apropos Variables..." . apropos-variable))
+(define-key menu-bar-describe-menu [apropos-commands]
+  '("Apropos Commands..." . apropos-command))
+(define-key menu-bar-describe-menu [describe-mode]
+  '("Describe Buffer Modes" . describe-mode))
+
+(defvar menu-bar-manuals-menu (make-sparse-keymap "Manuals"))
+
+(define-key menu-bar-manuals-menu [man]
+  '("Read Man Page..." . manual-entry))
+(define-key menu-bar-manuals-menu [sep2]
+  '("--"))
+(define-key menu-bar-manuals-menu [key]
+  '("Find Key in Manual" . Info-goto-emacs-key-command-node))
+(define-key menu-bar-manuals-menu [command]
+  '("Find Command in Manual" . Info-goto-emacs-command-node))
+(define-key menu-bar-manuals-menu [info]
+  '("Browse Manuals with Info" . info))
+(define-key menu-bar-manuals-menu [sep1]
+  '("--"))
+(define-key menu-bar-manuals-menu [emacs-faq]
+  '("Emacs FAQ" . view-emacs-FAQ))
+(define-key menu-bar-manuals-menu [emacs-news]
+  '("Emacs News" . view-emacs-news))
+
+(define-key menu-bar-help-menu [describe-no-warranty]
+  '("(Non)Warranty" . describe-no-warranty))
+(define-key menu-bar-help-menu [describe-copying]
+  '("Copying Conditions" . describe-copying))
+(define-key menu-bar-help-menu [describe-distribution]
+  '("Getting New Versions" . describe-distribution))
 (define-key menu-bar-help-menu [emacs-version]
   '("Show Version" . emacs-version))
 (define-key menu-bar-help-menu [report-emacs-bug]
   '("Send Bug Report..." . report-emacs-bug))
+(define-key menu-bar-help-menu [sep2]
+  '("--"))
 (define-key menu-bar-help-menu [finder-by-keyword]
-  '("Find Lisp Packages..." . finder-by-keyword))
+  '("Find Emacs Packages..." . finder-by-keyword))
+(define-key menu-bar-help-menu [describe]
+  (cons "Describe" menu-bar-describe-menu))
+(define-key menu-bar-help-menu [manuals]
+  (cons "Manuals" menu-bar-manuals-menu))
 (define-key menu-bar-help-menu [emacs-tutorial]
   '("Emacs Tutorial" . help-with-tutorial))
-(define-key menu-bar-help-menu [man]
-  '("Man..." . manual-entry))
-(define-key menu-bar-help-menu [describe-variable]
-  '("Describe Variable..." . describe-variable))
-(define-key menu-bar-help-menu [describe-function]
-  '("Describe Function..." . describe-function))
-(define-key menu-bar-help-menu [describe-key]
-  '("Describe Key..." . describe-key))
-(define-key menu-bar-help-menu [list-keybindings]
-  '("List Keybindings" . describe-bindings))
-(define-key menu-bar-help-menu [command-apropos]
-  '("Command Apropos..." . command-apropos))
-(define-key menu-bar-help-menu [describe-mode]
-  '("Describe Mode" . describe-mode))
-(define-key menu-bar-help-menu [info] '("Info (Browse Manuals)" . info))
-(define-key menu-bar-help-menu [emacs-faq] '("Emacs FAQ" . view-emacs-FAQ))
-(define-key menu-bar-help-menu [emacs-news] '("Emacs News" . view-emacs-news))
-(define-key menu-bar-help-menu [options-menu]
+(define-key menu-bar-help-menu [sep1]
+  '("--"))
+(define-key menu-bar-help-menu [options]
   (cons "Options" menu-bar-options-menu))
-(define-key menu-bar-help-menu [customize-menu]
+(define-key menu-bar-help-menu [customize]
   (cons "Customize" menu-bar-custom-menu))
 
 (defun kill-this-buffer ()	; for the menubar
@@ -535,6 +597,7 @@ Do the same for the keys of the same name."
   (if (> (length (cdr yank-menu)) kill-ring-max)
       (setcdr (nthcdr kill-ring-max yank-menu) nil)))
 
+(put 'menu-bar-select-yank 'apropos-inhibit t)
 (defun menu-bar-select-yank ()
   (interactive "*")
   (push-mark (point))
@@ -764,8 +827,8 @@ Do the same for the keys of the same name."
   "Toggle display of a menu bar on each frame.
 This command applies to all frames that exist and frames to be
 created in the future.
-With a numeric argument, if the argument is negative,
-turn off menu bars; otherwise, turn on menu bars."
+With a numeric argument, if the argument is positive,
+turn on menu bars; otherwise, turn off menu bars."
  (interactive "P")
 
   ;; Make menu-bar-mode and default-frame-alist consistent.

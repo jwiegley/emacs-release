@@ -1,6 +1,88 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
+
+File: emacs,  Node: Appending Kills,  Next: Earlier Kills,  Prev: Kill Ring,  Up: Yanking
+
+Appending Kills
+---------------
+
+   Normally, each kill command pushes a new entry onto the kill ring.
+However, two or more kill commands in a row combine their text into a
+single entry, so that a single `C-y' yanks all the text as a unit, just
+as it was before it was killed.
+
+   Thus, if you want to yank text as a unit, you need not kill all of it
+with one command; you can keep killing line after line, or word after
+word, until you have killed it all, and you can still get it all back at
+once.
+
+   Commands that kill forward from point add onto the end of the
+previous killed text.  Commands that kill backward from point add text
+onto the beginning.  This way, any sequence of mixed forward and
+backward kill commands puts all the killed text into one entry without
+rearrangement.  Numeric arguments do not break the sequence of
+appending kills.  For example, suppose the buffer contains this text:
+
+     This is a line -!-of sample text.
+
+with point shown by -!-.  If you type `M-d M-<DEL> M-d M-<DEL>',
+killing alternately forward and backward, you end up with `a line of
+sample' as one entry in the kill ring, and `This is  text.' in the
+buffer.  (Note the double space, which you can clean up with `M-<SPC>'
+or `M-q'.)
+
+   Another way to kill the same text is to move back two words with
+`M-b M-b', then kill all four words forward with `C-u M-d'.  This
+produces exactly the same results in the buffer and in the kill ring.
+`M-f M-f C-u M-<DEL>' kills the same text, all going backward; once
+again, the result is the same.  The text in the kill ring entry always
+has the same order that it had in the buffer before you killed it.
+
+   If a kill command is separated from the last kill command by other
+commands (not just numeric arguments), it starts a new entry on the kill
+ring.  But you can force it to append by first typing the command
+`C-M-w' (`append-next-kill') right before it.  The `C-M-w' tells the
+following command, if it is a kill command, to append the text it kills
+to the last killed text, instead of starting a new entry.  With
+`C-M-w', you can kill several separated pieces of text and accumulate
+them to be yanked back in one place.
+
+   A kill command following `M-w' does not append to the text that
+`M-w' copied into the kill ring.
+
 
 File: emacs,  Node: Earlier Kills,  Prev: Appending Kills,  Up: Yanking
 
@@ -44,7 +126,7 @@ will yank another copy of the same previous kill.
 you want, you can yank that text in one step using `C-y' with a numeric
 argument.  `C-y' with an argument restores the text the specified
 number of entries back in the kill ring.  Thus, `C-u 2 C-y' gets the
-next to the last block of killed text.  It is equivalent to `C-y M-y'.
+next-to-the-last block of killed text.  It is equivalent to `C-y M-y'.
 `C-y' with a numeric argument starts counting from the "last yank"
 pointer, and sets the "last yank" pointer to the entry that it yanks.
 
@@ -85,7 +167,7 @@ pieces of text into a buffer or into a file.
      Append region to contents of specified file, at the end.
 
    To accumulate text into a buffer, use `M-x append-to-buffer'.  This
-reads a buffer name, them inserts a copy of the region into the buffer
+reads a buffer name, then inserts a copy of the region into the buffer
 specified.  If you specify a nonexistent buffer, `append-to-buffer'
 creates the buffer.  The text is inserted wherever point is in that
 buffer.  If you have been using the buffer for editing, the copied text
@@ -106,12 +188,12 @@ prependings add text in reverse order.  `M-x copy-to-buffer' is similar
 except that any existing text in the other buffer is deleted, so the
 buffer is left containing just the text newly copied into it.
 
-   To retrieve the accumulated text from another buffer, use `M-x
-insert-buffer'; this too takes BUFFERNAME as an argument.  It inserts a
-copy of the text in buffer BUFFERNAME into the selected buffer.  You
-can alternatively select the other buffer for editing, then optionally
-move text from it by killing.  *Note Buffers::, for background
-information on buffers.
+   To retrieve the accumulated text from another buffer, use the command
+`M-x insert-buffer'; this too takes BUFFERNAME as an argument.  It
+inserts a copy of the text in buffer BUFFERNAME into the selected
+buffer.  You can alternatively select the other buffer for editing,
+then optionally move text from it by killing.  *Note Buffers::, for
+background information on buffers.
 
    Instead of accumulating text within Emacs, in a buffer, you can
 append text directly into a file with `M-x append-to-file', which takes
@@ -131,10 +213,10 @@ Rectangles
 
    The rectangle commands operate on rectangular areas of the text: all
 the characters between a certain pair of columns, in a certain range of
-lines. Commands are provided to kill rectangles, yank killed rectangles,
-clear them out, fill them with blanks or text, or delete them. Rectangle
-commands are useful with text in multicolumn formats, and for changing
-text into or out of such formats.
+lines.  Commands are provided to kill rectangles, yank killed
+rectangles, clear them out, fill them with blanks or text, or delete
+them.  Rectangle commands are useful with text in multicolumn formats,
+and for changing text into or out of such formats.
 
    When you must specify a rectangle for a command to work on, you do it
 by putting the mark at one corner and point at the opposite corner.  The
@@ -169,8 +251,13 @@ a line.
 `M-x clear-rectangle'
      Clear the region-rectangle by replacing its contents with spaces.
 
-`M-x string-rectangle <RET> STRING <RET>'
-     Insert STRING on each line of the region-rectangle.
+`M-x delete-whitespace-rectangle'
+     Delete whitespace in each of the lines on the specified rectangle,
+     starting from the left edge column of the rectangle.
+
+`C-x r t <RET> STRING <RET>'
+     Insert STRING on each line of the region-rectangle
+     (`string-rectangle').
 
    The rectangle operations fall into two classes: commands deleting and
 inserting rectangles, and commands for blank rectangles.
@@ -211,14 +298,18 @@ clear-rectangle' which blanks out existing text, and `C-x r o'
 rectangle is equivalent to deleting it and then inserting a blank
 rectangle of the same size.
 
-   The command `M-x string-rectangle' is similar to `C-x r o', but it
-inserts a specified string instead of blanks.  You specify the string
-with the minibuffer.  Since the length of the string specifies how many
-columns to insert, the width of the region-rectangle does not matter
-for this command.  What does matter is the position of the left edge
-(which specifies the column position for the insertion in each line)
-and the range of lines that the rectangle occupies.  The previous
-contents of the text beyond the insertion column are pushed rightward.
+   The command `M-x delete-whitespace-rectangle' deletes horizontal
+whitespace starting from a particular column.  This applies to each of
+the lines in the rectangle, and the column is specified by the left
+edge of the rectangle.  The right edge of the rectangle does not make
+any difference to this command.
+
+   The command `C-x r t' (`M-x string-rectangle') replaces the
+rectangle with a specified string (inserted once on each line).  The
+string's width need not be the same as the width of the rectangle.  if
+the string's width is less, the text after the rectangle shifts left; if
+the stringis wider than the rectangle, the text after the rectangle
+shifts right.
 
 
 File: emacs,  Node: Registers,  Next: Display,  Prev: Rectangles,  Up: Top
@@ -247,6 +338,7 @@ register.  To see what a register R contains, use `M-x view-register'.
 * Rectangle: RegRect.         Saving rectangles in registers.
 * Configurations: RegConfig.  Saving window configurations in registers.
 * Files: RegFiles.            File names in registers.
+* Numbers: RegNumbers.        Numbers in registers.
 * Bookmarks::                 Bookmarks are like registers, but persistent.
 
 
@@ -354,7 +446,30 @@ configuration become invisible.  If you wish to delete these frames
 instead, use `C-u C-x r j R'.
 
 
-File: emacs,  Node: RegFiles,  Next: Bookmarks,  Prev: RegConfig,  Up: Registers
+File: emacs,  Node: RegNumbers,  Next: Bookmarks,  Prev: RegFiles,  Up: Registers
+
+Keeping Numbers in Registers
+============================
+
+   There are commands to store a number in a register, to insert the
+number in the buffer in decimal, and to increment it.  These commands
+can be useful in keyboard macros (*note Keyboard Macros::.).
+
+`C-u NUMBER C-x r n REG'
+     Store NUMBER into register REG (`number-to-register').
+
+`C-u NUMBER C-x r + REG'
+     Increment the number in register REG by NUMBER
+     (`increment-register').
+
+`C-x r g REG'
+     Insert the number from register REG into the buffer.
+
+   `C-x r g' is the same command used to insert any other sort of
+register contents into the buffer.
+
+
+File: emacs,  Node: RegFiles,  Next: RegNumbers,  Prev: RegConfig,  Up: Registers
 
 Keeping File Names in Registers
 ===============================
@@ -376,7 +491,7 @@ puts the file name shown in register `z'.
 configuration.)
 
 
-File: emacs,  Node: Bookmarks,  Prev: RegFiles,  Up: Registers
+File: emacs,  Node: Bookmarks,  Prev: RegNumbers,  Up: Registers
 
 Bookmarks
 =========
@@ -563,7 +678,8 @@ rather, the text and point move rigidly on the screen.  `C-l' with a
 negative argument puts point that many lines from the bottom of the
 window.  For example, `C-u - 1 C-l' puts point on the bottom line, and
 `C-u - 5 C-l' puts it five lines from the bottom.  Just `C-u' as
-argument, as in `C-u C-l', scrolls point to the center of the screen.
+argument, as in `C-u C-l', scrolls point to the center of the selected
+window.
 
    The `C-M-l' command (`reposition-window') scrolls the current window
 heuristically in a way designed to get useful information onto the
@@ -1011,78 +1127,4 @@ rate is less than or equal to the value of the variable
    The number of lines to use in slow terminal search display is
 controlled by the variable `search-slow-window-lines'.  Its normal
 value is 1.
-
-
-File: emacs,  Node: Nonincremental Search,  Next: Word Search,  Prev: Incremental Search,  Up: Search
-
-Nonincremental Search
-=====================
-
-   Emacs also has conventional nonincremental search commands, which
-require you to type the entire search string before searching begins.
-
-`C-s <RET> STRING <RET>'
-     Search for STRING.
-
-`C-r <RET> STRING <RET>'
-     Search backward for STRING.
-
-   To do a nonincremental search, first type `C-s <RET>'.  This enters
-the minibuffer to read the search string; terminate the string with
-<RET>, and then the search takes place.  If the string is not found,
-the search command gets an error.
-
-   The way `C-s <RET>' works is that the `C-s' invokes incremental
-search, which is specially programmed to invoke nonincremental search
-if the argument you give it is empty.  (Such an empty argument would
-otherwise be useless.)  `C-r <RET>' also works this way.
-
-   However, nonincremental searches performed using `C-s <RET>' do not
-call `search-forward' right away.  The first thing done is to see if
-the next character is `C-w', which requests a word search.  *Note Word
-Search::.
-
-   Forward and backward nonincremental searches are implemented by the
-commands `search-forward' and `search-backward'.  These commands may be
-bound to keys in the usual manner.  The feature that you can get to
-them via the incremental search commands exists for historical reasons,
-and to avoid the need to find suitable key sequences for them.
-
-
-File: emacs,  Node: Word Search,  Next: Regexp Search,  Prev: Nonincremental Search,  Up: Search
-
-Word Search
-===========
-
-   Word search searches for a sequence of words without regard to how
-the words are separated.  More precisely, you type a string of many
-words, using single spaces to separate them, and the string can be
-found even if there are multiple spaces, newlines or other punctuation
-between the words.
-
-   Word search is useful for editing a printed document made with a text
-formatter.  If you edit while looking at the printed, formatted version,
-you can't tell where the line breaks are in the source file.  With word
-search, you can search without having to know them.
-
-`C-s <RET> C-w WORDS <RET>'
-     Search for WORDS, ignoring details of punctuation.
-
-`C-r <RET> C-w WORDS <RET>'
-     Search backward for WORDS, ignoring details of punctuation.
-
-   Word search is a special case of nonincremental search and is invoked
-with `C-s <RET> C-w'.  This is followed by the search string, which
-must always be terminated with <RET>.  Being nonincremental, this
-search does not start until the argument is terminated.  It works by
-constructing a regular expression and searching for that; see *Note
-Regexp Search::.
-
-   Use `C-r <RET> C-w' to do backward word search.
-
-   Forward and backward word searches are implemented by the commands
-`word-search-forward' and `word-search-backward'.  These commands may
-be bound to keys in the usual manner.  The feature that you can get to
-them via the incremental search commands exists for historical reasons,
-and to avoid the need to find suitable key sequences for them.
 

@@ -1,6 +1,12 @@
 This is Info file ../info/sc, produced by Makeinfo version 1.68 from
 the input file sc.texi.
 
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* SC: (sc).		Supercite lets you cite parts of messages you're
+			  replying to, in flexible ways.
+END-INFO-DIR-ENTRY
+
    This document describes the Supercite Version 3.1 package for citing
 and attributing the replies for various GNU Emacs mail and news reading
 subsystems.
@@ -833,8 +839,7 @@ of issues related to Supercite. This includes enhancement requests, bug
 reports, general help questions, etc.  To subscribe or unsubscribe to
 the mailing list, send a request to the administrative address:
 
-     Internet: supercite-request@anthem.nlm.nih.gov
-         UUCP: uunet!anthem.nlm.nih.gov!supercite-request
+     supercite-request@python.org
 
    Please be sure to include the most reliable and shortest (preferably
 Internet) address back to you.  To post articles to the list, send your
@@ -842,8 +847,7 @@ message to this address (you do not need to be a member to post, but be
 sure to indicate this in your article or replies may not be CC'd to
 you):
 
-     Internet: supercite@anthem.nlm.nih.gov
-         UUCP: uunet!anthem.nlm.nih.gov!supercite
+     supercite@python.org
 
    If you are sending bug reports, they should go to the following
 address, but *please*! use the command `sc-submit-bug-report' since it
@@ -851,8 +855,7 @@ will be much easier for me to duplicate your problem if you do so.  It
 will set up a mail buffer automatically with this address on the `To:'
 line:
 
-     Internet: supercite-help@anthem.nlm.nih.gov
-         UUCP: uunet!anthem.nlm.nih.gov!supercite-help
+     supercite-help@python.org
 
 
 File: sc,  Node: Concept Index,  Next: Command Index,  Prev: The Supercite Mailing List,  Up: Top

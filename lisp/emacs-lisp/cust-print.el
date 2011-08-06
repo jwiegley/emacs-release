@@ -83,6 +83,12 @@
 
 ;;; Code:
 
+(defgroup cust-print nil
+  "Handles print-level and print-circle."
+  :prefix "print-"
+  :group 'lisp
+  :group 'extensions)
+
 ;; If using cl-packages:
 
 '(defpackage "cust-print"
@@ -126,7 +132,7 @@
 ;;  "*Controls how many elements of a list, at each level, are printed.
 ;;This is defined by emacs.")
 
-(defvar print-level nil
+(defcustom print-level nil
   "*Controls how many levels deep a nested data object will print.  
 
 If nil, printing proceeds recursively and may lead to
@@ -137,10 +143,12 @@ Also see `print-length' and `print-circle'.
 If non-nil, components at levels equal to or greater than `print-level'
 are printed simply as `#'.  The object to be printed is at level 0,
 and if the object is a list or vector, its top-level components are at
-level 1.")
+level 1."
+  :type '(choice (const nil) integer)
+  :group 'cust-print)
 
 
-(defvar print-circle nil
+(defcustom print-circle nil
   "*Controls the printing of recursive structures.  
 
 If nil, printing proceeds recursively and may lead to
@@ -154,15 +162,19 @@ representation) and `#N#' in place of each subsequent occurrence,
 where N is a positive decimal integer.
 
 There is no way to read this representation in standard Emacs,
-but if you need to do so, try the cl-read.el package.")
+but if you need to do so, try the cl-read.el package."
+  :type 'boolean
+  :group 'cust-print)
 
 
-(defvar custom-print-vectors nil
+(defcustom custom-print-vectors nil
   "*Non-nil if printing of vectors should obey print-level and print-length.
 
 For Emacs 18, setting print-level, or adding custom print list or
 vector handling will make this happen anyway.  Emacs 19 obeys
-print-level, but not for vectors.")
+print-level, but not for vectors."
+  :type 'boolean
+  :group 'cust-print)
 
 
 ;; Custom printers
@@ -317,10 +329,11 @@ This is the custom-print replacement for the standard `princ'."
   (cust-print-top-level object stream 'cust-print-original-princ))
 
 
-(defun custom-prin1-to-string (object)
+(defun custom-prin1-to-string (object &optional noescape)
   "Return a string containing the printed representation of OBJECT,
 any Lisp object.  Quoting characters are used when needed to make output
-that `read' can handle, whenever this is possible.
+that `read' can handle, whenever this is possible, unless the optional
+second argument NOESCAPE is non-nil.
 
 This is the custom-print replacement for the standard `prin1-to-string'."
   (let ((buf (get-buffer-create " *custom-print-temp*")))
@@ -330,7 +343,9 @@ This is the custom-print replacement for the standard `prin1-to-string'."
       (set-buffer buf)
       (erase-buffer))
     ;; We must be in the current-buffer when the print occurs.
-    (custom-prin1 object buf)
+    (if noescape
+	(custom-princ object buf)
+      (custom-prin1 object buf))
     (save-excursion
       (set-buffer buf)
       (buffer-string)

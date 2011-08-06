@@ -388,21 +388,21 @@ whether to blink the matching beginning."
 	 (1 font-lock-type-face) (4 font-lock-variable-name-face))
        ;; do, if, select, where, and forall constructs
        '("\\<\\(end[ \t]*\\(do\\|if\\|select\\|forall\\|where\\)\\)\\>\\([ \t]+\\(\\sw+\\)\\)?"
-	 (1 font-lock-keyword-face) (3 font-lock-reference-face nil t))
+	 (1 font-lock-keyword-face) (3 font-lock-constant-face nil t))
        '("^[ \t0-9]*\\(\\(\\sw+\\)[ \t]*:[ \t]*\\)?\\(\\(if\\|do\\([ \t]*while\\)?\\|select[ \t]*case\\|where\\|forall\\)\\)\\>"
-	 (2 font-lock-reference-face nil t) (3 font-lock-keyword-face))
+	 (2 font-lock-constant-face nil t) (3 font-lock-keyword-face))
        ;; implicit declaration
        '("\\<\\(implicit\\)[ \t]*\\(real\\|integer\\|c\\(haracter\\|omplex\\)\\|logical\\|type[ \t]*(\\sw+)\\|none\\)\\>" (1 font-lock-keyword-face) (2 font-lock-type-face))
-       '("\\<\\(namelist\\|common\\)[ \t]*\/\\(\\sw+\\)?\/" (1 font-lock-keyword-face) (2 font-lock-reference-face nil t))
+       '("\\<\\(namelist\\|common\\)[ \t]*\/\\(\\sw+\\)?\/" (1 font-lock-keyword-face) (2 font-lock-constant-face nil t))
        "\\<else\\([ \t]*if\\|where\\)?\\>"
        "\\<\\(then\\|continue\\|format\\|include\\|stop\\|return\\)\\>"
        '("\\<\\(exit\\|cycle\\)[ \t]*\\(\\sw+\\)?\\>" 
-	 (1 font-lock-keyword-face) (2 font-lock-reference-face nil t))
+	 (1 font-lock-keyword-face) (2 font-lock-constant-face nil t))
        '("\\<\\(case\\)[ \t]*\\(default\\|(\\)" . 1)
        '("\\<\\(do\\|go *to\\)\\>[ \t]*\\([0-9]+\\)"
-	 (1 font-lock-keyword-face) (2 font-lock-reference-face))
+	 (1 font-lock-keyword-face) (2 font-lock-constant-face))
        ;; line numbers (lines whose first character after number is letter)
-       '("^[ \t]*\\([0-9]+\\)[ \t]*[a-z]+" (1 font-lock-reference-face t))))
+       '("^[ \t]*\\([0-9]+\\)[ \t]*[a-z]+" (1 font-lock-constant-face t))))
   "Highlights declarations, do-loops and other constructions")
 
 (defvar f90-font-lock-keywords-3
@@ -877,6 +877,7 @@ with no args, if that value is non-nil."
     (setq font-lock-defaults '(f90-font-lock-keywords nil t))
 
     ;; Tell imenu how to handle f90.
+    (setq imenu-case-fold-search t)
     (make-local-variable 'imenu-generic-expression)
     (setq imenu-generic-expression f90-imenu-generic-expression))
   (run-hooks 'f90-mode-hook)
@@ -988,7 +989,8 @@ Name is nil if the statement has no label."
 	    (setq struct (f90-match-piece 3))
 	    (if (looking-at "\\(\\sw+\\)[ \t]*\:")
 		(setq label (f90-match-piece 1)))
-	    (goto-char (scan-lists (point) 1 0))
+	    (let ((pos (scan-lists (point) 1 0)))
+	      (and pos (goto-char pos)))
 	    (skip-chars-forward " \t")
 	    (if (or (looking-at "then\\>")
 		    (if (f90-line-continued)
@@ -1040,7 +1042,11 @@ Name is non-nil only for type."
 	((and f90-directive-comment-re
 	      (looking-at f90-directive-comment-re)) 0)
 	((looking-at (regexp-quote f90-comment-region)) 0)
-	((looking-at f90-indented-comment-re)
+	((and (looking-at f90-indented-comment-re)
+	      ;; Don't attempt to indent trailing comment as code.
+	      (save-excursion
+		(skip-chars-backward " \t")
+		(bolp)))
 	 (f90-calculate-indent))
 	(t (skip-chars-backward " \t")
 	   (max (if (bolp) 0 (1+ (current-column))) comment-column))))

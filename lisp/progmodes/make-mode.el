@@ -88,7 +88,7 @@
 
 ;;; Code:
 
-(provide 'makefile)
+(provide 'make-mode)
 
 ;; Sadly we need this for a macro.
 (eval-when-compile
@@ -105,7 +105,7 @@
 
 (defface makefile-space-face
    '((((class color)) (:background  "hotpink"))
-         (t (:reverse-video t)))
+     (t (:reverse-video t)))
   "Face to use for highlighting leading spaces in Font-Lock mode."
   :group 'faces
   :group 'makemode)
@@ -234,7 +234,7 @@ not be enclosed in { } or ( )."
 ;; that if you change this regexp you must fix the imenu index
 ;; function defined at the end of the file.
 (defconst makefile-dependency-regex
-  "^ *\\([^ \n\t#:=]+\\([ \t]+[^ \t\n#:=]+\\)*\\)[ \t]*:\\([ \t]*$\\|\\([^=\n].*$\\)\\)"
+  "^ *\\([^ \n\t#:=]+\\([ \t]+\\([^ \t\n#:=]+\\|\\$[({][^ \t\n#})]+[})]\\)\\)*\\)[ \t]*:\\([ \t]*$\\|\\([^=\n].*$\\)\\)"
   "Regex used to find dependency lines in a makefile.")
 
 ;; Note that the first subexpression is used by font lock.  Note that
@@ -263,8 +263,11 @@ not be enclosed in { } or ( )."
    (list makefile-dependency-regex 1 'font-lock-function-name-face)
    ;;
    ;; Variable references even in targets/strings/comments:
-   '("\\$[({]\\([-a-zA-Z0-9_.]+\\)[}):]" 1 font-lock-reference-face prepend)
-
+   '("\\$[({]\\([-a-zA-Z0-9_.]+\\)[}):]" 1 font-lock-constant-face prepend)
+   ;;
+   ;; Automatic variable references.
+   '("\\$\\([@%<?^+*]\\)" 1 font-lock-reference-face prepend)
+   ;;
    ;; Highlight lines that contain just whitespace.
    ;; They can cause trouble, especially if they start with a tab.
    '("^[ \t]+$" . makefile-space-face)
@@ -1100,7 +1103,7 @@ definition and conveniently use this command."
   (let ((my-client makefile-browser-client))
     (setq makefile-browser-client nil)	; we quitted, so NO client!
     (set-buffer-modified-p nil)
-    (kill-buffer (current-buffer))
+    (quit-window t)
     (pop-to-buffer my-client)))
 
 ;;;

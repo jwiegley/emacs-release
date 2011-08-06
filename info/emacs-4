@@ -1,6 +1,38 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
 
 File: emacs,  Node: Minibuffer History,  Next: Repetition,  Prev: Completion,  Up: Minibuffer
 
@@ -13,10 +45,12 @@ argument.  Special commands load the text of an earlier argument in the
 minibuffer.  They discard the old minibuffer contents, so you can think
 of them as moving through the history of previous arguments.
 
+`<up>'
 `M-p'
      Move to the next earlier argument string saved in the minibuffer
      history (`previous-history-element').
 
+`<down>'
 `M-n'
      Move to the next later argument string saved in the minibuffer
      history (`next-history-element').
@@ -31,9 +65,9 @@ of them as moving through the history of previous arguments.
 
    The simplest way to reuse the saved arguments in the history list is
 to move through the history list one element at a time.  While in the
-minibuffer, type `M-p' (`previous-history-element') to "move to" the
-next earlier minibuffer input, and use `M-n' (`next-history-element')
-to "move to" the next later input.
+minibuffer, use `M-p' or up-arrow (`previous-history-element') to "move
+to" the next earlier minibuffer input, and use `M-n' or down-arrow
+(`next-history-element') to "move to" the next later input.
 
    The previous input that you fetch from the history entirely replaces
 the contents of the minibuffer.  To use it as the argument, exit the
@@ -55,16 +89,22 @@ expression that you specify with the minibuffer.  `M-r'
 history, while `M-s' (`next-matching-history-element') searches newer
 elements.  By special dispensation, these commands can use the
 minibuffer to read their arguments even though you are already in the
-minibuffer when you issue them.
+minibuffer when you issue them.  As with incremental searching, an
+uppercase letter in the regular expression makes the search
+case-sensitive (*note Search Case::.).
 
    All uses of the minibuffer record your input on a history list, but
 there are separate history lists for different kinds of arguments.  For
 example, there is a list for file names, used by all the commands that
-read file names.  There is a list for arguments of commands like
-`query-replace'.  There are several very specific history lists,
-including one for command names read by <M-x> and one for compilation
-commands read by `compile'.  Finally, there is one "miscellaneous"
-history list that most minibuffer arguments use.
+read file names.  (As a special feature, this history list records the
+absolute file name, no more and no less, even if that is not how you
+entered the file name.)
+
+   There are several other very specific history lists, including one
+for command names read by `M-x', one for buffer names, one for arguments
+of commands like `query-replace', and one for compilation commands read
+by `compile'.  Finally, there is one "miscellaneous" history list that
+most minibuffer arguments use.
 
    The variable `history-length' specifies the maximum length of a
 minibuffer history list; once a list gets that long, the oldest element
@@ -118,7 +158,7 @@ expression as usual and then resubmit it by typing <RET> as usual.
    The list of previous minibuffer-using commands is stored as a Lisp
 list in the variable `command-history'.  Each element is a Lisp
 expression which describes one command and its arguments.  Lisp programs
-can reexecute a command by calling `eval' with the `command-history'
+can re-execute a command by calling `eval' with the `command-history'
 element.
 
 
@@ -219,6 +259,7 @@ scroll conveniently with <SPC> and <DEL>.
 * Apropos::		Asking what pertains to a given topic.
 * Library Keywords::	Finding Lisp libraries by keywords (topics).
 * Language Help::       Help relating to international language support.
+* Help Mode::           Special features of Help mode and Help buffers.
 * Misc Help::		Other help commands.
 
 
@@ -319,7 +360,7 @@ Help Summary
 `C-h C-p'
      Display information about the GNU Project.
 
-`C-h C-s SYMBOL <RET>'
+`C-h <TAB> SYMBOL <RET>'
      Display the Info documentation on symbol SYMBOL according to the
      programming language you are editing (`info-lookup-symbol').
 
@@ -408,8 +449,9 @@ command name appears a brief description of how to use the command, and
 what keys you can currently invoke it with.  For example, it would say
 that you can invoke `find-file' by typing `C-x C-f'.  The `a' in `C-h
 a' stands for `Apropos'; `C-h a' runs the command `apropos-command'.
-This command does not check user variables by default; specify a
-numeric argument if you want it to check them.
+This command normally checks only commands (interactive functions); if
+you specify a prefix argument, it checks noninteractive functions as
+well.
 
    Because `C-h a' looks only for functions whose names contain the
 string you specify, you must use ingenuity in choosing the string.  If
@@ -431,6 +473,11 @@ technique for picking `apropos' strings.
      search, goto, kill, delete, mark, insert, yank, fill, indent,
      case, change, set, what, list, find, view, describe, default.
 
+   To list all user variables that match a regexp, use the command `M-x
+apropos-variable'. This command shows only user variables and
+customization options by default; if you specify a prefix argument, it
+checks all variables.
+
    To list all Lisp symbols that contain a match for a regexp, not just
 the ones that are defined as commands, use the command `M-x apropos'
 instead of `C-h a'.  This command does not check key bindings by
@@ -445,6 +492,9 @@ searches symbols' values for matches for the specified regular
 expression.  This command does not check function definitions or
 property lists by default; specify a numeric argument if you want it to
 check them.
+
+   If the variable `apropos-do-all' is non-`nil', the commands above
+all behave as if they had been given a prefix argument.
 
    If you want more information about a function definition, variable or
 symbol property listed in the Apropos buffer, you can click on it with
@@ -496,7 +546,7 @@ use:
      wp --- word processing.
 
 
-File: emacs,  Node: Language Help,  Next: Misc Help,  Prev: Library Keywords,  Up: Help
+File: emacs,  Node: Language Help,  Next: Help Mode,  Prev: Library Keywords,  Up: Help
 
 Help for International Language Support
 =======================================
@@ -520,7 +570,46 @@ about coding systems--either a specified coding system, or the ones
 currently in use.  *Note Coding Systems::.
 
 
-File: emacs,  Node: Misc Help,  Prev: Language Help,  Up: Help
+File: emacs,  Node: Help Mode,  Next: Misc Help,  Prev: Language Help,  Up: Help
+
+Help Mode Commands
+==================
+
+   Help buffers provide the commands of View mode (*note Misc File
+Ops::.), plus a few special commands of their own.
+
+`<SPC>'
+     Scroll forward.
+
+`<DEL>'
+     Scroll backward.
+
+`<RET>'
+     Follow a cross reference at point.
+
+`<TAB>'
+     Move point forward to the next cross reference.
+
+`S-<TAB>'
+     Move point back to the previous cross reference.
+
+`Mouse-2'
+     Follow a cross reference that you click on.
+
+   When a command name (*note Running Commands by Name: M-x.) or
+variable name (*note Variables::.) appears in the documentation, it
+normally appears inside paired single-quotes.  You can click on the name
+with `Mouse-2', or move point there and type <RET>, to view the
+documentation of that command or variable.  Use `C-c C-b' to retrace
+your steps.
+
+   There are convenient commands for moving point to cross references in
+the help text.  <TAB> (`help-next-ref') moves point down to the next
+cross reference.  Use `S-<TAB>' to move point up to the previous cross
+reference (`help-previous-ref').
+
+
+File: emacs,  Node: Misc Help,  Prev: Help Mode,  Up: Help
 
 Other Help Commands
 ===================
@@ -530,6 +619,12 @@ through structured documentation files.  The entire Emacs manual is
 available within Info.  Eventually all the documentation of the GNU
 system will be available.  Type `h' after entering Info to run a
 tutorial on using Info.
+
+   If you specify a numeric argument, `C-h i' prompts for the name of a
+documentation file.  This way, you can browse a file which doesn't have
+an entry in the top-level Info menu.  It is also handy when you need to
+get to the documentation quickly, and you know the exact name of the
+file.
 
    There are two special help commands for accessing Emacs documentation
 through Info.  `C-h C-f FUNCTION <RET>' enters Info and goes straight
@@ -1130,54 +1225,4 @@ copies the region into the kill ring without removing it from the
 buffer.  This is approximately equivalent to `C-w' followed by `C-x u',
 except that `M-w' does not alter the undo history and does not
 temporarily change the screen.
-
-
-File: emacs,  Node: Appending Kills,  Next: Earlier Kills,  Prev: Kill Ring,  Up: Yanking
-
-Appending Kills
----------------
-
-   Normally, each kill command pushes a new entry onto the kill ring.
-However, two or more kill commands in a row combine their text into a
-single entry, so that a single `C-y' yanks all the text as a unit, just
-as it was before it was killed.
-
-   Thus, if you want to yank text as a unit, you need not kill all of it
-with one command; you can keep killing line after line, or word after
-word, until you have killed it all, and you can still get it all back at
-once.
-
-   Commands that kill forward from point add onto the end of the
-previous killed text.  Commands that kill backward from point add text
-onto the beginning.  This way, any sequence of mixed forward and
-backward kill commands puts all the killed text into one entry without
-rearrangement.  Numeric arguments do not break the sequence of
-appending kills.  For example, suppose the buffer contains this text:
-
-     This is a line -!-of sample text.
-
-with point shown by -!-.  If you type `M-d M-<DEL> M-d M-<DEL>',
-killing alternately forward and backward, you end up with `a line of
-sample' as one entry in the kill ring, and `This is  text.' in the
-buffer.  (Note the double space, which you can clean up with `M-<SPC>'
-or `M-q'.)
-
-   Another way to kill the same text is to move back two words with
-`M-b M-b', then kill all four words forward with `C-u M-d'.  This
-produces exactly the same results in the buffer and in the kill ring.
-`M-f M-f C-u M-<DEL>' kills the same text, all going backward; once
-again, the result is the same.  The text in the kill ring entry always
-has the same order that it had in the buffer before you killed it.
-
-   If a kill command is separated from the last kill command by other
-commands (not just numeric arguments), it starts a new entry on the kill
-ring.  But you can force it to append by first typing the command
-`C-M-w' (`append-next-kill') right before it.  The `C-M-w' tells the
-following command, if it is a kill command, to append the text it kills
-to the last killed text, instead of starting a new entry.  With
-`C-M-w', you can kill several separated pieces of text and accumulate
-them to be yanked back in one place.
-
-   A kill command following `M-w' does not append to the text that
-`M-w' copied into the kill ring.
 

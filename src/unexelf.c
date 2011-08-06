@@ -430,7 +430,38 @@ Filesz      Memsz       Flags       Align
 #endif /* __sony_news && _SYSTYPE_SYSV */
 
 #if defined (__alpha__) && !defined (__NetBSD__) && !defined (__OpenBSD__)
-#include <sym.h>	/* get COFF debugging symbol table declaration */
+/* Declare COFF debugging symbol table.  This used to be in
+   /usr/include/sym.h, but this file is no longer included in Red Hat
+   5.0 and presumably in any other glibc 2.x based distribution.  */
+typedef struct {
+	short magic;
+	short vstamp;
+	int ilineMax;
+	int idnMax;
+	int ipdMax;
+	int isymMax;
+	int ioptMax;
+	int iauxMax;
+	int issMax;
+	int issExtMax;
+	int ifdMax;
+	int crfd;
+	int iextMax;
+	long cbLine;
+	long cbLineOffset;
+	long cbDnOffset;
+	long cbPdOffset;
+	long cbSymOffset;
+	long cbOptOffset;
+	long cbAuxOffset;
+	long cbSsOffset;
+	long cbSsExtOffset;
+	long cbFdOffset;
+	long cbRfdOffset;
+	long cbExtOffset;
+} HDRR, *pHDRR; 
+#define cbHDRR sizeof(HDRR)
+#define hdrNil ((pHDRR)0)
 #endif
 
 #ifdef __NetBSD__
@@ -544,9 +575,9 @@ typedef unsigned char byte;
 
 /* Round X up to a multiple of Y.  */
 
-int
+ElfW(Addr)
 round_up (x, y)
-     int x, y;
+     ElfW(Addr) x, y;
 {
   int rem = x % y;
   if (rem == 0)
@@ -799,7 +830,9 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   if (n < 0)
     fatal ("Couldn't find segment next to .bss in %s\n", old_name, 0);
 
-  NEW_PROGRAM_H (n).p_filesz += new_data2_size;
+  /* Make sure that the size includes any padding before the old .bss
+     section.  */
+  NEW_PROGRAM_H (n).p_filesz = new_bss_addr - NEW_PROGRAM_H (n).p_vaddr;
   NEW_PROGRAM_H (n).p_memsz = NEW_PROGRAM_H (n).p_filesz;
 
 #if 0 /* Maybe allow section after data2 - does this ever happen? */
@@ -1035,7 +1068,9 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 
       for (; symp < symendp; symp ++)
 	if (strcmp ((char *) (symnames + symp->st_name), "_end") == 0
-	    || strcmp ((char *) (symnames + symp->st_name), "_edata") == 0)
+	    || strcmp ((char *) (symnames + symp->st_name), "end") == 0
+	    || strcmp ((char *) (symnames + symp->st_name), "_edata") == 0
+	    || strcmp ((char *) (symnames + symp->st_name), "edata") == 0)
 	  memcpy (&symp->st_value, &new_bss_addr, sizeof (new_bss_addr));
     }
 

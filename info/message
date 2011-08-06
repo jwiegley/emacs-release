@@ -1,6 +1,11 @@
 This is Info file ../info/message, produced by Makeinfo version 1.68
 from the input file message.texi.
 
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Message: (message).	Mail and news composition mode that goes with Gnus.
+END-INFO-DIR-ENTRY
+
    This file documents Message, the Emacs message composition mode.
 
    Copyright (C) 1996 Free Software Foundation, Inc.
@@ -1072,37 +1077,37 @@ Key Index
 
 
 Tag Table:
-Node: Top798
-Node: Interface1315
-Node: New Mail Message2312
-Node: New News Message2674
-Node: Reply3067
-Node: Wide Reply4403
-Node: Followup5097
-Node: Canceling News5868
-Node: Superseding6073
-Node: Forwarding6545
-Node: Resending7468
-Node: Bouncing7853
-Node: Commands8360
-Node: Header Commands8789
-Node: Movement9829
-Node: Insertion10113
-Node: Various Commands12816
-Node: Sending13811
-Node: Mail Aliases14212
-Node: Variables14855
-Node: Message Headers15501
-Node: Mail Headers17219
-Node: Mail Variables17823
-Node: News Headers18484
-Node: News Variables24268
-Node: Various Message Variables24614
-Node: Sending Variables27076
-Node: Message Buffers27942
-Node: Message Actions29372
-Node: Compatibility30840
-Node: Index31277
-Node: Key Index38249
+Node: Top938
+Node: Interface1455
+Node: New Mail Message2452
+Node: New News Message2814
+Node: Reply3207
+Node: Wide Reply4543
+Node: Followup5237
+Node: Canceling News6008
+Node: Superseding6213
+Node: Forwarding6685
+Node: Resending7608
+Node: Bouncing7993
+Node: Commands8500
+Node: Header Commands8929
+Node: Movement9969
+Node: Insertion10253
+Node: Various Commands12956
+Node: Sending13951
+Node: Mail Aliases14352
+Node: Variables14995
+Node: Message Headers15641
+Node: Mail Headers17359
+Node: Mail Variables17963
+Node: News Headers18624
+Node: News Variables24408
+Node: Various Message Variables24754
+Node: Sending Variables27216
+Node: Message Buffers28082
+Node: Message Actions29512
+Node: Compatibility30980
+Node: Index31417
+Node: Key Index38389
 
 End Tag Table

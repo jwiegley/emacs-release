@@ -52,6 +52,7 @@ on the screen.
 * Comments::	        Inserting, killing, and aligning comments.
 * Balanced Editing::    Inserting two matching parentheses at once, etc.
 * Symbol Completion::   Completion on symbol names of your program or language.
+* Which Function::      Which Function mode shows which function you are in.
 * Documentation::       Getting documentation of functions you plan to call.
 * Change Log::	        Maintaining a change history for your program.
 * Tags::	        Go direct to any function in your program in one
@@ -71,10 +72,11 @@ on the screen.
 @cindex Awk mode
 @cindex Makefile mode
 @cindex Tcl mode
+@cindex CPerl mode
   Emacs also has major modes for the programming languages Lisp, Scheme
 (a variant of Lisp), Awk, C, C++, Fortran, Icon, Java, Objective-C,
 Pascal, Perl and Tcl.  There is also a major mode for makefiles, called
-Makefile mode.
+Makefile mode.  An second alternative mode for Perl is called CPerl mode.
 
   Ideally, a major mode should be implemented for each programming
 language that you might want to edit with Emacs; but often the mode for
@@ -224,7 +226,7 @@ kills the characters that @kbd{C-M-b} would move over.
 @findex forward-list
 @findex backward-list
   The @dfn{list commands} move over lists, as the sexp commands do, but skip
-blithely over any number of other kinds of sexps (symbols, strings, etc).
+blithely over any number of other kinds of sexps (symbols, strings, etc.).
 They are @kbd{C-M-n} (@code{forward-list}) and @kbd{C-M-p}
 (@code{backward-list}).  The main reason they are useful is that they
 usually ignore comments (since the comments usually do not contain any
@@ -337,7 +339,7 @@ it mandates the convention described above.
 @cindex indentation for programs
 
   The best way to keep a program properly indented is to use Emacs to
-re-indent it as you change it.  Emacs has commands to indent properly
+reindent it as you change it.  Emacs has commands to indent properly
 either a single line, a specified number of lines, or all of the lines
 inside a single parenthetical grouping.
 
@@ -404,23 +406,23 @@ information on this.
 @node Multi-line Indent
 @subsection Indenting Several Lines
 
-  When you wish to re-indent several lines of code which have been altered
+  When you wish to reindent several lines of code which have been altered
 or moved to a different level in the list structure, you have several
 commands available.
 
 @table @kbd
 @item C-M-q
-Re-indent all the lines within one list (@code{indent-sexp}).
+Reindent all the lines within one list (@code{indent-sexp}).
 @item C-u @key{TAB}
 Shift an entire list rigidly sideways so that its first line
 is properly indented.
 @item C-M-\
-Re-indent all lines in the region (@code{indent-region}).
+Reindent all lines in the region (@code{indent-region}).
 @end table
 
 @kindex C-M-q
 @findex indent-sexp
-  You can re-indent the contents of a single list by positioning point
+  You can reindent the contents of a single list by positioning point
 before the beginning of it and typing @kbd{C-M-q} (@code{indent-sexp} in
 Lisp mode, @code{c-indent-exp} in C mode; also bound to other suitable
 commands in other modes).  The indentation of the line the sexp starts on
@@ -438,7 +440,7 @@ whole grouping rigidly as a unit.  It is clever, though, and does not
 alter lines that start inside strings, or C preprocessor lines when in C
 mode.
 
-  Another way to specify the range to be re-indented is with the region.
+  Another way to specify the range to be reindented is with the region.
 The command @kbd{C-M-\} (@code{indent-region}) applies @key{TAB} to
 every line whose first character is between point and mark.
 
@@ -543,7 +545,8 @@ the current line and does nothing else.  This is the default.
 
 If that variable is @code{nil}, this command reindents the current line
 only if point is at the left margin or in the line's indentation;
-otherwise, it inserts a tab.
+otherwise, it inserts a tab (or the equivalent number of spaces,
+if @code{indent-tabs-mode} is @code{nil}).
 
 Any other value (not @code{nil} or @code{t}) means always reindent the
 line, and also insert a tab if within a comment, a string, or a
@@ -1140,7 +1143,7 @@ that is inserted after point, to keep the syntax valid.
 
   @kbd{M-;} can also be used to align an existing comment.  If a line
 already contains the string that starts comments, then @kbd{M-;} just moves
-point after it and re-indents it to the conventional place.  Exception:
+point after it and reindents it to the conventional place.  Exception:
 comments starting in column 0 are not moved.
 
   Some major modes have special rules for indenting certain kinds of
@@ -1209,6 +1212,11 @@ the comment delimiter is a way of calling attention to the comment.  It
 can also affect how the comment is indented.  In Lisp, for proper
 indentation, you should use an argument of two, if between defuns, and
 three, if within a defun.
+
+@vindex comment-padding
+  The variable @code{comment-padding} specifies how many spaces
+@code{comment-region} should insert on each line between the
+comment delimiter and the line's original text.  The default is 1.
 
 @node Options for Comments
 @subsection Options Controlling Comments
@@ -1279,7 +1287,7 @@ comment, and on the code in the preceding lines.
 @item M-(
 Put parentheses around next sexp(s) (@code{insert-parentheses}).
 @item M-)
-Move past next close parenthesis and re-indent
+Move past next close parenthesis and reindent
 (@code{move-past-close-and-reindent}).
 @end table
 
@@ -1351,6 +1359,22 @@ The command which implements this is @code{lisp-complete-symbol}.
   In Text mode and related modes, @kbd{M-@key{TAB}} completes words
 based on the spell-checker's dictionary.  @xref{Spelling}.
 
+@node Which Function
+@section Which Function Mode
+
+  Which Function mode is a minor mode that displays the current function
+name in the mode line, as you move around in a buffer.
+
+@findex which-function-mode
+@vindex which-func-modes
+  To enable (or disable) Which Function mode, use the command @kbd{M-x
+which-function-mode}.  This command is global; it applies to all
+buffers, both existing ones and those yet to be created.  However, this
+only affects certain major modes, those listed in the value of
+@code{which-func-modes}.  (If the value is @code{t}, then Which Function
+mode applies to all major modes that know how to support it---which are
+the major modes that support Imenu.)
+
 @node Documentation
 @section Documentation Commands
 
@@ -1393,7 +1417,7 @@ asynchronously if your system permits, so that you can keep on editing
 while the page is being formatted.  (MS-DOS and MS-Windows 3 do not
 permit asynchronous subprocesses, so on these systems you cannot edit
 while Emacs waits for @code{man} to exit.)  The result goes in a buffer
-named @samp{*man @var{topic}*}.  These buffers use a special major mode,
+named @samp{*Man @var{topic}*}.  These buffers use a special major mode,
 Man mode, that facilitates scrolling and examining other manual pages.
 For details, type @kbd{C-h m} while in a man page buffer.
 
@@ -1436,13 +1460,14 @@ your email address (taken from the variable @code{user-mail-address}),
 and the current date and time.  Aside from these header lines, every
 line in the change log starts with a space or a tab.  The bulk of the
 entry consists of @dfn{items}, each of which starts with a line starting
-with whitespace and a star.  Here are two entries, each with two items:
+with whitespace and a star.  Here are two entries, both dated in May
+1993, each with two items:
 
 @iftex
 @medbreak
 @end iftex
 @smallexample
-Wed May  5 14:11:45 1993  Richard Stallman  <rms@@gnu.ai.mit.edu>
+1993-05-25  Richard Stallman  <rms@@gnu.org>
 
         * man.el: Rename symbols `man-*' to `Man-*'.
         (manual-entry): Make prompt string clearer.
@@ -1450,11 +1475,14 @@ Wed May  5 14:11:45 1993  Richard Stallman  <rms@@gnu.ai.mit.edu>
         * simple.el (blink-matching-paren-distance):
         Change default to 12,000.
 
-Tue May  4 12:42:19 1993  Richard Stallman  <rms@@gnu.ai.mit.edu>
+1993-05-24  Richard Stallman  <rms@@gnu.org>
 
         * vc.el (minor-mode-map-alist): Don't use it if it's void.
         (vc-cancel-version): Doc fix.
 @end smallexample
+
+@noindent
+(Previous Emacs versions used a different format for the date.)
 
   One entry can describe several changes; each change should have its
 own item.  Normally there should be a blank line between items.  When
@@ -1476,7 +1504,7 @@ entry is considered a page.  This facilitates editing the entries.
 this is convenient for entering the contents of an entry.
 
   Version control systems are another way to keep track of changes in your
-program and keep a change log.  @xref{Log Entries}.
+program and keep a change log.  @xref{Log Buffer}.
 
 @node Tags
 @section Tags Tables
@@ -1487,7 +1515,7 @@ broken up into files.  It lists the names of the component files and the
 names and positions of the functions (or other named subunits) in each
 file.  Grouping the related files makes it possible to search or replace
 through all the files with one command.  Recording the function names
-and positions makes possible the @kbd{M-.}  command which finds the
+and positions makes possible the @kbd{M-.} command which finds the
 definition of a function by looking up which of the files it is in.
 
   Tags tables are stored in files called @dfn{tags table files}.  The
@@ -1594,7 +1622,7 @@ In Erlang code, the tags are the functions, records, and macros defined
 in the file.
 
 @item
-In Fortran code, functions and subroutines are tags.
+In Fortran code, functions, subroutines and blockdata are tags.
 
 @item
 In Objective C code, tags include Objective C definitions for classes,
@@ -1853,6 +1881,8 @@ Find first definition of @var{tag}, but display it in another window
 @item C-x 5 .@: @var{tag} @key{RET}
 Find first definition of @var{tag}, and create a new frame to select the
 buffer (@code{find-tag-other-frame}).
+@item M-*
+Pop back to where you previously invoked @kbd{M-.} and friends.
 @end table
 
 @kindex M-.
@@ -1894,10 +1924,22 @@ M-.}; more generally, @kbd{M-.} with a negative numeric argument.  This
 command can take you to another buffer.  @kbd{C-x 4 .} with a negative
 argument finds the previous tag location in another window.
 
+@kindex M-*
+@findex pop-tag-mark
+@vindex find-tag-marker-ring-length
+  As well as going back to places you've found tags recently, you can go
+back to places @emph{from where} you found them.  Use @kbd{M-*}, which
+invokes the command @code{pop-tag-mark}, for this.  Typically you would
+find and study the definition of something with @kbd{M-.} and then
+return to where you were with @kbd{M-*}.
+
+  Both @kbd{C-u - M-.} and @kbd{M-*} allow you to retrace your steps to
+a depth determined by the variable @code{find-tag-marker-ring-length}.
+
 @findex find-tag-regexp
 @kindex C-M-.
   The command @kbd{C-M-.} (@code{find-tag-regexp}) visits the tags that
-match a specified regular expression.  It is just like @kbd{M-.}  except
+match a specified regular expression.  It is just like @kbd{M-.} except
 that it does regexp matching instead of substring matching.
 
 @node Tags Search
@@ -2004,7 +2046,8 @@ names in the current tags tables.  @xref{Symbol Completion}.
 It's not unusual for programmers to get their signals crossed and modify
 the same program in two different directions.  To recover from this
 confusion, you need to merge the two versions.  Emerge makes this
-easier.  See also @ref{Comparing Files}.
+easier.  See also @ref{Comparing Files}, for commands to compare
+in a more manual fashion, and @ref{Emerge,,, ediff, The Ediff Manual}.
 
 @menu
 * Overview of Emerge::	How to start Emerge.  Basic concepts.
@@ -2741,6 +2784,7 @@ runs the hook @code{fortran-mode-hook} (@pxref{Hooks}).
 * Autofill: Fortran Autofill.	 Auto fill minor mode for Fortran.
 * Columns: Fortran Columns.	 Measuring columns for valid Fortran.
 * Abbrev: Fortran Abbrev.	 Built-in abbrevs for Fortran keywords.
+* Misc: Fortran Misc.            Other Fortran mode features.
 @end menu
 
 @node Fortran Motion
@@ -2805,6 +2849,8 @@ Indent the current and start a new indented line
 (@code{fortran-indent-new-line}).
 @item C-M-j
 Break the current line and set up a continuation line.
+@item M-^
+Join this line to the previous line.
 @item C-M-q
 Indent all the lines of the subprogram point is in
 (@code{fortran-indent-subprogram}).
@@ -2812,7 +2858,7 @@ Indent all the lines of the subprogram point is in
 
 @findex fortran-indent-line
   Fortran mode redefines @key{TAB} to reindent the current line for
-Fortran (@code{fortran-indent-line}).  This command indents Line numbers
+Fortran (@code{fortran-indent-line}).  This command indents line numbers
 and continuation markers to their required columns, and independently
 indents the body of the statement based on its nesting in the program.
 
@@ -2836,6 +2882,12 @@ a line in the appropriate fashion for Fortran.  In a non-comment line,
 the second half becomes a continuation line and is indented
 accordingly.  In a comment line, both halves become separate comment
 lines.
+
+@kindex M-^ @r{(Fortran mode)}
+@findex fortran-join-line
+  @kbd{M-^} runs the command @code{fortran-join-line}, which is more or
+less the inverse of @code{fortran-split-line}.  It joins the current
+line to the previous line in a suitable way for Fortran code.
 
 @node ForIndent Cont
 @subsubsection Continuation Lines
@@ -3180,6 +3232,21 @@ to @samp{continue}, provided Abbrev mode is enabled.@refill
 
   Type @samp{;?} or @samp{;C-h} to display a list of all the built-in
 Fortran abbrevs and what they stand for.
+
+@node Fortran Misc
+@subsection Other Fortran Mode Commands
+
+@table @kbd
+@item C-x n d
+Narrow to the current Fortran subprogram.
+@end table
+
+@kindex C-x n d
+@findex fortran-narrow-to-subprogram
+  Fortran mode redefines the key @kbd{C-x n d} to run the command
+@code{fortran-narrow-to-subprogram}, which is the Fortran analogue
+of the key's usual definition.  It narrows the buffer to the subprogram
+containing point.
 
 @node Asm Mode
 @section Asm Mode

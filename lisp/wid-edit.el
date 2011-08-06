@@ -34,35 +34,17 @@
 (eval-when-compile (require 'cl))
 
 ;;; Compatibility.
+  
+(defun widget-event-point (event)
+  "Character position of the end of event if that exists, or nil."
+  (posn-point (event-end event)))
+
+(defalias 'widget-read-event 'read-event)
 
 (eval-and-compile
   (autoload 'pp-to-string "pp")
   (autoload 'Info-goto-node "info")
   (autoload 'finder-commentary "finder" nil t)
-
-  (when (string-match "XEmacs" emacs-version)
-    (condition-case nil
-	(require 'overlay)
-      (error (load-library "x-overlay"))))
-  
-  (if (string-match "XEmacs" emacs-version)
-      (defun widget-event-point (event)
-	"Character position of the end of event if that exists, or nil."
-	(if (mouse-event-p event)
-	    (event-point event)
-	  nil))
-    (defun widget-event-point (event)
-      "Character position of the end of event if that exists, or nil."
-      (posn-point (event-end event))))
-
-  (defalias 'widget-read-event (if (string-match "XEmacs" emacs-version)
-				   'next-event
-				 'read-event))
-
-  ;; The following should go away when bundled with Emacs.
-  (condition-case ()
-      (require 'custom)
-    (error nil))
 
   (unless (and (featurep 'custom) (fboundp 'custom-declare-variable))
     ;; We have the old custom-library, hack around it!
@@ -83,24 +65,7 @@
       (and (eventp event)
 	   (memq (event-basic-type event) '(mouse-1 mouse-2 mouse-3))
 	   (or (memq 'click (event-modifiers event))
-	       (memq  'drag (event-modifiers event))))))
-
-  (unless (fboundp 'functionp)
-    ;; Missing from Emacs 19.34 and earlier.
-    (defun functionp (object)
-      "Non-nil of OBJECT is a type of object that can be called as a function."
-      (or (subrp object) (byte-code-function-p object)
-	  (eq (car-safe object) 'lambda)
-	  (and (symbolp object) (fboundp object)))))
-
-  (unless (fboundp 'error-message-string)
-    ;; Emacs function missing in XEmacs.
-    (defun error-message-string (obj)
-      "Convert an error value to an error message."
-      (let ((buf (get-buffer-create " *error-message*")))
-	(erase-buffer buf)
-	(display-error obj buf)
-	(buffer-string buf)))))
+	       (memq  'drag (event-modifiers event)))))))
 
 ;;; Customization.
 
@@ -189,17 +154,6 @@ This exists as a variable so it can be set locally in certain buffers.")
 ;;
 ;; These are not really widget specific.
 
-(defsubst widget-plist-member (plist prop)
-  ;; Return non-nil if PLIST has the property PROP.
-  ;; PLIST is a property list, which is a list of the form
-  ;; (PROP1 VALUE1 PROP2 VALUE2 ...).  PROP is a symbol.
-  ;; Unlike `plist-get', this allows you to distinguish between a missing
-  ;; property and a property with the value nil.
-  ;; The value is actually the tail of PLIST whose car is PROP.
-  (while (and plist (not (eq (car plist) prop)))
-    (setq plist (cdr (cdr plist))))
-  plist)
-
 (defun widget-princ-to-string (object)
   ;; Return string representation of OBJECT, any Lisp object.
   ;; No quoting characters are used; no delimiters are printed around
@@ -248,23 +202,6 @@ minibuffer."
 	 ;; We are in Emacs-19, pressed by the mouse
 	 (x-popup-menu event
 		       (list title (cons "" items))))
-	((and (< (length items) widget-menu-max-size)
-	      event (fboundp 'popup-menu) window-system)
-	 ;; We are in XEmacs, pressed by the mouse
-	 (let ((val (get-popup-menu-response
-		     (cons title
-			   (mapcar
-			    (function
-			     (lambda (x)
-			       (if (stringp x)
-				   (vector x nil nil) 
-				 (vector (car x) (list (car x)) t))))
-			    items)))))
-	   (setq val (and val
-			  (listp (event-object val))
-			  (stringp (car-safe (event-object val)))
-			  (car (event-object val))))
-	   (cdr (assoc val items))))
 	(widget-menu-minibuffer-flag
 	 ;; Read the choice of name from the minibuffer.
 	 (setq items (widget-remove-if 'stringp items))
@@ -306,17 +243,35 @@ minibuffer."
 	       (error "None of the choices is currently meaningful"))
 	   (define-key map [?\C-g] 'keyboard-quit)
 	   (define-key map [t] 'keyboard-quit)
+	   (define-key map [?\M-\C-v] 'scroll-other-window)
+	   (define-key map [?\M--] 'negative-argument)
 	   (setcdr map (nreverse (cdr map)))
-	   ;; Unread a SPC to lead to our new menu.
-	   (setq unread-command-events (cons ?\ unread-command-events))
 	   ;; Read a char with the menu, and return the result
 	   ;; that corresponds to it.
 	   (save-window-excursion
-	     (display-buffer (get-buffer " widget-choose"))
-	     (let ((cursor-in-echo-area t))
-	       (setq value
-		     (lookup-key overriding-terminal-local-map
-				 (read-key-sequence title) t))))
+	     (let ((buf (get-buffer " widget-choose")))
+	       (display-buffer buf)
+	       (let ((cursor-in-echo-area t)
+		     keys
+		     (char 0)
+		     (arg 1))
+		 (while (not (or (and (>= char ?0) (< char next-digit))
+				 (eq value 'keyboard-quit)))
+		   ;; Unread a SPC to lead to our new menu.
+		   (setq unread-command-events (cons ?\ unread-command-events))
+		   (setq keys (read-key-sequence title))
+		   (setq value (lookup-key overriding-terminal-local-map keys t)
+			 char (string-to-char (substring keys 1)))
+		   (cond ((eq value 'scroll-other-window)
+			  (let ((minibuffer-scroll-window (get-buffer-window buf)))
+			    (if (> 0 arg)
+				(scroll-other-window-down (window-height minibuffer-scroll-window))
+			      (scroll-other-window))
+			    (setq arg 1)))
+			 ((eq value 'negative-argument)
+			  (setq arg -1))
+			 (t
+			  (setq arg 1)))))))
 	   (when (eq value 'keyboard-quit)
 	     (error "Canceled"))
 	   value))))
@@ -384,7 +339,26 @@ new value."
     (overlay-put overlay 'keymap map)
     (overlay-put overlay 'face face)
     (overlay-put overlay 'balloon-help help-echo)
-    (overlay-put overlay 'help-echo help-echo)))
+    (overlay-put overlay 'help-echo help-echo))
+  (widget-specify-secret widget))
+
+(defun widget-specify-secret (field)
+  "Replace text in FIELD with value of `:secret', if non-nil."
+  (let ((secret (widget-get field :secret))
+	(size (widget-get field :size)))
+    (when secret
+      (let ((begin (widget-field-start field))
+	    (end (widget-field-end field)))
+	(when size 
+	  (while (and (> end begin)
+		      (eq (char-after (1- end)) ?\ ))
+	    (setq end (1- end))))
+	(while (< begin end)
+	  (let ((old (char-after begin)))
+	    (unless (eq old secret)
+	      (subst-char-in-region begin (1+ begin) old secret)
+	      (put-text-property begin (1+ begin) 'secret old))
+	    (setq begin (1+ begin))))))))
 
 (defun widget-specify-button (widget from to)
   "Specify button for WIDGET between FROM and TO."
@@ -487,27 +461,6 @@ new value."
   "Return the type of WIDGET, a symbol."
   (car widget))
 
-(defun widget-put (widget property value)
-  "In WIDGET set PROPERTY to VALUE.
-The value can later be retrived with `widget-get'."
-  (setcdr widget (plist-put (cdr widget) property value)))
-
-(defun widget-get (widget property)
-  "In WIDGET, get the value of PROPERTY.
-The value could either be specified when the widget was created, or
-later with `widget-put'."
-  (let ((missing t)
-	value tmp)
-    (while missing
-      (cond ((setq tmp (widget-plist-member (cdr widget) property))
-	     (setq value (car (cdr tmp))
-		   missing nil))
-	    ((setq tmp (car widget))
-	     (setq widget (get tmp 'widget-type)))
-	    (t 
-	     (setq missing nil))))
-    value))
-
 (defun widget-get-indirect (widget property)
   "In WIDGET, get the value of PROPERTY.
 If the value is a symbol, return its binding.  
@@ -525,12 +478,6 @@ Otherwise, just return the value."
 	 (widget-member (get (car widget) 'widget-type) property))
 	(t nil)))
 
-;;;###autoload
-(defun widget-apply (widget property &rest args)
-  "Apply the value of WIDGET's PROPERTY to the widget itself.
-ARGS are passed as extra arguments to the function."
-  (apply (widget-get widget property) widget args))
-
 (defun widget-value (widget)
   "Extract the current value of WIDGET."
   (widget-apply widget
@@ -541,6 +488,11 @@ ARGS are passed as extra arguments to the function."
   (widget-apply widget
 		:value-set (widget-apply widget
 					 :value-to-internal value)))
+
+(defun widget-default-get (widget)
+  "Extract the default value of WIDGET."
+  (or (widget-get widget :value)
+      (widget-apply widget :default-get)))
 
 (defun widget-match-inline (widget vals)
   ;; In WIDGET, match the start of VALS.
@@ -965,8 +917,9 @@ Recommended as a parent keymap for modes using widgets.")
   :group 'widget-faces)
 
 (defun widget-button-click (event)
-  "Invoke button below mouse pointer."
+  "Invoke the button that the mouse is pointing at, and move there."
   (interactive "@e")
+  (mouse-set-point event)
   (cond ((and (fboundp 'event-glyph)
 	      (event-glyph event))
 	 (widget-glyph-click event))
@@ -1048,7 +1001,7 @@ Recommended as a parent keymap for modes using widgets.")
       (if (eq extent (event-glyph-extent last))
 	  (set-extent-property extent 'end-glyph down-glyph)
 	(set-extent-property extent 'end-glyph up-glyph))
-      (setq last (next-event event)))
+      (setq last (read-event event)))
     ;; Release glyph.
     (when down-glyph
       (set-extent-property extent 'end-glyph up-glyph))
@@ -1158,23 +1111,25 @@ With optional ARG, move across that many fields."
   "Go to beginning of field or beginning of line, whichever is first."
   (interactive)
   (let* ((field (widget-field-find (point)))
-	 (start (and field (widget-field-start field))))
-    (if (and start (not (eq start (point))))
-	(goto-char start)
-      (call-interactively 'beginning-of-line)))
-  ;; XEmacs: preserve the region
-  (setq zmacs-region-stays t))
+	 (start (and field (widget-field-start field)))
+         (bol (save-excursion
+                (beginning-of-line)
+                (point))))
+    (goto-char (if start
+                   (max start bol)
+                 bol))))
 
 (defun widget-end-of-line ()
   "Go to end of field or end of line, whichever is first."
   (interactive)
   (let* ((field (widget-field-find (point)))
-	 (end (and field (widget-field-end field))))
-    (if (and end (not (eq end (point))))
-	(goto-char end)
-      (call-interactively 'end-of-line)))
-  ;; XEmacs: preserve the region
-  (setq zmacs-region-stays t))
+	 (end (and field (widget-field-end field)))
+         (eol (save-excursion
+                (end-of-line)
+                (point))))
+    (goto-char (if end
+                   (min end eol)
+                 eol))))
 
 (defun widget-kill-line ()
   "Kill to end of field or end of line, whichever is first."
@@ -1306,8 +1261,7 @@ Unlike (get-char-property POS 'field) this, works with empty fields too."
 	(when field
 	  (unless (eq field other)
 	    (debug "Change in different fields"))
-	  (let ((size (widget-get field :size))
-		(secret (widget-get field :secret)))
+	  (let ((size (widget-get field :size)))
 	    (when size 
 	      (let ((begin (widget-field-start field))
 		    (end (widget-field-end field)))
@@ -1329,19 +1283,7 @@ Unlike (get-char-property POS 'field) this, works with empty fields too."
 			 (while (and (eq (preceding-char) ?\ )
 				     (> (point) begin))
 			   (delete-backward-char 1)))))))
-	    (when secret
-	      (let ((begin (widget-field-start field))
-		    (end (widget-field-end field)))
-		(when size 
-		  (while (and (> end begin)
-			      (eq (char-after (1- end)) ?\ ))
-		    (setq end (1- end))))
-		(while (< begin end)
-		  (let ((old (char-after begin)))
-		    (unless (eq old secret)
-		      (subst-char-in-region begin (1+ begin) old secret)
-		      (put-text-property begin (1+ begin) 'secret old))
-		    (setq begin (1+ begin)))))))
+	    (widget-specify-secret field))
 	  (widget-apply field :notify field)))
     (error (debug "After Change"))))
 
@@ -1409,6 +1351,7 @@ Optional EVENT is the event that triggered the action."
   :delete 'widget-default-delete
   :value-set 'widget-default-value-set
   :value-inline 'widget-default-value-inline
+  :default-get 'widget-default-default-get
   :menu-tag-get 'widget-default-menu-tag-get
   :validate (lambda (widget) nil)
   :active 'widget-default-active
@@ -1605,6 +1548,10 @@ If that does not exists, call the value of `widget-complete-field'."
       (widget-value widget)
     (list (widget-value widget))))
 
+(defun widget-default-default-get (widget)
+  ;; Get `:value'.
+  (widget-get widget :value))
+
 (defun widget-default-menu-tag-get (widget)
   ;; Use tag or value for menus.
   (or (widget-get widget :menu-tag)
@@ -1789,8 +1736,27 @@ If END is omitted, it defaults to the length of LIST."
 
 (defun widget-url-link-action (widget &optional event)
   "Open the url specified by WIDGET."
-  (require 'browse-url)
-  (funcall browse-url-browser-function (widget-value widget)))
+  (browse-url (widget-value widget)))
+
+;;; The `function-link' Widget.
+
+(define-widget 'function-link 'link
+  "A link to an Emacs function."
+  :action 'widget-function-link-action)
+
+(defun widget-function-link-action (widget &optional event)
+  "Show the function specified by WIDGET."
+  (describe-function (widget-value widget)))
+
+;;; The `variable-link' Widget.
+
+(define-widget 'variable-link 'link
+  "A link to an Emacs variable."
+  :action 'widget-variable-link-action)
+
+(defun widget-variable-link-action (widget &optional event)
+  "Show the variable specified by WIDGET."
+  (describe-variable (widget-value widget)))
 
 ;;; The `file-link' Widget.
 
@@ -1959,6 +1925,7 @@ If END is omitted, it defaults to the length of LIST."
   :value-delete 'widget-children-value-delete
   :value-get 'widget-choice-value-get
   :value-inline 'widget-choice-value-inline
+  :default-get 'widget-choice-default-get
   :mouse-down-action 'widget-choice-mouse-down-action
   :action 'widget-choice-action
   :error "Make a choice"
@@ -1970,21 +1937,30 @@ If END is omitted, it defaults to the length of LIST."
   ;; Insert the first choice that matches the value.
   (let ((value (widget-get widget :value))
 	(args (widget-get widget :args))
+	(explicit (widget-get widget :explicit-choice))
+	(explicit-value (widget-get widget :explicit-choice-value))
 	current)
-    (while args
-      (setq current (car args)
-	    args (cdr args))
-      (when (widget-apply current :match value)
-	(widget-put widget :children (list (widget-create-child-value
-					    widget current value)))
-	(widget-put widget :choice current)
-	(setq args nil
-	      current nil)))
-    (when current
-      (let ((void (widget-get widget :void)))
-	(widget-put widget :children (list (widget-create-child-and-convert
-					    widget void :value value)))
-	(widget-put widget :choice void)))))
+    (if (and explicit (eq value explicit-value))
+	(progn
+	  ;; If the user specified the choice for this value,
+	  ;; respect that choice as long as the value is the same.
+	  (widget-put widget :children (list (widget-create-child-value
+					      widget explicit value)))
+	  (widget-put widget :choice explicit))
+      (while args
+	(setq current (car args)
+	      args (cdr args))
+	(when (widget-apply current :match value)
+	  (widget-put widget :children (list (widget-create-child-value
+					      widget current value)))
+	  (widget-put widget :choice current)
+	  (setq args nil
+		current nil)))
+      (when current
+	(let ((void (widget-get widget :void)))
+	  (widget-put widget :children (list (widget-create-child-and-convert
+					      widget void :value value)))
+	  (widget-put widget :choice void))))))
 
 (defun widget-choice-value-get (widget)
   ;; Get value of the child widget.
@@ -1993,6 +1969,10 @@ If END is omitted, it defaults to the length of LIST."
 (defun widget-choice-value-inline (widget)
   ;; Get value of the child widget.
   (widget-apply (car (widget-get widget :children)) :value-inline))
+
+(defun widget-choice-default-get (widget)
+  ;; Get default for the first choice.
+  (widget-default-get (car (widget-get widget :args))))
 
 (defcustom widget-choice-toggle nil
   "If non-nil, a binary choice will just toggle between the values.
@@ -2033,6 +2013,7 @@ when he invoked the menu."
 	(old (widget-get widget :choice))
 	(tag (widget-apply widget :menu-tag-get))
 	(completion-ignore-case (widget-get widget :case-fold))
+	this-explicit
 	current choices)
     ;; Remember old value.
     (if (and old (not (widget-apply widget :validate)))
@@ -2059,11 +2040,19 @@ when he invoked the menu."
 			 (cons (cons (widget-apply current :menu-tag-get)
 				     current)
 			       choices)))
+		 (setq this-explicit t)
 		 (widget-choose tag (reverse choices) event))))
     (when current
-      (widget-value-set widget 
-			(widget-apply current :value-to-external
-				      (widget-get current :value)))
+      ;; If this was an explicit user choice,
+      ;; record the choice, and the record the value it was made for.
+      ;; widget-choice-value-create will respect this choice,
+      ;; as long as the value is the same.
+      (when this-explicit
+	(widget-put widget :explicit-choice current)
+	(widget-put widget :explicit-choice-value (widget-get widget :value)))
+      (let ((value (widget-default-get current)))
+	(widget-value-set widget 
+			  (widget-apply current :value-to-external value)))
       (widget-setup)
       (widget-apply widget :notify widget event)))
   (run-hook-with-args 'widget-edit-functions widget))
@@ -2673,7 +2662,10 @@ when he invoked the menu."
 		(if conv
 		    (setq child (widget-create-child-value 
 				 widget type value))
-		  (setq child (widget-create-child widget type))))
+		  (setq child (widget-create-child-value 
+			       widget type
+			       (widget-apply type :value-to-external
+					     (widget-default-get type))))))
 	       (t 
 		(error "Unknown escape `%c'" escape)))))
      (widget-put widget 
@@ -2699,6 +2691,7 @@ when he invoked the menu."
   :value-create 'widget-group-value-create
   :value-delete 'widget-children-value-delete
   :value-get 'widget-editable-list-value-get
+  :default-get 'widget-group-default-get
   :validate 'widget-children-validate
   :match 'widget-group-match
   :match-inline 'widget-group-match-inline)
@@ -2724,6 +2717,10 @@ when he invoked the menu."
 		   (widget-create-child-value widget arg  (car (car answer)))))
 	    children))
     (widget-put widget :children (nreverse children))))
+
+(defun widget-group-default-get (widget)
+  ;; Get the default of the components.
+  (mapcar 'widget-default-get (widget-get widget :args)))
 
 (defun widget-group-match (widget values)
   ;; Match if the components match.
@@ -2926,6 +2923,17 @@ link for that string."
   :format "%v\n%h"
   :documentation-property 'variable-documentation)
 
+(define-widget 'other 'sexp
+  "Matches any value, but doesn't let the user edit the value.
+This is useful as last item in a `choice' widget.
+You should use this widget type with a default value,
+as in (other DEFAULT) or (other :tag \"NAME\" DEFAULT).
+If the user selects this alternative, that specifies DEFAULT
+as the value."
+  :tag "Other"
+  :format "%t%n"
+  :value 'other)
+
 (defvar widget-string-prompt-value-history nil
   "History of input to `widget-string-prompt-value'.")
 
@@ -3030,7 +3038,7 @@ It will read a directory name from the minibuffer when invoked."
   "History of input to `widget-symbol-prompt-value'.")
 
 (define-widget 'symbol 'editable-field
-  "A lisp symbol."
+  "A Lisp symbol."
   :value nil
   :tag "Symbol"
   :format "%{%t%}: %v"
@@ -3062,7 +3070,7 @@ It will read a directory name from the minibuffer when invoked."
   "History of input to `widget-function-prompt-value'.")
 
 (define-widget 'function 'sexp
-  "A lisp function."
+  "A Lisp function."
   :complete-function 'lisp-complete-symbol
   :prompt-value 'widget-field-prompt-value
   :prompt-internal 'widget-symbol-prompt-internal
@@ -3076,7 +3084,7 @@ It will read a directory name from the minibuffer when invoked."
 
 (define-widget 'variable 'symbol
   ;; Should complete on variables.
-  "A lisp variable."
+  "A Lisp variable."
   :prompt-match 'boundp
   :prompt-history 'widget-variable-prompt-value-history
   :tag "Variable")
@@ -3117,7 +3125,7 @@ It will read a directory name from the minibuffer when invoked."
   )
 
 (define-widget 'sexp 'editable-field
-  "An arbitrary lisp expression."
+  "An arbitrary Lisp expression."
   :tag "Lisp expression"
   :format "%{%t%}: %v"
   :value nil
@@ -3240,12 +3248,12 @@ To use this type, you must define :match or :match-alternatives."
 	     (integerp value))))
 
 (define-widget 'list 'group
-  "A lisp list."
+  "A Lisp list."
   :tag "List"
   :format "%{%t%}:\n%v")
 
 (define-widget 'vector 'group
-  "A lisp vector."
+  "A Lisp vector."
   :tag "Vector"
   :format "%{%t%}:\n%v"
   :match 'widget-vector-match
@@ -3389,13 +3397,9 @@ To use this type, you must define :match or :match-alternatives."
 		    (widget-value widget)
 		  (error (widget-get widget :value))))
 	 (symbol (intern (concat "fg:" value))))
-    (if (string-match "XEmacs" emacs-version)
-	(prog1 symbol
-	  (or (find-face symbol)
-	      (set-face-foreground (make-face symbol) value)))
-      (condition-case nil
-	  (facemenu-get-face symbol)
-	(error 'default)))))
+    (condition-case nil
+	(facemenu-get-face symbol)
+      (error 'default))))
 
 (defvar widget-color-choice-list nil)
 ;; Variable holding the possible colors.
@@ -3403,10 +3407,8 @@ To use this type, you must define :match or :match-alternatives."
 (defun widget-color-choice-list ()
   (unless widget-color-choice-list
     (setq widget-color-choice-list 
-	  (if (fboundp 'read-color-completion-table)
-	      (read-color-completion-table)
-	    (mapcar '(lambda (color) (list color))
-		    (x-defined-colors)))))
+	  (mapcar '(lambda (color) (list color))
+		  (x-defined-colors))))
   widget-color-choice-list)
 
 (defvar widget-color-history nil
@@ -3459,7 +3461,7 @@ Enable with (run-with-idle-timer 1 t 'widget-echo-help-mouse)"
 	  (select-window win)
 	  (let* ((result (compute-motion (window-start win)
 					 '(0 . 0)
-					 (window-end win)
+					 (point-max)
 					 where
 					 (window-width win)
 					 (cons (window-hscroll) 0)

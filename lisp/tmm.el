@@ -36,6 +36,11 @@
 
 (require 'electric)
 
+(defgroup tmm nil
+  "Text mode access to menu-bar."
+  :prefix "tmm-"
+  :group 'menu)
+
 ;;; The following will be localized, added only to pacify the compiler.
 (defvar tmm-short-cuts)
 (defvar tmm-old-mb-map nil)
@@ -94,15 +99,17 @@ See the documentation for `tmm-prompt'."
   (interactive "e")
   (tmm-menubar (car (posn-x-y (event-start event)))))
 
-(defvar tmm-mid-prompt "==>"
+(defcustom tmm-mid-prompt "==>"
   "*String to insert between shortcut and menu item. 
 If nil, there will be no shortcuts. It should not consist only of spaces,
-or else the correct item might not be found in the `*Completions*' buffer.")
+or else the correct item might not be found in the `*Completions*' buffer."
+  :type 'string
+  :group 'tmm)
 
 (defvar tmm-mb-map nil
   "A place to store minibuffer map.")
 
-(defvar tmm-completion-prompt 
+(defcustom tmm-completion-prompt 
   "Press PageUp Key to reach this buffer from the minibuffer.
 Alternatively, you can use Up/Down keys (or your History keys) to change
 the item in the minibuffer, and press RET when you are done, or press the 
@@ -110,17 +117,25 @@ marked letters to pick up your choice.  Type C-g or ESC ESC ESC to cancel.
 "
   "*Help text to insert on the top of the completion buffer.
 To save space, you can set this to nil,
-in which case the standard introduction text is deleted too.")
+in which case the standard introduction text is deleted too."
+  :type '(choice string (const nil))
+  :group 'tmm)
 
-(defvar tmm-shortcut-style '(downcase upcase)
+(defcustom tmm-shortcut-style '(downcase upcase)
   "*What letters to use as menu shortcuts. 
 Must be either one of the symbols `downcase' or `upcase', 
-or else a list of the two in the order you prefer.")
+or else a list of the two in the order you prefer."
+  :type '(choice (const downcase)
+		 (const upcase)
+		 (repeat (choice (const downcase) (const upcase))))
+  :group 'tmm)
 
-(defvar tmm-shortcut-words 2
+(defcustom tmm-shortcut-words 2
   "*How many successive words to try for shortcuts, nil means all.
 If you use only one of `downcase' or `upcase' for `tmm-shortcut-style', 
-specify nil for this variable.")
+specify nil for this variable."
+  :type '(choice integer (const nil))
+  :group 'tmm)
 
 ;;;###autoload
 (defun tmm-prompt (menu &optional in-popup default-item)
@@ -161,6 +176,8 @@ Its value should be an event that has a binding in MENU."
 	;; This way we only ask the user one question,
 	;; for which element of that pane.
 	(setq choice (cdr (car tmm-km-list)))
+      (unless tmm-km-list
+	(error "Empty menu reached"))
       (and tmm-km-list
 	   (let ((index-of-default 0))
 	     (if tmm-mid-prompt
@@ -205,7 +222,7 @@ Its value should be an event that has a binding in MENU."
 	   (string= (substring out 0 (length tmm-c-prompt)) tmm-c-prompt)
 	   (setq out (substring out (length tmm-c-prompt))
 		 choice (cdr (assoc out tmm-km-list))))
-      (and (null choice)
+      (and (null choice) out
 	   (setq out (try-completion out tmm-km-list)
 		 choice (cdr (assoc  out tmm-km-list)))))
     ;; CHOICE is now (STRING . MEANING).  Separate the two parts.
@@ -382,49 +399,60 @@ element of keymap, an `x-popup-menu' argument, or an element of
 `x-popup-menu' argument (when IN-X-MENU is not-nil).
 This function adds the element only if it is not already present.
 It uses the free variable `tmm-table-undef' to keep undefined keys."
-  (let (km str cache (event (car elt)))
+  (let (km str cache plist filter (event (car elt)))
     (setq elt (cdr elt))
     (if (eq elt 'undefined)
 	(setq tmm-table-undef (cons (cons event nil) tmm-table-undef))
-      (or
-       (assoc event tmm-table-undef)
-       (and (if (listp elt)
-		(or (keymapp elt) (eq (car elt) 'lambda))
-	      (fboundp elt))
-	    (setq km elt))
-       (and (if (listp (cdr-safe elt))
-		(or (keymapp (cdr-safe elt))
-		    (eq (car (cdr-safe elt)) 'lambda))
-	      (fboundp (cdr-safe elt)))
-	    (setq km (cdr elt))
-	    (and (stringp (car elt)) (setq str (car elt))))
-       (and (if (listp (cdr-safe (cdr-safe elt)))
-		(or (keymapp (cdr-safe (cdr-safe elt)))
-		    (eq (car (cdr-safe (cdr-safe elt))) 'lambda))
-	      (fboundp (cdr-safe (cdr-safe elt))))
-	    (setq km (cdr (cdr elt)))
-	    (and (stringp (car elt)) (setq str (car elt)))
-	    (or (and str
-		     (stringp (cdr (car (cdr elt)))) ; keyseq cache
-		     (setq cache (cdr (car (cdr elt))))
-		     cache (setq str (concat str cache))) str))
-       (and (if (listp (cdr-safe (cdr-safe (cdr-safe elt))))
-		(or (keymapp (cdr-safe (cdr-safe (cdr-safe elt))))
-		    (eq (car (cdr-safe (cdr-safe (cdr-safe elt)))) 'lambda))
-	      (fboundp (cdr-safe (cdr-safe (cdr-safe elt)))))
-					; New style of easy-menu
-	    (setq km (cdr (cdr (cdr elt))))
-	    (and (stringp (car elt)) (setq str (car elt)))
-	    (or (and str
-		     (stringp (cdr (car (cdr (cdr elt))))) ; keyseq cache
-		     (setq cache (cdr (car (cdr (cdr elt)))))
-		     cache (setq str (concat str cache)))
-		str))
-	    (and (stringp event)	; x-popup or x-popup element
-		 (if (or in-x-menu (stringp (car-safe elt)))
-		     (setq str event event nil km elt)
-		   (setq str event event nil km (cons 'keymap elt))
-		   )))
+      (unless (assoc event tmm-table-undef)
+	(cond ((if (listp elt)
+		   (or (keymapp elt) (eq (car elt) 'lambda))
+		 (fboundp elt))
+	       (setq km elt))
+	      ((if (listp (cdr-safe elt))
+		   (or (keymapp (cdr-safe elt))
+		       (eq (car (cdr-safe elt)) 'lambda))
+		 (fboundp (cdr-safe elt)))
+	       (setq km (cdr elt))
+	       (and (stringp (car elt)) (setq str (car elt))))
+	      ((if (listp (cdr-safe (cdr-safe elt)))
+		   (or (keymapp (cdr-safe (cdr-safe elt)))
+		       (eq (car (cdr-safe (cdr-safe elt))) 'lambda))
+		 (fboundp (cdr-safe (cdr-safe elt))))
+	       (setq km (cdr (cdr elt)))
+	       (and (stringp (car elt)) (setq str (car elt)))
+	       (and str
+		    (stringp (cdr (car (cdr elt)))) ; keyseq cache
+		    (setq cache (cdr (car (cdr elt))))
+		    cache (setq str (concat str cache))))
+	      ((eq (car-safe elt) 'menu-item)
+	       (setq plist (cdr-safe (cdr-safe (cdr-safe elt))))
+	       (setq km (nth 2 elt))
+	       (setq str (nth 1 elt))
+	       (setq filter (plist-get plist :filter))
+	       (if filter
+		   (setq km (funcall filter km)))
+	       (and str
+		    (consp (nth 3 elt))
+		    (stringp (cdr (nth 3 elt))) ; keyseq cache
+		    (setq cache (cdr (nth 3 elt)))
+		    cache
+		    (setq str (concat str cache))))
+	      ((if (listp (cdr-safe (cdr-safe (cdr-safe elt))))
+		   (or (keymapp (cdr-safe (cdr-safe (cdr-safe elt))))
+		       (eq (car (cdr-safe (cdr-safe (cdr-safe elt)))) 'lambda))
+		 (fboundp (cdr-safe (cdr-safe (cdr-safe elt)))))
+					 ; New style of easy-menu
+	       (setq km (cdr (cdr (cdr elt))))
+	       (and (stringp (car elt)) (setq str (car elt)))
+	       (and str
+		    (stringp (cdr (car (cdr (cdr elt))))) ; keyseq cache
+		    (setq cache (cdr (car (cdr (cdr elt)))))
+		    cache (setq str (concat str cache))))
+	      ((stringp event)		; x-popup or x-popup element
+	       (if (or in-x-menu (stringp (car-safe elt)))
+		   (setq str event event nil km elt)
+		 (setq str event event nil km (cons 'keymap elt))
+		 ))))
       (and km (stringp km) (setq str km))
       ;; Verify that the command is enabled;
       ;; if not, don't mention it.

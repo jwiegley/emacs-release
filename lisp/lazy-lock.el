@@ -2,9 +2,9 @@
 
 ;; Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
 
-;; Author: Simon Marshall <simon@gnu.ai.mit.edu>
+;; Author: Simon Marshall <simon@gnu.org>
 ;; Keywords: faces files
-;; Version: 2.08.04
+;; Version: 2.10
 
 ;;; This file is part of GNU Emacs.
 
@@ -129,9 +129,6 @@
 ;; Since `pre-idle-hook' is pretty much like `post-command-hook', there is no
 ;; point in making this version of lazy-lock.el work with it.  Anyway, that's
 ;; Lit 30 of my humble opinion.
-;;
-;; Steve Baur reverted to a non-hacked version 1 lazy-lock.el for XEmacs 19.15
-;; and 20.0.  Obviously, the above `post-command-hook' problems still apply.)
 ;;
 ;; - Version 1 stealth fontification is also implemented by placing a function
 ;; on `post-command-hook'.  This function waits for a given amount of time,
@@ -258,6 +255,12 @@
 ;; - Removed `byte-*' variables from `eval-when-compile' (Erik Naggum hint)
 ;; - Made various wrapping `inhibit-point-motion-hooks' (Vinicius Latorre hint)
 ;; - Made `lazy-lock-fontify-after-idle' wrap `minibuffer-auto-raise'
+;; - Made `lazy-lock-fontify-after-defer' paranoid about deferred buffers
+;; 2.09--2.10:
+;; - Use `window-end' UPDATE arg for Emacs 20.3 and later.
+;; - Made deferral `widen' before unfontifying (Dan Nicolaescu report)
+;; - Use `lazy-lock-fontify-after-visage' for hideshow.el (Dan Nicolaescu hint)
+;; - Use `other' widget where possible (Andreas Schwab fix)
 
 ;;; Code:
 
@@ -314,7 +317,7 @@ The value returned is the value of the last form in BODY."
 ;  "Submit via mail a bug report on lazy-lock.el."
 ;  (interactive)
 ;  (let ((reporter-prompt-for-summary-p t))
-;    (reporter-submit-bug-report "simon@gnu.ai.mit.edu" "lazy-lock 2.08.04"
+;    (reporter-submit-bug-report "simon@gnu.ai.mit.edu" "lazy-lock 2.10"
 ;     '(lazy-lock-minimum-size lazy-lock-defer-on-the-fly
 ;       lazy-lock-defer-on-scrolling lazy-lock-defer-contextually
 ;       lazy-lock-defer-time lazy-lock-stealth-time
@@ -401,7 +404,7 @@ makes little sense if `lazy-lock-defer-contextually' is non-nil.)
 The value of this variable is used when Lazy Lock mode is turned on."
   :type '(choice (const :tag "never" nil)
 		 (const :tag "always" t)
-		 (sexp :tag "eventually" :format "%t\n" eventually))
+		 (other :tag "eventually" eventually))
   :group 'lazy-lock)
 
 (defcustom lazy-lock-defer-contextually 'syntax-driven
@@ -419,7 +422,7 @@ buffer mode's syntax table, i.e., only if `font-lock-keywords-only' is nil.
 The value of this variable is used when Lazy Lock mode is turned on."
   :type '(choice (const :tag "never" nil)
 		 (const :tag "always" t)
-		 (sexp :tag "syntax-driven" :format "%t\n" syntax-driven))
+		 (other :tag "syntax-driven" syntax-driven))
   :group 'lazy-lock)
 
 (defcustom lazy-lock-defer-time
@@ -634,7 +637,9 @@ verbosity is controlled via the variable `lazy-lock-stealth-verbose'."
   ;;
   ;; Add package-specific hook.
   (make-local-hook 'outline-view-change-hook)
-  (add-hook 'outline-view-change-hook 'lazy-lock-fontify-after-outline nil t))
+  (add-hook 'outline-view-change-hook 'lazy-lock-fontify-after-visage nil t)
+  (make-local-hook 'hs-hide-hook)
+  (add-hook 'hs-hide-hook 'lazy-lock-fontify-after-visage nil t))
 
 (defun lazy-lock-install-timers (dtime stime)
   ;; Schedule or re-schedule the deferral and stealth timers.
@@ -684,7 +689,8 @@ verbosity is controlled via the variable `lazy-lock-stealth-verbose'."
   (remove-hook 'after-change-functions 'lazy-lock-fontify-rest-after-change t)
   (remove-hook 'after-change-functions 'lazy-lock-defer-line-after-change t)
   (remove-hook 'after-change-functions 'lazy-lock-defer-rest-after-change t)
-  (remove-hook 'outline-view-change-hook 'lazy-lock-fontify-after-outline t))
+  (remove-hook 'outline-view-change-hook 'lazy-lock-fontify-after-visage t)
+  (remove-hook 'hs-hide-hook 'lazy-lock-fontify-after-visage t))
 
 ;; Hook functions.
 
@@ -705,13 +711,9 @@ verbosity is controlled via the variable `lazy-lock-stealth-verbose'."
 
 (defun lazy-lock-fontify-after-scroll (window window-start)
   ;; Called from `window-scroll-functions'.
-  ;; Fontify WINDOW from WINDOW-START following the scroll.  We cannot use
-  ;; `window-end' so we work out what it would be via `vertical-motion'.
+  ;; Fontify WINDOW from WINDOW-START following the scroll.
   (let ((inhibit-point-motion-hooks t))
-    (save-excursion
-      (goto-char window-start)
-      (vertical-motion (window-height window) window)
-      (lazy-lock-fontify-region window-start (point))))
+    (lazy-lock-fontify-region window-start (window-end window t)))
   ;; A prior deletion that did not cause scrolling, followed by a scroll, would
   ;; result in an unnecessary trigger after this if we did not cancel it now.
   (set-window-redisplay-end-trigger window nil))
@@ -769,15 +771,11 @@ verbosity is controlled via the variable `lazy-lock-stealth-verbose'."
 
 (defun lazy-lock-fontify-after-trigger (window trigger-point)
   ;; Called from `redisplay-end-trigger-functions'.
-  ;; Fontify WINDOW from TRIGGER-POINT.  We cannot use `window-end' so we work
-  ;; out what it would be via `vertical-motion'.
+  ;; Fontify WINDOW from TRIGGER-POINT following the redisplay.
   ;; We could probably just use `lazy-lock-fontify-after-scroll' without loss:
-  ;;  (lazy-lock-fontify-after-scroll window (window-start window))
+  ;;  (inline (lazy-lock-fontify-after-scroll window (window-start window)))
   (let ((inhibit-point-motion-hooks t))
-    (save-excursion
-      (goto-char (window-start window))
-      (vertical-motion (window-height window) window)
-      (lazy-lock-fontify-region trigger-point (point)))))
+    (lazy-lock-fontify-region trigger-point (window-end window t))))
 
 ;; 2.  Modified text must be marked as unfontified so it can be identified and
 ;;     fontified later when Emacs is idle.  Deferral occurs by adding one of
@@ -799,7 +797,9 @@ verbosity is controlled via the variable `lazy-lock-stealth-verbose'."
   (save-buffer-state nil
     (unless (memq (current-buffer) lazy-lock-buffers)
       (push (current-buffer) lazy-lock-buffers))
-    (remove-text-properties end (point-max) '(lazy-lock nil))))
+    (save-restriction
+      (widen)
+      (remove-text-properties end (point-max) '(lazy-lock nil)))))
 
 (defun lazy-lock-defer-line-after-change (beg end old-len)
   ;; Called from `after-change-functions'.
@@ -819,9 +819,11 @@ verbosity is controlled via the variable `lazy-lock-stealth-verbose'."
   (save-buffer-state nil
     (unless (memq (current-buffer) lazy-lock-buffers)
       (push (current-buffer) lazy-lock-buffers))
-    (remove-text-properties (max (1- beg) (point-min))
-			    (point-max)
-			    '(lazy-lock nil))))
+    (save-restriction
+      (widen)
+      (remove-text-properties (max (1- beg) (point-min))
+			      (point-max)
+			      '(lazy-lock nil)))))
 
 ;; 3.  Deferred fontification and stealth fontification are done from these two
 ;;     functions.  They are set up as Idle Timers.
@@ -829,12 +831,18 @@ verbosity is controlled via the variable `lazy-lock-stealth-verbose'."
 (defun lazy-lock-fontify-after-defer ()
   ;; Called from `timer-idle-list'.
   ;; Fontify all windows where deferral has occurred for its buffer.
-  (while (and lazy-lock-buffers (not (input-pending-p)))
-    (let ((windows (get-buffer-window-list (car lazy-lock-buffers) 'nomini t)))
-      (while windows
-	(lazy-lock-fontify-window (car windows))
-	(setq windows (cdr windows)))
-      (setq lazy-lock-buffers (cdr lazy-lock-buffers))))
+  (save-excursion
+    (while (and lazy-lock-buffers (not (input-pending-p)))
+      (let ((buffer (car lazy-lock-buffers)) windows)
+	;; Paranoia: check that the buffer is still live and Lazy Lock mode on.
+	(when (buffer-live-p buffer)
+	  (set-buffer buffer)
+	  (when lazy-lock-mode
+	    (setq windows (get-buffer-window-list buffer 'nomini t))
+	    (while windows
+	      (lazy-lock-fontify-window (car windows))
+	      (setq windows (cdr windows)))))
+	(setq lazy-lock-buffers (cdr lazy-lock-buffers)))))
   ;; Add hook if fontification should now be defer-driven in this buffer.
   (when (and lazy-lock-mode lazy-lock-defer-on-scrolling
 	     (memq 'lazy-lock-fontify-after-scroll window-scroll-functions)
@@ -879,10 +887,11 @@ verbosity is controlled via the variable `lazy-lock-stealth-verbose'."
 
 ;; 4.  Special circumstances.
 
-(defun lazy-lock-fontify-after-outline ()
-  ;; Called from `outline-view-change-hook'.
+(defun lazy-lock-fontify-after-visage ()
+  ;; Called from `outline-view-change-hook' and `hs-hide-hook'.
   ;; Fontify windows showing the current buffer, as its visibility has changed.
-  ;; This is a conspiracy hack between lazy-lock.el and noutline.el.
+  ;; This is a conspiracy hack between lazy-lock.el, outline.el and
+  ;; hideshow.el.
   (let ((windows (get-buffer-window-list (current-buffer) 'nomini t)))
     (while windows
       (lazy-lock-fontify-conservatively (car windows))
@@ -1038,6 +1047,32 @@ verbosity is controlled via the variable `lazy-lock-stealth-verbose'."
       (mapcar 'lazy-lock-fontify-conservatively
 	      (get-buffer-window-list (pop lazy-lock-install) 'nomini t)))))
 
+(when (if (save-match-data (string-match "Lucid\\|XEmacs" (emacs-version)))
+	  nil
+	(or (and (= emacs-major-version 20) (< emacs-minor-version 3))
+	    (= emacs-major-version 19)))
+  ;;
+  ;; We use `vertical-motion' rather than `window-end' UPDATE arg.
+  (defun lazy-lock-fontify-after-scroll (window window-start)
+    ;; Called from `window-scroll-functions'.
+    ;; Fontify WINDOW from WINDOW-START following the scroll.  We cannot use
+    ;; `window-end' so we work out what it would be via `vertical-motion'.
+    (let ((inhibit-point-motion-hooks t))
+      (save-excursion
+	(goto-char window-start)
+	(vertical-motion (window-height window) window)
+	(lazy-lock-fontify-region window-start (point))))
+    (set-window-redisplay-end-trigger window nil))
+  (defun lazy-lock-fontify-after-trigger (window trigger-point)
+    ;; Called from `redisplay-end-trigger-functions'.
+    ;; Fontify WINDOW from TRIGGER-POINT following the redisplay.  We cannot
+    ;; use `window-end' so we work out what it would be via `vertical-motion'.
+    (let ((inhibit-point-motion-hooks t))
+      (save-excursion
+	(goto-char (window-start window))
+	(vertical-motion (window-height window) window)
+	(lazy-lock-fontify-region trigger-point (point))))))
+
 (when (consp lazy-lock-defer-time)
   ;;
   ;; In 2.06.04 and below, `lazy-lock-defer-time' could specify modes and time.
@@ -1095,6 +1130,12 @@ verbosity is controlled via the variable `lazy-lock-stealth-verbose'."
     (if (consp alist)
 	(cdr (or (assq major-mode alist) (assq t alist)))
       alist)))
+
+(unless (fboundp 'buffer-live-p)
+  ;; We use this to check that a buffer we have to fontify still exists.
+  (defun buffer-live-p (object)
+    "Return non-nil if OBJECT is an editor buffer that has not been deleted."
+    (and (bufferp object) (buffer-name object))))
 
 (unless (fboundp 'get-buffer-window-list)
   ;; We use this to get all windows showing a buffer we have to fontify.

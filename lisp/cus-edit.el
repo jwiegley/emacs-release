@@ -106,6 +106,10 @@
   :group 'external
   :group 'development)
 
+(defgroup convenience nil
+  "Convenience features for faster editing."
+  :group 'emacs)
+
 (defgroup programming nil
   "Support for programming in other languages."
   :group 'emacs)
@@ -408,7 +412,7 @@ Return a list suitable for use in `interactive'."
 		obarray (lambda (symbol)
 			  (and (boundp symbol)
 			       (or (get symbol 'custom-type)
-				   (user-variable-p symbol))))))
+				   (user-variable-p symbol)))) t))
      (list (if (equal val "")
 	       (if (symbolp v) v nil)
 	     (intern val)))))
@@ -606,6 +610,8 @@ If `last', order groups after non-groups."
 		 (const last)
 		 (const :tag "none" nil))
   :group 'custom-menu)
+
+;;;###autoload (add-hook 'same-window-regexps "\\`\\*Customiz.*\\*\\'")
 
 (defun custom-sort-items (items sort-alphabetically order-groups)
   "Return a sorted copy of ITEMS.
@@ -821,28 +827,39 @@ are shown; the contents of those subgroups are initially hidden."
   (let ((name (format "*Customize Group: %s*"
 		      (custom-unlispify-tag-name group))))
     (if (get-buffer name)
-	(switch-to-buffer name)
+	(pop-to-buffer name)
       (custom-buffer-create (list (list group 'custom-group))
 			    name
 			    (concat " for group "
 				    (custom-unlispify-tag-name group))))))
 
 ;;;###autoload
-(defun customize-group-other-window (symbol)
-  "Customize SYMBOL, which must be a customization group."
-  (interactive (list (completing-read "Customize group: (default emacs) "
-				      obarray 
-				      (lambda (symbol)
-					(get symbol 'custom-group))
-				      t)))
-
-  (when (stringp symbol)
-    (if (string-equal "" symbol)
-	(setq symbol 'emacs)
-      (setq symbol (intern symbol))))
-  (custom-buffer-create-other-window
-   (list (list symbol 'custom-group))
-   (format "*Customize Group: %s*" (custom-unlispify-tag-name symbol))))
+(defun customize-group-other-window (group)
+  "Customize GROUP, which must be a customization group."
+  (interactive (list (let ((completion-ignore-case t))
+		       (completing-read "Customize group: (default emacs) "
+					obarray 
+					(lambda (symbol)
+					  (or (get symbol 'custom-loads)
+					      (get symbol 'custom-group)))
+					t))))
+  (when (stringp group)
+    (if (string-equal "" group)
+	(setq group 'emacs)
+      (setq group (intern group))))
+  (or (get group 'custom-group)
+      (custom-load-symbol group))
+  (let ((name (format "*Customize Group: %s*"
+		      (custom-unlispify-tag-name group))))
+    (if (get-buffer name)
+	(let ((window (selected-window)))
+	  (pop-to-buffer name)
+	  (select-window window))
+      (custom-buffer-create-other-window
+       (list (list group 'custom-group))
+       name
+       (concat " for group "
+	       (custom-unlispify-tag-name group))))))
 
 ;;;###autoload
 (defalias 'customize-variable 'customize-option)
@@ -855,6 +872,72 @@ are shown; the contents of those subgroups are initially hidden."
 			(format "*Customize Option: %s*"
 				(custom-unlispify-tag-name symbol))))
 
+;;;###autoload
+(defun customize-changed-options (since-version)
+  "Customize all user option variables whose default values changed recently.
+This means, in other words, variables and groups defined with a `:version' 
+option."
+  (interactive "sCustomize options changed, since version (default all versions): ")
+  (if (equal since-version "")
+      (setq since-version nil))
+  (let ((found nil)
+	(versions nil))
+    (mapatoms (lambda (symbol)
+		(and (or (boundp symbol)
+			 ;; For variables not yet loaded.
+			 (get symbol 'standard-value)
+			 ;; For groups the previous test fails, this one
+			 ;; could be used to determine if symbol is a
+			 ;; group. Is there a better way for this?
+			 (get symbol 'group-documentation))
+		     (let ((version (get symbol 'custom-version)))
+		       (and version
+			    (or (null since-version)
+				(customize-version-lessp since-version version))
+			    (if (member version versions) 
+				t
+			      ;;; Collect all versions that we use.
+			      (push version versions))))
+		     (setq found
+			   ;; We have to set the right thing here,
+			   ;; depending if we have a group or a
+			   ;; variable. 
+			   (if (get  symbol 'group-documentation)
+			       (cons (list symbol 'custom-group) found)
+			     (cons (list symbol 'custom-variable) found))))))
+    (if (not found)
+	(error "No user options have changed defaults in recent Emacs versions")
+      (let ((flist nil))
+	(while versions
+	  (push (copy-sequence 
+		 (cdr (assoc (car versions)  custom-versions-load-alist)))
+		flist)
+	  (setq versions (cdr versions)))
+	(put 'custom-versions-load-alist 'custom-loads 
+	     ;; Get all the files that correspond to element from the
+	     ;; VERSIONS list. This could use some simplification.
+	     (apply 'nconc flist)))
+      ;; Because we set all the files needed to be loaded as a
+      ;; `custom-loads' property to `custom-versions-load-alist' this
+      ;; call will actually load them.
+      (custom-load-symbol 'custom-versions-load-alist)
+      ;; Clean up
+      (put 'custom-versions-load-alist 'custom-loads nil)
+      (custom-buffer-create (custom-sort-items found t 'first)
+			    "*Customize Changed Options*"))))
+
+(defun customize-version-lessp (version1 version2)
+  (let (major1 major2 minor1 minor2)
+    (string-match "\\([0-9]+\\)[.]\\([0-9]+\\)" version1)
+    (setq major1 (read (match-string 1 version1)))
+    (setq minor1 (read (match-string 2 version1)))
+    (string-match "\\([0-9]+\\)[.]\\([0-9]+\\)" version2)
+    (setq major2 (read (match-string 1 version2)))
+    (setq minor2 (read (match-string 2 version2)))
+    (or (< major1 major2)
+	(and (= major1 major2)
+	     (< minor1 minor2)))))
+  
 ;;;###autoload
 (defalias 'customize-variable-other-window 'customize-option-other-window)
 
@@ -1014,7 +1097,7 @@ SYMBOL is a customization option, and WIDGET is a widget for editing
 that option."
   (unless name (setq name "*Customization*"))
   (kill-buffer (get-buffer-create name))
-  (switch-to-buffer (get-buffer-create name))
+  (pop-to-buffer (get-buffer-create name))
   (custom-buffer-create-internal options description))
 
 ;;;###autoload
@@ -1026,8 +1109,13 @@ SYMBOL is a customization option, and WIDGET is a widget for editing
 that option."
   (unless name (setq name "*Customization*"))
   (kill-buffer (get-buffer-create name))
-  (let ((window (selected-window)))
-    (switch-to-buffer-other-window (get-buffer-create name))
+  (let ((window (selected-window))
+	(pop-up-windows t)
+	(special-display-buffer-names nil)
+	(special-display-regexps nil)
+	(same-window-buffer-names nil)
+	(same-window-regexps nil))
+    (pop-to-buffer (get-buffer-create name))
     (custom-buffer-create-internal options description)
     (select-window window)))
 
@@ -1118,7 +1206,7 @@ Reset all values in this buffer to their standard settings."
 		(length (length options)))
 	    (mapcar (lambda (entry)
 			(prog2
-			    (message "Creating customization items %2d%%..."
+			    (message "Creating customization items ...%2d%%"
 				     (/ (* 100.0 count) length))
 			    (widget-create (nth 1 entry)
 					 :tag (custom-unlispify-tag-name
@@ -1131,7 +1219,7 @@ Reset all values in this buffer to their standard settings."
 		      options))))
   (unless (eq (preceding-char) ?\n)
     (widget-insert "\n"))
-  (message "Creating customization items %2d%%...done" 100)
+  (message "Creating customization items ...%2d%%done" 100)
   (unless (eq custom-buffer-style 'tree)
     (mapcar 'custom-magic-reset custom-options))
   (message "Creating customization setup...")
@@ -1149,7 +1237,7 @@ Reset all values in this buffer to their standard settings."
     (setq group 'emacs))
   (let ((name "*Customize Browser*"))
     (kill-buffer (get-buffer-create name))
-    (switch-to-buffer (get-buffer-create name)))
+    (pop-to-buffer (get-buffer-create name)))
   (custom-mode)
   (widget-insert "\
 Square brackets show active fields; type RET or click mouse-1
@@ -1184,7 +1272,7 @@ item in another window.\n\n"))
   (goto-char (point-min)))
 
 (define-widget 'custom-browse-visibility 'item
-  "Control visibility of of items in the customize tree browser."
+  "Control visibility of items in the customize tree browser."
   :format "%[[%t]%]"
   :action 'custom-browse-visibility-action)
 
@@ -1386,8 +1474,8 @@ The list should be sorted most significant first.")
   "If non-nil, show textual description of the state.
 If `long', show a full-line description, not just one word."
   :type '(choice (const :tag "no" nil)
-		 (const short)
-		 (const long))
+		 (const long)
+		 (other :tag "short" short))
   :group 'custom-buffer)
 
 (defcustom custom-magic-show-hidden '(option face)
@@ -1734,6 +1822,13 @@ If INITIAL-STRING is non-nil, use that rather than \"Parent groups:\"."
   "Face used for pushable variable tags."
   :group 'custom-faces)
 
+(defcustom custom-variable-default-form 'edit
+  "Default form of displaying variable values."
+  :type '(choice (const edit)
+		 (const lisp))
+  :group 'custom-buffer
+  :version "20.3")
+
 (define-widget 'custom-variable 'custom
   "Customize variable."
   :format "%v"
@@ -1742,7 +1837,7 @@ If INITIAL-STRING is non-nil, use that rather than \"Parent groups:\"."
   :custom-category 'option
   :custom-state nil
   :custom-menu 'custom-variable-menu-create
-  :custom-form 'edit
+  :custom-form nil ; defaults to value of `custom-variable-default-form'
   :value-create 'custom-variable-value-create
   :action 'custom-variable-action
   :custom-set 'custom-variable-set
@@ -1770,6 +1865,8 @@ Otherwise, look up symbol in `custom-guess-type-alist'."
 (defun custom-variable-value-create (widget)
   "Here is where you edit the variables value."
   (custom-load-widget widget)
+  (unless (widget-get widget :custom-form)
+    (widget-put widget :custom-form custom-variable-default-form))
   (let* ((buttons (widget-get widget :buttons))
 	 (children (widget-get widget :children))
 	 (form (widget-get widget :custom-form))
@@ -2170,6 +2267,14 @@ Match frames with dark backgrounds.")
   "Face used for face tags."
   :group 'custom-faces)
 
+(defcustom custom-face-default-form 'selected
+  "Default form of displaying face definition."
+  :type '(choice (const all)
+		 (const selected)
+		 (const lisp))
+  :group 'custom-buffer
+  :version "20.3")
+
 (define-widget 'custom-face 'custom
   "Customize face."
   :sample-face 'custom-face-tag-face
@@ -2179,7 +2284,7 @@ Match frames with dark backgrounds.")
   :value-create 'custom-face-value-create
   :action 'custom-face-action
   :custom-category 'face
-  :custom-form 'selected
+  :custom-form nil ; defaults to value of `custom-face-default-form'
   :custom-set 'custom-face-set
   :custom-save 'custom-face-save
   :custom-reset-current 'custom-redraw
@@ -2283,6 +2388,8 @@ Match frames with dark backgrounds.")
 	   (unless (eq state 'hidden)
 	     (message "Creating face editor...")
 	     (custom-load-widget widget)
+	     (unless (widget-get widget :custom-form)
+		 (widget-put widget :custom-form custom-face-default-form))
 	     (let* ((symbol (widget-value widget))
 		    (spec (or (get symbol 'saved-face)
 			      (get symbol 'face-defface-spec)
@@ -2409,6 +2516,7 @@ Optional EVENT is the location for the menu."
     (face-spec-set symbol value)
     (put symbol 'saved-face value)
     (put symbol 'customized-face nil)
+    (custom-save-all)
     (custom-face-state-set widget)
     (custom-redraw-magic widget)))
 
@@ -2502,7 +2610,7 @@ Optional EVENT is the location for the menu."
 			 value))
   :match (lambda (widget value)
 	   (or (symbolp value)
-	       (widget-editable-list-match widget value)))
+	       (widget-group-match widget value)))
   :convert-widget 'custom-hook-convert-widget
   :tag "Hook")
 
@@ -2714,7 +2822,7 @@ If GROUPS-ONLY non-nil, return only those members that are groups."
 		      symbol)
 		     buttons)
 	     (push (widget-create-child-and-convert 
-		    widget 'group-visibility
+		    widget 'custom-group-visibility
 		    :help-echo "Show members of this group."
 		    :action 'custom-toggle-parent
 		    (not (eq state 'hidden)))
@@ -2933,10 +3041,19 @@ you need to explicitly load that file for the settings to take effect."
   :type '(choice (const :tag "Your Emacs init file" nil) file)
   :group 'customize)
 
+(defun custom-file ()
+  "Return the file name for saving customizations."
+  (setq custom-file
+	(or custom-file
+	    user-init-file
+	    (read-file-name "File for customizations: "
+			    "~/" nil nil ".emacs"))))
+
 (defun custom-save-delete (symbol)
-  "Delete the call to SYMBOL form `custom-file'.
+  "Delete the call to SYMBOL from `custom-file'.
 Leave point at the location of the call, or after the last expression."
-  (set-buffer (find-file-noselect (or custom-file user-init-file)))
+  (let ((default-major-mode))
+    (set-buffer (find-file-noselect (custom-file))))
   (goto-char (point-min))
   (catch 'found
     (while t
@@ -3043,7 +3160,8 @@ Leave point at the location of the call, or after the last expression."
     (custom-save-variables)
     (custom-save-faces)
     (save-excursion
-      (set-buffer (find-file-noselect (or custom-file user-init-file)))
+      (let ((default-major-mode nil))
+	(set-buffer (find-file-noselect (custom-file))))
       (save-buffer))))
 
 ;;; The Customize Menu.

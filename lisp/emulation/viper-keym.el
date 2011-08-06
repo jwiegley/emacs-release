@@ -389,9 +389,6 @@ viper-insert-basic-map. Not recommended, except for novice users.")
 (define-key viper-vi-basic-map "~" 'viper-toggle-case)
 (define-key viper-vi-basic-map "\C-?" 'viper-backward-char)
 (define-key viper-vi-basic-map "_" 'viper-nil)
-  
-;;; Escape from Emacs to Vi for one command
-(global-set-key "\C-c\\" 'viper-escape-to-vi)  ; everywhere
 
 ;;; This is viper-vi-diehard-map. Used when viper-vi-diehard-minor-mode is on.
 
@@ -533,7 +530,7 @@ Arguments: (major-mode viper-state keymap)"
     ;; Normalization usually doesn't help here, since one needs to
     ;; normalize in the actual buffer where changes to the keymap are
     ;; to take place. However, it doesn't hurt, and it helps whenever this
-    ;; function is actually called from within the right buffer.
+    ;; function is actually called from within the affected buffer.
     (viper-normalize-minor-mode-map-alist)
     
     (viper-set-mode-vars-for viper-current-state)))

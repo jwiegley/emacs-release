@@ -121,12 +121,12 @@ which tells you which mail folders have mail waiting in them, and
 buffer names.
 
 @item
-@c @iftex
+@c iftex
 Torbj@"orn
-@c @end iftex
-@c @ifinfo
+@c end iftex
+@c ifinfo
 @c Torbjorn
-@c @end ifinfo
+@c end ifinfo
 Einarsson contributed F90 mode (@file{f90.el}).
 
 @item
@@ -352,15 +352,8 @@ Geoff Kuenning wrote Emacs 19's @file{ispell.el}, based on work by Ken
 Stevens and others.
 
 @item
-David
-@c @ifinfo
-Kågedal
-@c @end ifinfo
-@c @iftex
-@c K@aa gedal
-@c @end iftex
-wrote @file{tempo.el}, providing support for easy
-insertion of boilerplate text and other common constructions.
+David K@ringaccent{a}gedal wrote @file{tempo.el}, providing support for
+easy insertion of boilerplate text and other common constructions.
 
 @item
 Daniel LaLiberte wrote:

@@ -1,6 +1,38 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
 
 File: emacs,  Node: Key Index,  Next: Command Index,  Prev: Glossary,  Up: Top
 
@@ -29,15 +61,22 @@ Key (Character) Index
 * * ? (Dired):                           Marks vs Flags.
 * * @ (Dired):                           Marks vs Flags.
 * * c (Dired):                           Marks vs Flags.
+* * C-n (Dired):                         Marks vs Flags.
+* * C-p (Dired):                         Marks vs Flags.
 * * DEL (Dired):                         Marks vs Flags.
 * * m (Dired):                           Marks vs Flags.
+* * s (Dired):                           Marks vs Flags.
+* * t (Dired):                           Marks vs Flags.
 * * u (Dired):                           Marks vs Flags.
 * + (Dired):                             Operating on Files.
 * . (Calendar mode):                     Specified Dates.
 * . (Dired):                             Flagging Many Files.
 * . (Rmail):                             Rmail Scrolling.
+* < (Dired):                             Subdirectory Motion.
 * < (Rmail):                             Rmail Motion.
+* <TAB> (Help mode):                     Help Mode.
 * = (Dired):                             Comparison in Dired.
+* > (Dired):                             Subdirectory Motion.
 * > (Rmail):                             Rmail Motion.
 * a (Calendar mode):                     Holidays.
 * A (Dired):                             Operating on Files.
@@ -51,6 +90,7 @@ Key (Character) Index
 * C-\:                                   Select Input Method.
 * C-]:                                   Quitting.
 * C-_:                                   Undo.
+* C-_ (Dired):                           Marks vs Flags.
 * C-a:                                   Moving Point.
 * C-a (Calendar mode):                   Move to Beginning or End.
 * C-b:                                   Moving Point.
@@ -205,6 +245,7 @@ Key (Character) Index
 * C-k:                                   Killing by Lines.
 * C-k (Gnus):                            Summary of Gnus.
 * C-l:                                   Scrolling.
+* C-M-%:                                 Query Replace.
 * C-M-.:                                 Find Tag.
 * C-M-/:                                 Dynamic Abbrevs.
 * C-M-@:                                 List Commands.
@@ -275,7 +316,7 @@ Key (Character) Index
 * C-u - C-x ;:                           Comment Commands.
 * C-u C-@:                               Mark Ring.
 * C-u C-SPC:                             Mark Ring.
-* C-u C-x C-q:                           Check-Out.
+* C-u C-x u:                             Undo.
 * C-u TAB:                               Multi-line Indent.
 * C-v:                                   Scrolling.
 * C-v (Calendar mode):                   Scroll Calendar.
@@ -344,8 +385,9 @@ Key (Character) Index
 * C-x C-n:                               Moving Point.
 * C-x C-o:                               Blank Lines.
 * C-x C-p:                               Pages.
-* C-x C-q:                               Misc Buffer.
-* C-x C-q (version control):             Check-Out.
+* C-x C-q <1>:                           Misc Buffer.
+* C-x C-q:                               Basic VC Editing.
+* C-x C-q (Version Control):             Basic VC Editing.
 * C-x C-r:                               Visiting.
 * C-x C-s:                               Saving.
 * C-x C-t:                               Transpose.
@@ -363,12 +405,14 @@ Key (Character) Index
 * C-x k:                                 Kill Buffer.
 * C-x l:                                 Pages.
 * C-x m:                                 Sending Mail.
-* C-x n d:                               Narrowing.
+* C-x n d <1>:                           Narrowing.
+* C-x n d:                               Fortran Misc.
 * C-x n n:                               Narrowing.
 * C-x n p:                               Narrowing.
 * C-x n w:                               Narrowing.
 * C-x o:                                 Other Window.
 * C-x q:                                 Kbd Macro Query.
+* C-x r +:                               RegNumbers.
 * C-x r b:                               Bookmarks.
 * C-x r d:                               Rectangles.
 * C-x r f:                               RegConfig.
@@ -377,10 +421,12 @@ Key (Character) Index
 * C-x r k:                               Rectangles.
 * C-x r l:                               Bookmarks.
 * C-x r m:                               Bookmarks.
+* C-x r n:                               RegNumbers.
 * C-x r o:                               Rectangles.
 * C-x r r:                               RegRect.
 * C-x r s:                               RegText.
 * C-x r SPC:                             RegPos.
+* C-x r t:                               Rectangles.
 * C-x r w:                               RegConfig.
 * C-x r y:                               Rectangles.
 * C-x RET:                               International Intro.
@@ -390,6 +436,8 @@ Key (Character) Index
 * C-x RET k:                             Specify Coding.
 * C-x RET p:                             Specify Coding.
 * C-x RET t:                             Specify Coding.
+* C-x RET X:                             Specify Coding.
+* C-x RET x:                             Specify Coding.
 * C-x s:                                 Saving.
 * C-x SPC:                               Commands of GUD.
 * C-x TAB:                               Indentation Commands.
@@ -397,20 +445,25 @@ Key (Character) Index
 * C-x u:                                 Undo.
 * C-x v =:                               Old Versions.
 * C-x v a:                               Change Logs and VC.
-* C-x v c:                               Version Control Undo.
-* C-x v d:                               Status in VC.
+* C-x v c:                               VC Undo.
+* C-x v d:                               VC Dired Mode.
+* C-x v g:                               Old Versions.
 * C-x v h:                               Version Headers.
 * C-x v i:                               Registering.
-* C-x v l:                               Status in VC.
+* C-x v l:                               VC Status.
+* C-x v m:                               Merging.
 * C-x v r:                               Making Snapshots.
 * C-x v s:                               Making Snapshots.
-* C-x v u:                               Version Control Undo.
+* C-x v u:                               VC Undo.
+* C-x v v:                               Basic VC Editing.
 * C-x v ~:                               Old Versions.
+* C-x z:                                 Repeating.
 * C-x }:                                 Change Window.
 * C-y:                                   Kill Ring.
 * C-z:                                   Exiting.
 * C-z (X windows):                       Misc X.
 * d (Calendar mode):                     Diary Commands.
+* D (Dired):                             Operating on Files.
 * d (Dired):                             Dired Deletion.
 * d (Rmail):                             Rmail Deletion.
 * DEL:                                   Deletion.
@@ -476,6 +529,7 @@ Key (Character) Index
 * M-':                                   Expanding Abbrevs.
 * M-(:                                   Balanced Editing.
 * M-):                                   Balanced Editing.
+* M-*:                                   Find Tag.
 * M-,:                                   Tags Search.
 * M--:                                   Arguments.
 * M-- M-c:                               Fixing Case.
@@ -498,6 +552,7 @@ Key (Character) Index
 * M-@:                                   Words.
 * M-\:                                   Deletion.
 * M-^:                                   Indentation Commands.
+* M-^ (Fortran mode):                    ForIndent Commands.
 * M-`:                                   Menu Bar.
 * M-a:                                   Sentences.
 * M-a (Calendar mode):                   Move to Beginning or End.
@@ -591,6 +646,7 @@ Key (Character) Index
 * Q (Dired):                             Operating on Files.
 * q (Gnus Group mode):                   Summary of Gnus.
 * q (Rmail summary):                     Rmail Summary Edit.
+* Q (Rmail summary):                     Rmail Summary Edit.
 * q (Rmail):                             Rmail Basics.
 * R (Dired):                             Operating on Files.
 * r (Rmail):                             Rmail Reply.
@@ -605,6 +661,7 @@ Key (Character) Index
 * S (Dired):                             Operating on Files.
 * s (Gnus Summary mode):                 Summary of Gnus.
 * s (Rmail):                             Rmail Basics.
+* S-<TAB> (Help mode):                   Help Mode.
 * S-Mouse-1:                             Frame Parameters.
 * S-TAB (customization buffer):          Changing an Option.
 * SPC:                                   Completion Commands.
@@ -629,7 +686,6 @@ Key (Character) Index
 * u (Rmail):                             Rmail Deletion.
 * UP:                                    Moving Point.
 * v (Dired):                             Dired Visiting.
-* w (Rmail summary):                     Rmail Summary Edit.
 * w (Rmail):                             Rmail Output.
 * x (Calendar mode):                     Holidays.
 * x (Dired):                             Dired Deletion.

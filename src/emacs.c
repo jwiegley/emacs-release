@@ -1,5 +1,5 @@
 /* Fully extensible Emacs, running on Unix, intended for GNU.
-   Copyright (C) 1985, 86, 87, 93, 94, 95 Free Software Foundation, Inc.
+   Copyright (C) 1985,86,87,93,94,95,97,1998 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -39,11 +39,13 @@ Boston, MA 02111-1307, USA.  */
 #include "lisp.h"
 #include "commands.h"
 #include "intervals.h"
+#include "buffer.h"
 
 #include "systty.h"
 #include "blockinput.h"
 #include "syssignal.h"
 #include "process.h"
+#include "keyboard.h"
 
 #ifdef HAVE_SETRLIMIT
 #include <sys/time.h>
@@ -75,6 +77,17 @@ Lisp_Object Vinstallation_directory;
 
 /* Hook run by `kill-emacs' before it does really anything.  */
 Lisp_Object Vkill_emacs_hook;
+
+#ifdef SIGUSR1
+/* Hooks for signal USR1 and USR2 handing */
+Lisp_Object Vsignal_USR1_hook;
+#ifdef SIGUSR2
+Lisp_Object Vsignal_USR2_hook;
+#endif 
+#endif
+
+/* Search path separator.  */
+Lisp_Object Vpath_separator;
 
 /* Set nonzero after Emacs has started up the first time.
   Prevents reinitialization of the Lisp world and keymaps
@@ -158,12 +171,49 @@ char **initial_argv;
 int initial_argc;
 
 static void sort_args ();
+void syms_of_emacs ();
 
 /* Signal code for the fatal signal that was received */
 int fatal_error_code;
 
 /* Nonzero if handling a fatal error already */
 int fatal_error_in_progress;
+
+#ifdef SIGUSR1
+int SIGUSR1_in_progress=0;
+SIGTYPE
+handle_USR1_signal (sig)
+     int sig;
+{
+  if (! SIGUSR1_in_progress)
+    {
+      SIGUSR1_in_progress = 1;
+      
+      if (!NILP (Vrun_hooks) && !noninteractive)
+	call1 (Vrun_hooks, intern ("signal-USR1-hook"));
+      
+      SIGUSR1_in_progress = 0;
+    }
+}
+
+#ifdef SIGUSR2
+int SIGUSR2_in_progress=0;
+SIGTYPE
+handle_USR2_signal (sig)
+     int sig;
+{
+  if (! SIGUSR2_in_progress)
+    {
+      SIGUSR2_in_progress = 1;
+      
+      if (!NILP (Vrun_hooks) && !noninteractive)
+	call1 (Vrun_hooks, intern ("signal-USR2-hook"));
+      
+      SIGUSR2_in_progress = 0;
+    }
+}
+#endif
+#endif 
 
 /* Handle bus errors, illegal instruction, etc. */
 SIGTYPE
@@ -212,10 +262,25 @@ memory_warning_signal (sig)
   force_auto_save_soon ();
 }
 #endif
+
+/* We define abort, rather than using it from the library,
+   so that GDB can return from a breakpoint here.
+   MSDOS has its own definition on msdos.c  */
+
+#if ! defined (DOS_NT) && ! defined (NO_ABORT)
+void
+abort ()
+{
+  kill (getpid (), SIGABRT);
+  /* This shouldn't be executed, but it prevents a warning.  */
+  exit (1);
+}
+#endif
+
 
 /* Code for dealing with Lisp access to the Unix command line */
 
-static
+static void
 init_cmdargs (argc, argv, skip_args)
      int argc;
      char **argv;
@@ -392,11 +457,11 @@ static char dump_tz[] = "UtC0";
    (We don't have any real constructors or destructors.)  */
 #ifdef __GNUC__
 #ifndef GCC_CTORS_IN_LIBC
-__do_global_ctors ()
+void __do_global_ctors ()
 {}
-__do_global_ctors_aux ()
+void __do_global_ctors_aux ()
 {}
-__do_global_dtors ()
+void __do_global_dtors ()
 {}
 /* Linux has a bug in its library; avoid an error.  */
 #ifndef LINUX
@@ -404,7 +469,7 @@ char * __CTOR_LIST__[2] = { (char *) (-1), 0 };
 #endif
 char * __DTOR_LIST__[2] = { (char *) (-1), 0 };
 #endif /* GCC_CTORS_IN_LIBC */
-__main ()
+void __main ()
 {}
 #endif /* __GNUC__ */
 #endif /* ORDINARY_LINK */
@@ -479,6 +544,7 @@ argmatch (argv, argc, sstr, lstr, minlen, valptr, skipptr)
 }
 
 /* ARGSUSED */
+int
 main (argc, argv, envp)
      int argc;
      char **argv;
@@ -487,10 +553,11 @@ main (argc, argv, envp)
   char stack_bottom_variable;
   int skip_args = 0;
   extern int errno;
-  extern sys_nerr;
+  extern int sys_nerr;
 #ifdef HAVE_SETRLIMIT
   struct rlimit rlim;
 #endif
+  int no_loadup = 0;
 
 #ifdef LINUX_SBRK_BUG
   __sbrk (1);
@@ -499,6 +566,7 @@ main (argc, argv, envp)
 #ifdef DOUG_LEA_MALLOC
   if (initialized)
     {
+      extern void r_alloc_reinit ();
       malloc_set_state (malloc_state_ptr);
       free (malloc_state_ptr);
       r_alloc_reinit ();
@@ -511,8 +579,13 @@ main (argc, argv, envp)
 #endif
 
   sort_args (argc, argv);
+  argc = 0;
+  while (argv[argc]) argc++;
 
-  if (argmatch (argv, argc, "-version", "--version", 3, NULL, &skip_args))
+  if (argmatch (argv, argc, "-version", "--version", 3, NULL, &skip_args)
+      /* We don't know the version number unless this is a dumped Emacs.
+         So ignore --version otherwise.  */
+      && initialized)
     {
       Lisp_Object tem;
       tem = Fsymbol_value (intern ("emacs-version"));
@@ -524,12 +597,12 @@ main (argc, argv, envp)
       else
 	{
 	  printf ("GNU Emacs %s\n", XSTRING (tem)->data);
-	  printf ("Copyright (C) 1997 Free Software Foundation, Inc.\n");
+	  printf ("Copyright (C) 1998 Free Software Foundation, Inc.\n");
 	  printf ("GNU Emacs comes with ABSOLUTELY NO WARRANTY.\n");
 	  printf ("You may redistribute copies of Emacs\n");
 	  printf ("under the terms of the GNU General Public License.\n");
 	  printf ("For more information about these matters, ");
-	  printf ("see the files named COPYING.\n");
+	  printf ("see the file named COPYING.\n");
 	  exit (0);
 	}
     }
@@ -595,8 +668,14 @@ main (argc, argv, envp)
     {
       long newlim;
       extern int re_max_failures;
-      /* Approximate the amount regex.c needs, plus some more.  */
-      newlim = re_max_failures * 2 * 20 * sizeof (char *);
+      /* Approximate the amount regex.c needs per unit of re_max_failures.  */
+      int ratio = 20 * sizeof (char *);
+      /* Then add 33% to cover the size of the smaller stacks that regex.c
+	 successively allocates and discards, on its way to the maximum.  */
+      ratio += ratio / 3;
+      /* Add in some extra to cover
+	 what we're likely to use for other reasons.  */
+      newlim = re_max_failures * ratio + 200000;
 #ifdef __NetBSD__
       /* NetBSD (at least NetBSD 1.2G and former) has a bug in its
        stack allocation routine for new process that the allocation
@@ -607,8 +686,8 @@ main (argc, argv, envp)
       if (newlim > rlim.rlim_max)
 	{
 	  newlim = rlim.rlim_max;
-	  /* Don't let regex.c overflow the stack.  */
-	  re_max_failures = newlim / (2 * 20 * sizeof (char *));
+	  /* Don't let regex.c overflow the stack we have.  */
+	  re_max_failures = (newlim - 200000) / ratio;
 	}
       if (rlim.rlim_cur < newlim)
 	rlim.rlim_cur = newlim;
@@ -672,32 +751,36 @@ main (argc, argv, envp)
   inhibit_window_system = 0;
 
   /* Handle the -t switch, which specifies filename to use as terminal */
-  {
-    char *term;
-    if (argmatch (argv, argc, "-t", "--terminal", 4, &term, &skip_args))
-      {
-	int result;
-	close (0);
-	close (1);
-	result = open (term, O_RDWR, 2 );
-	if (result < 0)
-	  {
-	    char *errstring = strerror (errno);
-	    fprintf (stderr, "emacs: %s: %s\n", term, errstring);
-	    exit (1);
-	  }
-	dup (0);
-	if (! isatty (0))
-	  {
-	    fprintf (stderr, "emacs: %s: not a tty\n", term);
-	    exit (1);
-	  }
-	fprintf (stderr, "Using %s\n", term);
+  while (1)
+    {
+      char *term;
+      if (argmatch (argv, argc, "-t", "--terminal", 4, &term, &skip_args))
+	{
+	  int result;
+	  close (0);
+	  close (1);
+	  result = open (term, O_RDWR, 2 );
+	  if (result < 0)
+	    {
+	      char *errstring = strerror (errno);
+	      fprintf (stderr, "emacs: %s: %s\n", term, errstring);
+	      exit (1);
+	    }
+	  dup (0);
+	  if (! isatty (0))
+	    {
+	      fprintf (stderr, "emacs: %s: not a tty\n", term);
+	      exit (1);
+	    }
+	  fprintf (stderr, "Using %s\n", term);
 #ifdef HAVE_WINDOW_SYSTEM
-	inhibit_window_system = 1; /* -t => -nw */
+	  inhibit_window_system = 1; /* -t => -nw */
 #endif
-      }
-  }
+	}
+      else
+	break;
+    }
+
   if (argmatch (argv, argc, "-nw", "--no-windows", 6, NULL, &skip_args))
     inhibit_window_system = 1;
 
@@ -712,55 +795,13 @@ main (argc, argv, envp)
       printf ("\
 Usage: %s [-t term] [--terminal term]  [-nw] [--no-windows]  [--batch]\n\
       [-q] [--no-init-file]  [-u user] [--user user]  [--debug-init]\n\
-      [--version] [--no-site-file]\n\
+      [--unibyte] [--multibyte] [--version] [--no-site-file]\n\
       [-f func] [--funcall func]  [-l file] [--load file]  [--insert file]\n\
       [+linenum] file-to-visit  [--kill]\n\
-Report bugs to bug-gnu-emacs@prep.ai.mit.edu.  First, please see\n\
+Report bugs to bug-gnu-emacs@gnu.org.  First, please see\n\
 the Bugs section of the Emacs manual or the file BUGS.\n", argv[0]);
       exit (0);
     }
-
-#ifdef HAVE_X_WINDOWS
-  /* Stupid kludge to catch command-line display spec.  We can't
-     handle this argument entirely in window system dependent code
-     because we don't even know which window system dependent code
-     to run until we've recognized this argument.  */
-  {
-    char *displayname = 0;
-    int i;
-    int count_before = skip_args;
-
-    if (argmatch (argv, argc, "-d", "--display", 3, &displayname, &skip_args))
-      display_arg = 1;
-    else if (argmatch (argv, argc, "-display", 0, 3, &displayname, &skip_args))
-      display_arg = 1;
-
-    /* If we have the form --display=NAME,
-       convert it into  -d name.
-       This requires inserting a new element into argv.  */
-    if (displayname != 0 && skip_args - count_before == 1)
-      {
-	char **new = (char **) xmalloc (sizeof (char *) * (argc + 2));
-	int j;
-
-	for (j = 0; j < count_before + 1; j++)
-	  new[j] = argv[j];
-	new[count_before + 1] = "-d";
-	new[count_before + 2] = displayname;
-	for (j = count_before + 2; j <argc; j++)
-	  new[j + 1] = argv[j];
-	argv = new;
-	argc++;
-      }
-    /* Change --display to -d, when its arg is separate.  */
-    else if (displayname != 0 && skip_args > count_before
-	     && argv[count_before + 1][1] == '-')
-      argv[count_before + 1] = "-d";
-
-    /* Don't actually discard this arg.  */
-    skip_args = count_before;
-  }
-#endif
 
   if (! noninteractive)
     {
@@ -811,6 +852,12 @@ the Bugs section of the Emacs manual or the file BUGS.\n", argv[0]);
       signal (SIGQUIT, fatal_error_signal);
       signal (SIGILL, fatal_error_signal);
       signal (SIGTRAP, fatal_error_signal);
+#ifdef SIGUSR1
+      signal (SIGUSR1, handle_USR1_signal);
+#ifdef SIGUSR2
+      signal (SIGUSR2, handle_USR2_signal);
+#endif
+#endif
 #ifdef SIGABRT
       signal (SIGABRT, fatal_error_signal);
 #endif
@@ -896,8 +943,125 @@ the Bugs section of the Emacs manual or the file BUGS.\n", argv[0]);
 
   init_alloc ();
   init_eval ();
+  init_coding ();
   init_data ();
   running_asynch_code = 0;
+
+  /* Handle --unibyte and the EMACS_UNIBYTE envvar,
+     but not while dumping.  */
+  if (
+#ifndef CANNOT_DUMP
+      ! noninteractive || initialized
+#else
+      1
+#endif
+      )
+    {
+      int inhibit_unibyte = 0;
+
+      /* --multibyte overrides EMACS_UNIBYTE.  */
+      if (argmatch (argv, argc, "-no-unibyte", "--no-unibyte", 4, NULL, &skip_args)
+	  || argmatch (argv, argc, "-multibyte", "--multibyte", 4, NULL, &skip_args))
+	inhibit_unibyte = 1;
+
+      /* --unibyte requests that we set up to do everything with single-byte
+	 buffers and strings.  We need to handle this before calling
+	 init_lread, init_editfns and other places that generate Lisp strings
+	 from text in the environment.  */
+      if (argmatch (argv, argc, "-unibyte", "--unibyte", 4, NULL, &skip_args)
+	  || argmatch (argv, argc, "-no-multibyte", "--no-multibyte", 4, NULL, &skip_args)
+	  || (getenv ("EMACS_UNIBYTE") && !inhibit_unibyte))
+	{
+	  Lisp_Object old_log_max;
+	  Lisp_Object symbol, tail;
+
+	  symbol = intern ("default-enable-multibyte-characters");
+	  Fset (symbol, Qnil);
+
+	  if (initialized)
+	    {
+	      /* Erase pre-dump messages in *Messages* now so no abort.  */
+	      old_log_max = Vmessage_log_max;
+	      XSETFASTINT (Vmessage_log_max, 0);
+	      message_dolog ("", 0, 1, 0);
+	      Vmessage_log_max = old_log_max;
+	    }
+
+	  for (tail = Vbuffer_alist; CONSP (tail);
+	       tail = XCONS (tail)->cdr)
+	    {
+	      Lisp_Object buffer;
+
+	      buffer = Fcdr (XCONS (tail)->car);
+	      /* Verify that all buffers are empty now, as they
+		 ought to be.  */
+	      if (BUF_Z (XBUFFER (buffer)) > BUF_BEG (XBUFFER (buffer)))
+		abort ();
+	      /* It is safe to do this crudely in an empty buffer.  */
+	      XBUFFER (buffer)->enable_multibyte_characters = Qnil;
+	    }
+	}
+    }
+
+  no_loadup
+    = !argmatch (argv, argc, "-nl", "--no-loadup", 6, NULL, &skip_args);
+
+
+#ifdef HAVE_X_WINDOWS
+  /* Stupid kludge to catch command-line display spec.  We can't
+     handle this argument entirely in window system dependent code
+     because we don't even know which window system dependent code
+     to run until we've recognized this argument.  */
+  {
+    char *displayname = 0;
+    int i;
+    int count_before = skip_args;
+
+    /* Skip any number of -d options, but only use the last one.  */
+    while (1)
+      {
+	int count_before_this = skip_args;
+
+	if (argmatch (argv, argc, "-d", "--display", 3, &displayname, &skip_args))
+	  display_arg = 1;
+	else if (argmatch (argv, argc, "-display", 0, 3, &displayname, &skip_args))
+	  display_arg = 1;
+	else
+	  break;
+
+	count_before = count_before_this;
+      }
+
+    /* If we have the form --display=NAME,
+       convert it into  -d name.
+       This requires inserting a new element into argv.  */
+    if (displayname != 0 && skip_args - count_before == 1)
+      {
+	char **new = (char **) xmalloc (sizeof (char *) * (argc + 2));
+	int j;
+
+	for (j = 0; j < count_before + 1; j++)
+	  new[j] = argv[j];
+	new[count_before + 1] = "-d";
+	new[count_before + 2] = displayname;
+	for (j = count_before + 2; j <argc; j++)
+	  new[j + 1] = argv[j];
+	argv = new;
+	argc++;
+      }
+    /* Change --display to -d, when its arg is separate.  */
+    else if (displayname != 0 && skip_args > count_before
+	     && argv[count_before + 1][1] == '-')
+      argv[count_before + 1] = "-d";
+
+    /* Don't actually discard this arg.  */
+    skip_args = count_before;
+  }
+#endif
+
+  /* argmatch must not be used after here,
+     except when bulding temacs
+     because the -d argument has not been skipped in skip_args.  */
 
 #ifdef MSDOS
   /* Call early 'cause init_environment needs it.  */
@@ -937,37 +1101,15 @@ the Bugs section of the Emacs manual or the file BUGS.\n", argv[0]);
       Lisp_Object old_log_max;
       old_log_max = Vmessage_log_max;
       XSETFASTINT (Vmessage_log_max, 0);
-      message_dolog ("", 0, 1);
+      message_dolog ("", 0, 1, 0);
       Vmessage_log_max = old_log_max;
     }
 
   init_callproc ();	/* Must follow init_cmdargs but not init_sys_modes.  */
   init_lread ();
 
-  if (!noninteractive)
-    {
-#ifdef VMS
-      init_vms_input ();/* init_display calls get_frame_size, that needs this */
-#endif /* VMS */
-      init_display ();	/* Determine terminal type.  init_sys_modes uses results */
-    }
-  init_keyboard ();	/* This too must precede init_sys_modes */
-#ifdef VMS
-  init_vmsproc ();	/* And this too. */
-#endif /* VMS */
-  init_sys_modes ();	/* Init system terminal modes (RAW or CBREAK, etc.) */
-  init_xdisp ();
-  init_macros ();
-  init_editfns ();
-#ifdef LISP_FLOAT_TYPE
-  init_floatfns ();
-#endif
-#ifdef VMS
-  init_vmsfns ();
-#endif /* VMS */
-  init_process ();
-
-/* Intern the names of all standard functions and variables; define standard keys */
+  /* Intern the names of all standard functions and variables;
+     define standard keys.  */
 
   if (!initialized)
     {
@@ -1071,16 +1213,39 @@ the Bugs section of the Emacs manual or the file BUGS.\n", argv[0]);
       keys_of_frame ();
     }
 
+  if (!noninteractive)
+    {
+#ifdef VMS
+      init_vms_input ();/* init_display calls get_frame_size, that needs this */
+#endif /* VMS */
+      init_display ();	/* Determine terminal type.  init_sys_modes uses results */
+    }
+  init_keyboard ();	/* This too must precede init_sys_modes */
+#ifdef VMS
+  init_vmsproc ();	/* And this too. */
+#endif /* VMS */
+  init_sys_modes ();	/* Init system terminal modes (RAW or CBREAK, etc.) */
+  init_xdisp ();
+  init_macros ();
+  init_editfns ();
+#ifdef LISP_FLOAT_TYPE
+  init_floatfns ();
+#endif
+#ifdef VMS
+  init_vmsfns ();
+#endif /* VMS */
+  init_process ();
+
   if (!initialized)
     {
       char *file;
-      /* Handle -l loadup-and-dump, args passed by Makefile. */
+      /* Handle -l loadup, args passed by Makefile. */
       if (argmatch (argv, argc, "-l", "--load", 3, &file, &skip_args))
 	Vtop_level = Fcons (intern ("load"),
 			    Fcons (build_string (file), Qnil));
 #ifdef CANNOT_DUMP
       /* Unless next switch is -nl, load "loadup.el" first thing.  */
-      if (!argmatch (argv, argc, "-nl", "--no-loadup", 6, NULL, &skip_args))
+      if (! no_loadup)
 	Vtop_level = Fcons (intern ("load"),
 			    Fcons (build_string ("loadup.el"), Qnil));
 #endif /* CANNOT_DUMP */
@@ -1160,17 +1325,28 @@ struct standard_args
 
 struct standard_args standard_args[] =
 {
-  { "-version", "--version", 110, 0 },
-  { "-help", "--help", 110, 0 },
-  { "-nl", "--no-shared-memory", 100, 0 },
-#ifdef VMS
-  { "-map", "--map-data", 100, 0 },
+  { "-version", "--version", 150, 0 },
+#ifdef HAVE_SHM
+  { "-nl", "--no-shared-memory", 140, 0 },
 #endif
-  { "-t", "--terminal", 90, 1 },
-  { "-d", "--display", 80, 1 },
-  { "-display", 0, 80, 1 },
-  { "-nw", "--no-windows", 70, 0 },
-  { "-batch", "--batch", 60, 0 },
+#ifdef VMS
+  { "-map", "--map-data", 130, 0 },
+#endif
+  { "-t", "--terminal", 120, 1 },
+  { "-nw", "--no-windows", 110, 0 },
+  { "-batch", "--batch", 100, 0 },
+  { "-help", "--help", 90, 0 },
+  { "-no-unibyte", "--no-unibyte", 83, 0 },
+  { "-multibyte", "--multibyte", 82, 0 },
+  { "-unibyte", "--unibyte", 81, 0 },
+  { "-no-multibyte", "--no-multibyte", 80, 0 },
+#ifdef CANNOT_DUMP
+  { "-nl", "--no-loadup", 70, 0 },
+#endif
+  /* -d must come last before the options handled in startup.el.  */
+  { "-d", "--display", 60, 1 },
+  { "-display", 0, 60, 1 },
+  /* Now for the options handled in startup.el.  */
   { "-q", "--no-init-file", 50, 0 },
   { "-no-init-file", 0, 50, 0 },
   { "-no-site-file", "--no-site-file", 40, 0 },
@@ -1221,7 +1397,10 @@ struct standard_args standard_args[] =
 /* Reorder the elements of ARGV (assumed to have ARGC elements)
    so that the highest priority ones come first.
    Do not change the order of elements of equal priority.
-   If an option takes an argument, keep it and its argument together.  */
+   If an option takes an argument, keep it and its argument together.
+
+   If an option that takes no argument appears more
+   than once, eliminate all but one copy of it.  */
 
 static void
 sort_args (argc, argv)
@@ -1237,6 +1416,7 @@ sort_args (argc, argv)
   int *options = (int *) xmalloc (sizeof (int) * argc);
   int *priority = (int *) xmalloc (sizeof (int) * argc);
   int to = 1;
+  int incoming_used = 1;
   int from;
   int i;
   int end_of_options = argc;
@@ -1320,7 +1500,7 @@ sort_args (argc, argv)
 
   /* Copy the arguments, in order of decreasing priority, to NEW.  */
   new[0] = argv[0];
-  while (to < argc)
+  while (incoming_used < argc)
     {
       int best = -1;
       int best_priority = -9999;
@@ -1342,10 +1522,17 @@ sort_args (argc, argv)
       if (best < 0)
 	abort ();
 
-      /* Copy the highest priority remaining option, with its args, to NEW.  */
-      new[to++] = argv[best];
-      for (i = 0; i < options[best]; i++)
-	new[to++] = argv[best + i + 1];
+      /* Copy the highest priority remaining option, with its args, to NEW.
+         Unless it is a duplicate of the previous one.  */
+      if (! (options[best] == 0
+	     && ! strcmp (new[to - 1], argv[best])))
+	{
+	  new[to++] = argv[best];
+	  for (i = 0; i < options[best]; i++)
+	    new[to++] = argv[best + i + 1];
+	}
+
+      incoming_used += 1 + (options[best] > 0 ? options[best] : 0);
 
       /* Clear out this option in ARGV.  */
       argv[best] = 0;
@@ -1481,6 +1668,10 @@ shut_down_emacs (sig, no_x, stuff)
 
 #ifdef WINDOWSNT
   term_ntproc ();
+#endif
+
+#ifdef MSDOS
+  dos_cleanup ();
 #endif
 }
 
@@ -1652,6 +1843,7 @@ decode_env_path (evarname, defalt)
   return Fnreverse (lpath);
 }
 
+void
 syms_of_emacs ()
 {
   Qfile_name_handler_alist = intern ("file-name-handler-alist");
@@ -1696,6 +1888,18 @@ expect to be able to interact with the user.  To ask for confirmation,\n\
 see `kill-emacs-query-functions' instead.");
   Vkill_emacs_hook = Qnil;
 
+#ifdef SIGUSR1
+  DEFVAR_LISP ("signal-USR1-hook", &Vsignal_USR1_hook,
+    "Hook to be run whenever emacs receives a USR1 signal");
+  Vsignal_USR1_hook = Qnil;
+#ifdef SIGUSR2
+  DEFVAR_LISP ("signal-USR2-hook", &Vsignal_USR2_hook,
+    "Hook to be run whenever emacs receives a USR2 signal");
+  Vsignal_USR2_hook = Qnil;
+#endif
+#endif
+
+
   DEFVAR_INT ("emacs-priority", &emacs_priority,
     "Priority for Emacs to run at.\n\
 This value is effective only if set before Emacs is dumped,\n\
@@ -1704,6 +1908,13 @@ it to change priority.  (Emacs sets its uid back to the real uid.)\n\
 Currently, you need to define SET_EMACS_PRIORITY in `config.h'\n\
 before you compile Emacs, to enable the code for this feature.");
   emacs_priority = 0;
+
+  DEFVAR_LISP ("path-separator", &Vpath_separator,
+    "The directory separator in search paths, as a string.");
+  {
+    char c = SEPCHAR;
+    Vpath_separator = make_string (&c, 1);
+  }
 
   DEFVAR_LISP ("invocation-name", &Vinvocation_name,
     "The program name that was used to run Emacs.\n\

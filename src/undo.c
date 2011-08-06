@@ -41,6 +41,7 @@ Lisp_Object pending_boundary;
    (It is possible to record an insertion before or after the fact
    because we don't need to record the contents.)  */
 
+void
 record_insert (beg, length)
      int beg, length;
 {
@@ -83,12 +84,14 @@ record_insert (beg, length)
 }
 
 /* Record that a deletion is about to take place,
-   for LENGTH characters at location BEG.  */
+   of the characters in STRING, at location BEG.  */
 
-record_delete (beg, length)
-     int beg, length;
+void
+record_delete (beg, string)
+     int beg;
+     Lisp_Object string;
 {
-  Lisp_Object lbeg, lend, sbeg;
+  Lisp_Object sbeg;
   int at_boundary;
 
   if (EQ (current_buffer->undo_list, Qt))
@@ -102,18 +105,32 @@ record_delete (beg, length)
     Fundo_boundary ();
   XSETBUFFER (last_undo_buffer, current_buffer);
 
-  at_boundary = (CONSP (current_buffer->undo_list)
-		 && NILP (XCONS (current_buffer->undo_list)->car));
+  if (CONSP (current_buffer->undo_list))
+    {
+      /* Set AT_BOUNDARY to 1 only when we have nothing other than
+         marker adjustment before undo boundary.  */
+
+      Lisp_Object tail = current_buffer->undo_list, elt;
+
+      while (1)
+	{
+	  elt = XCONS (tail)->car;
+	  if (NILP (elt) || ! (CONSP (elt) && MARKERP (XCONS (elt)->car)))
+	    break;
+	  tail = XCONS (tail)->cdr;
+	}
+      at_boundary = NILP (elt);
+    }
+  else
+    at_boundary = 0;
 
   if (MODIFF <= SAVE_MODIFF)
     record_first_change ();
 
-  if (PT == beg + length)
+  if (PT == beg + XSTRING (string)->size)
     XSETINT (sbeg, -beg);
   else
     XSETFASTINT (sbeg, beg);
-  XSETFASTINT (lbeg, beg);
-  XSETFASTINT (lend, beg + length);
 
   /* If we are just after an undo boundary, and 
      point wasn't at start of deleted range, record where it was.  */
@@ -124,8 +141,7 @@ record_delete (beg, length)
       = Fcons (make_number (last_point_position), current_buffer->undo_list);
 
   current_buffer->undo_list
-    = Fcons (Fcons (Fbuffer_substring (lbeg, lend), sbeg),
-	     current_buffer->undo_list);
+    = Fcons (Fcons (string, sbeg), current_buffer->undo_list);
 }
 
 /* Record the fact that MARKER is about to be adjusted by ADJUSTMENT.
@@ -133,6 +149,7 @@ record_delete (beg, length)
    because that's the only case where an automatic marker adjustment
    won't be inverted automatically by undoing the buffer modification.  */
 
+void
 record_marker_adjustment (marker, adjustment)
      Lisp_Object marker;
      int adjustment;
@@ -155,12 +172,13 @@ record_marker_adjustment (marker, adjustment)
 
 /* Record that a replacement is about to take place,
    for LENGTH characters at location BEG.
-   The replacement does not change the number of characters.  */
+   The replacement must not change the number of characters.  */
 
+void
 record_change (beg, length)
      int beg, length;
 {
-  record_delete (beg, length);
+  record_delete (beg, make_buffer_string (beg, beg + length, 1));
   record_insert (beg, length);
 }
 
@@ -168,6 +186,7 @@ record_change (beg, length)
    Record the file modification date so that when undoing this entry
    we can tell whether it is obsolete because the file was saved again.  */
 
+void
 record_first_change ()
 {
   Lisp_Object high, low;
@@ -191,6 +210,7 @@ record_first_change ()
 /* Record a change in property PROP (whose old value was VAL)
    for LENGTH characters starting at position BEG in BUFFER.  */
 
+void
 record_property_change (beg, length, prop, value, buffer)
      int beg, length;
      Lisp_Object prop, value, buffer;
@@ -504,6 +524,7 @@ Return what remains of the list.")
   return unbind_to (count, list);
 }
 
+void
 syms_of_undo ()
 {
   Qinhibit_read_only = intern ("inhibit-read-only");

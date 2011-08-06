@@ -28,6 +28,7 @@ Boston, MA 02111-1307, USA.  */
 #include "blockinput.h"
 
 #include "w32term.h"
+#include <shellapi.h>
 
 #include "systty.h"
 #include "systime.h"
@@ -48,6 +49,14 @@ Boston, MA 02111-1307, USA.  */
 #include "window.h"
 #include "keyboard.h"
 #include "intervals.h"
+#include "coding.h"
+
+#undef min
+#undef max
+#define min(x, y) (((x) < (y)) ? (x) : (y))
+#define max(x, y) (((x) > (y)) ? (x) : (y))
+
+extern unsigned int msh_mousewheel;
 
 extern void free_frame_menubar ();
 
@@ -143,6 +152,9 @@ Lisp_Object Vw32_grab_focus_on_raise;
 /* Control whether Caps Lock affects non-ascii characters.  */
 Lisp_Object Vw32_capslock_is_shiftlock;
 
+/* Control whether right-alt and left-ctrl should be recognized as AltGr.  */
+Lisp_Object Vw32_recognize_altgr;
+
 /* The scroll bar in which the last motion event occurred.
 
    If the last motion event occurred in a scroll bar, we set this
@@ -192,8 +204,36 @@ static void clear_mouse_face ();
 static void show_mouse_face ();
 static void do_line_dance ();
 
-static int w32_cursor_to ();
-static int w32_clear_end_of_line ();
+/* Forward declarations for term hooks.  Consistency with the rest of Emacs
+   requires the use of K&R functions prototypes.  However, MSVC does not
+   pick up the function prototypes correctly with K&R function definitions,
+   and so we declare them first to give a little help to MSVC.  */
+static void w32_clear_frame ();
+static void w32_clear_end_of_line (int);
+static void w32_ins_del_lines (int, int);
+static void w32_change_line_highlight (int, int, int);
+static void w32_insert_glyphs (GLYPH *, int);
+static void w32_write_glyphs (GLYPH *, int);
+static void w32_delete_glyphs (int);
+static void w32_ring_bell ();
+static void w32_reset_terminal_modes ();
+static void w32_set_terminal_modes ();
+static void w32_update_begin (FRAME_PTR);
+static void w32_update_end (FRAME_PTR);
+static void w32_set_terminal_window (int);
+extern int  w32_read_socket (int, struct input_event *, int, int);
+static void w32_frame_up_to_date (FRAME_PTR);
+static void w32_cursor_to (int, int);
+static void w32_reassert_line_highlight (int, int);
+static void w32_mouse_position (FRAME_PTR *, int, Lisp_Object *,
+		enum scroll_bar_part *, Lisp_Object *,
+		Lisp_Object *, unsigned long *);
+static void w32_frame_rehighlight (FRAME_PTR);
+static void w32_frame_raise_lower (FRAME_PTR, int);
+static void w32_set_vertical_scroll_bar (struct window *, int, int, int);
+static void w32_condemn_scroll_bars (FRAME_PTR);
+static void w32_redeem_scroll_bar (struct window *);
+static void w32_judge_scroll_bars (FRAME_PTR);
 
 #if 0
 /* This is a function useful for recording debugging information
@@ -278,7 +318,7 @@ w32_clear_window (f)
    should never be called except during an update, the only exceptions
    being w32_cursor_to, w32_write_glyphs and w32_reassert_line_highlight.  */
 
-static
+static void
 w32_update_begin (f)
      struct frame *f;
 {
@@ -341,7 +381,7 @@ w32_update_begin (f)
   UNBLOCK_INPUT;
 }
 
-static
+static void
 w32_update_end (f)
      struct frame *f;
 {
@@ -358,7 +398,7 @@ w32_update_end (f)
 
 /* This is called after a redisplay on frame F.  */
 
-static
+static void
 w32_frame_up_to_date (f)
      FRAME_PTR f;
 {
@@ -378,6 +418,7 @@ w32_frame_up_to_date (f)
    Call this when about to modify line at position VPOS
    and not change whether it is highlighted.  */
 
+static void
 w32_reassert_line_highlight (new, vpos)
      int new, vpos;
 {
@@ -387,7 +428,7 @@ w32_reassert_line_highlight (new, vpos)
 /* Call this when about to modify line at position VPOS
    and change whether it is highlighted.  */
 
-static
+static void
 w32_change_line_highlight (new_highlight, vpos, first_unused_hpos)
      int new_highlight, vpos, first_unused_hpos;
 {
@@ -400,8 +441,8 @@ w32_change_line_highlight (new_highlight, vpos, first_unused_hpos)
    When starting Emacs, no window is mapped.  And nothing must be done
    to Emacs's own window if it is suspended (though that rarely happens).  */
 
-static
-w32_set_terminal_modes ()
+static void
+w32_set_terminal_modes (void)
 {
 }
 
@@ -409,8 +450,8 @@ w32_set_terminal_modes ()
    Exiting will make the W32 windows go away, and suspending
    requires no action.  */
 
-static
-w32_reset_terminal_modes ()
+static void
+w32_reset_terminal_modes (void)
 {
 }
 
@@ -418,7 +459,7 @@ w32_reset_terminal_modes ()
    This is where display update commands will take effect.
    This does not affect the place where the cursor-box is displayed.  */
 
-static int
+static void
 w32_cursor_to (row, col)
      register int row, col;
 {
@@ -452,13 +493,14 @@ w32_cursor_to (row, col)
    Call this function with input blocked.  */
 
 static void
-dumpglyphs (f, left, top, gp, n, hl, just_foreground)
+dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
      struct frame *f;
      int left, top;
      register GLYPH *gp; /* Points to first GLYPH. */
      register int n;  /* Number of glyphs to display. */
      int hl;
      int just_foreground;
+	 struct cmpchar_info *cmpcharp;
 {
   /* Holds characters to be displayed. */
   char *buf = (char *) alloca (f->width * sizeof (*buf));
@@ -475,35 +517,78 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground)
     {
       /* Get the face-code of the next GLYPH.  */
       int cf, len;
-      int g = *gp;
+      GLYPH g = *gp;
+      int ch, charset;
 
       GLYPH_FOLLOW_ALIASES (tbase, tlen, g);
-      cf = FAST_GLYPH_FACE (g);
+      cf = (cmpcharp ? cmpcharp->face_work : FAST_GLYPH_FACE (g));
+      ch = FAST_GLYPH_CHAR (g);
+      charset = CHAR_CHARSET (ch);
+      if (charset == CHARSET_COMPOSITION)
+	{
+  	  struct face *face = FRAME_DEFAULT_FACE (f);
+	  XFontStruct *font = FACE_FONT (face);
+	  /* We must draw components of the composite character on the
+	     same column */
+	  cmpcharp = cmpchar_table[COMPOSITE_CHAR_ID (ch)];
 
+	  /* Set the face in the slot for work. */
+	  cmpcharp->face_work = cf;
+
+	  dumpglyphs (f, left, top, cmpcharp->glyph, cmpcharp->glyph_len,
+		      hl, just_foreground, cmpcharp);
+	  left += FONT_WIDTH (font) * cmpcharp->width;
+	  ++gp, --n;
+	  while (gp && (*gp & GLYPH_MASK_PADDING)) ++gp, --n;
+	  cmpcharp = NULL;
+	  continue;
+	}
       /* Find the run of consecutive glyphs with the same face-code.
 	 Extract their character codes into BUF.  */
       cp = buf;
       while (n > 0)
 	{
+	  int this_charset, c[2];
+
 	  g = *gp;
 	  GLYPH_FOLLOW_ALIASES (tbase, tlen, g);
-	  if (FAST_GLYPH_FACE (g) != cf)
+	  ch = FAST_GLYPH_CHAR (g);
+	  SPLIT_CHAR (ch, this_charset, c[0], c[1]);
+	  if (this_charset != charset
+	      || (cmpcharp == NULL && FAST_GLYPH_FACE (g) != cf))
 	    break;
 
-	  *cp++ = FAST_GLYPH_CHAR (g);
-	  --n;
-	  ++gp;
+	  if ( c[1] > 0 )
+	    {
+	      int consumed, produced;
+	      /* Handle multibyte characters (still assuming user
+	         selects correct font themselves for now */
+	      produced = encode_terminal_code(gp, cp, 1,
+			  (f->width*sizeof(*buf))-(cp-buf), &consumed);
+		  /* If we can't display this glyph, skip it */
+		  if (consumed == 0)
+		  	  gp++,n--;
+		  else
+			gp += consumed, n-= consumed;
+		  cp += produced;
+		}
+	  else
+	    {
+	      *cp++ = c[0];
+	      ++gp, --n;
+	    }
+	  while (gp && (*gp & GLYPH_MASK_PADDING))
+	    ++gp, --n;
 	}
 
       /* LEN gets the length of the run.  */
       len = cp - buf;
-
       /* Now output this run of chars, with the font and pixel values
 	 determined by the face code CF.  */
       {
+	int stippled = 0;
 	struct face *face = FRAME_DEFAULT_FACE (f);
 	XFontStruct *font = FACE_FONT (face);
-	int stippled = 0;
 	COLORREF fg;
 	COLORREF bg;
 
@@ -633,7 +718,7 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground)
    `highlight', set up by w32_reassert_line_highlight or w32_change_line_highlight,
    controls the pixel values used for foreground and background.  */
 
-static
+static void
 w32_write_glyphs (start, len)
      register GLYPH *start;
      int len;
@@ -657,7 +742,7 @@ w32_write_glyphs (start, len)
   dumpglyphs (f,
 	      CHAR_TO_PIXEL_COL (f, curs_x),
 	      CHAR_TO_PIXEL_ROW (f, curs_y),
-	      start, len, highlight, 0);
+	      start, len, highlight, 0, NULL);
 
   /* If we drew on top of the cursor, note that it is turned off.  */
   if (curs_y == f->phys_cursor_y
@@ -682,7 +767,7 @@ w32_write_glyphs (start, len)
    to column FIRST_UNUSED (exclusive).  The idea is that everything
    from FIRST_UNUSED onward is already erased.  */
 
-static
+static void
 w32_clear_end_of_line (first_unused)
      register int first_unused;
 {
@@ -692,9 +777,9 @@ w32_clear_end_of_line (first_unused)
     abort ();
 
   if (curs_y < 0 || curs_y >= f->height)
-    return 1;
+    return;
   if (first_unused <= 0)
-    return 1;
+    return;
 
   if (first_unused >= f->width)
     first_unused = f->width;
@@ -720,7 +805,7 @@ w32_clear_end_of_line (first_unused)
   UNBLOCK_INPUT;
 }
 
-static
+static void
 w32_clear_frame ()
 {
   struct frame *f = updating_frame;
@@ -745,33 +830,42 @@ w32_clear_frame ()
 
 /* Make audible bell.  */
 
-w32_ring_bell ()
+static void
+w32_ring_bell (void)
 {
   BLOCK_INPUT;
 
   if (visible_bell)
-      FlashWindow (FRAME_W32_WINDOW (selected_frame), FALSE);
+    {
+      int i;
+      HWND hwnd = FRAME_W32_WINDOW (selected_frame);
+
+      for (i = 0; i < 5; i++) 
+	{
+	  FlashWindow (hwnd, TRUE);
+	  Sleep (10);
+	}
+      FlashWindow (hwnd, FALSE);
+    }
   else
       w32_sys_ring_bell ();
 
   UNBLOCK_INPUT;
-
-  return 1;
 }
 
 /* Insert and delete character.
    These are not supposed to be used because we are supposed to turn
    off the feature of using them.  */
 
-static
+static void
 w32_insert_glyphs (start, len)
-     register char *start;
+     register GLYPH *start;
      register int len;
 {
   abort ();
 }
 
-static
+static void
 w32_delete_glyphs (n)
      register int n;
 {
@@ -783,7 +877,7 @@ w32_delete_glyphs (n)
    This, and those operations, are used only within an update
    that is bounded by calls to w32_update_begin and w32_update_end.  */
 
-static
+static void
 w32_set_terminal_window (n)
      register int n;
 {
@@ -814,13 +908,15 @@ static int line_dance_in_progress;
 
 /* Perform an insert-lines or delete-lines operation,
    inserting N lines or deleting -N lines at vertical position VPOS.  */
+
+static void
 w32_ins_del_lines (vpos, n)
      int vpos, n;
 {
   register int fence, i;
 
   if (vpos >= flexlines)
-    return 1;
+    return;
 
   if (!line_dance_in_progress)
     {
@@ -1007,7 +1103,7 @@ dumprectangle (f, left, top, cols, rows)
 		  CHAR_TO_PIXEL_COL (f, left),
 		  CHAR_TO_PIXEL_ROW (f, y),
 		  line, min (cols, active_frame->used[y] - left),
-		  active_frame->highlight[y], 0);
+		  active_frame->highlight[y], 0, NULL);
     }
 
   /* Turn the cursor on if we turned it off.  */
@@ -1030,7 +1126,6 @@ frame_unhighlight (f)
   x_display_cursor (f, 1);
 }
 
-static void w32_frame_rehighlight ();
 static void x_frame_rehighlight ();
 
 /* The focus has changed.  Update the frames as necessary to reflect
@@ -1322,6 +1417,52 @@ construct_mouse_wheel (result, msg, f)
   XSETINT (result->x, p.x);
   XSETINT (result->y, p.y);
   XSETFRAME (result->frame_or_window, f);
+}
+
+static void
+construct_drag_n_drop (result, msg, f)
+     struct input_event *result;
+     W32Msg *msg;
+     struct frame *f;
+{
+  Lisp_Object files;
+  Lisp_Object frame;
+  HDROP hdrop;
+  POINT p;
+  WORD num_files;
+  char *name;
+  int i, len;
+
+  result->kind = drag_n_drop;
+  result->code = 0;
+  result->timestamp = msg->msg.time;
+  result->modifiers = msg->dwModifiers;
+
+  p.x = LOWORD (msg->msg.lParam);
+  p.y = HIWORD (msg->msg.lParam);
+  ScreenToClient (msg->msg.hwnd, &p);
+  XSETINT (result->x, p.x);
+  XSETINT (result->y, p.y);
+
+  hdrop = (HDROP) msg->msg.wParam;
+  DragQueryPoint (hdrop, &p);
+  num_files = DragQueryFile (hdrop, 0xFFFFFFFF, NULL, 0);
+  files = Qnil;
+
+  for (i = 0; i < num_files; i++)
+    {
+      len = DragQueryFile (hdrop, i, NULL, 0);
+      if (len <= 0)
+	continue;
+      name = alloca (len + 1);
+      DragQueryFile (hdrop, i, name, len + 1);
+      files = Fcons (build_string (name), files);
+    }
+
+  DragFinish (hdrop);
+
+  XSETFRAME (frame, f);
+  result->frame_or_window = Fcons (frame, files);
 }
 
 
@@ -1678,7 +1819,7 @@ show_mouse_face (dpyinfo, hl)
 		  FRAME_CURRENT_GLYPHS (f)->glyphs[i] + column,
 		  endcolumn - column,
 		  /* Highlight with mouse face if hl > 0.  */
-		  hl > 0 ? 3 : 0, 0);
+		  hl > 0 ? 3 : 0, 0, NULL);
     }
 
   /* If we turned the cursor off, turn it back on.  */
@@ -1748,7 +1889,7 @@ w32_mouse_position (fp, insist, bar_window, part, x, y, time)
 
   BLOCK_INPUT;
 
-  if (! NILP (last_mouse_scroll_bar))
+  if (! NILP (last_mouse_scroll_bar) && insist == 0)
     /* This is never called at the moment.  */
     x_scroll_bar_report_motion (fp, bar_window, part, x, y, time);
   else
@@ -1790,7 +1931,7 @@ w32_mouse_position (fp, insist, bar_window, part, x, y, time)
 	      }
 	  }
 
-	if (f1 == 0 && insist)
+	if (f1 == 0 && insist > 0)
 	  f1 = selected_frame;
 
 	if (f1)
@@ -1906,6 +2047,13 @@ my_set_focus (f, hwnd)
 {
   SendMessage (FRAME_W32_WINDOW (f), WM_EMACS_SETFOCUS, 
 	       (WPARAM) hwnd, 0);
+}
+
+BOOL
+my_set_foreground_window (hwnd)
+     HWND hwnd;
+{
+  SendMessage (hwnd, WM_EMACS_SETFOREGROUND, (WPARAM) hwnd, 0);
 }
 
 void
@@ -2196,6 +2344,19 @@ static void
 w32_condemn_scroll_bars (frame)
      FRAME_PTR frame;
 {
+  /* Transfer all the scroll bars to FRAME_CONDEMNED_SCROLL_BARS.  */
+  while (! NILP (FRAME_SCROLL_BARS (frame)))
+    {
+      Lisp_Object bar;
+      bar = FRAME_SCROLL_BARS (frame);
+      FRAME_SCROLL_BARS (frame) = XSCROLL_BAR (bar)->next;
+      XSCROLL_BAR (bar)->next = FRAME_CONDEMNED_SCROLL_BARS (frame);
+      XSCROLL_BAR (bar)->prev = Qnil;
+      if (! NILP (FRAME_CONDEMNED_SCROLL_BARS (frame)))
+	XSCROLL_BAR (FRAME_CONDEMNED_SCROLL_BARS (frame))->prev = bar;
+      FRAME_CONDEMNED_SCROLL_BARS (frame) = bar;
+    }
+#ifdef PIGSFLY
   /* The condemned list should be empty at this point; if it's not,
      then the rest of Emacs isn't using the condemn/redeem/judge
      protocol correctly.  */
@@ -2205,6 +2366,7 @@ w32_condemn_scroll_bars (frame)
   /* Move them all to the "condemned" list.  */
   FRAME_CONDEMNED_SCROLL_BARS (frame) = FRAME_SCROLL_BARS (frame);
   FRAME_SCROLL_BARS (frame) = Qnil;
+#endif
 }
 
 /* Unmark WINDOW's scroll bar for deletion in this judgement cycle.
@@ -2213,6 +2375,46 @@ static void
 w32_redeem_scroll_bar (window)
      struct window *window;
 {
+  struct scroll_bar *bar;
+
+  /* We can't redeem this window's scroll bar if it doesn't have one.  */
+  if (NILP (window->vertical_scroll_bar))
+    abort ();
+
+  bar = XSCROLL_BAR (window->vertical_scroll_bar);
+
+  /* Unlink it from the condemned list.  */
+  {
+    FRAME_PTR f = XFRAME (WINDOW_FRAME (window));
+
+    if (NILP (bar->prev))
+      {
+	/* If the prev pointer is nil, it must be the first in one of
+           the lists.  */
+	if (EQ (FRAME_SCROLL_BARS (f), window->vertical_scroll_bar))
+	  /* It's not condemned.  Everything's fine.  */
+	  return;
+	else if (EQ (FRAME_CONDEMNED_SCROLL_BARS (f),
+		     window->vertical_scroll_bar))
+	  FRAME_CONDEMNED_SCROLL_BARS (f) = bar->next;
+	else
+	  /* If its prev pointer is nil, it must be at the front of
+             one or the other!  */
+	  abort ();
+      }
+    else
+      XSCROLL_BAR (bar->prev)->next = bar->next;
+
+    if (! NILP (bar->next))
+      XSCROLL_BAR (bar->next)->prev = bar->prev;
+
+    bar->next = FRAME_SCROLL_BARS (f);
+    bar->prev = Qnil;
+    XSETVECTOR (FRAME_SCROLL_BARS (f), bar);
+    if (! NILP (bar->next))
+      XSETVECTOR (XSCROLL_BAR (bar->next)->prev, bar);
+  }
+#ifdef PIGSFLY
   struct scroll_bar *bar;
 
   /* We can't redeem this window's scroll bar if it doesn't have one.  */
@@ -2252,6 +2454,7 @@ w32_redeem_scroll_bar (window)
     if (! NILP (bar->next))
       XSETVECTOR (XSCROLL_BAR (bar->next)->prev, bar);
   }
+#endif
 }
 
 /* Remove all scroll bars on FRAME that haven't been saved since the
@@ -2280,6 +2483,28 @@ w32_judge_scroll_bars (f)
 
   /* Now there should be no references to the condemned scroll bars,
      and they should get garbage-collected.  */
+#ifdef PIGSFLY
+  Lisp_Object bar, next;
+
+  bar = FRAME_CONDEMNED_SCROLL_BARS (f);
+
+  /* Clear out the condemned list now so we won't try to process any
+     more events on the hapless scroll bars.  */
+  FRAME_CONDEMNED_SCROLL_BARS (f) = Qnil;
+
+  for (; ! NILP (bar); bar = next)
+    {
+      struct scroll_bar *b = XSCROLL_BAR (bar);
+
+      x_scroll_bar_remove (b);
+
+      next = b->next;
+      b->next = b->prev = Qnil;
+    }
+
+  /* Now there should be no references to the condemned scroll bars,
+     and they should get garbage-collected.  */
+#endif
 }
 
 /* Handle a mouse click on the scroll bar BAR.  If *EMACS_EVENT's kind
@@ -2635,14 +2860,22 @@ w32_read_socket (sd, bufp, numchars, expected)
 
 	    if (f) 
 	      {
-	      if (f->async_visible != 1)
+		if (msg.rect.right == msg.rect.left ||
+		    msg.rect.bottom == msg.rect.top)
 		  {
-		  /* Definitely not obscured, so mark as visible.  */
+		    /* We may get paint messages even though the client
+		       area is clipped - these are not expose events. */
+		    DebPrint (("clipped frame %04x (%s) got WM_PAINT\n", f,
+			       XSTRING (f->name)->data));
+		  }
+		else if (f->async_visible != 1)
+		  {
+		    /* Definitely not obscured, so mark as visible.  */
 		    f->async_visible = 1;
 		    f->async_iconified = 0;
 		    SET_FRAME_GARBAGED (f);
-		  DebPrint (("frame %04x (%s) reexposed\n", f,
-			     XSTRING (f->name)->data));
+		    DebPrint (("frame %04x (%s) reexposed\n", f,
+			       XSTRING (f->name)->data));
 
 		    /* WM_PAINT serves as MapNotify as well, so report
                        visibility changes properly.  */
@@ -2815,6 +3048,18 @@ w32_read_socket (sd, bufp, numchars, expected)
             }
 	  break;
 
+	case WM_DROPFILES:
+	  f = x_window_to_frame (dpyinfo, msg.msg.hwnd);
+
+	  if (f)
+	    {
+	      construct_drag_n_drop (bufp, &msg, f);
+	      bufp++;
+	      count++;
+	      numchars--;
+	    }
+	  break;
+
 	case WM_VSCROLL:
 	  {
 	    struct scroll_bar *bar =
@@ -2874,44 +3119,6 @@ w32_read_socket (sd, bufp, numchars, expected)
 	case WM_SIZE:
 	  f = x_window_to_frame (dpyinfo, msg.msg.hwnd);
 	  
-	  if (f && !f->async_iconified && msg.msg.wParam != SIZE_MINIMIZED)
-	    {
-	      RECT rect;
-	      int rows;
-	      int columns;
-	      int width;
-	      int height;
-	      
-	      GetClientRect(msg.msg.hwnd, &rect);
-	      
-	      height = rect.bottom - rect.top;
-	      width = rect.right - rect.left;
-	      
-	      rows = PIXEL_TO_CHAR_HEIGHT (f, height);
-	      columns = PIXEL_TO_CHAR_WIDTH (f, width);
-	      
-	      /* TODO: Clip size to the screen dimensions.  */
-	      
-	      /* Even if the number of character rows and columns has
-		 not changed, the font size may have changed, so we need
-		 to check the pixel dimensions as well.  */
-	      
-	      if (columns != f->width
-		  || rows != f->height
-		  || width != f->output_data.w32->pixel_width
-		  || height != f->output_data.w32->pixel_height)
-		{
-		  /* I had set this to 0, 0 - I am not sure why?? */
-		  
-		  change_frame_size (f, rows, columns, 0, 1);
-		  SET_FRAME_GARBAGED (f);
-		  
-		  f->output_data.w32->pixel_width = width;
-		  f->output_data.w32->pixel_height = height;
-		  f->output_data.w32->win_gravity = NorthWestGravity;
-		}
-	    }
-
 	  /* Inform lisp of whether frame has been iconified etc. */
 	  if (f)
 	    {
@@ -2951,6 +3158,44 @@ w32_read_socket (sd, bufp, numchars, expected)
 		       in case this is the second frame.  */
 		    record_asynch_buffer_change ();
 		  break;
+		}
+	    }
+
+	  if (f && !f->async_iconified && msg.msg.wParam != SIZE_MINIMIZED)
+	    {
+	      RECT rect;
+	      int rows;
+	      int columns;
+	      int width;
+	      int height;
+	      
+	      GetClientRect(msg.msg.hwnd, &rect);
+	      
+	      height = rect.bottom - rect.top;
+	      width = rect.right - rect.left;
+	      
+	      rows = PIXEL_TO_CHAR_HEIGHT (f, height);
+	      columns = PIXEL_TO_CHAR_WIDTH (f, width);
+	      
+	      /* TODO: Clip size to the screen dimensions.  */
+	      
+	      /* Even if the number of character rows and columns has
+		 not changed, the font size may have changed, so we need
+		 to check the pixel dimensions as well.  */
+	      
+	      if (columns != f->width
+		  || rows != f->height
+		  || width != f->output_data.w32->pixel_width
+		  || height != f->output_data.w32->pixel_height)
+		{
+		  /* I had set this to 0, 0 - I am not sure why?? */
+		  
+		  change_frame_size (f, rows, columns, 0, 1);
+		  SET_FRAME_GARBAGED (f);
+		  
+		  f->output_data.w32->pixel_width = width;
+		  f->output_data.w32->pixel_height = height;
+		  f->output_data.w32->win_gravity = NorthWestGravity;
 		}
 	    }
 
@@ -3007,45 +3252,12 @@ w32_read_socket (sd, bufp, numchars, expected)
 
 	case WM_COMMAND:
 	  f = x_window_to_frame (dpyinfo, msg.msg.hwnd);
-	  
-#if 1
+
 	  if (f)
 	    {
-	      if (msg.msg.lParam == 0) 
-		{
-		  /* Came from window menu */
-		  
-		  extern Lisp_Object get_frame_menubar_event ();
-		  Lisp_Object event = get_frame_menubar_event (f, msg.msg.wParam);
-		  struct input_event buf;
-		  Lisp_Object frame;
-		  
-		  XSETFRAME (frame, f);
-		  buf.kind = menu_bar_event;
-		  
-		  /* Store initial menu bar event */
-		  
-		  if (!NILP (event))
-		    {
-		      buf.frame_or_window = Fcons (frame, Fcons (Qmenu_bar, Qnil));
-		      kbd_buffer_store_event (&buf);
-		    }
-		  
-		  /* Enqueue the events */
-		  
-		  while (!NILP (event))
-		    {
-		      buf.frame_or_window = Fcons (frame, XCONS (event)->car);
-		      kbd_buffer_store_event (&buf);
-		      event = XCONS (event)->cdr;
-		    }
-		} 
-	      else 
-		{
-		  /* Came from popup menu */
-		}
+	      extern void menubar_selection_callback (FRAME_PTR f, void * client_data);
+	      menubar_selection_callback (f, (void *)msg.msg.wParam);
 	    }
-#endif
 
 	  check_visibility = 1;
 	  break;
@@ -3063,6 +3275,31 @@ w32_read_socket (sd, bufp, numchars, expected)
 	    }
 	  
 	  check_visibility = 1;
+	  break;
+
+	default:
+	  /* Check for messages registered at runtime. */
+	  if (msg.msg.message == msh_mousewheel)
+	    {
+	      if (dpyinfo->grabbed && last_mouse_frame 
+		  && FRAME_LIVE_P (last_mouse_frame))
+		f = last_mouse_frame;
+	      else
+		f = x_window_to_frame (dpyinfo, msg.msg.hwnd);
+          
+	      if (f)
+		{
+		  if ((!dpyinfo->w32_focus_frame 
+		       || f == dpyinfo->w32_focus_frame)
+		      && (numchars >= 1))
+		    {
+		      construct_mouse_wheel (bufp, &msg, f);
+		      bufp++;
+		      count++;
+		      numchars--;
+		    }
+		}
+	    }
 	  break;
 	}
     }
@@ -3195,7 +3432,7 @@ x_draw_single_glyph (f, row, column, glyph, highlight)
   dumpglyphs (f,
 	      CHAR_TO_PIXEL_COL (f, column),
 	      CHAR_TO_PIXEL_ROW (f, row),
-	      &glyph, 1, highlight, 0);
+	      &glyph, 1, highlight, 0, NULL);
 }
 
 static void
@@ -3745,7 +3982,7 @@ x_focus_on_frame (f)
     my_set_focus (f, FRAME_W32_WINDOW (f));
   else
 #endif
-    SetForegroundWindow (FRAME_W32_WINDOW (f));
+    my_set_foreground_window (FRAME_W32_WINDOW (f));
   UNBLOCK_INPUT;
 }
 
@@ -3808,7 +4045,7 @@ x_raise_frame (f)
     }
   else
     {
-      SetForegroundWindow (FRAME_W32_WINDOW (f));
+      my_set_foreground_window (FRAME_W32_WINDOW (f));
     }
 
   UNBLOCK_INPUT;
@@ -3899,7 +4136,7 @@ x_make_frame_visible (f)
 	    /* It could be confusing if a real alarm arrives while processing
 	       the fake one.  Turn it off and let the handler reset it.  */
 	    alarm (0);
-	    input_poll_signal ();
+	    input_poll_signal (0);
 	  }
 	/* Once we have handled input events,
 	   we should have received the MapNotify if one is coming.
@@ -4245,16 +4482,18 @@ DWORD w32_msg_worker ();
 
 w32_initialize ()
 {
-  clear_frame_hook = w32_clear_frame;
+  /* MSVC does not type K&R functions with no arguments correctly, and
+     so we must explicitly cast them.  */
+  clear_frame_hook = (void (*)(void)) w32_clear_frame;
   clear_end_of_line_hook = w32_clear_end_of_line;
   ins_del_lines_hook = w32_ins_del_lines;
   change_line_highlight_hook = w32_change_line_highlight;
   insert_glyphs_hook = w32_insert_glyphs;
   write_glyphs_hook = w32_write_glyphs;
   delete_glyphs_hook = w32_delete_glyphs;
-  ring_bell_hook = w32_ring_bell;
-  reset_terminal_modes_hook = w32_reset_terminal_modes;
-  set_terminal_modes_hook = w32_set_terminal_modes;
+  ring_bell_hook = (void (*)(void)) w32_ring_bell;
+  reset_terminal_modes_hook = (void (*)(void)) w32_reset_terminal_modes;
+  set_terminal_modes_hook = (void (*)(void)) w32_set_terminal_modes;
   update_begin_hook = w32_update_begin;
   update_end_hook = w32_update_end;
   set_terminal_window_hook = w32_set_terminal_window;
@@ -4378,4 +4617,11 @@ desirable when using a point-to-focus policy.");
 	       "Apply CapsLock state to non character input keys.\n\
 When nil, CapsLock only affects normal character input keys.");
   Vw32_capslock_is_shiftlock = Qnil;
+
+  DEFVAR_LISP ("w32-recognize-altgr",
+	       &Vw32_recognize_altgr,
+	       "Recognize right-alt and left-ctrl as AltGr.\n\
+When nil, the right-alt and left-ctrl key combination is\n\
+interpreted normally."); 
+  Vw32_recognize_altgr = Qt;
 }

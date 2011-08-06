@@ -32,68 +32,13 @@
 
 (defun setup-english-environment ()
   "Reset multilingual environment of Emacs to the default status.
-The default status is as follows.
-
-  The default value of enable-multibyte-characters is t.
-
-  The default value of buffer-file-coding-system is nil.
-  The coding system for terminal output is nil.
-  The coding system for keyboard input is nil.
-
-  The order of priorities of coding categories and the coding system
-  bound to each category are as follows
-	coding category			coding system
-	--------------------------------------------------
-	coding-category-iso-7		iso-2022-7bit
-	coding-category-iso-8-1		iso-latin-1
-	coding-category-iso-8-2		iso-latin-1
-	coding-category-iso-7-else	iso-2022-7bit-lock
-	coding-category-iso-8-else	iso-2022-8bit-ss2
-	coding-category-emacs-mule 	emacs-mule
-	coding-category-raw-text	raw-text
-	coding-category-sjis		japanese-shift-jis
-	coding-category-big5		chinese-big5
-	coding-category-binarry		no-conversion
-"
+See the function `reset-language-environment' for more detail."
   (interactive)
-  (setq-default enable-multibyte-characters t)
-
-  (setq coding-category-iso-7		'iso-2022-7bit
-	coding-category-iso-8-1		'iso-latin-1
-	coding-category-iso-8-2		'iso-latin-1
-	coding-category-iso-7-else	'iso-2022-7bit-lock
-	coding-category-iso-8-else	'iso-2022-8bit-ss2
-	coding-category-emacs-mule	'emacs-mule
-	coding-category-raw-text	'raw-text
-	coding-category-sjis		'japanese-shift-jis
-	coding-category-big5		'chinese-big5
-	coding-category-binary		'no-conversion)
-
-  (set-coding-priority
-   '(coding-category-iso-7
-     coding-category-iso-8-2
-     coding-category-iso-8-1
-     coding-category-iso-7-else
-     coding-category-iso-8-else
-     coding-category-emacs-mule 
-     coding-category-raw-text
-     coding-category-sjis
-     coding-category-big5
-     coding-category-binary))
-
-  (set-default-coding-systems nil)
-  ;; Don't alter the terminal and keyboard coding systems here.
-  ;; The terminal still supports the same coding system
-  ;; that it supported a minute ago.
-;;;  (set-terminal-coding-system-internal nil)
-;;;  (set-keyboard-coding-system-internal nil)
-
-  (setq nonascii-insert-offset 0))
+  (reset-language-environment))
 
 (set-language-info-alist
- "English" '((setup-function . setup-english-environment)
-	     (tutorial . "TUTORIAL")
-	     (charset . (ascii))
+ "English" '((tutorial . "TUTORIAL")
+	     (charset ascii)
 	     (sample-text . "Hello!, Hi!, How are you?")
 	     (documentation . "\
 Nothing special is needed to handle English.")

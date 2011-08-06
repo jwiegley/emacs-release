@@ -1,6 +1,6 @@
 ;;; lisp-mnt.el --- minor mode for Emacs Lisp maintainers
 
-;; Copyright (C) 1992, 1994 Free Software Foundation, Inc.
+;; Copyright (C) 1992, 1994, 1997 Free Software Foundation, Inc.
 
 ;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: Eric S. Raymond <esr@snark.thyrsus.com>
@@ -113,12 +113,16 @@
 
 ;;; Code:
 
-(require 'picture)		; provides move-to-column-force
 (require 'emacsbug)
 
 ;;; Variables:
 
-(defvar lm-header-prefix "^;;*[ \t]+\\(@\(#\)\\)?[ \t]*\\([\$]\\)?"
+(defgroup lisp-mnt nil
+  "Minor mode for Emacs Lisp maintainers."
+  :prefix "lm-"
+  :group 'maint)
+
+(defcustom lm-header-prefix "^;;*[ \t]+\\(@\(#\)\\)?[ \t]*\\([\$]\\)?"
   "Prefix that is ignored before the tag.
 For example, you can write the 1st line synopsis string and headers like this
 in your Lisp package:
@@ -128,23 +132,31 @@ in your Lisp package:
    ;; @(#) $Maintainer:   Person Foo Bar $
 
 The @(#) construct is used by unix what(1) and
-then $identifier: doc string $ is used by GNU ident(1)")
+then $identifier: doc string $ is used by GNU ident(1)"
+  :type 'regexp
+  :group 'lisp-mnt)
 
-(defvar lm-comment-column 16
-  "Column used for placing formatted output.")
+(defcustom lm-comment-column 16
+  "Column used for placing formatted output."
+  :type 'integer
+  :group 'lisp-mnt)
 
-(defvar lm-commentary-header "Commentary\\|Documentation"
-  "Regexp which matches start of documentation section.")
+(defcustom lm-commentary-header "Commentary\\|Documentation"
+  "Regexp which matches start of documentation section."
+  :type 'regexp
+  :group 'lisp-mnt)
 
-(defvar lm-history-header "Change Log\\|History"
-  "Regexp which matches the start of code log section.")
+(defcustom lm-history-header "Change Log\\|History"
+  "Regexp which matches the start of code log section."
+  :type 'regexp
+  :group 'lisp-mnt)
 
 ;;; Functions:
 
 ;; These functions all parse the headers of the current buffer
 
 (defsubst lm-get-header-re (header &optional mode)
-  "Returns regexp for matching HEADER.
+  "Return regexp for matching HEADER.
 If called with optional MODE and with value `section',
 return section regexp instead."
   (cond ((eq mode 'section)
@@ -153,14 +165,14 @@ return section regexp instead."
 	 (concat lm-header-prefix header ":[ \t]*"))))
 
 (defsubst lm-get-package-name ()
-  "Returns package name by looking at the first line."
+  "Return package name by looking at the first line."
   (save-excursion
     (goto-char (point-min))
     (if (and (looking-at (concat lm-header-prefix))
 	     (progn (goto-char (match-end 0))
 		    (looking-at "\\([^\t ]+\\)")
 		    (match-end 1)))
-	(buffer-substring (match-beginning 1) (match-end 1))
+	(buffer-substring-no-properties (match-beginning 1) (match-end 1))
       )))
 
 (defun lm-section-mark (header &optional after)
@@ -197,7 +209,7 @@ If AFTER is non-nil, return the location of the next line."
 	     ;;   RCS ident likes format "$identifier: data$"
 	     (looking-at "\\([^$\n]+\\)")
 	     (match-end 1))
-	(buffer-substring (match-beginning 1) (match-end 1))
+	(buffer-substring-no-properties (match-beginning 1) (match-end 1))
       nil)))
 
 (defun lm-header-multiline (header)
@@ -216,7 +228,7 @@ The returned value is a list of strings, one per line."
 		      (goto-char (match-end 0))
 		      (looking-at "\\(.*\\)"))
 		    (match-end 1))
-	  (setq res (cons (buffer-substring
+	  (setq res (cons (buffer-substring-no-properties
 			   (match-beginning 1)
 			   (match-end 1))
 			  res))
@@ -238,13 +250,13 @@ The returned value is a list of strings, one per line."
 	   (looking-at lm-header-prefix)
 	   (progn (goto-char (match-end 0))
 		  (looking-at "[^ ]+[ \t]+--+[ \t]+\\(.*\\)")))
-	  (buffer-substring (match-beginning 1) (match-end 1)))
+	  (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
       (if file
 	  (kill-buffer (current-buffer)))
       )))
 
 (defun lm-crack-address (x)
-  "Split up an email address into full name and real email address.
+  "Split up an email address X into full name and real email address.
 The value is a cons of the form (FULLNAME . ADDRESS)."
   (cond ((string-match "\\(.+\\) [(<]\\(\\S-+@\\S-+\\)[>)]" x)
 	 (cons (substring x (match-beginning 1) (match-end 1))
@@ -335,7 +347,7 @@ This can befound in an RCS or SCCS header to crack it out of."
 	   (cond
 	    ;; Look for an RCS header
 	    ((re-search-forward "\\$[I]d: [^ ]+ \\([^ ]+\\) " header-max t)
-	     (buffer-substring (match-beginning 1) (match-end 1)))
+	     (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
 
 	    ;; Look for an SCCS header
 	    ((re-search-forward 
@@ -344,7 +356,7 @@ This can befound in an RCS or SCCS header to crack it out of."
 	       (regexp-quote (file-name-nondirectory (buffer-file-name)))
 	       "\t\\([012345679.]*\\)")
 	      header-max t)
-	     (buffer-substring (match-beginning 1) (match-end 1)))
+	     (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
 
 	    (t nil))))
       (if file
@@ -390,9 +402,9 @@ with tag `Commentary' and ends with tag `Change Log' or `History'."
 	      )
 	  (cond
 	   ((and commentary change-log)
-	    (buffer-substring commentary change-log))
+	    (buffer-substring-no-properties commentary change-log))
 	   ((and commentary code)
-	    (buffer-substring commentary code))
+	    (buffer-substring-no-properties commentary code))
 	   (t
 	    nil)))
       (if file
@@ -402,9 +414,9 @@ with tag `Commentary' and ends with tag `Change Log' or `History'."
 ;;; Verification and synopses
 
 (defun lm-insert-at-column (col &rest strings)
-  "Insert list of STRINGS, at column COL."
+  "Insert, at column COL, list of STRINGS."
   (if (> (current-column) col) (insert "\n"))
-  (move-to-column-force col)
+  (move-to-column col t)
   (apply 'insert strings))
 
 (defun lm-verify (&optional file showok &optional verb)
@@ -529,7 +541,7 @@ which do not include a recognizable synopsis."
 
 (defun lm-report-bug (topic)
   "Report a bug in the package currently being visited to its maintainer.
-Prompts for bug subject.  Leaves you in a mail buffer."
+Prompts for bug subject TOPIC.  Leaves you in a mail buffer."
   (interactive "sBug Subject: ")
   (let ((package	(lm-get-package-name))
 	(addr		(lm-maintainer))

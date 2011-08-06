@@ -1,5 +1,5 @@
 /* Record indices of function doc strings stored in a file.
-   Copyright (C) 1985, 86, 93, 94, 95, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1985, 86, 93, 94, 95, 97, 1998 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -39,6 +39,7 @@ Boston, MA 02111-1307, USA.  */
 #include "lisp.h"
 #include "buffer.h"
 #include "keyboard.h"
+#include "charset.h"
 
 Lisp_Object Vdoc_file_name;
 
@@ -74,17 +75,41 @@ munge_doc_file_name (name)
 static char *get_doc_string_buffer;
 static int get_doc_string_buffer_size;
 
+static unsigned char *read_bytecode_pointer;
+
+/* readchar in lread.c calls back here to fetch the next byte.
+   If UNREADFLAG is 1, we unread a byte.  */
+
+int
+read_bytecode_char (unreadflag)
+{
+  if (unreadflag)
+    {
+      read_bytecode_pointer--;
+      return 0;
+    }
+  return *read_bytecode_pointer++;
+}
+
 /* Extract a doc string from a file.  FILEPOS says where to get it.
    If it is an integer, use that position in the standard DOC-... file.
    If it is (FILE . INTEGER), use FILE as the file name
    and INTEGER as the position in that file.
    But if INTEGER is negative, make it positive.
    (A negative integer is used for user variables, so we can distinguish
-   them without actually fetching the doc string.)  */
+   them without actually fetching the doc string.)
 
-static Lisp_Object
-get_doc_string (filepos)
+   If UNIBYTE is nonzero, always make a unibyte string.
+
+   If DEFINITION is nonzero, assume this is for reading
+   a dynamic function definition; convert the bytestring
+   and the constants vector with appropriate byte handling,
+   and return a cons cell.  */
+
+Lisp_Object
+get_doc_string (filepos, unibyte, definition)
      Lisp_Object filepos;
+     int unibyte, definition;
 {
   char *from, *to;
   register int fd;
@@ -238,8 +263,20 @@ get_doc_string (filepos)
 	*to++ = *from++;
     }
 
-  return make_string (get_doc_string_buffer + offset,
-		      to - (get_doc_string_buffer + offset));
+  /* If DEFINITION, read from this buffer
+     the same way we would read bytes from a file.  */
+  if (definition)
+    {
+      read_bytecode_pointer = get_doc_string_buffer + offset;
+      return Fread (Qlambda);
+    }
+
+  if (unibyte)
+    return make_unibyte_string (get_doc_string_buffer + offset,
+				to - (get_doc_string_buffer + offset));
+  else
+    return make_string (get_doc_string_buffer + offset,
+			to - (get_doc_string_buffer + offset));
 }
 
 /* Get a string from position FILEPOS and pass it through the Lisp reader.
@@ -250,7 +287,7 @@ Lisp_Object
 read_doc_string (filepos)
      Lisp_Object filepos;
 {
-  return Fread (get_doc_string (filepos));
+  return get_doc_string (filepos, 0, 1);
 }
 
 DEFUN ("documentation", Fdocumentation, Sdocumentation, 1, 2, 0,
@@ -272,7 +309,8 @@ string is passed through `substitute-command-keys'.")
       if ((EMACS_INT) XSUBR (fun)->doc >= 0)
 	doc = build_string (XSUBR (fun)->doc);
       else
-	doc = get_doc_string (make_number (- (EMACS_INT) XSUBR (fun)->doc));
+	doc = get_doc_string (make_number (- (EMACS_INT) XSUBR (fun)->doc),
+			      0, 0);
     }
   else if (COMPILEDP (fun))
     {
@@ -282,7 +320,7 @@ string is passed through `substitute-command-keys'.")
       if (STRINGP (tem))
 	doc = tem;
       else if (NATNUMP (tem) || CONSP (tem))
-	doc = get_doc_string (tem);
+	doc = get_doc_string (tem, 0, 0);
       else
 	return Qnil;
     }
@@ -310,7 +348,7 @@ subcommands.)");
 	     in the function body, so reject them if they are last.  */
 	  else if ((NATNUMP (tem) || CONSP (tem))
 		   && ! NILP (XCONS (tem1)->cdr))
-	    doc = get_doc_string (tem);
+	    doc = get_doc_string (tem, 0, 0);
 	  else
 	    return Qnil;
 	}
@@ -351,9 +389,9 @@ translation.")
 
   tem = Fget (symbol, prop);
   if (INTEGERP (tem))
-    tem = get_doc_string (XINT (tem) > 0 ? tem : make_number (- XINT (tem)));
+    tem = get_doc_string (XINT (tem) > 0 ? tem : make_number (- XINT (tem)), 0, 0);
   else if (CONSP (tem))
-    tem = get_doc_string (tem);
+    tem = get_doc_string (tem, 0, 0);
   if (NILP (raw) && STRINGP (tem))
     return Fsubstitute_command_keys (tem);
   return tem;
@@ -478,7 +516,9 @@ when doc strings are referred to later in the dumped Emacs.")
       if (p != end)
 	{
 	  end = index (p, '\n');
-	  sym = oblookup (Vobarray, p + 2, end - p - 2);
+	  sym = oblookup (Vobarray, p + 2,
+			  multibyte_chars_in_text (p + 2, end - p - 2),
+			  end - p - 2);
 	  if (SYMBOLP (sym))
 	    {
 	      /* Attach a docstring to a variable?  */
@@ -533,9 +573,11 @@ thus, \\=\\=\\=\\= puts \\=\\= into the output, and \\=\\=\\=\\[ puts \\=\\[ int
   Lisp_Object tem;
   Lisp_Object keymap;
   unsigned char *start;
-  int length;
+  int length, length_byte;
   Lisp_Object name;
   struct gcpro gcpro1, gcpro2, gcpro3, gcpro4;
+  int multibyte;
+  int nchars;
 
   if (NILP (string))
     return Qnil;
@@ -546,6 +588,9 @@ thus, \\=\\=\\=\\= puts \\=\\= into the output, and \\=\\=\\=\\[ puts \\=\\[ int
   name = Qnil;
   GCPRO4 (string, tem, keymap, name);
 
+  multibyte = STRING_MULTIBYTE (string);
+  nchars = 0;
+
   /* KEYMAP is either nil (which means search all the active keymaps)
      or a specified local map (which means search just that and the
      global map).  If non-nil, it might come from Voverriding_local_map,
@@ -554,19 +599,34 @@ thus, \\=\\=\\=\\= puts \\=\\= into the output, and \\=\\=\\=\\[ puts \\=\\[ int
   if (NILP (keymap))
     keymap = Voverriding_local_map;
 
-  bsize = XSTRING (string)->size;
+  bsize = STRING_BYTES (XSTRING (string));
   bufp = buf = (unsigned char *) xmalloc (bsize);
 
   strp = (unsigned char *) XSTRING (string)->data;
-  while (strp < (unsigned char *) XSTRING (string)->data + XSTRING (string)->size)
+  while (strp < XSTRING (string)->data + STRING_BYTES (XSTRING (string)))
     {
       if (strp[0] == '\\' && strp[1] == '=')
 	{
 	  /* \= quotes the next character;
 	     thus, to put in \[ without its special meaning, use \=\[.  */
 	  changed = 1;
-	  *bufp++ = strp[2];
-	  strp += 3;
+	  strp += 2;
+	  if (multibyte)
+	    {
+	      int len;
+	      int maxlen = XSTRING (string)->data + STRING_BYTES (XSTRING (string)) - strp;
+
+	      STRING_CHAR_AND_LENGTH (strp, maxlen, len);
+	      if (len == 1)
+		*bufp = *strp;
+	      else
+		bcopy (strp, bufp, len);
+	      strp += len;
+	      bufp += len;
+	      nchars++;
+	    }
+	  else
+	    *bufp++ = *strp++, nchars++;
 	}
       else if (strp[0] == '\\' && strp[1] == '[')
 	{
@@ -577,15 +637,16 @@ thus, \\=\\=\\=\\= puts \\=\\= into the output, and \\=\\=\\=\\[ puts \\=\\[ int
 	  start = strp;
 
 	  while ((strp - (unsigned char *) XSTRING (string)->data
-		  < XSTRING (string)->size)
+		  < STRING_BYTES (XSTRING (string)))
 		 && *strp != ']')
 	    strp++;
-	  length = strp - start;
+	  length_byte = strp - start;
+
 	  strp++;		/* skip ] */
 
 	  /* Save STRP in IDX.  */
 	  idx = strp - (unsigned char *) XSTRING (string)->data;
-	  tem = Fintern (make_string (start, length), Qnil);
+	  tem = Fintern (make_string (start, length_byte), Qnil);
 	  tem = Fwhere_is_internal (tem, keymap, Qt, Qnil);
 
 	  /* Disregard menu bar bindings; it is positively annoying to
@@ -605,6 +666,11 @@ thus, \\=\\=\\=\\= puts \\=\\= into the output, and \\=\\=\\=\\[ puts \\=\\[ int
 	      buf = new;
 	      bcopy ("M-x ", bufp, 4);
 	      bufp += 4;
+	      nchars += 4;
+	      if (multibyte)
+		length = multibyte_chars_in_text (start, length_byte);
+	      else
+		length = length_byte;
 	      goto subst;
 	    }
 	  else
@@ -627,7 +693,8 @@ thus, \\=\\=\\=\\= puts \\=\\= into the output, and \\=\\=\\=\\[ puts \\=\\[ int
 		  < XSTRING (string)->size)
 		 && *strp != '}' && *strp != '>')
 	    strp++;
-	  length = strp - start;
+
+	  length_byte = strp - start;
 	  strp++;			/* skip } or > */
 
 	  /* Save STRP in IDX.  */
@@ -636,7 +703,7 @@ thus, \\=\\=\\=\\= puts \\=\\= into the output, and \\=\\=\\=\\[ puts \\=\\[ int
 	  /* Get the value of the keymap in TEM, or nil if undefined.
 	     Do this while still in the user's current buffer
 	     in case it is a local variable.  */
-	  name = Fintern (make_string (start, length), Qnil);
+	  name = Fintern (make_string (start, length_byte), Qnil);
 	  tem = Fboundp (name);
 	  if (! NILP (tem))
 	    {
@@ -653,7 +720,9 @@ thus, \\=\\=\\=\\= puts \\=\\= into the output, and \\=\\=\\=\\[ puts \\=\\[ int
 	    {
 	      name = Fsymbol_name (name);
 	      insert_string ("\nUses keymap \"");
-	      insert_from_string (name, 0, XSTRING (name)->size, 1);
+	      insert_from_string (name, 0, 0,
+				  XSTRING (name)->size,
+				  STRING_BYTES (XSTRING (name)), 1);
 	      insert_string ("\", which is not currently defined.\n");
 	      if (start[-1] == '<') keymap = Qnil;
 	    }
@@ -668,27 +737,44 @@ thus, \\=\\=\\=\\= puts \\=\\= into the output, and \\=\\=\\=\\[ puts \\=\\[ int
 	subst_string:
 	  start = XSTRING (tem)->data;
 	  length = XSTRING (tem)->size;
+	  length_byte = STRING_BYTES (XSTRING (tem));
 	subst:
-	  new = (unsigned char *) xrealloc (buf, bsize += length);
+	  new = (unsigned char *) xrealloc (buf, bsize += length_byte);
 	  bufp += new - buf;
 	  buf = new;
-	  bcopy (start, bufp, length);
-	  bufp += length;
+	  bcopy (start, bufp, length_byte);
+	  bufp += length_byte;
+	  nchars += length;
 	  /* Check STRING again in case gc relocated it.  */
 	  strp = (unsigned char *) XSTRING (string)->data + idx;
 	}
-      else			/* just copy other chars */
-	*bufp++ = *strp++;
+      else if (! multibyte)		/* just copy other chars */
+	*bufp++ = *strp++, nchars++;
+      else
+	{
+	  int len;
+	  int maxlen = XSTRING (string)->data + STRING_BYTES (XSTRING (string)) - strp;
+
+	  STRING_CHAR_AND_LENGTH (strp, maxlen, len);
+	  if (len == 1)
+	    *bufp = *strp;
+	  else
+	    bcopy (strp, bufp, len);
+	  strp += len;
+	  bufp += len;
+	  nchars++;
+	}
     }
 
   if (changed)			/* don't bother if nothing substituted */
-    tem = make_string (buf, bufp - buf);
+    tem = make_string_from_bytes (buf, nchars, bufp - buf);
   else
     tem = string;
   xfree (buf);
   RETURN_UNGCPRO (tem);
 }
 
+void
 syms_of_doc ()
 {
   DEFVAR_LISP ("internal-doc-file-name", &Vdoc_file_name,

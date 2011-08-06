@@ -1,6 +1,11 @@
 This is Info file ../info/mh-e, produced by Makeinfo version 1.68 from
 the input file mh-e.texi.
 
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* MH-E: (mh-e).		Emacs interface to the MH mail system.
+END-INFO-DIR-ENTRY
+
    This is Edition 1.2, last updated 22 August 1995, of `mh-e, The
 Emacs Interface to MH', for mh-e, Version 5.0.2.
 

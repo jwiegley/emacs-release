@@ -14,6 +14,7 @@ in the larger process of developing and maintaining programs.
 @menu
 * Compilation::         Compiling programs in languages other
                           than Lisp (C, Pascal, etc.).
+* Grep Searching::      Running grep as if it were a compiler.
 * Compilation Mode::    The mode for visiting compiler errors.
 * Compilation Shell::   Customizing your shell properly
                           for use in the compilation buffer.
@@ -89,6 +90,11 @@ above point, which remains at the end.  If point is not at the end of
 the buffer, it remains fixed while more compilation output is added at
 the end of the buffer.
 
+@vindex compilation-scroll-output
+  If you set the variable @code{compilation-scroll-output} to a
+non-@code{nil} value, then the compilation buffer always scrolls to
+follow output as it comes in.
+
 @findex kill-compilation
   To kill the compilation process, do @kbd{M-x kill-compilation}.  When
 the compiler process terminates, the mode line of the
@@ -98,16 +104,27 @@ compilation, as only one can exist at any time.  However, @kbd{M-x
 compile} asks for confirmation before actually killing a compilation
 that is running.
 
+@node Grep Searching
+@section Searching with Grep under Emacs
+
 @findex grep
-  Just as you can run a compiler, you can also run @code{grep} and then
-visit the lines on which matches were found.  To do this, type @kbd{M-x
-grep} with an argument line that contains the same arguments you would
-give @code{grep} when running it normally: a @code{grep}-style regexp
+  Just as you can run a compiler from Emacs and then visit the lines
+where there were compilation errors, you can also run @code{grep} and
+then visit the lines on which matches were found.  This works by
+treating the matches reported by @code{grep} as if they were ``errors.''
+
+  To do this, type @kbd{M-x grep}, then enter a command line that
+specifies how to run @code{grep}.  Use the same arguments you would give
+@code{grep} when running it normally: a @code{grep}-style regexp
 (usually in single-quotes to quote the shell's special characters)
-followed by file names which may use wildcards.  The output from
-@code{grep} goes in the @samp{*grep*} buffer, and you can find the
-matching lines in the source with @kbd{C-x `} and @key{RET} just like
-compiler errors.
+followed by file names, which may use wildcards.  The output from
+@code{grep} goes in the @samp{*grep*} buffer.  You can find the
+corresponding lines in the original files using @kbd{C-x `} and
+@key{RET}, as with compilation errors.
+
+  If you specify a prefix argument for @kbd{M-x grep}, it figures out
+the tag (@pxref{Tags}) around point, and puts that into the default
+@code{grep} command.
 
 @findex grep-find
   The command @kbd{M-x grep-find} is similar to @kbd{M-x grep}, but it
@@ -170,22 +187,26 @@ move up or down to an error message for a different source file.
 called Compilation Minor mode.  This lets you parse error messages in
 any buffer, not just a normal compilation output buffer.  Type @kbd{M-x
 compilation-minor-mode} to enable the minor mode.  This defines the keys
-@key{RET} and @kbd{Mouse-2}, as in the Compilation major mode.  In an
-Rlogin buffer (@pxref{Remote Host}), Compilation minor mode
-automatically accesses remote source files by FTP (@pxref{File Names}).
+@key{RET} and @kbd{Mouse-2}, as in the Compilation major mode.
+
+  Compilation minor mode works in any buffer, as long as the contents
+are in a format that it understands.  In an Rlogin buffer (@pxref{Remote
+Host}), Compilation minor mode automatically accesses remote source
+files by FTP (@pxref{File Names}).
 
 @node Compilation Shell
 @section Subshells for Compilation
 
-  Note: Emacs uses a shell to run the compilation command, but specifies
+  Emacs uses a shell to run the compilation command, but specifies
 the option for a noninteractive shell.  This means, in particular, that
 the shell should start with no prompt.  If you find your usual shell
 prompt making an unsightly appearance in the @samp{*compilation*}
 buffer, it means you have made a mistake in your shell's init file by
 setting the prompt unconditionally.  (This init file's name may be
-@file{.profile}, @file{.cshrc}, @file{.shrc}, or various other things,
-depending on the shell you use.)  The shell init file should set the
-prompt only if there already is a prompt.  In csh, here is how to do it:
+@file{.bashrc}, @file{.profile}, @file{.cshrc}, @file{.shrc}, or various
+other things, depending on the shell you use.)  The shell init file
+should set the prompt only if there already is a prompt.  In csh, here
+is how to do it:
 
 @example
 if ($?prompt) set prompt = @dots{}
@@ -196,7 +217,7 @@ And here's how to do it in bash:
 
 @example
 if [ "$@{PS1+set@}" = set ]
-then prompt=@dots{}
+then PS1=@dots{}
 fi
 @end example
 
@@ -219,13 +240,15 @@ Emacs.  @xref{MS-DOS}.
 @cindex SDB
 @cindex XDB
 @cindex Perldb
+@cindex JDB
+@cindex PDB
 
 @c Do you believe in GUD?
 The GUD (Grand Unified Debugger) library provides an interface to
 various symbolic debuggers from within Emacs.  We recommend the debugger
 GDB, which is free software, but you can also run DBX, SDB or XDB if you
 have them.  GUD can also serve as an interface to the Perl's debugging
-mode.
+mode, the Python debugger PDB, and to JDB, the Java Debugger.
 
 @menu
 * Starting GUD::	How to start a debugger subprocess.
@@ -237,7 +260,7 @@ mode.
 @node Starting GUD
 @subsection Starting GUD
 
-  There are five commands for starting a debugger, each corresponding
+  There are several commands for starting a debugger, each corresponding
 to a particular debugger program.
 
 @table @kbd
@@ -273,6 +296,14 @@ tags table in the working directory and try again.
 @item M-x perldb @key{RET} @var{file} @key{RET}
 @findex perldb
 Run the Perl interpreter in debug mode to debug @var{file}, a Perl program.
+
+@item M-x jdb @key{RET} @var{file} @key{RET}
+@findex jdb
+Run the Java debugger to debug @var{file}.
+
+@item M-x pdb @key{RET} @var{file} @key{RET}
+@findex pdb
+Run the Python debugger to debug @var{file}.
 @end table
 
   Each of these commands takes one argument: a command line to invoke
@@ -442,11 +473,14 @@ Instead, type @kbd{C-q @key{TAB}} to enter a tab.
 @vindex sdb-mode-hook
 @vindex xdb-mode-hook
 @vindex perldb-mode-hook
+@vindex pdb-mode-hook
+@vindex jdb-mode-hook
   On startup, GUD runs one of the following hooks: @code{gdb-mode-hook},
 if you are using GDB; @code{dbx-mode-hook}, if you are using DBX;
 @code{sdb-mode-hook}, if you are using SDB; @code{xdb-mode-hook}, if you
-are using XDB; @code{perldb-mode-hook}, for Perl debugging mode.  You
-can use these hooks to define custom key bindings for the debugger
+are using XDB; @code{perldb-mode-hook}, for Perl debugging mode;
+@code{jdb-mode-hook}, for PDB; @code{jdb-mode-hook}, for JDB.  You can
+use these hooks to define custom key bindings for the debugger
 interaction buffer.  @xref{Hooks}.
 
   Here is a convenient way to define a command that sends a particular
@@ -665,9 +699,10 @@ expression preceding point in the buffer, and displays the value in the
 echo area.  It is available in all major modes, not just Emacs-Lisp
 mode.  It does not treat @code{defvar} specially.
 
-  If @kbd{C-M-x} or @kbd{C-x C-e} is given a numeric argument, it
-inserts the value into the current buffer at point, rather than
-displaying it in the echo area.  The argument's value does not matter.
+  If @kbd{C-M-x}, @kbd{C-x C-e}, or @kbd{M-:} is given a numeric
+argument, it inserts the value into the current buffer at point, rather
+than displaying it in the echo area.  The argument's value does not
+matter.
 
 @findex eval-region
 @findex eval-current-buffer

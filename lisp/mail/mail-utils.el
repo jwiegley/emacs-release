@@ -34,10 +34,12 @@
 (require 'lisp-mode)
 		     
 ;;;###autoload
-(defvar mail-use-rfc822 nil "\
+(defcustom mail-use-rfc822 nil "\
 *If non-nil, use a full, hairy RFC822 parser on mail addresses.
 Otherwise, (the default) use a smaller, somewhat faster, and
-often correct parser.")
+often correct parser."
+  :type 'boolean
+  :group 'mail)
 
 ;; Returns t if file FILE is an Rmail file.
 ;;;###autoload
@@ -110,12 +112,6 @@ Return a modified address list."
 	(progn (require 'rfc822)
 	       (mapconcat 'identity (rfc822-addresses address) ", "))
       (let (pos)
-       (string-match "\\`[ \t\n]*" address)
-       ;; strip surrounding whitespace
-       (setq address (substring address
-				(match-end 0)
-				(string-match "[ \t\n]*\\'" address
-					      (match-end 0))))
 
        ;; Detect nested comments.
        (if (string-match "[ \t]*(\\([^)\\]\\|\\\\.\\|\\\\\n\\)*(" address)
@@ -147,6 +143,13 @@ Return a modified address list."
 		 (mail-string-delete address
 				     pos (match-end 0)))))
 
+       ;; strip surrounding whitespace
+       (string-match "\\`[ \t\n]*" address)
+       (setq address (substring address
+				(match-end 0)
+				(string-match "[ \t\n]*\\'" address
+					      (match-end 0))))
+
        ;; strip `quoted' names (This is supposed to hack `"Foo Bar" <bar@host>')
        (setq pos 0)
        (while (setq pos (string-match
@@ -168,10 +171,6 @@ Return a modified address list."
 	   (setq address (mail-string-delete address (1- close) close))
 	   (setq address (mail-string-delete address junk-beg junk-end))))
        address))))
-  
-(or (and (boundp 'rmail-default-dont-reply-to-names)
-	 (not (null rmail-default-dont-reply-to-names)))
-    (setq rmail-default-dont-reply-to-names "info-"))
 
 ; rmail-dont-reply-to-names is defined in loaddefs
 (defun rmail-dont-reply-to (userids)
@@ -185,22 +184,40 @@ Usenet paths ending in an element that matches are removed also."
 		        "")
 		    (concat (regexp-quote (user-login-name))
 			    "\\>"))))
-  (let ((match (concat "\\(^\\|,\\)[ \t\n]*\\([^,\n]*[!<]\\|\\)\\("
-		       rmail-dont-reply-to-names
-		       "\\|[^\,.<]*<\\(" rmail-dont-reply-to-names "\\)"
+  (let ((match (concat "\\(^\\|,\\)[ \t\n]*"
+		       ;; Can anyone figure out what this is for?
+		       ;; Is it an obsolete remnant of another way of
+		       ;; handling Foo Bar <foo@machine>?
+		       "\\([^,\n]*[!<]\\|\\)"
+		       "\\("
+			     rmail-dont-reply-to-names
+		       "\\|"
+		             ;; Include the human name that precedes <foo@bar>.
+			     "\\([^\,.<\"]\\|\"[^\"]*\"\\)*"
+			     "<\\(" rmail-dont-reply-to-names "\\)"
 		       "\\)"))
 	(case-fold-search t)
 	pos epos)
-    (while (setq pos (string-match match userids))
+    (while (setq pos (string-match match userids pos))
       (if (> pos 0) (setq pos (match-beginning 2)))
       (setq epos
 	    ;; Delete thru the next comma, plus whitespace after.
 	    (if (string-match ",[ \t\n]*" userids (match-end 0))
 		(match-end 0)
 	      (length userids)))
-      (setq userids
-	    (mail-string-delete
-	      userids pos epos)))
+      ;; Count the double-quotes since the beginning of the list.
+      ;; Reject this match if it is inside a pair of doublequotes.
+      (let (quote-pos inside-quotes)
+	(while (and (setq quote-pos (string-match "\"" userids quote-pos))
+		    (< quote-pos pos))
+	  (setq quote-pos (1+ quote-pos))
+	  (setq inside-quotes (not inside-quotes)))
+	(if inside-quotes
+	    ;; Advance to next even-parity quote, and scan from there.
+	    (setq pos (string-match "\"" userids pos))
+	  (setq userids
+		(mail-string-delete
+		 userids pos epos)))))
     ;; get rid of any trailing commas
     (if (setq pos (string-match "[ ,\t\n]*\\'" userids))
 	(setq userids (substring userids 0 pos)))
@@ -211,9 +228,9 @@ Usenet paths ending in an element that matches are removed also."
 
 ;;;###autoload
 (defun mail-fetch-field (field-name &optional last all list)
-  "Return the value of the header field FIELD-NAME.
-The buffer is expected to be narrowed to just the headers of the message.
-If second arg LAST is non-nil, use the last such field if there are several.
+  "Return the value of the header field whose type is FIELD-NAME.
+The buffer is expected to be narrowed to just the header of the message.
+If second arg LAST is non-nil, use the last field of type FIELD-NAME.
 If third arg ALL is non-nil, concatenate all such fields with commas between.
 If 4th arg LIST is non-nil, return a list of all such fields."
   (save-excursion
@@ -258,16 +275,16 @@ If 4th arg LIST is non-nil, return a list of all such fields."
 (defun mail-parse-comma-list ()
   (let (accumulated
 	beg)
-    (skip-chars-forward " ")
+    (skip-chars-forward " \t\n")
     (while (not (eobp))
       (setq beg (point))
       (skip-chars-forward "^,")
-      (skip-chars-backward " ")
+      (skip-chars-backward " \t\n")
       (setq accumulated
 	    (cons (buffer-substring-no-properties beg (point))
 		  accumulated))
       (skip-chars-forward "^,")
-      (skip-chars-forward ", "))
+      (skip-chars-forward ", \t\n"))
     accumulated))
 
 (defun mail-comma-list-regexp (labels)

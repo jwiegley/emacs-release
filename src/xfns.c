@@ -136,6 +136,9 @@ Lisp_Object Vx_bitmap_file_path;
 /* Regexp matching a font name whose width is the same as `PIXEL_SIZE'.  */
 Lisp_Object Vx_pixel_size_width_font_regexp;
 
+/* A flag to control how to display unibyte 8-bit character.  */
+int unibyte_display_via_language_environment;
+
 /* Evaluate this expression to rebuild the section of syms_of_xfns
    that initializes and staticpros the symbols declared below.  Note
    that Emacs 18 has a bug that keeps C-x C-e from being able to
@@ -599,7 +602,8 @@ x_create_bitmap_from_file (f, file)
   id = x_allocate_bitmap_record (f);
   dpyinfo->bitmaps[id - 1].pixmap = bitmap;
   dpyinfo->bitmaps[id - 1].refcount = 1;
-  dpyinfo->bitmaps[id - 1].file = (char *) xmalloc (XSTRING (file)->size + 1);
+  dpyinfo->bitmaps[id - 1].file
+    = (char *) xmalloc (STRING_BYTES (XSTRING (file)) + 1);
   dpyinfo->bitmaps[id - 1].depth = 1;
   dpyinfo->bitmaps[id - 1].height = height;
   dpyinfo->bitmaps[id - 1].width = width;
@@ -610,7 +614,7 @@ x_create_bitmap_from_file (f, file)
 
 /* Remove reference to bitmap with id number ID.  */
 
-int
+void
 x_destroy_bitmap (f, id)
      FRAME_PTR f;
      int id;
@@ -712,6 +716,7 @@ static struct x_frame_parm_table x_frame_parms[] =
 /* Attach the `x-frame-parameter' properties to
    the Lisp symbol names of parameters relevant to X.  */
 
+void
 init_x_parm_symbols ()
 {
   int i;
@@ -1022,6 +1027,7 @@ x_real_positions (f, xptr, yptr)
    and whose values are not correctly recorded in the frame's
    param_alist need to be considered here.  */
 
+void
 x_report_frame_params (f, alistptr)
      struct frame *f;
      Lisp_Object *alistptr;
@@ -1201,8 +1207,15 @@ x_set_foreground_color (f, arg, oldval)
      struct frame *f;
      Lisp_Object arg, oldval;
 {
-  f->output_data.x->foreground_pixel
+  unsigned long pixel
     = x_decode_color (f, arg, BLACK_PIX_DEFAULT (f));
+
+  if (f->output_data.x->foreground_pixel != f->output_data.x->mouse_pixel
+      && f->output_data.x->foreground_pixel != f->output_data.x->cursor_pixel
+      && f->output_data.x->foreground_pixel != f->output_data.x->cursor_foreground_pixel)
+    unload_color (f, f->output_data.x->foreground_pixel);
+  f->output_data.x->foreground_pixel = pixel;
+
   if (FRAME_X_WINDOW (f) != 0)
     {
       BLOCK_INPUT;
@@ -1225,8 +1238,14 @@ x_set_background_color (f, arg, oldval)
   Pixmap temp;
   int mask;
 
-  f->output_data.x->background_pixel
+  unsigned long pixel
     = x_decode_color (f, arg, WHITE_PIX_DEFAULT (f));
+
+  if (f->output_data.x->background_pixel != f->output_data.x->mouse_pixel
+      && f->output_data.x->background_pixel != f->output_data.x->cursor_pixel
+      && f->output_data.x->background_pixel != f->output_data.x->cursor_foreground_pixel)
+    unload_color (f, f->output_data.x->background_pixel);
+  f->output_data.x->background_pixel = pixel;
 
   if (FRAME_X_WINDOW (f) != 0)
     {
@@ -1265,15 +1284,23 @@ x_set_mouse_color (f, arg, oldval)
   Cursor cursor, nontext_cursor, mode_cursor, cross_cursor;
   int count;
   int mask_color;
-
+  unsigned long pixel = f->output_data.x->mouse_pixel;
+  
   if (!EQ (Qnil, arg))
-    f->output_data.x->mouse_pixel
-      = x_decode_color (f, arg, BLACK_PIX_DEFAULT (f));
+    pixel = x_decode_color (f, arg, BLACK_PIX_DEFAULT (f));
+
   mask_color = f->output_data.x->background_pixel;
 				/* No invisible pointers.  */
-  if (mask_color == f->output_data.x->mouse_pixel
-	&& mask_color == f->output_data.x->background_pixel)
-    f->output_data.x->mouse_pixel = f->output_data.x->foreground_pixel;
+  if (mask_color == pixel
+      && mask_color == f->output_data.x->background_pixel)
+    pixel = f->output_data.x->foreground_pixel;
+
+  if (f->output_data.x->background_pixel != f->output_data.x->mouse_pixel
+      && f->output_data.x->foreground_pixel != f->output_data.x->mouse_pixel
+      && f->output_data.x->cursor_pixel != f->output_data.x->mouse_pixel
+      && f->output_data.x->cursor_foreground_pixel != f->output_data.x->mouse_pixel)
+    unload_color (f, f->output_data.x->mouse_pixel);
+  f->output_data.x->mouse_pixel = pixel;
 
   BLOCK_INPUT;
 
@@ -1378,23 +1405,36 @@ x_set_cursor_color (f, arg, oldval)
      struct frame *f;
      Lisp_Object arg, oldval;
 {
-  unsigned long fore_pixel;
+  unsigned long fore_pixel, pixel;
 
   if (!EQ (Vx_cursor_fore_pixel, Qnil))
     fore_pixel = x_decode_color (f, Vx_cursor_fore_pixel,
 				 WHITE_PIX_DEFAULT (f));
   else
     fore_pixel = f->output_data.x->background_pixel;
-  f->output_data.x->cursor_pixel = x_decode_color (f, arg, BLACK_PIX_DEFAULT (f));
-  
+  pixel = x_decode_color (f, arg, BLACK_PIX_DEFAULT (f));
+
   /* Make sure that the cursor color differs from the background color.  */
-  if (f->output_data.x->cursor_pixel == f->output_data.x->background_pixel)
+  if (pixel == f->output_data.x->background_pixel)
     {
-      f->output_data.x->cursor_pixel = f->output_data.x->mouse_pixel;
-      if (f->output_data.x->cursor_pixel == fore_pixel)
+      pixel = f->output_data.x->mouse_pixel;
+      if (pixel == fore_pixel)
 	fore_pixel = f->output_data.x->background_pixel;
     }
+
+  if (f->output_data.x->background_pixel != f->output_data.x->cursor_foreground_pixel
+      && f->output_data.x->foreground_pixel != f->output_data.x->cursor_foreground_pixel
+      && f->output_data.x->mouse_pixel != f->output_data.x->cursor_foreground_pixel
+      && f->output_data.x->cursor_pixel != f->output_data.x->cursor_foreground_pixel)
+    unload_color (f, f->output_data.x->cursor_foreground_pixel);
   f->output_data.x->cursor_foreground_pixel = fore_pixel;
+
+  if (f->output_data.x->background_pixel != f->output_data.x->cursor_pixel
+      && f->output_data.x->foreground_pixel != f->output_data.x->cursor_pixel
+      && f->output_data.x->mouse_pixel != f->output_data.x->cursor_pixel
+      && f->output_data.x->cursor_foreground_pixel != f->output_data.x->cursor_pixel)
+    unload_color (f, f->output_data.x->cursor_pixel);
+  f->output_data.x->cursor_pixel = pixel;
 
   if (FRAME_X_WINDOW (f) != 0)
     {
@@ -1444,10 +1484,12 @@ x_set_border_color (f, arg, oldval)
    Note that this does not fully take effect if done before
    F has an x-window.  */
 
+void
 x_set_border_pixel (f, pix)
      struct frame *f;
      int pix;
 {
+  unload_color (f, f->output_data.x->border_pixel);
   f->output_data.x->border_pixel = pix;
 
   if (FRAME_X_WINDOW (f) != 0 && f->output_data.x->border_width > 0)
@@ -1582,10 +1624,6 @@ x_set_icon_name (f, arg, oldval)
   UNBLOCK_INPUT;
 }
 
-extern Lisp_Object x_new_font ();
-extern Lisp_Object x_new_fontset ();
-extern Lisp_Object Fquery_fontset ();
-
 void
 x_set_font (f, arg, oldval)
      struct frame *f;
@@ -1597,7 +1635,7 @@ x_set_font (f, arg, oldval)
 
   CHECK_STRING (arg, 1);
 
-  fontset_name = Fquery_fontset (arg);
+  fontset_name = Fquery_fontset (arg, Qnil);
 
   BLOCK_INPUT;
   result = (STRINGP (fontset_name)
@@ -1652,8 +1690,7 @@ x_set_internal_border_width (f, arg, oldval)
 
 #ifdef USE_X_TOOLKIT
   if (f->output_data.x->edit_widget)
-    widget_store_internal_border (f->output_data.x->edit_widget,
-				  f->output_data.x->internal_border_width);
+    widget_store_internal_border (f->output_data.x->edit_widget);
 #endif
 
   if (f->output_data.x->internal_border_width == old)
@@ -1822,14 +1859,14 @@ x_set_name (f, name, explicit)
 	text.value = XSTRING (name)->data;
 	text.encoding = XA_STRING;
 	text.format = 8;
-	text.nitems = XSTRING (name)->size;
+	text.nitems = STRING_BYTES (XSTRING (name));
 
 	icon_name = (!NILP (f->icon_name) ? f->icon_name : name);
 
 	icon.value = XSTRING (icon_name)->data;
 	icon.encoding = XA_STRING;
 	icon.format = 8;
-	icon.nitems = XSTRING (icon_name)->size;
+	icon.nitems = STRING_BYTES (XSTRING (icon_name));
 #ifdef USE_X_TOOLKIT
 	XSetWMName (FRAME_X_DISPLAY (f),
 		    XtWindow (f->output_data.x->widget), &text);
@@ -1912,14 +1949,14 @@ x_set_title (f, name)
 	text.value = XSTRING (name)->data;
 	text.encoding = XA_STRING;
 	text.format = 8;
-	text.nitems = XSTRING (name)->size;
+	text.nitems = STRING_BYTES (XSTRING (name));
 
 	icon_name = (!NILP (f->icon_name) ? f->icon_name : name);
 
 	icon.value = XSTRING (icon_name)->data;
 	icon.encoding = XA_STRING;
 	icon.format = 8;
-	icon.nitems = XSTRING (icon_name)->size;
+	icon.nitems = STRING_BYTES (XSTRING (icon_name));
 #ifdef USE_X_TOOLKIT
 	XSetWMName (FRAME_X_DISPLAY (f),
 		    XtWindow (f->output_data.x->widget), &text);
@@ -2049,7 +2086,7 @@ validate_x_resource_name ()
       unsigned char *p = XSTRING (Vx_resource_name)->data;
       int i;
 
-      len = XSTRING (Vx_resource_name)->size;
+      len = STRING_BYTES (XSTRING (Vx_resource_name));
 
       /* Only letters, digits, - and _ are valid in resource names.
 	 Count the valid characters and count the invalid ones.  */
@@ -2133,16 +2170,16 @@ and the class is `Emacs.CLASS.SUBCLASS'.")
 
   /* Allocate space for the components, the dots which separate them,
      and the final '\0'.  Make them big enough for the worst case.  */
-  name_key = (char *) alloca (XSTRING (Vx_resource_name)->size
+  name_key = (char *) alloca (STRING_BYTES (XSTRING (Vx_resource_name))
 			      + (STRINGP (component)
-				 ? XSTRING (component)->size : 0)
-			      + XSTRING (attribute)->size
+				 ? STRING_BYTES (XSTRING (component)) : 0)
+			      + STRING_BYTES (XSTRING (attribute))
 			      + 3);
 
-  class_key = (char *) alloca (XSTRING (Vx_resource_class)->size
-			       + XSTRING (class)->size
+  class_key = (char *) alloca (STRING_BYTES (XSTRING (Vx_resource_class))
+			       + STRING_BYTES (XSTRING (class))
 			       + (STRINGP (subclass)
-				  ? XSTRING (subclass)->size : 0)
+				  ? STRING_BYTES (XSTRING (subclass)) : 0)
 			       + 3);
 
   /* Start with emacs.FRAMENAME for the name (the specific one)
@@ -2201,16 +2238,16 @@ display_x_get_resource (dpyinfo, attribute, class, component, subclass)
 
   /* Allocate space for the components, the dots which separate them,
      and the final '\0'.  Make them big enough for the worst case.  */
-  name_key = (char *) alloca (XSTRING (Vx_resource_name)->size
+  name_key = (char *) alloca (STRING_BYTES (XSTRING (Vx_resource_name))
 			      + (STRINGP (component)
-				 ? XSTRING (component)->size : 0)
-			      + XSTRING (attribute)->size
+				 ? STRING_BYTES (XSTRING (component)) : 0)
+			      + STRING_BYTES (XSTRING (attribute))
 			      + 3);
 
-  class_key = (char *) alloca (XSTRING (Vx_resource_class)->size
-			       + XSTRING (class)->size
+  class_key = (char *) alloca (STRING_BYTES (XSTRING (Vx_resource_class))
+			       + STRING_BYTES (XSTRING (class))
 			       + (STRINGP (subclass)
-				  ? XSTRING (subclass)->size : 0)
+				  ? STRING_BYTES (XSTRING (subclass)) : 0)
 			       + 3);
 
   /* Start with emacs.FRAMENAME for the name (the specific one)
@@ -2253,7 +2290,7 @@ x_get_resource_string (attribute, class)
 
   /* Allocate space for the components, the dots which separate them,
      and the final '\0'.  */
-  name_key = (char *) alloca (XSTRING (Vinvocation_name)->size
+  name_key = (char *) alloca (STRING_BYTES (XSTRING (Vinvocation_name))
 			      + strlen (attribute) + 2);
   class_key = (char *) alloca ((sizeof (EMACS_CLASS) - 1)
 			       + strlen (class) + 2);
@@ -2911,6 +2948,7 @@ x_window (f, window_prompting, minibuffer_only)
 
 /* Create and set up the X window for frame F.  */
 
+void
 x_window (f)
      struct frame *f;
 
@@ -3289,7 +3327,7 @@ This function is an internal primitive--use `make-frame' instead.")
     /* First, try whatever font the caller has specified.  */
     if (STRINGP (font))
       {
-	tem = Fquery_fontset (font);
+	tem = Fquery_fontset (font, Qnil);
 	if (STRINGP (tem))
 	  font = x_new_fontset (f, XSTRING (tem)->data);
 	else
@@ -3322,7 +3360,7 @@ This function is an internal primitive--use `make-frame' instead.")
 #endif
 
   x_default_parameter (f, parms, Qborder_width, make_number (2),
-		       "borderwidth", "BorderWidth", number);
+		       "borderWidth", "BorderWidth", number);
   /* This defaults to 2 in order to match xterm.  We recognize either
      internalBorderWidth or internalBorder (which is what xterm calls
      it).  */
@@ -4870,7 +4908,8 @@ also be depressed for NEWSTRING to appear.")
 
   if (NILP (modifiers))
     XRebindKeysym (x_current_display, keysym, modifier_list, 0,
-		   XSTRING (newstring)->data, XSTRING (newstring)->size);
+		   XSTRING (newstring)->data,
+		   STRING_BYTES (XSTRING (newstring)));
   else
     {
       register Lisp_Object rest, mod;
@@ -4898,7 +4937,8 @@ also be depressed for NEWSTRING to appear.")
 	}
 
       XRebindKeysym (x_current_display, keysym, modifier_list, i,
-		     XSTRING (newstring)->data, XSTRING (newstring)->size);
+		     XSTRING (newstring)->data,
+		     STRING_BYTES (XSTRING (newstring)));
     }
 
   return Qnil;
@@ -4929,7 +4969,7 @@ See the documentation of `x-rebind-key' for more information.")
       if (!NILP (item))
 	{
 	  CHECK_STRING (item, 2);
-	  strsize = XSTRING (item)->size;
+	  strsize = STRING_BYTES (XSTRING (item));
 	  rawstring = (unsigned char *) xmalloc (strsize);
 	  bcopy (XSTRING (item)->data, rawstring, strsize);
 	  modifier[1] = 1 << i;
@@ -5181,6 +5221,7 @@ x_sync (f)
   UNBLOCK_INPUT;
 }
 
+void
 syms_of_xfns ()
 {
   /* This is zero if not using X windows.  */
@@ -5345,6 +5386,15 @@ such a font.  This is especially effective for such large fonts as\n\
 Chinese, Japanese, and Korean.");
   Vx_pixel_size_width_font_regexp = Qnil;
 
+  DEFVAR_BOOL ("unibyte-display-via-language-environment",
+	       &unibyte_display_via_language_environment,
+   "*Non-nil means display unibyte text according to language environment.\n\
+Specifically this means that unibyte non-ASCII characters\n\
+are displayed by converting them to the equivalent multibyte characters\n\
+according to the current language environment.  As a result, they are\n\
+displayed according to the current fontset.");
+  unibyte_display_via_language_environment = 0;
+
 #ifdef USE_X_TOOLKIT
   Fprovide (intern ("x-toolkit"));
 #endif
@@ -5398,6 +5448,7 @@ Chinese, Japanese, and Korean.");
   get_font_info_func = x_get_font_info;
   list_fonts_func = x_list_fonts;
   load_font_func = x_load_font;
+  find_ccl_program_func = x_find_ccl_program;
   query_font_func = x_query_font;
   set_frame_fontset_func = x_set_font;
   check_window_system_func = check_x;

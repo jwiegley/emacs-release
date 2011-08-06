@@ -1,9 +1,10 @@
 ;;; autoinsert.el --- automatic mode-dependent insertion of text into new files
 
-;; Copyright (C) 1985, 1986, 1987, 1994, 1995 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 86, 87, 94, 95, 98 Free Software Foundation, Inc.
 
 ;; Author: Charlie Martin <crm@cs.duke.edu>
 ;; Adapted-By: Daniel.Pfeiffer@Informatik.START.dbp.de, fax (+49 69) 7588-2389
+;; Keywords: convenience
 ;; Maintainer: FSF
 
 ;; This file is part of GNU Emacs.
@@ -35,6 +36,10 @@
 ;;     (add-hook 'find-file-hooks 'auto-insert)
 ;;     setq auto-insert-directory to an appropriate slash-terminated value
 ;;
+;;  You can also customize the variable `auto-insert-mode' to load the
+;;  package.  Alternatively, add the following to your .emacs file:
+;;  (auto-insert-mode 1)
+;;
 ;;  Author:  Charlie Martin
 ;;           Department of Computer Science and
 ;;           National Biomedical Simulation Resource
@@ -45,7 +50,24 @@
 
 ;;; Code:
 
-(defvar auto-insert 'not-modified
+(defgroup auto-insert nil
+  "Automatic mode-dependent insertion of text into new files."
+  :prefix "auto-insert-"
+  :group 'files
+  :group 'convenience)
+
+
+(defcustom auto-insert-mode nil
+  "Toggle auto-insert-mode.
+You must modify via \\[customize] for this variable to have an effect."
+  :set (lambda (symbol value)
+	 (auto-insert-mode (or value 0)))
+  :initialize 'custom-initialize-default
+  :type 'boolean
+  :group 'auto-insert
+  :require 'autoinsert)
+
+(defcustom auto-insert 'not-modified
   "*Controls automatic insertion into newly found empty files:
 	nil	do nothing
 	t	insert if possible
@@ -55,20 +77,29 @@ Insertion is possible when something appropriate is found in
 save it with  \\[write-file] RET.
 This variable is used when `auto-insert' is called as a function, e.g.
 when you do (add-hook 'find-file-hooks 'auto-insert).
-With \\[auto-insert], this is always treated as if it were `t'.")
+With \\[auto-insert], this is always treated as if it were `t'."
+  :type '(choice (const :tag "Insert if possible" t)
+                 (const :tag "Do nothing" nil)
+                 (other :tag "insert if possible, mark as unmodified." 
+                        not-modified))
+  :group 'auto-insert)
 
-
-(defvar auto-insert-query 'function
+(defcustom auto-insert-query 'function
   "*If non-`nil', ask user before auto-inserting.
-When this is `function', only ask when called non-interactively.")
+When this is `function', only ask when called non-interactively."
+  :type '(choice (const :tag "Don't ask" nil)
+                 (const :tag "Ask if called non-interactively" function)
+                 (other :tag "Ask" t))
+  :group 'auto-insert)
 
-
-(defvar auto-insert-prompt "Perform %s auto-insertion? "
+(defcustom auto-insert-prompt "Perform %s auto-insertion? "
   "*Prompt to use when querying whether to auto-insert.
-If this contains a %s, that will be replaced by the matching rule.")
+If this contains a %s, that will be replaced by the matching rule."
+  :type 'string
+  :group 'auto-insert)
 
 
-(defvar auto-insert-alist
+(defcustom auto-insert-alist
   '((("\\.\\([Hh]\\|hh\\|hpp\\)\\'" . "C / C++ header")
      (upcase (concat (file-name-nondirectory
 		      (substring buffer-file-name 0 (match-beginning 0)))
@@ -168,12 +199,16 @@ Optional DESCRIPTION is a string for filling `auto-insert-prompt'.
 ACTION may be a skeleton to insert (see `skeleton-insert'), an absolute
 file-name or one relative to `auto-insert-directory' or a function to call.
 ACTION may also be a vector containing several successive single actions as
-described above, e.g. [\"header.insert\" date-and-author-update].")
+described above, e.g. [\"header.insert\" date-and-author-update]."
+  :type 'sexp
+  :group 'auto-insert)
 
 
 ;; Establish a default value for auto-insert-directory
-(defvar auto-insert-directory "~/insert/"
-  "*Directory from which auto-inserted files are taken.")
+(defcustom auto-insert-directory "~/insert/"
+  "*Directory from which auto-inserted files are taken."
+  :type 'directory
+  :group 'auto-insert)
 
 
 ;;;###autoload
@@ -234,11 +269,11 @@ Matches the visited file name against the elements of `auto-insert-alist'."
 
 
 ;;;###autoload
-(defun define-auto-insert (key action &optional after)
+(defun define-auto-insert (condition action &optional after)
   "Associate CONDITION with (additional) ACTION in `auto-insert-alist'.
 Optional AFTER means to insert action after all existing actions for CONDITION,
 or if CONDITION had no actions, after all other CONDITIONs."
-  (let ((elt (assoc key auto-insert-alist)))
+  (let ((elt (assoc condition auto-insert-alist)))
     (if elt
 	(setcdr elt
 		(if (vectorp (cdr elt))
@@ -249,9 +284,32 @@ or if CONDITION had no actions, after all other CONDITIONs."
 		      (vector (cdr elt) action)
 		    (vector action (cdr elt)))))
       (if after
-	  (nconc auto-insert-alist (list (cons key action)))
-	(setq auto-insert-alist (cons (cons key action)
+	  (nconc auto-insert-alist (list (cons condition action)))
+	(setq auto-insert-alist (cons (cons condition action)
 				      auto-insert-alist))))))
+
+;;;###autoload
+(defun auto-insert-mode (&optional arg)
+  "Toggle auto-insert mode.
+With prefix ARG, turn auto-insert mode on if and only if ARG is positive.
+Returns the new status of auto-insert mode (non-nil means on).
+
+When auto-insert mode is enabled, when new files are created you can
+insert a template for the file depending on the mode of the buffer."
+  (interactive "P")
+  (let ((on-p (if arg
+		  (> (prefix-numeric-value arg) 0)
+		(not auto-insert-mode))))
+    (if on-p
+	(add-hook 'find-file-hooks 'auto-insert)
+      (remove-hook 'find-file-hooks 'auto-insert))
+    (if (interactive-p)
+	(message "Auto-insert now %s." (if on-p "on" "off")))
+    (setq auto-insert-mode on-p)
+    ))
+
+(if auto-insert-mode
+    (auto-insert-mode 1))
 
 (provide 'autoinsert)
 

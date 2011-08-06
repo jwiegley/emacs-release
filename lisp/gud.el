@@ -1,10 +1,10 @@
-;;; gud.el --- Grand Unified Debugger mode for gdb, sdb, dbx, xdb or perldb
+;;; gud.el --- Grand Unified Debugger mode for running GDB and other debuggers
 
 ;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: FSF
 ;; Keywords: unix, tools
 
-;; Copyright (C) 1992, 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
+;; Copyright (C) 1992, 93, 94, 95, 96, 1998 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -26,15 +26,16 @@
 ;;; Commentary:
 
 ;; The ancestral gdb.el was by W. Schelter <wfs@rascal.ics.utexas.edu>
-;; It was later rewritten by rms.  Some ideas were due to Masanobu. 
+;; It was later rewritten by rms.  Some ideas were due to Masanobu.
 ;; Grand Unification (sdb/dbx support) by Eric S. Raymond <esr@thyrsus.com>
 ;; The overloading code was then rewritten by Barry Warsaw <bwarsaw@cen.com>,
 ;; who also hacked the mode to use comint.el.  Shane Hartman <shane@spr.com>
 ;; added support for xdb (HPUX debugger).  Rick Sladkey <jrs@world.std.com>
 ;; wrote the GDB command completion code.  Dave Love <d.love@dl.ac.uk>
 ;; added the IRIX kluge, re-implemented the Mips-ish variant and added
-;; a menu. Brian D. Carlstrom <bdc@ai.mit.edu> combined the IRIX kluge with 
-;; the gud-xdb-directories hack producing gud-dbx-directories.
+;; a menu. Brian D. Carlstrom <bdc@ai.mit.edu> combined the IRIX kluge with
+;; the gud-xdb-directories hack producing gud-dbx-directories.  Derek L. Davies
+;; <ddavies@world.std.com> added support for jdb (Java debugger.)
 
 ;;; Code:
 
@@ -45,7 +46,8 @@
 ;; GUD commands must be visible in C buffers visited by GUD
 
 (defgroup gud nil
-  "Grand Unified Debugger mode for gdb, sdb, dbx, xdb or perldb under Emacs."
+  "Grand Unified Debugger mode for gdb and other debuggers under Emacs.
+Supported debuggers include gdb, sdb, dbx, xdb, perldb, pdb (Python), and jdb."
   :group 'unix
   :group 'tools)
 
@@ -107,8 +109,8 @@
 optional doc string DOC.  Certain %-escapes in the string arguments
 are interpreted specially if present.  These are:
 
-  %f	name (without directory) of current source file. 
-  %d	directory of current source file. 
+  %f	name (without directory) of current source file.
+  %d	directory of current source file.
   %l	number of current source line
   %e	text of the C lvalue or function-call expression surrounding point.
   %a	text of the hexadecimal address surrounding point
@@ -135,9 +137,9 @@ we're in the GUD buffer)."
 		  (list 'concat 'gud-key-prefix key)
 		  (list 'quote func)))))
 
-;; Where gud-display-frame should put the debugging arrow.  This is
-;; set by the marker-filter, which scans the debugger's output for
-;; indications of the current program counter.
+;; Where gud-display-frame should put the debugging arrow; a cons of
+;; (filename . line-number).  This is set by the marker-filter, which scans
+;; the debugger's output for indications of the current program counter.
 (defvar gud-last-frame nil)
 
 ;; Used by gud-refresh, which should cause gud-display-frame to redisplay
@@ -169,6 +171,94 @@ we're in the GUD buffer)."
 ;; The job of the find-file method is to visit and return the buffer indicated
 ;; by the car of gud-tag-frame.  This may be a file name, a tag name, or
 ;; something else.  It would be good if it also copied the Gud menubar entry.
+
+;; ======================================================================
+;; speedbar support functions and variables.
+(eval-when-compile (require 'speedbar))
+
+(defvar gud-last-speedbar-buffer nil
+  "The last GUD buffer used.")
+
+(defvar gud-last-speedbar-stackframe nil
+  "Description of the currently displayed GUD stack.
+t means that there is no stack, and we are in display-file mode.")
+
+(defvar gud-speedbar-key-map nil
+  "Keymap used when in the buffers display mode.")
+
+(defun gud-install-speedbar-variables ()
+  "Install those variables used by speedbar to enhance gud/gdb."
+  (if gud-speedbar-key-map
+      nil
+    (setq gud-speedbar-key-map (speedbar-make-specialized-keymap))
+
+    (define-key gud-speedbar-key-map "j" 'speedbar-edit-line)
+    (define-key gud-speedbar-key-map "e" 'speedbar-edit-line)
+    (define-key gud-speedbar-key-map "\C-m" 'speedbar-edit-line)))
+
+(defvar gud-speedbar-menu-items
+  ;; Note to self.  Add expand, and turn off items when not available.
+  '(["Jump to stack frame" speedbar-edit-line t])
+  "Additional menu items to add the the speedbar frame.")
+
+;; Make sure our special speedbar mode is loaded
+(if (featurep 'speedbar)
+    (gud-install-speedbar-variables)
+  (add-hook 'speedbar-load-hook 'gud-install-speedbar-variables))
+
+(defun gud-speedbar-buttons (buffer)
+  "Create a speedbar display based on the current state of GUD.
+If the GUD BUFFER is not running a supported debugger, then turn
+off the specialized speedbar mode."
+  (if (and (save-excursion (goto-char (point-min))
+			   (looking-at "Current Stack"))
+	   (equal gud-last-last-frame gud-last-speedbar-stackframe))
+      nil
+    (setq gud-last-speedbar-buffer buffer)
+    (let* ((ff (save-excursion (set-buffer buffer) gud-find-file))
+	   ;;(lf (save-excursion (set-buffer buffer) gud-last-last-frame))
+	   (frames
+	    (cond ((eq ff 'gud-gdb-find-file)
+		   (gud-gdb-get-stackframe buffer)
+		   )
+		  ;; Add more debuggers here!
+		  (t
+		   (speedbar-remove-localized-speedbar-support buffer)
+		   nil))))
+      (erase-buffer)
+      (if (not frames)
+	  (insert "No Stack frames\n")
+	(insert "Current Stack:\n"))
+      (while frames
+	(insert (nth 1 (car frames)) ":\n")
+	(if (= (length (car frames)) 2)
+	    (progn
+;	      (speedbar-insert-button "[?]"
+;				      'speedbar-button-face
+;				      nil nil nil t)
+	      (speedbar-insert-button (car (car frames))
+				      'speedbar-directory-face
+				      nil nil nil t))
+;	  (speedbar-insert-button "[+]"
+;				  'speedbar-button-face
+;				  'speedbar-highlight-face
+;				  'gud-gdb-get-scope-data
+;				  (car frames) t)
+	  (speedbar-insert-button (car (car frames))
+				  'speedbar-file-face
+				  'speedbar-highlight-face
+				  (cond ((eq ff 'gud-gdb-find-file)
+					 'gud-gdb-goto-stackframe)
+					(t (error "Should never be here.")))
+				  (car frames) t))
+	(setq frames (cdr frames)))
+;      (let ((selected-frame
+;	     (cond ((eq ff 'gud-gdb-find-file)
+;		    (gud-gdb-selected-frame-info buffer))
+;		   (t (error "Should never be here."))))))
+      )
+    (setq gud-last-speedbar-stackframe gud-last-last-frame)))
+
 
 ;; ======================================================================
 ;; gdb functions
@@ -369,7 +459,7 @@ available with older versions of GDB."
 		(setq gud-gdb-complete-list (list (concat str "'"))))))
     ;; Let comint handle the rest.
     (comint-dynamic-simple-complete command-word gud-gdb-complete-list)))
-    
+
 ;; The completion process filter is installed temporarily to slurp the
 ;; output of GDB up to the next prompt and build the completion list.
 (defun gud-gdb-complete-filter (string)
@@ -378,6 +468,114 @@ available with older versions of GDB."
     (setq gud-gdb-complete-list
 	  (cons (substring string gud-gdb-complete-break (match-beginning 0))
 		gud-gdb-complete-list))
+    (setq string (substring string (match-end 0))))
+  (if (string-match comint-prompt-regexp string)
+      (progn
+	(setq gud-gdb-complete-in-progress nil)
+	string)
+    (progn
+      (setq gud-gdb-complete-string string)
+      "")))
+
+;; gdb speedbar functions
+
+(defun gud-gdb-goto-stackframe (text token indent)
+  "Goto the stackframe described by TEXT, TOKEN, and INDENT."
+  (speedbar-with-attached-buffer
+   (gud-basic-call (concat "frame " (nth 1 token)))
+   (sit-for 1)))
+
+(defvar gud-gdb-fetched-stack-frame nil
+  "Stack frames we are fetching from GDB.")
+
+(defvar gud-gdb-fetched-stack-frame-list nil
+  "List of stack frames we are fetching from GDB.")
+
+;(defun gud-gdb-get-scope-data (text token indent)
+;  ;; checkdoc-params: (indent)
+;  "Fetch data associated with a stack frame, and expand/contract it.
+;Data to do this is retrieved from TEXT and TOKEN."
+;  (let ((args nil) (scope nil))
+;    (gud-gdb-run-command-fetch-lines "info args")
+;
+;    (gud-gdb-run-command-fetch-lines "info local")
+;
+;    ))
+
+(defun gud-gdb-get-stackframe (buffer)
+  "Extract the current stack frame out of the GUD GDB BUFFER."
+  (let ((newlst nil)
+	(gud-gdb-fetched-stack-frame-list nil))
+    (gud-gdb-run-command-fetch-lines "backtrace" buffer)
+    (if (and (car gud-gdb-fetched-stack-frame-list)
+	     (string-match "No stack" (car gud-gdb-fetched-stack-frame-list)))
+	;; Go into some other mode???
+	nil
+      (while gud-gdb-fetched-stack-frame-list
+	(let ((e (car gud-gdb-fetched-stack-frame-list))
+	      (name nil) (num nil))
+	  (if (not (or
+		    (string-match "^#\\([0-9]+\\) +[0-9a-fx]+ in \\([:0-9a-zA-Z_]+\\) (" e)
+		    (string-match "^#\\([0-9]+\\) +\\([:0-9a-zA-Z_]+\\) (" e)))
+	      (if (not (string-match
+			"at \\([-0-9a-zA-Z_.]+\\):\\([0-9]+\\)$" e))
+		  nil
+		(setcar newlst
+			(list (nth 0 (car newlst))
+			      (nth 1 (car newlst))
+			      (match-string 1 e)
+			      (match-string 2 e))))
+	    (setq num (match-string 1 e)
+		  name (match-string 2 e))
+	    (setq newlst
+		  (cons
+		   (if (string-match
+			"at \\([-0-9a-zA-Z_.]+\\):\\([0-9]+\\)$" e)
+		       (list name num (match-string 1 e)
+			     (match-string 2 e))
+		     (list name num))
+		   newlst))))
+	(setq gud-gdb-fetched-stack-frame-list
+	      (cdr gud-gdb-fetched-stack-frame-list)))
+      (nreverse newlst))))
+
+;(defun gud-gdb-selected-frame-info (buffer)
+;  "Learn GDB information for the currently selected stack frame in BUFFER."
+;  )
+
+(defun gud-gdb-run-command-fetch-lines (command buffer)
+  "Run COMMAND, and return when `gud-gdb-fetched-stack-frame-list' is full.
+BUFFER is the GUD buffer in which to run the command."
+  (save-excursion
+    (set-buffer buffer)
+    (if (save-excursion
+	  (goto-char (point-max))
+	  (beginning-of-line)
+	  (not (looking-at comint-prompt-regexp)))
+	nil
+      ;; Much of this copied from GDB complete, but I'm grabbing the stack
+      ;; frame instead.
+      (let ((gud-marker-filter 'gud-gdb-speedbar-stack-filter))
+	;; Issue the command to GDB.
+	(gud-basic-call command)
+	(setq gud-gdb-complete-in-progress t ;; use this flag for our purposes.
+	      gud-gdb-complete-string nil
+	      gud-gdb-complete-list nil)
+	;; Slurp the output.
+	(while gud-gdb-complete-in-progress
+	  (accept-process-output (get-buffer-process gud-comint-buffer)))
+	(setq gud-gdb-fetched-stack-frame nil
+	      gud-gdb-fetched-stack-frame-list
+	      (nreverse gud-gdb-fetched-stack-frame-list))))))
+
+(defun gud-gdb-speedbar-stack-filter (string)
+  ;; checkdoc-params: (string)
+  "Filter used to read in the current GDB stack."
+  (setq string (concat gud-gdb-fetched-stack-frame string))
+  (while (string-match "\n" string)
+    (setq gud-gdb-fetched-stack-frame-list
+	  (cons (substring string 0 (match-beginning 0))
+		gud-gdb-fetched-stack-frame-list))
     (setq string (substring string (match-end 0))))
   (if (string-match comint-prompt-regexp string)
       (progn
@@ -406,27 +604,27 @@ available with older versions of GDB."
 	(if gud-marker-acc (concat gud-marker-acc string) string))
   (let (start)
     ;; Process all complete markers in this chunk
-    (while 
-	(cond 
+    (while
+	(cond
 	 ;; System V Release 3.2 uses this format
 	 ((string-match "\\(^\\|\n\\)\\*?\\(0x\\w* in \\)?\\([^:\n]*\\):\\([0-9]*\\):.*\n"
 			gud-marker-acc start)
 	  (setq gud-last-frame
 		(cons
 		 (substring gud-marker-acc (match-beginning 3) (match-end 3))
-		 (string-to-int 
+		 (string-to-int
 		  (substring gud-marker-acc (match-beginning 4) (match-end 4))))))
 	 ;; System V Release 4.0 quite often clumps two lines together
-	 ((string-match "^\\(BREAKPOINT\\|STEPPED\\) process [0-9]+ function [^ ]+ in \\(.+\\)\n\\([0-9]+\\):" 
+	 ((string-match "^\\(BREAKPOINT\\|STEPPED\\) process [0-9]+ function [^ ]+ in \\(.+\\)\n\\([0-9]+\\):"
 			gud-marker-acc start)
 	  (setq gud-sdb-lastfile
 		(substring gud-marker-acc (match-beginning 2) (match-end 2)))
 	  (setq gud-last-frame
 		(cons
 		 gud-sdb-lastfile
-		 (string-to-int 
+		 (string-to-int
 		  (substring gud-marker-acc (match-beginning 3) (match-end 3))))))
-	 ;; System V Release 4.0 
+	 ;; System V Release 4.0
 	 ((string-match "^\\(BREAKPOINT\\|STEPPED\\) process [0-9]+ function [^ ]+ in \\(.+\\)\n"
 			gud-marker-acc start)
 	  (setq gud-sdb-lastfile
@@ -436,9 +634,9 @@ available with older versions of GDB."
 	       (setq gud-last-frame
 		     (cons
 		      gud-sdb-lastfile
-		      (string-to-int 
+		      (string-to-int
 		       (substring gud-marker-acc (match-beginning 1) (match-end 1))))))
-	 (t 
+	 (t
 	  (setq gud-sdb-lastfile nil)))
       (setq start (match-end 0)))
 
@@ -552,7 +750,7 @@ containing the executable being debugged."
       (setq gud-last-frame
 	    (cons
 	     (substring gud-marker-acc (match-beginning 2) (match-end 2))
-	     (string-to-int 
+	     (string-to-int
 	      (substring gud-marker-acc (match-beginning 1) (match-end 1))))
 	    start (match-end 0)))
 
@@ -563,7 +761,7 @@ containing the executable being debugged."
     ;; If the incomplete line APPEARS to begin with another marker, keep it
     ;; in the accumulator.  Otherwise, clear the accumulator to avoid an
     ;; unnecessary concat during the next call.
-    (setq gud-marker-acc 
+    (setq gud-marker-acc
 	  (if (string-match "\\(stopped\\|signal\\)" gud-marker-acc start)
 	      (substring gud-marker-acc (match-beginning 0))
 	    nil)))
@@ -577,7 +775,7 @@ containing the executable being debugged."
       (string-match "^mips-[^-]*-riscos" system-configuration)
       ;; It's documented on OSF/1.3
       (string-match "^mips-[^-]*-osf1" system-configuration)
-      (string-match "^alpha-[^-]*-osf" system-configuration))
+      (string-match "^alpha[^-]*-[^-]*-osf" system-configuration))
   "Non-nil to assume the MIPS/OSF dbx conventions (argument `-emacs').")
 
 (defun gud-mipsdbx-massage-args (file args)
@@ -694,7 +892,7 @@ a better solution in 6.1 upwards.")
 	 ;; Process  1281 (pplot) stopped at [params:339 ,0x400ec8]
 	 ;; Process  1270 (pplot) Floating point exception [._read._read:16 ,0x452188]
 	 ((string-match
-	   "^\\(\\[[0-9]+] \\)?Process +[0-9]+ ([^)]*) [^[]+\\[[^]\n]*]\n" 
+	   "^\\(\\[[0-9]+] \\)?Process +[0-9]+ ([^)]*) [^[]+\\[[^]\n]*]\n"
 	   result)
 	  ;; prod dbx into printing out the line number and file
 	  ;; name in a form we can grok as below
@@ -713,7 +911,7 @@ a better solution in 6.1 upwards.")
 		      (cons
 		       (substring
 			result (match-beginning 1) (match-end 1))
-		       (string-to-int 
+		       (string-to-int
 			(substring
 			 result (match-beginning 2) (match-end 2)))))))
 	  result)
@@ -725,7 +923,7 @@ a better solution in 6.1 upwards.")
 		(setq gud-last-frame
 		      (cons
 		       file
-		       (string-to-int 
+		       (string-to-int
 			(substring
 			 result (match-beginning 1) (match-end 1)))))))
 	  (setq result (substring result 0 (match-beginning 0))))))
@@ -776,7 +974,7 @@ This was tested using R4.11.")
     ;; If the incomplete line APPEARS to begin with another marker, keep it
     ;; in the accumulator.  Otherwise, clear the accumulator to avoid an
     ;; unnecessary concat during the next call.
-    (setq gud-marker-acc 
+    (setq gud-marker-acc
 	  (if (string-match "Stopped\\|Frame" gud-marker-acc start)
 	      (substring gud-marker-acc (match-beginning 0))
 	    nil)))
@@ -840,7 +1038,7 @@ and source-file directory for your debugger."
     (process-send-string (get-buffer-process gud-comint-buffer)
 			 "printf \"\032\032%1d:\",(int)$curline;file\n"))
    (gud-dbx-use-stopformat-p
-    (process-send-string (get-buffer-process gud-comint-buffer) 
+    (process-send-string (get-buffer-process gud-comint-buffer)
 			 "set $stopformat=1\n"))
    (t
     (gud-def gud-up     "up %p"         "<" "Up (numeric arg) stack frames.")
@@ -922,8 +1120,8 @@ containing the executable being debugged."
                          (substring result (match-beginning 1) (match-end 1)))))
               (if file
                   (setq gud-last-frame (cons file line))))))
-    (or result "")))    
-               
+    (or result "")))
+
 (defun gud-xdb-find-file (f)
   (save-excursion
     (let ((realf (gud-xdb-file-name f)))
@@ -986,10 +1184,10 @@ directories if your program contains sources from more than one directory."
 (defvar gud-perldb-history nil)
 
 (defun gud-perldb-massage-args (file args)
-  (cond ((equal (car args) "-e") 
-	 (cons "-d" 
-	       (cons (car args) 
-		     (cons (nth 1 args) 
+  (cond ((equal (car args) "-e")
+	 (cons "-d"
+	       (cons (car args)
+		     (cons (nth 1 args)
 			   (cons "--" (cons "-emacs" (cdr (cdr args))))))))
 	(t
 	 (cons "-d" (cons (car args) (cons "-emacs" (cdr args)))))))
@@ -1000,8 +1198,6 @@ directories if your program contains sources from more than one directory."
 ;; receive a chunk of text which looks like it might contain the
 ;; beginning of a marker, we save it here between calls to the
 ;; filter.
-(defvar gud-perldb-marker-acc "")
-
 (defun gud-perldb-marker-filter (string)
   (setq gud-marker-acc (concat gud-marker-acc string))
   (let ((output ""))
@@ -1053,7 +1249,7 @@ directories if your program contains sources from more than one directory."
       (gud-make-debug-menu)
       buf)))
 
-(defcustom perldb-command-name "perl"
+(defcustom gud-perldb-command-name "perl"
   "File name for executing Perl."
   :type 'string
   :group 'gud)
@@ -1067,7 +1263,7 @@ and source-file directory for your debugger."
    (list (read-from-minibuffer "Run perldb (like this): "
 			       (if (consp gud-perldb-history)
 				   (car gud-perldb-history)
-				 (concat perldb-command-name
+				 (concat gud-perldb-command-name
 					 " "
 					 (or (buffer-file-name)
 					     "-e 0")
@@ -1092,6 +1288,618 @@ and source-file directory for your debugger."
   (setq paragraph-start comint-prompt-regexp)
   (run-hooks 'perldb-mode-hook)
   )
+
+;; ======================================================================
+;; pdb (Python debugger) functions
+
+;;; History of argument lists passed to pdb.
+(defvar gud-pdb-history nil)
+
+(defun gud-pdb-massage-args (file args)
+  args)
+
+;; Last group is for return value, e.g. "> test.py(2)foo()->None"
+;; Either file or function name may be omitted: "> <string>(0)?()"
+(defvar gud-pdb-marker-regexp
+  "^> \\([-a-zA-Z0-9_/.]*\\|<string>\\)(\\([0-9]+\\))\\([a-zA-Z0-9_]*\\|\\?\\)()\\(->[^\n]*\\)?\n")
+(defvar gud-pdb-marker-regexp-file-group 1)
+(defvar gud-pdb-marker-regexp-line-group 2)
+(defvar gud-pdb-marker-regexp-fnname-group 3)
+
+(defvar gud-pdb-marker-regexp-start "^> ")
+
+;; There's no guarantee that Emacs will hand the filter the entire
+;; marker at once; it could be broken up across several strings.  We
+;; might even receive a big chunk with several markers in it.  If we
+;; receive a chunk of text which looks like it might contain the
+;; beginning of a marker, we save it here between calls to the
+;; filter.
+(defun gud-pdb-marker-filter (string)
+  (setq gud-marker-acc (concat gud-marker-acc string))
+  (let ((output ""))
+
+    ;; Process all the complete markers in this chunk.
+    (while (string-match gud-pdb-marker-regexp gud-marker-acc)
+      (setq
+
+       ;; Extract the frame position from the marker.
+       gud-last-frame
+       (let ((file (match-string gud-pdb-marker-regexp-file-group
+				 gud-marker-acc))
+	     (line (string-to-int
+		    (match-string gud-pdb-marker-regexp-line-group
+				  gud-marker-acc))))
+	 (if (string-equal file "<string>")
+	     gud-last-frame
+	   (cons file line)))
+
+       ;; Output everything instead of the below
+       output (concat output (substring gud-marker-acc 0 (match-end 0)))
+;;        ;; Append any text before the marker to the output we're going
+;;        ;; to return - we don't include the marker in this text.
+;;        output (concat output
+;; 		      (substring gud-marker-acc 0 (match-beginning 0)))
+
+       ;; Set the accumulator to the remaining text.
+       gud-marker-acc (substring gud-marker-acc (match-end 0))))
+
+    ;; Does the remaining text look like it might end with the
+    ;; beginning of another marker?  If it does, then keep it in
+    ;; gud-marker-acc until we receive the rest of it.  Since we
+    ;; know the full marker regexp above failed, it's pretty simple to
+    ;; test for marker starts.
+    (if (string-match gud-pdb-marker-regexp-start gud-marker-acc)
+	(progn
+	  ;; Everything before the potential marker start can be output.
+	  (setq output (concat output (substring gud-marker-acc
+						 0 (match-beginning 0))))
+
+	  ;; Everything after, we save, to combine with later input.
+	  (setq gud-marker-acc
+		(substring gud-marker-acc (match-beginning 0))))
+
+      (setq output (concat output gud-marker-acc)
+	    gud-marker-acc ""))
+
+    output))
+
+(defun gud-pdb-find-file (f)
+  (save-excursion
+    (let ((buf (find-file-noselect f)))
+      (set-buffer buf)
+      (gud-make-debug-menu)
+      ;; (local-set-key [menu-bar debug finish] '("Finish Function" . gud-finish))
+      ;; (local-set-key [menu-bar debug up] '("Up Stack" . gud-up))
+      ;; (local-set-key [menu-bar debug down] '("Down Stack" . gud-down))
+      buf)))
+
+(defvar pdb-minibuffer-local-map nil
+  "Keymap for minibuffer prompting of pdb startup command.")
+(if pdb-minibuffer-local-map
+    ()
+  (setq pdb-minibuffer-local-map (copy-keymap minibuffer-local-map))
+  (define-key
+    pdb-minibuffer-local-map "\C-i" 'comint-dynamic-complete-filename))
+
+(defcustom gud-pdb-command-name "pdb"
+  "File name for executing the Python debugger.
+This should be an executable on your path, or an absolute file name."
+  :type 'string
+  :group 'gud)
+
+;;;###autoload
+(defun pdb (command-line)
+  "Run pdb on program FILE in buffer `*gud-FILE*'.
+The directory containing FILE becomes the initial working directory
+and source-file directory for your debugger."
+  (interactive
+   (list (read-from-minibuffer "Run pdb (like this): "
+			       (if (consp gud-pdb-history)
+				   (car gud-pdb-history)
+				 (concat gud-pdb-command-name " "))
+			       pdb-minibuffer-local-map nil
+			       '(gud-pdb-history . 1))))
+
+  (gud-common-init command-line 'gud-pdb-massage-args
+		   'gud-pdb-marker-filter 'gud-pdb-find-file)
+
+  (gud-def gud-break  "break %l"     "\C-b" "Set breakpoint at current line.")
+  (gud-def gud-remove "clear %l"     "\C-d" "Remove breakpoint at current line")
+  (gud-def gud-step   "step"         "\C-s" "Step one source line with display.")
+  (gud-def gud-next   "next"         "\C-n" "Step one line (skip functions).")
+  (gud-def gud-cont   "continue"     "\C-r" "Continue with display.")
+  (gud-def gud-finish "return"       "\C-f" "Finish executing current function.")
+  (gud-def gud-up     "up"           "<" "Up one stack frame.")
+  (gud-def gud-down   "down"         ">" "Down one stack frame.")
+  (gud-def gud-print  "p %e"         "\C-p" "Evaluate Python expression at point.")
+  ;; Is this right?
+  (gud-def gud-statement "! %e"	     "\C-e" "Execute Python statement at point.")
+
+  (local-set-key [menu-bar debug finish] '("Finish Function" . gud-finish))
+  (local-set-key [menu-bar debug up] '("Up Stack" . gud-up))
+  (local-set-key [menu-bar debug down] '("Down Stack" . gud-down))
+  ;; (setq comint-prompt-regexp "^(.*pdb[+]?) *")
+  (setq comint-prompt-regexp "^(Pdb) *")
+  (setq paragraph-start comint-prompt-regexp)
+  (run-hooks 'pdb-mode-hook))
+
+;; ======================================================================
+;;
+;; JDB support.
+;;
+;; AUTHOR:	Derek Davies <ddavies@world.std.com>
+;;
+;; CREATED:	Sun Feb 22 10:46:38 1998 Derek Davies.
+;;
+;; INVOCATION NOTES:
+;;
+;; You invoke jdb-mode with:
+;;
+;;    M-x jdb <enter>
+;;
+;; It responds with:
+;;
+;;    Run jdb (like this): jdb
+;;
+;; type any jdb switches followed by the name of the class you'd like to debug.
+;; Supply a fully qualfied classname (these do not have the ".class" extension)
+;; for the name of the class to debug (e.g. "COM.the-kind.ddavies.CoolClass").
+;; See the known problems section below for restrictions when specifying jdb
+;; command line switches (search forward for '-classpath').
+;;
+;; You should see something like the following:
+;;
+;;    Current directory is ~/src/java/hello/
+;;    Initializing jdb...
+;;    0xed2f6628:class(hello)
+;;    >
+;;
+;; To set an initial breakpoint try:
+;;
+;;    > stop in hello.main
+;;    Breakpoint set in hello.main
+;;    >
+;;
+;; To execute the program type:
+;;
+;;    > run
+;;    run hello
+;;
+;;    Breakpoint hit: running ...
+;;    hello.main (hello:12)
+;;
+;; Type M-n to step over the current line and M-s to step into it.  That,
+;; along with the JDB 'help' command should get you started.  The 'quit'
+;; JDB command will get out out of the debugger.  There is some truly
+;; pathetic JDB documentation available at:
+;;
+;;     http://java.sun.com/products/jdk/1.1/debugging/
+;;
+;; KNOWN PROBLEMS AND FIXME's:
+;;
+;; Not sure what happens with inner classes ... haven't tried them.
+;;
+;; Does not grok UNICODE id's.  Only ASCII id's are supported.
+;;
+;; You must not put whitespace between "-classpath" and the path to
+;; search for java classes even though it is required when invoking jdb
+;; from the command line.  See gud-jdb-massage-args for details.
+;;
+;; If any of the source files in the directories listed in
+;; gud-jdb-directories won't parse you'll have problems.  Make sure
+;; every file ending in ".java" in these directories parses without error.
+;;
+;; All the .java files in the directories in gud-jdb-directories are
+;; syntactically analyzed each time gud jdb is invoked.  It would be
+;; nice to keep as much information as possible between runs.  It would
+;; be really nice to analyze the files only as neccessary (when the
+;; source needs to be displayed.)  I'm not sure to what extent the former
+;; can be accomplished and I'm not sure the latter can be done at all
+;; since I don't know of any general way to tell which .class files are
+;; defined by which .java file without analyzing all the .java files.
+;; If anyone knows why JavaSoft didn't put the source file names in
+;; debuggable .class files please clue me in so I find something else
+;; to be spiteful and bitter about.
+;;
+;; ======================================================================
+;; gud jdb variables and functions
+
+;; History of argument lists passed to jdb.
+(defvar gud-jdb-history nil)
+
+;; List of Java source file directories.
+(defvar gud-jdb-directories (list ".")
+  "*A list of directories that gud jdb should search for source code.
+The file names should be absolute, or relative to the current directory.")
+
+;; List of the java source files for this debugging session.
+(defvar gud-jdb-source-files nil)
+
+;; Association list of fully qualified class names (package + class name) and
+;; their source files.
+(defvar gud-jdb-class-source-alist nil)
+
+;; This is used to hold a source file during analysis.
+(defvar gud-jdb-analysis-buffer nil)
+
+;; Return a list of java source files.  PATH gives the directories in
+;; which to search for files with extension EXTN.  Normally EXTN is
+;; given as the regular expression "\\.java$" .
+(defun gud-jdb-build-source-files-list (path extn)
+  (apply 'nconc (mapcar (lambda (d) (directory-files d t extn nil)) path)))
+
+;; Move point past whitespace.
+(defun gud-jdb-skip-whitespace ()
+  (skip-chars-forward " \n\r\t\014"))
+
+;; Move point past a "// <eol>" type of comment.
+(defun gud-jdb-skip-single-line-comment ()
+  (end-of-line))
+
+;; Move point past a "/* */" or "/** */" type of comment.
+(defun gud-jdb-skip-traditional-or-documentation-comment ()
+  (forward-char 2)
+  (catch 'break
+    (while (not (eobp))
+      (if (eq (following-char) ?*)
+	  (progn
+	    (forward-char)
+	    (if (not (eobp))
+		(if (eq (following-char) ?/)
+		    (progn
+		      (forward-char)
+		      (throw 'break nil)))))
+	(forward-char)))))
+
+;; Move point past any number of consecutive whitespace chars and/or comments.
+(defun gud-jdb-skip-whitespace-and-comments ()
+  (gud-jdb-skip-whitespace)
+  (catch 'done
+    (while t
+      (cond
+       ((looking-at "//")
+	(gud-jdb-skip-single-line-comment)
+	(gud-jdb-skip-whitespace))
+       ((looking-at "/\\*")
+	(gud-jdb-skip-traditional-or-documentation-comment)
+	(gud-jdb-skip-whitespace))
+       (t (throw 'done nil))))))
+
+;; Move point past things that are id-like.  The intent is to skip regular
+;; id's, such as class or interface names as well as package and interface
+;; names.
+(defun gud-jdb-skip-id-ish-thing ()
+  (skip-chars-forward "^ /\n\r\t\014,;{"))
+
+;; Move point past a string literal.
+(defun gud-jdb-skip-string-literal ()
+  (forward-char)
+  (while
+      (progn
+	(if (eq (following-char) ?\\)
+	    (forward-char 2))
+	(not (eq (following-char) ?\042)))
+    (forward-char))
+  (forward-char))
+
+;; Move point past a character literal.
+(defun gud-jdb-skip-character-literal ()
+  (forward-char)
+  (while
+      (progn
+	(if (eq (following-char) ?\\)
+	    (forward-char 2))
+	(not (eq (following-char) ?\')))
+    (forward-char))
+  (forward-char))
+
+;; Move point past the following block.  There may be (legal) cruft before
+;; the block's opening brace.  There must be a block or it's the end of life
+;; in petticoat junction.
+(defun gud-jdb-skip-block ()
+
+  ;; Find the begining of the block.
+  (while
+      (not (eq (following-char) ?{))
+
+    ;; Skip any constructs that can harbor literal block delimiter
+    ;; characters and/or the delimiters for the constructs themselves.
+    (cond
+     ((looking-at "//")
+      (gud-jdb-skip-single-line-comment))
+     ((looking-at "/\\*")
+      (gud-jdb-skip-traditional-or-documentation-comment))
+     ((eq (following-char) ?\042)
+      (gud-jdb-skip-string-literal))
+     ((eq (following-char) ?\')
+      (gud-jdb-skip-character-literal))
+     (t (forward-char))))
+
+  ;; Now at the begining of the block.
+  (forward-char)
+
+  ;; Skip over the body of the block as well as the final brace.
+  (let ((open-level 1))
+    (while (not (eq open-level 0))
+      (cond
+       ((looking-at "//")
+	(gud-jdb-skip-single-line-comment))
+       ((looking-at "/\\*")
+	(gud-jdb-skip-traditional-or-documentation-comment))
+       ((eq (following-char) ?\042)
+	(gud-jdb-skip-string-literal))
+       ((eq (following-char) ?\')
+	(gud-jdb-skip-character-literal))
+       ((eq (following-char) ?{)
+	(setq open-level (+ open-level 1))
+	(forward-char))
+       ((eq (following-char) ?})
+	(setq open-level (- open-level 1))
+	(forward-char))
+       (t (forward-char))))))
+
+;; Find the package and class definitions in Java source file FILE.  Assumes
+;; that FILE contains a legal Java program.  BUF is a scratch buffer used
+;; to hold the source during analysis.
+(defun gud-jdb-analyze-source (buf file)
+  (let ((l nil))
+    (set-buffer buf)
+    (insert-file-contents file nil nil nil t)
+    (goto-char 0)
+    (catch 'abort
+      (let ((p ""))
+	(while (progn
+		 (gud-jdb-skip-whitespace)
+		 (not (eobp)))
+	  (cond
+
+	   ;; Any number of semi's following a block is legal.  Move point
+	   ;; past them.  Note that comments and whitespace may be
+	   ;; interspersed as well.
+	   ((eq (following-char) ?\073)
+	    (forward-char))
+
+	   ;; Move point past a single line comment.
+	   ((looking-at "//")
+	    (gud-jdb-skip-single-line-comment))
+
+	   ;; Move point past a traditional or documentation comment.
+	   ((looking-at "/\\*")
+	    (gud-jdb-skip-traditional-or-documentation-comment))
+
+	   ;; Move point past a package statement, but save the PackageName.
+	   ((looking-at "package")
+	    (forward-char 7)
+	    (gud-jdb-skip-whitespace-and-comments)
+	    (let ((s (point)))
+	      (gud-jdb-skip-id-ish-thing)
+	      (setq p (concat (buffer-substring s (point)) "."))
+	      (gud-jdb-skip-whitespace-and-comments)
+	      (if (eq (following-char) ?\073)
+		  (forward-char))))
+
+	   ;; Move point past an import statement.
+	   ((looking-at "import")
+	    (forward-char 6)
+	    (gud-jdb-skip-whitespace-and-comments)
+	    (gud-jdb-skip-id-ish-thing)
+	    (gud-jdb-skip-whitespace-and-comments)
+	    (if (eq (following-char) ?\073)
+		(forward-char)))
+
+	   ;; Move point past the various kinds of ClassModifiers.
+	   ((looking-at "public")
+	    (forward-char 6))
+	   ((looking-at "abstract")
+	    (forward-char 8))
+	   ((looking-at "final")
+	    (forward-char 5))
+
+	   ;; Move point past a ClassDeclaraction, but save the class
+	   ;; Identifier.
+	   ((looking-at "class")
+	    (forward-char 5)
+	    (gud-jdb-skip-whitespace-and-comments)
+	    (let ((s (point)))
+	      (gud-jdb-skip-id-ish-thing)
+	      (setq
+	       l (nconc l (list (concat p (buffer-substring s (point)))))))
+	    (gud-jdb-skip-block))
+
+	   ;; Move point past an interface statement.
+	   ((looking-at "interface")
+	    (forward-char 9)
+	    (gud-jdb-skip-block))
+
+	   ;; Anything else means the input is invalid.
+	   (t
+	    (message (format "Error parsing file %s." file))
+	    (throw 'abort nil))))))
+    l))
+
+(defun gud-jdb-build-class-source-alist-for-file (file)
+  (mapcar
+   (lambda (c)
+     (cons c file))
+   (gud-jdb-analyze-source gud-jdb-analysis-buffer file)))
+
+;; Return an alist of fully qualified classes and the source files
+;; holding their definitions.  SOURCES holds a list of all the source
+;; files to examine.
+(defun gud-jdb-build-class-source-alist (sources)
+  (setq gud-jdb-analysis-buffer (get-buffer-create "*gud-jdb-scratch*"))
+  (prog1
+      (apply
+       'nconc
+       (mapcar
+	'gud-jdb-build-class-source-alist-for-file
+	sources))
+    (kill-buffer gud-jdb-analysis-buffer)
+    (setq gud-jdb-analysis-buffer nil)))
+
+;; Change what was given in the minibuffer to something that can be used to
+;; invoke the debugger.
+(defun gud-jdb-massage-args (file args)
+  ;; The jdb executable must have whitespace between "-classpath" and
+  ;; its value while gud-common-init expects all switch values to
+  ;; follow the switch keyword without intervening whitespace.  We
+  ;; require that when the user enters the "-classpath" switch in the
+  ;; EMACS minibuffer that they do so without the intervening
+  ;; whitespace.  This function adds it back (it's called after
+  ;; gud-common-init).  There are more switches like this (for
+  ;; instance "-host" and "-password") but I don't care about them
+  ;; yet.
+  (if args
+      (let (massaged-args user-error)
+
+	(while
+	    (and args
+		 (not (string-match "-classpath\\(.+\\)" (car args)))
+		 (not (setq user-error
+			    (string-match "-classpath$" (car args)))))
+	  (setq massaged-args (append massaged-args (list (car args))))
+	  (setq args (cdr args)))
+
+	;; By this point the current directory is all screwed up.  Maybe we
+	;; could fix things and re-invoke gud-common-init, but for now I think
+	;; issueing the error is good enough.
+	(if user-error
+	    (progn
+	      (kill-buffer (current-buffer))
+	      (error "Error: Omit whitespace between '-classpath' and it's value")))
+
+	(if args
+	    (setq massaged-args
+		  (append
+		   massaged-args
+		   (list "-classpath")
+		   (list
+		    (substring
+		     (car args)
+		     (match-beginning 1) (match-end 1)))
+		   (cdr args)))
+	  massaged-args))))
+
+;; Search for an association with P, a fully qualified class name, in
+;; gud-jdb-class-source-alist.  The asssociation gives the fully
+;; qualified file name of the source file which produced the class.
+(defun gud-jdb-find-source-file (p)
+  (cdr (assoc p gud-jdb-class-source-alist)))
+
+;; See comentary for other debugger's marker filters - there you will find
+;; important notes about STRING.
+(defun gud-jdb-marker-filter (string)
+
+  ;; Build up the accumulator.
+  (setq gud-marker-acc
+	(if gud-marker-acc
+	    (concat gud-marker-acc string)
+	  string))
+
+  ;; We process STRING from left to right.  Each time through the following
+  ;; loop we process at most one marker.  The start variable keeps track of
+  ;; where we are in the input string through the iterations of this loop.
+  (let (start file-found)
+
+    ;; Process each complete marker in the input.  There may be an incomplete
+    ;; marker at the end of the input string.  Incomplete markers are left
+    ;; in the accumulator for processing the next time the function is called.
+    (while
+
+	;; Do we see a marker?
+	(string-match
+	 ;; jdb puts out a string of the following form when it
+	 ;; hits a breakpoint:
+	 ;;
+	 ;;     <fully-qualified-class><method> (<class>:<line-number>)
+	 ;;
+	 ;; <fully-qualified-class>'s are composed of Java ID's
+	 ;; separated by periods.  <method> and <class> are
+	 ;; also Java ID's.  <method> begins with a period and
+	 ;; may contain less-than and greater-than (constructors,
+	 ;; for instance, are called <init> in the symbol table.)
+	 ;; Java ID's begin with a letter followed by letters
+	 ;; and/or digits.  The set of letters includes underscore
+	 ;; and dollar sign.
+	 ;;
+	 ;; The first group matches <fully-qualified-class>,
+	 ;; the second group matches <class> and the third group
+	 ;; matches <line-number>.  We don't care about using
+	 ;; <method> so we don't "group" it.
+	 ;;
+	 ;; FIXME: Java ID's are UNICODE strings, this matches ASCII
+	 ;; ID's only.
+	 "\\([a-zA-Z0-9.$_]+\\)\\.[a-zA-Z0-9$_<>]+ (\\([a-zA-Z0-9$_]+\\):\\([0-9]+\\))"
+	 gud-marker-acc start)
+
+      ;; Figure out the line on which to position the debugging arrow.
+      ;; Return the info as a cons of the form:
+      ;;
+      ;;     (<file-name> . <line-number>) .
+      (if (setq
+	   file-found
+	   (gud-jdb-find-source-file
+	    (substring gud-marker-acc
+		       (match-beginning 1)
+		       (match-end 1))))
+	  (setq gud-last-frame
+		(cons
+		 file-found
+		 (string-to-int
+		  (substring gud-marker-acc
+			     (match-beginning 3)
+			     (match-end 3)))))
+	(message "Could not find source file."))
+
+      ;; Set start after the last character of STRING that we've looked at
+      ;; and loop to look for another marker.
+      (setq start (match-end 0))))
+
+  ;; We don't filter any debugger output so just return what we were given.
+  string)
+
+(defun gud-jdb-find-file (f)
+  (and (file-readable-p f)
+       (find-file-noselect f)))
+
+(defvar gud-jdb-command-name "jdb" "Command that executes the Java debugger.")
+
+;;;###autoload
+(defun jdb (command-line)
+  "Run jdb with command line COMMAND-LINE in a buffer.  The buffer is named
+\"*gud*\" if no initial class is given or \"*gud-<initial-class-basename>*\"
+if there is.  If the \"-classpath\" switch is given, omit all whitespace
+between it and it's value."
+  (interactive
+   (list (read-from-minibuffer "Run jdb (like this): "
+			       (if (consp gud-jdb-history)
+				   (car gud-jdb-history)
+				 (concat gud-jdb-command-name " "))
+			       nil nil
+			       '(gud-jdb-history . 1))))
+
+  (gud-common-init command-line 'gud-jdb-massage-args
+	   'gud-jdb-marker-filter 'gud-jdb-find-file)
+
+  (gud-def gud-break  "stop at %l" "\C-b" "Set breakpoint at current line.")
+  (gud-def gud-remove "clear %l" "\C-d" "Remove breakpoint at current line")
+  (gud-def gud-step   "step"    "\C-s" "Step one source line with display.")
+  (gud-def gud-next   "next"    "\C-n" "Step one line (skip functions).")
+  (gud-def gud-cont   "cont"    "\C-r" "Continue with display.")
+
+  (setq comint-prompt-regexp "^> \|^.+\[[0-9]+\] ")
+  (setq paragraph-start comint-prompt-regexp)
+  (run-hooks 'jdb-mode-hook)
+
+  ;; Create and bind the class/source association list as well as the source
+  ;; file list.
+  (setq
+   gud-jdb-class-source-alist
+   (gud-jdb-build-class-source-alist
+    (setq
+     gud-jdb-source-files
+     (gud-jdb-build-source-files-list gud-jdb-directories "\\.java$")))))
+
 
 ;;
 ;; End of debugger-specific information
@@ -1349,22 +2157,22 @@ It is saved for when this flag is not set.")
 
 	      ;; Let the comint filter do the actual insertion.
 	      ;; That lets us inherit various comint features.
-	      (comint-output-filter proc output)))
+	      (comint-output-filter proc output))
 
-	  ;; Put the arrow on the source line.
-	  ;; This must be outside of the save-excursion
-	  ;; in case the source file is our current buffer.
-	  (if process-window
-	      (save-selected-window
-		(select-window process-window)
-		(gud-display-frame))
-	    ;; We have to be in the proper buffer, (process-buffer proc),
-	    ;; but not in a save-excursion, because that would restore point.
-	    (let ((old-buf (current-buffer)))
-	      (set-buffer (process-buffer proc))
-	      (unwind-protect
-		  (gud-display-frame)
-		(set-buffer old-buf))))
+	    ;; Put the arrow on the source line.
+	    ;; This must be outside of the save-excursion
+	    ;; in case the source file is our current buffer.
+	    (if process-window
+		(save-selected-window
+		  (select-window process-window)
+		  (gud-display-frame))
+	      ;; We have to be in the proper buffer, (process-buffer proc),
+	      ;; but not in a save-excursion, because that would restore point.
+	      (let ((old-buf (current-buffer)))
+		(set-buffer (process-buffer proc))
+		(unwind-protect
+		    (gud-display-frame)
+		  (set-buffer old-buf)))))
 
 	  ;; If we deferred text that arrived during this processing,
 	  ;; handle it now.
@@ -1380,10 +2188,6 @@ It is saved for when this flag is not set.")
 	((memq (process-status proc) '(signal exit))
 	 ;; Stop displaying an arrow in a source file.
 	 (setq overlay-arrow-position nil)
-	 ;; Fix the mode line.
-	 (setq mode-line-process
-	       (concat ":"
-		       (symbol-name (process-status proc))))
 	 (let* ((obuf (current-buffer)))
 	   ;; save-excursion isn't the right thing if
 	   ;;  process-buffer is current-buffer
@@ -1391,6 +2195,10 @@ It is saved for when this flag is not set.")
 	       (progn
 		 ;; Write something in *compilation* and hack its mode line,
 		 (set-buffer (process-buffer proc))
+		 ;; Fix the mode line.
+		 (setq mode-line-process
+		       (concat ":"
+			       (symbol-name (process-status proc))))
 		 (force-mode-line-update)
 		 (if (eobp)
 		     (insert ?\n mode-name " " msg)
@@ -1475,7 +2283,7 @@ Obeying it means displaying in another window the specified file and line."
 	  (setq subst (if insource
 			  (save-excursion
 			    (beginning-of-line)
-			    (save-restriction (widen) 
+			    (save-restriction (widen)
 					      (1+ (count-lines 1 (point)))))
 			(cdr frame))))
 	 ((eq key ?e)
@@ -1502,7 +2310,7 @@ Obeying it means displaying in another window the specified file and line."
 				(progn (re-search-forward "[^0-9a-f]")
 				       (forward-char -1)
 				       (point))))
-       (t (setq begin (progn (re-search-backward "[^0-9]") 
+       (t (setq begin (progn (re-search-backward "[^0-9]")
 			     (forward-char 1)
 			     (point)))
 	  (forward-char 1)
@@ -1592,14 +2400,14 @@ and create such a submap in that new map."
 (defun gud-innermost-expr ()
   "Returns the smallest expr that point is in; move point to beginning of it.
 The expr is represented as a cons cell, where the car specifies the point in
-the current buffer that marks the beginning of the expr and the cdr specifies 
+the current buffer that marks the beginning of the expr and the cdr specifies
 the character after the end of the expr."
   (let ((p (point)) begin end)
     (gud-backward-sexp)
     (setq begin (point))
     (gud-forward-sexp)
     (setq end (point))
-    (if (>= p end) 
+    (if (>= p end)
 	(progn
 	 (setq begin p)
 	 (goto-char p)
@@ -1624,7 +2432,7 @@ the character after the end of the expr."
 (defun gud-prev-expr ()
   "Returns the previous expr, point is set to beginning of that expr.
 The expr is represented as a cons cell, where the car specifies the point in
-the current buffer that marks the beginning of the expr and the cdr specifies 
+the current buffer that marks the beginning of the expr and the cdr specifies
 the character after the end of the expr"
   (let ((begin) (end))
     (gud-backward-sexp)
@@ -1637,7 +2445,7 @@ the character after the end of the expr"
 (defun gud-next-expr ()
   "Returns the following expr, point is set to beginning of that expr.
 The expr is represented as a cons cell, where the car specifies the point in
-the current buffer that marks the beginning of the expr and the cdr specifies 
+the current buffer that marks the beginning of the expr and the cdr specifies
 the character after the end of the expr."
   (let ((begin) (end))
     (gud-forward-sexp)
@@ -1659,7 +2467,7 @@ If no punctuation is found, return `? '."
       (cond
        ((= syntax ?\ ) t)
        ((= syntax ?.) (setq syntax (char-after span-start))
-	(cond 
+	(cond
 	 ((= syntax ?.) (setq result ?.))
 	 ((and (= syntax ?-) (= (char-after (+ span-start 1)) ?>))
 	  (setq result ?.)
@@ -1671,8 +2479,8 @@ If no punctuation is found, return `? '."
 
 (defun gud-expr-compound (first second)
   "Non-nil if concatenating FIRST and SECOND makes a single C expression.
-The two exprs are represented as a cons cells, where the car 
-specifies the point in the current buffer that marks the beginning of the 
+The two exprs are represented as a cons cells, where the car
+specifies the point in the current buffer that marks the beginning of the
 expr and the cdr specifies the character after the end of the expr.
 Link exprs of the form:
       Expr -> Expr

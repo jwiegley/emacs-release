@@ -1,6 +1,6 @@
 ;;; ls-lisp.el --- emulate insert-directory completely in Emacs Lisp
 
-;; Copyright (C) 1992, 1994 by Sebastian Kremer <sk@thp.uni-koeln.de>
+;; Copyright (C) 1992, 1994 Free Software Foundation, Inc.
 
 ;; Author: Sebastian Kremer <sk@thp.uni-koeln.de>
 ;; Maintainer: FSF
@@ -62,6 +62,9 @@
 nil means they are treated as Emacs regexps (for backward compatibility).
 This variable is checked by \\[insert-directory] only when `ls-lisp.el'
 package is used.")
+
+(defvar ls-lisp-dired-ignore-case nil
+  "Non-nil causes dired buffers to sort alphabetically regardless of case.")
 
 (defun insert-directory (file &optional switches wildcard full-directory-p)
   "Insert directory listing for FILE, formatted according to SWITCHES.
@@ -188,10 +191,15 @@ are: A a c i r S s t u"
 			  (ls-lisp-time-lessp (nth index (cdr y))
 					      (nth index (cdr x))))))
 		      (t		; sorted alphabetically
-		       (function
-			(lambda (x y)
-			  (string-lessp (car x)
-					(car y)))))))))
+		       (if ls-lisp-dired-ignore-case
+			   (function
+			    (lambda (x y)
+			      (string-lessp (upcase (car x))
+					    (upcase (car y)))))
+			 (function
+			  (lambda (x y)
+			    (string-lessp (car x)
+					  (car y))))))))))
   (if (memq ?r switches)		; reverse sort order
       (setq file-alist (nreverse file-alist)))
   file-alist)

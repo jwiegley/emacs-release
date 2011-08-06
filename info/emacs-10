@@ -1,6 +1,454 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
+
+File: emacs,  Node: Scroll Bars,  Next: Menu Bars,  Prev: Frame Parameters,  Up: Frames
+
+Scroll Bars
+===========
+
+   When using X, Emacs normally makes a "scroll bar" at the left of
+each Emacs window.  The scroll bar runs the height of the window, and
+shows a moving rectangular inner box which represents the portion of the
+buffer currently displayed.  The entire height of the scroll bar
+represents the entire length of the buffer.
+
+   You can use `Mouse-2' (normally, the middle button) in the scroll
+bar to move or drag the inner box up and down.  If you move it to the
+top of the scroll bar, you see the top of the buffer.  If you move it to
+the bottom of the scroll bar, you see the bottom of the buffer.
+
+   The left and right buttons in the scroll bar scroll by controlled
+increments.  `Mouse-1' (normally, the left button) moves the line at
+the level where you click up to the top of the window.  `Mouse-3'
+(normally, the right button) moves the line at the top of the window
+down to the level where you click.  By clicking repeatedly in the same
+place, you can scroll by the same distance over and over.
+
+   Aside from scrolling, you can also click `C-Mouse-2' in the scroll
+bar to split a window vertically.  The split occurs on the line where
+you click.
+
+   You can enable or disable Scroll Bar mode with the command `M-x
+scroll-bar-mode'.  With no argument, it toggles the use of scroll bars.
+With an argument, it turns use of scroll bars on if and only if the
+argument is positive.  This command applies to all frames, including
+frames yet to be created.  You can use the X resource
+`verticalScrollBars' to control the initial setting of Scroll Bar mode.
+*Note Resources X::.
+
+   To enable or disable scroll bars for just the selected frame, use the
+`M-x toggle-scroll-bar' command.
+
+
+File: emacs,  Node: Menu Bars,  Next: Faces,  Prev: Scroll Bars,  Up: Frames
+
+Menu Bars
+=========
+
+   You can turn display of menu bars on or off with `M-x
+menu-bar-mode'.  With no argument, this command toggles Menu Bar mode, a
+minor mode.  With an argument, the command turns Menu Bar mode on if the
+argument is positive, off if the argument is not positive.  You can use
+the X resource `menuBarLines' to control the initial setting of Menu
+Bar mode.  *Note Resources X::.  Expert users often turn off the menu
+bar, especially on text-only terminals, where this makes one additional
+line available for text.
+
+   *Note Menu Bar:: for information on how to invoke commands with the
+menu bar.
+
+
+File: emacs,  Node: Faces,  Next: Font Lock,  Prev: Menu Bars,  Up: Frames
+
+Using Multiple Typefaces
+========================
+
+   When using Emacs with X, you can set up multiple styles of displaying
+characters.  The aspects of style that you can control are the type
+font, the foreground color, the background color, and whether to
+underline.  Emacs on MS-DOS supports faces partially by letting you
+control the foreground and background colors of each face (*note
+MS-DOS::.).
+
+   The way you control display style is by defining named "faces".
+Each face can specify a type font, a foreground color, a background
+color, and an underline flag; but it does not have to specify all of
+them.
+
+   The style of display used for a given character in the text is
+determined by combining several faces.  Any aspect of the display style
+that isn't specified by overlays or text properties comes from the frame
+itself.
+
+   Enriched mode, the mode for editing formatted text, includes several
+commands and menus for specifying faces.  *Note Format Faces::, for how
+to specify the font for text in the buffer.  *Note Format Colors::, for
+how to specify the foreground and background color.
+
+   To alter the appearance of a face, use the customization buffer.
+*Note Face Customization::.  You can also use X resources to specify
+attributes of particular faces (*note Resources X::.).
+
+   To see what faces are currently defined, and what they look like,
+type `M-x list-faces-display'.  It's possible for a given face to look
+different in different frames; this command shows the appearance in the
+frame in which you type it.  Here's a list of the standardly defined
+faces:
+
+`default'
+     This face is used for ordinary text that doesn't specify any other
+     face.
+
+`modeline'
+     This face is used for mode lines.  By default, it's set up as the
+     inverse of the default face.  *Note Display Vars::.
+
+`highlight'
+     This face is used for highlighting portions of text, in various
+     modes.
+
+`region'
+     This face is used for displaying a selected region (when Transient
+     Mark mode is enabled--see below).
+
+`secondary-selection'
+     This face is used for displaying a secondary selection (*note
+     Secondary Selection::.).
+
+`bold'
+     This face uses a bold variant of the default font, if it has one.
+
+`italic'
+     This face uses an italic variant of the default font, if it has
+     one.
+
+`bold-italic'
+     This face uses a bold italic variant of the default font, if it
+     has one.
+
+`underline'
+     This face underlines text.
+
+   When Transient Mark mode is enabled, the text of the region is
+highlighted when the mark is active.  This uses the face named
+`region'; you can control the style of highlighting by changing the
+style of this face (*note Face Customization::.).  *Note Transient
+Mark::, for more information about Transient Mark mode and activation
+and deactivation of the mark.
+
+   One easy way to use faces is to turn on Font Lock mode.  This minor
+mode, which is always local to a particular buffer, arranges to choose
+faces according to the syntax of the text you are editing.  It can
+recognize comments and strings in most languages; in several languages,
+it can also recognize and properly highlight various other important
+constructs.  *Note Font Lock::, for more information about Font Lock
+mode and syntactic highlighting.
+
+   You can print out the buffer with the highlighting that appears on
+your screen using the command `ps-print-buffer-with-faces'.  *Note
+Postscript::.
+
+
+File: emacs,  Node: Font Lock,  Next: Support Modes,  Prev: Faces,  Up: Frames
+
+Font Lock mode
+==============
+
+   Font Lock mode is a minor mode, always local to a particular buffer,
+which highlights (or "fontifies") using various faces according to the
+syntax of the text you are editing.  It can recognize comments and
+strings in most languages; in several languages, it can also recognize
+and properly highlight various other important constructs--for example,
+names of functions being defined or reserved keywords.
+
+   The command `M-x font-lock-mode' turns Font Lock mode on or off
+according to the argument, and toggles the mode when it has no argument.
+The function `turn-on-font-lock' unconditionally enables Font Lock
+mode.  This is useful in mode-hook functions.  For example, to enable
+Font Lock mode whenever you edit a C file, you can do this:
+
+     (add-hook 'c-mode-hook 'turn-on-font-lock)
+
+   To turn on Font Lock mode automatically in all modes which support
+it, use the function `global-font-lock-mode', like this:
+
+     (global-font-lock-mode t)
+
+   In Font Lock mode, when you edit the text, the highlighting updates
+automatically in the line that you changed.  Most changes don't affect
+the highlighting of subsequent lines, but occasionally they do.  To
+rehighlight a range of lines, use the command `M-g M-g'
+(`font-lock-fontify-block').
+
+   In certain major modes, `M-g M-g' refontifies the entire current
+function.  (The variable `font-lock-mark-block-function' controls how
+to find the current function.)  In other major modes, `M-g M-g'
+refontifies 16 lines above and below point.
+
+   With a prefix argument N, `M-g M-g' refontifies N lines above and
+below point, regardless of the mode.
+
+   To get the full benefit of Font Lock mode, you need to choose a
+default font which has bold, italic, and bold-italic variants; or else
+you need to have a color or gray-scale screen.
+
+   The variable `font-lock-maximum-decoration' specifies the preferred
+level of fontification, for modes that provide multiple levels.  Level
+1 is the least amount of fontification; some modes support levels as
+high as 3.  The normal default is "as high as possible."  You can
+specify an integer, which applies to all modes, or you can specify
+different numbers for particular major modes; for example, to use level
+1 for C/C++ modes, and the default level otherwise, use this:
+
+     (setq font-lock-maximum-decoration
+           '((c-mode . 1) (c++-mode . 1)))
+
+   Fontification can be too slow for large buffers, so you can suppress
+it.  The variable `font-lock-maximum-size' specifies a buffer size,
+beyond which buffer fontification is suppressed.
+
+   Comment and string fontification (or "syntactic" fontification)
+relies on analysis of the syntactic structure of the buffer text.  For
+the purposes of speed, some modes including C mode and Lisp mode rely on
+a special convention: an open-parenthesis in the leftmost column always
+defines the beginning of a defun, and is thus always outside any string
+or comment.  (*Note Defuns::.)  If you don't follow this convention,
+then Font Lock mode can misfontify the text after an open-parenthesis in
+the leftmost column that is inside a string or comment.
+
+   The variable `font-lock-beginning-of-syntax-function' (always
+buffer-local) specifies how Font Lock mode can find a position
+guaranteed to be outside any comment or string.  In modes which use the
+leftmost column parenthesis convention, the default value of the
+variable is `beginning-of-defun'--that tells Font Lock mode to use the
+convention.  If you set this variable to `nil', Font Lock no longer
+relies on the convention.  This avoids incorrect results, but the price
+is that, in some cases, fontification for a changed text must rescan
+buffer text from the beginning of the buffer.
+
+   Font Lock highlighting patterns already exist for many modes, but you
+may want to fontify additional patterns.  You can use the function
+`font-lock-add-keywords', to add your own highlighting patterns for a
+particular mode.  For example, to highlight `FIXME:' words in C
+comments, use this:
+
+     (font-lock-add-keywords
+      'c-mode
+      '(("\\<\\(FIXME\\):" 1 font-lock-warning-face t)))
+
+
+File: emacs,  Node: Support Modes,  Next: Highlight Changes,  Prev: Font Lock,  Up: Frames
+
+Font Lock Support Modes
+=======================
+
+   Font Lock support modes make Font Lock mode faster for large buffers.
+There are two support modes: Fast Lock mode and Lazy Lock mode.  They
+use two different methods of speeding up Font Lock mode.
+
+* Menu:
+
+* Fast Lock Mode::      Saving font information in files.
+* Lazy Lock Mode::      Fontifying only text that is actually displayed.
+* Fast or Lazy::        Which support mode is best for you?
+
+
+File: emacs,  Node: Fast Lock Mode,  Next: Lazy Lock Mode,  Up: Support Modes
+
+Fast Lock Mode
+--------------
+
+   To make Font Lock mode faster for buffers visiting large files, you
+can use Fast Lock mode.  Fast Lock mode saves the font information for
+each file in a separate cache file; each time you visit the file, it
+rereads the font information from the cache file instead of refontifying
+the text from scratch.
+
+   The command `M-x fast-lock-mode' turns Fast Lock mode on or off,
+according to the argument (with no argument, it toggles).  You can also
+arrange to enable Fast Lock mode whenever you use Font Lock mode, like
+this:
+
+     (setq font-lock-support-mode 'fast-lock-mode)
+
+   It is not worth writing a cache file for small buffers.  Therefore,
+the variable `fast-lock-minimum-size' specifies a minimum file size for
+caching font information.
+
+   The variable `fast-lock-cache-directories' specifies where to put
+the cache files.  Its value is a list of directories to try; `"."'
+means the same directory as the file being edited.  The default value is
+`("." "~/.emacs-flc")', which means to use the same directory if
+possible, and otherwise the directory `~/.emacs-flc'.
+
+   The variable `fast-lock-save-others' specifies whether Fast Lock
+mode should save cache files for files that you do not own.  A
+non-`nil' value means yes (and that is the default).
+
+
+File: emacs,  Node: Lazy Lock Mode,  Next: Fast or Lazy,  Prev: Fast Lock Mode,  Up: Support Modes
+
+Lazy Lock Mode
+--------------
+
+   To make Font Lock mode faster for large buffers, you can use Lazy
+Lock mode to reduce the amount of text that is fontified.  In Lazy Lock
+mode, buffer fontification is demand-driven; it happens to portions of
+the buffer that are about to be displayed.  And fontification of your
+changes is deferred; it happens only when Emacs has been idle for a
+certain short period of time.
+
+   The command `M-x lazy-lock-mode' turns Lazy Lock mode on or off,
+according to the argument (with no argument, it toggles).  You can also
+arrange to enable Lazy Lock mode whenever you use Font Lock mode, like
+this:
+
+     (setq font-lock-support-mode 'lazy-lock-mode)
+
+   It is not worth avoiding buffer fontification for small buffers.
+Therefore, the variable `lazy-lock-minimum-size' specifies a minimum
+buffer size for demand-driven buffer fontification.  Buffers smaller
+than that are fontified all at once, as in plain Font Lock mode.
+
+   When you alter the buffer, Lazy Lock mode defers fontification of the
+text you changed.  The variable `lazy-lock-defer-time' specifies how
+many seconds Emacs must be idle before it starts fontifying your
+changes.  If the value is 0, then changes are fontified immediately, as
+in plain Font Lock mode.
+
+   Lazy Lock mode normally fontifies newly visible portions of the
+buffer before they are first displayed.  However, if the value of
+`lazy-lock-defer-on-scrolling' is non-`nil', newly visible text is
+fontified only when Emacs is idle for `lazy-lock-defer-time' seconds.
+
+   In some modes, including C mode and Emacs Lisp mode, changes in one
+line's contents can alter the context for subsequent lines, and thus
+change how they ought to be fontified.  Ordinarily, you must type `M-g
+M-g' to refontify the subsequent lines.  However, if you set the
+variable `lazy-lock-defer-contextually' to non-`nil', Lazy Lock mode
+does this automatically, after `lazy-lock-defer-time' seconds.
+
+   When Emacs is idle for a long time, Lazy Lock fontifies additional
+portions of the buffer, not yet displayed, in case you will display them
+later.  This is called "stealth fontification".
+
+   The variable `lazy-lock-stealth-time' specifies how many seconds
+Emacs has to be idle before stealth fontification starts.  A value of
+`nil' means no stealth fontification.  The variables
+`lazy-lock-stealth-lines' and `lazy-lock-stealth-verbose' specify the
+granularity and verbosity of stealth fontification.
+
+
+File: emacs,  Node: Fast or Lazy,  Prev: Lazy Lock Mode,  Up: Support Modes
+
+Fast Lock or Lazy Lock?
+-----------------------
+
+   Here is a simple guide to help you choose one of the Font Lock
+support modes.
+
+   * Fast Lock mode intervenes only during file visiting and buffer
+     killing (and related events); therefore buffer editing and window
+     scrolling are no faster or slower than in plain Font Lock mode.
+
+   * Fast Lock mode is slower at reading a cache file than Lazy Lock
+     mode is at fontifying a window; therefore Fast Lock mode is slower
+     at visiting a file than Lazy Lock mode.
+
+   * Lazy Lock mode intervenes during window scrolling to fontify text
+     that scrolls onto the screen; therefore, scrolling is slower than
+     in plain Font Lock mode.
+
+   * Lazy Lock mode doesn't fontify during buffer editing (it defers
+     fontification of changes); therefore, editing is faster than in
+     plain Font Lock mode.
+
+   * Fast Lock mode can be fooled by a file that is kept under version
+     control software; therefore buffer fontification may occur even
+     when a cache file exists for the file.
+
+   * Fast Lock mode only works with a buffer visiting a file; Lazy Lock
+     mode works with any buffer.
+
+   * Fast Lock mode generates cache files; Lazy Lock mode does not.
+
+   The variable `font-lock-support-mode' specifies which of these
+support modes to use; for example, to specify that Fast Lock mode is
+used for C/C++ modes, and Lazy Lock mode otherwise, set the variable
+like this:
+
+     (setq font-lock-support-mode
+           '((c-mode . fast-lock-mode) (c++-mode . fast-lock-mode)
+             (t . lazy-lock-mode)))
+
+
+File: emacs,  Node: Highlight Changes,  Next: Misc X,  Prev: Support Modes,  Up: Frames
+
+Highlight Changes Mode
+======================
+
+   Use `M-x highlight-changes-mode' to enable a minor mode that uses
+faces (colors, typically) to indicate which parts of the buffer were
+changed most recently.
+
+
+File: emacs,  Node: Misc X,  Next: Non-Window Terminals,  Prev: Highlight Changes,  Up: Frames
+
+Miscellaneous X Window Features
+===============================
+
+   The following commands let you create, delete and operate on frames:
+
+`C-z'
+     Iconify the selected Emacs frame (`iconify-or-deiconify-frame').
+     The normal meaning of `C-z', to suspend Emacs, is not useful under
+     a window system, so it has a different binding in that case.
+
+     If you type this command on an Emacs frame's icon, it deiconifies
+     the frame.
+
+`C-x 5 0'
+     Delete the selected frame (`delete-frame').  This is not allowed if
+     there is only one frame.
+
+`C-x 5 o'
+     Select another frame, raise it, and warp the mouse to it so that it
+     stays selected.  If you repeat this command, it cycles through all
+     the frames on your terminal.
+
 
 File: emacs,  Node: Non-Window Terminals,  Prev: Misc X,  Up: Frames
 
@@ -20,6 +468,13 @@ current frame.
    Each frame has a number to distinguish it.  If your terminal can
 display only one frame at a time, the selected frame's number N appears
 near the beginning of the mode line, in the form `FN'.
+
+   `FN' is actually the frame's name.  You can also specify a different
+name if you wish, and you can select a frame by its name.  Use the
+command `M-x set-frame-name <RET> NAME <RET>' to specify a new name for
+the selected frame, and use `M-x select-frame-by-name <RET> NAME <RET>'
+to select a frame according to its name.  The name you specify appears
+in the mode line when the frame is selected.
 
 
 File: emacs,  Node: International,  Next: Major Modes,  Prev: Frames,  Up: Top
@@ -98,29 +553,33 @@ use ISO Latin-1 or ISO Latin-2; the Emacs multibyte character set
 includes all the characters in these character sets, and Emacs can
 translate automatically to and from either of these ISO codes.
 
+   To edit a particular file in unibyte representation, visit it using
+`find-file-literally'.  *Note Visiting::.  To convert a buffer in
+multibyte representation into a single-byte representation of the same
+characters, the easiest way is to save the contents in a file, kill the
+buffer, and find the file again with `find-file-literally'.
+
+   To turn off multibyte character support by default, start Emacs with
+the `--unibyte' option (*note Initial Options::.), or set the
+environment variable `EMACS_UNIBYTE'.
+
    The mode line indicates whether multibyte character support is
-enabled in the current buffer.  If it is, a colon appears near the
-beginning of the mode line, preceding the place where stars appear when
-the buffer is modified.  When multibyte characters are not enabled, the
-colon does not appear.
+enabled in the current buffer.  If it is, there are two or more
+characters (most often two dashes) before the colon near the beginning
+of the mode line.  When multibyte characters are not enabled, just one
+dash precedes the colon.
 
-   The command `C-x <RET> m' (`toggle-enable-multibyte-characters')
-enables or disables multibyte character support for the current buffer.
+   When multibyte characters are enabled, character codes 0240 (octal)
+through 0377 (octal) are not really legitimate in the buffer.  The valid
+non-ASCII printing characters have codes that start from 0400.
 
-   To turn off multibyte character support by default, execute this
-Lisp expression:
-
-     (setq-default enable-multibyte-characters nil)
-
-   When multibyte characters are enabled, character codes 0200 (octal)
-through 0377 (octal) are not valid in the buffer.  The valid non-ASCII
-printing characters have codes that start from 0400.
-
-   If you type a self-inserting character in the invalid range, Emacs
-assumes you intended to use one of the ISO Latin-N character sets, and
-converts it to the Emacs code representing that Latin-N character.  You
-select *which* ISO Latin character set to use though your choice of
-language environment (*note Language Environments::.).
+   If you type a self-inserting character in the invalid range 0240
+through 0377, Emacs assumes you intended to use one of the ISO Latin-N
+character sets, and converts it to the Emacs code representing that
+Latin-N character.  You select *which* ISO Latin character set to use
+though your choice of language environment (*note Language
+Environments::.).  If you do not specify a choice, the default is
+Latin-1.
 
    The same thing happens when you use `C-q' to enter an octal code in
 this range.
@@ -145,7 +604,7 @@ incoming mail, netnews, and any other text you read into Emacs.  It may
 also specify the default coding system to use when you create a file.
 Each language environment also specifies a default input method.
 
-   The command to select a language environment is `M-x
+   The way to select a language environment is with the command `M-x
 set-language-environment'.  It makes no difference which buffer is
 current when you use this command, because the effects apply globally to
 the Emacs session.  The supported language environments include:
@@ -169,6 +628,22 @@ coding systems, and input methods that go with it.  It also shows some
 sample text to illustrate scripts used in this language environment.
 By default, this command describes the chosen language environment.
 
+   You can customize any language environment with the normal hook
+`set-language-environment-hook'.  The command
+`set-language-environment' runs that hook after setting up the new
+language environment.  The hook functions can test for a specific
+language environment by checking the variable
+`current-language-environment'.
+
+   Before it starts to set up the new language environment,
+`set-language-environment' first runs the hook
+`exit-language-environment-hook'.  This hook is useful for undoing
+customizations that were made with `set-language-environment-hook'.
+For instance, if you set up a special key binding in a specific language
+environment using `set-language-environment-hook', you should set up
+`exit-language-environment-hook' to restore the normal binding for that
+key.
+
 
 File: emacs,  Node: Input Methods,  Next: Select Input Method,  Prev: Language Environments,  Up: International
 
@@ -188,7 +663,9 @@ another alphabet.  This is how the Greek and Russian input methods work.
 characters into one letter.  Many European input methods use composition
 to produce a single non-ASCII letter from a sequence that consists of a
 letter followed by accent characters.  For example, some methods convert
-the sequence `'a' into a single accented letter.
+the sequence `'a' into a single accented letter.  These input methods
+have no special commands of their own; all they do is compose sequences
+of printing characters.
 
    The input methods for syllabic scripts typically use mapping followed
 by composition.  The input methods for Thai and Korean work this way.
@@ -233,8 +710,8 @@ the command `C-\' (`toggle-input-method') used twice.  *Note Select
 Input Method::.
 
    `C-\ C-\' is especially useful inside an incremental search, because
-stops waiting for more characters to combine, and starts searching for
-what you have already entered.
+it stops waiting for more characters to combine, and starts searching
+for what you have already entered.
 
    The variables `input-method-highlight-flag' and
 `input-method-verbose-flag' control how input methods explain what is
@@ -258,13 +735,15 @@ Selecting an Input Method
 `C-h I METHOD <RET>'
 `C-h C-\ METHOD <RET>'
      Describe the input method METHOD (`describe-input-method').  By
-     default, it describes the current input method (if any).
+     default, it describes the current input method (if any).  This
+     description should give you the full details of how to use any
+     particular input method.
 
 `M-x list-input-methods'
      Display a list of all the supported input methods.
 
    To choose an input method for the current buffer, use `C-x <RET>
-C-\' (`select-input-method').  This command reads the input method name
+C-\' (`set-input-method').  This command reads the input method name
 with the minibuffer; the name normally starts with the language
 environment that it is meant to be used with.  The variable
 `current-input-method' records which input method is selected.
@@ -435,7 +914,7 @@ list.
 file.  The variable `file-coding-system-alist' specifies this
 correspondence.  There is a special function
 `modify-coding-system-alist' for adding elements to this list.  For
-example, to read and write all `.txt' using the coding system
+example, to read and write all `.txt' files using the coding system
 `china-iso-8bit', you can execute this Lisp expression:
 
      (modify-coding-system-alist 'file "\\.txt\\'" 'china-iso-8bit)
@@ -451,7 +930,15 @@ value for the "variable" named `coding'.  Emacs does not really have a
 variable `coding'; instead of setting a variable, it uses the specified
 coding system for the file.  For example, `-*-mode: C; coding:
 latin-1;-*-' specifies use of the Latin-1 coding system, as well as C
-mode.
+mode.  If you specify the coding explicitly in the file, that overrides
+`file-coding-system-alist'.
+
+   The variable `auto-coding-alist' is the strongest way to specify the
+coding system for certain patterns of file names; this variable even
+overrides `-*-coding:-*-' tags in the file itself.  Emacs uses this
+feature for tar and archive files, to prevent Emacs from being confused
+by a `-*-coding:-*-' tag in a member of the archive and thinking it
+applies to the archive file as a whole.
 
    Once Emacs has chosen a coding system for a buffer, it stores that
 coding system in `buffer-file-coding-system' and uses that coding
@@ -507,12 +994,20 @@ system, you can use these commands to specify one:
      Use coding system CODING for subprocess input and output in the
      current buffer.
 
-   The command `C-x RET f' (`set-buffer-file-coding-system') specifies
-the file coding system for the current buffer--in other words, which
-coding system to use when saving or rereading the visited file.  You
-specify which coding system using the minibuffer.  Since this command
-applies to a file you have already visited, it affects only the way the
-file is saved.
+`C-x <RET> x CODING <RET>'
+     Use coding system CODING for transferring selections to and from
+     other programs through the window system.
+
+`C-x <RET> X CODING <RET>'
+     Use coding system CODING for transferring *one* selection--the
+     next one--to or from the window system.
+
+   The command `C-x <RET> f' (`set-buffer-file-coding-system')
+specifies the file coding system for the current buffer--in other
+words, which coding system to use when saving or rereading the visited
+file.  You specify which coding system using the minibuffer.  Since this
+command applies to a file you have already visited, it affects only the
+way the file is saved.
 
    Another way to specify the coding system for a file is when you visit
 the file.  First use the command `C-x <RET> c'
@@ -550,9 +1045,12 @@ translated into that coding system.
 
    This feature is useful for certain character-only terminals built to
 support specific languages or character sets--for example, European
-terminals that support one of the ISO Latin character sets.
+terminals that support one of the ISO Latin character sets.  You need to
+specify the terminal coding system when using multibyte text, so that
+Emacs knows which characters the terminal can actually handle.
 
-   By default, output to the terminal is not translated at all.
+   By default, output to the terminal is not translated at all, unless
+Emacs can deduce the proper coding system from your terminal type.
 
    The command `C-x <RET> k' (`set-keyboard-coding-system') specifies
 the coding system for keyboard input.  Character-code translation of
@@ -570,6 +1068,14 @@ the sequences that are translated are typically sequences of ASCII
 printing characters.  Coding systems typically translate sequences of
 non-graphic characters.
 
+   The command `C-x <RET> x' (`set-selection-coding-system') specifies
+the coding system for sending selected text to the window system, and
+for receiving the text of selections made in other applications.  This
+command applies to all subsequent selections, until you override it by
+using the command again.  The command `C-x <RET> X'
+(`set-next-selection-coding-system') specifies the coding system for
+the next selection made in Emacs or read by Emacs.
+
    The command `C-x <RET> p' (`set-buffer-process-coding-system')
 specifies the coding system for input and output to a subprocess.  This
 command applies to the current buffer; normally, each subprocess has its
@@ -584,488 +1090,20 @@ use for encoding file names.  If you set the variable to a coding
 system name (as a Lisp symbol or a string), Emacs encodes file names
 using that coding system for all file operations.  This makes it
 possible to use non-ASCII characters in file names--or, at least, those
-non-ASCII characters which the specified coding system can encode.  By
-default, this variable is `nil', which implies that you cannot use
-non-ASCII characters in file names.
-
-
-File: emacs,  Node: Fontsets,  Next: Defining Fontsets,  Prev: Specify Coding,  Up: International
-
-Fontsets
-========
-
-   A font for X Windows typically defines shapes for one alphabet or
-script.  Therefore, displaying the entire range of scripts that Emacs
-supports requires a collection of many fonts.  In Emacs, such a
-collection is called a "fontset".  A fontset is defined by a list of
-fonts, each assigned to handle a range of character codes.
-
-   Each fontset has a name, like a font.  The available X fonts are
-defined by the X server; fontsets, however, are defined within Emacs
-itself.  Once you have defined a fontset, you can use it within Emacs by
-specifying its name, anywhere that you could use a single font.  Of
-course, Emacs fontsets can use only the fonts that the X server
-supports; if certain characters appear on the screen as hollow boxes,
-this means that the fontset in use for them has no font for those
-characters.
-
-   Emacs creates two fontsets automatically: the "standard fontset" and
-the "startup fontset".  The standard fontset is most likely to have
-fonts for a wide variety of non-ASCII characters; however, this is not
-the default for Emacs to use.  (By default, Emacs tries to find a font
-which has bold and italic variants.)  You can specify use of the
-standard fontset by starting Emacs in this way:
-
-     emacs -fn fontset-standard
-
-   A fontset does not necessarily specify a font for all character
-codes.  If a fontset specifies no font for a certain character, or if it
-specifies a font that does not exist on your system, then it cannot
-display that character.  It will display an empty box instead.
-
-   The fontset height and width are determined by the ASCII characters
-(that is, by the font used for ASCII characters in that fontset).  If
-another font in the fontset has a different height, or a different
-width, then characters assigned to that font are clipped to the
-fontset's size.  If `highlight-wrong-size-font' is non-`nil', a box is
-displayed around these wrong-size characters as well.
-
-
-File: emacs,  Node: Defining Fontsets,  Next: Single-Byte European Support,  Prev: Fontsets,  Up: International
-
-Defining fontsets
-=================
-
-   Emacs creates a standard fontset automatically according to the value
-of `standard-fontset-spec'.  This fontset's name is
-
-     -*-fixed-medium-r-normal-*-16-*-*-*-*-*-fontset-standard
-
-or just `fontset-standard' for short.
-
-   Bold, italic, and bold-italic variants of the standard fontset are
-created automatically.  Their names have `bold' instead of `medium', or
-`i' instead of `r', or both.
-
-   If you specify a default ASCII font with the `Font' resource or the
-`-fn' argument, Emacs generates a fontset from it automatically.  This
-is the "startup fontset" and its name is `fontsent-startup'.  It does
-this by replacing the FOUNDRY, FAMILY, ADD_STYLE, and AVERAGE_WIDTH
-fields of the font name with `*', replacing CHARSET_REGISTRY field with
-`fontset', and replacing CHARSET_ENCODING field with `startup', then
-using the resulting string to specify a fontset.
-
-   For instance, if you start Emacs this way,
-
-     emacs -fn *courier-medium-r-normal--14-140-*-iso8859-1
-
-Emacs generates the following fontset and uses it for the initial X
-window frame:
-
-     -*-*-medium-r-normal-*-14-140-*-*-*-*-fontset-startup
-
-   With the X resource `Emacs.Font', you can specify a fontset name
-just like an actual font name.  But be careful not to specify a fontset
-name in a wildcard resource like `Emacs*Font'--that wildcard
-specification applies to various other purposes, such as menus, and
-menus cannot handle fontsets.
-
-   You can specify additional fontsets using X resources named
-`Fontset-N', where N is an integer starting from 0.  The resource value
-should have this form:
-
-     FONTPATTERN, [CHARSETNAME:FONTNAME]...
-
-FONTPATTERN should have the form of a standard X font name, except for
-the last two fields.  They should have the form `fontset-ALIAS'.
-
-   The fontset has two names, one long and one short.  The long name is
-FONTPATTERN.  The short name is `fontset-ALIAS'.  You can refer to the
-fontset by either name.
-
-   The construct `CHARSET:FONT' specifies which font to use (in this
-fontset) for one particular character set.  Here, CHARSET is the name
-of a character set, and FONT is the font to use for that character set.
-You can use this construct any number of times in defining one fontset.
-
-   For the other character sets, Emacs chooses a font based on
-FONTPATTERN.  It replaces `fontset-ALIAS' with values that describe the
-character set.  For the ASCII character font, `fontset-ALIAS' is
-replaced with `ISO8859-1'.
-
-   In addition, when several consecutive fields are wildcards, Emacs
-collapses them into a single wildcard.  This is to prevent use of
-auto-scaled fonts.  Fonts made by scaling larger fonts are not usable
-for editing, and scaling a smaller font is not useful because it is
-better to use the smaller font in its own size, which Emacs does.
-
-   Thus if FONTPATTERN is this,
-
-     -*-fixed-medium-r-normal-*-24-*-*-*-*-*-fontset-24
-
-the font specification for ASCII characters would be this:
-
-     -*-fixed-medium-r-normal-*-24-*-ISO8859-1
-
-and the font specification for Chinese GB2312 characters would be this:
-
-     -*-fixed-medium-r-normal-*-24-*-gb2312*-*
-
-   You may not have any Chinese font matching the above font
-specification.  Most X distributions include only Chinese fonts that
-have `song ti' or `fangsong ti' in FAMILY field.  In such a case,
-`Fontset-N' can be specified as below:
-
-     Emacs.Fontset-0: -*-fixed-medium-r-normal-*-24-*-*-*-*-*-fontset-24,\
-             chinese-gb2312:-*-*-medium-r-normal-*-24-*-gb2312*-*
-
-Then, the font specifications for all but Chinese GB2312 characters have
-`fixed' in the FAMILY field, and the font specification for Chinese
-GB2312 characters has a wild card `*' in the FAMILY field.
-
-   The function that processes the fontset resource value to create the
-fontset is called `create-fontset-from-fontset-spec'.  You can also
-call this function explicitly to create a fontset.
-
-   *Note Font X::, for more information about font naming in X.
-
-
-File: emacs,  Node: Single-Byte European Support,  Prev: Defining Fontsets,  Up: International
-
-Single-byte European Character Support
-======================================
-
-   The ISO 8859 Latin-N character sets define character codes in the
-range 160 to 255 to handle the accented letters and punctuation needed
-by various European languages.  If you disable multibyte characters,
-Emacs can still handle *one* of these character codes at a time.  To
-specify *which* of these codes to use, call `set-language-environment'
-and specify `Latin-N'.
-
-   Emacs can display those characters provided the terminal or font in
-use supports them.  Use the `M-x standard-display-european' command to
-enable or disable European display mode.  With a numeric argument, `M-x
-standard-display-european' enables European character display if and
-only if the argument is positive.
-
-   If your terminal does not support display of the Latin-1 character
-set, Emacs can display these characters as ASCII sequences which at
-least give you a clear idea of what the characters are.  To do this,
-load the library `iso-ascii'.  Similar libraries for other Latin-N
-character sets are possible, but we don't have them.
-
-   There are three different ways you can input single-byte Latin-N
-characters:
-
-   * If your keyboard can generate character codes 128 and up,
-     representing ISO Latin-N characters, execute the following
-     expression to enable Emacs to understand them:
-
-          (set-input-mode (car (current-input-mode))
-                          (nth 1 (current-input-mode))
-                          0)
-
-   * For Latin-1 only, you can load the library `iso-transl' to turn the
-     key `C-x 8' into a "compose character" prefix for entry of
-     non-ASCII Latin-1 printing characters.  `C-x 8' is good for
-     insertion (in the minibuffer as well as other buffers), for
-     searching, and in any other context where a key sequence is
-     allowed.  The <ALT> modifier key, if you have one, serves the same
-     purpose as `C-x 8'; use <ALT> together with an accent character to
-     modify the following letter.
-
-   * You can use ISO Accents mode.  When this minor mode is enabled, the
-     characters ``', `'', `"', `^', `/', `,' and `~' modify the
-     following letter by adding the corresponding diacritical mark to
-     it, if possible.  To enable or disable ISO Accents mode, use the
-     command `M-x iso-accents-mode'.  This command affects only the
-     current buffer.
-
-     To enter one of those accent characters while in ISO Accents mode,
-     type the character, followed by a space.  Some of those characters
-     have a corresponding "dead key" accent character in certain ISO
-     Latin character sets; to enter the "dead key" character, type the
-     corresponding ASCII character twice.  For example, in Latin-1, `'''
-     enters the Latin-1 character acute-accent (octal code 0264).
-
-     ISO Accents mode input is available whenever a key sequence is
-     expected: for ordinary insertion, for searching, for the
-     minibuffer, and for certain command arguments.
-
-     In addition to the accented letters, you can use these special
-     sequences in ISO Accents mode to enter certain other ISO Latin-1
-     characters:
-
-          `/A', `A' with ring.  `~C', `C' with cedilla.  `~D', `D' with
-          stroke.  `/E', `AE' ligature.  `/a', `a' with ring.  `~c',
-          `c' with cedilla.  `~d', `d' with stroke.  `/e', `ae'
-          ligature.  `"s', German sharp `s'.  `~<', left guillemot.
-          `~>', right guillemot.  `~!', inverted exclamation mark.
-          `~?', inverted question mark.
-
-
-File: emacs,  Node: Major Modes,  Next: Indentation,  Prev: International,  Up: Top
-
-Major Modes
-***********
-
-   Emacs provides many alternative "major modes", each of which
-customizes Emacs for editing text of a particular sort.  The major modes
-are mutually exclusive, and each buffer has one major mode at any time.
-The mode line normally shows the name of the current major mode, in
-parentheses (*note Mode Line::.).
-
-   The least specialized major mode is called "Fundamental mode".  This
-mode has no mode-specific redefinitions or variable settings, so that
-each Emacs command behaves in its most general manner, and each option
-is in its default state.  For editing text of a specific type that
-Emacs knows about, such as Lisp code or English text, you should switch
-to the appropriate major mode, such as Lisp mode or Text mode.
-
-   Selecting a major mode changes the meanings of a few keys to become
-more specifically adapted to the language being edited.  The ones that
-are changed frequently are <TAB>, <DEL>, and `C-j'.  The prefix key
-`C-c' normally contains mode-specific commands.  In addition, the
-commands which handle comments use the mode to determine how comments
-are to be delimited.  Many major modes redefine the syntactical
-properties of characters appearing in the buffer.  *Note Syntax::.
-
-   The major modes fall into three major groups.  Lisp mode (which has
-several variants), C mode, Fortran mode and others are for specific
-programming languages.  Text mode, Nroff mode, TeX mode and Outline
-mode are for editing English text.  The remaining major modes are not
-intended for use on users' files; they are used in buffers created for
-specific purposes by Emacs, such as Dired mode for buffers made by Dired
-(*note Dired::.), Mail mode for buffers made by `C-x m' (*note Sending
-Mail::.), and Shell mode for buffers used for communicating with an
-inferior shell process (*note Interactive Shell::.).
-
-   Most programming-language major modes specify that only blank lines
-separate paragraphs.  This is to make the paragraph commands useful.
-(*Note Paragraphs::.)  They also cause Auto Fill mode to use the
-definition of <TAB> to indent the new lines it creates.  This is
-because most lines in a program are usually indented.  (*Note
-Indentation::.)
-
-* Menu:
-
-* Choosing Modes::     How major modes are specified or chosen.
-
-
-File: emacs,  Node: Choosing Modes,  Prev: Major Modes,  Up: Major Modes
-
-How Major Modes are Chosen
-==========================
-
-   You can select a major mode explicitly for the current buffer, but
-most of the time Emacs determines which mode to use based on the file
-name or on special text in the file.
-
-   Explicit selection of a new major mode is done with a `M-x' command.
-From the name of a major mode, add `-mode' to get the name of a command
-to select that mode.  Thus, you can enter Lisp mode by executing `M-x
-lisp-mode'.
-
-   When you visit a file, Emacs usually chooses the right major mode
-based on the file's name.  For example, files whose names end in `.c'
-are edited in C mode.  The correspondence between file names and major
-modes is controlled by the variable `auto-mode-alist'.  Its value is a
-list in which each element has this form,
-
-     (REGEXP . MODE-FUNCTION)
-
-or this form,
-
-     (REGEXP MODE-FUNCTION FLAG)
-
-For example, one element normally found in the list has the form
-`("\\.c\\'" . c-mode)', and it is responsible for selecting C mode for
-files whose names end in `.c'.  (Note that `\\' is needed in Lisp
-syntax to include a `\' in the string, which is needed to suppress the
-special meaning of `.' in regexps.)  If the element has the form
-`(REGEXP MODE-FUNCTION FLAG)' and FLAG is non-nil, then after calling
-FUNCTION, the suffix that matched REGEXP is discarded and the list is
-searched again for another match.
-
-   You can specify which major mode should be used for editing a certain
-file by a special sort of text in the first nonblank line of the file.
-The mode name should appear in this line both preceded and followed by
-`-*-'.  Other text may appear on the line as well.  For example,
-
-     ;-*-Lisp-*-
-
-tells Emacs to use Lisp mode.  Such an explicit specification overrides
-any defaulting based on the file name.  Note how the semicolon is used
-to make Lisp treat this line as a comment.
-
-   Another format of mode specification is
-
-     -*- mode: MODENAME;-*-
-
-which allows you to specify local variables as well, like this:
-
-     -*- mode: MODENAME; VAR: VALUE; ... -*-
-
-*Note File Variables::, for more information about this.
-
-   When a file's contents begin with `#!', it can serve as an
-executable shell command, which works by running an interpreter named on
-the file's first line.  The rest of the file is used as input to the
-interpreter.
-
-   When you visit such a file in Emacs, if the file's name does not
-specify a major mode, Emacs uses the interpreter name on the first line
-to choose a mode.  If the first line is the name of a recognized
-interpreter program, such as `perl' or `tcl', Emacs uses a mode
-appropriate for programs for that interpreter.  The variable
-`interpreter-mode-alist' specifies the correspondence between
-interpreter program names and major modes.
-
-   When you visit a file that does not specify a major mode to use, or
-when you create a new buffer with `C-x b', the variable
-`default-major-mode' specifies which major mode to use.  Normally its
-value is the symbol `fundamental-mode', which specifies Fundamental
-mode.  If `default-major-mode' is `nil', the major mode is taken from
-the previously selected buffer.
-
-   If you change the major mode of a buffer, you can go back to the
-major mode Emacs would choose automatically: use the command `M-x
-normal-mode' to do this.  This is the same function that `find-file'
-calls to choose the major mode.  It also processes the file's local
-variables list if any.
-
-   The commands `C-x C-w' and `set-visited-file-name' change to a new
-major mode if the new file name implies a mode (*note Saving::.).
-However, this does not happen if the buffer contents specify a major
-mode, and certain "special" major modes do not allow the mode to
-change.  You can turn off this mode-changing feature by setting
-`change-major-mode-with-file-name' to `nil'.
-
-
-File: emacs,  Node: Indentation,  Next: Text,  Prev: Major Modes,  Up: Top
-
-Indentation
-***********
-
-   This chapter describes the Emacs commands that add, remove, or
-adjust indentation.
-
-`<TAB>'
-     Indent current line "appropriately" in a mode-dependent fashion.
-
-`C-j'
-     Perform <RET> followed by <TAB> (`newline-and-indent').
-
-`M-^'
-     Merge two lines (`delete-indentation').  This would cancel out the
-     effect of `C-j'.
-
-`C-M-o'
-     Split line at point; text on the line after point becomes a new
-     line indented to the same column that it now starts in
-     (`split-line').
-
-`M-m'
-     Move (forward or back) to the first nonblank character on the
-     current line (`back-to-indentation').
-
-`C-M-\'
-     Indent several lines to same column (`indent-region').
-
-`C-x <TAB>'
-     Shift block of lines rigidly right or left (`indent-rigidly').
-
-`M-i'
-     Indent from point to the next prespecified tab stop column
-     (`tab-to-tab-stop').
-
-`M-x indent-relative'
-     Indent from point to under an indentation point in the previous
-     line.
-
-   Most programming languages have some indentation convention.  For
-Lisp code, lines are indented according to their nesting in
-parentheses.  The same general idea is used for C code, though many
-details are different.
-
-   Whatever the language, to indent a line, use the <TAB> command.  Each
-major mode defines this command to perform the sort of indentation
-appropriate for the particular language.  In Lisp mode, <TAB> aligns
-the line according to its depth in parentheses.  No matter where in the
-line you are when you type <TAB>, it aligns the line as a whole.  In C
-mode, <TAB> implements a subtle and sophisticated indentation style that
-knows about many aspects of C syntax.
-
-   In Text mode, <TAB> runs the command `tab-to-tab-stop', which
-indents to the next tab stop column.  You can set the tab stops with
-`M-x edit-tab-stops'.
-
-* Menu:
-
-* Indentation Commands::  Various commands and techniques for indentation.
-* Tab Stops::             You can set arbitrary "tab stops" and then
-                            indent to the next tab stop when you want to.
-* Just Spaces::           You can request indentation using just spaces.
-
-
-File: emacs,  Node: Indentation Commands,  Next: Tab Stops,  Prev: Indentation,  Up: Indentation
-
-Indentation Commands and Techniques
-===================================
-
-   To move over the indentation on a line, do `M-m'
-(`back-to-indentation').  This command, given anywhere on a line,
-positions point at the first nonblank character on the line.
-
-   To insert an indented line before the current line, do `C-a C-o
-<TAB>'.  To make an indented line after the current line, use `C-e C-j'.
-
-   If you just want to insert a tab character in the buffer, you can
-type `C-q <TAB>'.
-
-   `C-M-o' (`split-line') moves the text from point to the end of the
-line vertically down, so that the current line becomes two lines.
-`C-M-o' first moves point forward over any spaces and tabs.  Then it
-inserts after point a newline and enough indentation to reach the same
-column point is on.  Point remains before the inserted newline; in this
-regard, `C-M-o' resembles `C-o'.
-
-   To join two lines cleanly, use the `M-^' (`delete-indentation')
-command.  It deletes the indentation at the front of the current line,
-and the line boundary as well, replacing them with a single space.  As
-a special case (useful for Lisp code) the single space is omitted if
-the characters to be joined are consecutive open parentheses or closing
-parentheses, or if the junction follows another newline.  To delete
-just the indentation of a line, go to the beginning of the line and use
-`M-\' (`delete-horizontal-space'), which deletes all spaces and tabs
-around the cursor.
-
-   If you have a fill prefix, `M-^' deletes the fill prefix if it
-appears after the newline that is deleted.  *Note Fill Prefix::.
-
-   There are also commands for changing the indentation of several lines
-at once.  `C-M-\' (`indent-region') applies to all the lines that begin
-in the region; it indents each line in the "usual" way, as if you had
-typed <TAB> at the beginning of the line.  A numeric argument specifies
-the column to indent to, and each line is shifted left or right so that
-its first nonblank character appears in that column.  `C-x <TAB>'
-(`indent-rigidly') moves all of the lines in the region right by its
-argument (left, for negative arguments).  The whole group of lines
-moves rigidly sideways, which is how the command gets its name.
-
-   `M-x indent-relative' indents at point based on the previous line
-(actually, the last nonempty line).  It inserts whitespace at point,
-moving point, until it is underneath an indentation point in the
-previous line.  An indentation point is the end of a sequence of
-whitespace or the end of the line.  If point is farther right than any
-indentation point in the previous line, the whitespace before point is
-deleted and the first indentation point then applicable is used.  If no
-indentation point is applicable even then, `indent-relative' runs
-`tab-to-tab-stop' (*note Tab Stops::.).
-
-   `indent-relative' is the definition of <TAB> in Indented Text mode.
-*Note Text::.
-
-   *Note Format Indentation::, for another way of specifying the
-indentation for part of your text.
+non-ASCII characters which the specified coding system can encode.
+
+   If `file-name-coding-system' is `nil', Emacs uses a default coding
+system determined by the selected language environment.  In the default
+language environment, any non-ASCII characters in file names are not
+encoded specially; they appear in the file system using the internal
+Emacs representation.
+
+   *Warning:* if you change `file-name-coding-system' (or the language
+environment) in the middle of an Emacs session, problems can result if
+you have already visited files whose names were encoding using the
+earlier coding system and cannot be encoded (or are encoded
+differently) under the new coding system.  If you try to save one of
+these buffers under the visited file name, saving may use the wrong file
+name, or it may get an error.  If such a problem happens, use `C-x C-w'
+to specify a new file name for that buffer.
 

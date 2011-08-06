@@ -30,7 +30,9 @@ Boston, MA 02111-1307, USA.
 #include <fcntl.h>
 #include <ctype.h>
 #include <signal.h>
+#include <sys/file.h>
 #include <sys/time.h>
+#include <sys/utime.h>
 
 /* must include CRT headers *before* config.h */
 #include "config.h"
@@ -79,6 +81,11 @@ Boston, MA 02111-1307, USA.
 #include "ndir.h"
 #include "w32heap.h"
  
+#undef min
+#undef max
+#define min(x, y) (((x) < (y)) ? (x) : (y))
+#define max(x, y) (((x) > (y)) ? (x) : (y))
+
 extern Lisp_Object Vw32_downcase_file_names;
 extern Lisp_Object Vw32_generate_fake_inodes;
 extern Lisp_Object Vw32_get_true_file_attributes;
@@ -458,6 +465,10 @@ get_long_basename (char * name, char * buf, int size)
   HANDLE dir_handle;
   int len = 0;
 
+  /* must be valid filename, no wild cards or other illegal characters */
+  if (strpbrk (name, "*?|<>\""))
+    return 0;
+
   dir_handle = FindFirstFile (name, &find_data);
   if (dir_handle != INVALID_HANDLE_VALUE)
     {
@@ -522,6 +533,19 @@ w32_get_long_filename (char * name, char * buf, int size)
   return TRUE;
 }
 
+int
+is_unc_volume (const char *filename)
+{
+  const char *ptr = filename;
+
+  if (!IS_DIRECTORY_SEP (ptr[0]) || !IS_DIRECTORY_SEP (ptr[1]) || !ptr[2])
+    return 0;
+
+  if (strpbrk (ptr + 2, "*?|<>\"\\/"))
+    return 0;
+
+  return 1;
+}
 
 /* Routines that are no-ops on NT but are defined to get Emacs to compile.  */
 
@@ -549,16 +573,16 @@ alarm (int seconds)
   return 0;
 }
 
-int 
+void 
 unrequest_sigio (void) 
 { 
-  return 0;
+  return;
 }
 
-int 
+void
 request_sigio (void) 
 { 
-  return 0;
+  return;
 }
 
 #define REG_ROOT "SOFTWARE\\GNU\\Emacs"
@@ -617,6 +641,42 @@ extern Lisp_Object Vsystem_configuration;
 void
 init_environment ()
 {
+  int len;
+  static const char * const tempdirs[] = {
+    "$TMPDIR", "$TEMP", "$TMP", "c:/"
+  };
+  int i;
+  const int imax = sizeof (tempdirs) / sizeof (tempdirs[0]);
+
+  /* Make sure they have a usable $TMPDIR.  Many Emacs functions use
+     temporary files and assume "/tmp" if $TMPDIR is unset, which
+     will break on DOS/Windows.  Refuse to work if we cannot find
+     a directory, not even "c:/", usable for that purpose.  */
+  for (i = 0; i < imax ; i++)
+    {
+      const char *tmp = tempdirs[i];
+
+      if (*tmp == '$')
+	tmp = getenv (tmp + 1);
+      /* Note that `access' can lie to us if the directory resides on a
+	 read-only filesystem, like CD-ROM or a write-protected floppy.
+	 The only way to be really sure is to actually create a file and
+	 see if it succeeds.  But I think that's too much to ask.  */
+      if (tmp && access (tmp, D_OK) == 0)
+	{
+	  char * var = alloca (strlen (tmp) + 8);
+	  sprintf (var, "TMPDIR=%s", tmp);
+	  putenv (var);
+	  break;
+	}
+    }
+  if (i >= imax)
+    cmd_error_internal
+      (Fcons (Qerror,
+	      Fcons (build_string ("no usable temporary directories found!!"),
+		     Qnil)),
+       "While setting TMPDIR: ");
+
   /* Check for environment variables and use registry if they don't exist */
   {
     int i;
@@ -1125,6 +1185,18 @@ map_w32_filename (const char * name, const char ** pPath)
   return shortname;
 }
 
+static int
+is_exec (const char * name)
+{
+  char * p = strrchr (name, '.');
+  return
+    (p != NULL
+     && (stricmp (p, ".exe") == 0 ||
+	 stricmp (p, ".com") == 0 ||
+	 stricmp (p, ".bat") == 0 ||
+	 stricmp (p, ".cmd") == 0));
+}
+
 /* Emulate the Unix directory procedures opendir, closedir, 
    and readdir.  We can't use the procedures supplied in sysdep.c,
    so we provide them here.  */
@@ -1135,6 +1207,13 @@ static int    dir_is_fat;
 static char   dir_pathname[MAXPATHLEN+1];
 static WIN32_FIND_DATA dir_find_data;
 
+/* Support shares on a network resource as subdirectories of a read-only
+   root directory. */
+static HANDLE wnet_enum_handle = INVALID_HANDLE_VALUE;
+HANDLE open_unc_volume (char *);
+char  *read_unc_volume (HANDLE, char *, int);
+void   close_unc_volume (HANDLE);
+
 DIR *
 opendir (char *filename)
 {
@@ -1143,9 +1222,19 @@ opendir (char *filename)
   /* Opening is done by FindFirstFile.  However, a read is inherent to
      this operation, so we defer the open until read time.  */
 
-  if (!(dirp = (DIR *) malloc (sizeof (DIR))))
-    return NULL;
   if (dir_find_handle != INVALID_HANDLE_VALUE)
+    return NULL;
+  if (wnet_enum_handle != INVALID_HANDLE_VALUE)
+    return NULL;
+
+  if (is_unc_volume (filename))
+    {
+      wnet_enum_handle = open_unc_volume (filename);
+      if (wnet_enum_handle == INVALID_HANDLE_VALUE)
+	return NULL;
+    }
+
+  if (!(dirp = (DIR *) malloc (sizeof (DIR))))
     return NULL;
 
   dirp->dd_fd = 0;
@@ -1168,14 +1257,26 @@ closedir (DIR *dirp)
       FindClose (dir_find_handle);
       dir_find_handle = INVALID_HANDLE_VALUE;
     }
+  else if (wnet_enum_handle != INVALID_HANDLE_VALUE)
+    {
+      close_unc_volume (wnet_enum_handle);
+      wnet_enum_handle = INVALID_HANDLE_VALUE;
+    }
   xfree ((char *) dirp);
 }
 
 struct direct *
 readdir (DIR *dirp)
 {
+  if (wnet_enum_handle != INVALID_HANDLE_VALUE)
+    {
+      if (!read_unc_volume (wnet_enum_handle, 
+			      dir_find_data.cFileName, 
+			      MAX_PATH))
+	return NULL;
+    }
   /* If we aren't dir_finding, do a find-first, otherwise do a find-next. */
-  if (dir_find_handle == INVALID_HANDLE_VALUE)
+  else if (dir_find_handle == INVALID_HANDLE_VALUE)
     {
       char filename[MAXNAMLEN + 3];
       int ln;
@@ -1221,6 +1322,80 @@ readdir (DIR *dirp)
   return &dir_static;
 }
 
+HANDLE
+open_unc_volume (char *path)
+{
+  NETRESOURCE nr; 
+  HANDLE henum;
+  int result;
+
+  nr.dwScope = RESOURCE_GLOBALNET; 
+  nr.dwType = RESOURCETYPE_DISK; 
+  nr.dwDisplayType = RESOURCEDISPLAYTYPE_SERVER; 
+  nr.dwUsage = RESOURCEUSAGE_CONTAINER; 
+  nr.lpLocalName = NULL; 
+  nr.lpRemoteName = map_w32_filename (path, NULL);
+  nr.lpComment = NULL; 
+  nr.lpProvider = NULL;   
+
+  result = WNetOpenEnum(RESOURCE_GLOBALNET, RESOURCETYPE_DISK,  
+			RESOURCEUSAGE_CONNECTABLE, &nr, &henum);
+
+  if (result == NO_ERROR)
+    return henum;
+  else
+    return INVALID_HANDLE_VALUE;
+}
+
+char *
+read_unc_volume (HANDLE henum, char *readbuf, int size)
+{
+  int count;
+  int result;
+  int bufsize = 512;
+  char *buffer;
+  char *ptr;
+
+  count = 1;
+  buffer = alloca (bufsize);
+  result = WNetEnumResource (wnet_enum_handle, &count, buffer, &bufsize);
+  if (result != NO_ERROR)
+    return NULL;
+
+  /* WNetEnumResource returns \\resource\share...skip forward to "share". */
+  ptr = ((LPNETRESOURCE) buffer)->lpRemoteName;
+  ptr += 2;
+  while (*ptr && !IS_DIRECTORY_SEP (*ptr)) ptr++;
+  ptr++;
+
+  strncpy (readbuf, ptr, size);
+  return readbuf;
+}
+
+void
+close_unc_volume (HANDLE henum)
+{
+  if (henum != INVALID_HANDLE_VALUE)
+    WNetCloseEnum (henum);
+}
+
+DWORD
+unc_volume_file_attributes (char *path)
+{
+  HANDLE henum;
+  DWORD attrs;
+
+  henum = open_unc_volume (path);
+  if (henum == INVALID_HANDLE_VALUE)
+    return -1;
+
+  attrs = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_DIRECTORY;
+
+  close_unc_volume (henum);
+
+  return attrs;
+}
+
 
 /* Shadow some MSVC runtime functions to map requests for long filenames
    to reasonable short names if necessary.  This was originally added to
@@ -1230,7 +1405,41 @@ readdir (DIR *dirp)
 int
 sys_access (const char * path, int mode)
 {
-  return _access (map_w32_filename (path, NULL), mode);
+  DWORD attributes;
+
+  /* MSVC implementation doesn't recognize D_OK.  */
+  path = map_w32_filename (path, NULL);
+  if (is_unc_volume (path))
+    {
+      attributes = unc_volume_file_attributes (path);
+      if (attributes == -1) {
+	errno = EACCES;
+	return -1;
+      }
+    }
+  else if ((attributes = GetFileAttributes (path)) == -1)
+    {
+      /* Should try mapping GetLastError to errno; for now just indicate
+	 that path doesn't exist.  */
+      errno = EACCES;
+      return -1;
+    }
+  if ((mode & X_OK) != 0 && !is_exec (path))
+    {
+      errno = EACCES;
+      return -1;
+    }
+  if ((mode & W_OK) != 0 && (attributes & FILE_ATTRIBUTE_READONLY) != 0)
+    {
+      errno = EACCES;
+      return -1;
+    }
+  if ((mode & D_OK) != 0 && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
+    {
+      errno = EACCES;
+      return -1;
+    }
+  return 0;
 }
 
 int
@@ -1434,8 +1643,8 @@ sys_open (const char * path, int oflag, int mode)
 int
 sys_rename (const char * oldname, const char * newname)
 {
+  int result;
   char temp[MAX_PATH];
-  DWORD attr;
 
   /* MoveFile on Windows 95 doesn't correctly change the short file name
      alias in a number of circumstances (it is not easy to predict when
@@ -1454,37 +1663,56 @@ sys_rename (const char * oldname, const char * newname)
 
   if (os_subtype == OS_WIN95)
     {
+      char * o;
       char * p;
+      int    i = 0;
+
+      oldname = map_w32_filename (oldname, NULL);
+      if (o = strrchr (oldname, '\\'))
+	o++;
+      else
+	o = (char *) oldname;
 
       if (p = strrchr (temp, '\\'))
 	p++;
       else
 	p = temp;
-      /* Force temp name to require a manufactured 8.3 alias - this
-	 seems to make the second rename work properly. */
-      strcpy (p, "_rename_temp.XXXXXX");
-      sys_mktemp (temp);
-      if (rename (map_w32_filename (oldname, NULL), temp) < 0)
+
+      do
+	{
+	  /* Force temp name to require a manufactured 8.3 alias - this
+	     seems to make the second rename work properly.  */
+	  sprintf (p, "_.%s.%u", o, i);
+	  i++;
+	  result = rename (oldname, temp);
+	}
+      /* This loop must surely terminate!  */
+      while (result < 0 && (errno == EEXIST || errno == EACCES));
+      if (result < 0)
 	return -1;
     }
 
   /* Emulate Unix behaviour - newname is deleted if it already exists
      (at least if it is a file; don't do this for directories).
-     However, don't do this if we are just changing the case of the file
-     name - we will end up deleting the file we are trying to rename!  */
+
+     Since we mustn't do this if we are just changing the case of the
+     file name (we would end up deleting the file we are trying to
+     rename!), we let rename detect if the destination file already
+     exists - that way we avoid the possible pitfalls of trying to
+     determine ourselves whether two names really refer to the same
+     file, which is not always possible in the general case.  (Consider
+     all the permutations of shared or subst'd drives, etc.)  */
+
   newname = map_w32_filename (newname, NULL);
+  result = rename (temp, newname);
 
-  /* TODO: Use GetInformationByHandle (on NT) to ensure newname and temp
-     do not refer to the same file, eg. through share aliases.  */
-  if (stricmp (newname, temp) != 0
-      && (attr = GetFileAttributes (newname)) != -1
-      && (attr & FILE_ATTRIBUTE_DIRECTORY) == 0)
-    {
-      _chmod (newname, 0666);
-      _unlink (newname);
-    }
+  if (result < 0
+      && (errno == EEXIST || errno == EACCES)
+      && _chmod (newname, 0666) == 0
+      && _unlink (newname) == 0)
+    result = rename (temp, newname);
 
-  return rename (temp, newname);
+  return result;
 }
 
 int
@@ -1496,7 +1724,11 @@ sys_rmdir (const char * path)
 int
 sys_unlink (const char * path)
 {
-  return _unlink (map_w32_filename (path, NULL));
+  path = map_w32_filename (path, NULL);
+
+  /* On Unix, unlink works without write permission. */
+  _chmod (path, 0666);
+  return _unlink (path);
 }
 
 static FILETIME utc_base_ft;
@@ -1535,8 +1767,6 @@ convert_time (FILETIME ft)
   return (time_t) (ret * 1e-7);
 }
 
-#if 0
-/* in case we ever have need of this */
 void
 convert_from_time_t (time_t time, FILETIME * pft)
 {
@@ -1564,9 +1794,8 @@ convert_from_time_t (time_t time, FILETIME * pft)
   /* time in 100ns units since 1-Jan-1601 */
   tmp = (long double) time * 1e7 + utc_base;
   pft->dwHighDateTime = (DWORD) (tmp / (4096.0 * 1024 * 1024));
-  pft->dwLowDateTime = (DWORD) (tmp - pft->dwHighDateTime);
+  pft->dwLowDateTime = (DWORD) (tmp - (4096.0 * 1024 * 1024) * pft->dwHighDateTime);
 }
-#endif
 
 #if 0
 /* No reason to keep this; faking inode values either by hashing or even
@@ -1617,7 +1846,7 @@ generate_inode_val (const char * name)
 int
 stat (const char * path, struct stat * buf)
 {
-  char * name;
+  char *name, *r;
   WIN32_FIND_DATA wfd;
   HANDLE fh;
   DWORD fake_inode;
@@ -1632,11 +1861,18 @@ stat (const char * path, struct stat * buf)
     }
 
   name = (char *) map_w32_filename (path, &path);
-  /* must be valid filename, no wild cards */
-  if (strchr (name, '*') || strchr (name, '?'))
+  /* must be valid filename, no wild cards or other illegal characters */
+  if (strpbrk (name, "*?|<>\""))
     {
       errno = ENOENT;
       return -1;
+    }
+
+  /* If name is "c:/.." or "/.." then stat "c:/" or "/".  */
+  r = IS_DEVICE_SEP (name[1]) ? &name[2] : name;
+  if (IS_DIRECTORY_SEP (r[0]) && r[1] == '.' && r[2] == '.' && r[3] == '\0')
+    {
+      r[1] = r[2] = '\0';
     }
 
   /* Remove trailing directory separator, unless name is the root
@@ -1647,7 +1883,21 @@ stat (const char * path, struct stat * buf)
 	     && (IS_DIRECTORY_SEP (*path) || *path == 0));
   name = strcpy (alloca (len + 2), name);
 
-  if (rootdir)
+  if (is_unc_volume (name))
+    {
+      DWORD attrs = unc_volume_file_attributes (name);
+
+      if (attrs == -1)
+	return -1;
+
+      memset (&wfd, 0, sizeof (wfd));
+      wfd.dwFileAttributes = attrs;
+      wfd.ftCreationTime = utc_base_ft;
+      wfd.ftLastAccessTime = utc_base_ft;
+      wfd.ftLastWriteTime = utc_base_ft;
+      strcpy (wfd.cFileName, name);
+    }
+  else if (rootdir)
     {
       if (!IS_DIRECTORY_SEP (name[len-1]))
 	strcat (name, "\\");
@@ -1698,15 +1948,15 @@ stat (const char * path, struct stat * buf)
       buf->st_nlink = 2;	/* doesn't really matter */
       fake_inode = 0;		/* this doesn't either I think */
     }
-  else if (!NILP (Vw32_get_true_file_attributes))
+  else if (!NILP (Vw32_get_true_file_attributes)
+	   /* No access rights required to get info.  */
+	   && (fh = CreateFile (name, 0, 0, NULL, OPEN_EXISTING, 0, NULL))
+	      != INVALID_HANDLE_VALUE)
     {
       /* This is more accurate in terms of gettting the correct number
 	 of links, but is quite slow (it is noticable when Emacs is
 	 making a list of file name completions). */
       BY_HANDLE_FILE_INFORMATION info;
-
-      /* No access rights required to get info.  */
-      fh = CreateFile (name, 0, 0, NULL, OPEN_EXISTING, 0, NULL);
 
       if (GetFileInformationByHandle (fh, &info))
 	{
@@ -1790,19 +2040,148 @@ stat (const char * path, struct stat * buf)
   
   if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     permission |= _S_IEXEC;
+  else if (is_exec (name))
+    permission |= _S_IEXEC;
+
+  buf->st_mode |= permission | (permission >> 3) | (permission >> 6);
+
+  return 0;
+}
+
+/* Provide fstat and utime as well as stat for consistent handling of
+   file timestamps. */
+int
+fstat (int desc, struct stat * buf)
+{
+  HANDLE fh = (HANDLE) _get_osfhandle (desc);
+  BY_HANDLE_FILE_INFORMATION info;
+  DWORD fake_inode;
+  int permission;
+
+  switch (GetFileType (fh) & ~FILE_TYPE_REMOTE)
+    {
+    case FILE_TYPE_DISK:
+      buf->st_mode = _S_IFREG;
+      if (!GetFileInformationByHandle (fh, &info))
+	{
+	  errno = EACCES;
+	  return -1;
+	}
+      break;
+    case FILE_TYPE_PIPE:
+      buf->st_mode = _S_IFIFO;
+      goto non_disk;
+    case FILE_TYPE_CHAR:
+    case FILE_TYPE_UNKNOWN:
+    default:
+      buf->st_mode = _S_IFCHR;
+    non_disk:
+      memset (&info, 0, sizeof (info));
+      info.dwFileAttributes = 0;
+      info.ftCreationTime = utc_base_ft;
+      info.ftLastAccessTime = utc_base_ft;
+      info.ftLastWriteTime = utc_base_ft;
+    }
+
+  if (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    {
+      buf->st_mode = _S_IFDIR;
+      buf->st_nlink = 2;	/* doesn't really matter */
+      fake_inode = 0;		/* this doesn't either I think */
+    }
   else
     {
+      buf->st_nlink = info.nNumberOfLinks;
+      /* Might as well use file index to fake inode values, but this
+	 is not guaranteed to be unique unless we keep a handle open
+	 all the time (even then there are situations where it is
+	 not unique).  Reputedly, there are at most 48 bits of info
+      (on NTFS, presumably less on FAT). */
+      fake_inode = info.nFileIndexLow ^ info.nFileIndexHigh;
+    }
+
+  /* MSVC defines _ino_t to be short; other libc's might not.  */
+  if (sizeof (buf->st_ino) == 2)
+    buf->st_ino = fake_inode ^ (fake_inode >> 16);
+  else
+    buf->st_ino = fake_inode;
+
+  /* consider files to belong to current user */
+  buf->st_uid = 0;
+  buf->st_gid = 0;
+
+  buf->st_dev = info.dwVolumeSerialNumber;
+  buf->st_rdev = info.dwVolumeSerialNumber;
+
+  buf->st_size = info.nFileSizeLow;
+
+  /* Convert timestamps to Unix format. */
+  buf->st_mtime = convert_time (info.ftLastWriteTime);
+  buf->st_atime = convert_time (info.ftLastAccessTime);
+  if (buf->st_atime == 0) buf->st_atime = buf->st_mtime;
+  buf->st_ctime = convert_time (info.ftCreationTime);
+  if (buf->st_ctime == 0) buf->st_ctime = buf->st_mtime;
+
+  /* determine rwx permissions */
+  if (info.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
+    permission = _S_IREAD;
+  else
+    permission = _S_IREAD | _S_IWRITE;
+  
+  if (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    permission |= _S_IEXEC;
+  else
+    {
+#if 0 /* no way of knowing the filename */
       char * p = strrchr (name, '.');
-      if (p != NULL
-	  && (stricmp (p, ".exe") == 0 ||
-	      stricmp (p, ".com") == 0 ||
-	      stricmp (p, ".bat") == 0 ||
-	      stricmp (p, ".cmd") == 0))
+      if (p != NULL &&
+	  (stricmp (p, ".exe") == 0 ||
+	   stricmp (p, ".com") == 0 ||
+	   stricmp (p, ".bat") == 0 ||
+	   stricmp (p, ".cmd") == 0))
 	permission |= _S_IEXEC;
+#endif
     }
 
   buf->st_mode |= permission | (permission >> 3) | (permission >> 6);
 
+  return 0;
+}
+
+int
+utime (const char *name, struct utimbuf *times)
+{
+  struct utimbuf deftime;
+  HANDLE fh;
+  FILETIME mtime;
+  FILETIME atime;
+
+  if (times == NULL)
+    {
+      deftime.modtime = deftime.actime = time (NULL);
+      times = &deftime;
+    }
+
+  /* Need write access to set times.  */
+  fh = CreateFile (name, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+		   0, OPEN_EXISTING, 0, NULL);
+  if (fh)
+    {
+      convert_from_time_t (times->actime, &atime);
+      convert_from_time_t (times->modtime, &mtime);
+      if (!SetFileTime (fh, NULL, &atime, &mtime))
+	{
+	  CloseHandle (fh);
+	  errno = EACCES;
+	  return -1;
+	}
+      CloseHandle (fh);
+    }
+  else
+    {
+      errno = EINVAL;
+      return -1;
+    }
   return 0;
 }
 
@@ -2036,7 +2415,7 @@ sys_socket(int af, int type, int protocol)
 	    if (!pfn_SetHandleInformation
 		|| !pfn_SetHandleInformation ((HANDLE) s,
 					      HANDLE_FLAG_INHERIT,
-					      HANDLE_FLAG_INHERIT))
+					      0))
 	      {
 		DuplicateHandle (parent,
 				 (HANDLE) s,
@@ -2327,10 +2706,6 @@ sys_dup2 (int src, int dst)
   return rc;
 }
 
-/* From callproc.c  */
-extern Lisp_Object Vbinary_process_input;
-extern Lisp_Object Vbinary_process_output;
-
 /* Unix pipe() has only one arg */
 int
 sys_pipe (int * phandles)
@@ -2347,14 +2722,10 @@ sys_pipe (int * phandles)
 
   if (rc == 0)
     {
-      flags = FILE_PIPE | FILE_READ;
-      if (!NILP (Vbinary_process_output))
-	flags |= FILE_BINARY;
+      flags = FILE_PIPE | FILE_READ | FILE_BINARY;
       fd_info[phandles[0]].flags = flags;
 
-      flags = FILE_PIPE | FILE_WRITE;
-      if (!NILP (Vbinary_process_input))
-	flags |= FILE_BINARY;
+      flags = FILE_PIPE | FILE_WRITE | FILE_BINARY;
       fd_info[phandles[1]].flags = flags;
     }
 
@@ -2459,6 +2830,7 @@ sys_read (int fd, char * buffer, unsigned int count)
 	  *buffer++ = 0x0d;
 	  count--;
 	  nchars++;
+	  fd_info[fd].flags &= ~FILE_LAST_CR;
 	}
 
       /* presence of a child_process structure means we are operating in
@@ -2474,8 +2846,10 @@ sys_read (int fd, char * buffer, unsigned int count)
 	    {
 	    case STATUS_READ_FAILED:
 	    case STATUS_READ_ERROR:
-	      /* report normal EOF */
-	      return 0;
+	      /* report normal EOF if nothing in buffer */
+	      if (nchars <= 0)
+		fd_info[fd].flags |= FILE_AT_EOF;
+	      return nchars;
 
 	    case STATUS_READ_READY:
 	    case STATUS_READ_IN_PROGRESS:
@@ -2504,8 +2878,9 @@ sys_read (int fd, char * buffer, unsigned int count)
 	    {
 	      PeekNamedPipe ((HANDLE) _get_osfhandle (fd), NULL, 0, NULL, &waiting, NULL);
 	      to_read = min (waiting, (DWORD) count);
-      
-	      nchars += _read (fd, buffer, to_read);
+
+	      if (to_read > 0)
+		nchars += _read (fd, buffer, to_read);
 	    }
 #ifdef HAVE_SOCKETS
 	  else /* FILE_SOCKET */
@@ -2537,10 +2912,18 @@ sys_read (int fd, char * buffer, unsigned int count)
 #endif
 	}
       else
-	nchars += _read (fd, buffer, count);
+	{
+	  int nread = _read (fd, buffer, count);
+	  if (nread >= 0)
+	    nchars += nread;
+	  else if (nchars == 0)
+	    nchars = nread;
+	}
 
+      if (nchars <= 0)
+	fd_info[fd].flags |= FILE_AT_EOF;
       /* Perform text mode translation if required.  */
-      if ((fd_info[fd].flags & FILE_BINARY) == 0)
+      else if ((fd_info[fd].flags & FILE_BINARY) == 0)
 	{
 	  nchars = crlf_to_lf (nchars, orig_buffer);
 	  /* If buffer contains only CR, return that.  To be absolutely
@@ -2552,8 +2935,6 @@ sys_read (int fd, char * buffer, unsigned int count)
 	      fd_info[fd].flags |= FILE_LAST_CR;
 	      nchars--;
 	    }
-	  else
-	    fd_info[fd].flags &= ~FILE_LAST_CR;
 	}
     }
   else
@@ -2634,6 +3015,50 @@ sys_write (int fd, const void * buffer, unsigned int count)
   return nchars;
 }
 
+static void
+check_windows_init_file ()
+{
+  extern int noninteractive, inhibit_window_system;
+
+  /* A common indication that Emacs is not installed properly is when
+     it cannot find the Windows installation file.  If this file does
+     not exist in the expected place, tell the user.  */
+
+  if (!noninteractive && !inhibit_window_system) {
+    extern Lisp_Object Vwindow_system, Vload_path;
+    Lisp_Object init_file;
+    int fd;
+
+    init_file = build_string ("term/w32-win");
+    fd = openp (Vload_path, init_file, ".el:.elc", NULL, 0);
+    if (fd < 0) {
+      Lisp_Object load_path_print = Fprin1_to_string (Vload_path, Qnil);
+      char *init_file_name = XSTRING (init_file)->data;
+      char *load_path = XSTRING (load_path_print)->data;
+      char *buffer = alloca (1024);
+
+      sprintf (buffer, 
+	       "The Emacs Windows initialization file \"%s.el\" "
+	       "could not be found in your Emacs installation.  "
+	       "Emacs checked the following directories for this file:\n"
+	       "\n%s\n\n"
+	       "When Emacs cannot find this file, it usually means that it "
+	       "was not installed properly, or its distribution file was "
+	       "not unpacked properly.\nSee the README.W32 file in the "
+	       "top-level Emacs directory for more information.",
+	       init_file_name, load_path);
+      MessageBox (NULL,
+		  buffer,
+		  "Emacs Abort Dialog",
+		  MB_OK | MB_ICONEXCLAMATION | MB_TASKMODAL);
+      close (fd);
+
+      /* Use the low-level Emacs abort. */
+#undef abort
+      abort ();
+    }
+  }
+}
 
 void
 term_ntproc ()
@@ -2642,6 +3067,12 @@ term_ntproc ()
   /* shutdown the socket interface if necessary */
   term_winsock ();
 #endif
+
+  /* Check whether we are shutting down because we cannot find the
+     Windows initialization file.  Do this during shutdown so that
+     Emacs is initialized as possible, and so that it is out of the 
+     critical startup path.  */
+  check_windows_init_file ();
 }
 
 void

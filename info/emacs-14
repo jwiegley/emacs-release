@@ -1,6 +1,539 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
+
+File: emacs,  Node: Balanced Editing,  Next: Symbol Completion,  Prev: Comments,  Up: Programs
+
+Editing Without Unbalanced Parentheses
+======================================
+
+`M-('
+     Put parentheses around next sexp(s) (`insert-parentheses').
+
+`M-)'
+     Move past next close parenthesis and reindent
+     (`move-past-close-and-reindent').
+
+   The commands `M-(' (`insert-parentheses') and `M-)'
+(`move-past-close-and-reindent') are designed to facilitate a style of
+editing which keeps parentheses balanced at all times.  `M-(' inserts a
+pair of parentheses, either together as in `()', or, if given an
+argument, around the next several sexps.  It leaves point after the
+open parenthesis.  The command `M-)' moves past the close parenthesis,
+deleting any indentation preceding it (in this example there is none),
+and indenting with `C-j' after it.
+
+   For example, instead of typing `( F O O )', you can type `M-( F O
+O', which has the same effect except for leaving the cursor before the
+close parenthesis.
+
+   `M-(' may insert a space before the open parenthesis, depending on
+the syntax class of the preceding character.  Set
+`parens-require-spaces' to `nil' value if you wish to inhibit this.
+
+
+File: emacs,  Node: Symbol Completion,  Next: Which Function,  Prev: Balanced Editing,  Up: Programs
+
+Completion for Symbol Names
+===========================
+
+   Usually completion happens in the minibuffer.  But one kind of
+completion is available in all buffers: completion for symbol names.
+
+   The character `M-<TAB>' runs a command to complete the partial
+symbol before point against the set of meaningful symbol names.  Any
+additional characters determined by the partial name are inserted at
+point.
+
+   If the partial name in the buffer has more than one possible
+completion and they have no additional characters in common, a list of
+all possible completions is displayed in another window.
+
+   In most programming language major modes, `M-<TAB>' runs the command
+`complete-symbol', which provides two kinds of completion.  Normally it
+does completion based on a tags table (*note Tags::.); with a numeric
+argument (regardless of the value), it does completion based on the
+names listed in the Info file indexes for your language.  Thus, to
+complete the name of a symbol defined in your own program, use
+`M-<TAB>' with no argument; to complete the name of a standard library
+function, use `C-u M-<TAB>'.  Of course, Info-based completion works
+only if there is an Info file for the standard library functions of
+your language, and only if it is installed at your site.
+
+   In Emacs-Lisp mode, the name space for completion normally consists
+of nontrivial symbols present in Emacs--those that have function
+definitions, values or properties.  However, if there is an
+open-parenthesis immediately before the beginning of the partial symbol,
+only symbols with function definitions are considered as completions.
+The command which implements this is `lisp-complete-symbol'.
+
+   In Text mode and related modes, `M-<TAB>' completes words based on
+the spell-checker's dictionary.  *Note Spelling::.
+
+
+File: emacs,  Node: Which Function,  Next: Documentation,  Prev: Symbol Completion,  Up: Programs
+
+Which Function Mode
+===================
+
+   Which Function mode is a minor mode that displays the current
+function name in the mode line, as you move around in a buffer.
+
+   To enable (or disable) Which Function mode, use the command `M-x
+which-function-mode'.  This command is global; it applies to all
+buffers, both existing ones and those yet to be created.  However, this
+only affects certain major modes, those listed in the value of
+`which-func-modes'.  (If the value is `t', then Which Function mode
+applies to all major modes that know how to support it--which are the
+major modes that support Imenu.)
+
+
+File: emacs,  Node: Documentation,  Next: Change Log,  Prev: Which Function,  Up: Programs
+
+Documentation Commands
+======================
+
+   As you edit Lisp code to be run in Emacs, the commands `C-h f'
+(`describe-function') and `C-h v' (`describe-variable') can be used to
+print documentation of functions and variables that you want to call.
+These commands use the minibuffer to read the name of a function or
+variable to document, and display the documentation in a window.
+
+   For extra convenience, these commands provide default arguments
+based on the code in the neighborhood of point.  `C-h f' sets the
+default to the function called in the innermost list containing point.
+`C-h v' uses the symbol name around or adjacent to point as its default.
+
+   For Emacs Lisp code, you can also use Eldoc mode.  This minor mode
+constantly displays in the echo area the argument list for the function
+being called at point.  (In other words, it finds the function call that
+point is contained in, and displays the argument list of that function.)
+Eldoc mode applies in Emacs Lisp and Lisp Interaction modes only.  Use
+the command `M-x eldoc-mode' to enable or disable this feature.
+
+   For C, Lisp, and other languages, you can use `C-h C-i'
+(`info-lookup-symbol') to view the Info documentation for a symbol.
+You specify the symbol with the minibuffer; by default, it uses the
+symbol that appears in the buffer at point.  The major mode determines
+where to look for documentation for the symbol--which Info files and
+which indices.  You can also use `M-x info-lookup-file' to look for
+documentation for a file name.
+
+   You can read the "man page" for an operating system command, library
+function, or system call, with the `M-x manual-entry' command.  It runs
+the `man' program to format the man page, and runs it asynchronously if
+your system permits, so that you can keep on editing while the page is
+being formatted.  (MS-DOS and MS-Windows 3 do not permit asynchronous
+subprocesses, so on these systems you cannot edit while Emacs waits for
+`man' to exit.)  The result goes in a buffer named `*Man TOPIC*'.
+These buffers use a special major mode, Man mode, that facilitates
+scrolling and examining other manual pages.  For details, type `C-h m'
+while in a man page buffer.
+
+   For a long man page, setting the faces properly can take substantial
+time.  By default, Emacs uses faces in man pages if Emacs can display
+different fonts or colors.  You can turn off use of faces in man pages
+by setting the variable `Man-fontify-manpage-flag' to `nil'.
+
+   If you insert the text of a man page into an Emacs buffer in some
+other fashion, you can use the command `M-x Man-fontify-manpage' to
+perform the same conversions that `M-x manual-entry' does.
+
+   Eventually the GNU project hopes to replace most man pages with
+better-organized manuals that you can browse with Info.  *Note Misc
+Help::.  Since this process is only partially completed, it is still
+useful to read manual pages.
+
+
+File: emacs,  Node: Change Log,  Next: Tags,  Prev: Documentation,  Up: Programs
+
+Change Logs
+===========
+
+   The Emacs command `C-x 4 a' adds a new entry to the change log file
+for the file you are editing (`add-change-log-entry-other-window').
+
+   A change log file contains a chronological record of when and why you
+have changed a program, consisting of a sequence of entries describing
+individual changes.  Normally it is kept in a file called `ChangeLog'
+in the same directory as the file you are editing, or one of its parent
+directories.  A single `ChangeLog' file can record changes for all the
+files in its directory and all its subdirectories.
+
+   A change log entry starts with a header line that contains your name,
+your email address (taken from the variable `user-mail-address'), and
+the current date and time.  Aside from these header lines, every line
+in the change log starts with a space or a tab.  The bulk of the entry
+consists of "items", each of which starts with a line starting with
+whitespace and a star.  Here are two entries, both dated in May 1993,
+each with two items:
+
+     1993-05-25  Richard Stallman  <rms@gnu.org>
+     
+             * man.el: Rename symbols `man-*' to `Man-*'.
+             (manual-entry): Make prompt string clearer.
+     
+             * simple.el (blink-matching-paren-distance):
+             Change default to 12,000.
+     
+     1993-05-24  Richard Stallman  <rms@gnu.org>
+     
+             * vc.el (minor-mode-map-alist): Don't use it if it's void.
+             (vc-cancel-version): Doc fix.
+
+(Previous Emacs versions used a different format for the date.)
+
+   One entry can describe several changes; each change should have its
+own item.  Normally there should be a blank line between items.  When
+items are related (parts of the same change, in different places), group
+them by leaving no blank line between them.  The second entry above
+contains two items grouped in this way.
+
+   `C-x 4 a' visits the change log file and creates a new entry unless
+the most recent entry is for today's date and your name.  It also
+creates a new item for the current file.  For many languages, it can
+even guess the name of the function or other object that was changed.
+
+   The change log file is visited in Change Log mode.  In this major
+mode, each bunch of grouped items counts as one paragraph, and each
+entry is considered a page.  This facilitates editing the entries.
+`C-j' and auto-fill indent each new line like the previous line; this
+is convenient for entering the contents of an entry.
+
+   Version control systems are another way to keep track of changes in
+your program and keep a change log.  *Note Log Buffer::.
+
+
+File: emacs,  Node: Tags,  Next: Emerge,  Prev: Change Log,  Up: Programs
+
+Tags Tables
+===========
+
+   A "tags table" is a description of how a multi-file program is
+broken up into files.  It lists the names of the component files and the
+names and positions of the functions (or other named subunits) in each
+file.  Grouping the related files makes it possible to search or replace
+through all the files with one command.  Recording the function names
+and positions makes possible the `M-.' command which finds the
+definition of a function by looking up which of the files it is in.
+
+   Tags tables are stored in files called "tags table files".  The
+conventional name for a tags table file is `TAGS'.
+
+   Each entry in the tags table records the name of one tag, the name
+of the file that the tag is defined in (implicitly), and the position
+in that file of the tag's definition.
+
+   Just what names from the described files are recorded in the tags
+table depends on the programming language of the described file.  They
+normally include all functions and subroutines, and may also include
+global variables, data types, and anything else convenient.  Each name
+recorded is called a "tag".
+
+* Menu:
+
+* Tag Syntax::		Tag syntax for various types of code and text files.
+* Create Tags Table::	Creating a tags table with `etags'.
+* Select Tags Table::	How to visit a tags table.
+* Find Tag::		Commands to find the definition of a specific tag.
+* Tags Search::		Using a tags table for searching and replacing.
+* List Tags::		Listing and finding tags defined in a file.
+
+
+File: emacs,  Node: Tag Syntax,  Next: Create Tags Table,  Up: Tags
+
+Source File Tag Syntax
+----------------------
+
+   Here is how tag syntax is defined for the most popular languages:
+
+   * In C code, any C function or typedef is a tag, and so are
+     definitions of `struct', `union' and `enum'.  `#define' macro
+     definitions and `enum' constants are also tags, unless you specify
+     `--no-defines' when making the tags table.  Similarly, global
+     variables are tags, unless you specify `--no-globals'.  Use of
+     `--no-globals' and `--no-defines' can make the tags table file
+     much smaller.
+
+   * In C++ code, in addition to all the tag constructs of C code,
+     member functions are also recognized, and optionally member
+     variables if you use the `--members' option.  Tags for variables
+     and functions in classes are named `CLASS::VARIABLE' and
+     `CLASS::FUNCTION'.
+
+   * In Java code, tags include all the constructs recognized in C++,
+     plus the `extends' and `implements' constructs.  Tags for variables
+     and functions in classes are named `CLASS.VARIABLE' and
+     `CLASS.FUNCTION'.
+
+   * In LaTeX text, the argument of any of the commands `\chapter',
+     `\section', `\subsection', `\subsubsection', `\eqno', `\label',
+     `\ref', `\cite', `\bibitem', `\part', `\appendix', `\entry', or
+     `\index', is a tag.
+
+     Other commands can make tags as well, if you specify them in the
+     environment variable `TEXTAGS' before invoking `etags'.  The value
+     of this environment variable should be a colon-separated list of
+     command names.  For example,
+
+          TEXTAGS="def:newcommand:newenvironment"
+          export TEXTAGS
+
+     specifies (using Bourne shell syntax) that the commands `\def',
+     `\newcommand' and `\newenvironment' also define tags.
+
+   * In Lisp code, any function defined with `defun', any variable
+     defined with `defvar' or `defconst', and in general the first
+     argument of any expression that starts with `(def' in column zero,
+     is a tag.
+
+   * In Scheme code, tags include anything defined with `def' or with a
+     construct whose name starts with `def'.  They also include
+     variables set with `set!' at top level in the file.
+
+   Several other languages are also supported:
+
+   * In assembler code, labels appearing at the beginning of a line,
+     followed by a colon, are tags.
+
+   * In Bison or Yacc input files, each rule defines as a tag the
+     nonterminal it constructs.  The portions of the file that contain
+     C code are parsed as C code.
+
+   * In Cobol code, tags are paragraph names; that is, any word
+     starting in column 8 and followed by a period.
+
+   * In Erlang code, the tags are the functions, records, and macros
+     defined in the file.
+
+   * In Fortran code, functions, subroutines and blockdata are tags.
+
+   * In Objective C code, tags include Objective C definitions for
+     classes, class categories, methods, and protocols.
+
+   * In Pascal code, the tags are the functions and procedures defined
+     in the file.
+
+   * In Perl code, the tags are the procedures defined by the `sub'
+     keyword.
+
+   * In Postscript code, the tags are the functions.
+
+   * In Prolog code, a tag name appears at the left margin.
+
+   You can also generate tags based on regexp matching (*note Create
+Tags Table::.) to handle other formats and languages.
+
+
+File: emacs,  Node: Create Tags Table,  Next: Select Tags Table,  Prev: Tag Syntax,  Up: Tags
+
+Creating Tags Tables
+--------------------
+
+   The `etags' program is used to create a tags table file.  It knows
+the syntax of several languages, as described in *Note Tag Syntax::.
+Here is how to run `etags':
+
+     etags INPUTFILES...
+
+The `etags' program reads the specified files, and writes a tags table
+named `TAGS' in the current working directory.  `etags' recognizes the
+language used in an input file based on its file name and contents.
+You can specify the language with the `--language=NAME' option,
+described below.
+
+   If the tags table data become outdated due to changes in the files
+described in the table, the way to update the tags table is the same
+way it was made in the first place.  It is not necessary to do this
+often.
+
+   If the tags table fails to record a tag, or records it for the wrong
+file, then Emacs cannot possibly find its definition.  However, if the
+position recorded in the tags table becomes a little bit wrong (due to
+some editing in the file that the tag definition is in), the only
+consequence is a slight delay in finding the tag.  Even if the stored
+position is very wrong, Emacs will still find the tag, but it must
+search the entire file for it.
+
+   So you should update a tags table when you define new tags that you
+want to have listed, or when you move tag definitions from one file to
+another, or when changes become substantial.  Normally there is no need
+to update the tags table after each edit, or even every day.
+
+   One tags table can effectively include another.  Specify the included
+tags file name with the `--include=FILE' option when creating the file
+that is to include it.  The latter file then acts as if it contained
+all the files specified in the included file, as well as the files it
+directly contains.
+
+   If you specify the source files with relative file names when you run
+`etags', the tags file will contain file names relative to the
+directory where the tags file was initially written.  This way, you can
+move an entire directory tree containing both the tags file and the
+source files, and the tags file will still refer correctly to the source
+files.
+
+   If you specify absolute file names as arguments to `etags', then the
+tags file will contain absolute file names.  This way, the tags file
+will still refer to the same files even if you move it, as long as the
+source files remain in the same place.  Absolute file names start with
+`/', or with `DEVICE:/' on MS-DOS and MS-Windows.
+
+   When you want to make a tags table from a great number of files, you
+may have problems listing them on the command line, because some systems
+have a limit on its length.  The simplest way to circumvent this limit
+is to tell `etags' to read the file names from its standard input, by
+typing a dash in place of the file names, like this:
+
+     find . -name "*.[chCH]" -print | etags -
+
+   Use the option `--language=NAME' to specify the language explicitly.
+You can intermix these options with file names; each one applies to
+the file names that follow it.  Specify `--language=auto' to tell
+`etags' to resume guessing the language from the file names and file
+contents.  Specify `--language=none' to turn off language-specific
+processing entirely; then `etags' recognizes tags by regexp matching
+alone.  `etags --help' prints the list of the languages `etags' knows,
+and the file name rules for guessing the language.
+
+   The `--regex' option provides a general way of recognizing tags
+based on regexp matching.  You can freely intermix it with file names.
+Each `--regex' option adds to the preceding ones, and applies only to
+the following files.  The syntax is:
+
+     --regex=/TAGREGEXP[/NAMEREGEXP]/
+
+where TAGREGEXP is used to match the lines to tag.  It is always
+anchored, that is, it behaves as if preceded by `^'.  If you want to
+account for indentation, just match any initial number of blanks by
+beginning your regular expression with `[ \t]*'.  In the regular
+expressions, `\' quotes the next character, and `\t' stands for the tab
+character.  Note that `etags' does not handle the other C escape
+sequences for special characters.
+
+   The syntax of regular expressions in `etags' is the same as in
+Emacs, augmented with the "interval operator", which works as in `grep'
+and `ed'.  The syntax of an interval operator is `\{M,N\}', and its
+meaning is to match the preceding expression at least M times and up to
+N times.
+
+   You should not match more characters with TAGREGEXP than that needed
+to recognize what you want to tag.  If the match is such that more
+characters than needed are unavoidably matched by TAGREGEXP, you may
+find useful to add a NAMEREGEXP, in order to narrow the tag scope.  You
+can find some examples below.
+
+   The `-R' option deletes all the regexps defined with `--regex'
+options.  It applies to the file names following it, as you can see
+from the following example:
+
+     etags --regex=/REG1/ voo.doo --regex=/REG2/ \
+         bar.ber -R --lang=lisp los.er
+
+Here `etags' chooses the parsing language for `voo.doo' and `bar.ber'
+according to their contents.  `etags' also uses REG1 to recognize
+additional tags in `voo.doo', and both REG1 and REG2 to recognize
+additional tags in `bar.ber'.  `etags' uses the Lisp tags rules, and no
+regexp matching, to recognize tags in `los.er'.
+
+   Here are some more examples.  The regexps are quoted to protect them
+from shell interpretation.
+
+   * Tag the `DEFVAR' macros in the emacs source files:
+
+          --regex='/[ \t]*DEFVAR_[A-Z_ \t(]+"\([^"]+\)"/'
+
+   * Tag VHDL files (this example is a single long line, broken here for
+     formatting reasons):
+
+          --language=none
+          --regex='/[ \t]*\(ARCHITECTURE\|CONFIGURATION\) +[^ ]* +OF/'
+          --regex='/[ \t]*\(ATTRIBUTE\|ENTITY\|FUNCTION\|PACKAGE\
+          \( BODY\)?\|PROCEDURE\|PROCESS\|TYPE\)[ \t]+\([^ \t(]+\)/\3/'
+
+   * Tag Tcl files (this last example shows the usage of a NAMEREGEXP):
+
+          --lang=none --regex='/proc[ \t]+\([^ \t]+\)/\1/'
+
+   For a list of the other available `etags' options, execute `etags
+--help'.
+
+
+File: emacs,  Node: Select Tags Table,  Next: Find Tag,  Prev: Create Tags Table,  Up: Tags
+
+Selecting a Tags Table
+----------------------
+
+   Emacs has at any time one "selected" tags table, and all the commands
+for working with tags tables use the selected one.  To select a tags
+table, type `M-x visit-tags-table', which reads the tags table file
+name as an argument.  The name `TAGS' in the default directory is used
+as the default file name.
+
+   All this command does is store the file name in the variable
+`tags-file-name'.  Emacs does not actually read in the tags table
+contents until you try to use them.  Setting this variable yourself is
+just as good as using `visit-tags-table'.  The variable's initial value
+is `nil'; that value tells all the commands for working with tags tables
+that they must ask for a tags table file name to use.
+
+   Using `visit-tags-table' when a tags table is already loaded gives
+you a choice: you can add the new tags table to the current list of
+tags tables, or start a new list.  The tags commands use all the tags
+tables in the current list.  If you start a new list, the new tags table
+is used *instead* of others.  If you add the new table to the current
+list, it is used *as well as* the others.  When the tags commands scan
+the list of tags tables, they don't always start at the beginning of
+the list; they start with the first tags table (if any) that describes
+the current file, proceed from there to the end of the list, and then
+scan from the beginning of the list until they have covered all the
+tables in the list.
+
+   You can specify a precise list of tags tables by setting the variable
+`tags-table-list' to a list of strings, like this:
+
+     (setq tags-table-list
+           '("~/emacs" "/usr/local/lib/emacs/src"))
+
+This tells the tags commands to look at the `TAGS' files in your
+`~/emacs' directory and in the `/usr/local/lib/emacs/src' directory.
+The order depends on which file you are in and which tags table
+mentions that file, as explained above.
+
+   Do not set both `tags-file-name' and `tags-table-list'.
+
 
 File: emacs,  Node: Find Tag,  Next: Tags Search,  Prev: Select Tags Table,  Up: Tags
 
@@ -32,6 +565,9 @@ find the definition of a specific tag.
 `C-x 5 . TAG <RET>'
      Find first definition of TAG, and create a new frame to select the
      buffer (`find-tag-other-frame').
+
+`M-*'
+     Pop back to where you previously invoked `M-.' and friends.
 
    `M-.' (`find-tag') is the command to find the definition of a
 specified tag.  It searches through the tags table for that tag, as a
@@ -65,8 +601,17 @@ more generally, `M-.' with a negative numeric argument.  This command
 can take you to another buffer.  `C-x 4 .' with a negative argument
 finds the previous tag location in another window.
 
+   As well as going back to places you've found tags recently, you can
+go back to places *from where* you found them.  Use `M-*', which
+invokes the command `pop-tag-mark', for this.  Typically you would find
+and study the definition of something with `M-.' and then return to
+where you were with `M-*'.
+
+   Both `C-u - M-.' and `M-*' allow you to retrace your steps to a
+depth determined by the variable `find-tag-marker-ring-length'.
+
    The command `C-M-.' (`find-tag-regexp') visits the tags that match a
-specified regular expression.  It is just like `M-.'  except that it
+specified regular expression.  It is just like `M-.' except that it
 does regexp matching instead of substring matching.
 
 
@@ -171,7 +716,8 @@ Merging Files with Emerge
    It's not unusual for programmers to get their signals crossed and
 modify the same program in two different directions.  To recover from
 this confusion, you need to merge the two versions.  Emerge makes this
-easier.  See also *Note Comparing Files::.
+easier.  See also *Note Comparing Files::, for commands to compare in a
+more manual fashion, and *Note Emerge: (ediff)Emerge.
 
 * Menu:
 
@@ -619,593 +1165,4 @@ related modes.
 `M-x c-forward-into-nomenclature'
      Move point forward to end of a C++ nomenclature section or word.
      With prefix argument N, move N times.
-
-
-File: emacs,  Node: Electric C,  Next: Hungry Delete,  Prev: Motion in C,  Up: C/Java Modes
-
-Electric C Characters
----------------------
-
-   In C mode and related modes, certain printing characters are
-"electric"--in addition to inserting themselves, they also reindent the
-current line and may insert newlines.  This feature is controlled by
-the variable `c-auto-newline'.  The "electric" characters are `{', `}',
-`:', `#', `;', `,', `<', `>', `/' and `*'.
-
-   Electric characters insert newlines only when the "auto-newline"
-feature is enabled (indicated by `/a' in the mode line after the mode
-name).  This feature is controlled by the variable `c-auto-newline'.
-You can turn this feature on or off with the command `C-c C-a':
-
-`C-c C-a'
-     Toggle the auto-newline feature (`c-toggle-auto-state').  With a
-     prefix argument, this command turns the auto-newline feature on if
-     the argument is positive, and off if it is negative.
-
-   The colon character is electric because that is appropriate for a
-single colon.  But when you want to insert a double colon in C++, the
-electric behavior of colon is inconvenient.  You can insert a double
-colon with no reindentation or newlines by typing `C-c :':
-
-`C-c :'
-     Insert a double colon scope operator at point, without reindenting
-     the line or adding any newlines (`c-scope-operator').
-
-   The electric `#' key reindents the line if it appears to be the
-beginning of a preprocessor directive.  This happens when the value of
-`c-electric-pound-behavior' is `(alignleft)'.  You can turn this
-feature off by setting `c-electric-pound-behavior' to `nil'.
-
-   The variable `c-hanging-braces-alist' controls the insertion of
-newlines before and after inserted braces.  It is an association list
-with elements of the following form: `(SYNTACTIC-SYMBOL . NL-LIST)'.
-Most of the syntactic symbols that appear in `c-offsets-alist' are
-meaningful here as well.
-
-   The list NL-LIST may contain either of the symbols `before' or
-`after', or both; or it may be `nil'.  When a brace is inserted, the
-syntactic context it defines is looked up in `c-hanging-braces-alist';
-if it is found, the NL-LIST is used to determine where newlines are
-inserted: either before the brace, after, or both.  If not found, the
-default is to insert a newline both before and after braces.
-
-   The variable `c-hanging-colons-alist' controls the insertion of
-newlines before and after inserted colons.  It is an association list
-with elements of the following form: `(SYNTACTIC-SYMBOL . NL-LIST)'.
-The list NL-LIST may contain either of the symbols `before' or `after',
-or both; or it may be `nil'.
-
-   When a colon is inserted, the syntactic symbol it defines is looked
-up in this list, and if found, the NL-LIST is used to determine where
-newlines are inserted: either before the brace, after, or both.  If the
-syntactic symbol is not found in this list, no newlines are inserted.
-
-   Electric characters can also delete newlines automatically when the
-auto-newline feature is enabled.  This feature makes auto-newline more
-acceptable, by deleting the newlines in the most common cases where you
-do not want them.  Emacs can recognize several cases in which deleting a
-newline might be desirable; by setting the variable `c-cleanup-list',
-you can specify *which* of these cases that should happen.  The
-variable's value is a list of symbols, each describing one case for
-possible deletion of a newline.  Here are the meaningful symbols, and
-their meanings:
-
-`brace-else-brace'
-     Clean up `} else {' constructs by placing the entire construct on
-     a single line.  The clean-up occurs when you type the `{' after
-     the `else', but only if there is nothing but white space between
-     the braces and the `else'.
-
-`brace-elseif-brace'
-     Clean up `} else if (...) {' constructs by placing the entire
-     construct on a single line.  The clean-up occurs when you type the
-     `{', if there is nothing but white space between the `}' and `{'
-     aside from the keywords and the `if'-condition.
-
-`empty-defun-braces'
-     Clean up empty defun braces by placing the braces on the same
-     line.  Clean-up occurs when you type the closing brace.
-
-`defun-close-semi'
-     Clean up the semicolon after a `struct' or similar type
-     declaration, by placing the semicolon on the same line as the
-     closing brace.  Clean-up occurs when you type the semicolon.
-
-`list-close-comma'
-     Clean up commas following braces in array and aggregate
-     initializers.  Clean-up occurs when you type the comma.
-
-`scope-operator'
-     Clean up double colons which may designate a C++ scope operator, by
-     placing the colons together.  Clean-up occurs when you type the
-     second colon, but only when the two colons are separated by
-     nothing but whitespace.
-
-
-File: emacs,  Node: Hungry Delete,  Next: Other C Commands,  Prev: Electric C,  Up: C/Java Modes
-
-Hungry Delete Feature in C
---------------------------
-
-   When the "hungry-delete" feature is enabled (indicated by `/h' or
-`/ah' in the mode line after the mode name), a single <DEL> command
-deletes all preceding whitespace, not just one space.  To turn this
-feature on or off, use `C-c C-d':
-
-`C-c C-d'
-     Toggle the hungry-delete feature (`c-toggle-hungry-state').  With a
-     prefix argument, this command turns the hungry-delete feature on
-     if the argument is positive, and off if it is negative.
-
-`C-c C-t'
-     Toggle the auto-newline and hungry-delete features, both at once
-     (`c-toggle-auto-hungry-state').
-
-   The variable `c-hungry-delete-key' controls whether the
-hungry-delete feature is enabled.
-
-
-File: emacs,  Node: Other C Commands,  Next: Comments in C,  Prev: Hungry Delete,  Up: C/Java Modes
-
-Other Commands for C Mode
--------------------------
-
-`C-M-h'
-     Put mark at the end of a function definition, and put point at the
-     beginning (`c-mark-function').
-
-`M-q'
-     Fill a paragraph, handling C and C++ comments (`c-fill-paragraph').
-     If any part of the current line is a comment or within a comment,
-     this command fills the comment or the paragraph of it that point
-     is in, preserving the comment indentation and comment delimiters.
-
-`C-c C-e'
-     Run the C preprocessor on the text in the region, and show the
-     result, which includes the expansion of all the macro calls
-     (`c-macro-expand').  The buffer text before the region is also
-     included in preprocessing, for the sake of macros defined there,
-     but the output from this part isn't shown.
-
-     When you are debugging C code that uses macros, sometimes it is
-     hard to figure out precisely how the macros expand.  With this
-     command, you don't have to figure it out; you can see the
-     expansions.
-
-`C-c C-\'
-     Insert or align `\' characters at the ends of the lines of the
-     region (`c-backslash-region').  This is useful after writing or
-     editing a C macro definition.
-
-     If a line already ends in `\', this command adjusts the amount of
-     whitespace before it.  Otherwise, it inserts a new `\'.  However,
-     the last line in the region is treated specially; no `\' is
-     inserted on that line, and any `\' there is deleted.
-
-`M-x cpp-highlight-buffer'
-     Highlight parts of the text according to its preprocessor
-     conditionals.  This command displays another buffer named `*CPP
-     Edit*', which serves as a graphic menu for selecting how to
-     display particular kinds of conditionals and their contents.
-     After changing various settings, click on `[A]pply these settings'
-     (or go to that buffer and type `a') to rehighlight the C mode
-     buffer accordingly.
-
-`C-c C-s'
-     Display the syntactic information about the current source line
-     (`c-show-syntactic-information').  This is the information that
-     directs how the line is indented.
-
-
-File: emacs,  Node: Comments in C,  Prev: Other C Commands,  Up: C/Java Modes
-
-Comments in C Modes
--------------------
-
-   C mode and related modes use a number of variables for controlling
-comment format.
-
-`c-comment-only-line-offset'
-     Extra offset for line which contains only the start of a comment.
-     It can be either an integer or a cons cell of the form
-     `(NON-ANCHORED-OFFSET . ANCHORED-OFFSET)', where
-     NON-ANCHORED-OFFSET is the amount of offset given to
-     non-column-zero anchored comment-only lines, and ANCHORED-OFFSET
-     is the amount of offset to give column-zero anchored comment-only
-     lines.  Just an integer as value is equivalent to `(VAL . 0)'.
-
-`c-comment-start-regexp'
-     This buffer-local variable specifies how to recognize the start of
-     a comment.
-
-`c-hanging-comment-ender-p'
-     If this variable is `nil', `c-fill-paragraph' leaves the comment
-     terminator of a block comment on a line by itself.  The default
-     value is `t', which puts the comment-end delimiter `*/' at the end
-     of the last line of the comment text.
-
-`c-hanging-comment-starter-p'
-     If this variable is `nil', `c-fill-paragraph' leaves the starting
-     delimiter of a block comment on a line by itself.  The default
-     value is `t', which puts the comment-start delimiter `/*' at the
-     beginning of the first line of the comment text.
-
-
-File: emacs,  Node: Fortran,  Next: Asm Mode,  Prev: C/Java Modes,  Up: Programs
-
-Fortran Mode
-============
-
-   Fortran mode provides special motion commands for Fortran statements
-and subprograms, and indentation commands that understand Fortran
-conventions of nesting, line numbers and continuation statements.
-Fortran mode has its own Auto Fill mode that breaks long lines into
-proper Fortran continuation lines.
-
-   Special commands for comments are provided because Fortran comments
-are unlike those of other languages.  Built-in abbrevs optionally save
-typing when you insert Fortran keywords.
-
-   Use `M-x fortran-mode' to switch to this major mode.  This command
-runs the hook `fortran-mode-hook' (*note Hooks::.).
-
-* Menu:
-
-* Motion: Fortran Motion.	 Moving point by statements or subprograms.
-* Indent: Fortran Indent.	 Indentation commands for Fortran.
-* Comments: Fortran Comments.	 Inserting and aligning comments.
-* Autofill: Fortran Autofill.	 Auto fill minor mode for Fortran.
-* Columns: Fortran Columns.	 Measuring columns for valid Fortran.
-* Abbrev: Fortran Abbrev.	 Built-in abbrevs for Fortran keywords.
-
-
-File: emacs,  Node: Fortran Motion,  Next: Fortran Indent,  Up: Fortran
-
-Motion Commands
----------------
-
-   Fortran mode provides special commands to move by subprograms
-(functions and subroutines) and by statements.  There is also a command
-to put the region around one subprogram, convenient for killing it or
-moving it.
-
-`C-M-a'
-     Move to beginning of subprogram
-     (`beginning-of-fortran-subprogram').
-
-`C-M-e'
-     Move to end of subprogram (`end-of-fortran-subprogram').
-
-`C-M-h'
-     Put point at beginning of subprogram and mark at end
-     (`mark-fortran-subprogram').
-
-`C-c C-n'
-     Move to beginning of current or next statement
-     (`fortran-next-statement').
-
-`C-c C-p'
-     Move to beginning of current or previous statement
-     (`fortran-previous-statement').
-
-
-File: emacs,  Node: Fortran Indent,  Next: Fortran Comments,  Prev: Fortran Motion,  Up: Fortran
-
-Fortran Indentation
--------------------
-
-   Special commands and features are needed for indenting Fortran code
-in order to make sure various syntactic entities (line numbers, comment
-line indicators and continuation line flags) appear in the columns that
-are required for standard Fortran.
-
-* Menu:
-
-* Commands: ForIndent Commands.  Commands for indenting Fortran.
-* Contline: ForIndent Cont.      How continuation lines indent.
-* Numbers:  ForIndent Num.       How line numbers auto-indent.
-* Conv:     ForIndent Conv.      Conventions you must obey to avoid trouble.
-* Vars:     ForIndent Vars.      Variables controlling Fortran indent style.
-
-
-File: emacs,  Node: ForIndent Commands,  Next: ForIndent Cont,  Up: Fortran Indent
-
-Fortran Indentation Commands
-............................
-
-`<TAB>'
-     Indent the current line (`fortran-indent-line').
-
-`C-j'
-     Indent the current and start a new indented line
-     (`fortran-indent-new-line').
-
-`C-M-j'
-     Break the current line and set up a continuation line.
-
-`C-M-q'
-     Indent all the lines of the subprogram point is in
-     (`fortran-indent-subprogram').
-
-   Fortran mode redefines <TAB> to reindent the current line for
-Fortran (`fortran-indent-line').  This command indents Line numbers and
-continuation markers to their required columns, and independently
-indents the body of the statement based on its nesting in the program.
-
-   The key `C-j' runs the command `fortran-indent-new-line', which
-reindents the current line then makes and indents a new line.  This
-command is useful to reindent the closing statement of `do' loops and
-other blocks before starting a new line.
-
-   The key `C-M-q' runs `fortran-indent-subprogram', a command to
-reindent all the lines of the Fortran subprogram (function or
-subroutine) containing point.
-
-   The key `C-M-j' runs `fortran-split-line', which splits a line in
-the appropriate fashion for Fortran.  In a non-comment line, the second
-half becomes a continuation line and is indented accordingly.  In a
-comment line, both halves become separate comment lines.
-
-
-File: emacs,  Node: ForIndent Cont,  Next: ForIndent Num,  Prev: ForIndent Commands,  Up: Fortran Indent
-
-Continuation Lines
-..................
-
-   Most modern Fortran compilers allow two ways of writing continuation
-lines.  If the first non-space character on a line is in column 5, then
-that line is a continuation of the previous line.  We call this "fixed
-format".  (In GNU Emacs we always count columns from 0.)  The variable
-`fortran-continuation-string' specifies what character to put on column
-5.  A line that starts with a tab character followed by any digit
-except `0' is also a continuation line.  We call this style of
-continuation "tab format".
-
-   Fortran mode can make either style of continuation line, but you
-must specify which one you prefer.  The value of the variable
-`indent-tabs-mode' controls the choice: `nil' for fixed format, and
-non-`nil' for tab format.  You can tell which style is presently in
-effect by the presence or absence of the string `Tab' in the mode line.
-
-   If the text on a line starts with the conventional Fortran
-continuation marker `$', or if it begins with any non-whitespace
-character in column 5, Fortran mode treats it as a continuation line.
-When you indent a continuation line with <TAB>, it converts the line to
-the current continuation style.  When you split a Fortran statement
-with `C-M-j', the continuation marker on the newline is created
-according to the continuation style.
-
-   The setting of continuation style affects several other aspects of
-editing in Fortran mode.  In fixed format mode, the minimum column
-number for the body of a statement is 6.  Lines inside of Fortran
-blocks that are indented to larger column numbers always use only the
-space character for whitespace.  In tab format mode, the minimum column
-number for the statement body is 8, and the whitespace before column 8
-must always consist of one tab character.
-
-   When you enter Fortran mode for an existing file, it tries to deduce
-the proper continuation style automatically from the file contents.
-The first line that begins with either a tab character or six spaces
-determines the choice.  The variable `fortran-analyze-depth' specifies
-how many lines to consider (at the beginning of the file); if none of
-those lines indicates a style, then the variable
-`fortran-tab-mode-default' specifies the style.  If it is `nil', that
-specifies fixed format, and non-`nil' specifies tab format.
-
-
-File: emacs,  Node: ForIndent Num,  Next: ForIndent Conv,  Prev: ForIndent Cont,  Up: Fortran Indent
-
-Line Numbers
-............
-
-   If a number is the first non-whitespace in the line, Fortran
-indentation assumes it is a line number and moves it to columns 0
-through 4.  (Columns always count from 0 in GNU Emacs.)
-
-   Line numbers of four digits or less are normally indented one space.
-The variable `fortran-line-number-indent' controls this; it specifies
-the maximum indentation a line number can have.  Line numbers are
-indented to right-justify them to end in column 4 unless that would
-require more than this maximum indentation.  The default value of the
-variable is 1.
-
-   Simply inserting a line number is enough to indent it according to
-these rules.  As each digit is inserted, the indentation is recomputed.
-To turn off this feature, set the variable
-`fortran-electric-line-number' to `nil'.  Then inserting line numbers
-is like inserting anything else.
-
-
-File: emacs,  Node: ForIndent Conv,  Next: ForIndent Vars,  Prev: ForIndent Num,  Up: Fortran Indent
-
-Syntactic Conventions
-.....................
-
-   Fortran mode assumes that you follow certain conventions that
-simplify the task of understanding a Fortran program well enough to
-indent it properly:
-
-   * Two nested `do' loops never share a `continue' statement.
-
-   * Fortran keywords such as `if', `else', `then', `do' and others are
-     written without embedded whitespace or line breaks.
-
-     Fortran compilers generally ignore whitespace outside of string
-     constants, but Fortran mode does not recognize these keywords if
-     they are not contiguous.  Constructs such as `else if' or `end do'
-     are acceptable, but the second word should be on the same line as
-     the first and not on a continuation line.
-
-If you fail to follow these conventions, the indentation commands may
-indent some lines unaesthetically.  However, a correct Fortran program
-retains its meaning when reindented even if the conventions are not
-followed.
-
-
-File: emacs,  Node: ForIndent Vars,  Prev: ForIndent Conv,  Up: Fortran Indent
-
-Variables for Fortran Indentation
-.................................
-
-   Several additional variables control how Fortran indentation works:
-
-`fortran-do-indent'
-     Extra indentation within each level of `do' statement (default 3).
-
-`fortran-if-indent'
-     Extra indentation within each level of `if' statement (default 3).
-     This value is also used for extra indentation within each level of
-     the Fortran 90 `where' statement.
-
-`fortran-structure-indent'
-     Extra indentation within each level of `structure', `union', or
-     `map' statements (default 3).
-
-`fortran-continuation-indent'
-     Extra indentation for bodies of continuation lines (default 5).
-
-`fortran-check-all-num-for-matching-do'
-     If this is `nil', indentation assumes that each `do' statement
-     ends on a `continue' statement.  Therefore, when computing
-     indentation for a statement other than `continue', it can save time
-     by not checking for a `do' statement ending there.  If this is
-     non-`nil', indenting any numbered statement must check for a `do'
-     that ends there.  The default is `nil'.
-
-`fortran-blink-matching-if'
-     If this is `t', indenting an `endif' statement moves the cursor
-     momentarily to the matching `if' statement to show where it is.
-     The default is `nil'.
-
-`fortran-minimum-statement-indent-fixed'
-     Minimum indentation for fortran statements when using fixed format
-     continuation line style.  Statement bodies are never indented less
-     than this much.  The default is 6.
-
-`fortran-minimum-statement-indent-tab'
-     Minimum indentation for fortran statements for tab format
-     continuation line style.  Statement bodies are never indented less
-     than this much.  The default is 8.
-
-
-File: emacs,  Node: Fortran Comments,  Next: Fortran Autofill,  Prev: Fortran Indent,  Up: Fortran
-
-Fortran Comments
-----------------
-
-   The usual Emacs comment commands assume that a comment can follow a
-line of code.  In Fortran, the standard comment syntax requires an
-entire line to be just a comment.  Therefore, Fortran mode replaces the
-standard Emacs comment commands and defines some new variables.
-
-   Fortran mode can also handle a nonstandard comment syntax where
-comments start with `!' and can follow other text.  Because only some
-Fortran compilers accept this syntax, Fortran mode will not insert such
-comments unless you have said in advance to do so.  To do this, set the
-variable `comment-start' to `"!"' (*note Variables::.).
-
-`M-;'
-     Align comment or insert new comment (`fortran-comment-indent').
-
-`C-x ;'
-     Applies to nonstandard `!' comments only.
-
-`C-c ;'
-     Turn all lines of the region into comments, or (with argument)
-     turn them back into real code (`fortran-comment-region').
-
-   `M-;' in Fortran mode is redefined as the command
-`fortran-comment-indent'.  Like the usual `M-;' command, this
-recognizes any kind of existing comment and aligns its text
-appropriately; if there is no existing comment, a comment is inserted
-and aligned.  But inserting and aligning comments are not the same in
-Fortran mode as in other modes.
-
-   When a new comment must be inserted, if the current line is blank, a
-full-line comment is inserted.  On a non-blank line, a nonstandard `!'
-comment is inserted if you have said you want to use them.  Otherwise a
-full-line comment is inserted on a new line before the current line.
-
-   Nonstandard `!' comments are aligned like comments in other
-languages, but full-line comments are different.  In a standard
-full-line comment, the comment delimiter itself must always appear in
-column zero.  What can be aligned is the text within the comment.  You
-can choose from three styles of alignment by setting the variable
-`fortran-comment-indent-style' to one of these values:
-
-`fixed'
-     Align the text at a fixed column, which is the sum of
-     `fortran-comment-line-extra-indent' and the minimum statement
-     indentation.  This is the default.
-
-     The minimum statement indentation is
-     `fortran-minimum-statement-indent-fixed' for fixed format
-     continuation line style and `fortran-minimum-statement-indent-tab'
-     for tab format style.
-
-`relative'
-     Align the text as if it were a line of code, but with an additional
-     `fortran-comment-line-extra-indent' columns of indentation.
-
-`nil'
-     Don't move text in full-line columns automatically at all.
-
-   In addition, you can specify the character to be used to indent
-within full-line comments by setting the variable
-`fortran-comment-indent-char' to the single-character string you want
-to use.
-
-   Fortran mode introduces two variables `comment-line-start' and
-`comment-line-start-skip', which play for full-line comments the same
-roles played by `comment-start' and `comment-start-skip' for ordinary
-text-following comments.  Normally these are set properly by Fortran
-mode, so you do not need to change them.
-
-   The normal Emacs comment command `C-x ;' has not been redefined.  If
-you use `!' comments, this command can be used with them.  Otherwise it
-is useless in Fortran mode.
-
-   The command `C-c ;' (`fortran-comment-region') turns all the lines
-of the region into comments by inserting the string `C$$$' at the front
-of each one.  With a numeric argument, it turns the region back into
-live code by deleting `C$$$' from the front of each line in it.  The
-string used for these comments can be controlled by setting the
-variable `fortran-comment-region'.  Note that here we have an example
-of a command and a variable with the same name; these two uses of the
-name never conflict because in Lisp and in Emacs it is always clear
-from the context which one is meant.
-
-
-File: emacs,  Node: Fortran Autofill,  Next: Fortran Columns,  Prev: Fortran Comments,  Up: Fortran
-
-Fortran Auto Fill Mode
-----------------------
-
-   Fortran Auto Fill mode is a minor mode which automatically splits
-Fortran statements as you insert them when they become too wide.
-Splitting a statement involves making continuation lines using
-`fortran-continuation-string' (*Note ForIndent Cont::).  This splitting
-happens when you type <SPC>, <RET>, or <TAB>, and also in the Fortran
-indentation commands.
-
-   `M-x fortran-auto-fill-mode' turns Fortran Auto Fill mode on if it
-was off, or off if it was on.  This command works the same as `M-x
-auto-fill-mode' does for normal Auto Fill mode (*note Filling::.).  A
-positive numeric argument turns Fortran Auto Fill mode on, and a
-negative argument turns it off.  You can see when Fortran Auto Fill mode
-is in effect by the presence of the word `Fill' in the mode line,
-inside the parentheses.  Fortran Auto Fill mode is a minor mode, turned
-on or off for each buffer individually.  *Note Minor Modes::.
-
-   Fortran Auto Fill mode breaks lines at spaces or delimiters when the
-lines get longer than the desired width (the value of `fill-column').
-The delimiters that Fortran Auto Fill mode may break at are `,', `'',
-`+', `-', `/', `*', `=', and `)'.  The line break comes after the
-delimiter if the variable `fortran-break-before-delimiters' is `nil'.
-Otherwise (and by default), the break comes before the delimiter.
-
-   By default, Fortran Auto Fill mode is not enabled.  If you want this
-feature turned on permanently, add a hook function to
-`fortran-mode-hook' to execute `(fortran-auto-fill-mode 1)'.  *Note
-Hooks::.
 

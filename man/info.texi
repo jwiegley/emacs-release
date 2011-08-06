@@ -440,13 +440,13 @@ You must then type the name of the subtopic you want, and end it with
 a @key{RET}.
 
   You can abbreviate the subtopic name.  If the abbreviation is not
-unique, the first matching subtopic is chosen.  Some menus put
-the shortest possible abbreviation for each subtopic name in capital
-letters, so you can see how much you need to type.  It does not
-matter whether you use upper case or lower case when you type the
-subtopic.  You should not put any spaces at the end, or inside of the
-item name, except for one space where a space appears in the item in
-the menu.
+unique, the first matching subtopic is chosen.  Some menus put the
+shortest possible abbreviation for each subtopic name in capital
+letters, so you can see how much you need to type.  It does not matter
+whether you use upper case or lower case when you type the subtopic.  Do
+not put spaces at the end of the subtopic name; in the middle of the
+subtopic name, use one space (no more!) wherever the menu item name has
+a space.
 
   You can also use the @dfn{completion} feature to help enter the subtopic
 name.  If you type the Tab key after entering part of a name, it will

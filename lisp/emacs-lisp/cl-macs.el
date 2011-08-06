@@ -303,6 +303,9 @@ ARGLIST allows full Common Lisp conventions."
 					  (list nil (cl-const-expr-val def)))
 				       (list 'list nil def))))))))
 	      (cl-push karg keys)
+	      ;; In Emacs 20.3, keyword symbols are preinitialized,
+	      ;; making this unnecessary.  But let's keep it for
+	      ;; compatibility's sake.
 	      (if (= (aref (symbol-name karg) 0) ?:)
 		  (progn (set karg karg)
 			 (cl-push (list 'setq karg (list 'quote karg))
@@ -1576,7 +1579,9 @@ Example: (defsetf nth (n x) (v) (list 'setcar (list 'nthcdr n x) v))."
 
 ;;; Some more Emacs-related place types.
 (defsetf buffer-file-name set-visited-file-name t)
-(defsetf buffer-modified-p set-buffer-modified-p t)
+(defsetf buffer-modified-p (&optional buf) (flag)
+  (list 'with-current-buffer buf
+	(list 'set-buffer-modified-p flag)))
 (defsetf buffer-name rename-buffer t)
 (defsetf buffer-string () (store)
   (list 'progn '(erase-buffer) (list 'insert store)))
@@ -1621,7 +1626,7 @@ Example: (defsetf nth (n x) (v) (list 'setcar (list 'nthcdr n x) v))."
 (defsetf mark set-mark t)
 (defsetf mark-marker set-mark t)
 (defsetf marker-position set-marker t)
-(defsetf match-data store-match-data t)
+(defsetf match-data set-match-data t)
 (defsetf mouse-position (scr) (store)
   (list 'set-mouse-position scr (list 'car store) (list 'cadr store)
 	(list 'cddr store)))
@@ -2440,9 +2445,9 @@ compiler macros are expanded repeatedly until no further expansions are
 possible.  Unlike regular macros, BODY can decide to \"punt\" and leave the
 original function call alone by declaring an initial `&whole foo' parameter
 and then returning foo."
-  (let ((p (if (listp args) args (list '&rest args))) (res nil))
+  (let ((p args) (res nil))
     (while (consp p) (cl-push (cl-pop p) res))
-    (setq args (nreverse res)) (setcdr res (and p (list '&rest p))))
+    (setq args (nconc (nreverse res) (and p (list '&rest p)))))
   (list 'eval-when '(compile load eval)
 	(cl-transform-function-property
 	 func 'cl-compiler-macro

@@ -52,7 +52,10 @@ This string is shown at mode line when users are in KKC mode.")
 ;; Cash data for `kkc-lookup-key'.  This may be initialized by loading
 ;; a file specified by `kkc-init-file-name'.  If any elements are
 ;; modified, the data is written out to the file when exiting Emacs.
-(defvar kkc-lookup-cache '(kkc-lookup-cache))
+(defvar kkc-lookup-cache nil)
+
+;; Tag symbol of `kkc-lookup-cache'.
+(defconst kkc-lookup-cache-tag 'kkc-lookup-cache-2)
 
 (defun kkc-save-init-file ()
   "Save initial setup code for KKC to a file specified by `kkc-init-file-name'"
@@ -66,29 +69,32 @@ This string is shown at mode line when users are in KKC mode.")
 ;; Sequence of characters to be used for indexes for shown list.  The
 ;; Nth character is for the Nth conversion in the list currently shown.
 (defvar kkc-show-conversion-list-index-chars
-  "1234567890abcdefghijklmnopqrsuvwxyz")
+  "1234567890")
 
-(defvar kkc-mode-map
-  (let ((map (make-keymap))
+(defun kkc-help ()
+  "Show key bindings available while converting by KKC."
+  (interactive)
+  (with-output-to-temp-buffer "*Help*"
+    (princ (substitute-command-keys "\\{kkc-keymap}"))))
+
+(defvar kkc-keymap
+  (let ((map (make-sparse-keymap))
+	(len (length kkc-show-conversion-list-index-chars))
 	(i 0))
-    (while (< i 128)
-      (define-key map (char-to-string i) 'kkc-non-kkc-command)
+    (while (< i len)
+      (define-key map
+	(char-to-string (aref kkc-show-conversion-list-index-chars i))
+	'kkc-select-from-list)
       (setq i (1+ i)))
-    (setq i 0)
-    (let ((len (length kkc-show-conversion-list-index-chars)))
-      (while (< i len)
-	(define-key map
-	  (char-to-string (aref kkc-show-conversion-list-index-chars i))
-	  'kkc-select-from-list)
-	(setq i (1+ i))))
     (define-key map " " 'kkc-next)
-    (define-key map (char-to-string help-char) 'help-command)
     (define-key map "\r" 'kkc-terminate)
     (define-key map "\C-@" 'kkc-first-char-only)
     (define-key map "\C-n" 'kkc-next)
     (define-key map "\C-p" 'kkc-prev)
     (define-key map "\C-i" 'kkc-shorter)
     (define-key map "\C-o" 'kkc-longer)
+    (define-key map "I" 'kkc-shorter-conversion)
+    (define-key map "O" 'kkc-longer-phrase)
     (define-key map "\C-c" 'kkc-cancel)
     (define-key map "\C-?" 'kkc-cancel)
     (define-key map "\C-f" 'kkc-next-phrase)
@@ -96,26 +102,12 @@ This string is shown at mode line when users are in KKC mode.")
     (define-key map "H" 'kkc-hiragana)
     (define-key map "l" 'kkc-show-conversion-list-or-next-group)
     (define-key map "L" 'kkc-show-conversion-list-or-prev-group)
-    (define-key map [?\C-\ ] 'kkc-first-char-only)
+    (define-key map [?\C- ] 'kkc-first-char-only)
     (define-key map [delete] 'kkc-cancel)
     (define-key map [return] 'kkc-terminate)
-    (let ((meta-map (make-sparse-keymap)))
-      (define-key map (char-to-string meta-prefix-char) meta-map)
-      (define-key map [escape] meta-map))
-    (define-key map (vector meta-prefix-char t) 'kkc-non-kkc-command)
-    ;; At last, define default key binding.
-    (define-key map [t] 'kkc-non-kkc-command)
+    (define-key map "\C-h" 'kkc-help)
     map)
-  "Keymap for KKC (Kana Kanji Conversion) mode.")
-
-(defun kkc-mode ()
-  "Major mode for converting Kana string to Kanji-Kana mixed string.
-Commands:
-\\{kkc-mode-map}"
-  (setq major-mode 'kkc-mode)
-  (setq mode-name "KKC")
-  (use-local-map kkc-mode-map)
-  (run-hooks 'kkc-mode-hook))
+  "Keymap for KKC (Kana Kanji Converter).")
 
 ;;; Internal variables used in KKC.
 
@@ -143,7 +135,7 @@ Commands:
   "Count of successive `kkc-next' or `kkc-prev' to show conversion list.")
 
 ;; Provided that `kkc-current-key' is [A B C D E F G H I], the current
-;; conversion target is [A B C D E F], the sequence of which
+;; conversion target is [A B C D E F], and the sequence of which
 ;; conversion is found is [A B C D]:
 ;;
 ;;                                A B C D E F G H I
@@ -160,11 +152,6 @@ Commands:
 ;; Cursor type (`box' or `bar') of the current frame.
 (defvar kkc-cursor-type nil)
 
-;; Flag to tell if the current conversion is canceled.  If non-nil,
-;; the value is a buffer position of the head of currently active
-;; conversion region.
-(defvar kkc-canceled nil)
-
 ;; Lookup SKK dictionary to set list of conversions in
 ;; kkc-current-conversions for key sequence kkc-current-key of length
 ;; LEN.  If no conversion is found in the dictionary, don't change
@@ -172,15 +159,18 @@ Commands:
 ;; Postfixes are handled only if POSTFIX is non-nil. 
 (defun kkc-lookup-key (len &optional postfix prefer-noun)
   ;; At first, prepare cache data if any.
-  (if (not kkc-init-file-flag)
-      (progn
-	(setq kkc-init-file-flag t)
-	(add-hook 'kill-emacs-hook 'kkc-save-init-file)
-	(if (file-readable-p kkc-init-file-name)
-	    (condition-case nil
-		(load-file "~/.kkcrc")
-	      (error (message "Invalid data in %s" kkc-init-file-name)
-		     (ding))))))
+  (unless kkc-init-file-flag
+    (setq kkc-init-file-flag t
+	  kkc-lookup-cache nil)
+    (add-hook 'kill-emacs-hook 'kkc-save-init-file)
+    (if (file-readable-p kkc-init-file-name)
+	(condition-case nil
+	    (load-file kkc-init-file-name)
+	  (kkc-error "Invalid data in %s" kkc-init-file-name))))
+  (or (and (nested-alist-p kkc-lookup-cache)
+	   (eq (car kkc-lookup-cache) kkc-lookup-cache-tag))
+      (setq kkc-lookup-cache (list kkc-lookup-cache-tag)
+	    kkc-init-file-flag 'kkc-lookup-cache))
   (let ((entry (lookup-nested-alist kkc-current-key kkc-lookup-cache len 0 t)))
     (if (consp (car entry))
 	(setq kkc-length-converted len
@@ -204,12 +194,20 @@ Commands:
 		  kkc-current-conversions-width nil
 		  kkc-current-conversions (cons 0 nil)))))))
 
+(put 'kkc-error 'error-conditions '(kkc-error error))
+(defun kkc-error (&rest args)
+  (signal 'kkc-error (apply 'format args)))
+
+(defvar kkc-converting nil)
+
 ;;;###autoload
-(defun kkc-region (from to &optional kkc-mode-exit-function)
+(defun kkc-region (from to)
   "Convert Kana string in the current region to Kanji-Kana mixed string.
-After one candidate of conversion is shown in the region, users are
-put in KKC major mode to select a desirable conversion.
-Optional arg KKC-MODE-EXIT-FUNCTION if non-nil is called on exiting KKC mode."
+Users can select a desirable conversion interactively.
+When called from a program, expects two arguments,
+positions FROM and TO (integers or markers) specifying the target region.
+When it returns, the point is at the tail of the selected conversion,
+and the return value is the length of the conversion."
   (interactive "r")
   (setq kkc-original-kana (buffer-substring from to))
   (goto-char from)
@@ -224,61 +222,61 @@ Optional arg KKC-MODE-EXIT-FUNCTION if non-nil is called on exiting KKC mode."
     (setq kkc-overlay-tail (make-overlay to to nil nil t))
     (overlay-put kkc-overlay-tail 'face 'underline))
 
-  ;; After updating the conversion region with the first candidate of
-  ;; conversion, jump into a recursive editing environment with KKC
-  ;; mode.
-  (let ((overriding-local-map nil)
-	(previous-local-map (current-local-map))
-	(minor-mode-alist nil)
-	(minor-mode-map-alist nil)
-	(current-input-method-title kkc-input-method-title)
-	major-mode mode-name)
-    (unwind-protect
-	(let (len)
-	  (setq kkc-canceled nil)
-	  (setq kkc-current-key (string-to-vector kkc-original-kana))
-	  (setq kkc-length-head (length kkc-current-key))
-	  (setq len kkc-length-head)
-	  (setq kkc-length-converted 0)
-	  (while (not (kkc-lookup-key kkc-length-head nil
-				      (< kkc-length-head len)))
-	    (setq kkc-length-head (1- kkc-length-head)))
-	  (goto-char to)
-	  (kkc-update-conversion 'all)
-	  (kkc-mode)
-	  (recursive-edit))
-      (goto-char (overlay-end kkc-overlay-tail))
-      (delete-overlay kkc-overlay-head)
-      (delete-overlay kkc-overlay-tail)
-      (use-local-map previous-local-map)
-      (if (and kkc-mode-exit-function
-	       (fboundp kkc-mode-exit-function))
-	  (funcall kkc-mode-exit-function (if kkc-canceled
-					      (cons kkc-canceled (point))))))))
+  (setq kkc-current-key (string-to-vector kkc-original-kana))
+  (setq kkc-length-head (length kkc-current-key))
+  (setq kkc-length-converted 0)
+
+  (unwind-protect
+      ;; At first convert the region to the first candidate.
+      (let ((current-input-method-title kkc-input-method-title)
+	    (input-method-function nil)
+	    (first t))
+	(while (not (kkc-lookup-key kkc-length-head nil first))
+	  (setq kkc-length-head (1- kkc-length-head)
+		first nil))
+	(goto-char to)
+	(kkc-update-conversion 'all)
+
+	;; Then, ask users to selecte a desirable conversion.
+	(force-mode-line-update)
+	(setq kkc-converting t)
+	(while kkc-converting
+	  (let* ((overriding-terminal-local-map kkc-keymap)
+		 (help-char nil)
+		 (keyseq (read-key-sequence nil))
+		 (cmd (lookup-key kkc-keymap keyseq)))
+	    (if (commandp cmd)
+		(condition-case err
+		    (call-interactively cmd)
+		  (kkc-error (message "%s" (cdr err)) (beep)))
+	      ;; KEYSEQ is not defined in KKC keymap.
+	      ;; Let's put the event back.
+	      (setq unread-input-method-events
+		    (append (string-to-list keyseq)
+			    unread-input-method-events))
+	      (kkc-terminate))))
+
+	(force-mode-line-update)
+	(goto-char (overlay-end kkc-overlay-tail))
+	(- (overlay-start kkc-overlay-head) from))
+    (delete-overlay kkc-overlay-head)
+    (delete-overlay kkc-overlay-tail)))
 
 (defun kkc-terminate ()
   "Exit from KKC mode by fixing the current conversion."
   (interactive)
-  (throw 'exit nil))
-
-(defun kkc-non-kkc-command ()
-  "Exit from KKC mode by fixing the current conversion.
-After that, handle the event which invoked this command."
-  (interactive)
-  (let* ((key (this-command-keys))
-	 (keylist (listify-key-sequence key)))
-    (setq unread-command-events (append keylist unread-command-events)))
-  (kkc-terminate))
+  (goto-char (overlay-end kkc-overlay-tail))
+  (move-overlay kkc-overlay-head (point) (point))
+  (setq kkc-converting nil))
 
 (defun kkc-cancel ()
   "Exit from KKC mode by canceling any conversions."
   (interactive)
-  (setq kkc-canceled (overlay-start kkc-overlay-head))
-  (goto-char kkc-canceled)
+  (goto-char (overlay-start kkc-overlay-head))
   (delete-region (overlay-start kkc-overlay-head)
 		 (overlay-end kkc-overlay-tail))
   (insert kkc-original-kana)
-  (kkc-terminate))
+  (setq kkc-converting nil))
 
 (defun kkc-first-char-only ()
   "Select only the first character currently converted."
@@ -349,7 +347,7 @@ After that, handle the event which invoked this command."
 	      (setq len maxlen))
 	  (while (< i len)
 	    (if (= (aref kkc-show-conversion-list-index-chars i)
-		   last-input-char)
+		   last-input-event)
 		(setq idx i i len)
 	      (setq i (1+ i))))))
     (if idx
@@ -358,7 +356,8 @@ After that, handle the event which invoked this command."
 		  (+ (aref (aref kkc-current-conversions-width 0) 0) idx))
 	  (kkc-show-conversion-list-update)
 	  (kkc-update-conversion))
-      (setq unread-command-events (list last-input-event))
+      (setq unread-input-method-events
+	    (cons last-input-event unread-input-method-events))
       (kkc-terminate))))
 
 (defun kkc-katakana ()
@@ -377,24 +376,43 @@ After that, handle the event which invoked this command."
   "Make the Kana string to be converted shorter."
   (interactive)
   (if (<= kkc-length-head 1)
-      (error "Can't be shorter")
-    (setq kkc-length-head (1- kkc-length-head))
-    (if (> kkc-length-converted kkc-length-head)
-	(let ((len kkc-length-head))
-	  (setq kkc-length-converted 0)
-	  (while (not (kkc-lookup-key len))
-	    (setq len (1- len)))))
-    (kkc-update-conversion 'all)))
+      (kkc-error "Can't be shorter"))
+  (setq kkc-length-head (1- kkc-length-head))
+  (if (> kkc-length-converted kkc-length-head)
+      (let ((len kkc-length-head))
+	(setq kkc-length-converted 0)
+	(while (not (kkc-lookup-key len))
+	  (setq len (1- len)))))
+  (kkc-update-conversion 'all))
 
 (defun kkc-longer ()
   "Make the Kana string to be converted longer."
   (interactive)
   (if (>= kkc-length-head (length kkc-current-key))
-      (error "Can't be longer")
-    (setq kkc-length-head (1+ kkc-length-head))
-    ;; This time, try also entries with postfixes.
-    (kkc-lookup-key kkc-length-head 'postfix)
-    (kkc-update-conversion 'all)))
+      (kkc-error "Can't be longer"))
+  (setq kkc-length-head (1+ kkc-length-head))
+  ;; This time, try also entries with postfixes.
+  (kkc-lookup-key kkc-length-head 'postfix)
+  (kkc-update-conversion 'all))
+
+(defun kkc-shorter-conversion ()
+  "Make the Kana string to be converted shorter."
+  (interactive)
+  (if (<= kkc-length-converted 1)
+      (kkc-error "Can't be shorter"))
+  (let ((len (1- kkc-length-converted)))
+    (setq kkc-length-converted 0)
+    (while (not (kkc-lookup-key len))
+      (setq len (1- len))))
+  (kkc-update-conversion 'all))
+
+(defun kkc-longer-phrase ()
+  "Make the current phrase (BUNSETSU) longer without looking up dictionary."
+  (interactive)
+  (if (>= kkc-length-head (length kkc-current-key))
+      (kkc-error "Can't be longer"))
+  (setq kkc-length-head (1+ kkc-length-head))
+  (kkc-update-conversion 'all))
 
 (defun kkc-next-phrase ()
   "Fix the currently converted string and try to convert the remaining string."
@@ -459,7 +477,7 @@ If the list is already shown, show the next group of conversions,
 and change the current conversion to the first one in the group."
   (interactive)
   (if (< (length kkc-current-conversions) 3)
-      (error "No alternative"))
+      (kkc-error "No alternative"))
   (if kkc-current-conversions-width
       (let ((next-idx (aref (aref kkc-current-conversions-width 0) 1)))
 	(if (< next-idx (length kkc-current-conversions-width))
@@ -476,7 +494,7 @@ If the list is already shown, show the previous group of conversions,
 and change the current conversion to the last one in the group."
   (interactive)
   (if (< (length kkc-current-conversions) 3)
-      (error "No alternative"))
+      (kkc-error "No alternative"))
   (if kkc-current-conversions-width
       (let ((this-idx (aref (aref kkc-current-conversions-width 0) 0)))
 	(if (> this-idx 1)
@@ -519,16 +537,19 @@ and change the current conversion to the last one in the group."
 	      (width-table kkc-current-conversions-width)
 	      (width 0)
 	      (idx this-idx)
+	      (max-items (length kkc-show-conversion-list-index-chars))
 	      l)
 	  (while (< idx current-idx)
-	    (if (<= (+ width (aref width-table idx)) max-width)
+	    (if (and (<= (+ width (aref width-table idx)) max-width)
+		     (< (- idx this-idx) max-items))
 		(setq width (+ width (aref width-table idx)))
 	      (setq this-idx idx width (aref width-table idx)))
 	    (setq idx (1+ idx)
 		  l (cdr l)))
 	  (aset first-slot 0 this-idx)
 	  (while (and (< idx len)
-		      (<= (+ width (aref width-table idx)) max-width))
+		      (<= (+ width (aref width-table idx)) max-width)
+		      (< (- idx this-idx) max-items))
 	    (setq width (+ width (aref width-table idx))
 		  idx (1+ idx)
 		  l (cdr l)))

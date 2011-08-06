@@ -56,7 +56,10 @@ When t this still needs to be initialized.")
 (defcustom mail-complete-alist
   ;; Don't use backquote here; we don't want backquote to get loaded
   ;; just because of loading this file.
-  (cons (cons mail-address-field-regexp '(mail-get-names pattern))
+  ;; Don't refer to mail-address-field-regexp here;
+  ;; that confuses some things such as cus-dep.el.
+  (cons '("^\\(Resent-\\)?\\(To\\|From\\|CC\\|BCC\\|Reply-to\\):"
+	  . (mail-get-names pattern))
 	'(("Newsgroups:" . (if (boundp 'gnus-active-hashtb)
 			       gnus-active-hashtb
 			     (if (boundp news-group-article-assoc)
@@ -158,7 +161,7 @@ When t this still needs to be initialized.")
 ;;;###autoload
 (defun expand-mail-aliases (beg end &optional exclude)
   "Expand all mail aliases in suitable header fields found between BEG and END.
-If interactive, expand in header fields before `mail-header-separator'.
+If interactive, expand in header fields.
 Suitable header fields are `To', `From', `CC' and `BCC', `Reply-to', and
 their `Resent-' variants.
 
@@ -167,7 +170,7 @@ removed from alias expansions."
   (interactive
    (save-excursion
      (list (goto-char (point-min))
-	   (search-forward (concat "\n" mail-header-separator "\n")))))
+	   (mail-header-end))))
   (sendmail-sync-aliases)
   (when (eq mail-aliases t)
     (setq mail-aliases nil)
@@ -238,6 +241,9 @@ removed from alias expansions."
   "Read mail aliases from personal aliases file and set `mail-aliases'.
 By default, this is the file specified by `mail-personal-alias-file'."
   (setq file (expand-file-name (or file mail-personal-alias-file)))
+  ;; In case mail-aliases is t, make sure define-mail-alias
+  ;; does not recursively call build-mail-aliases.
+  (setq mail-aliases nil)
   (let ((buffer nil)
 	(obuf (current-buffer)))
     (unwind-protect
@@ -302,7 +308,9 @@ if it is quoted with double-quotes."
 
   (interactive "sDefine mail alias: \nsDefine %s as mail alias for: ")
   ;; Read the defaults first, if we have not done so.
-  (sendmail-sync-aliases)
+  ;; But not if we are doing that already right now.
+  (unless from-mailrc-file
+    (sendmail-sync-aliases))
   (if (eq mail-aliases t)
       (progn
 	(setq mail-aliases nil)
@@ -317,21 +325,37 @@ if it is quoted with double-quotes."
 	;; If DEFINITION is null string, avoid looping even once.
 	(start (and (not (equal definition "")) 0))
 	(L (length definition))
+	convert-backslash
 	end tem)
     (while start
+      (setq convert-backslash nil)
       ;; If we're reading from the mailrc file, then addresses are delimited
       ;; by spaces, and addresses with embedded spaces must be surrounded by
       ;; double-quotes.  Otherwise, addresses are separated by commas.
       (if from-mailrc-file
 	  (if (eq ?\" (aref definition start))
-	      (setq start (1+ start)
-		    end (string-match "\"[ \t,]*" definition start))
+	      ;; The following test on `found' compensates for a bug
+	      ;; in match-end, which does not return nil when match
+	      ;; failed.
+	      (let ((found (string-match "[^\\]\\(\\([\\][\\]\\)*\\)\"[ \t,]*"
+					 definition start)))
+		(setq start (1+ start)
+		      end (and found (match-end 1))
+		      convert-backslash t))
 	    (setq end (string-match "[ \t,]+" definition start)))
 	(setq end (string-match "[ \t\n,]*,[ \t\n,]*" definition start)))
-      (setq result (cons (substring definition start end) result))
-      (setq start (and end
-		       (/= (match-end 0) L)
-		       (match-end 0))))
+      (let ((temp (substring definition start end))
+	    (pos 0))
+	(setq start (and end
+			 (/= (match-end 0) L)
+			 (match-end 0)))
+	(if convert-backslash
+	    (while (string-match "[\\]" temp pos)
+	      (setq temp (replace-match "" t t temp))
+	      (if start 
+		  (setq start (1- start)))
+	      (setq pos (match-end 0))))
+	(setq result (cons temp result))))
     (setq definition (mapconcat (function identity)
 				(nreverse result)
 				", "))
@@ -355,9 +379,7 @@ current header, calls `mail-complete-function' and passes prefix arg if any."
 	(if (file-exists-p mail-personal-alias-file)
 	    (build-mail-aliases))))
   (let ((list mail-complete-alist))
-    (if (and (save-excursion (search-forward
-			      (concat "\n" mail-header-separator "\n")
-			      nil t))
+    (if (and (< 0 (mail-header-end))
 	     (save-excursion
 	       (if (re-search-backward "^[^\t]" nil t)
 		   (while list

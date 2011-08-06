@@ -349,7 +349,7 @@ yank'' pointer remains at the same place in the kill ring, so repeating
 you want, you can yank that text in one step using @kbd{C-y} with a
 numeric argument.  @kbd{C-y} with an argument restores the text the
 specified number of entries back in the kill ring.  Thus, @kbd{C-u 2
-C-y} gets the next to the last block of killed text.  It is equivalent
+C-y} gets the next-to-the-last block of killed text.  It is equivalent
 to @kbd{C-y M-y}.  @kbd{C-y} with a numeric argument starts counting
 from the ``last yank'' pointer, and sets the ``last yank'' pointer to
 the entry that it yanks.
@@ -393,7 +393,7 @@ Append region to contents of specified file, at the end.
 @end table
 
   To accumulate text into a buffer, use @kbd{M-x append-to-buffer}.
-This reads a buffer name, them inserts a copy of the region into the
+This reads a buffer name, then inserts a copy of the region into the
 buffer specified.  If you specify a nonexistent buffer,
 @code{append-to-buffer} creates the buffer.  The text is inserted
 wherever point is in that buffer.  If you have been using the buffer for
@@ -415,12 +415,12 @@ copy-to-buffer} is similar except that any existing text in the other
 buffer is deleted, so the buffer is left containing just the text newly
 copied into it.
 
-  To retrieve the accumulated text from another buffer, use @kbd{M-x
-insert-buffer}; this too takes @var{buffername} as an argument.  It
-inserts a copy of the text in buffer @var{buffername} into the selected
-buffer.  You can alternatively select the other buffer for editing, then
-optionally move text from it by killing.  @xref{Buffers}, for background
-information on buffers.
+  To retrieve the accumulated text from another buffer, use the command
+@kbd{M-x insert-buffer}; this too takes @var{buffername} as an argument.
+It inserts a copy of the text in buffer @var{buffername} into the
+selected buffer.  You can alternatively select the other buffer for
+editing, then optionally move text from it by killing.  @xref{Buffers},
+for background information on buffers.
 
   Instead of accumulating text within Emacs, in a buffer, you can append
 text directly into a file with @kbd{M-x append-to-file}, which takes
@@ -440,8 +440,8 @@ can lead to losing some of your editing.
 
   The rectangle commands operate on rectangular areas of the text: all
 the characters between a certain pair of columns, in a certain range of
-lines. Commands are provided to kill rectangles, yank killed rectangles,
-clear them out, fill them with blanks or text, or delete them. Rectangle
+lines.  Commands are provided to kill rectangles, yank killed rectangles,
+clear them out, fill them with blanks or text, or delete them.  Rectangle
 commands are useful with text in multicolumn formats, and for changing
 text into or out of such formats.
 
@@ -474,8 +474,12 @@ Insert blank space to fill the space of the region-rectangle
 region-rectangle rightward.
 @item M-x clear-rectangle
 Clear the region-rectangle by replacing its contents with spaces.
-@item M-x string-rectangle @key{RET} @var{string} @key{RET}
-Insert @var{string} on each line of the region-rectangle.
+@item M-x delete-whitespace-rectangle
+Delete whitespace in each of the lines on the specified rectangle,
+starting from the left edge column of the rectangle.
+@item C-x r t @key{RET} @var{string} @key{RET}
+Insert @var{string} on each line of the region-rectangle
+(@code{string-rectangle}).
 @end table
 
   The rectangle operations fall into two classes: commands deleting and
@@ -527,12 +531,18 @@ o} (@code{open-rectangle}) which inserts a blank rectangle.  Clearing a
 rectangle is equivalent to deleting it and then inserting a blank
 rectangle of the same size.
 
+@findex delete-whitespace-rectangle
+  The command @kbd{M-x delete-whitespace-rectangle} deletes horizontal
+whitespace starting from a particular column.  This applies to each of
+the lines in the rectangle, and the column is specified by the left
+edge of the rectangle.  The right edge of the rectangle does not make
+any difference to this command.
+
+@kindex C-x r t
 @findex string-rectangle
-  The command @kbd{M-x string-rectangle} is similar to @kbd{C-x r o},
-but it inserts a specified string instead of blanks.  You specify the
-string with the minibuffer.  Since the length of the string specifies
-how many columns to insert, the width of the region-rectangle does not
-matter for this command.  What does matter is the position of the left
-edge (which specifies the column position for the insertion in each
-line) and the range of lines that the rectangle occupies.  The previous
-contents of the text beyond the insertion column are pushed rightward.
+  The command @kbd{C-x r t} (@code{M-x string-rectangle}) replaces the
+rectangle with a specified string (inserted once on each line).  The
+string's width need not be the same as the width of the rectangle.  if
+the string's width is less, the text after the rectangle shifts left; if
+the stringis wider than the rectangle, the text after the rectangle
+shifts right.

@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/types.h>
+#include <getopt.h>
 #ifdef MSDOS
 #include <fcntl.h>
 #endif
@@ -30,6 +31,10 @@
 /* On some systems, Emacs defines static as nothing for the sake
    of unexec.  We don't want that here since we don't use unexec. */
 #undef static
+#endif
+
+#ifdef STDC_HEADERS
+#include <stdlib.h>
 #endif
 
 #undef TRUE
@@ -78,6 +83,16 @@ void fatal ();
 
 char *progname;
 
+struct option longopts[] =
+{
+  { "help",			no_argument,	   NULL,     'h'   },
+  { "version",			no_argument,	   NULL,     'V'   },
+  { 0 }
+};
+
+extern int optind;
+
+int
 main (argc, argv)
      int argc;
      char **argv;
@@ -101,11 +116,31 @@ main (argc, argv)
 #endif
   progname = argv[0];
 
-  if (argc != 1)
+  while (1)
+    {
+      int opt = getopt_long (argc, argv, "hV", longopts, 0);
+      if (opt == EOF)
+	break;
+
+      switch (opt)
+	{
+	case 'V':
+	  printf ("%s (GNU Emacs %s)\n", "b2m", VERSION);
+	  puts ("b2m is in the public domain.");
+	  exit (GOOD);
+
+	case 'h':
+	  fprintf (stderr, "Usage: %s <babylmailbox >unixmailbox\n", progname);
+	  exit (GOOD);
+	}
+    }
+
+  if (optind != argc)
     {
       fprintf (stderr, "Usage: %s <babylmailbox >unixmailbox\n", progname);
       exit (GOOD);
     }
+
   labels_saved = printing = header = FALSE;
   ltoday = time (0);
   today = ctime (&ltoday);
@@ -261,6 +296,7 @@ xrealloc (ptr, size)
 
 void
 fatal (message)
+     char *message;
 {
   fprintf (stderr, "%s: %s\n", progname, message);
   exit (BAD);

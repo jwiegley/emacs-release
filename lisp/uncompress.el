@@ -72,8 +72,14 @@ It then selects a major mode from the uncompressed file name and contents."
           (set-visited-file-name
            (concat (substring buffer-file-name 0 (match-beginning 0)) ".tar")))))
   (message "Uncompressing...")
-  (let ((buffer-read-only nil))
+  (let ((buffer-read-only nil)
+	(coding-system-for-write 'no-conversion)
+	(coding-system-for-read
+	 (find-operation-coding-system
+	  'insert-file-contents
+	  buffer-file-name t)))
     (shell-command-on-region (point-min) (point-max) uncompress-program t))
+  (goto-char (point-min))
   (message "Uncompressing...done")
   (set-buffer-modified-p nil)
   (make-local-variable 'write-file-hooks)
@@ -98,7 +104,9 @@ It then selects a major mode from the uncompressed file name and contents."
 	(progn
 	  (insert-file-contents buffer-file-name t)
 	  (goto-char (point-min))
-	  (setq error nil)
+	  ;; No need for this, because error won't be set to t
+	  ;; if this function returns t.
+	  ;; (setq error nil)
 	  t))))
 
 (provide 'uncompress)

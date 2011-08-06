@@ -78,12 +78,21 @@
 
 ;;{{{ variables
 
-(defvar tcl-default-application "wish"
-  "Default tcl/tk application to run in tcl subprocess.")
+(defgroup tcl nil
+  "Major mode for editing tcl/tk code."
+  :prefix "tcl-"
+  :group 'languages)
 
-(defvar tcl-default-command-switches nil
+(defcustom tcl-default-application "wish"
+  "Default tcl/tk application to run in tcl subprocess."
+  :type 'string
+  :group 'tcl)
+
+(defcustom tcl-default-command-switches nil
   "Command switches for `tcl-default-application'.
-Should be a list of strings.")
+Should be a list of strings."
+  :type '(repeat string)
+  :group 'tcl)
 
 (defvar tcl-process nil
   "The active tcl subprocess corresponding to current buffer.")
@@ -91,8 +100,10 @@ Should be a list of strings.")
 (defvar tcl-process-buffer nil
   "Buffer used for communication with tcl subprocess for current buffer.")
 
-(defvar tcl-always-show t
-  "*Non-nil means display tcl-process-buffer after sending a command.")
+(defcustom tcl-always-show t
+  "*Non-nil means display tcl-process-buffer after sending a command."
+  :type 'boolean
+  :group 'tcl)
 
 (defvar tcl-mode-map nil
   "Keymap used with tcl mode.")
@@ -100,8 +111,10 @@ Should be a list of strings.")
 (defvar tcl-prefix-key "\C-c"
   "Prefix for all tcl-mode commands.")
 
-(defvar tcl-mode-hook nil
-  "Hooks called when tcl mode fires up.")
+(defcustom tcl-mode-hook nil
+  "Hooks called when tcl mode fires up."
+  :type 'hook
+  :group 'tcl)
 
 (defvar tcl-region-start (make-marker)
   "Start of special region for tcl communication.")
@@ -109,11 +122,15 @@ Should be a list of strings.")
 (defvar tcl-region-end (make-marker)
   "End of special region for tcl communication.")
 
-(defvar tcl-indent-level 4
-  "Amount by which tcl subexpressions are indented.")
+(defcustom tcl-indent-level 4
+  "Amount by which tcl subexpressions are indented."
+  :type 'integer
+  :group 'tcl)
 
-(defvar tcl-default-eval "eval"
-  "Default command used when sending regions.")
+(defcustom tcl-default-eval "eval"
+  "Default command used when sending regions."
+  :type 'string
+  :group 'tcl)
 
 (defvar tcl-mode-menu (make-sparse-keymap "Tcl-Mode")
   "Keymap for tcl-mode's menu.")
@@ -179,6 +196,7 @@ The following keys are bound:
 	 '(tcl-font-lock-keywords nil nil ((?_ . "w"))))
     (set (make-local-variable 'imenu-generic-expression)
 	 tcl-imenu-generic-expression)
+    (setq imenu-case-fold-search nil)
     (make-local-variable 'tcl-default-eval)
     (or tcl-mode-map
 	(tcl-setup-keymap))

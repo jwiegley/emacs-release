@@ -1,0 +1,1098 @@
+This is Info file ../info/reftex, produced by Makeinfo version 1.68
+from the input file reftex.texi.
+
+   This file documents RefTeX, a package to do labels, references and
+citations for LaTeX documents with Emacs.
+
+   This is edition 1.19 of the RefTeX User Manual for RefTeX 3.21
+
+   Copyright (c) 1997, 1998 Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the entire resulting derived work is distributed under the terms
+of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Free Software Foundation.
+
+
+File: reftex,  Node: Optimizations,  Next: Problems and Work-Arounds,  Prev: Multifile Documents,  Up: Top
+
+Optimizations
+=============
+
+   The default settings of RefTeX ensure a safe ride for beginners and
+casual users.  However, when using RefTeX for a large project and/or on
+a small computer, there are ways to improve speed or memory usage.
+
+   * Removing Lookup Buffers
+     RefTeX will load other parts of a multifile document as well as
+     BibTeX database files for lookup purposes.  These buffers are
+     kept, so that subsequent use of the same files is fast.  If you
+     can't afford keeping these buffers around, and if you can live
+     with a speed penalty, try
+
+          (setq reftex-keep-temporary-buffers nil)
+
+   * Files Visited with Follow Mode
+     Follow-mode in the selection and `*toc*' buffers shows the context
+     of the current line in another window.  If the context is in an
+     unvisited file, RefTeX normally visits the file.  The setting
+
+          (setq reftex-revisit-to-follow nil)
+
+     disables follow mode for such cases, so that only context in live
+     buffers is displayed.  However, pressing <SPC> will always visit
+     the file to show the context.
+
+   * Partial Document Scans
+     A `C-u' prefix on the major RefTeX commands `reftex-label' (`C-u
+     C-c ('), `reftex-reference' (`C-u C-c )'), `reftex-citation' (`C-u
+     C-c ['), `reftex-toc' (`C-u C-c ='), and `reftex-view-crossref'
+     (`C-u C-c &') initiates re-parsing of the entire document in order
+     to update the parsing information.  For a large document this can
+     be unnecessary, in particular if only one file has changed.
+     RefTeX can be configured to do partial scans instead of full ones.
+     `C-u' re-parsing then does apply only to the current buffer and
+     files included from it.  Likewise, the `r' key in both the label
+     selection buffer and the table-of-contents buffer will only prompt
+     scanning of the file in which the label or section macro near the
+     cursor was defined.  Re-parsing of the entire document is still
+     available by using `C-u C-u' as a prefix, or the capital `R' key
+     in the menus.  To use this feature, try
+
+          (setq reftex-enable-partial-scans t)
+
+   * Saving Parser Information
+     Even with partial scans enabled, RefTeX still has to make one full
+     scan, when you start working with a document.  To avoid this,
+     parsing information can be stored in a file.  The file
+     `MASTER.rel' is used for storing information about a document with
+     master file `MASTER.tex'.  It is written each time RefTeX parses
+     (part of) the document, and restored when you begin working with a
+     document in a new editing session.  To use this feature, put into
+     `.emacs':
+
+          (setq reftex-save-parse-info t)
+
+   * Automatic Document Scans
+     At rare occasions, RefTeX will automatically rescan a part of the
+     document.  If this gets into your way, it can be turned off with
+
+          (setq reftex-allow-automatic-rescan nil)
+
+     RefTeX will then occasionally annotate new labels in the selection
+     buffer, saying that their position in the label list in uncertain.
+     A manual document scan will fix this.
+
+   * Multiple Selection Buffers
+     Normally, the selection buffer `*RefTeX Select*' is re-created
+     newly for every selection process.  In documents with very many
+     labels this can take several seconds - in particular with context
+     refontification turned on.  RefTeX provides an option to create a
+     separate selection buffer for each label type and to keep this
+     buffer from one selection to the next.  These buffers are updated
+     automatically only when a new label has been added in the buffers
+     category with `reftex-label'.  Updating the buffer takes as long
+     as recreating it - so the time saving is limited to cases where no
+     new labels of that category have been added.  To turn on this
+     feature, use
+
+          (setq reftex-use-multiple-selection-buffers t)
+
+     You can also inhibit the automatic updating entirely.  Then the
+     selection buffer will always pop up very fast, but may not contain
+     the most recently defined labels.  You can always update the
+     buffer by hand, with the `g' key.  To get this behavior, use
+     instead
+
+          (setq reftex-use-multiple-selection-buffers t
+                reftex-auto-update-selection-buffers nil)
+
+As a summary, here are the settings I recommend for heavy use of RefTeX
+with large documents:
+
+     (setq reftex-enable-partial-scans t
+           reftex-save-parse-info t
+           reftex-use-multiple-selection-buffers t
+           reftex-revisit-to-follow nil)
+
+
+File: reftex,  Node: Problems and Work-Arounds,  Next: Imprint,  Prev: Optimizations,  Up: Top
+
+Problems and Work-arounds
+=========================
+
+   * `\input', `\include', `\bibliography' and `\section' (etc.)
+     statements have to be first on a line (except for white space).
+
+   * RefTeX sees also labels in regions commented out and will refuse to
+     make duplicates of such a label.  This is considered to be a
+     feature.
+
+   * When using partial scans (REFTEX-ENABLE-PARTIAL-SCANS), the section
+     numbers in the table of contents may eventually become wrong.  A
+     full scan will fix this.
+
+   * RefTeX keeps only a global copy of the configuration variables.
+     Also, any additions from style files go into a global variable.
+     Practically, this should not be a problem.  Theoretically, it could
+     give conflicts if two documents used environments with identical
+     names, but different associated label types.
+
+   * When using AUCTeX and AMS-LaTeX, the `amsmath.el' style file will
+     automatically cause RefTeX to use the macro `\eqref' for equation
+     references.  This will take effect for *all* current documents,
+     not only for the one actually using AMS-LaTeX.  The best
+     work-around is to use AMS-LaTeX in *all* documents.  The other
+     possibility is to enforce the use of the `\ref' macro for all
+     documents with
+
+          (setq reftex-label-alist '((nil ?e nil "~(\\ref{%s})" nil nil)))
+
+   * When using packages which make the buffer representation of a file
+     different from its disk representation (e.g. x-symbol, isotex,
+     iso-cvt) you may find that RefTeX's parsing information sometimes
+     reflects the disk state of a file.  This happens only in
+     *unvisited* parts of a multifile document, because RefTeX visits
+     these files literally for speed reasons.  Then both short context
+     and section headings may look different from what you usually see
+     on your screen.  In rare cases `reftex-toc' may have problems to
+     jump to an affected section heading.  There are three possible
+     ways to deal with this:
+        - `(setq reftex-keep-temporary-buffers t)'
+          This implies that RefTeX will load all parts of a multifile
+          document into Emacs (i.e. there will be no temporary buffers).
+
+        - `(setq reftex-initialize-temporary-buffers t)'
+          This means full initialization of temporary buffers.  It
+          involves a penalty when the same unvisited file is used for
+          lookup often.
+
+        - Set `reftex-initialize-temporary-buffers' to a list of hook
+          functions doing a minimal initialization.  See also the
+     variable REFTEX-REFONTIFY-CONTEXT.
+
+   * Some packages use an additional argument to a `\begin' macro to
+     specify a label.  E.g. Lamport's `pf.sty' uses both
+
+          \step{LABEL}{CLAIM}   and      \begin{step+}{LABEL}
+                                            CLAIM
+                                         \end{step+}
+
+     We need to trick RefTeX into swallowing this:
+
+          ;; Configuration for Lamport's pf.sty
+          (setq reftex-label-alist
+              '(("\\step{*}{}"       ?p "st:" "~\\stepref{%s}" 2 ("Step" "St."))
+                ("\\begin{step+}{*}" ?p "st:" "~\\stepref{%s}" 1000)))
+
+     The first line is just a normal configuration for a macro.  For the
+     `step+' environment we actually tell RefTeX to look for the
+     *macro* `\begin{step+}' and interpret the *first* argument (which
+     really is a second argument to the macro `\begin') as a label of
+     type `?p'.  Argument count for this macro starts only after the
+     `{step+}', also when specifying how to get context.
+
+   * If you use Viper mode prior to Vipers version 3.01, you need to
+     protect RefTeX's keymaps with
+
+          (viper-harness-minor-mode "reftex")
+
+
+File: reftex,  Node: Imprint,  Next: Commands,  Prev: Problems and Work-Arounds,  Up: Top
+
+Imprint
+=======
+
+   RefTeX was written by Carsten Dominik <dominik@strw.LeidenUniv.nl>,
+with contributions by Stephen Eglen.  RefTeX is currently maintained by
+
+     Carsten Dominik <dominik@strw.LeidenUniv.nl>
+
+   If you find a bug in RefTeX or its documentation, or if you want to
+contribute code or ideas, please contact the maintainer.  Remember to
+provide all necessary information such as version numbers of Emacs and
+RefTeX, and the relevant part of your configuration in `.emacs'.  When
+reporting a bug, please include a backtrace if you know how to produce
+one.
+
+   RefTeX is distributed with Emacs (version 20.2 and later) and XEmacs
+(version 19.16 and 20.2 and later).  The newest version of RefTeX is
+available at
+
+     http://www.strw.leidenuniv.nl/~dominik/Tools/
+     ftp://strw.leidenuniv.nl/pub/dominik/
+
+The version at this site is actually compatible with Emacs 19; the
+versions of RefTeX distributed with Emacs 20 are not.
+
+   Thanks to the people on the Net who have used RefTeX and helped
+developing it with their reports.  In particular thanks to F. Burstall,
+Alastair Burt, Soren Dayton, Stephen Eglen, Karl Eichwalder, Peter
+Galbraith, Dieter Kraft, Adrian Lanz, Rory Molinari, Laurent Mugnier,
+Sudeep Kumar Palat, Daniel Polani, Robin Socha, Richard Stanton, Allan
+Strand, Jan Vroonhof, Christoph Wedler.
+
+   The view crossref feature was inspired by the similar function in
+Peter Galbraith's `bib-cite.el'.
+
+   Finally thanks to Uwe Bolick who first got me (some years ago) into
+supporting LaTeX labels and references with an Editor (which was
+MicroEmacs at the time).
+
+
+File: reftex,  Node: Commands,  Next: Options,  Prev: Imprint,  Up: Top
+
+Commands
+********
+
+   Here is a summary of RefTeX's commands.  All commands are available
+from the `Ref' menu.  For keybindings, *note Keybindings::..
+
+ - Command: reftex-label
+     Insert a unique label.  With one or two `C-u' prefixes, enforce
+     document rescan first.
+
+ - Command: reftex-reference
+     Start a selection process to select a label, and insert a
+     reference to it.  With one or two `C-u' prefixes, enforce document
+     rescan first.
+
+ - Command: reftex-citation
+     Make a citation using BibTeX database files.  After asking for a
+     Regular Expression, it scans the buffers with BibTeX entries
+     (taken from the `\bibliography' command or a `thebibliography'
+     environment) and offers the matching entries for selection.  The
+     selected entry is formated according to REFTEX-CITE-FORMAT and
+     inserted into the buffer.
+     When called with one or two `C-u' prefixes, first rescans the
+     document.  When called with a numeric prefix, make that many
+     citations.  When called with point inside the braces of a `\cite'
+     command, it will add another key, ignoring the value of
+     REFTEX-CITE-FORMAT.
+     The regular expression uses an expanded syntax: `&&' is
+     interpreted as `and'.  Thus, `aaaa&&bbb' matches entries which
+     contain both `aaaa' and `bbb'.
+
+ - Command: reftex-view-crossref
+     View cross reference of `\ref' or `\cite' macro at point.  If the
+     macro at point is a `\ref', show the corresponding label
+     definition.  If it is a `\cite', show the BibTeX database entry or
+     the `\bibitem'.  If there is no such macro at point, search
+     forward to find one.  When you call this function several times in
+     direct succession, point will move to view subsequent cross
+     references further down in the buffer.  To cope with the plethora
+     of variations in packages, this function assumes any macro either
+     starting with or ending in `ref' or `cite' to contain cross
+     references.  When the LaTeX package `xr' is being used, this
+     command will also view cross-references in external documents.
+     However, this works correctly only when the `\externaldocument'
+     macros are used with the optional label prefix argument.
+     With one or two `C-u' prefixes, enforce rescanning of the
+     document.  With argument t or 1, select the window showing the
+     cross reference.
+
+ - Command: reftex-toc
+     Show the table of contents for the current document.  When called
+     with one ore two `C-u' prefixes, rescan the document first.
+
+ - Command: reftex-create-tags-file
+     Create TAGS file by running `etags' on the current document.  The
+     TAGS file is also immediately visited with `visit-tags-table'.
+
+ - Command: reftex-grep-document
+     Run grep query through all files related to this document.  With
+     prefix arg, force to rescan document.  This works also without an
+     active TAGS table.
+
+ - Command: reftex-search-document
+     Regexp search through all files of the current TeX document.
+     Starts always in the master file.  Stops when a match is found.
+     This works also without an active TAGS table.
+
+ - Command: reftex-query-replace-document
+     Run a query-replace-regexp of FROM with TO over the entire TeX
+     document.  With prefix arg, replace only word-delimited matches.
+     This works also without an active TAGS table.
+
+ - Command: reftex-change-label
+     Query replace FROM with TO in all `\label' and `\ref' commands.
+     Works on the entire multifile document.  This works also without
+     an active TAGS table.
+
+ - Command: reftex-find-duplicate-labels
+     Produce a list of all duplicate labels in the document.
+
+ - Command: reftex-customize
+     Run the customize browser on the RefTeX group.
+
+ - Command: reftex-show-commentary
+     Show the commentary section from `reftex.el'.
+
+ - Command: reftex-info
+     Run info on the top RefTeX node.
+
+ - Command: reftex-parse-document
+     Parse the entire document in order to update the parsing
+     information.
+
+ - Command: reftex-reset-mode
+     Enforce rebuilding of several internal lists and variables.
+
+
+File: reftex,  Node: Options,  Next: Keymaps,  Prev: Commands,  Up: Top
+
+Options, Keymaps, Hooks
+***********************
+
+   Here is a complete list of RefTeX's configuration variables.  All
+variables have customize support - so if you are not familiar with Emacs
+Lisp (and even if you are) you might find it more comfortable to use
+`customize' to look at and change these variables. `M-x
+reftex-customize' will get you there.
+
+* Menu:
+
+* Options (Defining Label Environments)::
+* Options (Creating Labels)::
+* Options (Referencing Labels)::
+* Options (Creating Citations)::
+* Options (Table of Contents)::
+* Options (Optimizations)::
+* Options (Fontification)::
+* Options (Misc)::
+
+
+File: reftex,  Node: Options (Defining Label Environments),  Next: Options (Creating Labels),  Up: Options
+
+Defining Label Environments
+===========================
+
+ - User Option: reftex-default-label-alist-entries
+     Default label alist specifications.  It is a list of symbols with
+     associations in the constant REFTEX-LABEL-ALIST-BUILTIN.  `LaTeX'
+     should always be the last entry.
+
+ - User Option: reftex-label-alist
+     Set this variable to define additions and changes to the defaults
+     in REFTEX-DEFAULT-LABEL-ALIST-ENTRIES.  The only things you *must
+     not* change is that `?s' is the type indicator for section labels,
+     and <SPC> for the `any' label type.  These are hard-coded at other
+     places in the code.
+
+     The value of the variable must be a list of items.  Each item is a
+     list itself and has the following structure:
+
+           (ENV-OR-MACRO  TYPE-KEY  LABEL-PREFIX  REFERENCE-FORMAT
+              CONTEXT-METHOD  (MAGIC-WORD ... ))
+
+     Each list entry describes either an environment carrying a counter
+     for use with `\label' and `\ref', or a LaTeX macro defining a
+     label as (or inside) one of its arguments.  The elements of each
+     list entry are:
+
+    ENV-OR-MACRO
+          Name of the environment (like `table') or macro (like
+          `\myfig').  For macros, indicate the arguments, as in
+          `\myfig[]{}{}{*}{}'.  Use square brackets for optional
+          arguments, a star to mark the label argument, if any.  The
+          macro does not have to have a label argument - you could also
+          use `\label{...}' inside one of its arguments.
+
+          Special names: `section' for section labels, `any' to define a
+          group which contains all labels.
+
+          This may also be `nil' if the entry is only meant to change
+          some settings associated with the type indicator character
+          (see below).
+
+    TYPE-KEY
+          Type indicator character, like `?t', must be a printable ASCII
+          character.  The type indicator is a single character which
+          defines a label type.  Any label inside the environment or
+          macro is assumed to belong to this type.  The same character
+          may occur several times in this list, to cover cases in which
+          different environments carry the same label type (like
+          `equation' and `eqnarray').
+
+    LABEL-PREFIX
+          Label prefix string, like `tab:'.  The prefix is a short
+          string used as the start of a label.  It may be the empty
+          string.  The prefix may contain the following `%' escapes:
+
+               %f Current file name, directory and extension stripped.
+               %F Current file name relative to master file directory.
+               %u User login name, on systems which support this.
+
+          Example: In a file `intro.tex', `eq:%f:' will become
+          `eq:intro:'.
+
+    REFERENCE-FORMAT
+          Format string for reference insert in buffer.  `%s' will be
+          replaced by the label.  When the format starts with `~', this
+          `~' will only be inserted when the character before point is
+          *not* a whitespace.
+
+    CONTEXT-METHOD
+          Indication on how to find the short context.
+             - If `nil', use the text following the `\label{...}' macro.
+
+             - If `t', use
+                  - the section heading for section labels.
+
+                  - text following the `\begin{...}' statement of
+                    environments (not a good choice for environments
+                    like eqnarray or enumerate, where one has several
+                    labels in a single environment).
+
+                  - text after the macro name (starting with the first
+                    arg) for macros.
+
+             - If an integer, use the nth argument of the macro.  As a
+               special case, 1000 means to get text after the last
+               macro argument.
+
+             - If a string, use as regexp to search *backward* from the
+               label.  Context is then the text following the end of
+               the match.  E.g. putting this to `\\caption[{]]' will
+               use the caption in a figure or table environment.
+               `\\begin{eqnarray}\|\\\\' works for eqnarrays.
+
+             - If any of `caption', `item', `eqnarray-like',
+               `alignat-like', this symbol will internally be
+               translated into an appropriate regexp (see also the
+               variable REFTEX-DEFAULT-CONTEXT-REGEXPS).
+
+             - If a function, call this function with the name of the
+               environment/macro as argument.  On call, point will be
+               just after the `\label' macro.  The function is expected
+               to return a suitable context string.  It should throw an
+               exception (error) when failing to find context.  As an
+               example, here is a function returning the 10 chars
+               following the label macro as context:
+
+                    (defun my-context-function (env-or-mac)
+                       (if (> (point-max) (+ 10 (point)))
+                           (buffer-substring (point) (+ 10 (point)))
+                         (error "Buffer too small")))
+
+          Label context is used in two ways by RefTeX: For display in
+          the label menu, and to derive a label string.  If you want to
+          use a different method for each of these, specify them as a
+          dotted pair.  E.g. `(nil . t)' uses the text after the label
+          (`nil') for display, and text from the default position (`t')
+          to derive a label string.  This is actually used for section
+          labels.
+
+          Setting the variable REFTEX-USE-TEXT-AFTER-LABEL-AS-CONTEXT to
+          `t' overrides the setting here.
+
+    MAGIC-WORD-LIST
+          List of magic words which identify a reference to be of this
+          type.  If the word before point is equal to one of these
+          words when calling `reftex-reference', the label list offered
+          will be automatically restricted to labels of the correct
+          type.  If the first element of this word-list is the symbol
+          `regexp', the strings are interpreted as regular
+          expressions(1).
+
+     If the type indicator characters of two or more entries are the
+     same, RefTeX will use
+        - the first non-`nil' format and prefix
+
+        - the magic words of all involved entries.
+
+     Any list entry may also be a symbol.  If that has an association in
+     REFTEX-LABEL-ALIST-BUILTIN, the `cddr' of that association is
+     spliced into the list.  However, builtin defaults should normally
+     be set with the variable REFTEX-DEFAULT-LABEL-ALIST-ENTRIES.
+
+ - User Option: reftex-section-levels
+     Commands and levels used for defining sections in the document.
+     The `car' of each cons cell is the name of the section macro.  The
+     `cdr' is a number indicating its level.
+
+ - User Option: reftex-default-context-regexps
+     Alist with default regular expressions for finding context.  The
+     emacs lisp form `(format regexp (regexp-quote environment))' is
+     used to calculate the final regular expression - so `%s' will be
+     replaced with the environment or macro.
+
+ - User Option: reftex-use-text-after-label-as-context
+     Non-`nil' means, grab context from directly after the
+     `\label{...}' macro.  This is the fastest method for obtaining
+     context of the label definition, but requires discipline when
+     placing labels.  Setting this variable to `t' takes precedence
+     over the individual settings in REFTEX-LABEL-ALIST.  This variable
+     may be set to `t', `nil', or a string of label type letters
+     indicating the label types for which it should be true.
+
+   ---------- Footnotes ----------
+
+   (1) Careful:  RefTeX will add stuff to the beginning and end of
+these regular expressions.
+
+
+File: reftex,  Node: Options (Creating Labels),  Next: Options (Referencing Labels),  Prev: Options (Defining Label Environments),  Up: Options
+
+Creating Labels
+===============
+
+ - User Option: reftex-insert-label-flags
+     Flags governing label insertion.  The value has the form
+
+          (DERIVE PROMPT)
+
+     If DERIVE is `t', RefTeX will try to derive a sensible label from
+     context.  A section label for example will be derived from the
+     section heading.  The conversion of the context to a legal label is
+     governed by the specifications given in
+     REFTEX-DERIVE-LABEL-PARAMETERS.  If DERIVE is `nil', the default
+     label will consist of the prefix and a unique number, like `eq:23'.
+
+     If PROMPT is `t', the user will be prompted for a label string.
+     When PROMPT is `nil', the default label will be inserted without
+     query.
+
+     So the combination of DERIVE and PROMPT controls label insertion.
+     Here is a table describing all four possibilities:
+
+          DERIVE PROMPT ACTION
+          -----------------------------------------------------------
+          nil    nil    Insert simple label, like `eq:22' or `sec:13'. No query.
+          nil    t      Prompt for label.
+          t      nil    Derive a label from context and insert. No query.
+          t      t      Derive a label from context, prompt for confirmation.
+
+     Each flag may be set to `t', `nil', or a string of label type
+     letters indicating the label types for which it should be true.
+     Thus, the combination may be set differently for each label type.
+     The default settings `"s"' and `"sft"' mean: Derive section labels
+     from headings (with confirmation).  Prompt for figure and table
+     labels.  Use simple labels without confirmation for everything
+     else.
+
+     The available label types are: `s' (section), `f' (figure), `t'
+     (table), `i' (item), `e' (equation), `n' (footnote), plus any
+     definitions in REFTEX-LABEL-ALIST.
+
+ - Hook: reftex-format-label-function
+     If non-`nil', should be a function which produces the string to
+     insert as a label definition.  The function will be called with two
+     arguments, the LABEL and the DEFAULT FORMAT (usually
+     `\label{%s}').  It should return the string to insert into the
+     buffer.
+
+ - User Option: reftex-derive-label-parameters
+     Parameters for converting a string into a label.  This variable is
+     a list of the following items:
+    NWORDS
+          Number of words to use.
+
+    MAXCHAR
+          Maximum number of characters in a label string.
+
+    ILLEGAL
+          `nil': Throw away any words containing characters illegal in
+          labels.
+          `t':   Throw away only the illegal characters, not the whole
+          word.
+
+    ABBREV
+          `nil': Never abbreviate words.
+          `t':   Always abbreviate words (see REFTEX-ABBREV-PARAMETERS).
+          `1':   Abbreviate words if necessary to shorten label string.
+
+    SEPARATOR
+          String separating different words in the label.
+
+    IGNOREWORDS
+          List of words which should not be part of labels.
+
+ - User Option: reftex-label-illegal-re
+     Regexp matching characters not legal in labels.  For historic
+     reasons, this character class comes *with* the `[]' brackets.
+
+ - User Option: reftex-abbrev-parameters
+     Parameters for abbreviation of words.  A list of four parameters.
+    MIN-CHARS
+          Minimum number of characters remaining after abbreviation.
+
+    MIN-KILL
+          Minimum number of characters to remove when abbreviating
+          words.
+
+    BEFORE
+          Character class before abbrev point in word.
+
+    AFTER
+          Character class after  abbrev point in word.
+
+
+File: reftex,  Node: Options (Referencing Labels),  Next: Options (Creating Citations),  Prev: Options (Creating Labels),  Up: Options
+
+Referencing Labels
+==================
+
+ - User Option: reftex-label-menu-flags
+     List of flags governing the label menu makeup. The flags are:
+    TABLE-OF-CONTENTS
+          Show the labels embedded in a table of context.
+
+    SECTION-NUMBERS
+          Include section numbers (like 4.1.3) in table of contents.
+
+    COUNTERS
+          Show counters.  This just numbers the labels in the menu.
+
+    NO-CONTEXT
+          Non-`nil' means do NOT show the short context.
+
+    FOLLOW
+          Follow full context in other window.
+
+    SHOW-COMMENTED
+          Show labels from regions which are commented out.
+
+    MATCH-EVERYWHERE
+          Obsolete flag.
+
+    SHOW FILES
+          Show begin and end of included files.
+
+     Each of these flags can be set to `t' or `nil', or to a string of
+     type letters indicating the label types for which it should be
+     true.  These strings work like character classes in regular
+     expressions.  Thus, setting one of the flags to `"sf"' makes the
+     flag true for section and figure labels, `nil' for everything
+     else.  Setting it to `"^sf"' makes it the other way round.
+
+     The available label types are: `s' (section), `f' (figure), `t'
+     (table), `i' (item), `e' (equation), `n' (footnote), plus any
+     definitions in REFTEX-LABEL-ALIST.
+
+     Most options can also be switched from the label menu itself - so
+     if you decide here to not have a table of contents in the label
+     menu, you can still get one interactively during selection from
+     the label menu.
+
+ - Hook: reftex-format-ref-function
+     If non-`nil', should be a function which produces the string to
+     insert as a reference.  Note that the insertion format can also be
+     changed with REFTEX-LABEL-ALIST.  The function will be called with
+     two arguments, the LABEL and the DEFAULT FORMAT (usually
+     `~\ref{%s}').  It should return the string to insert into the
+     buffer.
+
+ - User Option: reftex-vref-is-default
+     Non-`nil' means, the varioref macro `\vref' is used as default.
+     In the selection buffer, the `v' key toggles the reference macro
+     between `\ref' and `\vref'.  The value of this variable determines
+     the default which is active when entering the selection process.
+     Instead of `nil' or `t', this may also be a string of type letters
+     indicating the label types for which it should be true.
+
+ - User Option: reftex-level-indent
+     Number of spaces to be used for indentation per section level.
+
+ - User Option: reftex-guess-label-type
+     Non-`nil' means, `reftex-reference' will try to guess the label
+     type.  To do that, RefTeX will look at the word before the cursor
+     and compare it with the magic words given in REFTEX-LABEL-ALIST.
+     When it finds a match, RefTeX will immediately offer the correct
+     label menu - otherwise it will prompt you for a label type.  If
+     you set this variable to `nil', RefTeX will always prompt for a
+     label type.
+
+
+File: reftex,  Node: Options (Creating Citations),  Next: Options (Table of Contents),  Prev: Options (Referencing Labels),  Up: Options
+
+Creating Citations
+==================
+
+ - User Option: reftex-bibpath-environment-variables
+     List of environment variables which might contain the path to
+     BibTeX database files.
+
+ - User Option: reftex-bibfile-ignore-list
+     List of files in `\bibliography{...}' RefTeX should not parse.
+     The file names have to be in the exact same form as in the
+     bibliography macro - i.e. without the `.bib' extension.  Intended
+     for files which contain only `@string' macro definitions and the
+     like, which are ignored by RefTeX anyway.
+
+ - User Option: reftex-default-bibliography
+     List of BibTeX database file which should be used if none are
+     specified.  When `reftex-citation' is called from a document which
+     has neither a `\bibliography{...}' statement nor a
+     `thebibliography' environment, RefTeX will scan these files
+     instead.  Intended for using `reftex-citation' in non-LaTeX files.
+
+ - User Option: reftex-sort-bibtex-matches
+     Sorting of the entries found in BibTeX databases by
+     reftex-citation.  Possible values:
+          nil          Do not sort entries.
+          author       Sort entries by author name.
+          year         Sort entries by increasing year.
+          reverse-year Sort entries by decreasing year.
+
+ - User Option: reftex-cite-format
+     The format of citations to be inserted into the buffer.  It can be
+     a string or an alist.  In the simplest case this is just the string
+     `\cite{%l}', which is also the default.  See the definition of
+     REFTEX-CITE-FORMAT-BUILTIN for more complex examples.
+
+     If REFTEX-CITE-FORMAT is a string, it will be used as the format.
+     In the format, the following percent escapes will be expanded.
+
+    `%l'
+          The BibTeX label of the citation.
+
+    `%a'
+          List of author names, see also REFTEX-CITE-PUNCTUATION.
+
+    `%2a'
+          Like %a, but abbreviate more than 2 authors like Jones et al.
+
+    `%A'
+          First author name only.
+
+    `%e'
+          Works like `%a', but on list of editor names. (`%2e' and `%E'
+          work a well).
+
+     It is also possible to access all other BibTeX database fields:
+
+          %b booktitle     %c chapter        %d edition    %h howpublished
+          %i institution   %j journal        %k key        %m month
+          %n number        %o organization   %p pages      %P first page
+          %r address       %s school         %u publisher  %t title
+          %v volume        %y year
+
+     Usually, only `%l' is needed.  Try, however, `(setq
+     reftex-comment-citations t)'.
+
+     Beware that all this only works when using BibTeX database files.
+     When citations are made from the `\bibitems' in an explicit
+     `thebibliography' environment, only `%l' is available.
+
+     If REFTEX-CITE-FORMAT is an alist of characters and strings, the
+     user will be prompted for a character to select one of the possible
+     format strings.
+
+     In order to configure this variable, you can either set
+     REFTEX-CITE-FORMAT directly yourself or set it to the *symbol* of
+     one of the predefined styles (see REFTEX-CITE-FORMAT-BUILTIN).
+     E.g.: `(setq reftex-cite-format 'harvard)'.
+
+ - Hook: reftex-format-cite-function
+     If non-`nil', should be a function which produces the string to
+     insert as a citation.  Note that the citation format can also be
+     changed with the variable REFTEX-CITE-FORMAT.  The function will
+     be called with two arguments, the CITATION KEY and the DEFAULT
+     FORMAT (taken from REFTEX-CITE-FORMAT).  It should return the
+     string to insert into the buffer.
+
+ - User Option: reftex-comment-citations
+     Non-`nil' means add a comment for each citation describing the full
+     entry.  The comment is formatted according to
+     REFTEX-CITE-COMMENT-FORMAT.
+
+ - User Option: reftex-cite-comment-format
+     Citation format used for commented citations.  Must *not* contain
+     `%l'.
+
+ - User Option: reftex-cite-punctuation
+     Punctuation for formatting of name lists in citations.  This is a
+     list of 3 strings.
+       1. normal names separator, like `, ' in Jones, Brown and Miller
+
+       2. final names separator, like ` and '  in Jones, Brown and
+          Miller
+
+       3. The `et al.' string, like ` {\it et al.}' in Jones {\it et
+          al.}
+
+
+File: reftex,  Node: Options (Table of Contents),  Next: Options (Optimizations),  Prev: Options (Creating Citations),  Up: Options
+
+Table of Contents
+=================
+
+ - User Option: reftex-toc-follow-mode
+     Non-`nil' means, point in `*toc*' buffer (the table-of-contents
+     buffer) will cause other window to follow.  The other window will
+     show the corresponding part of the document.  This flag can be
+     toggled from within the `*toc*' buffer with the `f' key.
+
+
+File: reftex,  Node: Options (Optimizations),  Next: Options (Fontification),  Prev: Options (Table of Contents),  Up: Options
+
+Optimizations
+=============
+
+ - User Option: reftex-keep-temporary-buffers
+     Non-`nil' means, keep buffers created for parsing and lookup.
+     RefTeX sometimes needs to visit files related to the current
+     document.  We distinguish files visited for
+    PARSING
+          Parts of a multifile document loaded when (re)-parsing the
+          document.
+
+    LOOKUP
+          BibTeX database files and TeX files loaded to find a
+          reference, to display label context, etc.  The created
+     buffers can be kept for later use, or be thrown away immediately
+     after use, depending on the value of this variable:
+
+    `nil'
+          Throw away as much as possible.
+
+    `t'
+          Keep everything.
+
+    `1'
+          Throw away buffers created for parsing, but keep the ones
+          created for lookup.
+
+     If a buffer is to be kept, the file is visited normally (which is
+     potentially slow but will happen only once). If a buffer is to be
+     thrown away, the initialization of the buffer depends upon the
+     variable REFTEX-INITIALIZE-TEMPORARY-BUFFERS.
+
+ - User Option: reftex-initialize-temporary-buffers
+     Non-`nil' means do initializations even when visiting file
+     temporarily.  When `nil', RefTeX may turn off find-file hooks and
+     other stuff to briefly visit a file. When `t', the full default
+     initializations are done (`find-file-hook' etc.).  Instead of `t'
+     or `nil', this variable may also be a list of hook functions to do
+     a minimal initialization.
+
+ - User Option: reftex-no-include-regexps
+     List of regular expressions to exclude certain input files from
+     parsing.  If the name of a file included via `\include' or
+     `\input' is matched by any of the regular expressions in this
+     list, that file is not parsed by RefTeX.
+
+ - User Option: reftex-enable-partial-scans
+     Non-`nil' means, re-parse only 1 file when asked to re-parse.
+     Re-parsing is normally requested with a `C-u' prefix to many RefTeX
+     commands, or with the `r' key in menus.  When this option is `t'
+     in a multifile document, we will only parse the current buffer, or
+     the file associated with the label or section heading near point
+     in a menu.  Requesting re-parsing of an entire multifile document
+     then requires a `C-u C-u' prefix or the capital `R' key in menus.
+
+ - User Option: reftex-save-parse-info
+     Non-`nil' means, save information gathered with parsing in a file.
+     The file `MASTER.rel' in the same directory as `MASTER.tex' is
+     used to save the information.  When this variable is `t',
+        - accessing the parsing information for the first time in an
+          editing session will read that file (if available) instead of
+          parsing the document.
+
+        - each time (part of) the document is rescanned, a new version
+          of the file is written.
+
+ - User Option: reftex-allow-automatic-rescan
+     Non-`nil' means, RefTeX may rescan the document when this seems
+     necessary.  Applies (currently) only in rare cases, when a new
+     label cannot be placed with certainty into the internal label list.
+
+ - User Option: reftex-use-multiple-selection-buffers
+     Non-`nil' means use a separate selection buffer for each label
+     type.  These buffers are kept from one selection to the next and
+     need not to be created for each use - so the menu generally comes
+     up faster.  The selection buffers will be erased (and therefore
+     updated) automatically when new labels in its category are added.
+     See the variable REFTEX-AUTO-UPDATE-SELECTION-BUFFERS.
+
+ - User Option: reftex-auto-update-selection-buffers
+     Non-`nil' means, selection buffers will be updated automatically.
+     When a new label is defined with `reftex-label', all selection
+     buffers associated with that label category are emptied, in order
+     to force an update upon next use.  When `nil', the buffers are left
+     alone and have to be updated by hand, with the `g' key from the
+     label selection process.  The value of this variable will only
+     have any effect when REFTEX-USE-MULTIPLE-SELECTION-BUFFERS is
+     non-`nil'.
+
+
+File: reftex,  Node: Options (Fontification),  Next: Options (Misc),  Prev: Options (Optimizations),  Up: Options
+
+Fontification
+=============
+
+ - User Option: reftex-use-fonts
+     Non-`nil' means, use fonts in label menu and on-the-fly help.
+     Font-lock must be loaded as well to actually get fontified display.
+
+ - User Option: reftex-refontify-context
+     Non-`nil' means, re-fontify the context in the label menu with
+     font-lock.  This slightly slows down the creation of the label
+     menu.  It is only necessary when you definitely want the context
+     fontified.
+
+     This option may have 3 different values:
+    `nil'
+          Never refontify.
+
+    `t'
+          Always refontify.
+
+    `1'
+          Refontify when necessary, e.g. with the x-symbol package.
+     The option is ignored when REFTEX-USE-FONTS is `nil'.
+
+ - User Option: reftex-highlight-selection
+     Non-`nil' means, highlight selected text in selection and `*toc*'
+     buffers.  Normally, the text near the cursor is the *selected*
+     text, and it is highlighted.  This is the entry most keys in the
+     selection and `*toc*' buffers act on.  However, if you mainly use
+     the mouse to select an item, you may find it nice to have
+     mouse-triggered highlighting *instead* or *as well*. The variable
+     may have one of these values:
+
+          nil      No highlighting.
+          cursor   Highlighting is cursor driven.
+          mouse    Highlighting is mouse driven.
+          both     Both cursor and mouse trigger highlighting.
+
+ - User Option: reftex-cursor-selected-face
+     Face name to highlight cursor selected item in toc and selection
+     buffers.  See also the variable REFTEX-HIGHLIGHT-SELECTION.
+
+ - User Option: reftex-mouse-selected-face
+     Face name to highlight mouse selected item in toc and selection
+     buffers.  See also the variable REFTEX-HIGHLIGHT-SELECTION.
+
+ - User Option: reftex-file-boundary-face
+     Face name for file boundaries in selection buffer.
+
+ - User Option: reftex-label-face
+     Face name for labels in selection buffer.
+
+ - User Option: reftex-section-heading-face
+     Face name for section headings in toc and selection buffers.
+
+ - User Option: reftex-toc-header-face
+     Face name for the header of a toc buffer.
+
+ - User Option: reftex-bib-author-face
+     Face name for author names in bib selection buffer.
+
+ - User Option: reftex-bib-year-face
+     Face name for year in bib selection buffer.
+
+ - User Option: reftex-bib-title-face
+     Face name for article title in bib selection buffer.
+
+ - User Option: reftex-bib-extra-face
+     Face name for bibliographic information in bib selection buffer.
+
+
+File: reftex,  Node: Options (Misc),  Prev: Options (Fontification),  Up: Options
+
+Miscellaneous
+=============
+
+ - User Option: reftex-extra-bindings
+     Non-`nil' means, make additional key bindings on startup.  These
+     extra bindings are located in the users `C-c letter' map. *Note
+     Keybindings::.
+
+ - User Option: reftex-plug-into-AUCTeX
+     Plug-in flags for AUCTeX interface.  This variable is a list of 4
+     boolean flags.  When a flag is non-`nil', it means:
+
+          Flag 1:  use `reftex-label'     as `LaTeX-label-function'.
+          Flag 2:  use `reftex-arg-label' as `TeX-arg-label'
+          Flag 3:  use `reftex-arg-ref'   as `TeX-arg-ref'
+          Flag 4:  use `reftex-arg-cite'  as `TeX-arg-cite'
+
+     You may also set the variable itself to `t' or `nil' in order to
+     turn all plug-ins on or off, respectively.  The value of
+     LATEX-LABEL-FUNCTION is the function used for label insertion when
+     you enter a new environment in AUCTeX.  The `TeX-arg-label' etc.
+     functions are for entering macro arguments during macro insertion
+     with AUCTeX.  See the AUCTeX documentation for more information.
+     RefTeX uses `fset' to take over the function calls.  Changing the
+     variable may require a restart of Emacs in order to become
+     effective.
+
+ - User Option: reftex-auto-show-entry
+     Non-`nil' means, do something when context in other window is
+     hidden.  Some modes like `outline-mode' or `folding-mode' hide
+     parts of buffers.  When RefTeX is asked to show context for a label
+     definition, and the context is invisible, it can unhide that
+     section permanently (value `t'), or copy the context to a
+     temporary buffer (value 'copy).
+
+ - User Option: reftex-revisit-to-follow
+     Non-`nil' means, follow-mode will revisit files if necessary.
+     When nil, follow-mode will be suspended for stuff in unvisited
+     files.
+
+
+File: reftex,  Node: Keymaps,  Next: Hooks,  Prev: Options,  Up: Top
+
+Keymaps
+=======
+
+ - Variable: reftex-mode-map
+     The keymap for RefTeX minor mode.
+
+ - Variable: reftex-select-label-map
+     The keymap which is active in the labels selection process (*note
+     Referencing Labels::.).
+
+ - Variable: reftex-select-bib-map
+     The keymap which is active in the citation-key selection process
+     (*note Creating Citations::.).
+
+ - Variable: reftex-toc-map
+     The keymap which is active in the `*toc*' buffer.  (*note Table of
+     Contents::.).
+
+
+File: reftex,  Node: Hooks,  Prev: Keymaps,  Up: Top
+
+Hooks
+=====
+
+ - Normal Hook: reftex-load-hook
+     Normal hook which is being run when loading `reftex.el'.
+
+ - Normal Hook: reftex-mode-hook
+     Normal hook which is being run when turning on RefTeX mode.
+
+ - Normal Hook: reftex-select-label-mode-hook
+     Normal hook which is run when a selection buffer enters
+     `reftex-select-label-mode'.
+
+ - Normal Hook: reftex-select-bib-mode-hook
+     Normal hook which is run when a selection buffer enters
+     `reftex-select-bib-mode'.
+
+ - Normal Hook: reftex-toc-mode-hook
+     Normal hook which is run when a `*toc*' buffer is created.
+
+   See also the following variables which have hook properties as well:
+
+   * REFTEX-FORMAT-LABEL-FUNCTION (*Note Options (Creating Labels)::)
+
+   * REFTEX-FORMAT-REF-FUNCTION (*Note Options (Referencing Labels)::)
+
+   * REFTEX-FORMAT-CITE-FUNCTION (*Note Options (Creating Citations)::)
+
+   * REFTEX-INITIALIZE-TEMPORARY-BUFFERS (*Note Options
+     (Optimizations)::)
+

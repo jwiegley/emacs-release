@@ -26,11 +26,11 @@ Options:
   --help  Output help.
   --version  Output version number.
 
-Report bugs to <bug-gnu-emacs@prep.ai.mit.edu>.'
+Report bugs to <bug-gnu-emacs@gnu.org>.'
 
-Id='$Id: rcs2log,v 1.42 1997/06/26 01:00:03 eggert Exp $'
+Id='$Id: rcs2log,v 1.45 1998/08/12 22:33:01 eggert Exp $'
 
-# Copyright 1992, 1993, 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
+# Copyright 1992, 93, 94, 95, 96, 97, 1998 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ Id='$Id: rcs2log,v 1.42 1997/06/26 01:00:03 eggert Exp $'
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-Copyright='Copyright 1997 Free Software Foundation, Inc.
+Copyright='Copyright 1998 Free Software Foundation, Inc.
 This program comes with NO WARRANTY, to the extent permitted by law.
 You may redistribute copies of this program
 under the terms of the GNU General Public License.
@@ -425,13 +425,16 @@ EOF
 	'
 
 	initialize_fullname=`
-		(
-			cat /etc/passwd
-			for author in $authors
-			do NIS_PATH= nismatch $author passwd.org_dir
-			done
-			ypmatch $authors passwd
-		) 2>/dev/null |
+		{
+			(getent passwd $authors) ||
+			(
+				cat /etc/passwd
+				for author in $authors
+				do NIS_PATH= nismatch $author passwd.org_dir
+				done
+				ypmatch $authors passwd
+			)
+		} 2>/dev/null |
 		$AWK -F: "$awkscript"
 	`$initialize_fullname
 esac

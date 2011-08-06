@@ -190,8 +190,11 @@ Emacs features that create special buffers with particular names.
   @kbd{M-x view-buffer} is much like @kbd{M-x view-file} (@pxref{Misc
 File Ops}) except that it examines an already existing Emacs buffer.
 View mode provides commands for scrolling through the buffer
-conveniently but not for changing it.  When you exit View mode, the
-value of point that resulted from your perusal remains in effect.
+conveniently but not for changing it.  When you exit View mode with
+@kbd{q}, that switches back to the buffer (and the position) which was
+previously displayed in the window.  Alternatively, if you exit View
+mode with @kbd{e}, the buffer and the value of point that resulted from
+your perusal remain in effect.
 
   The commands @kbd{M-x append-to-buffer} and @kbd{M-x insert-buffer}
 can be used to copy text from one buffer to another.  @xref{Accumulating
@@ -238,6 +241,28 @@ for killing various buffers.
 @vindex kill-buffer-hook
   If you want to do something special every time a buffer is killed, you
 can add hook functions to the hook @code{kill-buffer-hook} (@pxref{Hooks}).
+
+@findex clean-buffer-list
+  If you run one Emacs session for a period of days, as many people do,
+it can fill up with buffers that you used several days ago.  The command
+@kbd{M-x clean-buffer-list} is a convenient way to purge them; it kills
+all the unmodified buffers that you have not used for a long time.  An
+ordinary buffer is killed if it has not been displayed for three days;
+however, you can specify certain buffers that should never be killed
+automatically, and others that should be killed if they have been unused
+for a mere hour.
+
+@cindex Midnight mode
+@vindex midnight-mode
+@vindex midnight-hook
+  You can also have this buffer purging done for you, every day at
+midnight, by enabling Midnight mode.  Midnight mode operates each day at
+midnight; at that time, it runs @code{clean-buffer-list}, or whichever
+functions you have placed in the normal hook @code{midnight-hook}
+(@pxref{Hooks}).
+
+  To enable Midnight mode, use the Customization buffer to set the
+variable @code{midnight-mode} to @code{t}.  @xref{Easy Customization}.
 
 @node Several Buffers
 @section Operating on Several Buffers
@@ -321,6 +346,8 @@ Immediately select this line's buffer in a full-screen window.
 Immediately set up two windows, with this line's buffer in one, and the
 previously selected buffer (aside from the buffer @samp{*Buffer List*})
 in the other.
+@item b
+Bury the buffer listed on this line.
 @item m
 Mark this line's buffer to be displayed in another window if you exit
 with the @kbd{v} command.  The request shows as a @samp{>} at the

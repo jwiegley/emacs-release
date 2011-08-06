@@ -1,6 +1,12 @@
 This is Info file ../info/sc, produced by Makeinfo version 1.68 from
 the input file sc.texi.
 
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* SC: (sc).		Supercite lets you cite parts of messages you're
+			  replying to, in flexible ways.
+END-INFO-DIR-ENTRY
+
    This document describes the Supercite Version 3.1 package for citing
 and attributing the replies for various GNU Emacs mail and news reading
 subsystems.
@@ -13,54 +19,54 @@ preserved on all copies.
 
 
 Indirect:
-sc-1: 456
-sc-2: 47956
-sc-3: 97652
+sc-1: 620
+sc-2: 48120
+sc-3: 97599
 
 Tag Table:
 (Indirect)
-Node: Top456
-Node: Introduction1156
-Node: Usage Overview3121
-Node: What Supercite Does Not Do4278
-Node: What Supercite Does5406
-Node: Citations8231
-Node: Citation Elements10520
-Node: Recognizing Citations12397
-Node: Information Keys and the Info Alist14442
-Node: Reference Headers17033
-Node: The Built-in Header Rewrite Functions18598
-Node: Electric References21043
-Node: Getting Connected23918
-Node: Emacs 19 MUAs27436
-Node: Emacs 18 MUAs28267
-Node: MH-E with any Emacsen29623
-Node: VM with any Emacsen31382
-Node: GNEWS with any Emacsen32444
-Node: Overloading for Non-conforming MUAs33166
-Node: Replying and Yanking36416
-Node: Reply Buffer Initialization36751
-Node: Filling Cited Text43630
-Node: Selecting an Attribution47099
-Node: Attribution Preferences47956
-Node: Anonymous Attributions51867
-Node: Author Names54903
-Node: Configuring the Citation Engine57386
-Node: Using Regi59111
-Node: Frames You Can Customize62981
-Node: Post-yank Formatting Commands65506
-Node: Citing Commands66651
-Node: Insertion Commands69363
-Node: Variable Toggling Shortcuts70298
-Node: Mail Field Commands72653
-Node: Miscellaneous Commands75020
-Node: Hints to MUA Authors76284
-Node: Version 3 Changes80323
-Node: Thanks and History83019
-Node: The Supercite Mailing List84615
-Node: Concept Index85943
-Node: Command Index92101
-Node: Key Index97652
-Node: Variable Index99643
+Node: Top620
+Node: Introduction1320
+Node: Usage Overview3285
+Node: What Supercite Does Not Do4442
+Node: What Supercite Does5570
+Node: Citations8395
+Node: Citation Elements10684
+Node: Recognizing Citations12561
+Node: Information Keys and the Info Alist14606
+Node: Reference Headers17197
+Node: The Built-in Header Rewrite Functions18762
+Node: Electric References21207
+Node: Getting Connected24082
+Node: Emacs 19 MUAs27600
+Node: Emacs 18 MUAs28431
+Node: MH-E with any Emacsen29787
+Node: VM with any Emacsen31546
+Node: GNEWS with any Emacsen32608
+Node: Overloading for Non-conforming MUAs33330
+Node: Replying and Yanking36580
+Node: Reply Buffer Initialization36915
+Node: Filling Cited Text43794
+Node: Selecting an Attribution47263
+Node: Attribution Preferences48120
+Node: Anonymous Attributions52031
+Node: Author Names55067
+Node: Configuring the Citation Engine57550
+Node: Using Regi59275
+Node: Frames You Can Customize63145
+Node: Post-yank Formatting Commands65670
+Node: Citing Commands66815
+Node: Insertion Commands69527
+Node: Variable Toggling Shortcuts70462
+Node: Mail Field Commands72817
+Node: Miscellaneous Commands75184
+Node: Hints to MUA Authors76448
+Node: Version 3 Changes80487
+Node: Thanks and History83183
+Node: The Supercite Mailing List84779
+Node: Concept Index85890
+Node: Command Index92048
+Node: Key Index97599
+Node: Variable Index99590
 
 End Tag Table

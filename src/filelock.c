@@ -20,6 +20,7 @@ Boston, MA 02111-1307, USA.  */
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <signal.h>
 #include <config.h>
 
 #ifdef VMS
@@ -34,15 +35,24 @@ Boston, MA 02111-1307, USA.  */
 #include <string.h>
 #endif /* USG */
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #include "lisp.h"
 #include "buffer.h"
+#include "charset.h"
+#include "coding.h"
 
+#include <time.h>
 #include <errno.h>
 #ifndef errno
 extern int errno;
 #endif
 
 #ifdef CLASH_DETECTION
+
+#include <utmp.h>
   
 /* The strategy: to lock a file FN, create a symlink .#FN in FN's
    directory, with link data `user@host.pid'.  This avoids a single
@@ -80,6 +90,46 @@ extern int errno;
    --karl@cs.umb.edu/karl@hq.ileaf.com.  */
 
 
+/* Return the time of the last system boot.  */
+
+static time_t boot_time;
+
+static time_t
+get_boot_time ()
+{
+#ifdef BOOT_TIME
+  struct utmp ut, *utp;
+
+  if (boot_time)
+    return boot_time;
+
+  utmpname ("/var/log/wtmp");
+  setutent ();
+  boot_time = 1;
+  while (1)
+    {
+      /* Find the next reboot record.  */
+      ut.ut_type = BOOT_TIME;
+      utp = getutid (&ut);
+      if (! utp)
+	break;
+      /* Compare reboot times and use the newest one.  */
+      if (utp->ut_time > boot_time)
+	boot_time = utp->ut_time;
+      /* Advance on element in the file
+	 so that getutid won't repeat the same one.  */
+      utp = getutent ();
+      if (! utp)
+	break;
+    }
+  endutent ();
+
+  return boot_time;
+#else
+  return 0;
+#endif
+}
+
 /* Here is the structure that stores information about a lock.  */
 
 typedef struct
@@ -87,6 +137,7 @@ typedef struct
   char *user;
   char *host;
   unsigned long pid;
+  time_t boot_time;
 } lock_info_type;
 
 /* When we read the info back, we might need this much more,
@@ -100,7 +151,7 @@ typedef struct
 /* Write the name of the lock file for FN into LFNAME.  Length will be
    that of FN plus two more for the leading `.#' plus one for the null.  */
 #define MAKE_LOCK_NAME(lock, file) \
-  (lock = (char *) alloca (XSTRING (file)->size + 2 + 1), \
+  (lock = (char *) alloca (STRING_BYTES (XSTRING (file)) + 2 + 1), \
    fill_in_lock_file_name (lock, (file)))
 
 static void
@@ -133,6 +184,7 @@ lock_file_1 (lfname, force)
      int force;
 {
   register int err;
+  time_t boot_time;
   char *user_name;
   char *host_name;
   char *lock_info_str;
@@ -146,10 +198,15 @@ lock_file_1 (lfname, force)
   else
     host_name = "";
   lock_info_str = (char *)alloca (strlen (user_name) + strlen (host_name)
-			  + LOCK_PID_MAX + 5);
+				  + LOCK_PID_MAX + 5);
 
-  sprintf (lock_info_str, "%s@%s.%lu", user_name, host_name,
-           (unsigned long) getpid ());
+  boot_time = get_boot_time ();
+  if (boot_time)
+    sprintf (lock_info_str, "%s@%s.%lu:%lu", user_name, host_name,
+	     (unsigned long) getpid (), (unsigned long) boot_time);
+  else
+    sprintf (lock_info_str, "%s@%s.%lu", user_name, host_name,
+	     (unsigned long) getpid ());    
 
   err = symlink (lock_info_str, lfname);
   if (errno == EEXIST && force)
@@ -178,7 +235,7 @@ current_lock_owner (owner, lfname)
 #endif
   int o, p, len, ret;
   int local_owner = 0;
-  char *at, *dot;
+  char *at, *dot, *colon;
   char *lfinfo = 0;
   int bufsize = 50;
   /* Read arbitrarily-long contents of symlink.  Similar code in
@@ -209,21 +266,30 @@ current_lock_owner (owner, lfname)
       local_owner = 1;
     }
   
-  /* Parse USER@HOST.PID.  If can't parse, return -1.  */
+  /* Parse USER@HOST.PID:BOOT_TIME.  If can't parse, return -1.  */
   /* The USER is everything before the first @.  */
   at = index (lfinfo, '@');
   dot = rindex (lfinfo, '.');
-  if (!at || !dot) {
-    xfree (lfinfo);
-    return -1;
-  }
+  if (!at || !dot)
+    {
+      xfree (lfinfo);
+      return -1;
+    }
   len = at - lfinfo;
   owner->user = (char *) xmalloc (len + 1);
   strncpy (owner->user, lfinfo, len);
   owner->user[len] = 0;
   
-  /* The PID is everything after the last `.'.  */
+  /* The PID is everything from the last `.' to the `:'.  */
   owner->pid = atoi (dot + 1);
+  colon = dot;
+  while (*colon && *colon != ':')
+    colon++;
+  /* After the `:', if there is one, comes the boot time.  */
+  if (*colon == ':')
+    owner->boot_time = atoi (colon + 1);
+  else
+    owner->boot_time = 0;
 
   /* The host is everything in between.  */
   len = dot - at - 1;
@@ -241,7 +307,9 @@ current_lock_owner (owner, lfname)
       if (owner->pid == getpid ())
         ret = 2; /* We own it.  */
       else if (owner->pid > 0
-               && (kill (owner->pid, 0) >= 0 || errno == EPERM))
+               && (kill (owner->pid, 0) >= 0 || errno == EPERM)
+	       && (owner->boot_time == 0
+		   || owner->boot_time == get_boot_time ()))
         ret = 1; /* An existing process on this machine owns it.  */
       /* The owner process is dead or has a strange pid (<=0), so try to
          zap the lockfile.  */
@@ -316,27 +384,34 @@ lock_if_free (clasher, lfname)
 
 void
 lock_file (fn)
-    register Lisp_Object fn;
+     Lisp_Object fn;
 {
-  register Lisp_Object attack, orig_fn;
+  register Lisp_Object attack, orig_fn, encoded_fn;
   register char *lfname, *locker;
   lock_info_type lock_info;
 
   orig_fn = fn;
   fn = Fexpand_file_name (fn, Qnil);
+  encoded_fn = ENCODE_FILE (fn);
 
   /* Create the name of the lock-file for file fn */
-  MAKE_LOCK_NAME (lfname, fn);
+  MAKE_LOCK_NAME (lfname, encoded_fn);
 
   /* See if this file is visited and has changed on disk since it was
      visited.  */
   {
     register Lisp_Object subject_buf;
+    struct gcpro gcpro1;
+
     subject_buf = get_truename_buffer (orig_fn);
+    GCPRO1 (fn);
+
     if (!NILP (subject_buf)
 	&& NILP (Fverify_visited_file_modtime (subject_buf))
 	&& !NILP (Ffile_exists_p (fn)))
       call1 (intern ("ask-user-about-supersession-threat"), fn);
+
+    UNGCPRO;
   }
 
   /* Try to lock the lock. */
@@ -368,6 +443,7 @@ unlock_file (fn)
   register char *lfname;
 
   fn = Fexpand_file_name (fn, Qnil);
+  fn = ENCODE_FILE (fn);
 
   MAKE_LOCK_NAME (lfname, fn);
 
@@ -385,7 +461,14 @@ unlock_all_files ()
     {
       b = XBUFFER (XCONS (XCONS (tail)->car)->cdr);
       if (STRINGP (b->file_truename) && BUF_SAVE_MODIFF (b) < BUF_MODIFF (b))
-	unlock_file (b->file_truename);
+	{
+	  register char *lfname;
+
+	  MAKE_LOCK_NAME (lfname, b->file_truename);
+
+	  if (current_lock_owner (0, lfname) == 2)
+	    unlink (lfname);
+	}
     }
 }
 
@@ -421,6 +504,7 @@ if it should normally be locked.")
 
 /* Unlock the file visited in buffer BUFFER.  */
 
+void
 unlock_buffer (buffer)
      struct buffer *buffer;
 {
@@ -457,10 +541,10 @@ t if it is locked by you, else a string of the name of the locker.")
 
   return ret;
 }
-
 
 /* Initialization functions.  */
 
+void
 syms_of_filelock ()
 {
   defsubr (&Sunlock_buffer);

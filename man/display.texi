@@ -109,7 +109,7 @@ rather, the text and point move rigidly on the screen.  @kbd{C-l} with a
 negative argument puts point that many lines from the bottom of the window.
 For example, @kbd{C-u - 1 C-l} puts point on the bottom line, and @kbd{C-u
 - 5 C-l} puts it five lines from the bottom.  Just @kbd{C-u} as argument,
-as in @kbd{C-u C-l}, scrolls point to the center of the screen.
+as in @kbd{C-u C-l}, scrolls point to the center of the selected window.
 
 @kindex C-M-l
 @findex reposition-window

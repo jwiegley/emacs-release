@@ -1,8 +1,8 @@
-This is Info file LNEWS, produced by Makeinfo-1.55 from the input file
-news.texi.
+This is Info file LNEWS, produced by Makeinfo version 1.67 from the
+input file news.texi.
 
    This file describes the new Lisp features of Emacs version 19 as
-first released to the public.  For Lisp changes in subsequent Emacs 19
+first released to the public.  For Lisp changes in subsequent Emacs
 releases, see the file NEWS.
 
 New Features in the Lisp Language
@@ -31,9 +31,9 @@ New Features in the Lisp Language
    * There are new escape sequences for use in character and string
      constants.  The escape sequence `\a' is equivalent to `\C-g', the
      ASCII BEL character (code 7).  The escape sequence `\x' followed
-     by a hexidecimal number represents the character whose ASCII code
+     by a hexadecimal number represents the character whose ASCII code
      is that number.  There is no limit on the number of digits in the
-     hexidecimal value.
+     hexadecimal value.
 
    * The function `read' when reading from a buffer now does not skip a
      terminator character that terminates a symbol.  It leaves that
@@ -88,11 +88,11 @@ New Features in the Lisp Language
      plural noun and ACTION is a transitive verb describing ACTOR.  The
      default is `("object" "objects" "act on")'.
 
-     Each time a question is asked, the user may enter `y', `Y', or SPC
-     to act on that object; `n', `N', or DEL to skip that object; `!'
-     to act on all following objects; ESC or `q' to exit (skip all
-     following objects); `.' (period) to act on the current object and
-     then exit; or `C-h' to get help.
+     Each time a question is asked, the user may enter `y', `Y', or
+     <SPC> to act on that object; `n', `N', or <DEL> to skip that
+     object; `!' to act on all following objects; <ESC> or `q' to exit
+     (skip all following objects); `.' (period) to act on the current
+     object and then exit; or `C-h' to get help.
 
      `map-y-or-n-p' returns the number of objects acted on.
 
@@ -113,7 +113,7 @@ evalled when particular files are loaded.  Each element looks like
 
    When `load' is run and the file name argument equals FILENAME, the
 FORMS in the corresponding element are executed at the end of loading.
-fILENAME must match exactly!  Normally FILENAME is the name of a
+FILENAME must match exactly!  Normally FILENAME is the name of a
 library, with no directory specified, since that is how `load' is
 normally called.
 
@@ -1864,7 +1864,7 @@ represent them as input.
     alt
           The 2**18 bit in the character code indicates a character
           typed with the alt key held down.  (On some terminals, the
-          key labeled ALT is actually the meta key.)
+          key labeled <ALT> is actually the meta key.)
 
      In the future, Emacs may support a larger range of basic codes.
      We may also move the modifier bits to larger bit numbers.
@@ -1873,7 +1873,7 @@ represent them as input.
      character is with the function `event-modifiers' (see below).
 
    * Function keys are represented as symbols.  The symbol's name is
-     the function key's label.  For example, pressing a key labeled F1
+     the function key's label.  For example, pressing a key labeled <F1>
      places the symbol `f1' in the input stream.
 
      There are a few exceptions to the symbol naming convention:
@@ -1890,9 +1890,9 @@ represent them as input.
     `left', `up', `right', `down'
           Cursor arrow keys
 
-     You can use the modifier keys CTRL, META, HYPER, SUPER, ALT and
-     SHIFT with function keys.  The way to represent them is with
-     prefixes in the symbol name:
+     You can use the modifier keys <CTRL>, <META>, <HYPER>, <SUPER>,
+     <ALT> and <SHIFT> with function keys.  The way to represent them
+     is with prefixes in the symbol name:
 
     `A-'
           The alt modifier.
@@ -1912,10 +1912,10 @@ represent them as input.
     `S-'
           The shift modifier.
 
-     Thus, the symbol for the key F3 with META held down is `M-F3'.
-     When you use more than one prefix, we recommend you write them in
-     alphabetical order (though the order does not matter in arguments
-     to the key-binding lookup and modification functions).
+     Thus, the symbol for the key <F3> with <META> held down is
+     `M-<F3>'.  When you use more than one prefix, we recommend you
+     write them in alphabetical order (though the order does not matter
+     in arguments to the key-binding lookup and modification functions).
 
    * Mouse events are represented as lists.
 
@@ -2104,19 +2104,19 @@ Working with Input Events
 
           (global-set-key [mouse-1] 'mouse-set-point)
 
-     To bind the sequence `C-c F1' to the command `tex-view' in
+     To bind the sequence `C-c <F1>' to the command `tex-view' in
      `tex-mode-map', you could evaluate this:
 
           (define-key tex-mode-map [?\C-c f1] 'tex-view)
 
-     To find the binding for the function key labeled NEXT in
+     To find the binding for the function key labeled <NEXT> in
      `minibuffer-local-map', you could evaluate this:
 
           (lookup-key minibuffer-local-map [next])
                => next-history-element
 
      If you call the function `read-key-sequence' and then press `C-x
-     C-F5', here is how it behaves:
+     C-<F5>', here is how it behaves:
 
           (read-key-sequence "Press `C-x C-F5': ")
                => [24 C-f5]
@@ -2154,7 +2154,7 @@ Working with Input Events
 
           (global-set-key [mode-line mouse-3] 'mouse-delete-window)
 
-     Here's how to bind the middle button (modified by META) on the
+     Here's how to bind the middle button (modified by <META>) on the
      vertical line at the right of a window to scroll the window to the
      left.
 
@@ -2260,7 +2260,7 @@ sequences or keyboard macro definitions.  There are special rules for
 how to put keyboard characters into a string, because they are not
 limited to the range of 0 to 255 as text characters are.
 
-   A keyboard character typed using the META key is called a "meta
+   A keyboard character typed using the <META> key is called a "meta
 character".  The numeric code for such an event includes the 2**23 bit;
 it does not even come close to fitting in a string.  However, earlier
 Emacs versions used a different representation for these characters,
@@ -2387,9 +2387,9 @@ function key) has a definition that is a menu keymap, you can use the
 keyboard to choose a menu item.
 
    Emacs displays the menu alternatives in the echo area.  If they don't
-all fit at once, type SPC to see the next line of alternatives.  If you
-keep typing SPC, you eventually get to the end of the menu and then
-cycle around to the beginning again.
+all fit at once, type <SPC> to see the next line of alternatives.  If
+you keep typing <SPC>, you eventually get to the end of the menu and
+then cycle around to the beginning again.
 
    When you have found the alternative you want, type the corresponding
 character--the one whose binding is that alternative.
@@ -2641,28 +2641,28 @@ New Features for Reading Input
      (Normally this is `C-g'.)
 
    * The variable `meta-flag' has been deleted; use `set-input-mode' to
-     enable or disable support for a META key.  This change was made
+     enable or disable support for a <META> key.  This change was made
      because `set-input-mode' can send the terminal the appropriate
-     commands to enable or disable operation of the META key.
+     commands to enable or disable operation of the <META> key.
 
    * The new variable `extra-keyboard-modifiers' lets Lisp programs
      "press" the modifier keys on the keyboard.  The value is a bit
      mask:
 
     1
-          The SHIFT key.
+          The <SHIFT> key.
 
     2
-          The LOCK key.
+          The <LOCK> key.
 
     4
-          The CTL key.
+          The <CTL> key.
 
     8
-          The META key.
+          The <META> key.
 
      When you use X windows, the program can press any of the modifier
-     keys in this way.  Otherwise, only the CTL and META keys can be
+     keys in this way.  Otherwise, only the <CTL> and <META> keys can be
      virtually pressed.
 
    * You can use the new function `keyboard-translate' to set up
@@ -2686,14 +2686,14 @@ New Features for Reading Input
      when K appears as a subsequence *anywhere* in a key sequence, it
      is replaced with V.
 
-     For example, VT100 terminals send `ESC O P' when the "keypad" PF1
-     key is pressed.  Thus, on a VT100, `function-key-map' should
+     For example, VT100 terminals send `<ESC> O P' when the "keypad"
+     PF1 key is pressed.  Thus, on a VT100, `function-key-map' should
      "bind" that sequence to `[pf1]'.  This specifies translation of
-     `ESC O P' into PF1 anywhere in a key sequence.
+     `<ESC> O P' into <PF1> anywhere in a key sequence.
 
-     Thus, typing `C-c PF1' sends the character sequence `C-c ESC O P',
-     but `read-key-sequence' translates this back into `C-c PF1', which
-     it returns as the vector `[?\C-c PF1]'.
+     Thus, typing `C-c <PF1>' sends the character sequence `C-c <ESC> O
+     P', but `read-key-sequence' translates this back into `C-c <PF1>',
+     which it returns as the vector `[?\C-c PF1]'.
 
      Entries in `function-key-map' are ignored if they conflict with
      bindings made in the minor mode, local, or global keymaps.
@@ -2752,7 +2752,7 @@ New Syntax Table Features
           including the letter `p' in the syntax specification.
 
           These characters are treated as whitespace when they appear
-          between expressions.  When they appear withing an expression,
+          between expressions.  When they appear within an expression,
           they are handled according to their usual syntax codes.
 
           The function `backward-prefix-chars' moves back over these
@@ -2887,7 +2887,7 @@ New Features for Dealing with Buffers
      being displayed in windows may be returned even if there are other
      buffers not visible.  Normally, `other-buffer' returns a currently
      visible buffer only as a last resort, if there are no suitable
-     nonvisible buffers.
+     invisible buffers.
 
    * The hook `kill-buffer-hook' now runs whenever a buffer is killed.
 

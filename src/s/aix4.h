@@ -4,3 +4,11 @@
 
 /* AIX 4 does not have HFT any more.  */
 #undef AIXHFT
+
+/* Dave Love <d.love@dl.ac.uk> reported this as needed on AIX 4.1.
+   It is just a guess which versions of AIX need this definition.  */
+#define HAVE_WAIT_HEADER
+
+/* Specify the type that the 3rd arg of `accept' points to.
+   It is just a guess which versions of AIX need this definition.  */
+#define SOCKLEN_TYPE int

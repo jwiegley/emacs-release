@@ -94,6 +94,15 @@ such as `edebug-defun' to work with such inputs."
   :type 'hook
   :group 'ielm)
 
+(defvar * nil
+  "Most recent value evaluated in IELM.")
+
+(defvar ** nil
+  "Second-most-recent value evaluated in IELM.")
+
+(defvar *** nil
+  "Third-most-recent value evaluated in IELM.")
+  
 ;;; System variables
 
 (defvar ielm-working-buffer nil
@@ -130,7 +139,9 @@ This variable is buffer-local.")
 (defvar ielm-font-lock-keywords
   (list 
    (cons (concat "^" (regexp-quote ielm-prompt)) 'font-lock-keyword-face)
-   '("\\(^\\*\\*\\*[^*]+\\*\\*\\*\\)\\(.*$\\)" (1 font-lock-comment-face) (2 font-lock-reference-face)))
+   '("\\(^\\*\\*\\*[^*]+\\*\\*\\*\\)\\(.*$\\)"
+     (1 font-lock-comment-face)
+     (2 font-lock-constant-face)))
   "Additional expressions to highlight in ielm buffers.")
 	
 ;;; Completion stuff
@@ -301,15 +312,15 @@ simply inserts a newline."
 	      (if (ielm-is-whitespace (substring ielm-string ielm-pos))
 		  ;; need this awful let convolution to work around
 		  ;; an Emacs bug involving local vbls and let binding
-		  (let ((:save :)
-			(::save ::)
-			(:::save :::))
+		  (let ((*save *)
+			(**save **)
+			(***save ***))
 		    (save-excursion
 		      (set-buffer ielm-working-buffer)
 		      (condition-case err
-			  (let ((: :save)
-				(:: ::save)
-				(::: :::save)
+			  (let ((* *save)
+				(** **save)
+				(*** ***save)
 				(ielm-obuf (current-buffer)))
 			    (setq ielm-result (eval ielm-form))
 			    (setq ielm-wbuf (current-buffer))
@@ -345,10 +356,10 @@ simply inserts a newline."
 		(if ielm-noisy (ding))
 		(setq ielm-output (concat ielm-output "*** " ielm-error-type " ***  "))
 		(setq ielm-output (concat ielm-output ielm-result)))
-	    ;; There was no error, so shift the ::: values
-	    (setq ::: ::)
-	    (setq :: :)
-	    (setq : ielm-result))
+	    ;; There was no error, so shift the *** values
+	    (setq *** **)
+	    (setq ** *)
+	    (setq * ielm-result))
 	  (setq ielm-output (concat ielm-output "\n"))))
     (setq ielm-output (concat ielm-output ielm-prompt))
     (comint-output-filter (ielm-process) ielm-output)))
@@ -386,7 +397,7 @@ Uses the interface provided by `comint-mode' (which see).
 * \\[comint-dynamic-complete] completes Lisp symbols (or filenames, within strings), 
   or indents the line if there is nothing to complete.
 
-During evaluations, the values of the variables `:', `::', and `:::'
+During evaluations, the values of the variables `*', `**', and `***'
 are the results of the previous, second previous and third previous
 evaluations respectively.
 
@@ -436,12 +447,12 @@ Customised bindings may be defined in `ielm-map', which currently contains:
   (setq fill-paragraph-function 'lisp-fill-paragraph)
 
   ;; Value holders
-  (setq : nil)
-  (make-local-variable ':)
-  (setq :: nil)
-  (make-local-variable '::)
-  (setq ::: nil)
-  (make-local-variable ':::)
+  (setq * nil)
+  (make-local-variable '*)
+  (setq ** nil)
+  (make-local-variable '**)
+  (setq *** nil)
+  (make-local-variable '***)
 
   ;; font-lock support
   (make-local-variable 'font-lock-defaults)

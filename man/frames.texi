@@ -34,6 +34,7 @@ so that you can use many of the features described in this chapter.
 * Mouse References::    Using the mouse to select an item from a list.
 * Menu Mouse Clicks::   Mouse clicks that bring up menus.
 * Mode Line Mouse::     Mouse clicks on the mode line.
+* Speedbar::            How to make and use a speedbar frame.
 * Creating Frames::     Creating additional Emacs frames with various contents.
 * Multiple Displays::   How one Emacs job can talk to several displays.
 * Special Buffer Frames::  You can make certain buffers have their own frames.
@@ -43,7 +44,8 @@ so that you can use many of the features described in this chapter.
 * Faces::	        How to change the display style using faces.
 * Font Lock::           Minor mode for syntactic highlighting using faces.
 * Support Modes::       Font Lock support modes make Font Lock faster.
-* Misc X::	        Iconifying and deleting frames.	Region highlighting.
+* Highlight Changes::   Using colors to show where you changed the buffer.
+* Misc X::	        Iconifying and deleting frames. Region highlighting.
 * Non-Window Terminals::  Multiple frames on terminals that show only one.
 @end menu
 
@@ -100,11 +102,11 @@ then @kbd{Mouse-3} in another.  This selects the text between those two
 positions as the region.  It also copies the new region to the kill
 ring, so that you can copy it to someplace else.
 
-If you click @kbd{Mouse-1}, scroll with the scroll bar, and then click
-@kbd{Mouse-3}, it remembers where point was before scrolling (where you
-put it with @kbd{Mouse-1}), and uses that position as the other end of
-the region.  This is so that you can select a region that doesn't fit
-entirely on the screen.
+If you click @kbd{Mouse-1} in the text, scroll with the scroll bar, and
+then click @kbd{Mouse-3}, it remembers where point was before scrolling
+(where you put it with @kbd{Mouse-1}), and uses that position as the
+other end of the region.  This is so that you can select a region that
+doesn't fit entirely on the screen.
 
 More generally, if you do not have a highlighted region, @kbd{Mouse-3}
 selects the text between point and the click position as the region.  It
@@ -156,9 +158,9 @@ text with @kbd{Mouse-1}.  Then you can copy it elsewhere by yanking it.
   To yank the killed or copied text somewhere else, move the mouse there
 and press @kbd{Mouse-2}.  @xref{Yanking}.  However, if
 @code{mouse-yank-at-point} is non-@code{nil}, @kbd{Mouse-2} yanks at
-point.  Then it does not matter precisely where you click; all that
-matters is which window you click on.  The default value is @code{nil}.
-This variable also affects yanking the secondary selection.
+point.  Then it does not matter where you click, or even which of the
+frame's windows you click on.  The default value is @code{nil}.  This
+variable also affects yanking the secondary selection.
 
 @cindex cutting and X
 @cindex pasting and X
@@ -322,7 +324,7 @@ vertically.  @xref{Split Window}.
 @kindex C-x 5
   The prefix key @kbd{C-x 5} is analogous to @kbd{C-x 4}, with parallel
 subcommands.  The difference is that @kbd{C-x 5} commands create a new
-frame rather than just a new window in the selected frame  (@xref{Pop
+frame rather than just a new window in the selected frame (@xref{Pop
 Up Window}).  If an existing visible or iconified frame already displays
 the requested material, these commands use the existing frame, after
 raising or deiconifying as necessary. 
@@ -336,7 +338,7 @@ buffer to select:
 @findex make-frame
 Create a new frame (@code{make-frame}).
 @item C-x 5 b @var{bufname} @key{RET}
-Select buffer @var{bufname} in another window.  This runs
+Select buffer @var{bufname} in another frame.  This runs
 @code{switch-to-buffer-other-frame}.
 @item C-x 5 f @var{filename} @key{RET}
 Visit file @var{filename} and select its buffer in another frame.  This
@@ -367,6 +369,39 @@ frame parameters in @code{default-frame-alist}.  You can use the
 variable @code{initial-frame-alist} to specify parameters that affect
 only the initial frame.  @xref{Initial Parameters,,, elisp, The Emacs
 Lisp Reference Manual}, for more information.
+
+@node Speedbar
+@section Making and Using a Speedbar Frame
+@cindex speedbar
+
+  An Emacs frame can have a @dfn{speedbar}, which is a vertical window
+that serves as a scrollable menu of files you could visit and tags
+within those files.  To create a speedbar, type @kbd{M-x speedbar}; this
+creates a speedbar window for the selected frame.  From then on, you can
+click on a file name in the speedbar to visit that file in the
+corresponding Emacs frame, or click on a tag name to jump to that tag in
+the Emacs frame.
+
+  Initially the speedbar lists the immediate contents of the current
+directory, one file per line.  Each line also has a box, @samp{[+]} or
+@samp{<+>}, that you can click on with @kbd{Mouse-2} to ``open up'' the
+contents of that item.  If the line names a directory, opening it adds
+the contents of that directory to the speedbar display, underneath the
+directory's own line.  If the line lists an ordinary file, opening it up
+adds a list of the tags in that file to the speedbar display.  When a
+file is opened up, the @samp{[+]} changes to @samp{[-]}; you can click
+on that box to ``close up'' that file (hide its contents).
+
+  Some major modes, including Rmail mode, Info, and GUD, have
+specialized ways of putting useful items into the speedbar for you to
+select.  For example, in Rmail mode, the speedbar shows a list of Rmail
+files, and lets you move the current message to another Rmail file by
+clicking on its @samp{<M>} box.
+
+  A speedbar belongs to one Emacs frame, and always operates on that
+frame.  If you use multiple frames, you can make a speedbar for some or
+all of the frames; type @kbd{M-x speedbar} in any given frame to make a
+speedbar for it.
 
 @node Multiple Displays
 @section Multiple Displays
@@ -684,7 +719,8 @@ on your screen using the command @code{ps-print-buffer-with-faces}.
 @node Font Lock
 @section Font Lock mode
 @cindex Font Lock mode
-@cindex mode. Font Lock
+@cindex mode, Font Lock
+@cindex syntax highlighting
 
   Font Lock mode is a minor mode, always local to a particular
 buffer, which highlights (or ``fontifies'') using various faces
@@ -887,7 +923,7 @@ text is fontified only when Emacs is idle for
 line's contents can alter the context for subsequent lines, and thus
 change how they ought to be fontified.  Ordinarily, you must type
 @kbd{M-g M-g} to refontify the subsequent lines.  However, if you set
-the variable @code{lazy-lock-defer-contextually} to non-@code{nil}, Lay
+the variable @code{lazy-lock-defer-contextually} to non-@code{nil}, Lazy
 Lock mode does this automatically, after @code{lazy-lock-defer-time}
 seconds.
 
@@ -957,6 +993,14 @@ like this:
         (t . lazy-lock-mode)))
 @end example
 
+@node Highlight Changes
+@section Highlight Changes Mode
+
+@findex highlight-changes-mode
+  Use @kbd{M-x highlight-changes-mode} to enable a minor mode
+that uses faces (colors, typically) to indicate which parts of
+the buffer were changed most recently.
+
 @node Misc X
 @section Miscellaneous X Window Features
 
@@ -1005,4 +1049,14 @@ the current frame.
 display only one frame at a time, the selected frame's number @var{n}
 appears near the beginning of the mode line, in the form
 @samp{F@var{n}}.
+
+@findex set-frame-name
+@findex select-frame-by-name
+  @samp{F@var{n}} is actually the frame's name.  You can also specify a
+different name if you wish, and you can select a frame by its name.  Use
+the command @kbd{M-x set-frame-name @key{RET} @var{name} @key{RET}} to
+specify a new name for the selected frame, and use @kbd{M-x
+select-frame-by-name @key{RET} @var{name} @key{RET}} to select a frame
+according to its name.  The name you specify appears in the mode line
+when the frame is selected.
 

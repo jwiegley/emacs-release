@@ -1,6 +1,38 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
 
 File: emacs,  Node: Command Index,  Next: Variable Index,  Prev: Key Index,  Up: Top
 
@@ -35,6 +67,7 @@ Command and Function Index
 * apropos-command:                       Apropos.
 * apropos-documentation:                 Apropos.
 * apropos-value:                         Apropos.
+* apropos-variable:                      Apropos.
 * ask-user-about-lock:                   Interlocking.
 * auto-compression-mode:                 Compressed Files.
 * auto-fill-mode:                        Auto Fill.
@@ -147,9 +180,11 @@ Command and Function Index
 * calendar-unmark:                       Holidays.
 * call-last-kbd-macro:                   Basic Kbd Macro.
 * capitalize-word:                       Case.
+* cd:                                    File Names.
 * center-line:                           Fill Commands.
 * change-log-mode:                       Change Log.
 * choose-completion:                     Completion Commands.
+* clean-buffer-list:                     Kill Buffer.
 * clear-rectangle:                       Rectangles.
 * column-number-mode:                    Optional Mode Line.
 * comint-bol:                            Shell Mode.
@@ -160,6 +195,7 @@ Command and Function Index
 * comint-dynamic-complete-variable:      Shell Options.
 * comint-dynamic-list-filename...:       Shell Mode.
 * comint-dynamic-list-input-ring:        Shell Mode.
+* comint-get-next-from-history:          Shell Ring.
 * comint-interrupt-subjob:               Shell Mode.
 * comint-kill-input:                     Shell Mode.
 * comint-kill-output:                    Shell Mode.
@@ -200,6 +236,7 @@ Command and Function Index
 * customize:                             Easy Customization.
 * customize-apropos:                     Specific Customization.
 * customize-browse:                      Customization Groups.
+* customize-changed-options:             Specific Customization.
 * customize-customized:                  Specific Customization.
 * customize-face:                        Specific Customization.
 * customize-group:                       Specific Customization.
@@ -225,6 +262,7 @@ Command and Function Index
 * delete-non-matching-lines:             Other Repeating Search.
 * delete-other-windows:                  Change Window.
 * delete-rectangle:                      Rectangles.
+* delete-whitespace-rectangle:           Rectangles.
 * delete-window:                         Change Window.
 * describe-bindings:                     Misc Help.
 * describe-coding-system:                Coding Systems.
@@ -245,12 +283,14 @@ Command and Function Index
 * diary-block:                           Special Diary Entries.
 * diary-cyclic:                          Special Diary Entries.
 * diary-float:                           Special Diary Entries.
+* diary-mail-entries:                    Diary Commands.
 * diff:                                  Comparing Files.
 * diff-backup:                           Comparing Files.
 * digit-argument:                        Arguments.
 * dired:                                 Dired Enter.
 * dired-backup-diff:                     Comparison in Dired.
 * dired-change-marks:                    Marks vs Flags.
+* dired-clean-directory:                 Flagging Many Files.
 * dired-create-directory:                Operating on Files.
 * dired-diff:                            Comparison in Dired.
 * dired-display-file:                    Dired Visiting.
@@ -261,6 +301,7 @@ Command and Function Index
 * dired-do-compress:                     Operating on Files.
 * dired-do-copy:                         Operating on Files.
 * dired-do-copy-regexp:                  Transforming File Names.
+* dired-do-delete:                       Operating on Files.
 * dired-do-hardlink:                     Operating on Files.
 * dired-do-hardlink-regexp:              Transforming File Names.
 * dired-do-kill-lines:                   Dired Updating.
@@ -274,13 +315,14 @@ Command and Function Index
 * dired-do-shell-command:                Shell Commands in Dired.
 * dired-do-symlink:                      Operating on Files.
 * dired-do-symlink-regexp:               Transforming File Names.
+* dired-do-toggle:                       Marks vs Flags.
 * dired-downcase:                        Transforming File Names.
 * dired-expunge:                         Dired Deletion.
 * dired-find-file:                       Dired Visiting.
 * dired-find-file-other-window:          Dired Visiting.
 * dired-flag-auto-save-files:            Flagging Many Files.
 * dired-flag-backup-files:               Flagging Many Files.
-* dired-flag-clean-directory:            Flagging Many Files.
+* dired-flag-file-deletion:              Dired Deletion.
 * dired-flag-files-regexp:               Flagging Many Files.
 * dired-flag-garbage-files:              Flagging Many Files.
 * dired-hide-all:                        Hiding Subdirectories.
@@ -288,17 +330,24 @@ Command and Function Index
 * dired-mark:                            Marks vs Flags.
 * dired-mark-directories:                Marks vs Flags.
 * dired-mark-executables:                Marks vs Flags.
+* dired-mark-files-containing-regexp:    Marks vs Flags.
 * dired-mark-files-regexp:               Marks vs Flags.
+* dired-mark-subdir-files:               Marks vs Flags.
 * dired-mark-symlinks:                   Marks vs Flags.
 * dired-maybe-insert-subdir:             Subdirectories in Dired.
 * dired-mouse-find-file-other-window:    Dired Visiting.
+* dired-next-dirline:                    Subdirectory Motion.
+* dired-next-marked-file:                Marks vs Flags.
 * dired-next-subdir:                     Subdirectory Motion.
 * dired-other-frame:                     Dired Enter.
 * dired-other-window:                    Dired Enter.
+* dired-prev-dirline:                    Subdirectory Motion.
+* dired-prev-marked-file:                Marks vs Flags.
 * dired-prev-subdir:                     Subdirectory Motion.
 * dired-sort-toggle-or-edit:             Dired Updating.
 * dired-tree-down:                       Subdirectory Motion.
 * dired-tree-up:                         Subdirectory Motion.
+* dired-undo:                            Marks vs Flags.
 * dired-unmark:                          Marks vs Flags.
 * dired-unmark-all-files:                Marks vs Flags.
 * dired-unmark-all-files-no-query:       Marks vs Flags.
@@ -306,6 +355,7 @@ Command and Function Index
 * dired-upcase:                          Transforming File Names.
 * dired-view-file:                       Dired Visiting.
 * dirs:                                  Interactive Shell.
+* dirtrack-mode:                         Interactive Shell.
 * disable-command:                       Disabling.
 * display-time:                          Optional Mode Line.
 * dissociated-press:                     Dissociated Press.
@@ -402,7 +452,9 @@ Command and Function Index
 * fortran-indent-line:                   ForIndent Commands.
 * fortran-indent-new-line:               ForIndent Commands.
 * fortran-indent-subprogram:             ForIndent Commands.
+* fortran-join-line:                     ForIndent Commands.
 * fortran-mode:                          Fortran.
+* fortran-narrow-to-subprogram:          Fortran Misc.
 * fortran-next-statement:                Fortran Motion.
 * fortran-previous-statement:            Fortran Motion.
 * fortran-split-line:                    ForIndent Commands.
@@ -441,9 +493,9 @@ Command and Function Index
 * gomoku:                                Amusements.
 * goto-char:                             Moving Point.
 * goto-line:                             Moving Point.
-* grep:                                  Compilation.
+* grep:                                  Grep Searching.
 * grep (MS-DOS):                         MS-DOS Processes.
-* grep-find:                             Compilation.
+* grep-find:                             Grep Searching.
 * gud-cont:                              Commands of GUD.
 * gud-def:                               GUD Customization.
 * gud-down:                              Commands of GUD.
@@ -459,6 +511,8 @@ Command and Function Index
 * hanoi:                                 Amusements.
 * help-command:                          Help.
 * help-for-help:                         Help.
+* help-next-ref:                         Help Mode.
+* help-previous-ref:                     Help Mode.
 * help-with-tutorial:                    Basic.
 * hide-body:                             Outline Visibility.
 * hide-entry:                            Outline Visibility.
@@ -466,11 +520,13 @@ Command and Function Index
 * hide-other:                            Outline Visibility.
 * hide-sublevels:                        Outline Visibility.
 * hide-subtree:                          Outline Visibility.
+* highlight-changes-mode:                Highlight Changes.
 * holidays:                              Holidays.
 * hscroll-mode:                          Horizontal Scrolling.
 * iconify-or-deiconify-frame:            Misc X.
 * ielm:                                  Lisp Interaction.
 * increase-left-margin:                  Format Indentation.
+* increment-register:                    RegNumbers.
 * indent-for-comment:                    Comment Commands.
 * indent-new-comment-line:               Multi-Line Comments.
 * indent-region:                         Indentation Commands.
@@ -500,13 +556,13 @@ Command and Function Index
 * isearch-backward-regexp:               Regexp Search.
 * isearch-forward:                       Incremental Search.
 * isearch-forward-regexp:                Regexp Search.
-* iso-accents-mode:                      Single-Byte European Support.
 * ispell-buffer:                         Spelling.
 * ispell-complete-word:                  Spelling.
 * ispell-kill-ispell:                    Spelling.
 * ispell-message:                        Mail Mode Misc.
 * ispell-region:                         Spelling.
 * ispell-word:                           Spelling.
+* jdb:                                   Starting GUD.
 * jump-to-register:                      RegPos.
 * just-one-space:                        Deletion.
 * kbd-macro-query:                       Kbd Macro Query.
@@ -620,6 +676,7 @@ Command and Function Index
 * normal-mode:                           Choosing Modes.
 * not-modified:                          Saving.
 * nroff-mode:                            Nroff Mode.
+* number-to-register:                    RegNumbers.
 * occur:                                 Other Repeating Search.
 * open-dribble-file:                     Checklist.
 * open-line:                             Blank Lines.
@@ -636,6 +693,7 @@ Command and Function Index
 * outline-up-heading:                    Outline Motion.
 * overwrite-mode:                        Minor Modes.
 * paragraph-indent-text-mode:            Text Mode.
+* pdb:                                   Starting GUD.
 * perldb:                                Starting GUD.
 * phases-of-moon:                        Lunar Phases.
 * picture-backward-clear-column:         Basic Picture.
@@ -666,6 +724,7 @@ Command and Function Index
 * picture-yank-rectangle-from-register:  Rectangles in Picture.
 * plain-tex-mode:                        TeX Mode.
 * point-to-register:                     RegPos.
+* pop-tag-mark:                          Find Tag.
 * prefer-coding-system:                  Recognize Coding.
 * prepend-to-buffer:                     Accumulating Text.
 * previous-completion:                   Completion Commands.
@@ -686,6 +745,7 @@ Command and Function Index
 * ps-spool-buffer-with-faces:            Postscript.
 * ps-spool-region:                       Postscript.
 * ps-spool-region-with-faces:            Postscript.
+* pwd:                                   File Names.
 * quail-set-keyboard-layout:             Select Input Method.
 * query-replace:                         Query Replace.
 * query-replace-regexp:                  Query Replace.
@@ -701,6 +761,7 @@ Command and Function Index
 * remove-untranslated-filesystem:        Text and Binary.
 * rename-buffer:                         Misc Buffer.
 * rename-file:                           Misc File Ops.
+* repeat:                                Repeating.
 * repeat-complex-command:                Repetition.
 * replace-regexp:                        Unconditional Replace.
 * replace-string:                        Unconditional Replace.
@@ -727,6 +788,7 @@ Command and Function Index
 * rmail-kill-label:                      Rmail Labels.
 * rmail-last-message:                    Rmail Motion.
 * rmail-mail:                            Rmail Reply.
+* rmail-mode:                            Rmail.
 * rmail-next-labeled-message:            Rmail Labels.
 * rmail-next-message:                    Rmail Motion.
 * rmail-next-undeleted-message:          Rmail Motion.
@@ -769,7 +831,7 @@ Command and Function Index
 * sdb:                                   Starting GUD.
 * search-backward:                       Nonincremental Search.
 * search-forward:                        Nonincremental Search.
-* select-input-method:                   Select Input Method.
+* select-frame-by-name:                  Non-Window Terminals.
 * self-insert:                           Inserting Text.
 * send-invisible:                        Shell Mode.
 * server-edit:                           Emacs Server.
@@ -783,7 +845,9 @@ Command and Function Index
 * set-fill-prefix:                       Fill Prefix.
 * set-foreground-color:                  Frame Parameters.
 * set-frame-font:                        Frame Parameters.
+* set-frame-name:                        Non-Window Terminals.
 * set-goal-column:                       Moving Point.
+* set-input-method:                      Select Input Method.
 * set-justification-center:              Format Justification.
 * set-justification-full:                Format Justification.
 * set-justification-left:                Format Justification.
@@ -793,8 +857,11 @@ Command and Function Index
 * set-language-environment:              Language Environments.
 * set-mark-command:                      Setting Mark.
 * set-mouse-color:                       Frame Parameters.
+* set-next-selection-coding-system:      Specify Coding.
 * set-rmail-inbox-list:                  Rmail Files.
+* set-selection-coding-system:           Specify Coding.
 * set-selective-display:                 Selective Display.
+* set-terminal-coding-system <1>:        Single-Byte European Support.
 * set-terminal-coding-system:            Specify Coding.
 * set-variable:                          Examining.
 * set-visited-file-name:                 Saving.
@@ -826,7 +893,6 @@ Command and Function Index
 * split-window-horizontally:             Split Window.
 * split-window-vertically:               Split Window.
 * spook:                                 Distracting NSA.
-* standard-display-european:             Single-Byte European Support.
 * start-kbd-macro:                       Basic Kbd Macro.
 * string-rectangle:                      Rectangles.
 * substitute-in-file-name:               File Names.
@@ -874,6 +940,7 @@ Command and Function Index
 * turn-on-font-lock:                     Font Lock.
 * undigestify-rmail-message:             Rmail Digest.
 * undo:                                  Undo.
+* unexpand-abbrev:                       Expanding Abbrevs.
 * unforward-rmail-message:               Rmail Reply.
 * universal-argument:                    Arguments.
 * universal-coding-system-argument:      Specify Coding.
@@ -883,17 +950,22 @@ Command and Function Index
 * upcase-word:                           Case.
 * validate-tex-region:                   TeX Editing.
 * vc-annotate:                           Old Versions.
-* vc-cancel-version:                     Version Control Undo.
+* vc-cancel-version:                     VC Undo.
 * vc-create-snapshot:                    Making Snapshots.
 * vc-diff:                               Old Versions.
-* vc-directory:                          Status in VC.
+* vc-directory:                          VC Dired Mode.
+* vc-dired-mark-locked:                  VC Dired Commands.
+* vc-dired-toggle-terse-mode:            VC Dired Commands.
 * vc-insert-headers:                     Version Headers.
-* vc-print-log:                          Status in VC.
+* vc-merge:                              Merging.
+* vc-next-action:                        Basic VC Editing.
+* vc-print-log:                          VC Status.
 * vc-register:                           Registering.
 * vc-rename-file:                        Renaming and VC.
 * vc-retrieve-snapshot:                  Making Snapshots.
-* vc-revert-buffer:                      Version Control Undo.
-* vc-toggle-read-only:                   Misc Buffer.
+* vc-revert-buffer:                      VC Undo.
+* vc-toggle-read-only <1>:               Misc Buffer.
+* vc-toggle-read-only:                   Basic VC Editing.
 * vc-update-change-log:                  Change Logs and VC.
 * vc-version-other-window:               Old Versions.
 * vi-mode:                               Emulation.
@@ -911,6 +983,7 @@ Command and Function Index
 * what-line:                             Position Info.
 * what-page:                             Position Info.
 * where-is:                              Name Help.
+* which-function-mode:                   Which Function.
 * widen:                                 Narrowing.
 * widget-backward:                       Changing an Option.
 * widget-complete:                       Changing an Option.

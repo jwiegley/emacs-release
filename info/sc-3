@@ -1,6 +1,12 @@
 This is Info file ../info/sc, produced by Makeinfo version 1.68 from
 the input file sc.texi.
 
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* SC: (sc).		Supercite lets you cite parts of messages you're
+			  replying to, in flexible ways.
+END-INFO-DIR-ENTRY
+
    This document describes the Supercite Version 3.1 package for citing
 and attributing the replies for various GNU Emacs mail and news reading
 subsystems.

@@ -57,7 +57,7 @@
 					(integer :tag "space"
 						 :format "%v"
 						 1)
-					(const :tag "on" t)))
+					(other :tag "on" t)))
 	     (selective-display-ellipses display boolean)
 	     (transient-mark-mode editing-basics boolean)
 	     ;; callint.c
@@ -113,7 +113,7 @@
 	     (auto-save-interval auto-save integer)
 	     (auto-save-timeout auto-save (choice (const :tag "off" nil)
 						  (integer :format "%v")))
-	     (echo-keystrokes minibuffer boolean)
+	     (echo-keystrokes minibuffer integer)
 	     (polling-period keyboard integer)
 	     (double-click-time mouse (restricted-sexp
 				       :match-alternatives (integerp 'nil 't)))
@@ -123,8 +123,7 @@
 	     (menu-prompting menu boolean)
 	     (suggest-key-bindings keyboard (choice (const :tag "off" nil)
 						    (integer :tag "time" 2)
-						    (sexp :tag "on"
-							  :format "%t")))
+						    (other :tag "on")))
 	     ;; lread.c
 	     (load-path environment 
 			(repeat (choice :tag "[Current dir?]"
@@ -175,7 +174,7 @@
 	     (same-window-buffer-names windows (repeat (string :format "%v")))
 	     (same-window-regexps windows (repeat (regexp :format "%v")))
 	     (pop-up-windows windows boolean)
-	     (next-screen-context-lines windows boolean)
+	     (next-screen-context-lines windows integer)
 	     (split-height-threshold windows integer)
 	     (window-min-height windows integer)
 	     (window-min-width windows integer)
@@ -188,7 +187,7 @@
 	     (message-log-max debug (choice (const :tag "Disable" nil)
 					    (integer :menu-tag "lines"
 						     :format "%v")
-					    (const :tag "Unlimited" t)))
+					    (other :tag "Unlimited" t)))
 	     ;; xfns.c
 	     (x-bitmap-file-path installation
 				 (repeat (directory :format "%v")))))

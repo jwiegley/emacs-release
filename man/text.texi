@@ -289,8 +289,8 @@ that separate paragraphs without being part of any paragraph (for
 example, blank lines).  Lines that start a new paragraph and are
 contained in it must match only @code{paragraph-start}, not
 @code{paragraph-separate}.  For example, in Fundamental mode,
-@code{paragraph-start} is @code{" [ @t{\}t@t{\}n@t{\}f]"} and
-@code{paragraph-separate} is @code{" [ @t{\}t@t{\}f]*$"}.@refill
+@code{paragraph-start} is @code{"[ @t{\}t@t{\}n@t{\}f]"} and
+@code{paragraph-separate} is @code{"[ @t{\}t@t{\}f]*$"}.@refill
 
   Normally it is desirable for page boundaries to separate paragraphs.
 The default values of these variables recognize the usual separator for
@@ -394,6 +394,7 @@ Text}).
 @subsection Auto Fill Mode
 @cindex Auto Fill mode
 @cindex mode, Auto Fill
+@cindex word wrap
 
   @dfn{Auto Fill} mode is a minor mode in which lines are broken
 automatically when they become too wide.  Breaking happens only when
@@ -457,7 +458,7 @@ Fill current paragraph (@code{fill-paragraph}).
 Set the fill column (@code{set-fill-column}).
 @item M-x fill-region
 Fill each paragraph in the region (@code{fill-region}).
-@item M-x fill-region-as-paragraph.
+@item M-x fill-region-as-paragraph
 Fill the region, considering it as one paragraph.
 @item M-s
 Center a line.
@@ -998,7 +999,7 @@ Make all body lines in the buffer invisible (@code{hide-body}).
 Make all lines in the buffer visible (@code{show-all}).
 @item C-c C-d
 Make everything under this heading invisible, not including this
-heading itself3 (@code{hide-subtree}).
+heading itself (@code{hide-subtree}).
 @item C-c C-s
 Make everything under this heading visible, including body,
 subheadings, and their bodies (@code{show-subtree}).
@@ -1088,6 +1089,10 @@ leading up from there to top level in the outline).
   You can turn off the use of ellipses at the ends of visible lines by
 setting @code{selective-display-ellipses} to @code{nil}.  Then there is
 no visible indication of the presence of invisible lines.
+
+  When incremental search finds text that is hidden by Outline mode,
+it makes that part of the buffer visible.  If you exit the search
+at that position, the text remains visible.
 
 @node Outline Views
 @subsection Viewing One Outline in Multiple Views
@@ -1243,7 +1248,7 @@ features not applicable to plain @TeX{}.
 @table @kbd
 @item C-c C-o
 Insert @samp{\begin} and @samp{\end} for La@TeX{} block and position
-point on a line between them. (@code{tex-latex-block}).
+point on a line between them (@code{tex-latex-block}).
 @item C-c C-e
 Close the innermost La@TeX{} block not yet closed
 (@code{tex-close-latex-block}).
@@ -1598,7 +1603,7 @@ newlines, @dfn{hard} newlines and @dfn{soft} newlines.
 
   Hard newlines are used to separate paragraphs, or items in a list, or
 anywhere that there should always be a line break regardless of the
-margins.  The @kbd{RET} command (@code{newline}) and @kbd{C-o}
+margins.  The @key{RET} command (@code{newline}) and @kbd{C-o}
 (@code{open-line}) insert hard newlines.
 
   Soft newlines are used to make text fit between the margins.  All the
@@ -1718,8 +1723,8 @@ part of the text to use a fixed-width font, you should specify the
 @code{fixed} face for that part.
 
   The @code{fixed} face is normally defined to use a different font from
-the default.  However, systems have different fonts installed, you may
-need to customize this.
+the default.  However, different systems have different fonts installed,
+so you may need to customize this.
 
   If your terminal cannot display different faces, you will not be able
 to see them, but you can still edit documents containing faces.  You can
@@ -1813,10 +1818,14 @@ refill the paragraph.
 @vindex standard-indent
   The variable @code{standard-indent} specifies how many columns these
 commands should add to or subtract from the indentation.  The default
-value is 4.
+value is 4.  The overall default right margin for Enriched mode is
+controlled by the variable @code{fill-column}, as usual.
 
-  The overall default right margin for Enriched mode is controlled by
-the variable @code{fill-column}, as usual.
+  The fill prefix, if any, works in addition to the specified paragraph
+indentation: @kbd{C-x .} does not include the specified indentation's
+whitespace in the new value for the fill prefix, and the fill commands
+look for the fill prefix after the indentation on each line.  @xref{Fill
+Prefix}.
 
 @node Format Justification
 @subsection Justification in Formatted Text

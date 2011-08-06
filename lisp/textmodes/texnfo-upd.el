@@ -498,7 +498,8 @@ appears in the texinfo file."
              ;;
              ;; We're interested in the second case.
              (concat "\\* "              ; so only menu entries are found
-                     "\\(.*\\): " (car (car new-menu-list))  "[.,\t\n]")
+		     "\\(.*\\): " (regexp-quote (car (car new-menu-list)))
+		     "[.,\t\n]")
              end-of-menu
              t)
             (setcar
@@ -650,7 +651,7 @@ complements the node name rather than repeats it as a title does."
       (if (re-search-forward
            (concat
             "^@node[ \t]+"
-            node-name
+            (regexp-quote node-name)
             ".*\n"                             ; match node line
             "\\("
             "\\(\\(^@c \\|^@comment\\).*\n\\)" ; match comment line, if any
@@ -908,7 +909,8 @@ However, there does not need to be a title field."
       ;; Only insert detailed master menu if there is one....
       (if (car (car master-menu-list))
           (progn (setq master-menu-inserted-p t)
-                 (insert (concat "\n@detailmenu" texinfo-master-menu-header))))
+                 (insert (concat "\n@detailmenu\n"
+				 texinfo-master-menu-header))))
 
       ;; @detailmenu added 5 Sept 1996 to `texinfo-master-menu-header'
       ;; at Karl Berry's request to avert a bug in `makeinfo';

@@ -1,6 +1,6 @@
 ;;; dired-aux.el --- less commonly used parts of dired  -*-byte-compile-dynamic: t;-*-
 
-;; Copyright (C) 1985, 1986, 1992, 1994 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1986, 1992, 1994, 1998 Free Software Foundation, Inc.
 
 ;; Author: Sebastian Kremer <sk@thp.uni-koeln.de>.
 ;; Maintainer: FSF
@@ -245,7 +245,7 @@ with a prefix argument."
 
 (defun dired-map-dired-file-lines (fun)
   ;; Perform FUN with point at the end of each non-directory line.
-  ;; FUN takes one argument, the filename (complete pathname).
+  ;; FUN takes one argument, the absolute filename.
   (save-excursion
     (let (file buffer-read-only)
       (goto-char (point-min))
@@ -292,18 +292,6 @@ with a prefix argument."
 		(insert dired-del-marker)))))
 
 ;;; Shell commands
-;;>>> install (move this function into simple.el)
-(defun dired-shell-quote (filename)
-  "Quote a file name for inferior shell (see variable `shell-file-name')."
-  ;; Quote everything except POSIX filename characters.
-  ;; This should be safe enough even for really weird shells.
-  (let ((result "") (start 0) end)
-    (while (string-match "[^-0-9a-zA-Z_./]" filename start)
-      (setq end (match-beginning 0)
-	    result (concat result (substring filename start end)
-			   "\\" (substring filename end (1+ end)))
-	    start (1+ end)))
-    (concat result (substring filename start))))
 
 (defun dired-read-shell-command (prompt arg files)
 ;;  "Read a dired shell command prompting with PROMPT (using read-string).
@@ -387,8 +375,8 @@ output files usually are created there instead of in a subdir."
 			 (dired-replace-in-string "\\*" x command)))
 	   (function (lambda (x) (concat command " " x))))))
     (if on-each
-	(mapconcat stuff-it (mapcar 'dired-shell-quote file-list) ";")
-      (let ((fns (mapconcat 'dired-shell-quote
+	(mapconcat stuff-it (mapcar 'shell-quote-argument file-list) ";")
+      (let ((fns (mapconcat 'shell-quote-argument
 			    file-list dired-mark-separator)))
 	(if (> (length file-list) 1)
 	    (setq fns (concat dired-mark-prefix fns dired-mark-postfix)))
@@ -396,7 +384,11 @@ output files usually are created there instead of in a subdir."
 
 ;; This is an extra function so that it can be redefined by ange-ftp.
 (defun dired-run-shell-command (command)
-  (shell-command command)
+  (let ((handler
+	 (find-file-name-handler (directory-file-name default-directory)
+				 'shell-command)))
+    (if handler (apply handler 'shell-command (list command))
+      (shell-command command)))
   ;; Return nil for sake of nconc in dired-bunch-files.
   nil)
 
@@ -914,7 +906,7 @@ a prefix arg lets you edit the `ls' switches used for the new listing."
 
 (defun dired-relist-entry (file)
   ;; Relist the line for FILE, or just add it if it did not exist.
-  ;; FILE must be an absolute pathname.
+  ;; FILE must be an absolute file name.
   (let (buffer-read-only marker)
     ;; If cursor is already on FILE's line delete-region will cause
     ;; save-excursion to fail because of floating makers,
@@ -935,7 +927,7 @@ a prefix arg lets you edit the `ls' switches used for the new listing."
 Special value `always' suppresses confirmation."
   :type '(choice (const :tag "off" nil)
 		 (const :tag "suppress" always)
-		 (sexp :tag "ask" :format "%t\n" t))
+		 (other :tag "ask" t))
   :group 'dired)
 
 (defvar dired-overwrite-confirmed)
@@ -1070,7 +1062,7 @@ Special value `always' suppresses confirmation."
 ;; OPERATION (a capitalized string, e.g. `Copy') describes the
 ;; operation performed.  It is used for error logging.
 
-;; FN-LIST is the list of files to copy (full absolute pathnames).
+;; FN-LIST is the list of files to copy (full absolute file names).
 
 ;; NAME-CONSTRUCTOR returns a newfile for every oldfile, or nil to
 ;; skip.  If it skips files for other reasons than a direct user
@@ -1307,7 +1299,7 @@ When renaming multiple or marked files, you specify a directory."
   ;; ARG as in dired-get-marked-files.
   ;; Matches each marked file against REGEXP and constructs the new
   ;;   filename from NEWNAME (like in function replace-match).
-  ;; Optional arg WHOLE-PATH means match/replace the whole pathname
+  ;; Optional arg WHOLE-PATH means match/replace the whole file name
   ;;   instead of only the non-directory part of the file.
   ;; Optional arg MARKER-CHAR as in dired-create-files.
   (let* ((fn-list (dired-get-marked-files nil arg))
@@ -1378,9 +1370,9 @@ As each match is found, the user must type a character saying
   what to do with it.  For directions, type \\[help-command] at that time.
 NEWNAME may contain \\=\\<n> or \\& as in `query-replace-regexp'.
 REGEXP defaults to the last regexp used.
-With a zero prefix arg, renaming by regexp affects the complete
-  pathname - usually only the non-directory part of file names is used
-  and changed."
+
+With a zero prefix arg, renaming by regexp affects the absolute file name.
+Normally, only the non-directory part of the file name is used and changed."
   (interactive (dired-mark-read-regexp "Rename"))
   (dired-do-create-files-regexp
    (function dired-rename-file)
@@ -1653,7 +1645,7 @@ This function takes some pains to conform to `ls -lR' output."
 	    (run-hooks 'dired-after-readin-hook))))))
 
 (defun dired-tree-lessp (dir1 dir2)
-  ;; Lexicographic order on pathname components, like `ls -lR':
+  ;; Lexicographic order on file name components, like `ls -lR':
   ;; DIR1 < DIR2 iff DIR1 comes *before* DIR2 in an `ls -lR' listing,
   ;;   i.e., iff DIR1 is a (grand)parent dir of DIR2,
   ;;   or DIR1 and DIR2 are in the same parentdir and their last
@@ -1759,7 +1751,9 @@ The next char is either \\n, or \\r if DIR is hidden."
 
 ;;;###autoload
 (defun dired-mark-subdir-files ()
-  "Mark all files except `.' and `..'."
+  "Mark all files except `.' and `..' in current subdirectory.
+If the Dired buffer shows multiple directories, this command
+marks the files listed in the subdirectory that point is in."
   (interactive)
   (let ((p-min (dired-subdir-min)))
     (dired-mark-files-in-region p-min (dired-subdir-max))))

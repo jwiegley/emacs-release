@@ -3,6 +3,11 @@
 @setfilename ../info/vip
 @settitle VIP
 
+@dircategory Editors
+@direntry
+* VIP: (vip).		An older VI-emulation for Emacs.
+@end direntry
+
 @iftex
 @finalout
 @end iftex

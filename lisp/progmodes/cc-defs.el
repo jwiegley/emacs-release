@@ -1,13 +1,13 @@
-;;; cc-defs.el --- definitions for CC Mode
+;;; cc-defs.el --- compile time definitions for CC Mode
 
-;; Copyright (C) 1985,87,92,93,94,95,96,97 Free Software Foundation, Inc.
+;; Copyright (C) 1985,87,92,93,94,95,96,97,98 Free Software Foundation, Inc.
 
 ;; Authors:    1992-1997 Barry A. Warsaw
 ;;             1987 Dave Detlefs and Stewart Clamen
 ;;             1985 Richard M. Stallman
 ;; Maintainer: cc-mode-help@python.org
 ;; Created:    22-Apr-1997 (split from cc-mode.el)
-;; Version:    5.17
+;; Version:    See cc-mode.el
 ;; Keywords:   c languages oop
 
 ;; This file is part of GNU Emacs.
@@ -28,50 +28,6 @@
 ;; Boston, MA 02111-1307, USA.
 
 
-;; Figure out what features this Emacs has
-(defconst c-emacs-features
-  (let ((infodock-p (boundp 'infodock-version))
-	(comments
-	 ;; XEmacs 19 and beyond use 8-bit modify-syntax-entry flags.
-	 ;; Emacs 19 uses a 1-bit flag.  We will have to set up our
-	 ;; syntax tables differently to handle this.
-	 (let ((table (copy-syntax-table))
-	       entry)
-	   (modify-syntax-entry ?a ". 12345678" table)
-	   (cond
-	    ;; XEmacs 19, and beyond Emacs 19.34
-	    ((arrayp table)
-	     (setq entry (aref table ?a))
-	     ;; In Emacs, table entries are cons cells
-	     (if (consp entry) (setq entry (car entry))))
-	    ;; XEmacs 20
-	    ((fboundp 'get-char-table) (setq entry (get-char-table ?a table)))
-	    ;; before and including Emacs 19.34
-	    ((and (fboundp 'char-table-p)
-		  (char-table-p table))
-	     (setq entry (car (char-table-range table [?a]))))
-	    ;; incompatible
-	    (t (error "CC Mode is incompatible with this version of Emacs")))
-	   (if (= (logand (lsh entry -16) 255) 255)
-	       '8-bit
-	     '1-bit))))
-    (if infodock-p
-	(list comments 'infodock)
-      (list comments)))
-  "A list of features extant in the Emacs you are using.
-There are many flavors of Emacs out there, each with different
-features supporting those needed by CC Mode.  Here's the current
-supported list, along with the values for this variable:
-
- XEmacs 19:                  (8-bit)
- XEmacs 20:                  (8-bit)
- Emacs 19:                   (1-bit)
-
-Infodock (based on XEmacs) has an additional symbol on this list:
-'infodock.")
-
-
-
 (defsubst c-point (position)
   ;; Returns the value of point at certain commonly referenced POSITIONs.
   ;; POSITION can be one of the following symbols:
@@ -90,14 +46,6 @@ Infodock (based on XEmacs) has an additional symbol on this list:
     (cond
      ((eq position 'bol)  (beginning-of-line))
      ((eq position 'eol)  (end-of-line))
-     ((eq position 'bod)
-      (beginning-of-defun)
-      ;; if defun-prompt-regexp is non-nil, b-o-d won't leave us at
-      ;; the open brace.
-      (and defun-prompt-regexp
-	   (looking-at defun-prompt-regexp)
-	   (goto-char (match-end 0)))
-      )
      ((eq position 'boi)  (back-to-indentation))
      ((eq position 'bonl) (forward-line 1))
      ((eq position 'bopl) (forward-line -1))
@@ -107,6 +55,51 @@ Infodock (based on XEmacs) has an additional symbol on this list:
      ((eq position 'ionl)
       (forward-line 1)
       (back-to-indentation))
+     ((eq position 'bod)
+      (if (and (fboundp 'buffer-syntactic-context-depth)
+	       c-enable-xemacs-performance-kludge-p)
+	  ;; XEmacs only.  This can improve the performance of
+	  ;; c-parse-state to between 3 and 60 times faster when
+	  ;; braces are hung.  It can cause c-parse-state to be
+	  ;; slightly slower when braces are not hung, but general
+	  ;; editing appears to be still about as fast.
+	  (let (pos)
+	    (while (not pos)
+	      (save-restriction
+		(widen)
+		(setq pos (scan-lists (point) -1
+				      (buffer-syntactic-context-depth)
+				      nil t)))
+	      (cond
+	       ((bobp) (setq pos (point-min)))
+	       ((not pos)
+		(let ((distance (skip-chars-backward "^{")))
+		  ;; unbalanced parenthesis, while illegal C code,
+		  ;; shouldn't cause an infloop!  See unbal.c
+		  (when (zerop distance)
+		    ;; Punt!
+		    (beginning-of-defun)
+		    (setq pos (point)))))
+	       ((= pos 0))
+	       ((not (eq (char-after pos) ?{))
+		(goto-char pos)
+		(setq pos nil))
+	       ))
+	    (goto-char pos))
+	;; Emacs, which doesn't have buffer-syntactic-context-depth
+	;;
+	;; NOTE: This should be the only explicit use of
+	;; beginning-of-defun in CC Mode.  Eventually something better
+	;; than b-o-d will be available and this should be the only
+	;; place the code needs to change.  Everything else should use
+	;; (goto-char (c-point 'bod))
+	(beginning-of-defun)
+	;; if defun-prompt-regexp is non-nil, b-o-d won't leave us at
+	;; the open brace.
+	(and defun-prompt-regexp
+	     (looking-at defun-prompt-regexp)
+	     (goto-char (match-end 0)))
+	))
      (t (error "unknown buffer position requested: %s" position))
      )
     (prog1

@@ -306,7 +306,7 @@ If the third argument is incorrect, Emacs may crash.")
   /* Cached address of beginning of string,
      valid if BYTESTR equals STRING_SAVED.  */
   register unsigned char *strbeg;
-  int bytestr_length = XSTRING (bytestr)->size;
+  int bytestr_length = STRING_BYTES (XSTRING (bytestr));
 
   CHECK_STRING (bytestr, 0);
   if (!VECTORP (vector))
@@ -578,7 +578,7 @@ If the third argument is incorrect, Emacs may crash.")
 
 	case Bsave_current_buffer:
 	case Bsave_current_buffer_1:
-	  record_unwind_protect (Fset_buffer, Fcurrent_buffer ());
+	  record_unwind_protect (set_buffer_if_live, Fcurrent_buffer ());
 	  break;
 
 	case Bsave_window_excursion:
@@ -1129,9 +1129,6 @@ If the third argument is incorrect, Emacs may crash.")
 	case Bscan_buffer:
 	  error ("scan-buffer is an obsolete bytecode");
 	  break;
-	case Bmark:
-	  error ("mark is an obsolete bytecode");
-	  break;
 #endif
 
 	default:
@@ -1159,6 +1156,7 @@ If the third argument is incorrect, Emacs may crash.")
   return v1;
 }
 
+void
 syms_of_bytecode ()
 {
   Qbytecode = intern ("byte-code");

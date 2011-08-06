@@ -1,5 +1,5 @@
 /* Header for multilingual character handler.
-   Copyright (C) 1995, 1997 Electrotechnical Laboratory, JAPAN.
+   Copyright (C) 1995, 1997, 1998 Electrotechnical Laboratory, JAPAN.
    Licensed to the Free Software Foundation.
 
 This file is part of GNU Emacs.
@@ -134,9 +134,9 @@ extern int charset_latin_jisx0201; /* JISX0201.Roman (Japanese Roman) */
 extern int charset_big5_1;	/* Big5 Level 1 (Chinese Traditional) */
 extern int charset_big5_2;	/* Big5 Level 2 (Chinese Traditional) */
 
-/* Check if STR points the head of multi-byte form, i.e. *STR is an
-   ASCII character or a base leading-code.  */
-#define CHAR_HEAD_P(str) ((unsigned char) *(str) < 0xA0)
+/* Check if CH is the head of multi-byte form, i.e.,
+   an ASCII character or a base leading-code.  */
+#define CHAR_HEAD_P(ch) ((unsigned char) (ch) < 0xA0)
 
 /*** GENERAL NOTE on CHARACTER REPRESENTATION ***
 
@@ -155,7 +155,7 @@ extern int charset_big5_2;	/* Big5 Level 2 (Chinese Traditional) */
   Emacs has two kinds of representation of a character: multi-byte
   form (for buffer and string) and single-word form (for character
   object in Emacs Lisp).  The latter is called "character code" here
-  after.  Both representation encode the information of charset and
+  after.  Both representations encode the information of charset and
   POSITION-CODE but in a different way (for instance, MSB of
   POSITION-CODE is set in multi-byte form).
 
@@ -197,7 +197,7 @@ extern int charset_big5_2;	/* Big5 Level 2 (Chinese Traditional) */
 /*** GENERAL NOTE on COMPOSITE CHARACTER ***
 
   A composite character is a character composed from several (up to
-  16) non-composite characters (components).  Although each components
+  16) non-composite characters (components).  Although each component
   can belong to any charset, a composite character itself belongs to
   the charset `charset-composition' and is assigned a special
   leading-code `LEADING_CODE_COMPOSITION' for multi-byte form.  See
@@ -244,11 +244,18 @@ extern int charset_big5_2;	/* Big5 Level 2 (Chinese Traditional) */
   ((MIN_CHARSET_PRIVATE_DIMENSION2 - 0xE0) << 14)
 #define MIN_CHAR_COMPOSITION \
   (0x1F << 14)
+#define MAX_CHAR_COMPOSITION (GLYPH_MASK_CHAR - 1)
+
+/* A generic character for composition characters.  */
+#define GENERIC_COMPOSITION_CHAR (GLYPH_MASK_CHAR)
 
 /* 1 if C is an ASCII character, else 0.  */
 #define SINGLE_BYTE_CHAR_P(c) ((c) < 0x100)
 /* 1 if C is an composite character, else 0.  */
 #define COMPOSITE_CHAR_P(c) ((c) >= MIN_CHAR_COMPOSITION)
+
+/* 1 if BYTE is a character in itself, in multibyte mode.  */
+#define ASCII_BYTE_P(byte) ((byte) < 0x80)
 
 /* A char-table containing information of each character set.
 
@@ -401,7 +408,9 @@ extern int width_by_char_head[256];
 	 ? CHAR_FIELD1 (c) + 0x8F	 	\
 	 : ((c) < MIN_CHAR_COMPOSITION	 	\
 	    ? CHAR_FIELD1 (c) + 0xE0	 	\
-	    : CHARSET_COMPOSITION))))
+	    : ((c) <= MAX_CHAR_COMPOSITION	\
+	       ? CHARSET_COMPOSITION		\
+	       : CHARSET_ASCII)))))
 
 /* Return charset at the place pointed by P.  */
 #define CHARSET_AT(p)			   	\
@@ -462,15 +471,35 @@ extern int width_by_char_head[256];
    ? (c1)					 	\
    : MAKE_NON_ASCII_CHAR ((charset), (c1) & 0x7F, (c2) & 0x7F))
 
-/* 1 if C is in the range of possible character code Emacs can have.  */
-#define VALID_CHAR_P(c)							\
-  ((c) >= 0								\
-   && (SINGLE_BYTE_CHAR_P (c)						\
-       || ((c) < MIN_CHAR_COMPOSITION					\
-	   ? ((c) & CHAR_FIELD1_MASK					\
-	      ? (CHAR_FIELD2 (c) >= 32 && CHAR_FIELD3 (c) >= 32)	\
-	      : (CHAR_FIELD2 (c) >= 16 && CHAR_FIELD3 (c) >= 32))	\
-	   : (c) < MIN_CHAR_COMPOSITION + n_cmpchars)))
+/* If GENERICP is nonzero, return nonzero iff C is a valid normal or
+   generic character.  If GENERICP is zero, return nonzero iff C is a
+   valid normal character.  */
+#define CHAR_VALID_P(c, genericp)	\
+  ((c) >= 0				\
+   && (SINGLE_BYTE_CHAR_P (c) || char_valid_p (c, genericp)))
+
+/* This default value is used when nonascii-translation-table or
+   nonascii-insert-offset fail to convert unibyte character to a valid
+   multibyte character.  This makes a Latin-1 character.  */
+
+#define DEFAULT_NONASCII_INSERT_OFFSET 0x800
+
+/* Check if the character C is valid as a multibyte character.  */
+
+#define VALID_MULTIBYTE_CHAR_P(c)					  \
+  ((c) < MIN_CHAR_OFFICIAL_DIMENSION2					  \
+   ? (!NILP (XCHAR_TABLE (Vcharset_table)->contents[CHAR_FIELD2 (c)	  \
+						   + 0xF0])		  \
+      && CHAR_FIELD3 (c) >= 32)						  \
+   : ((c) < MIN_CHAR_PRIVATE_DIMENSION2					  \
+      ? (!NILP (XCHAR_TABLE (Vcharset_table)->contents[CHAR_FIELD1 (c)	  \
+						      + 0x10F])		  \
+	 && CHAR_FIELD2 (c) >= 32 && CHAR_FIELD3 (c) >= 32)		  \
+      : ((c) < MIN_CHAR_COMPOSITION					  \
+	 ? (!NILP (XCHAR_TABLE (Vcharset_table)->contents[CHAR_FIELD1 (c) \
+							 + 0x160])	  \
+	    && CHAR_FIELD2 (c) >= 32 && CHAR_FIELD3 (c) >= 32)		  \
+	 : (c) < MIN_CHAR_COMPOSITION + n_cmpchars)))
 
 /* The charset of non-ASCII character C is stored in CHARSET, and the
    position-codes of C are stored in C1 and C2.
@@ -510,7 +539,7 @@ extern int width_by_char_head[256];
 #define SPLIT_STRING(str, len, charset, c1, c2)			      	\
   ((BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) < 2		      	\
     || BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) > len	      	\
-    || split_non_ascii_string (str, len, &charset, &c1, &c2, 0) < 0)	\
+    || split_non_ascii_string (str, len, &charset, &c1, &c2) < 0)	\
    ? c1 = *(str), charset = CHARSET_ASCII			      	\
    : charset)
 
@@ -538,7 +567,7 @@ extern int iso_charset_table[2][2][128];
 #define CHAR_STRING(c, workbuf, str)		 	\
   (SINGLE_BYTE_CHAR_P (c)			 	\
    ? *(str = workbuf) = (unsigned char)(c), 1	 	\
-   : non_ascii_char_to_string (c, workbuf, &str))
+   : non_ascii_char_to_string (c, workbuf, (unsigned char **)&str))
 
 /* Return a character code of the character of which multi-byte form
    is at STR and the length is LEN.  If STR doesn't contain valid
@@ -548,7 +577,7 @@ extern int iso_charset_table[2][2][128];
   ((BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) == 1	    	\
     || BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) > (len))	\
    ? (unsigned char) *(str)				    	\
-   : string_to_non_ascii_char (str, len, 0))
+   : string_to_non_ascii_char (str, len, 0, 0))
 
 /* This is like STRING_CHAR but the third arg ACTUAL_LEN is set to
    the length of the multi-byte form.  Just to know the length, use
@@ -558,14 +587,45 @@ extern int iso_charset_table[2][2][128];
   ((BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) == 1	    	\
     || BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) > (len))	\
    ? (actual_len = 1), (unsigned char) *(str)		    	\
-   : string_to_non_ascii_char (str, len, &actual_len))
+   : string_to_non_ascii_char (str, len, &actual_len, 0))
+
+/* This is like STRING_CHAR_AND_LENGTH but the third arg ACTUAL_LEN
+   does not include garbage bytes following the multibyte character.  */
+#define STRING_CHAR_AND_CHAR_LENGTH(str, len, actual_len)	    	\
+  ((BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) == 1	    	\
+    || BYTES_BY_CHAR_HEAD ((unsigned char) *(str)) > (len))	\
+   ? (actual_len = 1), (unsigned char) *(str)		    	\
+   : string_to_non_ascii_char (str, len, &actual_len, 1))
+
+/* Fetch the "next" multibyte character from Lisp string STRING
+   at byte position BYTEIDX, character position CHARIDX.
+   Store it into OUTPUT.
+
+   All the args must be side-effect-free.
+   BYTEIDX and CHARIDX must be lvalues;
+   we increment them past the character fetched.  */
+
+#define FETCH_STRING_CHAR_ADVANCE(OUTPUT, STRING, CHARIDX, BYTEIDX)	      \
+if (1)									      \
+  {									      \
+    unsigned char *fetch_string_char_ptr = &XSTRING (STRING)->data[BYTEIDX];  \
+    int fetch_string_char_space_left = XSTRING (STRING)->size_byte - BYTEIDX; \
+    int actual_len;							      \
+    									      \
+    OUTPUT								      \
+      = STRING_CHAR_AND_LENGTH (fetch_string_char_ptr,			      \
+			        fetch_string_char_space_left, actual_len);    \
+									      \
+    BYTEIDX += actual_len;						      \
+    CHARIDX++;								      \
+  }									      \
+else
 
 /* Return the length of the multi-byte form at string STR of length LEN.  */
 
-#define MULTIBYTE_FORM_LENGTH(str, len)			     	\
-  ((BYTES_BY_CHAR_HEAD (*(unsigned char *)(str)) == 1	     	\
-    || BYTES_BY_CHAR_HEAD (*(unsigned char *)(str)) > (len))	\
-   ? 1							     	\
+#define MULTIBYTE_FORM_LENGTH(str, len)			\
+  (BYTES_BY_CHAR_HEAD (*(unsigned char *)(str)) == 1	\
+   ? 1							\
    : multibyte_form_length (str, len))
 
 /* Set C a (possibly multibyte) character at P.  P points into a
@@ -599,24 +659,93 @@ extern int iso_charset_table[2][2][128];
    range checking of POS.  */
 #define INC_POS(pos)				\
   do {						\
-    unsigned char *p = POS_ADDR (pos);		\
+    unsigned char *p = BYTE_POS_ADDR (pos);	\
     pos++;					\
-    if (*p++ >= 0x80)				\
-      while (!CHAR_HEAD_P (p)) p++, pos++;	\
+    if (BASE_LEADING_CODE_P (*p++))		\
+      while (!CHAR_HEAD_P (*p)) p++, pos++;	\
   } while (0)
 
 /* Decrease the buffer point POS of the current buffer to the previous
    character boundary.  No range checking of POS.  */
-#define DEC_POS(pos)					      	\
+#define DEC_POS(pos)						\
+  do {								\
+    unsigned char *p, *p_min;					\
+    								\
+    pos--;							\
+    if (pos < GPT_BYTE)						\
+      p = BEG_ADDR + pos - 1, p_min = BEG_ADDR;			\
+    else							\
+      p = BEG_ADDR + GAP_SIZE + pos - 1, p_min = GAP_END_ADDR;	\
+    if (p > p_min && !CHAR_HEAD_P (*p))				\
+      {								\
+	int pos_saved = pos--;					\
+	p--;							\
+	while (p > p_min && !CHAR_HEAD_P (*p)) p--, pos--;	\
+	if (!BASE_LEADING_CODE_P (*p)) pos = pos_saved;		\
+      }								\
+  } while (0)
+
+/* Increment both CHARPOS and BYTEPOS, each in the appropriate way.  */
+
+#define INC_BOTH(charpos, bytepos)				\
+do								\
+  {								\
+    (charpos)++;						\
+    if (NILP (current_buffer->enable_multibyte_characters))	\
+      (bytepos)++;						\
+    else							\
+      INC_POS ((bytepos));					\
+  }								\
+while (0)
+
+/* Decrement both CHARPOS and BYTEPOS, each in the appropriate way.  */
+
+#define DEC_BOTH(charpos, bytepos)				\
+do								\
+  {								\
+    (charpos)--;						\
+    if (NILP (current_buffer->enable_multibyte_characters))	\
+      (bytepos)--;						\
+    else							\
+      DEC_POS ((bytepos));					\
+  }								\
+while (0)
+
+/* Increase the buffer point POS of the current buffer to the next
+   character boundary.  This macro relies on the fact that *GPT_ADDR
+   and *Z_ADDR are always accessible and the values are '\0'.  No
+   range checking of POS.  */
+#define BUF_INC_POS(buf, pos)				\
+  do {							\
+    unsigned char *p = BUF_BYTE_ADDRESS (buf, pos);	\
+    pos++;						\
+    if (BASE_LEADING_CODE_P (*p++))			\
+      while (!CHAR_HEAD_P (*p)) p++, pos++;		\
+  } while (0)
+
+/* Decrease the buffer point POS of the current buffer to the previous
+   character boundary.  No range checking of POS.  */
+#define BUF_DEC_POS(buf, pos)				      	\
   do {							      	\
     unsigned char *p, *p_min;				      	\
     int pos_saved = --pos;				      	\
-    if (pos < GPT)					      	\
-      p = BEG_ADDR + pos - 1, p_min = BEG_ADDR;		      	\
+    if (pos < BUF_GPT_BYTE (buf))			      	\
+      {								\
+	p = BUF_BEG_ADDR (buf) + pos - 1;			\
+	p_min = BUF_BEG_ADDR (buf);				\
+      }								\
     else						      	\
-      p = BEG_ADDR + GAP_SIZE + pos - 1, p_min = GAP_END_ADDR;	\
-    while (p > p_min && !CHAR_HEAD_P (p)) p--, pos--;		\
-    if (*p < 0x80 && pos != pos_saved) pos = pos_saved;		\
+      {								\
+	p = BUF_BEG_ADDR (buf) + BUF_GAP_SIZE (buf) + pos - 1;	\
+	p_min = BUF_GAP_END_ADDR (buf);				\
+      }								\
+    if (p > p_min && !CHAR_HEAD_P (*p))				\
+      {								\
+	int pos_saved = pos--;					\
+	p--;							\
+	while (p > p_min && !CHAR_HEAD_P (*p)) p--, pos--;	\
+	if (!BASE_LEADING_CODE_P (*p)) pos = pos_saved;		\
+      }								\
   } while (0)
 
 #endif /* emacs */
@@ -671,6 +800,37 @@ extern int n_cmpchars;
 /* Maximum character code currently used.  */
 #define MAX_CHAR (MIN_CHAR_COMPOSITION + n_cmpchars)
 
-extern int unify_char ();
+extern void invalid_character P_ ((int));
+
+extern int translate_char P_ ((Lisp_Object, int, int, int, int));
+extern int split_non_ascii_string P_ ((const unsigned char *, int, int *,
+				       unsigned char *, unsigned char *));
+extern int string_to_non_ascii_char P_ ((const unsigned char *, int, int *,
+					 int));
+extern int non_ascii_char_to_string P_ ((int, unsigned char *, unsigned char **));
+extern int multibyte_form_length P_ ((const unsigned char *, int));
+extern int str_cmpchar_id P_ ((const unsigned char *, int));
+extern int get_charset_id P_ ((Lisp_Object));
+extern int cmpchar_component P_ ((unsigned int, unsigned int));
+extern int find_charset_in_str P_ ((unsigned char *, int, int *,
+				    Lisp_Object, int));
+extern int strwidth P_ ((unsigned char *, int));
+
+extern Lisp_Object Vtranslation_table_vector;
+
+/* Return a translation table of id number ID.  */
+#define GET_TRANSLATION_TABLE(id) \
+  (XCONS(XVECTOR(Vtranslation_table_vector)->contents[(id)])->cdr)
+
+/* Copy LEN bytes from FROM to TO.  This macro should be used only
+   when a caller knows that LEN is short and the obvious copy loop is
+   faster than calling bcopy which has some overhead.  */
+
+#define BCOPY_SHORT(from, to, len)		\
+  do {						\
+    int i = len;				\
+    unsigined char *from_p = from, *to_p = to;	\
+    while (i--) *from_p++ = *to_p++;		\
+  } while (0)
 
 #endif /* _CHARSET_H */

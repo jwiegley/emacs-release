@@ -173,7 +173,7 @@ files not writable by you are visited read-only.
 Read-only folders only work in VM 5, not in VM 4."
   :type '(choice (const :tag "off" nil)
 		 (const :tag "on" t)
-		 (sexp :tag "non-writable only" if-file-read-only))
+		 (other :tag "non-writable only" if-file-read-only))
   :group 'dired-x)
 
 (defcustom dired-omit-files-p nil
@@ -208,7 +208,7 @@ toggle between those two."
   :type 'boolean
   :group 'dired-x)
 
-(defcustom dired-omit-size-limit 20000
+(defcustom dired-omit-size-limit 30000
   "*Maximum size for the \"omitting\" feature.
 If nil, there is no maximum size."
   :type '(choice (const :tag "no maximum" nil) integer)
@@ -254,8 +254,6 @@ to nil: a pipe using `zcat' or `gunzip -c' will be used."
 (define-key dired-mode-map "*(" 'dired-mark-sexp)
 (define-key dired-mode-map "*." 'dired-mark-extension)
 (define-key dired-mode-map "\M-!" 'dired-smart-shell-command)
-(define-key dired-mode-map "T" 'dired-do-toggle)
-(define-key dired-mode-map "*t" 'dired-do-toggle)
 (define-key dired-mode-map "w" 'dired-copy-filename-as-kill)
 (define-key dired-mode-map "\M-g" 'dired-goto-file)
 (define-key dired-mode-map "\M-G" 'dired-goto-subdir)
@@ -291,7 +289,6 @@ to nil: a pipe using `zcat' or `gunzip -c' will be used."
   \\[dired-man]\t-- run man on file
   \\[dired-do-find-marked-files]\t-- visit all marked files simultaneously
   \\[dired-omit-toggle]\t-- toggle omitting of files
-  \\[dired-do-toggle]\t-- toggle marks
   \\[dired-mark-sexp]\t-- mark by lisp expression
   \\[dired-copy-filename-as-kill]\t-- copy the file or subdir names into the kill ring.
   \t   You can feed it to other commands using \\[yank].
@@ -485,33 +482,6 @@ buffer and try again."
   (interactive)
   (dired-jump t))
 
-;;; TOGGLE.
-;;; Toggle marked files with unmarked files.
-
-(defun dired-do-toggle ()
-  "Toggle marks.
-That is, currently marked files become unmarked and vice versa.
-Files marked with other flags (such as `D') are not affected.
-`.' and `..' are never toggled.
-As always, hidden subdirs are not affected."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (let (buffer-read-only)
-      (while (not (eobp))
-        (or (dired-between-files)
-            (looking-at dired-re-dot)
-            ;; use subst instead of insdel because it does not move
-            ;; the gap and thus should be faster and because
-            ;; other characters are left alone automatically
-            (apply 'subst-char-in-region
-                   (point) (1+ (point))
-                   (if (eq ?\040 (following-char)) ; SPC
-                       (list ?\040 dired-marker-char)
-                     (list dired-marker-char ?\040))))
-        (forward-line 1)))))
-
-
 ;;; COPY NAMES OF MARKED FILES INTO KILL-RING.
 
 (defun dired-copy-filename-as-kill (&optional arg)
@@ -610,7 +580,12 @@ This functions works by temporarily binding `dired-marker-char' to
   (if (and dired-omit-files-p
            (or (interactive-p)
                (not dired-omit-size-limit)
-               (< (buffer-size) dired-omit-size-limit)))
+               (< (buffer-size) dired-omit-size-limit)
+	       (progn
+		 (message "Not omitting: directory larger than %d characters."
+			  dired-omit-size-limit)
+		 (setq dired-omit-files-p nil)
+		 nil)))
       (let ((omit-re (or regexp (dired-omit-regexp)))
             (old-modified-p (buffer-modified-p))
             count)
@@ -976,7 +951,7 @@ dired."
                   " " dired-guess-shell-znew-switches))
 
    ;; gzip'ed archives
-   (list "\\.tar\\.g?z$"
+   (list "\\.t\\(ar\\.\\)g?z$"
          '(if dired-guess-shell-gnutar
               (concat dired-guess-shell-gnutar " zxvf")
             (concat "gunzip -qc * | tar xvf -"))
@@ -1017,6 +992,7 @@ dired."
    '("\\.out$" "xgraph")                ; for plotting purposes.
    '("\\.tex$" "latex" "tex")
    '("\\.texi\\(nfo\\)?$" "makeinfo" "texi2dvi")
+   '("\\.pdf$" "acroread")              ; edit PDF files
 
    ;; Some other popular archivers.
    '("\\.zoo$" "zoo x//")
@@ -1461,6 +1437,7 @@ See also variable `dired-vm-read-only-folders'."
 
 
 ;; Does anyone use this? - lrd 6/29/93.
+;; Apparently people do use it. - lrd 12/22/97.
 (defun dired-mark-sexp (predicate &optional unflag-p)
   "Mark files for which PREDICATE returns non-nil.
 With a prefix arg, unflag those files instead.
@@ -1522,7 +1499,8 @@ to mark all zero length files."
               (setq mode (buffer-substring (point) (+ mode-len (point))))
               (forward-char mode-len)
               (setq nlink (read (current-buffer)))
-              (setq uid (buffer-substring (point) (progn (forward-word 1) (point))))
+              ;; Karsten Wenger <kw@cis.uni-muenchen.de> fixed uid.
+              (setq uid (buffer-substring (+ (point) 1) (progn (forward-word 1) (point))))
               (re-search-forward "\\(Jan\\|Feb\\|Mar\\|Apr\\|May\\|Jun\\|Jul\\|Aug\\|Sep\\|Oct\\|Nov\\|Dec\\)")
               (goto-char (match-beginning 1))
               (forward-char -1)

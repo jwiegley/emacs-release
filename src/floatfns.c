@@ -47,16 +47,14 @@ Boston, MA 02111-1307, USA.  */
 #include <signal.h>
 
 #include <config.h>
-
-/* Put this before lisp.h so that lisp.h can define DBL_DIG if not defined.  */
-#if STDC_HEADERS
-#include <float.h>
-#endif
-
 #include "lisp.h"
 #include "syssignal.h"
 
 #ifdef LISP_FLOAT_TYPE
+
+#if STDC_HEADERS
+#include <float.h>
+#endif
 
 /* If IEEE_FLOATING_POINT isn't defined, default it from FLT_*. */
 #ifndef IEEE_FLOATING_POINT
@@ -1012,6 +1010,7 @@ matherr (x)
 }
 #endif /* HAVE_MATHERR */
 
+void
 init_floatfns ()
 {
 #ifdef FLOAT_CATCH_SIGILL
@@ -1027,6 +1026,7 @@ init_floatfns ()
 
 #endif /* not LISP_FLOAT_TYPE */
 
+void
 syms_of_floatfns ()
 {
 #ifdef LISP_FLOAT_TYPE

@@ -149,7 +149,8 @@ If the optional FRAME argument is provided, change only
 in that frame; otherwise change each frame."
   (interactive (internal-face-interactive "font"))
   (if (stringp font)
-      (setq font (or (query-fontset font)
+      (setq font (or (and (not (eq window-system 'w32))
+			  (resolve-fontset-name font))
 		     (x-resolve-font-name font 'default frame))))
   (internal-set-face-1 face 'font font 3 frame)
   ;; Record that this face's font was set explicitly, not automatically,
@@ -164,9 +165,8 @@ If the optional FRAME argument is provided, change only
 in that frame; otherwise change each frame."
   (interactive (internal-face-interactive "font"))
   (if (stringp font)
-      (setq font (or (and (fontset-name-p font)
-			  (or (query-fontset font)
-			      (instantiate-fontset font)))
+      (setq font (or (and (not (eq window-system 'w32))
+			  (resolve-fontset-name font))
 		     (x-resolve-font-name font 'default frame))))
   (internal-set-face-1 face 'font font 3 frame))
 
@@ -1138,7 +1138,8 @@ selected frame."
 	    (while (not (eobp))
 	      (insert "                          ")
 	      (forward-line 1))))
-	(goto-char (point-min))))
+	(goto-char (point-min)))
+      (print-help-return-message))
     ;; If the *Faces* buffer appears in a different frame,
     ;; copy all the face definitions from FRAME,
     ;; so that the display will reflect the frame that was selected.
@@ -1168,7 +1169,8 @@ selected frame."
     (let ((doc (face-documentation face)))
       (if doc
 	  (princ doc)
-	(princ "not documented as a face.")))))
+	(princ "not documented as a face.")))
+    (print-help-return-message)))
 
 ;;; Setting a face based on a SPEC.
 
@@ -1345,6 +1347,19 @@ If FRAME is nil, the current FRAME is used."
 	  ;; Put the geometry parameters at the end.
 	  ;; Copy default-frame-alist so that they go after it.
 	  (setq parameters (append parameters default-frame-alist parsed)))))
+
+  (if default-enable-multibyte-characters
+      ;; If an ASCII font is specified in PARAMETERS, we try to create
+      ;; a fontset from it, and use it for the new frame.
+      (condition-case nil
+	  (let ((font (cdr (assq 'font parameters))))
+	    (if (and font
+		     (not (query-fontset font)))
+		(setq parameters
+		      (cons (cons 'font (create-fontset-from-ascii-font font))
+			    parameters))))
+	(error nil)))
+
   (let (frame)
     (if (null global-face-data)
 	(progn
@@ -1432,6 +1447,10 @@ Set this to the symbol dark if your background color is dark, light if
 your background is light, or nil (default) if you want Emacs to
 examine the brightness for you."
   :group 'faces
+  :set #'(lambda (var value)
+	   (set var value)
+	   (mapcar 'frame-set-background-mode (frame-list)))
+  :initialize 'custom-initialize-changed
   :type '(choice (choice-item dark) 
 		 (choice-item light)
 		 (choice-item :tag "default" nil)))
@@ -1470,6 +1489,7 @@ examine the brightness for you."
 ;; This applies only to faces with global color specifications
 ;; that are not simple constants.
 (defun frame-update-face-colors (frame)
+  (frame-set-background-mode frame)
   (let ((faces global-face-data))
     (while faces
       (condition-case nil
@@ -1604,6 +1624,11 @@ examine the brightness for you."
 
 (setq region-face (face-id 'region))
 
+(defgroup basic-faces nil
+  "The standard faces of Emacs."
+  :prefix "huh"
+  :group 'faces)
+
 ;; Specify how these faces look, and their documentation.
 (let ((all '((bold "Use bold font." ((t (:bold t))))
 	     (bold-italic "Use bold italic font." ((t (:bold t :italic t))))
@@ -1636,6 +1661,7 @@ examine the brightness for you."
 	  symbol (nth 0 entry)
 	  doc (nth 1 entry)
 	  spec (nth 2 entry))
+    (custom-add-to-group 'basic-faces symbol 'custom-face)
     (put symbol 'face-documentation doc)
     (put symbol 'face-defface-spec spec)))
 

@@ -1,11 +1,18 @@
 * Add functions next-char-property-change and
-previous-char-property-change which are like
-next-single-property-change and previous-single-property-change except
-that they consider overlays as well as text properties.
+  previous-char-property-change which are like
+  next-single-property-change and previous-single-property-change except
+  that they consider overlays as well as text properties.
+
+* Make compile.el record the markers that point to error loci
+  on text properties in the error message lines.
+
+* Make desktop.el save the "frame configuration" of Emacs (in some
+  useful sense).
 
 * Make movemail work with IMAP.
 
-* Add ANSI C prototypes to the header files.
+* Add ANSI C prototype forward declarations to the source files,
+  so that even the functions used within one file have prototypes.
 
 * Implement a graphical menu bar ("tool bar").
 
@@ -15,11 +22,40 @@ that they consider overlays as well as text properties.
 * Add a feature to specify a line which will be displayed at the top
   of a window, much the way the mode line is displayed at the bottom.
 
-* Convert additional packages to use defcustom.
+* Implement a variant of uncompress.el or jka-compr.el that
+  works with GNU Privacy Guard for encryption.
 
-* Change vc-directory so that in the CVS case
-  it does `cvs status .' to get the whole directory status at once
-  and then parse the output to find out about each file.
+* Enable use of X toolkit scroll bars.
+
+* Implement radio buttons in menus for real.
+
+* Handle keymap properties of strings that appear in the mode line, so
+  that different parts of the mode line can have different mouse
+  activity.
+
+* Save undo information in files, and reload it when needed
+  for undoing.
+
+* Support multiple terminal-input descriptors,
+  and thus allow having both terminal and X frames at once.
+
+* modify lisp/ps-print.el to handle multibyte characters.
+
+* modify comint.el so that input appears in a special font.
+  I can add a simple Emacs feature to help.
+
+* Implement other text formatting properties.
+** Spaces of fractional width.
+** Footnotes that can appear either in place
+  or at the end of the page.
+** text property that says "don't break line in middle of this".
+  Don't break the line between two characters that have the
+  same value of this property.
+** Discretionary hyphens that disappear at end of line.
+** Text property for raising or lowering text.
+** Text property for making text smaller or bigger by one level of size.
+
+* Implement use of mmap to allocate buffers, when mmap exists.
 
 * Change the Windows NT menu code
   so that it handles the deep_p argument and avoids
@@ -30,38 +66,3 @@ that they consider overlays as well as text properties.
   the main thread, and not return from that message until the main
   thread has processed the menu_bar_activate_event and regenerated
   the whole menu bar.  In the mean time, it should process other messages.
-
-* Enable use of X toolkit scroll bars.
-
-* Put cross-references into the documentation strings.
-(See the docref.el package for how they can work.)
-
-* Implement radio buttons in menus for real.
-
-* Handle keymap properties of strings that appear in the mode line, so
-that different parts of the mode line can have different mouse
-activity.
-
-* Save undo information in files, and reload it when needed
-for undoing.
-
-* Support multiple terminal-input descriptors,
-and thus allow having both terminal and X frames at once.
-
-* modify lisp/ps-print.el to handle multibyte characters.
-
-* modify comint.el so that input appears in a special font.
-I can add a simple Emacs feature to help.
-
-* Implement other text formatting properties.
-** Spaces of fractional width.
-** Footnotes that can appear either in place
-or at the end of the page.
-** text property that says "don't break line in middle of this".
-Don't break the line between two characters that have the
-same value of this property.
-** Discretionary hyphens that disappear at end of line.
-** Text property for raising or lowering text.
-** Text property for making text smaller or bigger by one level of size.
-
-* Implement use of mmap to allocate buffers, when mmap exists.

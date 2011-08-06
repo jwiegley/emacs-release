@@ -1,6 +1,38 @@
 This is Info file ../info/emacs, produced by Makeinfo version 1.68 from
 the input file emacs.texi.
 
+   This is the thirteenth edition of the `GNU Emacs Manual', updated
+for Emacs version 20.3
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Emacs: (emacs).	The extensible self-documenting text editor.
+END-INFO-DIR-ENTRY
+
+   Published by the Free Software Foundation 59 Temple Place, Suite 330
+Boston, MA  02111-1307 USA
+
+   Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998
+Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the sections entitled "The GNU Manifesto", "Distribution" and "GNU
+General Public License" are included exactly as in the original, and
+provided that the entire resulting derived work is distributed under the
+terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the sections entitled "The GNU Manifesto",
+"Distribution" and "GNU General Public License" may be included in a
+translation approved by the Free Software Foundation instead of in the
+original English.
+
 
 File: emacs,  Node: Top,  Next: Distrib,  Prev: (dir),  Up: (dir)
 
@@ -9,8 +41,9 @@ The Emacs Editor
 
    Emacs is the extensible, customizable, self-documenting real-time
 display editor.  This Info file describes how to edit with Emacs and
-some of how to customize it, but not how to extend it.  It corresponds
-to GNU Emacs version 20.1.
+some of how to customize it; it corresponds to GNU Emacs version 20.3.
+For information on extending Emacs, see *Note Emacs Lisp: (elisp)Emacs
+Lisp.
 
 * Menu:
 
@@ -249,24 +282,15 @@ Saving Files
 
 Version Control
 
-* Version Systems::     Supported version control back-end systems.
-* VC Concepts::         Basic version control information;
-                          checking files in and out.
-* Editing with VC::     Commands for editing a file maintained
-                          with version control.
-* Log Entries::         Logging your changes.
-* Change Logs and VC::  Generating a change log file from log entries.
+* Introduction to VC::  How version control works in general.
+* VC Mode Line::     How the mode line shows version control status.
+* Basic VC Editing::    How to edit a file under version control.
 * Old Versions::        Examining and comparing old versions.
-* Branches::            Selecting a branch to put your changes in,
-                          and creating a new branch.
-* Status in VC::        Commands to view the VC status of files and
-                          look at log entries.
-* Renaming and VC::     A command to rename both the source and
-                          master file correctly.
-* Snapshots::           How to make and use snapshots, a set of
-                          file versions that can be treated as a unit.
-* Version Headers::     Inserting version control headers into working files.
-* Customizing VC::      Variables to change VC's behavior.
+* Secondary VC Commands::    The commands used a little less frequently.
+* Branches::            Multiple lines of development.
+* Snapshots::           Sets of file versions treated as a unit.
+* Miscellaneous VC::    Various other commands and features of VC.
+* Customizing VC::      Variables that change VC's behavior.
 
 Using Multiple Buffers
 
@@ -304,7 +328,7 @@ Frames and X Windows
 * Faces::	        How to change the display style using faces.
 * Font Lock::           Minor mode for syntactic highlighting using faces.
 * Support Modes::       Font Lock support modes make Font Lock faster.
-* Misc X::	        Iconifying and deleting frames.	Region highlighting.
+* Misc X::	        Iconifying and deleting frames.  Region highlighting.
 * Non-Window Terminals::  Multiple frames on terminals that show only one.
 
 Font Lock Support Modes
@@ -704,7 +728,7 @@ Foundation on CD-ROM.  This is a convenient and reliable way to get a
 copy; it is also a good way to help fund our work.  (The Foundation has
 always received most of its funds in this way.)  An order form is
 included in the file `etc/ORDERS' in the Emacs distribution, and on our
-web site in `http://www.gnu.ai.mit.edu/order/order.html'.  For further
+web site in `http://www.gnu.org/order/order.html'.  For further
 information, write to
 
      Free Software Foundation

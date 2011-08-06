@@ -79,17 +79,32 @@ Boston, MA 02111-1307, USA.  */
 #endif
 
 #ifdef WINDOWSNT
+#include "ntlib.h"
 #undef access
 #undef unlink
 #define fork() 0
-#define sys_wait(var) (*(var) = 0)
+#define wait(var) (*(var) = 0)
 /* Unfortunately, Samba doesn't seem to properly lock Unix files even
    though the locking call succeeds (and indeed blocks local access from
    other NT programs).  If you have direct file access using an NFS
    client or something other than Samba, the locking call might work
-   properly - make sure it does before you enable this! */
-#define DISABLE_DIRECT_ACCESS
+   properly - make sure it does before you enable this!
+
+   [18-Feb-97 andrewi] I now believe my comment above to be incorrect,
+   since it was based on a misunderstanding of how locking calls are
+   implemented and used on Unix.  */
+//#define DISABLE_DIRECT_ACCESS
+
+/* Ensure all file i/o is in binary mode. */
+#include <fcntl.h>
+int _fmode = _O_BINARY;
 #endif /* WINDOWSNT */
+
+/* Cancel substitutions made by config.h for Emacs.  */
+#undef open
+#undef read
+#undef write
+#undef close
 
 #ifdef USG
 #include <fcntl.h>
@@ -104,6 +119,10 @@ Boston, MA 02111-1307, USA.  */
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#ifdef STDC_HEADERS
+#include <stdlib.h>
 #endif
 
 #if defined (XENIX) || defined (WINDOWSNT)
@@ -132,12 +151,6 @@ extern int lk_open (), lk_close ();
 static char *mail_spool_name ();
 #endif
 #endif
-
-/* Cancel substitutions made by config.h for Emacs.  */
-#undef open
-#undef read
-#undef write
-#undef close
 
 #ifndef errno
 extern int errno;
@@ -483,8 +496,8 @@ main (argc, argv)
 	  close (open (inname, O_CREAT | O_TRUNC | O_RDWR, 0666));
 #else
 	  ftruncate (indesc, 0L);
-	}
 #endif /* STRIDE or XENIX */
+	}
 #endif /* MAIL_USE_SYSTEM_LOCK */
 
 #ifdef MAIL_USE_MMDF
@@ -795,12 +808,12 @@ pop_retr (server, msgno, arg)
       return (NOTOK);
     }
 
-  while (! (ret = pop_retrieve_next (server, &line)))
+  while ((ret = pop_retrieve_next (server, &line)) >= 0)
     {
       if (! line)
 	break;
 
-      if (mbx_write (line, arg) != OK)
+      if (mbx_write (line, ret, arg) != OK)
 	{
 	  strcpy (Errmsg, strerror (errno));
 	  pop_close (server);
@@ -826,16 +839,26 @@ pop_retr (server, msgno, arg)
 			 && (a[4] == ' '))
 
 int
-mbx_write (line, mbf)
+mbx_write (line, len, mbf)
      char *line;
+     int len;
      FILE *mbf;
 {
+#ifdef MOVEMAIL_QUOTE_POP_FROM_LINES
   if (IS_FROM_LINE (line))
     {
       if (fputc ('>', mbf) == EOF)
 	return (NOTOK);
     }
-  if (fputs (line, mbf) == EOF) 
+#endif
+  if (line[0] == '\037')
+    {
+      if (fputs ("^_", mbf) == EOF)
+	return (NOTOK);
+      line++;
+      len--;
+    }
+  if (fwrite (line, 1, len, mbf) != len) 
     return (NOTOK);
   if (fputc (0x0a, mbf) == EOF)
     return (NOTOK);

@@ -15,7 +15,7 @@ to display your editing.  Emacs normally starts out with just one frame,
 but you can create additional frames if you wish.  @xref{Frames}.
 
   When you start Emacs, the entire frame except for the first and last
-lines is devoted to the text you are editing.  This area is called
+lines is devoted to the text you are editing.  This area is called the
 @dfn{window}.  The first line is a @dfn{menu bar}, and the last line is
 a special @dfn{echo area} or @dfn{minibuffer window} where prompts
 appear and where you can enter responses.  See below for more
@@ -59,8 +59,8 @@ Many Emacs commands move point through the text, so that you can edit at
 different places in it.  You can also place point by clicking mouse
 button 1.
 
-  While the cursor appears to point @var{at} a character, you should
-think of point as @var{between} two characters; it points @var{before}
+  While the cursor appears to point @emph{at} a character, you should
+think of point as @emph{between} two characters; it points @emph{before}
 the character that appears under the cursor.  For example, if your text
 looks like @samp{frob} with the cursor over the @samp{b}, then point is
 between the @samp{o} and the @samp{b}.  If you insert the character

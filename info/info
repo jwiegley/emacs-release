@@ -328,9 +328,10 @@ must then type the name of the subtopic you want, and end it with a
 unique, the first matching subtopic is chosen.  Some menus put the
 shortest possible abbreviation for each subtopic name in capital
 letters, so you can see how much you need to type.  It does not matter
-whether you use upper case or lower case when you type the subtopic.
-You should not put any spaces at the end, or inside of the item name,
-except for one space where a space appears in the item in the menu.
+whether you use upper case or lower case when you type the subtopic.  Do
+not put spaces at the end of the subtopic name; in the middle of the
+subtopic name, use one space (no more!) wherever the menu item name has
+a space.
 
    You can also use the "completion" feature to help enter the subtopic
 name.  If you type the Tab key after entering part of a name, it will
@@ -1792,34 +1793,34 @@ Node: Help4176
 Node: Help-P5293
 Node: Help-^L6140
 Node: Help-M9216
-Node: Help-FOO15005
-Node: Help-Adv15733
-Node: Help-Cross18383
-Node: Help-Q19019
-Node: Advanced Info19638
-Node: Expert20610
-Node: Add23258
-Node: Menus26612
-Node: Cross-refs29481
-Node: Tags30178
-Node: Checking31485
-Node: Emacs Info Variables32433
-Node: Create an Info File33417
-Node: Using Stand-alone Info33951
-Node: Options35228
-Node: Cursor Commands38418
-Node: Scrolling Commands41083
-Node: Node Commands43568
-Node: Searching Commands47576
-Node: Xref Commands49191
-Node: Parts of an Xref49794
-Node: Selecting Xrefs51724
-Node: Window Commands53307
-Node: The Mode Line54213
-Node: Basic Windows55850
-Node: The Echo Area58364
-Node: Printing Nodes62543
-Node: Miscellaneous Commands63197
-Node: Variables66415
+Node: Help-FOO15021
+Node: Help-Adv15749
+Node: Help-Cross18399
+Node: Help-Q19035
+Node: Advanced Info19654
+Node: Expert20626
+Node: Add23274
+Node: Menus26628
+Node: Cross-refs29497
+Node: Tags30194
+Node: Checking31501
+Node: Emacs Info Variables32449
+Node: Create an Info File33433
+Node: Using Stand-alone Info33967
+Node: Options35244
+Node: Cursor Commands38434
+Node: Scrolling Commands41099
+Node: Node Commands43584
+Node: Searching Commands47592
+Node: Xref Commands49207
+Node: Parts of an Xref49810
+Node: Selecting Xrefs51740
+Node: Window Commands53323
+Node: The Mode Line54229
+Node: Basic Windows55866
+Node: The Echo Area58380
+Node: Printing Nodes62559
+Node: Miscellaneous Commands63213
+Node: Variables66431
 
 End Tag Table

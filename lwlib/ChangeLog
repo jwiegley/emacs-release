@@ -1,3 +1,29 @@
+1998-08-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Version 20.3 released.
+
+1998-07-30  Paul Eggert  <eggert@twinsun.com>
+
+	* lwlib/Makefile.in (lwlib-utils.o, lwlib.o, lwlib-Xlw.o)
+	(lwlib-Xaw.o, lwlib-Xm.o, lwlib-Xol.o, lwlib-Xolmb.o): 
+	Add dependencies to corresponding .c files. for Solaris 2.x VPATH make.
+
+1998-04-06  Andreas Schwab  <schwab@gnu.org>
+
+	* lwlib.c: Always declare xmalloc.
+	[USE_XAW]: Include <X11/Xaw/Paned.h>.
+	(lwlib_memset, lwlib_bcopy): Explicitly declare return type.
+
+1997-12-20  Richard Stallman  <rms@delysid.gnu.org>
+
+	* lwlib-Xm.c (update_one_menu_entry):
+	Add conditional in case XmNpositionIndex is missing.
+
+1997-12-20  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* lwlib-Xm.c (update_one_menu_entry):
+	Add conditional in case XmNpositionIndex is missing.
+
 1997-09-19  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 20.2 released.

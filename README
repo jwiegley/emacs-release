@@ -1,4 +1,4 @@
-This directory tree holds version 20.2 of GNU Emacs, the extensible,
+This directory tree holds version 20.3 of GNU Emacs, the extensible,
 customizable, self-documenting real-time display editor.
 
 You may encounter bugs in this release.  If you do, please report
@@ -14,17 +14,11 @@ Emacs.
 The file INSTALL in this directory says how to bring up GNU Emacs on
 Unix, once you have loaded the entire subtree of this directory.
 
-Note that the Emacs installation procedure has changed since version
-18; you will probably want to read the file INSTALL even if you have
-installed Emacs before.  The new procedure is intended to simplify
-Emacs installation, and make it easier to have several versions of
-Emacs for several architectures installed simultaneously.
-
-The file PROBLEMS contains information on many common problems that
+The file etc/PROBLEMS contains information on many common problems that
 occur in building, installing and running Emacs.
 
 Reports of bugs in Emacs should be sent to the mailing list
-bug-gnu-emacs@prep.ai.mit.edu.  See the "Bugs" section of the Emacs
+bug-gnu-emacs@gnu.org.  See the "Bugs" section of the Emacs
 manual for more information on how to report bugs.  (The file `BUGS'
 in this directory explains how you can find and read that section
 using the Info files that come with Emacs.)  See `etc/MAILINGLISTS'
@@ -73,9 +67,6 @@ There are several subdirectories:
 (They are twice as large as the Emacs manual in the man subdirectory.)
 
 `msdos' holds configuration files for compiling Emacs under MSDOG.
-`cpp' holds a C preprocessor for use instead of the installed one when
-    the installed one fails to distinguish more than 8 characters in a
-    symbol name.
 `vms' holds instructions and useful files for running Emacs under VMS.
 `nt' holds various command files and documentation files that pertain
     to running Emacs on Windows NT.

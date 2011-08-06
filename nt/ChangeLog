@@ -1,3 +1,60 @@
+1998-08-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Version 20.3 released.
+
+1998-07-20  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* addpm.c (main): Explicitly check result of message box for OK.
+
+1998-06-05  Andrew Innes  <andrewi@harlequin.co.uk>
+
+	* inc/sys/file.h (D_OK): Define new macro.
+
+1998-06-01  Andrew Innes  <andrewi@mescaline.gnu.org>
+
+	* makefile.def (CFLAGS): Do not define HAVE_NTGUI.
+
+1998-05-30  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* emacs.rc (VS_VERSION_INFO): Define.
+
+1998-04-23  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* makefile.nt (emacs.bat, debug.bat): Create them in the
+	installation directory.
+
+1998-04-23  Andrew Innes  <andrewi@harlequin.co.uk>
+
+	* ddeclient.c: New file.  (Support program for performing limited
+ 	interprocess communication on Windows.)
+
+	* makefile.nt: Build ddeclient.
+
+	* cmdproxy.c (main): Only set environment size for real shell, and
+ 	provide extra directory argument, when running on Windows 95.
+	
+1998-04-17  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* cmdproxy.c (fail): Exit with a negative return value.
+	(spawn): Return subprocess return code as an argument.
+	Explicitly copy environment block.
+	(main): Update to use return value argument with spawn.
+	Retry if spawn failed when a subshell was not tried.
+
+	* config.nt: Include new macros from src/config.in.
+	(GNU_MALLOC, REL_ALLOC): Define.
+	(RE_TRANSLATE_TYPE): Use Lisp_Object as type.
+	(RE_TRANSLATE): Use char_table_translate.
+
+	* makefile.def (CP_DIR): Preserve attributes.
+
+	* makefile.nt (clean): Delete patch generated files, optimized
+	build directory.
+
+1997-10-01  Geoff Voelker  <voelker@cs.washington.edu>
+
+	* addpm.c (env_vars): Fix misplaced % in SHELL entry.
+
 1997-09-19  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 20.2 released.

@@ -117,11 +117,11 @@ for `jka-compr-compression-info-list')."
   :type 'string
   :group 'jka-compr)
 
-(defvar jka-compr-use-shell t)
-
+(defvar jka-compr-use-shell 
+  (not (memq system-type '(ms-dos windows-nt))))
 
 ;;; I have this defined so that .Z files are assumed to be in unix
-;;; compress format; and .gz files, in gzip format.
+;;; compress format; and .gz files, in gzip format, and .bz2 files in bzip fmt.
 (defcustom jka-compr-compression-info-list
   ;;[regexp
   ;; compr-message  compr-prog  compr-args
@@ -130,6 +130,10 @@ for `jka-compr-compression-info-list')."
   '(["\\.Z\\(~\\|\\.~[0-9]+~\\)?\\'"
      "compressing"    "compress"     ("-c")
      "uncompressing"  "uncompress"   ("-c")
+     nil t]
+    ["\\.bz2\\'"
+     "bzip2ing"        "bzip2"         ("-c")
+     "bunzip2ing"      "bzip2"         ("-d" "-c")
      nil t]
     ["\\.tgz\\'"
      "zipping"        "gzip"         ("-c" "-q")
@@ -302,7 +306,7 @@ to keep: LEN chars starting BEG chars from the beginning."
 
       (let ((err-file (jka-compr-make-temp-name))
 	    (coding-system-for-read (or coding-system-for-read 'undecided))
-            (coding-system-for-write 'no-conversion) )
+            (coding-system-for-write 'no-conversion))
 
 	(unwind-protect
 
@@ -343,8 +347,7 @@ to keep: LEN chars starting BEG chars from the beginning."
 ;;; from ange-ftp.
 
 (defcustom jka-compr-temp-name-template
-  (expand-file-name "jka-com"
-		    (or (getenv "TMPDIR") "/tmp/"))
+  (expand-file-name "jka-com" temporary-file-directory)
   "Prefix added to all temp files created by jka-compr.
 There should be no more than seven characters after the final `/'."
   :type 'string
@@ -410,7 +413,11 @@ There should be no more than seven characters after the final `/'."
 		(compress-args (jka-compr-info-compress-args info))
 		(uncompress-args (jka-compr-info-uncompress-args info))
 		(base-name (file-name-nondirectory visit-file))
-		temp-file temp-buffer)
+		temp-file temp-buffer
+		;; we need to leave `last-coding-system-used' set to its
+		;; value after calling write-region the first time, so
+		;; that `basic-save-buffer' sees the right value.
+		(coding-system-used last-coding-system-used))
 
 	    (setq temp-buffer (get-buffer-create " *jka-compr-wr-temp*"))
 	    (with-current-buffer temp-buffer
@@ -433,6 +440,8 @@ There should be no more than seven characters after the final `/'."
 	    
 	    (jka-compr-run-real-handler 'write-region
 					(list start end temp-file t 'dont))
+	    ;; save value used by the real write-region
+	    (setq coding-system-used last-coding-system-used)
 
 	    ;; Here we must read the output of compress program as is
 	    ;; without any code conversion.
@@ -475,6 +484,9 @@ There should be no more than seven characters after the final `/'."
 		     (stringp visit))
 		 (message "Wrote %s" visit-file))
 
+	    ;; ensure `last-coding-system-used' has an appropriate value
+	    (setq last-coding-system-used coding-system-used)
+
 	    nil)
 	      
 	(jka-compr-run-real-handler 'write-region
@@ -504,16 +516,14 @@ There should be no more than seven characters after the final `/'."
 	      size start
               (coding-system-for-read
 	       (or coding-system-for-read
-		   (let ((tail file-coding-system-alist)
-			 (newfile
-			  (jka-compr-byte-compiler-base-file-name file))
-			 result)
-		     (while tail
-		       (if (string-match (car (car tail)) newfile)
-			   (setq result (car (cdr (car tail)))
-				 tail nil))
-		       (setq tail (cdr tail)))
-		     result)
+		   ;; If multibyte characters are disabled,
+		   ;; don't do that conversion.
+		   (and (null enable-multibyte-characters)
+			'raw-text)
+		   (let ((coding (find-operation-coding-system
+				  'insert-file-contents
+				  (jka-compr-byte-compiler-base-file-name file))))
+		     (and (consp coding) (car coding)))
 		   'undecided)) )
 
 	  (setq local-file (or local-copy filename))
@@ -597,18 +607,22 @@ There should be no more than seven characters after the final `/'."
 	   (signal 'file-error
 		   (cons "Opening input file" (nth 2 notfound))))
 
-	  ;; Run the functions that insert-file-contents would.
-	  (let ((p after-insert-file-functions)
-		(insval size))
-	    (while p
-	      (setq insval (funcall (car p) size))
-	      (if insval
-		  (progn
-		    (or (integerp insval)
-			(signal 'wrong-type-argument
-				(list 'integerp insval)))
-		    (setq size insval)))
-	      (setq p (cdr p))))
+	  ;; This is done in insert-file-contents after we return.
+	  ;; That is a little weird, but better to go along with it now
+	  ;; than to change it now.
+
+;;;	  ;; Run the functions that insert-file-contents would.
+;;; 	  (let ((p after-insert-file-functions)
+;;; 		(insval size))
+;;; 	    (while p
+;;; 	      (setq insval (funcall (car p) size))
+;;; 	      (if insval
+;;; 		  (progn
+;;; 		    (or (integerp insval)
+;;; 			(signal 'wrong-type-argument
+;;; 				(list 'integerp insval)))
+;;; 		    (setq size insval)))
+;;; 	      (setq p (cdr p))))
 
 	  (list filename size))
 
@@ -716,10 +730,15 @@ There should be no more than seven characters after the final `/'."
 (put 'byte-compiler-base-file-name 'jka-compr
      'jka-compr-byte-compiler-base-file-name)
 
+(defvar jka-compr-inhibit nil
+  "Non-nil means inhibit automatic uncompression temporarily.
+Lisp programs can bind this to t to do that.
+It is not recommended to set this variable permanently to anything but nil.")
+
 (defun jka-compr-handler (operation &rest args)
   (save-match-data
     (let ((jka-op (get operation 'jka-compr)))
-      (if jka-op
+      (if (and jka-op (not jka-compr-inhibit))
 	  (apply jka-op args)
 	(jka-compr-run-real-handler operation args)))))
 

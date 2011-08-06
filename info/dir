@@ -16,8 +16,8 @@ File: dir	Node: Top	This is the top of the INFO tree
 
 * Info: (info).		Documentation browsing system.
 * Emacs: (emacs).	The extensible self-documenting text editor.
-* VIP: (vip).		A VI-emulation for Emacs.
-* VIPER: (viper).       The new VI-emulation mode in Emacs-19.29.
+* VIPER: (viper).       The newest Emacs VI-emulation mode.
+* VIP: (vip).		An older VI-emulation for Emacs.
 * Forms: (forms).	Emacs package for editing data bases
 			  by filling in forms.
 * Gnus: (gnus).		The news reader Gnus.

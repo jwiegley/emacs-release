@@ -1,6 +1,6 @@
 ;;; finder.el --- topic & keyword-based code finder
 
-;; Copyright (C) 1992 Free Software Foundation, Inc.
+;; Copyright (C) 1992, 1997, 1998 Free Software Foundation, Inc.
 
 ;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Created: 16 Jun 1992
@@ -51,6 +51,7 @@
     (c		. "support for the C language and related languages")
     (calendar	. "calendar and time management support")
     (comm	. "communications, networking, remote access to files")
+    (convenience . "convenience features for faster editing")
     (data	. "support editing files of data")
     (docs	. "support for Emacs documentation")
     (emulations	. "emulations of other editors")
@@ -87,6 +88,7 @@
     (let ((map (make-sparse-keymap)))
       (define-key map " "	'finder-select)
       (define-key map "f"	'finder-select)
+      (define-key map [mouse-2]	'finder-mouse-select)
       (define-key map "\C-m"	'finder-select)
       (define-key map "?"	'finder-summary)
       (define-key map "q"	'finder-exit)
@@ -115,32 +117,44 @@ arguments compiles from `load-path'."
       (insert "\n(setq finder-package-info '(\n")
       (mapcar
        (lambda (d)
-	 (mapcar
-	  (lambda (f) 
-	    (if (and (string-match "^[^=.].*\\.el$" f)
-		     (not (member f processed)))
-		(let (summary keystart keywords)
-		  (setq processed (cons f processed))
-		  (save-excursion
-		    (set-buffer (get-buffer-create "*finder-scratch*"))
-		    (buffer-disable-undo (current-buffer))
-		    (erase-buffer)
-		    (insert-file-contents
-		     (concat (file-name-as-directory (or d ".")) f))
-		    (setq summary (lm-synopsis))
-		    (setq keywords (lm-keywords)))
-		  (insert
-		   (format "    (\"%s\"\n        " f))
-		  (prin1 summary (current-buffer))
-		  (insert
-		   "\n        ")
-		  (setq keystart (point))
-		  (insert
-		   (if keywords (format "(%s)" keywords) "nil")
-		   ")\n")
-		  (subst-char-in-region keystart (point) ?, ? )
-		  )))
-	  (directory-files (or d "."))))
+	 (when (file-exists-p (directory-file-name d))
+	   (message "Directory %s" d)
+	   (mapcar
+	    (lambda (f) 
+	      (if (and (or (string-match "^[^=].*\\.el$" f)
+			   ;; Allow compressed files also.  Fixme:
+			   ;; generalize this, especially for
+			   ;; MS-DOG-type filenames.
+			   (and (string-match "^[^=].*\\.el\\.\\(gz\\|Z\\)$" f)
+				(require 'jka-compr)))
+		       ;; Ignore lock files.
+		       (not (string-match "^.#" f))
+		       (not (member f processed)))
+		  (let (summary keystart keywords)
+		    (setq processed (cons f processed))
+		    (save-excursion
+		      (set-buffer (get-buffer-create "*finder-scratch*"))
+		      (buffer-disable-undo (current-buffer))
+		      (erase-buffer)
+		      (insert-file-contents
+		       (concat (file-name-as-directory (or d ".")) f))
+		      (setq summary (lm-synopsis))
+		      (setq keywords (lm-keywords)))
+		    (insert
+		     (format "    (\"%s\"\n        "
+			     (if (string-match "\\.\\(gz\\|Z\\)$" f)
+				 (file-name-sans-extension f) 
+			       f)))
+		    (prin1 summary (current-buffer))
+		    (insert
+		     "\n        ")
+		    (setq keystart (point))
+		    (insert
+		     (if keywords (format "(%s)" keywords) "nil")
+		     ")\n")
+		    (subst-char-in-region keystart (point) ?, ? )
+		    )))
+	    (directory-files (or d ".")))))
        (or dirs load-path))
       (insert "))\n\n(provide 'finder-inf)\n\n;;; finder-inf.el ends here\n")
       (kill-buffer "*finder-scratch*")
@@ -155,19 +169,18 @@ arguments compiles from `load-path'."
 ;;; Now the retrieval code
 
 (defun finder-insert-at-column (column &rest strings)
-  "Insert list of STRINGS, at column COLUMN."
+  "Insert, at column COLUMN, other args STRINGS."
   (if (> (current-column) column) (insert "\n"))
-  (move-to-column column)
-  (let ((col (current-column)))
-    (if (< col column)
-	(indent-to column)
-      (if (and (/= col column)
-	       (= (preceding-char) ?\t))
-	  (let (indent-tabs-mode)
-	    (delete-char -1)
-            (indent-to col)
-            (move-to-column column)))))
+  (move-to-column column t)
   (apply 'insert strings))
+
+(defun finder-mouse-face-on-line ()
+  "Put a `mouse-face' property on the previous line."
+  (save-excursion
+    (previous-line 1)
+    (put-text-property (save-excursion (beginning-of-line) (point))
+		       (progn (end-of-line) (point))
+		       'mouse-face 'highlight)))
 
 (defun finder-list-keywords ()
   "Display descriptions of the keywords in the Finder buffer."
@@ -183,7 +196,7 @@ arguments compiles from `load-path'."
        (let ((keyword (car assoc)))
 	 (insert (symbol-name keyword))
 	 (finder-insert-at-column 14 (concat (cdr assoc) "\n"))
-	 (cons (symbol-name keyword) keyword)))
+	 (finder-mouse-face-on-line)))
      finder-known-keywords)
     (goto-char (point-min))
     (setq finder-headmark (point))
@@ -206,7 +219,8 @@ arguments compiles from `load-path'."
        (if (memq id (car (cdr (cdr x))))
 	   (progn
 	     (insert (car x))
-	     (finder-insert-at-column 16 (concat (car (cdr x)) "\n")))))
+	     (finder-insert-at-column 16 (concat (nth 1 x) "\n"))
+	     (finder-mouse-face-on-line))))
      finder-package-info)
     (goto-char (point-min))
     (forward-line)
@@ -215,21 +229,18 @@ arguments compiles from `load-path'."
     (shrink-window-if-larger-than-buffer)
     (finder-summary)))
 
-;; Search for a file named FILE the same way `load' would search.
-(defun finder-find-library (file)
-  (if (file-name-absolute-p file)
-      file
-    (let ((dirs load-path)
-	  found)
-      (while (and dirs (not found))
-	(if (file-exists-p (expand-file-name (concat file ".el") (car dirs)))
-	    (setq found (expand-file-name file (car dirs)))
-	  (if (file-exists-p (expand-file-name file (car dirs)))
-	      (setq found (expand-file-name file (car dirs)))))
-	(setq dirs (cdr dirs)))
-      found)))
+;; Search for a file named FILE on `load-path', also trying compressed
+;; versions if jka-compr is in use.
+(defun finder-find-library (library)
+  (or (locate-library library t)
+      (if (rassq 'jka-compr-handler file-name-handler-alist)
+        (or (locate-library (concat library ".gz") t)
+            (locate-library (concat library ".Z") t)
+            ;; last resort for MS-DOG et al
+            (locate-library (concat library "z"))))))
 
 (defun finder-commentary (file)
+  "Display FILE's commentary section."
   (interactive)
   (let* ((str (lm-commentary (finder-find-library file))))
     (if (null str)
@@ -259,11 +270,20 @@ arguments compiles from `load-path'."
       (current-word))))
 
 (defun finder-select ()
+  "Select item on current line in a finder buffer."
   (interactive)
   (let ((key (finder-current-item)))
-    (if (string-match "\\.el$" key)
-	(finder-commentary key)
-      (finder-list-matches key))))
+      (if (string-match "\\.el$" key)
+	  (finder-commentary key)
+	(finder-list-matches key))))
+
+(defun finder-mouse-select (event)
+  "Select item in a finder buffer with the mouse."
+  (interactive "e")
+  (save-excursion
+    (set-buffer (window-buffer (posn-window (event-start event))))
+    (goto-char (posn-point (event-start event)))
+    (finder-select)))
 
 (defun finder-by-keyword ()
   "Find packages matching a given keyword."
@@ -289,13 +309,20 @@ arguments compiles from `load-path'."
   (interactive)
   (message "%s"
    (substitute-command-keys
-    "\\<finder-mode-map>\\[finder-select] = select, \\[finder-list-keywords] = to finder directory, \\[finder-exit] = quit, \\[finder-summary] = help")))
+    "\\<finder-mode-map>\\[finder-select] = select, \
+\\[finder-mouse-select] = select, \\[finder-list-keywords] = to \
+finder directory, \\[finder-exit] = quit, \\[finder-summary] = help")))
 
 (defun finder-exit ()
-  "Exit Finder mode and kill the buffer"
+  "Exit Finder mode and kill the buffer."
   (interactive)
-  (delete-window)
-  (kill-buffer "*Finder*"))
+  (or (one-window-p t)
+      (delete-window))
+  ;; Can happen in either buffer -- kill each of the two that exists
+  (and (get-buffer "*Finder*")
+       (kill-buffer "*Finder*"))
+  (and (get-buffer "*Finder Category*")
+       (kill-buffer "*Finder Category*")))
 
 (provide 'finder)
 

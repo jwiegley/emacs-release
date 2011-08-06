@@ -1,6 +1,6 @@
 ;;; double.el --- Support for keyboard remapping with double clicking
 
-;; Copyright (C) 1994 Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1997, 1998 Free Software Foundation, Inc.
 
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Keywords: i18n
@@ -49,18 +49,13 @@
 ;; of such mappings, and just supporting the most common would
 ;; increase the size of this nice small file manyfold.
 
-;;; ChangeLog: 
-
-;; * 1994-06-21         Per Abrahamsen
-;;      Added `double-prefix-only'.
-;; * 1994-02-28         Per Abrahamsen
-;;      Use 127 instead of 'delete to delete a character.
-;; * 1994-02-03		Per Abrahamsen
-;;	Created.
-
 ;;; Code:
 
-(defvar double-map
+(defgroup double nil
+  "Remap keyboard, but get original by typing the same key twice."
+  :group 'i18n)
+
+(defcustom double-map
   '((?\; "\346" ";")
     (?\' "\370" "'")
     (?\[ "\345" "[")
@@ -72,12 +67,18 @@
 Each entry is a list with three elements:
 1. The key activating the translation.
 2. The string to be inserted when the key is pressed once.
-3. The string to be inserted when the key is pressed twice.")
+3. The string to be inserted when the key is pressed twice."
+  :group 'double
+  :type '(repeat (list (character :tag "Key")
+		       (string :tag "Once")
+		       (string :tag "Twice"))))
 
-(defvar double-prefix-only t
+(defcustom double-prefix-only t
   "*Non-nil means that Double mode mapping only works for prefix keys.
 That is, for any key `X' in `double-map',  `X' alone will be mapped
-but not `C-u X' or `ESC X' since the X is not the prefix key.")
+but not `C-u X' or `ESC X' since the X is not the prefix key."
+  :group 'double
+  :type 'boolean)
 
 ;;; Read Event
 
@@ -138,21 +139,21 @@ but not `C-u X' or `ESC X' since the X is not the prefix key.")
 
 ;;; Key Translation Map
 
-(defvar default-key-translation-map
-  (or key-translation-map (make-sparse-keymap))
-  "Key translation you want to have effect, regardless of Double mode.
-This defaults to the value of `key-translation-map' when double was
-first loaded.")
-
-(make-variable-buffer-local 'key-translation-map)
-
-(defun double-setup ()
-  ;; Setup key-translation-map as indicated by `double-map'.
-  (setq key-translation-map (copy-keymap default-key-translation-map))
-  (mapcar (function (lambda (entry)
-            (define-key key-translation-map (vector (nth 0 entry))
-	                'double-translate-key)))
-	  (append double-map '((magic-start) (magic-end)))))
+(defun double-setup (enable-flag)
+  (if enable-flag
+      (progn
+	;; Set up key-translation-map as indicated by `double-map'.
+	(kill-local-variable 'key-translation-map)
+	(make-local-variable 'key-translation-map)
+	(setq key-translation-map (if (keymapp key-translation-map)
+				      (copy-keymap key-translation-map)
+				    (make-sparse-keymap)))
+	(mapcar (function (lambda (entry)
+			    (define-key key-translation-map
+			      (vector (nth 0 entry))
+			      'double-translate-key)))
+		(append double-map '((magic-start) (magic-end)))))
+    (kill-local-variable 'key-translation-map)))
 
 ;;; Mode
 
@@ -184,13 +185,13 @@ when pressed twice.  See variable `double-map' for details."
       (if double-mode
 	  (progn
 	    (let ((double-map))
-	      (double-setup))
+	      (double-setup nil))
 	    (setq double-mode nil)
 	    (force-mode-line-update)))
     ;;Turn it on
     (if double-mode
 	()
-      (double-setup)
+      (double-setup t)
       (setq double-mode t)
       (force-mode-line-update))))
 

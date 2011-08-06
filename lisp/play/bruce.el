@@ -7,7 +7,7 @@
 ;; Keywords: games
 ;; Created: Jan 1997
 
-;; This file is a proposed part of GNU Emacs.
+;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -106,16 +106,27 @@
 (require 'cookie1)
 
 ; Variables
-(defvar bruce-phrases-file (concat data-directory "bruce.lines")
-   "Keep your favorite phrases here.")
+(defgroup bruce nil
+  "Insert phrases selected at random from a file into a buffer."
+  :prefix "bruce-"
+  :group 'games)
 
-(defvar bruce-phrase-default-count 15
-   "Default number of phrases to insert")
+(defcustom bruce-phrases-file "~/bruce.lines"
+  "Keep your favorite phrases here."
+  :type 'file
+  :group 'bruce)
+
+(defcustom bruce-phrase-default-count 15
+  "Default number of phrases to insert."
+  :type 'integer
+  :group 'bruce)
 
 ;;;###autoload
 (defun bruce ()
   "Adds that special touch of class to your outgoing mail."
   (interactive)
+  (or (file-exists-p bruce-phrases-file)
+      (error "You need to create %s" bruce-phrases-file))
   (cookie-insert bruce-phrases-file
 		 bruce-phrase-default-count
 		 "Checking authorization..."
@@ -124,6 +135,8 @@
 ;;;###autoload
 (defun snarf-bruces ()
   "Return a vector containing the lines from `bruce-phrases-file'."
+  (or (file-exists-p bruce-phrases-file)
+      (error "You need to create %s" bruce-phrases-file))
   (cookie-snarf bruce-phrases-file
 		"Checking authorization..."
 		"Checking authorization...Approved"))

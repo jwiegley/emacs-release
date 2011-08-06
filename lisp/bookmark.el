@@ -121,7 +121,7 @@ behavior.\)
 
 To specify the file in which to save them, modify the variable
 `bookmark-default-file', which is `~/.emacs.bmk' by default."
-  :type '(choice (const nil) (const t) integer)
+  :type '(choice (const nil) integer (other t))
   :group 'bookmark)
 
 
@@ -149,7 +149,8 @@ It can have four values: t, nil, `never', and `nospecial'.
 The first three have the same meaning that they do for the
 variable `version-control', and the final value `nospecial' means just
 use the value of `version-control'."
-  :type '(choice (const t) (const nil) (const never) (const nospecial))
+  :type '(choice (const nil) (const never) (const nospecial)
+		 (other t))
   :group 'bookmark)
 
 
@@ -1112,29 +1113,31 @@ of the old one in the permanent bookmark record."
                   (and (file-exists-p altname)
                        altname)))))
         (save-excursion
-          (if info-node
-              ;; Info nodes must be visited with care.
-              (progn
-                (require 'info)
-                (Info-find-node file info-node))
-            ;; Else no Info.  Can do an ordinary find-file:
-            (set-buffer (find-file-noselect file))
-            (goto-char place))
+          (save-window-excursion
+            (if info-node
+                ;; Info nodes must be visited with care.
+                (progn
+                  (require 'info)
+                  (Info-find-node file info-node))
+              ;; Else no Info.  Can do an ordinary find-file:
+              (set-buffer (find-file-noselect file))
+              (goto-char place))
 
-          ;; Go searching forward first.  Then, if forward-str exists and
-          ;; was found in the file, we can search backward for behind-str.
-          ;; Rationale is that if text was inserted between the two in the
-          ;; file, it's better to be put before it so you can read it,
-          ;; rather than after and remain perhaps unaware of the changes.
-          (if forward-str
-              (if (search-forward forward-str (point-max) t)
-                  (goto-char (match-beginning 0))))
-          (if behind-str
-              (if (search-backward behind-str (point-min) t)
-                  (goto-char (match-end 0))))
-          ;; added by db
-          (setq bookmark-current-bookmark str)
-          (cons (current-buffer) (point)))
+            ;; Go searching forward first.  Then, if forward-str exists and
+            ;; was found in the file, we can search backward for behind-str.
+            ;; Rationale is that if text was inserted between the two in the
+            ;; file, it's better to be put before it so you can read it,
+            ;; rather than after and remain perhaps unaware of the changes.
+            (if forward-str
+                (if (search-forward forward-str (point-max) t)
+                    (goto-char (match-beginning 0))))
+            (if behind-str
+                (if (search-backward behind-str (point-min) t)
+                    (goto-char (match-end 0))))
+            ;; added by db
+            (setq bookmark-current-bookmark str)
+            (cons (current-buffer) (point))))
+
       ;; Else unable to find the marked file, so ask if user wants to
       ;; relocate the bookmark, else remind them to consider deletion.
       (ding)
@@ -1482,7 +1485,7 @@ method buffers use to resolve name collisions."
     nil
   (setq bookmark-bmenu-mode-map (make-keymap))
   (suppress-keymap bookmark-bmenu-mode-map t)
-  (define-key bookmark-bmenu-mode-map "q" 'bookmark-bmenu-quit)
+  (define-key bookmark-bmenu-mode-map "q" 'quit-window)
   (define-key bookmark-bmenu-mode-map "v" 'bookmark-bmenu-select)
   (define-key bookmark-bmenu-mode-map "w" 'bookmark-bmenu-locate)
   (define-key bookmark-bmenu-mode-map "2" 'bookmark-bmenu-2-window)
@@ -1896,7 +1899,10 @@ With a prefix arg, prompts for a file to save them in."
   "Make the other window select this line's bookmark.
 The current window remains selected."
   (interactive)
-  (let ((bookmark (bookmark-bmenu-bookmark)))
+  (let ((bookmark (bookmark-bmenu-bookmark))
+        (pop-up-windows t)
+        same-window-buffer-names 
+        same-window-regexps)
     (if (bookmark-bmenu-check-position)
 	(let* ((pair (bookmark-jump-noselect bookmark))
                (buff (car pair))
@@ -1940,14 +1946,6 @@ The current window remains selected."
   (let ((bookmark (bookmark-bmenu-bookmark)))
     (if (bookmark-bmenu-check-position)
 	(bookmark-edit-annotation bookmark))))
-
-
-(defun bookmark-bmenu-quit ()
-  "Quit the bookmark menu."
-  (interactive)
-  (let ((buffer (current-buffer)))
-    (switch-to-buffer (other-buffer))
-    (bury-buffer buffer)))
 
 
 (defun bookmark-bmenu-unmark (&optional backup)

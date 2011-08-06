@@ -1,6 +1,6 @@
 ;;; replace.el --- replace commands for Emacs.
 
-;; Copyright (C) 1985, 1986, 1987, 1992, 1994, 1996 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 86, 87, 92, 94, 96, 1997 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -37,22 +37,44 @@
   "Non-nil means `query-replace' uses the last search string.
 That becomes the \"string to replace\".")
 
+(defcustom query-replace-from-history-variable 'query-replace-history
+  "History list to use for the FROM argument of query-replace commands.
+The value of this variable should be a symbol; that symbol
+is used as a variable to hold a history list for the strings
+or patterns to be replaced."
+  :group 'matching
+  :type 'symbol
+  :version "20.3")
+
+(defcustom query-replace-to-history-variable 'query-replace-history
+  "History list to use for the TO argument of query-replace commands.
+The value of this variable should be a symbol; that symbol
+is used as a variable to hold a history list for replacement
+strings or patterns."
+  :group 'matching
+  :type 'symbol
+  :version "20.3")
+
 (defun query-replace-read-args (string regexp-flag)
   (let (from to)
     (if query-replace-interactive
 	(setq from (car (if regexp-flag regexp-search-ring search-ring)))
       (setq from (read-from-minibuffer (format "%s: " string)
 				       nil nil nil
-				       'query-replace-history nil t)))
+				       query-replace-from-history-variable
+				       nil t)))
     (setq to (read-from-minibuffer (format "%s %s with: " string from)
 				   nil nil nil
-				   'query-replace-history nil t))
+				   query-replace-to-history-variable from t))
     (list from to current-prefix-arg)))
 
 (defun query-replace (from-string to-string &optional arg)
   "Replace some occurrences of FROM-STRING with TO-STRING.
 As each match is found, the user must type a character saying
 what to do with it.  For directions, type \\[help-command] at that time.
+
+In Transient Mark mode, if the mark is active, operate on the contents
+of the region.  Otherwise, operate from point to the end of the buffer.
 
 If `query-replace-interactive' is non-nil, the last incremental search
 string is used as FROM-STRING--you don't have to specify it with the
@@ -69,12 +91,16 @@ only matches surrounded by word boundaries.
 To customize possible responses, change the \"bindings\" in `query-replace-map'."
   (interactive (query-replace-read-args "Query replace" nil))
   (perform-replace from-string to-string t nil arg))
+
 (define-key esc-map "%" 'query-replace)
 
 (defun query-replace-regexp (regexp to-string &optional arg)
   "Replace some things after point matching REGEXP with TO-STRING.
 As each match is found, the user must type a character saying
 what to do with it.  For directions, type \\[help-command] at that time.
+
+In Transient Mark mode, if the mark is active, operate on the contents
+of the region.  Otherwise, operate from point to the end of the buffer.
 
 If `query-replace-interactive' is non-nil, the last incremental search
 regexp is used as REGEXP--you don't have to specify it with the
@@ -89,6 +115,7 @@ and `\\=\\N' (where N is a digit) stands for
  whatever what matched the Nth `\\(...\\)' in REGEXP."
   (interactive (query-replace-read-args "Query replace regexp" t))
   (perform-replace regexp to-string t t arg))
+(define-key esc-map [?\C-%] 'query-replace-regexp)
 
 (defun map-query-replace-regexp (regexp to-strings &optional arg)
   "Replace some matches for REGEXP with various strings, in rotation.
@@ -96,6 +123,9 @@ The second argument TO-STRINGS contains the replacement strings, separated
 by spaces.  This command works like `query-replace-regexp' except
 that each successive replacement uses the next successive replacement string,
 wrapping around from the last such string to the first.
+
+In Transient Mark mode, if the mark is active, operate on the contents
+of the region.  Otherwise, operate from point to the end of the buffer.
 
 Non-interactively, TO-STRINGS may be a list of replacement strings.
 
@@ -115,7 +145,7 @@ before rotating to the next."
 	       (format "Query replace %s with (space-separated strings): "
 		       from)
 	       nil nil nil
-	       'query-replace-history nil t))
+	       'query-replace-history from t))
      (list from to current-prefix-arg)))
   (let (replacements)
     (if (listp to-strings)
@@ -138,6 +168,9 @@ Preserve case in each match if `case-replace' and `case-fold-search'
 are non-nil and FROM-STRING has no uppercase letters.
 \(Preserving case means that if the string matched is all caps, or capitalized,
 then its replacement is upcased or capitalized.)
+
+In Transient Mark mode, if the mark is active, operate on the contents
+of the region.  Otherwise, operate from point to the end of the buffer.
 
 Third arg DELIMITED (prefix arg if interactive), if non-nil, means replace
 only matches surrounded by word boundaries.
@@ -165,6 +198,9 @@ only matches surrounded by word boundaries.
 In TO-STRING, `\\&' stands for whatever matched the whole of REGEXP,
 and `\\=\\N' (where N is a digit) stands for
  whatever what matched the Nth `\\(...\\)' in REGEXP.
+
+In Transient Mark mode, if the mark is active, operate on the contents
+of the region.  Otherwise, operate from point to the end of the buffer.
 
 If `query-replace-interactive' is non-nil, the last incremental search
 regexp is used as REGEXP--you don't have to specify it with the minibuffer.
@@ -226,9 +262,9 @@ Applies to lines after point."
 (defalias 'count-matches 'how-many)
 (defun how-many (regexp)
   "Print number of matches for REGEXP following point."
-  (interactive (list(read-from-minibuffer
-		     "How many matches for (regexp): "
-		     nil nil nil 'regexp-history nil t)))
+  (interactive (list (read-from-minibuffer
+		      "How many matches for (regexp): "
+		      nil nil nil 'regexp-history nil t)))
   (let ((count 0) opoint)
     (save-excursion
      (while (and (not (eobp))
@@ -389,11 +425,10 @@ the matching is case-sensitive."
 		      (format "List lines matching regexp (default `%s'): "
 			      default)
 		    "List lines matching regexp: ")
-		  nil nil nil 'regexp-history nil t)))
-	   (if (string-equal input "")
-	       default
-	     (set-text-properties 0 (length input) nil input)
-	     input))
+		  nil nil nil 'regexp-history default t)))
+	   (and (equal input "") default
+		(setq input default))
+	   input)
 	 current-prefix-arg))
   (let ((nlines (if nlines
 		    (prefix-numeric-value nlines)
@@ -477,6 +512,7 @@ the matching is case-sensitive."
 		     (tag (format "%5d" linenum))
 		     (empty (make-string (length tag) ?\ ))
 		     tem		
+		     insertion-start
 		     ;; Number of lines of context to show for current match.
 		     occur-marker	
 		     ;; Marker pointing to end of match in source buffer.
@@ -501,7 +537,21 @@ the matching is case-sensitive."
 		  ;; Insert matching text including context lines from
 		  ;; source buffer into *Occur*
 		  (set-marker text-beg (point))
+		  (setq insertion-start (point))
 		  (insert-buffer-substring buffer start end)
+		  (or (and (/= (+ start match-beg) end)
+			   (with-current-buffer buffer
+			     (eq (char-before end) ?\n)))
+		      (insert "\n"))
+		  (set-marker final-context-start 
+			      (+ (- (point) (- end (match-end 0)))
+				 (if (save-excursion
+				       (set-buffer buffer)
+				       (save-excursion
+					 (goto-char (match-end 0))
+					 (end-of-line)
+					 (bolp)))
+				     1 0)))
 		  (set-marker text-end (point))
 		  
 		  ;; Highlight text that was matched.
@@ -517,12 +567,10 @@ the matching is case-sensitive."
 		   (+ (marker-position text-beg) match-beg match-len)
 		   (+ (marker-position text-beg) match-beg match-len 1)
 		   'occur-point t)
-		  (set-marker final-context-start 
-			      (- (point) (- end (match-end 0))))
 		  
 		  ;; Now go back to the start of the matching text
 		  ;; adding the space and colon to the start of each line.
-		  (goto-char (- (point) (- end start)))
+		  (goto-char insertion-start)
 		  ;; Insert space and colon for lines of context before match.
 		  (setq tem (if (< linenum nlines)
 				(- nlines linenum)
@@ -542,7 +590,7 @@ the matching is case-sensitive."
 		      (forward-line 1)
 		      (setq tag nil)
 		      (setq this-linenum (1+ this-linenum)))
-		    (while (<= (point) final-context-start)
+		    (while (and (not (eobp)) (<= (point) final-context-start))
 		      (insert empty ?:)
 		      (forward-line 1)
 		      (setq this-linenum (1+ this-linenum))))
@@ -574,7 +622,8 @@ the matching is case-sensitive."
 		     (format "%d lines" occur-num-matches))))
 	      (insert message-string)
 	      (if (interactive-p)
-		  (message "%s matched" message-string)))))))))
+		  (message "%s matched" message-string)))
+	    (setq buffer-read-only t)))))))
 
 ;; It would be nice to use \\[...], but there is no reasonable way
 ;; to make that display both SPC and Y.
@@ -650,6 +699,9 @@ which will run faster and probably do exactly what you want."
 	(replace-count 0)
 	(nonempty-match nil)
 
+	;; If non-nil, it is marker saying where in the buffer to stop.
+	(limit nil)
+
 	;; Data for the next match.  If a cons, it has the same format as
 	;; (match-data); otherwise it is t if a match is possible at point.
 	(match-again t)
@@ -658,6 +710,13 @@ which will run faster and probably do exactly what you want."
 	 (if query-flag
 	     (substitute-command-keys
 	      "Query replacing %s with %s: (\\<query-replace-map>\\[help] for help) "))))
+
+    ;; If region is active, in Transient Mark mode, operate on region.
+    (if (and transient-mark-mode mark-active)
+	(progn
+	  (setq limit (copy-marker (region-end)))
+	  (goto-char (region-beginning))
+	  (deactivate-mark)))
     (if (stringp replacements)
 	(setq next-replacement replacements)
       (or repeat-count (setq repeat-count 1)))
@@ -684,7 +743,7 @@ which will run faster and probably do exactly what you want."
 				     (progn
 				       (forward-char 1)
 				       (not (eobp))))
-				 (funcall search-function search-string nil t)
+				 (funcall search-function search-string limit t)
 				 ;; For speed, use only integers and
 				 ;; reuse the list used last time.
 				 (match-data t real-match-data)))))
@@ -714,7 +773,7 @@ which will run faster and probably do exactly what you want."
 		(setq replacement-index (% (1+ replacement-index) (length replacements)))))
 	  (if (not query-flag)
 	      (progn
-		(store-match-data real-match-data)
+		(set-match-data real-match-data)
 		(replace-match next-replacement nocasify literal)
 		(setq replace-count (1+ replace-count)))
 	    (undo-boundary)
@@ -722,7 +781,7 @@ which will run faster and probably do exactly what you want."
 	      ;; Loop reading commands until one of them sets done,
 	      ;; which means it has finished handling this occurrence.
 	      (while (not done)
-		(store-match-data real-match-data)
+		(set-match-data real-match-data)
 		(replace-highlight (match-beginning 0) (match-end 0))
 		;; Bind message-log-max so we don't fill up the message log
 		;; with a bunch of identical messages.
@@ -731,7 +790,7 @@ which will run faster and probably do exactly what you want."
 		(setq key (read-event))
 		;; Necessary in case something happens during read-event
 		;; that clobbers the match data.
-		(store-match-data real-match-data)
+		(set-match-data real-match-data)
 		(setq key (vector key))
 		(setq def (lookup-key map key))
 		;; Restore the match data while we process the command.
@@ -756,7 +815,7 @@ which will run faster and probably do exactly what you want."
 			     (goto-char (car elt))
 			     (setq replaced (eq t (cdr elt)))
 			     (or replaced
-				 (store-match-data (cdr elt)))
+				 (set-match-data (cdr elt)))
 			     (setq stack (cdr stack)))
 			 (message "No previous match")
 			 (ding 'no-terminate)
@@ -791,9 +850,11 @@ which will run faster and probably do exactly what you want."
 		      ((eq def 'recenter)
 		       (recenter nil))
 		      ((eq def 'edit)
-		       (store-match-data
-			(prog1 (match-data)
-			  (save-excursion (recursive-edit))))
+		       (goto-char (match-beginning 0))
+		       (funcall search-function search-string limit t)
+		       (setq real-match-data (match-data))
+		       (save-excursion (recursive-edit))
+		       (set-match-data real-match-data)
 		       ;; Before we make the replacement,
 		       ;; decide whether the search string
 		       ;; can match again just after this match.
@@ -802,7 +863,7 @@ which will run faster and probably do exactly what you want."
 						  (match-data)))))
 		      ((eq def 'delete-and-edit)
 		       (delete-region (match-beginning 0) (match-end 0))
-		       (store-match-data
+		       (set-match-data
 			(prog1 (match-data)
 			  (save-excursion (recursive-edit))))
 		       (setq replaced t))
@@ -830,7 +891,7 @@ which will run faster and probably do exactly what you want."
 		 (if (= replace-count 1) "" "s")))
     (and keep-going stack)))
 
-(defcustom query-replace-highlight nil
+(defcustom query-replace-highlight t
   "*Non-nil means to highlight words during query replacement."
   :type 'boolean
   :group 'matching)

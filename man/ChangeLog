@@ -1,3 +1,38 @@
+1998-08-19  Richard Stallman  <rms@psilocin.ai.mit.edu>
+
+	* Version 20.3 released.
+
+1998-08-10  Carsten Dominik  <cd@delysid.gnu.org>
+
+	* reftex.texi: Updated to the latest RefTeX version.
+
+1998-05-06  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* Makefile.in (EMACSSOURCES): Add mule.texi.
+	Add msdog.texi, ack.texi.  Remove gnu1.texi.
+	
+1998-04-06  Andreas Schwab  <schwab@gnu.org>
+
+	* Makefile.in (ENVADD): Enviroment vars to pass to texi2dvi.  Use
+	it in dvi targets.
+	(../etc/GNU): Change to $(srcdir) first.
+
+1998-03-11  Carsten Dominik  <cd@delysid.gnu.org>
+
+	* reftex.texi Updated for RefTeX version 3.22.
+
+1998-02-08  Richard Stallman  <rms@psilocin.gnu.org>
+
+	* Makefile.in (reftex.dvi, ../info/reftex): New targets.
+	(INFO_TARGETS, DVI_TARGETS): Add the new targets.
+
+1997-09-23  Paul Eggert  <eggert@twinsun.com>
+
+	* Makefile.in: Merge changes mistakenly made to `Makefile'.
+	(INFO_TARGETS): Change ../info/custom to ../info/customize.
+	(../info/customize): Renamed from ../info/custom.
+	(../info/viper, viper.dvi): Remove dependency on viper-cmd.texi.
+
 1997-09-19  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 20.2 released.

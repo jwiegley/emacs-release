@@ -658,7 +658,7 @@ This is in addition to the primary selection.")
 (if (fboundp 'new-fontset)
     (progn
       ;; Create the standard fontset.
-      (create-fontset-from-fontset-spec standard-fontset-spec)
+      (create-fontset-from-fontset-spec standard-fontset-spec t)
 
       ;; Create fontset specified in X resources "Fontset-N" (N is 0, 1, ...).
       (create-fontset-from-x-resource)
@@ -674,28 +674,56 @@ This is in addition to the primary selection.")
       (let ((font (or (cdr (assq 'font initial-frame-alist))
 		      (cdr (assq 'font default-frame-alist))
 		      (x-get-resource "font" "Font")))
-	    xlfd-fields)
+	    xlfd-fields resolved-name)
 	(if (and font
 		 (not (query-fontset font))
+		 (setq resolved-name (x-resolve-font-name font))
 		 (setq xlfd-fields (x-decompose-font-name font)))
 	    (if (string= "fontset"
 			 (aref xlfd-fields xlfd-regexp-registry-subnum))
 		(new-fontset font (x-complement-fontset-spec xlfd-fields nil))
-	      (let (fontset fontset-spec)
-		;; Create a fontset from FONT.  The name is also
-		;; generated from FONT.
+	      ;; Create a fontset from FONT.  The fontset name is
+	      ;; generated from FONT.  Create style variants of the
+	      ;; fontset too.  Font names in the variants are
+	      ;; generated automatially unless X resources
+	      ;; XXX.attribyteFont explicitly specify them.
+	      (let ((styles (mapcar 'car x-style-funcs-alist))
+		    (faces '(bold italic bold-italic))
+		    face face-font fontset fontset-spec)
+		(while faces
+		  (setq face (car faces))
+		  (setq face-font (x-get-resource (concat (symbol-name face)
+							  ".attributeFont")
+						  "Face.AttributeFont"))
+		  (if face-font
+		      (setq styles (cons (cons face face-font)
+					 (delq face styles))))
+		  (setq faces (cdr faces)))
 		(aset xlfd-fields xlfd-regexp-foundry-subnum nil)
 		(aset xlfd-fields xlfd-regexp-family-subnum nil)
-		(aset xlfd-fields xlfd-regexp-adstyle-subnum nil)
-		(aset xlfd-fields xlfd-regexp-avgwidth-subnum nil)
 		(aset xlfd-fields xlfd-regexp-registry-subnum "fontset")
 		(aset xlfd-fields xlfd-regexp-encoding-subnum "startup")
+		;; The fontset name should have concrete values in
+		;; weight and slant field.
+		(let ((weight (aref xlfd-fields xlfd-regexp-weight-subnum))
+		      (slant (aref xlfd-fields xlfd-regexp-slant-subnum))
+		      xlfd-temp)
+		  (if (or (not weight) (string-match "[*?]*" weight))
+		      (progn
+			(setq xlfd-temp (x-decompose-font-name resolved-name))
+			(aset xlfd-fields xlfd-regexp-weight-subnum
+			      (aref xlfd-temp xlfd-regexp-weight-subnum))))
+		  (if (or (not slant) (string-match "[*?]*" slant))
+		      (progn
+			(or xlfd-temp
+			    (setq xlfd-temp
+				  (x-decompose-font-name resolved-name)))
+			(aset xlfd-fields xlfd-regexp-slant-subnum
+			      (aref xlfd-temp xlfd-regexp-slant-subnum)))))
 		(setq fontset (x-compose-font-name xlfd-fields))
-		(setq fontset-spec (concat fontset ", ascii:" font))
-		(create-fontset-from-fontset-spec fontset-spec t)
-		(setq fontset-alias-alist
-		      (cons (cons fontset font) fontset-alias-alist)))
-	      )))))
+		(create-fontset-from-fontset-spec
+		 (concat fontset ", ascii:" font) styles)
+		))))))
 
 ;; Sun expects the menu bar cut and paste commands to use the clipboard.
 ;; This has ,? to match both on Sunos and on Solaris.

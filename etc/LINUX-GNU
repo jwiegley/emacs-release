@@ -55,10 +55,10 @@ is.
 
 Most introductions to the "Linux system" acknowledge the role played
 by the GNU software components.  But they don't say that the system as
-a whole is a variant of the GNU system that the GNU project has been
-compiling for a decade.  They don't say that the goal of a free
-Unix-like system like this one came from the GNU project.  So most
-users don't know these things.
+a whole is a modified version of the GNU system that the GNU project
+has been developing and compiling since 1984.  They don't say that the
+goal of a free Unix-like system like this one came from the GNU
+project.  So most users don't know these things.
 
 Since human beings tend to correct their first impressions less than
 subsequent information calls for, those users who later learn about
@@ -99,7 +99,7 @@ additional proprietary software.
 We should not accept the idea of two separate communities for GNU and
 Linux.  Instead we should spread understanding that "Linux systems"
 are variants of the GNU system, and that the users of these systems
-are as GNU users as well as Linux users (users of the Linux kernel).
+are GNU users as well as Linux users (users of the Linux kernel).
 Users who know this will naturally tend to take a look at the GNU
 philosophy which brought these systems into existence.
 

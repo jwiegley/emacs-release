@@ -1,12 +1,12 @@
       GNU Project Electronic Mailing Lists and gnUSENET Newsgroups
-			 Last Updated 1 July 97
+			 Last Updated 26 November 1997
 
-	   Please report improvements to: gnu@prep.ai.mit.edu
+	   Please report improvements to: gnu@gnu.org
 
 * GNU mailing lists are also distributed as USENET news groups
 
 The mailing lists are gated both ways with the gnu.all newsgroups at
-ohio-state.edu.  The one-to-one correspondence is indicated below.  If
+uunet.  The one-to-one correspondence is indicated below.  If
 you don't know if your site is on USENET, ask your system administrator.
 If you are a USENET site and don't get the gnu.all newsgroups, please
 ask your USENET administrator to get them.  If he has your feeds ask
@@ -27,28 +27,25 @@ transport the mail from us to you.
 
 * How to subscribe to and report bugs in mailing lists
 
-Send messages ABOUT these lists, such as reports of mail problems, or
-requests to be added or removed, to help-gnu-emacs-request (or
+Send requests to be added or removed, to help-gnu-emacs-request (or
 info-gnu-request, bug-gdb-request, etc.), NOT to info-gnu-emacs (or
-info-gnu, etc.).  These <LIST_NAME>-request addresses go only to the
-people who can do something about your requests or problems, and thus
-avoids disturbing everyone else.
+info-gnu, etc.).  Most <LIST_NAME>-request addresses are now handled
+automagically by the SmartList program.
 
-Note that all GNU mailing lists are maintained by volunteers.  They get
-behind occasionally.  Wait at least 3 or 4 days before asking again.
-Thanks!
+If you need to report problems to a human, send mail to gnu@gnu.org
+explaining the problem.
 
 Many of the GNU mailing lists are very large and are received by many
 people.  Please don't send them anything that is not seriously important
-to all their readers.  All GNU mailing lists are unmoderated, mail
+to all their readers.  All GNU mailing lists are unmoderated mail
 reflectors, except info-gnu, info-gnu-emacs, info-gcc, info-g++,
 info-gnu-fortran.
 
 All addresses below are in internet format.  Consult the mail guru for
 your computer to figure out address syntaxes from other networks.  From
 UUCP machines:
-	..!ucbvax!prep.ai.mit.edu!ADDRESS
-	..!uunet!prep.ai.mit.edu!ADDRESS
+	..!ucbvax!gnu.org!ADDRESS
+	..!uunet!gnu.org!ADDRESS
 
 If a message you mail to a list is returned from a MAILER-DAEMON (often
 with the line:
@@ -63,11 +60,11 @@ already seen.  It also wastes computer and network resources.
 It is appropriate to send these to the -request address for a list, and
 ask them to check the problem out.
 
-* Send Specific Requests for Information to: gnu@prep.ai.mit.edu
+* Send Specific Requests for Information to: gnu@gnu.org
 
 Specific requests for information about obtaining GNU software, or GNU
 activities in Cambridge and elsewhere can be directed to:
-	gnu@prep.ai.mit.edu
+	gnu@gnu.org
 
 * General Information about all lists
 
@@ -80,7 +77,7 @@ somewhat larger postings (up to 10 parts of no more than 25,000
 characters each) are acceptable (assuming they are likely to be of
 interest to a reasonable number of people); if it is larger than that
 have it added to archive.cis.ohio-state.edu (the GNU Emacs Lisp ftp and
-uucp archive on and announce) its location there.  Good bug reports are
+uucp archive) and announce its location there.  Good bug reports are
 short.  See section '* General Information about bug-* lists and ...'
 for further details.
 
@@ -93,9 +90,12 @@ network congestion.
 
 The GNU mailing lists and newsgroups, like the GNU project itself, exist
 to promote the freedom to share software.  So don't use these lists to
-promote or recommend non-free software.  (Using them to post ordering
+promote or recommend non-free software or documentation, like
+proprietary books on GNU software.  (Using them to post ordering
 information is the ultimate faux pas.)  If there is no free program to
-do a certain task, then somebody should write one!
+do a certain task, then somebody should write one!  Similarly, free
+documentation that is inadequate should be improved--a way in which
+non-programmers can make a valuable contribution.
 
 * General Information about info-* lists
 
@@ -142,7 +142,7 @@ version number of the GNU program, as well as the operating system and
 machine the program was ran on (if the program doesn't have a version
 number, send the date of the latest entry in the file ChangeLog).  For
 GNU Emacs bugs, type "M-x emacs-version".  A debugger backtrace of any
-core dump, can also be useful.  Be careful to separate out hypothesis
+core dump can also be useful.  Be careful to separate out hypothesis
 from fact!  For bugs in GNU Emacs lisp, set variable debug-on-error to
 t, and re-enter the command(s) that cause the error message; Emacs will
 pop up a debug buffer if something is wrong; please include a copy of
@@ -165,14 +165,14 @@ bugs and make the improvements that everyone wants.  If you want help
 for yourself in particular, you may have to hire someone.  The GNU
 project maintains a list of people providing such services.  It is
 distributed with GNU Emacs in file etc/SERVICE, and can be requested
-from gnu@prep.ai.mit.edu.
+from gnu@gnu.org.
 
 Anything addressed to the implementors and maintainers of a GNU program
 via a bug-* list, should NOT be sent to the corresponding info-* or
 help-* list.
 
 Please DON'T post your bug reports on the gnu.*.bug newsgroups!  Mail
-them to bug-*@prep instead!  At first sight, it seems to make no
+them to bug-*@gnu.org instead!  At first sight, it seems to make no
 difference: anything sent to one will be propagated to the other; but:
 	- if you post on the newsgroup, the information about how to
 reach you is lost in the message that goes on the mailing list.  It
@@ -189,13 +189,18 @@ maintainers will never see the bug report.
 
 And please DON'T post your GNU bug reports to comp.* or other gnu.*
 newsgroups, they never make it to the GNU maintainers at all.  Please
-mail them to bug-*@prep instead!
+mail them to bug-*@gnu.org instead!
 
 See section '* General Information about all lists'.
 
-* info-gnu-request@prep.ai.mit.edu to subscribe to info-gnu
+* Mailing list archives
+
+The GNU mailing lists are archived at
+ftp://ftp-mailing-list-archives.gnu.org/
+
+* info-gnu-request@gnu.org to subscribe to info-gnu
 ** gnUSENET newsgroup: gnu.announce
-** Send announcements to: info-gnu@prep.ai.mit.edu
+** Send announcements to: info-gnu@gnu.org
 
 This list distributes progress reports on the GNU Project.  It is also
 used by the GNU Project to ask people for various kinds of help.  It is
@@ -207,9 +212,9 @@ have been sent to another list.
 
 See section '* General Information about info-* lists'.
 
-* gnu-misc-discuss-request@prep.ai.mit.edu to subscribe to gnu-misc-discuss
+* gnu-misc-discuss-request@gnu.org to subscribe to gnu-misc-discuss
 ** gnUSENET newsgroup: gnu.misc.discuss
-** Send contributions to: gnu-misc-discuss@prep.ai.mit.edu
+** Send contributions to: gnu-misc-discuss@gnu.org
 
 This list is for serious discussion of freed software, the GNU Project,
 the GNU Manifesto, and their implications.  It's THE place for
@@ -249,9 +254,9 @@ gnu-misc-discuss is likely to be less useful than sending them to the
 appropriate mailing list or gnUSENET newsgroup, since more technical
 people read those.
 
-* bug-gnu-sql-request@prep.ai.mit.edu to subscribe to bug-gnu-sql
+* bug-gnu-sql-request@gnu.org to subscribe to bug-gnu-sql
 ** gnUSENET newsgroup: NONE PLANNED
-** GNU-SQL BUG reports to: bug-gnu-sql@prep.ai.mit.edu
+** GNU-SQL BUG reports to: bug-gnu-sql@gnu.org
 
 This list distributes, to the active maintainers of GNU's SQL (GNU's SQL
 full scale database server), bug reports and fixes for, and suggestions
@@ -263,9 +268,9 @@ There are no other GNU mailing lists or gnUSENET newsgroups for GNU's SQL.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* bug-guile-request@prep.ai.mit.edu to subscribe to bug-guile
+* bug-guile-request@gnu.org to subscribe to bug-guile
 ** gnUSENET newsgroup: NONE PLANNED
-** GUILE BUG reports to: bug-guile@prep.ai.mit.edu
+** GUILE BUG reports to: bug-guile@gnu.org
 
 This list distributes, to the active maintainers of GUILE (GNU's
 Ubiquitous Extension Language), bug reports and fixes for, and suggestions for
@@ -276,9 +281,9 @@ There are no other GNU mailing lists or gnUSENET newsgroups for GUILE .
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* guile-sources-request@prep.ai.mit.edu to subscribe to guile-sources
+* guile-sources-request@gnu.org to subscribe to guile-sources
 ** gnUSENET newsgroup: NONE PLANNED
-** Guile source code to: guile-sources@prep.ai.mit.edu
+** Guile source code to: guile-sources@gnu.org
 
 This list will be for the posting, by their authors, of GUILE, Scheme,
 and C sources and patches that improve Guile.  Its contents will be
@@ -309,9 +314,9 @@ If the requested source is very long (>10k bytes) send mail offering to
 send it.  This prevents the requester from getting many redundant copies
 and saves network bandwidth.
 
-* bug-gnustep-request@prep.ai.mit.edu to subscribe to bug-gnustep
+* bug-gnustep-request@gnu.org to subscribe to bug-gnustep
 ** gnUSENET newsgroup: gnu.gnustep.bug
-** Gnustep bug reports to: bug-gnustep@prep.ai.mit.edu
+** Gnustep bug reports to: bug-gnustep@gnu.org
 ** FAQ-URL: none known
 ** FAQ-Archive-name: none known
 ** FAQ-Posting-frequency: none known
@@ -324,35 +329,35 @@ Subscribers to bug-gnustep get all info-gnustep messages.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* help-gnustep-request@prep.ai.mit.edu to subscribe to help-gnustep
+* help-gnustep-request@gnu.org to subscribe to help-gnustep
 ** gnUSENET newsgroup: gnu.gnustep.help	
-** Send contributions to: help-gnustep@prep.ai.mit.edu
+** Send contributions to: help-gnustep@gnu.org
 ** FAQ-URL: none known
 ** FAQ-Archive-name: none known
 ** FAQ-Posting-frequency: none known
 
 This list is the place for users and installers of the GNUstep to ask
-for help.  Please send bug reports to bug-gnustep@prep.ai.mit.edu
+for help.  Please send bug reports to bug-gnustep@gnu.org
 instead of posting them here.
 
 See section '* General Information about help-* lists'.
 
-* discuss-gnustep-request@prep.ai.mit.edu to subscribe to discuss-gnustep
+* discuss-gnustep-request@gnu.org to subscribe to discuss-gnustep
 ** gnUSENET newsgroup: gnu.gnustep.discuss	
-** Send contributions to: discuss-gnustep@prep.ai.mit.edu
+** Send contributions to: discuss-gnustep@gnu.org
 ** FAQ-URL: none known
 ** FAQ-Archive-name: none known
 ** FAQ-Posting-frequency: none known
 
 This list is the place for GNUstep users and developers to discuss
-GNUstep.  Please send bug reports to bug-gnustep@prep.ai.mit.edu
+GNUstep.  Please send bug reports to bug-gnustep@gnu.org
 instead of posting them here.
 
 See section '* General Information about discuss-* lists'.
 
-* info-gnustep-request@prep.ai.mit.edu to subscribe to info-gnustep
+* info-gnustep-request@gnu.org to subscribe to info-gnustep
 ** gnUSENET newsgroup: gnu.gnustep.announce
-** Send announcements to: info-gnustep@prep.ai.mit.edu
+** Send announcements to: info-gnustep@gnu.org
 ** FAQ-URL: none known
 ** FAQ-Archive-name: none known
 ** FAQ-Posting-frequency: none known
@@ -365,51 +370,51 @@ can be answered by the moderator without bothering the list, or should
 have been sent to another list.
 
 Do not report GNUstep bugs to info-gnustep, help-gnustep, or
-discuss-gnustep, mail them to bug-gnustep@prep.ai.mit.edu instead.
+discuss-gnustep, mail them to bug-gnustep@gnu.org instead.
 
 See section '* General Information about info-* lists'.
 
-* bug-hurd-request@prep.ai.mit.edu to subscribe to bug-hurd
-** gnUSENET newsgroup: gnu.hurd.bug
-** Hurd bug reports to: bug-hurd@prep.ai.mit.edu
+* bug-hurd-request@gnu.org to subscribe to bug-hurd
+** gnUSENET newsgroup: NONE
+** Hurd bug reports to: bug-hurd@gnu.org
 
 This list distributes bug reports for, fixes for bugs in, and
 suggestions for improvements in the GNU Hurd to its active developers.
 
 No info-gnu-hurd list is planned.  Announcements about the GNU Hurd will
-be made to the list info-gnu@prep.ai.mit.edu (see above).
+be made to the list info-gnu@gnu.org (see above).
 
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* help-hurd-request@prep.ai.mit.edu to subscribe to help-hurd
-** gnUSENET newsgroup: gnu.hurd.help
-** Send contributions to: help-hurd@prep.ai.mit.edu
+* help-hurd-request@gnu.org to subscribe to help-hurd
+** gnUSENET newsgroup: NONE
+** Send contributions to: help-hurd@gnu.org
 
 This list is the place for users and installers of the GNU Hurd to ask
 for help.
 
 No info-gnu-hurd list is planned.  Announcements about the GNU Hurd will
-be made to the list info-gnu@prep.ai.mit.edu (see above).
+be made to the list info-gnu@gnu.org (see above).
 
 See section '* General Information about help-* lists'.
 
-* hurd-ann-request@prep.ai.mit.edu IS NOW DEFUNCT
+* hurd-ann-request@gnu.org IS NOW DEFUNCT
 ** gnUSENET newsgroup: NEVER EXISTED
-** DEAD address: hurd-ann@prep.ai.mit.edu
+** DEAD address: hurd-ann@gnu.org
 
 This list is dead.  Announcements about the GNU Hurd will be made to the
-list info-gnu@prep.ai.mit.edu (see above).
+list info-gnu@gnu.org (see above).
 
-* bug-gnu-emacs-request@prep.ai.mit.edu to subscribe to bug-gnu-emacs
+* bug-gnu-emacs-request@gnu.org to subscribe to bug-gnu-emacs
 ** gnUSENET newsgroup: gnu.emacs.bug
-** Gnu Emacs bug reports to: bug-gnu-emacs@prep.ai.mit.edu
+** Gnu Emacs bug reports to: bug-gnu-emacs@gnu.org
 
 This list distributes, to the active maintainers of GNU Emacs, bug
 reports and fixes for, and suggestions for improvements in GNU Emacs.
 
 Send bugs in the GNU Emacs Lisp reference manual to:
-	lisp-manual-bugs@prep.ai.mit.edu
+	lisp-manual-bugs@gnu.org
 
 lisp-manual-bugs is neither a mailing list nor a gnUSENET newsgroup.
 It's just a bug-reporting address.
@@ -419,9 +424,9 @@ Subscribers to bug-gnu-emacs get all info-gnu-emacs messages.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* gnu-emacs-sources-request@prep.ai.mit.edu to subscribe to gnu-emacs-sources
+* gnu-emacs-sources-request@gnu.org to subscribe to gnu-emacs-sources
 ** gnUSENET newsgroup: gnu.emacs.sources
-** Gnu Emacs source code to: gnu-emacs-sources@prep.ai.mit.edu
+** Gnu Emacs source code to: gnu-emacs-sources@gnu.org
 
 This list/newsgroup will be for the posting, by their authors, of Emacs
 Lisp and C sources and patches that improve GNU Emacs.  Its contents
@@ -455,9 +460,9 @@ If the requested source is very long (>10k bytes) send mail offering to
 send it.  This prevents the requester from getting many redundant copies
 and saves network bandwidth.
 
-* help-gnu-emacs-request@prep.ai.mit.edu to subscribe to help-gnu-emacs
+* help-gnu-emacs-request@gnu.org to subscribe to help-gnu-emacs
 ** gnUSENET newsgroup: gnu.emacs.help	(and one-way into comp.emacs)
-** Send contributions to: help-gnu-emacs@prep.ai.mit.edu
+** Send contributions to: help-gnu-emacs@gnu.org
 
 This list is the place for users and installers of GNU Emacs to ask for
 help.  Please send bug reports to bug-gnu-emacs instead of posting them
@@ -484,13 +489,13 @@ on a system which Emacs is supposed to work on (see etc/MACHINES) and it
 does not work at all, or if an editing command does not behave as it is
 documented to behave, this is a bug.  Don't send bug reports to
 help-gnu-emacs (gnu.emacs.help) or post them to comp.emacs; mail them to
-bug-gnu-emacs@prep.ai.mit.edu instead.
+bug-gnu-emacs@gnu.org instead.
 
 See section '* General Information about help-* lists'.
 
-* info-gnu-emacs-request@prep.ai.mit.edu to subscribe to info-gnu-emacs
+* info-gnu-emacs-request@gnu.org to subscribe to info-gnu-emacs
 ** gnUSENET newsgroup: gnu.emacs.announce	(and one-way into comp.emacs)
-** Send announcements to: info-gnu-emacs@prep.ai.mit.edu
+** Send announcements to: info-gnu-emacs@gnu.org
 
 This list distributes announcements and progress reports on GNU Emacs.
 It is NOT for general discussion; please use help-gnu-emacs for that.
@@ -506,21 +511,21 @@ sites may receive all articles from comp.emacs by making their request
 to: unix-emacs-request@bbn.com
 
 Do not report GNU Emacs bugs to info-gnu-emacs or comp.emacs, instead
-mail them to bug-gnu-emacs@prep.ai.mit.edu.
+mail them to bug-gnu-emacs@gnu.org.
 
 See section '* General Information about info-* lists'.
 
-* vms-gnu-emacs-request@prep.ai.mit.edu to subscribe
+* vms-gnu-emacs-request@gnu.org to subscribe
 ** gnUSENET newsgroup: gnu.emacs.vms
-** Send contributions to: vms-gnu-emacs@prep.ai.mit.edu
+** Send contributions to: vms-gnu-emacs@gnu.org
 
 This list was a working group who did the initial port of GNU Emacs to
 the VMS operating system.  It still discusses problems and solutions to
 the VMS port and the distribution of it.
 
-* bug-bash-request@prep.ai.mit.edu to subscribe to bug-bash
+* bug-bash-request@gnu.org to subscribe to bug-bash
 ** gnUSENET newsgroup: gnu.bash.bug
-** BASH bug reports to: bug-bash@prep.ai.mit.edu
+** BASH bug reports to: bug-bash@gnu.org
 
 This list distributes, to the active maintainers of BASH (the Bourne
 Again SHell), bug reports and fixes for, and suggestions for
@@ -535,9 +540,9 @@ There are no other GNU mailing lists or gnUSENET newsgroups for BASH.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* bug-gdb-request@prep.ai.mit.edu to subscribe to bug-gdb
+* bug-gdb-request@gnu.org to subscribe to bug-gdb
 ** gnUSENET newsgroup: gnu.gdb.bug
-** GDB bug reports to: bug-gdb@prep.ai.mit.edu
+** GDB bug reports to: bug-gdb@gnu.org
 
 This list distributes, to the active maintainers of GDB (Gnu's
 DeBugger), bug reports and fixes for, and suggestions for improvements
@@ -548,9 +553,9 @@ There are no other GNU mailing lists or gnUSENET newsgroups for GDB.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* bug-octave-request@che.utexas.edu to subscribe to bug-octave
+* bug-octave-request@bevo.che.utexas.edu to subscribe to bug-octave
 ** gnUSENET newsgroup: NONE PLANNED
-** Octave bug reports to: bug-octave@che.utexas.edu
+** Octave bug reports to: bug-octave@bevo.che.utexas.edu
 
 This list distributes, to the active maintainers of Octave (a system
 for numerical computations), bug reports and fixes for, and
@@ -562,9 +567,9 @@ See section '* General Information about bug-* lists and reporting
 program bugs'.
 
 
-* help-octave-request@che.utexas.edu to subscribe to help-octave
+* help-octave-request@bevo.che.utexas.edu to subscribe to help-octave
 ** gnUSENET newsgroup: NONE PLANNED
-** Send contributions to: help-octave@che.utexas.edu
+** Send contributions to: help-octave@bevo.che.utexas.edu
 
 This list is the place for users and installers of Octave to ask for
 help.  Please send bug reports to bug-octave instead of posting them
@@ -578,9 +583,82 @@ help-octave; mail them to bug-octave@che.utexas.edu instead.
 
 See section '* General Information about help-* lists'.
 
-* bug-gcc-request@prep.ai.mit.edu to subscribe to bug-gcc
+* bug-bison-request@gnu.org to subscribe to bug-bison
+** gnUSENET newsgroup: NONE
+** Bison bug reports to: bug-bison@gnu.org
+
+This list distributes, to the active maintainers of Bison
+bug reports and fixes for, and suggestions for improvements
+in Bison.  User discussion of Bison bugs occurs here.
+
+See section '* General Information about bug-* lists and reporting
+program bugs'.
+
+* help-bison-request@gnu.org to subscribe to help-bison
+** gnUSENET newsgroup: NONE
+** Send contributions to: help-bison@gnu.org
+
+This list is the place for users and installers of Bison
+to ask for help.  Please send bug reports to bug-bison instead
+of posting them here.
+
+See section '* General Information about help-* lists'.
+
+* bug-make-request@gnu.org to subscribe to bug-make
+** gnUSENET newsgroup: NONE
+** Make bug reports to: bug-make@gnu.org
+
+This list distributes, to the active maintainers of GNU make
+bug reports and fixes for, and suggestions for improvements
+in GNU make.  User discussion of GNU make bugs occurs here.
+
+See section '* General Information about bug-* lists and reporting
+program bugs'.
+
+* help-make-request@gnu.org to subscribe to help-make
+** gnUSENET newsgroup: NONE
+** Send contributions to: help-make@gnu.org
+
+This list is the place for users and installers of GNU make
+to ask for help.  Please send bug reports to bug-make instead
+of posting them here.
+
+See section '* General Information about help-* lists'.
+
+* help-flex-request@gnu.org to subscribe to help-flex
+** gnUSENET newsgroup: NONE
+** Send contributions to: help-flex@gnu.org
+
+This list is the place for users and installers of Flex
+to ask for help.  Please send bug reports to bug-gnu-utils instead
+of posting them here.
+
+See section '* General Information about help-* lists'.
+
+* bug-rcs-request@gnu.org to subscribe to bug-rcs
+** gnUSENET newsgroup: NONE
+** RCS bug reports to: bug-rcs@gnu.org
+
+This list distributes, to the active maintainers of RCS
+bug reports and fixes for, and suggestions for improvements
+in RCS.  User discussion of RCS bugs occurs here.
+
+See section '* General Information about bug-* lists and reporting
+program bugs'.
+
+* help-rcs-request@gnu.org to subscribe to help-rcs
+** gnUSENET newsgroup: NONE
+** Send contributions to: help-rcs@gnu.org
+
+This list is the place for users and installers of RCS
+to ask for help.  Please send bug reports to bug-rcs instead
+of posting them here.
+
+See section '* General Information about help-* lists'.
+
+* bug-gcc-request@gnu.org to subscribe to bug-gcc
 ** gnUSENET newsgroup: gnu.gcc.bug
-** GCC bug reports to: bug-gcc@prep.ai.mit.edu
+** GCC bug reports to: bug-gcc@gnu.org
 
 This list distributes bug reports for, fixes for bugs in, and
 suggestions for improvements in the GNU C Compiler to its active
@@ -600,9 +678,9 @@ Subscribers to bug-gcc get all info-gcc messages.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* help-gcc-request@prep.ai.mit.edu to subscribe to help-gcc
+* help-gcc-request@gnu.org to subscribe to help-gcc
 ** gnUSENET newsgroup: gnu.gcc.help
-** Send contributions to: help-gcc@prep.ai.mit.edu
+** Send contributions to: help-gcc@gnu.org
 
 This list is the place for users and installers of the GNU C Compiler to
 ask for help.
@@ -611,13 +689,13 @@ If gcc crashes, or if you build gcc following the standard procedure on
 a system which gcc is supposed to work on (see config.sub) and it does
 not work at all, or if an command line option does not behave as it is
 documented to behave, this is a bug.  Don't send bug reports to help-gcc
-(gnu.gcc.help); mail them to bug-gcc@prep.ai.mit.edu instead.
+(gnu.gcc.help); mail them to bug-gcc@gnu.org instead.
 
 See section '* General Information about help-* lists'.
 
-* info-gcc-request@prep.ai.mit.edu to subscribe to info-gcc
+* info-gcc-request@gnu.org to subscribe to info-gcc
 ** gnUSENET newsgroup: gnu.gcc.announce
-** Send announcements to: info-gcc@prep.ai.mit.edu
+** Send announcements to: info-gcc@gnu.org
 
 This list distributes announcements and progress reports on the GNU C
 Compiler.  It is NOT for general discussion; please use help-gcc for
@@ -645,9 +723,9 @@ port of GNU software to the Intel 960 microprocessor.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* bug-glibc-request@prep.ai.mit.edu to subscribe to bug-glibc
+* bug-glibc-request@gnu.org to subscribe to bug-glibc
 ** gnUSENET newsgroup: gnu.glibc.bug
-** GNU C Library bug reports to: bug-glibc@prep.ai.mit.edu
+** GNU C Library bug reports to: bug-glibc@gnu.org
 
 This list distributes, to the active maintainers of glibc (GNU's C
 library), bug reports and fixes for, and suggestions for improvements in
@@ -662,28 +740,28 @@ C Library.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* bug-g++-request@prep.ai.mit.edu to subscribe to bug-g++
+* bug-g++-request@gnu.org to subscribe to bug-g++
 ** gnUSENET newsgroup: gnu.g++.bug
-** G++ bug reports to: bug-g++@prep.ai.mit.edu
+** G++ bug reports to: bug-g++@gnu.org
 
 This list distributes bug reports for, fixes for bugs in, and
 suggestions for improvements in the GNU C++ Compiler to its active
 developers.
 
 G++ uses the GNU C-Compiler back end.  Active developers may wish to
-subscribe to bug-gcc@prep.ai.mit.edu as well.
+subscribe to bug-gcc@gnu.org as well.
 
 Subscribers to bug-g++ get all info-g++ messages.
 
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* help-g++-request@prep.ai.mit.edu to subscribe to help-g++
+* help-g++-request@gnu.org to subscribe to help-g++
 ** gnUSENET newsgroup: gnu.g++.help	(and one-way into comp.lang.c++)
-** Send contributions to: help-g++@prep.ai.mit.edu
+** Send contributions to: help-g++@gnu.org
 
 This list is the place for users and installers of the GNU C++ Compiler
-to ask for help.  Please send bug reports to bug-g++@prep.ai.mit.edu
+to ask for help.  Please send bug reports to bug-g++@gnu.org
 instead of posting them here.
 
 help-g++ is also gated one way to USENET's newsgroup comp.lang.c++.
@@ -692,9 +770,9 @@ not gnu.g++.help.
 
 See section '* General Information about help-* lists'.
 
-* info-g++-request@prep.ai.mit.edu to subscribe to info-g++
+* info-g++-request@gnu.org to subscribe to info-g++
 ** gnUSENET newsgroup: gnu.g++.announce	(and one-way into comp.lang.c++)
-** Send announcements to: info-g++@prep.ai.mit.edu
+** Send announcements to: info-g++@gnu.org
 
 This list distributes announcements and progress reports on the GNU C++
 Compiler.  It is NOT for general discussion; please use help-g++ for
@@ -709,13 +787,13 @@ one-way gating is done for users whose sites get comp.lang.c++, but not
 gnu.g++.announce.
 
 Do not report g++ bugs to info-g++ or comp.lang.c++, mail them to
-bug-g++@prep.ai.mit.edu instead.
+bug-g++@gnu.org instead.
 
 See section '* General Information about info-* lists'.
 
-* bug-lib-g++-request@prep.ai.mit.edu to subscribe to bug-lib-g++
+* bug-lib-g++-request@gnu.org to subscribe to bug-lib-g++
 ** gnUSENET newsgroup: gnu.g++.lib.bug
-** lib-g++ bug reports to: bug-lib-g++@prep.ai.mit.edu
+** lib-g++ bug reports to: bug-lib-g++@gnu.org
 
 This list distributes, to the active maintainers of libg++ (GNU's
 library for C++), bug reports and fixes for, and suggestions for
@@ -730,9 +808,9 @@ G++ Library.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* info-gnu-fortran-request@prep.ai.mit.edu to subscribe to info-gnu-fortran
+* info-gnu-fortran-request@gnu.org to subscribe to info-gnu-fortran
 ** gnUSENET newsgroup: NONE YET
-** Send announcements to: info-gnu-fortran@prep.ai.mit.edu
+** Send announcements to: info-gnu-fortran@gnu.org
 
 This list is for progress reports about the GNU Fortran compiler.  In
 the future it will also be used for release notices.
@@ -749,9 +827,9 @@ See section '* General Information about info-* lists'.
 There are no other GNU mailing lists or gnUSENET newsgroups for GNU
 Fortran (yet).
 
-* bug-oleo-request@prep.ai.mit.edu to subscribe to bug-oleo
+* bug-oleo-request@gnu.org to subscribe to bug-oleo
 ** gnUSENET newsgroup: NONE PLANNED
-** Oleo bug reports to: bug-oleo@prep.ai.mit.edu
+** Oleo bug reports to: bug-oleo@gnu.org
 
 This list distributes, to the active maintainers of Oleo (the GNU
 spreadsheet), bug reports and fixes for, and suggestions for
@@ -762,9 +840,9 @@ There are no other GNU mailing lists or gnUSENET newsgroups for Oleo .
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* bug-gmp-request@prep.ai.mit.edu to subscribe to bug-gmp
+* bug-gmp-request@gnu.org to subscribe to bug-gmp
 ** gnUSENET newsgroup: NONE PLANNED
-** gmp bug reports to: bug-gmp@prep.ai.mit.edu
+** gmp bug reports to: bug-gmp@gnu.org
 
 This list distributes, to the active maintainers of gmp (the GNU
 Multiple Precision Library), bug reports and fixes for, and suggestions
@@ -775,9 +853,9 @@ There are no other GNU mailing lists or gnUSENET newsgroups for gmp .
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* bug-pine-request@prep.ai.mit.edu to subscribe to bug-pine
+* bug-pine-request@gnu.org to subscribe to bug-pine
 ** gnUSENET newsgroup: NONE PLANNED
-** pine bug reports to: bug-pine@prep.ai.mit.edu
+** pine bug reports to: bug-pine@gnu.org
 
 This list distributes, to the active maintainers of pine (the GNU
 version of the pine mail reader), bug reports and fixes for, and suggestions
@@ -788,9 +866,9 @@ There are no other GNU mailing lists or gnUSENET newsgroups for pine .
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* bug-cfengine-request@prep.ai.mit.edu to subscribe to bug-cfengine
+* bug-cfengine-request@gnu.org to subscribe to bug-cfengine
 ** gnUSENET newsgroup: gnu.cfengine.bug
-** cfengine bug reports to: bug-cfengine@prep.ai.mit.edu
+** cfengine bug reports to: bug-cfengine@gnu.org
 
 This list distributes, to the active maintainers of cfengine (configure
 BSD and System-5-like operating systems attached to a TCP/IP network),
@@ -800,9 +878,9 @@ User discussion of cfengine also occurs here.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* help-cfengine-request@prep.ai.mit.edu to subscribe to help-cfengine
+* help-cfengine-request@gnu.org to subscribe to help-cfengine
 ** gnUSENET newsgroup: gnu.cfengine.help
-** Send contributions to: help-cfengine@prep.ai.mit.edu
+** Send contributions to: help-cfengine@gnu.org
 
 This list is the place for users and installers of cfengine to ask for
 help.  Please send bug reports to bug-cfengine instead of posting them
@@ -810,7 +888,7 @@ here.
 
 This list is also used for announcements about cfengine and related
 programs, and small but important patches.  Announcements of cfengine
-releases are also made to info-gnu@prep.ai.mit.edu (see above)
+releases are also made to info-gnu@gnu.org (see above)
 
 Since help-cfengine is a large list, send it only those items that
 are seriously important to many people.
@@ -825,9 +903,9 @@ sites.
 See section '* General Information about help-* lists'.
 Also see section '* General Information about info-* lists'.
 
-* bug-gnu-smalltalk-request@prep.ai.mit.edu to subscribe to bug-gnu-smalltalk
+* bug-gnu-smalltalk-request@gnu.org to subscribe to bug-gnu-smalltalk
 ** gnUSENET newsgroup: gnu.smalltalk.bug
-** GNU Smalltalk bug reports to: bug-gnu-smalltalk@prep.ai.mit.edu
+** GNU Smalltalk bug reports to: bug-gnu-smalltalk@gnu.org
 
 GNU Smalltalk is the GNU project implementation of the Smalltalk language.
 
@@ -849,9 +927,9 @@ program bugs'.
 
 For people interested in working on GNU Smalltalk on the NeXT.
 
-* bug-groff-request@prep.ai.mit.edu to subscribe to bug-groff
+* bug-groff-request@gnu.org to subscribe to bug-groff
 ** gnUSENET newsgroup: gnu.groff.bug
-** GNU groff bug reports to: bug-groff@prep.ai.mit.edu
+** GNU groff bug reports to: bug-groff@gnu.org
 
 groff is the GNU project implementation, in C++, of the traditional Unix
 document formatting tools.
@@ -867,9 +945,9 @@ There are no other GNU mailing lists or gnUSENET newsgroups for groff.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* bug-ghostscript-request@prep.ai.mit.edu to subscribe to bug-ghostscript
+* bug-ghostscript-request@gnu.org to subscribe to bug-ghostscript
 ** gnUSENET newsgroup: gnu.ghostscript.bug
-** Ghostscript bug reports to: bug-ghostscript@prep.ai.mit.edu
+** Ghostscript bug reports to: bug-ghostscript@gnu.org
 
 Ghostscript is the GNU project implementation of a language and graphics
 library with a remarkable similarity to PostScript.
@@ -885,9 +963,9 @@ Ghostscript.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* bug-gnu-utils-request@prep.ai.mit.edu to subscribe to bug-gnu-utils
+* bug-gnu-utils-request@gnu.org to subscribe to bug-gnu-utils
 ** gnUSENET newsgroup: gnu.utils.bug
-** GNU Utilities bug reports to: bug-gnu-utils@prep.ai.mit.edu
+** GNU Utilities bug reports to: bug-gnu-utils@gnu.org
 
 This list distributes, to the active maintainers of these programs, bug
 reports and fixes for, and suggestions for improvements in GNU programs
@@ -896,35 +974,35 @@ not covered by other bug-* mailing lists/gnu.*.bug newsgroups.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* help-gnu-utils-request@prep.ai.mit.edu to subscribe to help-gnu-utils
+* help-gnu-utils-request@gnu.org to subscribe to help-gnu-utils
 ** gnUSENET newsgroup: gnu.utils.help
-** Send contributions to: help-gnu-utils@prep.ai.mit.edu
+** Send contributions to: help-gnu-utils@gnu.org
 
 This list is the place for users and installers of GNU programs not
 covered by other GNU mailing lists/gnu.* newsgroups to ask for help.
 
 Don't send bug reports to help-gnu-utils (gnu.utils.help); mail them to
-bug-gnu-utils@prep.ai.mit.edu instead.
+bug-gnu-utils@gnu.org instead.
 
 See section '* General Information about help-* lists'.
 
-* info-gnu-utils-request@prep.ai.mit.edu IS NOW DEFUNCT
+* info-gnu-utils-request@gnu.org IS NOW DEFUNCT
 ** a gnUSENET newsgroup bever existed
-** DEAD address: info-gnu-utils@prep.ai.mit.edu
+** DEAD address: info-gnu-utils@gnu.org
 
 This list is dead.  Announcements about GNU Utilities will be made to the
-list info-gnu@prep.ai.mit.edu (see above).
+list info-gnu@gnu.org (see above).
 
-* info-cvs-request@prep.ai.mit.edu to subscribe to info-cvs.
+* info-cvs-request@gnu.org to subscribe to info-cvs.
 ** USENET newsgroup: (none)
-** CVS discussions/questions to: info-cvs@prep.ai.mit.edu
+** CVS discussions/questions to: info-cvs@gnu.org
 
 This list is for discussion and dissemination of information about
 CVS.  Please check the FAQ before posting questions, however.
 
-* bug-cvs-request@prep.ai.mit.edu to subscribe to bug-cvs.
+* bug-cvs-request@gnu.org to subscribe to bug-cvs.
 ** USENET newsgroup: (none)
-** CVS bug reports to: bug-cvs@prep.ai.mit.edu
+** CVS bug reports to: bug-cvs@gnu.org
 
 This list distributes bug reports, fixes, and suggestions for
 improvements to the maintainers of CVS.
@@ -956,9 +1034,9 @@ network news reader for GNU Emacs (which also works with a news spool).
 English and Japanese are the official languages of the list.  GNUS is
 quite different than gnews.
 
-* info-gnus-english-request@prep.ai.mit.edu  to subscribe
+* info-gnus-english-request@gnu.org  to subscribe
 ** gnUSENET newsgroup: gnu.emacs.gnus
-** Send contributions to: info-gnus-english@prep.ai.mit.edu
+** Send contributions to: info-gnus-english@gnu.org
 
 The list has the same charter as info-gnus.  The difference is that
 English is the only official language of the list.
@@ -1027,9 +1105,9 @@ developments.  AUC TeX is a much enhanced LaTeX mode for GNU Emacs.
 
 The list is unmoderated.
 
-* bug-gnu-chess-request@prep.ai.mit.edu to subscribe to bug-gnu-chess
+* bug-gnu-chess-request@gnu.org to subscribe to bug-gnu-chess
 ** gnUSENET newsgroup: gnu.chess.bug
-** GNU Chess bug reports to: bug-gnu-chess@prep.ai.mit.edu
+** GNU Chess bug reports to: bug-gnu-chess@gnu.org
 
 This list directly accesses the GNU Chess developer's group.  If you
 have a *BUG* to report about the program, which can also include a
@@ -1040,15 +1118,15 @@ Subscribers to bug-gnu-chess get all info-gnu-chess messages.
 See section '* General Information about bug-* lists and reporting
 program bugs'.
 
-* help-gnu-chess-request@prep.ai.mit.edu IS NOW DEFUNCT
+* help-gnu-chess-request@gnu.org IS NOW DEFUNCT
 ** gnUSENET newsgroup: NONE PLANNED
-** DEAD address: help-gnu-chess@prep.ai.mit.edu
+** DEAD address: help-gnu-chess@gnu.org
 
-This list is dead.  Use info-gnu-chess@prep.ai.mit.edu/gnu.chess instead.
+This list is dead.  Use info-gnu-chess@gnu.org/gnu.chess instead.
 
-* info-gnu-chess-request@prep.ai.mit.edu to subscribe to info-gnu-chess
+* info-gnu-chess-request@gnu.org to subscribe to info-gnu-chess
 ** gnUSENET newsgroup: gnu.chess
-** Send contributions to: info-gnu-chess@prep.ai.mit.edu
+** Send contributions to: info-gnu-chess@gnu.org
 ** FAQ-URL: http://www.research.digital.com/SRC/personal/Tim_Mann/chess.html
 ** FAQ-Archive-name: games/chess/gnu-faq
 ** FAQ-Posting-frequency: monthly
@@ -1061,7 +1139,7 @@ of posting them here.
 
 This list is also used for announcements about GNU Chess and related
 programs, and small but important patches.  Announcements of GNU Chess
-releases are also made to info-gnu@prep.ai.mit.edu (see above)
+releases are also made to info-gnu@gnu.org (see above)
 
 Since info-gnu-chess is a large list, send it only those items that
 are seriously important to many people.
@@ -1076,9 +1154,9 @@ sites.
 See section '* General Information about help-* lists'.
 Also see section '* General Information about info-* lists'.
 
-* bug-gnu-shogi-request@prep.ai.mit.edu to subscribe to bug-gnu-shogi
+* bug-gnu-shogi-request@gnu.org to subscribe to bug-gnu-shogi
 ** gnUSENET newsgroup: NONE PLANNED
-** GNU Shogi bug reports to: bug-gnu-shogi@prep.ai.mit.edu
+** GNU Shogi bug reports to: bug-gnu-shogi@gnu.org
 
 This list directly accesses the GNU Shogi developer's group.  If you
 have a *BUG* to report about the program, which can also include a
@@ -1095,15 +1173,55 @@ captured piece can be reintroduced on the board by the capturing player
 (and used).  Due to this last difference from Western chess, a Shogi
 game never simplifies.
 
-* help-gnu-shogi-request@prep.ai.mit.edu IS NOW DEFUNCT
+* bug-mcsim-request@gnu.org to subscribe to bug-mcsim
+** gnUSENET newsgroup: None at present.
+** MCSim bug reports to: bug-mcsim@gnu.org
+
+This list is used for bug reports concerning MCSim, a general-
+purpose modeling and simulation program.  It is also for user
+discussion of bug fixes and patches.
+
+This list is unmoderated.
+
+See section '* General Information about bug-* lists and reporting
+program bugs'.
+
+* help-mcsim-request@gnu.org to subscribe to help-mcsim
+** gnUSENET newsgroup: None at present.
+** Send contributions to: help-mcsim@gnu.org
+
+This list is the place for users and installers of MCSim to ask for
+help.  Please send bug reports to bug-mcsim instead of posting them
+here.
+
+This list is also used for announcements about MCSim and related
+programs, and small but important patches.  Announcements of MCSim
+releases are also made to info-gnu@gnu.org (see above)
+
+* gpc-request@hut.fi to subscribe to gpc 
+** gnUSENET newsgroup: None at present.
+** Send contributions to: gpc@hut.fi
+
+This list is the user mailing list for GNU Pascal.  Announcements about
+GNU Pascal releases are sent to this list as well as to info-gnu@gnu.org.
+
+* automake-request@gnu.org to subscribe to automake
 ** gnUSENET newsgroup: NONE PLANNED
-** DEAD address: help-gnu-shogi@prep.ai.mit.edu
+** Send contributions to: automake@gnu.org
+
+The list can be used to discusse automake, autoconf, and related tools
+(eg libtool).  The discussion can range from simple "how-to" questions
+up to patches and configuration philosophy.
+
+* help-gnu-shogi-request@gnu.org IS NOW DEFUNCT
+** gnUSENET newsgroup: NONE PLANNED
+** DEAD address: help-gnu-shogi@gnu.org
 
 This list is dead.
 
-* info-gnu-shogi-request@prep.ai.mit.edu to subscribe to info-gnu-shogi
+* info-gnu-shogi-request@gnu.org to subscribe to info-gnu-shogi
 ** gnUSENET newsgroup: NONE PLANNED
-** Send contributions to: info-gnu-shogi@prep.ai.mit.edu
+** Send contributions to: info-gnu-shogi@gnu.org
 
 This list is the place for users and installers of GNU Shogi to ask for
 help.  This list is also used for games played by people or other
@@ -1113,7 +1231,7 @@ of posting them here.
 
 This list is also used for announcements about GNU Shogi and related
 programs, and small but important patches.  Announcements of GNU Shogi
-releases are also made to info-gnu@prep.ai.mit.edu (see above)
+releases are also made to info-gnu@gnu.org (see above)
 
 Since info-gnu-shogi is a large list, send it only those items that
 are seriously important to many people.
@@ -1138,7 +1256,7 @@ volunteers wrote, proofread and commented on the developing GNU Emacs
 Lisp programmers manual.
 
 Send bugs in the GNU Emacs Lisp reference manual to:
-	lisp-manual-bugs@prep.ai.mit.edu
+	lisp-manual-bugs@gnu.org
 
 lisp-manual-bugs is neither a mailing list nor a gnUSENET newsgroup.
 It's just a bug-reporting address.
@@ -1153,7 +1271,7 @@ administration and configuration of gnUSENET: the gnu.all alternative
 USENET hierarchy that carry the GNU mailing lists.
 
 Administrators of gnUSENET hosts receiving the gnu.all newsgroups are
-welcome to ask questions here or via e-mail of gnu@prep.ai.mit.edu.
+welcome to ask questions here or via e-mail of gnu@gnu.org.
 
 * no mailing list request
 ** gnUSENET newsgroup: gnu.gnusenet.test

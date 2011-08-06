@@ -1,6 +1,6 @@
 ;;; hexl.el --- edit a file in a hex dump format using the hexl filter.
 
-;; Copyright (C) 1989, 1994 Free Software Foundation, Inc.
+;; Copyright (C) 1989, 1994, 1998 Free Software Foundation, Inc.
 
 ;; Author: Keith Gabryelski <ag@wheaties.ai.mit.edu>
 ;; Maintainer: FSF
@@ -88,6 +88,12 @@ and \"-de\" when dehexlifying a buffer."
   :type 'string
   :group 'hexl)
 
+(defcustom hexl-follow-ascii t
+  "If non-nil then highlight the ASCII character corresponding to point."
+  :type 'boolean
+  :group 'hexl
+  :version "20.3")
+
 (defvar hexl-max-address 0
   "Maximum offset into hexl buffer.")
 
@@ -99,6 +105,10 @@ and \"-de\" when dehexlifying a buffer."
 (defvar hexl-mode-old-write-contents-hooks)
 (defvar hexl-mode-old-require-final-newline)
 (defvar hexl-mode-old-syntax-table)
+
+(defvar hexl-ascii-overlay nil
+  "Overlay used to highlight ASCII element corresponding to current point.")
+(make-variable-buffer-local 'hexl-ascii-overlay)
 
 ;; routines
 
@@ -229,7 +239,9 @@ You can use \\[hexl-find-file] to visit a file in hexl-mode.
     (add-hook 'after-revert-hook 'hexl-after-revert-hook nil t)
 
     (make-local-hook 'change-major-mode-hook)
-    (add-hook 'change-major-mode-hook 'hexl-maybe-dehexlify-buffer nil t))
+    (add-hook 'change-major-mode-hook 'hexl-maybe-dehexlify-buffer nil t)
+
+    (if hexl-follow-ascii (hexl-follow-ascii 1)))
   (run-hooks 'hexl-mode-hook))
 
 (defun hexl-after-revert-hook ()
@@ -291,6 +303,8 @@ With arg, don't unhexlify buffer."
 
   (remove-hook 'after-revert-hook 'hexl-after-revert-hook t)
   (remove-hook 'change-major-mode-hook 'hexl-maybe-dehexlify-buffer t)
+  (remove-hook 'post-command-hook 'hexl-follow-ascii-find t)
+  (setq hexl-ascii-overlay nil)
 
   (setq write-contents-hooks hexl-mode-old-write-contents-hooks)
   (setq require-final-newline hexl-mode-old-require-final-newline)
@@ -577,8 +591,8 @@ This discards the buffer's undo information."
        (or (y-or-n-p "Converting to hexl format discards undo info; ok? ")
 	   (error "Aborted")))
   (setq buffer-undo-list nil)
-  (let ((binary-process-output nil) ; for Ms-Dos
-	(binary-process-input buffer-file-type)
+  ;; Don't decode text in the ASCII part of `hexl' program output.
+  (let ((coding-system-for-read 'raw-text)
 	;; If the buffer was read with EOL conversions, be sure to use the
 	;; same conversions when passing the region to the `hexl' program.
 	(coding-system-for-write
@@ -601,9 +615,16 @@ This discards the buffer's undo information."
        (or (y-or-n-p "Converting from hexl format discards undo info; ok? ")
 	   (error "Aborted")))
   (setq buffer-undo-list nil)
-  (let ((binary-process-output buffer-file-type) ; for Ms-Dos
-	(binary-process-input nil)
-	(coding-system-for-read 'raw-text)
+  (let ((coding-system-for-write 'raw-text)
+	(coding-system-for-read
+	 (let ((eol-type (coding-system-eol-type buffer-file-coding-system)))
+	   (cond ((eq eol-type 1)
+		  'raw-text-dos)
+		 ((eq eol-type 2)
+		  'raw-text-mac)
+		 ((eq eol-type 0)
+		  'raw-text-unix)
+		 (t 'no-conversion))))
 	(buffer-undo-list t))
     (shell-command-on-region (point-min) (point-max) dehexlify-command t)))
 
@@ -702,6 +723,44 @@ This discards the buffer's undo information."
     (if (or (> num 255) (< num 0))
 	(error "Decimal number out of range")
       (hexl-insert-char num arg))))
+
+(defun hexl-follow-ascii (&optional arg)
+  "Toggle following ASCII in Hexl buffers.
+With prefix ARG, turn on following if and only if ARG is positive.
+When following is enabled, the ASCII character corresponding to the
+element under the point is highlighted.
+Customize the variable `hexl-follow-ascii' to disable this feature."
+  (interactive "P")
+  (let ((on-p (if arg 
+		  (> (prefix-numeric-value arg) 0)
+	       (not hexl-ascii-overlay))))
+
+    (make-local-hook 'post-command-hook)
+		    
+    (if on-p
+      ;; turn it on
+      (if (not hexl-ascii-overlay)
+	  (progn
+	    (setq hexl-ascii-overlay (make-overlay 1 1)
+		  hexl-follow-ascii t)
+	    (overlay-put hexl-ascii-overlay 'face 'highlight)
+	    (add-hook 'post-command-hook 'hexl-follow-ascii-find nil t)))
+      ;; turn it off
+      (if hexl-ascii-overlay
+	  (progn
+	    (delete-overlay hexl-ascii-overlay)
+	    (setq hexl-ascii-overlay nil
+		  hexl-follow-ascii nil)
+	    (remove-hook 'post-command-hook 'hexl-follow-ascii-find t)
+	    )))))
+
+(defun hexl-follow-ascii-find ()
+  "Find and highlight the ASCII element corresponding to current point."
+  (let ((pos (+ 51 
+		(- (point) (current-column))
+		(mod (hexl-current-address) 16))))
+    (move-overlay hexl-ascii-overlay pos (1+ pos))
+    ))
 
 ;; startup stuff.
 

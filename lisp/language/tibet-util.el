@@ -35,12 +35,7 @@
 ;;;###autoload
 (defun setup-tibetan-environment ()
   (interactive)
-  (setup-english-environment)
-  (setq coding-category-iso-8-2 'tibetan)
-
-  (setq-default buffer-file-coding-system 'iso-2022-7bit)
-
-  (setq default-input-method  "tibetan-wylie"))
+  (set-language-environment "Tibetan"))
 
 ;;; This function makes a transcription string for
 ;;; re-composing a character.
@@ -109,7 +104,7 @@
 ;;;
 ;;; Here are examples of the words "bsgrubs" and "h'uM"
 ;;;
-;;;            $(7"72%q`"U1"7"G(B         2$(7"H`#A`"U0"_1(B        
+;;;            $(7"7(B2$(7%q`"U(B1$(7"7"G(B         2$(7"H`#A`"U0"_(B1        
 ;;;
 ;;;                             M
 ;;;             b s b s         h
@@ -443,9 +438,9 @@ See also docstring of the function tibetan-compose-region."
 	(narrow-to-region (point) (+ (point) len))
 	(tibetan-compose-region (point-min) (point-max))
 	(set-buffer-modified-p buffer-modified-p)
-	(point-max))))
-  (make-local-variable 'tibetan-decomposed)
-  (setq tibetan-decomposed nil))
+	(make-local-variable 'tibetan-decomposed)
+	(setq tibetan-decomposed nil)
+	(- (point-max) (point-min))))))
 
 
 ;;;###autoload

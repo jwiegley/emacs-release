@@ -195,14 +195,18 @@
 (setup-special-charsets)
 
 
-;; These are tables for unifying characters on decoding and encoding.
-(setq standard-character-unification-table-for-decode
-      (make-unification-table
-       (list (cons (make-char 'japanese-jisx0208-1978)
-		   (make-char 'japanese-jisx0208))
-	     (cons (make-char 'latin-jisx0201) (make-char 'ascii)))))
+;; These are tables for translating characters on decoding and
+;; encoding.
+(define-translation-table
+  'oldjis-newjis-jisroman-ascii
+  (list (cons (make-char 'japanese-jisx0208-1978)
+	      (make-char 'japanese-jisx0208))
+	(cons (make-char 'latin-jisx0201) (make-char 'ascii))))
 
-(setq standard-character-unification-table-for-encode nil)
+(setq standard-translation-table-for-decode
+      (get 'oldjis-newjis-jisroman-ascii 'translation-table))
+
+(setq standard-translation-table-for-encode nil)
 
 
 ;;; Make fundamental coding systems.
@@ -211,55 +215,60 @@
 ;; `make-coding-system'.
 
 (put 'no-conversion 'coding-system
-     (vector nil ?= "Do no conversion" nil nil))
+     (vector nil ?= "Do no conversion"
+	     (list 'coding-category 'coding-category-binary
+		   'alias-coding-systems '(no-conversion))
+	     nil))
 (put 'no-conversion 'eol-type 0)
+(put 'coding-category-binary 'coding-systems '(no-conversion))
+(setq coding-system-list '(no-conversion))
+(setq coding-system-alist '(("no-conversion")))
 
 (define-coding-system-alias 'binary 'no-conversion)
 
-(put 'undecided-unix 'coding-system 'undecided)
-(put 'undecided-unix 'eol-type 0)
-(put 'undecided-unix 'eol-variant t)
-(put 'undecided-dos 'coding-system 'undecided)
-(put 'undecided-dos 'eol-type 1)
-(put 'undecided-dos 'eol-variant t)
-(put 'undecided-mac 'coding-system 'undecided)
-(put 'undecided-mac 'eol-type 2)
-(put 'undecided-mac 'eol-variant t)
 (put 'undecided 'coding-system
      (vector t ?- "No conversion on encoding, automatic conversion on decoding"
-	     nil nil))
+	     (list 'alias-coding-systems '(undecided))
+	     nil))
+(setq coding-system-list (cons 'undecided coding-system-list))
+(setq coding-system-alist (cons '("undecided") coding-system-alist))
 (put 'undecided 'eol-type
-     (vector 'undecided-unix
-	     'undecided-dos
-	     'undecided-mac))
+     (make-subsidiary-coding-system 'undecided))
 
 ;; Coding systems not specific to each language environment.
 
 (make-coding-system
  'emacs-mule 0 ?=
- "Emacs internal format used in buffer and string")
+ "Emacs internal format used in buffer and string"
+ nil
+ '((safe-charsets . t)))
 
 (make-coding-system
  'raw-text 5 ?t
- "Raw text, which means text contains random 8-bit codes.")
+ "Raw text, which means text contains random 8-bit codes."
+ nil
+ '((safe-charsets . t)))
 
 (make-coding-system
  'iso-2022-7bit 2 ?J
  "ISO 2022 based 7-bit encoding using only G0"
  '((ascii t) nil nil nil
-   short ascii-eol ascii-cntl seven))
+   short ascii-eol ascii-cntl seven)
+ '((safe-charsets . t)))
 
 (make-coding-system
  'iso-2022-7bit-ss2 2 ?$
  "ISO 2022 based 7-bit encoding using SS2 for 96-charset"
  '((ascii t) nil t nil
-   short ascii-eol ascii-cntl seven nil single-shift))
+   short ascii-eol ascii-cntl seven nil single-shift)
+ '((safe-charsets . t)))
 
 (make-coding-system
  'iso-2022-7bit-lock 2 ?&
  "ISO-2022 coding system using Locking-Shift for 96-charset"
  '((ascii t) t nil nil
-   nil ascii-eol ascii-cntl seven locking-shift))
+   nil ascii-eol ascii-cntl seven locking-shift)
+ '((safe-charsets . t)))
 
 (define-coding-system-alias 'iso-2022-int-1 'iso-2022-7bit-lock)
 
@@ -272,7 +281,11 @@
    (nil chinese-cns11643-3 chinese-cns11643-4 chinese-cns11643-5
 	chinese-cns11643-6 chinese-cns11643-7)
    short ascii-eol ascii-cntl seven locking-shift single-shift nil nil nil
-   init-bol))
+   init-bol)
+ '((safe-charsets ascii japanesejisx0208 japanese-jisx0208-1978 latin-jisx0201
+		  korean-ksc5601 chinese-gb2312 chinese-cns11643-1
+		  chinese-cns11643-2 chinese-cns11643-3 chinese-cns11643-4
+		  chinese-cns11643-5 chinese-cns11643-6 chinese-cns11643-7)))
 
 (define-coding-system-alias 'iso-2022-cjk 'iso-2022-7bit-lock-ss2)
 
@@ -280,27 +293,30 @@
  'iso-2022-8bit-ss2 2 ?@
  "ISO 2022 based 8-bit encoding using SS2 for 96-charset"
  '((ascii t) nil t nil
-   nil ascii-eol ascii-cntl nil nil single-shift))
+   nil ascii-eol ascii-cntl nil nil single-shift)
+ '((safe-charsets . t)))
 
 (make-coding-system
  'iso-safe 2 ?-
  "Convert all characters but ASCII to `?'."
  '(ascii nil nil nil
-   nil ascii-eol ascii-cntl nil nil nil nil nil nil nil nil t))
+   nil ascii-eol ascii-cntl nil nil nil nil nil nil nil nil t)
+ '((safe-charsets ascii)))
 
-;; Use iso-safe for terminal output if some other coding system is
+;; Use iso-safe for terminal output if some other coding system is not
 ;; specified explicitely.
 (set-safe-terminal-coding-system-internal 'iso-safe)
 
 ;; The other coding-systems are defined in each language specific
 ;; section of languages.el.
 
-;; Setting coding system `undecided' for reading any files.  Though,
-;; compiled Emacs Lisp files (*.elc) should never be decoded nor
-;; encoded.  tar files too.
+;; Normally, set coding system to `undecided' before reading a file.
+;; Compiled Emacs Lisp files (*.elc) are not decoded at all,
+;; but we regard them as containing multibyte characters.
+;; Tar files are not decoded at all, but we treat them as raw bytes.
 
 (setq file-coding-system-alist
-      '(("\\.elc$" . (no-conversion . no-conversion))
+      '(("\\.elc$" . (emacs-mule . emacs-mule))
 	("\\(\\`\\|/\\)loaddefs.el$" . (no-conversion . no-conversion))
 	("\\.tar$" . (no-conversion . no-conversion))
 	("" . (undecided . nil))))
@@ -316,24 +332,28 @@
 (setq coding-category-emacs-mule	'emacs-mule
       coding-category-sjis		'japanese-shift-jis
       coding-category-iso-7		'iso-2022-7bit
+      coding-category-iso-7-tight	'iso-2022-jp
       coding-category-iso-8-1		'iso-latin-1
-      coding-category-iso-8-2		'japanese-iso-8bit
+      coding-category-iso-8-2		'iso-latin-1
       coding-category-iso-7-else	'iso-2022-7bit-lock
       coding-category-iso-8-else	'iso-2022-8bit-ss2
+      coding-category-ccl		nil
       coding-category-big5		'chinese-big5
       coding-category-raw-text		'raw-text
       coding-category-binary		'no-conversion)
 
 (set-coding-priority
- '(coding-category-iso-7
-   coding-category-iso-8-1
+ '(coding-category-iso-8-1
    coding-category-iso-8-2
+   coding-category-iso-7-tight
+   coding-category-iso-7
    coding-category-iso-7-else
    coding-category-iso-8-else
    coding-category-emacs-mule
    coding-category-raw-text
    coding-category-sjis 
    coding-category-big5
+   coding-category-ccl
    coding-category-binary))
 
 

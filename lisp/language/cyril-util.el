@@ -27,23 +27,32 @@
 (defun setup-cyrillic-iso-environment ()
   "Setup multilingual environment (MULE) for Cyrillic ISO-8859-5 users."
   (interactive)
-  (setup-8-bit-environment "Cyrillic-ISO" 'cyrillic-iso8859-5
-			   'cyrillic-iso-8bit "cyrillic-yawerty"))
+  (set-language-environment "Cyrillic-ISO"))
 
 ;;;###autoload
 (defun setup-cyrillic-koi8-environment ()
   "Setup multilingual environment (MULE) for Cyrillic KOI8 users."
   (interactive)
-  (setup-8-bit-environment "Cyrillic-KOI8" 'cyrillic-iso8859-5 'cyrillic-koi8
-			   "cyrillic-yawerty"))
+  (set-language-environment "Cyrillic-KOI8"))
 
 ;;;###autoload
 (defun setup-cyrillic-alternativnyj-environment ()
   "Setup multilingual environment (MULE) for Cyrillic ALTERNATIVNYJ users."
   (interactive)
-  (setup-8-bit-environment "Cyrillic" 'cyrillic-iso8859-5
-			   'cyrillic-alternativnyj "cyrillic-yawerty")
-  (setq coding-category-raw-text 'cyrillic-alternativnyj))
+  (set-language-environment "Cyrillic-ALT"))
+
+;;;###autoload
+(defun cyrillic-encode-koi8-r-char (char)
+  "Return KOI8-R external character code of CHAR if appropriate."
+  (aref (char-table-extra-slot cyrillic-koi8-r-nonascii-translation-table 0)
+	char))
+
+;;;###autoload
+(defun cyrillic-encode-alternativnyj-char (char)
+  "Return ALTERNATIVNYJ external character code of CHAR if appropriate."
+  (aref (char-table-extra-slot
+	 cyrillic-alternativnyj-nonascii-translation-table 0)
+	char))
 
 
 ;; Display 

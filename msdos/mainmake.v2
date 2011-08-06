@@ -30,32 +30,40 @@
 #      Still more severe - delete backup and autosave files, too.
 
 # Generate a full pathname of the top-level installation directory
-topdir := $(subst \,/,$(shell cd))
+top_srcdir := $(subst \,/,$(shell cd))
 
-all:	lib-src src
+# Find out which version of Emacs this is.
+version := ${shell sed -n -e '/(defconst emacs-version/s/^[^"]*\("[^"]*"\).*/\1/p' lisp/version.el}
+
+all:	lib-src src man
 
 lib-src: FRC
 	cd lib-src
-	$(MAKE)
+	$(MAKE) top_srcdir=${top_srcdir} version=${version}
 	cd ..
 
 src: FRC
 	cd src
-	$(MAKE)
-	redir -o gdb.sed echo '/-geometry/s,^.*,set environment HOME $(topdir),'
+	$(MAKE) top_srcdir=${top_srcdir}
+	redir -o gdb.sed echo '/-geometry/s,^.*,set environment HOME $(top_srcdir),'
 	redir -oa gdb.sed echo '/environment *TERM/s/^.*/set environment TERM internal/'
 	redir -oa gdb.sed echo '/x_error_quitter/s/^.*/set environment NAME root/'
 	redir -o gdb.tmp sed -f gdb.sed _gdbinit
 	redir -oa gdb.tmp echo 'set environment USER root'
-	redir -oa gdb.tmp echo 'set environment EMACSPATH $(topdir)/bin'
+	redir -oa gdb.tmp echo 'set environment EMACSPATH $(top_srcdir)/bin'
 	redir -oa gdb.tmp echo 'set environment SHELL $(subst \,/,$(COMSPEC))'
 	redir -oa gdb.tmp echo 'set environment PATH $(subst \,/,$(PATH))'
 	update gdb.tmp gdb.ini
 	rm -f gdb.tmp gdb.sed
 	cd ..
 
+man:	FRC
+	cd man
+	$(MAKE) top_srcdir=${top_srcdir}
+	cd ..
+
 install: all
-	if not exist bin\\nul md bin
+	if not exist bin\nul md bin
 	cd lib-src
 	if exist hexl.exe mv -f hexl.exe ../bin
 	if exist etags.exe mv -f etags.exe ../bin
@@ -75,7 +83,7 @@ TAGS tags:	lib-src FRC
 	if exist etags.exe mv -f etags.exe ../bin
 	cd ..
 	cd lisp
-	../bin/etags [a-zA-Z]*.el [a-z][A-Z]*/[a-zA-Z]*.el
+	../bin/etags [a-zA-Z]*.el [a-zA-Z]*/[a-zA-Z]*.el
 	cd ..
 	cd src
 	../bin/etags --include=../lisp/TAGS \

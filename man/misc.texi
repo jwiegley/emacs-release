@@ -218,7 +218,7 @@ typed @kbd{C-s}.
 
 @kindex M-s @r{(Gnus Summary mode)}
 @findex gnus-summary-search-article-forward
-@item M-s @var{regexp} RET
+@item M-s @var{regexp} @key{RET}
 In the summary buffer, search forward for articles containing a match
 for @var{regexp}.
 
@@ -450,8 +450,10 @@ the subshell, use the command @kbd{M-x dirs} to ask the shell what its
 current directory is.  This command works for shells that support the
 most common command syntax; it may not work for unusual shells.
 
-  You can also use @kbd{M-x dirtrack} to use an alternative and
-more aggressive method of tracking changes in the current directory.
+@findex dirtrack-mode
+  You can also use @kbd{M-x dirtrack-mode} to enable (or disable) an
+alternative and more aggressive method of tracking changes in the
+current directory.
 
   Emacs defines the environment variable @code{EMACS} in the subshell,
 with value @code{t}.  A shell script can check this variable to
@@ -512,7 +514,18 @@ position in the buffer, @kbd{C-d} deletes a character as usual.
 @kindex C-c C-a @r{(Shell mode)}
 @findex comint-bol
 Move to the beginning of the line, but after the prompt if any
-(@code{comint-bol}).
+(@code{comint-bol}).  If you repeat this command twice in a row, the
+second time it moves back to the process mark, which is the beginning of
+the input that you have not yet sent to the subshell.  (Normally that is
+the same place---the end of the prompt on this line---but after @kbd{C-c
+@key{SPC}} the process mark may be in a previous line.)
+
+@item C-c @key{SPC}
+Accumulate multiple lines of input, then send them together.  This
+command inserts a newline before point, but does not send the preceding
+text as input to the subshell--at least, not yet.  Both lines, the one
+before this newline and the one after, will be sent together (along with
+the newline that separates them), when you type @key{RET}.
 
 @item C-c C-u
 @kindex C-c C-u @r{(Shell mode)}
@@ -528,18 +541,22 @@ Kill a word before point (@code{backward-kill-word}).
 @kindex C-c C-c @r{(Shell mode)}
 @findex comint-interrupt-subjob
 Interrupt the shell or its current subjob if any
-(@code{comint-interrupt-subjob}).
+(@code{comint-interrupt-subjob}).  This command also kills
+any shell input pending in the shell buffer and not yet sent.
 
 @item C-c C-z
 @kindex C-c C-z @r{(Shell mode)}
 @findex comint-stop-subjob
 Stop the shell or its current subjob if any (@code{comint-stop-subjob}).
+This command also kills any shell input pending in the shell buffer and
+not yet sent.
 
 @item C-c C-\
 @findex comint-quit-subjob
 @kindex C-c C-\ @r{(Shell mode)}
 Send quit signal to the shell or its current subjob if any
-(@code{comint-quit-subjob}).
+(@code{comint-quit-subjob}).  This command also kills any shell input
+pending in the shell buffer and not yet sent.
 
 @item C-c C-o
 @kindex C-c C-o @r{(Shell mode)}
@@ -692,6 +709,10 @@ Fetch the next later old shell command.
 @item M-r @var{regexp} @key{RET}
 @itemx M-s @var{regexp} @key{RET}
 Search backwards or forwards for old shell commands that match @var{regexp}.
+
+@item C-c C-x @r{(Shell mode)}
+@findex comint-get-next-from-history
+Fetch the next subsequent command from the history.
 @end table
 
   Shell buffers provide a history of previously entered shell commands.  To
@@ -715,6 +736,14 @@ same regexp used last time.
   When you find the previous input you want, you can resubmit it by
 typing @key{RET}, or you can edit it first and then resubmit it if you
 wish.
+
+  Often it is useful to reexecute several successive shell commands that
+were previously executed in sequence.  To do this, first find and
+reexecute the first command of the sequence.  Then type @kbd{C-c C-x};
+that will fetch the following command---the one that follows the command
+you just repeated.  Then type @key{RET} to reexecute this command.  You
+can reexecute several successive commands by typing @kbd{C-c C-x
+@key{RET}} over and over.
 
   These commands get the text of previous shell commands from a special
 history list, not from the shell buffer itself.  Thus, editing the shell
@@ -1027,12 +1056,17 @@ Like @code{lpr-buffer} but print only the current region.
   The hardcopy commands (aside from the Postscript commands) pass extra
 switches to the @code{lpr} program based on the value of the variable
 @code{lpr-switches}.  Its value should be a list of strings, each string
-an option starting with @samp{-}.  For example, to use a printer named
-@samp{nearme}, set @code{lpr-switches} like this:
+an option starting with @samp{-}.  For example, to specify a line width
+of 80 columns for all the printing you do in Emacs, set
+@code{lpr-switches} like this:
 
 @example
-(setq lpr-switches '("-Pnearme"))
+(setq lpr-switches '("-w80"))
 @end example
+
+@vindex printer-name
+  You can specify the printer to use by setting the variable
+@code{printer-name}.
 
 @vindex lpr-headers-switches
 @vindex lpr-commands
@@ -1107,12 +1141,15 @@ it to the printer.
 
 @vindex ps-lpr-command
 @vindex ps-lpr-switches
+@vindex ps-printer-name
   All the Postscript hardcopy commands use the variables
 @code{ps-lpr-command} and @code{ps-lpr-switches} to specify how to print
 the output.  @code{ps-lpr-command} specifies the command name to run,
-and @code{ps-lpr-switches} specifies command line options to use.  If
-you don't set these variables yourself, they take their initial values
-from @code{lpr-command} and @code{lpr-switches}.
+@code{ps-lpr-switches} specifies command line options to use, and
+@code{ps-printer-name} specifies the printer.  If you don't set the
+first two variables yourself, they take their initial values from
+@code{lpr-command} and @code{lpr-switches}.  If @code{ps-printer-name}
+is @code{nil}, @code{printer-name} is used.
 
 @vindex ps-print-header
 @vindex ps-print-color-p
@@ -1207,9 +1244,6 @@ field 1, etc.  A negative argument means count fields from the right
 instead of from the left; thus, minus 1 means sort by the last field.
 If several lines have identical contents in the field being sorted, they
 keep same relative order that they had in the original buffer.
-
-A negative argument means count fields from the right (from the end of
-the line).
 
 @item M-x sort-numeric-fields
 Like @kbd{M-x sort-fields} except the specified field is converted
@@ -1409,7 +1443,7 @@ and using buffer @var{buffer} as the right-hand buffer
   @kbd{@key{F2} s} or @kbd{C-x 6 s} looks for a column separator, which
 is a string that appears on each line between the two columns.  You can
 specify the width of the separator with a numeric argument to
-@key{@key{F2} s}; that many characters, before point, constitute the
+@kbd{@key{F2} s}; that many characters, before point, constitute the
 separator string.  By default, the width is 1, so the column separator
 is the character before point.
 
@@ -1505,11 +1539,12 @@ session to another.  Saving the state means that Emacs starts up with
 the same set of buffers, major modes, buffer positions, and so on that
 the previous Emacs session had.
 
-  To use Desktop, you should first add these lines at the end of your
-@file{.emacs} file:
+@vindex desktop-enable
+  To use Desktop, you should use the Customization buffer (@pxref{Easy
+Customization}) to set @code{desktop-enable} to a non-@code{nil} value,
+or add these lines at the end of your @file{.emacs} file:
 
 @example
-(load "desktop")
 (desktop-load-default)
 (desktop-read)
 @end example
@@ -1525,7 +1560,10 @@ desktop-save} again.
 
   In order for Emacs to recover the state from a previous session, you
 must start it with the same current directory as you used when you
-started the previous session.
+started the previous session.  This is because @code{desktop-read} looks
+in the current directory for the file to read.  This means that you can
+have separate saved sessions in different directories; the directory in
+which you start Emacs will control which saved session to use.
 
 @vindex desktop-files-not-to-save
   The variable @code{desktop-files-not-to-save} controls which files are
@@ -1596,7 +1634,7 @@ recursive edit when you no longer need it.
 
   In general, we try to minimize the use of recursive editing levels in
 GNU Emacs.  This is because they constrain you to ``go back'' in a
-particular order--from the innermost level toward the top level.  When
+particular order---from the innermost level toward the top level.  When
 possible, we present different activities in separate buffers so that
 you can switch between them as you please.  Some commands switch to a
 new major mode which provides a command to switch back.  These
@@ -1754,7 +1792,7 @@ stands for.
 a bigger sort of puzzle.
 
   When you are frustrated, try the famous Eliza program.  Just do
-@kbd{M-x doctor}.  End each input by typing @kbd{RET} twice.
+@kbd{M-x doctor}.  End each input by typing @key{RET} twice.
 
 @cindex Zippy
   When you are feeling strange, type @kbd{M-x yow}.

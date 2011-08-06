@@ -1,6 +1,6 @@
 ;;; add-log.el --- change log maintenance commands for Emacs
 
-;; Copyright (C) 1985, 86, 88, 93, 94, 1997 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 86, 88, 93, 94, 97, 1998 Free Software Foundation, Inc.
 
 ;; Keywords: tools
 
@@ -27,9 +27,12 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'fortran))
+
 (defgroup change-log nil
   "Change log maintenance"
   :group 'tools
+  :link '(custom-manual "(emacs)Change Log")
   :prefix "change-log-"
   :prefix "add-log-")
 
@@ -76,13 +79,45 @@ and `current-time-string' are two valid values."
 		(function :tag "Other"))
   :group 'change-log)
 
+(defcustom add-log-keep-changes-together nil
+  "*If non-nil, normally keep day's log entries for one file together.
+
+Log entries for a given file made with \\[add-change-log-entry] or
+\\[add-change-log-entry-other-window] will only be added to others \
+for that file made
+today if this variable is non-nil or that file comes first in today's
+entries.  Otherwise another entry for that file will be started.  An
+original log:
+
+	* foo (...): ...
+	* bar (...): change 1
+
+in the latter case, \\[add-change-log-entry-other-window] in a \
+buffer visiting `bar', yields:
+
+	* bar (...): -!-
+	* foo (...): ...
+	* bar (...): change 1
+
+and in the former:
+
+	* foo (...): ...
+	* bar (...): change 1
+	(...): -!-
+
+The NEW-ENTRY arg to `add-change-log-entry' can override the effect of
+this variable."
+  :version "20.3"
+  :type 'boolean
+  :group 'change-log)
+
 (defvar change-log-font-lock-keywords
   '(;;
     ;; Date lines, new and old styles.
-    ("^\\sw.........[0-9: ]*"
+    ("^\\sw.........[0-9:+ ]*"
      (0 font-lock-string-face)
      ("\\([^<]+\\)<\\([A-Za-z0-9_.-]+@[A-Za-z0-9_.-]+\\)>" nil nil
-      (1 font-lock-reference-face)
+      (1 font-lock-constant-face)
       (2 font-lock-variable-name-face)))
     ;;
     ;; File names.
@@ -115,6 +150,8 @@ and `current-time-string' are two valid values."
   "Time zone used for calculating change log time stamps.
 It takes the same format as the TZ argument of `set-time-zone-rule'.
 If nil, use local time.")
+
+(defvar add-log-debugging)
 
 (defun add-log-iso8601-time-zone (time)
   (let* ((utc-offset (or (car (current-time-zone time)) 0))
@@ -224,16 +261,20 @@ current buffer to the complete file name."
   (set (make-local-variable 'change-log-default-name) file-name)
   file-name)
 
-
 ;;;###autoload
 (defun add-change-log-entry (&optional whoami file-name other-window new-entry)
   "Find change log file and add an entry for today.
-Optional arg (interactive prefix) non-nil means prompt for user name and site.
-Second arg is file name of change log.  If nil, uses `change-log-default-name'.
+Optional arg WHOAMI (interactive prefix) non-nil means prompt for user
+name and site.
+
+Second arg is FILE-NAME of change log.  If nil, uses `change-log-default-name'.
 Third arg OTHER-WINDOW non-nil means visit in other window.
 Fourth arg NEW-ENTRY non-nil means always create a new entry at the front;
-never append to an existing entry.  Today's date is calculated according to
-`change-log-time-zone-rule' if non-nil, otherwise in local time."
+never append to an existing entry.  Option `add-log-keep-changes-together'
+otherwise affects whether a new entry is created.
+
+Today's date is calculated according to `change-log-time-zone-rule' if
+non-nil, otherwise in local time."
   (interactive (list current-prefix-arg
 		     (prompt-for-change-log-name)))
   (or add-log-full-name
@@ -251,7 +292,7 @@ never append to an existing entry.  Today's date is calculated according to
 	      (read-input "Mailing address: " add-log-mailing-address))))
   (let ((defun (funcall (or add-log-current-defun-function
 			    'add-log-current-defun)))
-	paragraph-end entry)
+	bound entry)
 
     (setq file-name (expand-file-name (find-change-log file-name)))
 
@@ -266,6 +307,8 @@ never append to an existing entry.  Today's date is calculated according to
 			 (substring buffer-file-name (match-end 0))
 		       (file-name-nondirectory buffer-file-name))))
 
+    (let ((buffer (find-buffer-visiting file-name)))
+      (setq add-log-debugging (list (gap-position) (gap-size))))
     (if (and other-window (not (equal file-name buffer-file-name)))
 	(find-file-other-window file-name)
       (find-file file-name))
@@ -280,15 +323,17 @@ never append to an existing entry.  Today's date is calculated according to
 	  (forward-line 1)
 	(insert new-entry "\n\n")))
 
-    ;; Search only within the first paragraph.
-    (if (looking-at "\n*[^\n* \t]")
-	(skip-chars-forward "\n")
-      (forward-paragraph 1))
-    (setq paragraph-end (point))
+    (setq bound
+	  (progn
+            (if (looking-at "\n*[^\n* \t]")
+                (skip-chars-forward "\n")
+	      (if add-log-keep-changes-together
+		  (forward-page)	; page delimits entries for date
+		(forward-paragraph)))	; paragraph delimits entries for file
+	    (point)))
     (goto-char (point-min))
-
     ;; Now insert the new line for this entry.
-    (cond ((re-search-forward "^\\s *\\*\\s *$" paragraph-end t)
+    (cond ((re-search-forward "^\\s *\\*\\s *$" bound t)
 	   ;; Put this file name into the existing empty entry.
 	   (if entry
 	       (insert entry)))
@@ -299,7 +344,7 @@ never append to an existing entry.  Today's date is calculated according to
 			   ;; Don't accept `foo.bar' when
 			   ;; looking for `foo':
 			   "\\(\\s \\|[(),:]\\)")
-		   paragraph-end t)))
+		   bound t)))
 	   ;; Add to the existing entry for the same file.
 	   (re-search-forward "^\\s *$\\|^\\s \\*")
 	   (goto-char (match-beginning 0))
@@ -342,9 +387,12 @@ never append to an existing entry.  Today's date is calculated according to
 ;;;###autoload
 (defun add-change-log-entry-other-window (&optional whoami file-name)
   "Find change log file in other window and add an entry for today.
-Optional arg (interactive prefix) non-nil means prompt for user name and site.
-Second arg is file name of change log.  \
-If nil, uses `change-log-default-name'."
+Optional arg WHOAMI (interactive prefix) non-nil means prompt for user
+name and site.
+Second optional arg FILE-NAME is file name of change log.
+If nil, use `change-log-default-name'.
+
+Affected by the same options as `add-change-log-entry'."
   (interactive (if current-prefix-arg
 		   (list current-prefix-arg
 			 (prompt-for-change-log-name))))
@@ -370,12 +418,12 @@ Runs `change-log-mode-hook'."
   (use-local-map change-log-mode-map)
   (set (make-local-variable 'fill-paragraph-function)
        'change-log-fill-paragraph)
-  ;; Let each entry behave as one paragraph:
-  ;; We really do want "^" in paragraph-start below: it is only the lines that
-  ;; begin at column 0 (despite the left-margin of 8) that we are looking for.
+  ;; We really do want "^" in paragraph-start below: it is only the
+  ;; lines that begin at column 0 (despite the left-margin of 8) that
+  ;; we are looking for.  Adding `* ' allows eliding the blank line
+  ;; between entries for different files.
   (set (make-local-variable 'paragraph-start) "\\s *$\\|\f\\|^\\<")
-  (set (make-local-variable 'paragraph-separate) "\\s *$\\|\f\\|^\\<")
-  ;; Let all entries for one day behave as one page.
+  (set (make-local-variable 'paragraph-separate) paragraph-start)
   ;; Match null string on the date-line so that the date-line
   ;; is grouped with what follows.
   (set (make-local-variable 'page-delimiter) "^\\<\\|^\f")
@@ -407,7 +455,7 @@ Prefix arg means justify as well."
 
 ;;;###autoload
 (defvar add-log-lisp-like-modes
-    '(emacs-lisp-mode lisp-mode scheme-mode lisp-interaction-mode)
+    '(emacs-lisp-mode lisp-mode scheme-mode dsssl-mode lisp-interaction-mode)
   "*Modes that look like Lisp to `add-log-current-defun'.")
 
 ;;;###autoload
@@ -443,18 +491,22 @@ Has a preference of looking backwards."
 		 (or (eobp) (forward-char 1))
 		 (beginning-of-defun)
 		 ;; Make sure we are really inside the defun found, not after it.
-		 (if (and (looking-at "\\s(")
-			  (progn (end-of-defun)
-				 (< location (point)))
-			  (progn (forward-sexp -1)
-				 (>= location (point))))
-		     (progn
-		       (if (looking-at "\\s(")
-			   (forward-char 1))
-		       (forward-sexp 1)
-		       (skip-chars-forward " '")
-		       (buffer-substring (point)
-					 (progn (forward-sexp 1) (point))))))
+		 (when (and (looking-at "\\s(")
+			    (progn (end-of-defun)
+				   (< location (point)))
+			    (progn (forward-sexp -1)
+				   (>= location (point))))
+		   (if (looking-at "\\s(")
+		       (forward-char 1))
+		   ;; Skip the defining construct name, typically "defun"
+		   ;; or "defvar".
+		   (forward-sexp 1)
+		   ;; The second element is usually a symbol being defined.
+		   ;; If it is not, use the first symbol in it.
+		   (skip-chars-forward " \t\n'(")
+		   (buffer-substring (point)
+				     (progn (forward-sexp 1)
+					    (point)))))
 		((and (memq major-mode add-log-c-like-modes)
 		      (save-excursion
 			(beginning-of-line)
@@ -515,7 +567,7 @@ Has a preference of looking backwards."
 			       (buffer-substring (point)
 						 (progn (forward-sexp 1) (point))))
                            (if (looking-at "^[+-]")
-                               (get-method-definition)
+                               (change-log-get-method-definition)
                              ;; Ordinary C function syntax.
                              (setq beg (point))
                              (if (and (condition-case nil
@@ -584,25 +636,31 @@ Has a preference of looking backwards."
 		 (if (re-search-backward "^sub[ \t]+\\([^ \t\n]+\\)" nil t)
 		     (buffer-substring (match-beginning 1)
 				       (match-end 1))))
-                ((eq major-mode 'fortran-mode)
+                ((or (eq major-mode 'fortran-mode)
+		     ;; Needs work for f90, but better than nothing.
+		     (eq major-mode 'f90-mode))
                  ;; must be inside function body for this to work
                  (beginning-of-fortran-subprogram)
                  (let ((case-fold-search t)) ; case-insensitive
                    ;; search for fortran subprogram start
                    (if (re-search-forward
-			 "^[ \t]*\\(program\\|subroutine\\|function\
-\\|[ \ta-z0-9*]*[ \t]+function\\)"
-			 nil t)
-                       (progn
-                         ;; move to EOL or before first left paren
-                         (if (re-search-forward "[(\n]" nil t)
-			     (progn (forward-char -1)
-				    (skip-chars-backward " \t"))
-			   (end-of-line))
-			 ;; Use the name preceding that.
-                         (buffer-substring (point)
-                                           (progn (forward-sexp -1)
-                                                  (point)))))))
+                        "^[ \t]*\\(program\\|subroutine\\|function\
+\\|[ \ta-z0-9*()]*[ \t]+function\\|\\(block[ \t]*data\\)\\)"
+                        (save-excursion (end-of-fortran-subprogram)
+                                        (point))
+                        t)
+                       (or (match-string 2)
+                           (progn
+                             ;; move to EOL or before first left paren
+                             (if (re-search-forward "[(\n]" nil t)
+				 (progn (backward-char)
+                                        (skip-chars-backward " \t"))
+                               (end-of-line))
+                             ;; Use the name preceding that.
+                             (buffer-substring (point)
+					       (progn (backward-sexp)
+						      (point)))))
+		     "main")))
 		(t
 		 ;; If all else fails, try heuristics
 		 (let (case-fold-search)
@@ -614,33 +672,33 @@ Has a preference of looking backwards."
 					 (match-end 1))))))))
     (error nil)))
 
-(defvar get-method-definition-md)
+(defvar change-log-get-method-definition-md)
 
-;; Subroutine used within get-method-definition.
+;; Subroutine used within change-log-get-method-definition.
 ;; Add the last match in the buffer to the end of `md',
 ;; followed by the string END; move to the end of that match.
-(defun get-method-definition-1 (end)
-  (setq get-method-definition-md
-	(concat get-method-definition-md
+(defun change-log-get-method-definition-1 (end)
+  (setq change-log-get-method-definition-md
+	(concat change-log-get-method-definition-md
 		(buffer-substring (match-beginning 1) (match-end 1))
 		end))
   (goto-char (match-end 0)))
 
 ;; For objective C, return the method name if we are in a method.
-(defun get-method-definition ()
-  (let ((get-method-definition-md "["))
+(defun change-log-get-method-definition ()
+  (let ((change-log-get-method-definition-md "["))
     (save-excursion
       (if (re-search-backward "^@implementation\\s-*\\([A-Za-z_]*\\)" nil t)
-	  (get-method-definition-1 " ")))
+	  (change-log-get-method-definition-1 " ")))
     (save-excursion
       (cond
        ((re-search-forward "^\\([-+]\\)[ \t\n\f\r]*\\(([^)]*)\\)?\\s-*" nil t)
-	(get-method-definition-1 "")
+	(change-log-get-method-definition-1 "")
 	(while (not (looking-at "[{;]"))
 	  (looking-at
 	   "\\([A-Za-z_]*:?\\)\\s-*\\(([^)]*)\\)?[A-Za-z_]*[ \t\n\f\r]*")
-	  (get-method-definition-1 ""))
-	(concat get-method-definition-md "]"))))))
+	  (change-log-get-method-definition-1 ""))
+	(concat change-log-get-method-definition-md "]"))))))
 
 
 (provide 'add-log)

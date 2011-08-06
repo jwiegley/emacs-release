@@ -60,7 +60,7 @@
 ;; Modified by James Larus, BBN, July 1984 and UCB, 1984 & 1985.
 ;; Rewritten for GNU Emacs, James Larus 1985.  larus@ginger.berkeley.edu
 ;; Modified by Stephen Gildea 1988.  gildea@lcs.mit.edu
-(defconst mh-e-RCS-id "$Id: mh-e.el,v 1.17 1997/09/04 20:25:56 rms Exp $")
+(defconst mh-e-RCS-id "$Id: mh-e.el,v 1.20 1998/05/03 07:34:07 rms Exp $")
 
 ;;; Code:
 
@@ -427,7 +427,6 @@ previous refile or write command."
 	 (apply 'mh-write-msg-to-file message (cdr mh-last-destination))
 	 (message "Destination: %s" (cdr mh-last-destination))))
   (mh-next-msg))
-
 
 (defun mh-quit ()
   "Quit the current mh-e folder.

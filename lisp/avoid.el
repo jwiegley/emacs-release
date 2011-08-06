@@ -32,7 +32,9 @@
 ;;
 ;; (if window-system (mouse-avoidance-mode 'animate))
 ;;
-;; The 'animate can be 'jump or 'banish or 'exile or 'protean if you prefer.
+;; Other legitimate alternatives include
+;; `banish', `exile', `jump', `cat-and-mouse', and `proteus'.
+;; They do somewhat different things.
 ;; See the documentation for function `mouse-avoidance-mode' for
 ;; details of the different modes.
 ;;
@@ -75,11 +77,21 @@
   :group 'mouse)
 
 
-(defvar mouse-avoidance-mode nil
-  "Value is t or a symbol if the mouse pointer should avoid the cursor.
-See function `mouse-avoidance-mode' for possible values.  Changing this
-variable is NOT the recommended way to change modes; use that function 
-instead.")
+(defcustom mouse-avoidance-mode nil
+  "Activate mouse avoidance mode.  
+See function `mouse-avoidance-mode' for possible values.
+You must modify via \\[customize] for this variable to have an effect."
+  :set (lambda (symbol value)
+	 ;; 'none below prevents toggling when value is nil.
+	 (mouse-avoidance-mode (or value 'none))) 
+  :initialize 'custom-initialize-default
+  :type '(choice (const :tag "none" nil) (const banish) (const jump) 
+		 (const animate) (const exile) (const proteus)
+		 )
+  :group 'avoid
+  :require 'avoid
+  :version "20.3")
+
 
 (defcustom mouse-avoidance-nudge-dist 15
   "*Average distance that mouse will be moved when approached by cursor.
@@ -256,14 +268,30 @@ redefine this function to suit your own tastes."
 
 (defun mouse-avoidance-banish-hook ()
   (if (and (not executing-kbd-macro)	; don't check inside macro
-	   (mouse-avoidance-kbd-command (this-command-keys)))
+	   ;; Don't do anything if last event was a mouse event.
+	   (not (and (consp last-input-event)
+		     (symbolp (car last-input-event))
+		     (let ((modifiers (event-modifiers (car last-input-event))))
+		       (or (memq (car last-input-event)
+				 '(mouse-movement scroll-bar-movement))
+			   (memq 'click modifiers)
+			   (memq 'drag modifiers)
+			   (memq 'down modifiers))))))
       (mouse-avoidance-banish-mouse)))
 
 (defun mouse-avoidance-exile-hook ()
   ;; For exile mode, the state is nil when the mouse is in its normal
   ;; position, and set to the old mouse-position when the mouse is in exile.
   (if (and (not executing-kbd-macro)
-	   (mouse-avoidance-kbd-command (this-command-keys)))
+	   ;; Don't do anything if last event was a mouse event.
+	   (not (and (consp last-input-event)
+		     (symbolp (car last-input-event))
+		     (let ((modifiers (event-modifiers (car last-input-event))))
+		       (or (memq (car last-input-event)
+				 '(mouse-movement scroll-bar-movement))
+			   (memq 'click modifiers)
+			   (memq 'drag modifiers)
+			   (memq 'down modifiers))))))
       (let ((mp (mouse-position)))
 	(cond ((and (not mouse-avoidance-state)
 		    (mouse-avoidance-too-close-p mp))
@@ -282,28 +310,21 @@ redefine this function to suit your own tastes."
 (defun mouse-avoidance-fancy-hook ()
   ;; Used for the "fancy" modes, ie jump et al.
   (if (and (not executing-kbd-macro)	; don't check inside macro
-	   (mouse-avoidance-kbd-command (this-command-keys))
+	   ;; Don't do anything if last event was a mouse event.
+	   (not (and (consp last-input-event)
+		     (symbolp (car last-input-event))
+		     (let ((modifiers (event-modifiers (car last-input-event))))
+		       (or (memq (car last-input-event)
+				 '(mouse-movement scroll-bar-movement))
+			   (memq 'click modifiers)
+			   (memq 'drag modifiers)
+			   (memq 'down modifiers)))))
 	   (mouse-avoidance-too-close-p (mouse-position)))
       (let ((old-pos (mouse-position)))
 	(mouse-avoidance-nudge-mouse)
 	(if (not (eq (selected-frame) (car old-pos)))
 	    ;; This should never happen.
 	    (apply 'set-mouse-position old-pos)))))
-
-(defun mouse-avoidance-kbd-command (key)
-  "Return t if the KEYSEQENCE is composed of keyboard events only.
-Return nil if there are any lists in the key sequence."
-  (cond ((null key) nil)		; Null event seems to be
-					; returned occasionally.
-	((not (vectorp key)) t)		; Strings are keyboard events.
-	((catch 'done
-	   (let ((i 0)
-		 (l (length key)))
-	     (while (< i l)
-	       (if (listp (aref key i))
-		   (throw 'done nil))
-	       (setq i (1+ i))))
-	   t))))
 
 ;;;###autoload
 (defun mouse-avoidance-mode (&optional mode)
@@ -378,4 +399,8 @@ definition of \"random distance\".)"
 ;;    (setq minor-mode-alist (cons '(mouse-avoidance-mode " Avoid")
 ;;				 minor-mode-alist)))
 
-;;; End of avoid.el
+;; Needed for custom.
+(if mouse-avoidance-mode 
+    (mouse-avoidance-mode mouse-avoidance-mode))
+
+;;; avoid.el ends here

@@ -1,5 +1,5 @@
 /* Manipulation of keymaps
-   Copyright (C) 1985, 86, 87, 88, 93, 94, 95 Free Software Foundation, Inc.
+   Copyright (C) 1985, 86,87,88,93,94,95,98 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -21,6 +21,9 @@ Boston, MA 02111-1307, USA.  */
 
 #include <config.h>
 #include <stdio.h>
+#ifdef STDC_HEADERS
+#include <stdlib.h>
+#endif
 #undef NULL
 #include "lisp.h"
 #include "commands.h"
@@ -71,6 +74,10 @@ Lisp_Object Vminibuffer_local_must_match_map;
 /* Alist of minor mode variables and keymaps.  */
 Lisp_Object Vminor_mode_map_alist;
 
+/* Alist of major-mode-specific overrides for
+   minor mode variables and keymaps.  */
+Lisp_Object Vminor_mode_overriding_map_alist;
+
 /* Keymap mapping ASCII function key sequences onto their preferred forms.
    Initialized by the terminal-specific lisp files.  See DEFVAR for more
    documentation.  */
@@ -85,7 +92,7 @@ Lisp_Object Vkey_translation_map;
    when Emacs starts up.   t means don't record anything here.  */
 Lisp_Object Vdefine_key_rebound_commands;
 
-Lisp_Object Qkeymapp, Qkeymap, Qnon_ascii;
+Lisp_Object Qkeymapp, Qkeymap, Qnon_ascii, Qmenu_item;
 
 /* A char with the CHAR_META bit set in a vector or the 0200 bit set
    in a string key sequence is equivalent to prefixing with this
@@ -98,7 +105,6 @@ static Lisp_Object define_as_prefix ();
 static Lisp_Object describe_buffer_bindings ();
 static void describe_command (), describe_translation ();
 static void describe_map ();
-Lisp_Object Fcopy_keymap ();
 
 /* Keymap object support - constructors and predicates.			*/
 
@@ -341,8 +347,7 @@ PARENT should be nil or another keymap.")
 
       if (CHAR_TABLE_P (XCONS (list)->car))
 	{
-	  Lisp_Object *indices
-	    = (Lisp_Object *) alloca (3 * sizeof (Lisp_Object));
+	  Lisp_Object indices[3];
 
 	  map_char_table (fix_submap_inheritance, Qnil, XCONS (list)->car,
 			  keymap, 0, indices);
@@ -356,6 +361,7 @@ PARENT should be nil or another keymap.")
    if EVENT is also a prefix in MAP's parent,
    make sure that SUBMAP inherits that definition as its own parent.  */
 
+void
 fix_submap_inheritance (map, event, submap)
      Lisp_Object map, event, submap;
 {
@@ -364,22 +370,34 @@ fix_submap_inheritance (map, event, submap)
   /* SUBMAP is a cons that we found as a key binding.
      Discard the other things found in a menu key binding.  */
 
-  if (CONSP (submap)
-      && STRINGP (XCONS (submap)->car))
+  if (CONSP (submap))
     {
-      submap = XCONS (submap)->cdr;
-      /* Also remove a menu help string, if any,
-	 following the menu item name.  */
-      if (CONSP (submap) && STRINGP (XCONS (submap)->car))
-	submap = XCONS (submap)->cdr;
-      /* Also remove the sublist that caches key equivalences, if any.  */
-      if (CONSP (submap)
-	  && CONSP (XCONS (submap)->car))
+      /* May be an old format menu item */
+      if (STRINGP (XCONS (submap)->car))
 	{
-	  Lisp_Object carcar;
-	  carcar = XCONS (XCONS (submap)->car)->car;
-	  if (NILP (carcar) || VECTORP (carcar))
+	  submap = XCONS (submap)->cdr;
+	  /* Also remove a menu help string, if any,
+	     following the menu item name.  */
+	  if (CONSP (submap) && STRINGP (XCONS (submap)->car))
 	    submap = XCONS (submap)->cdr;
+	  /* Also remove the sublist that caches key equivalences, if any.  */
+	  if (CONSP (submap)
+	      && CONSP (XCONS (submap)->car))
+	    {
+	      Lisp_Object carcar;
+	      carcar = XCONS (XCONS (submap)->car)->car;
+	      if (NILP (carcar) || VECTORP (carcar))
+		submap = XCONS (submap)->cdr;
+	    }
+	}
+
+      /* Or a new format menu item */
+      else if (EQ (XCONS (submap)->car, Qmenu_item)
+	       && CONSP (XCONS (submap)->cdr))
+	{
+	  submap = XCONS (XCONS (submap)->cdr)->cdr;
+	  if (CONSP (submap))
+	    submap = XCONS (submap)->car;
 	}
     }
 
@@ -548,12 +566,15 @@ get_keyelt (object, autoload)
 	    object = access_keymap (map, key, 0, 0);
 	}
 
+      else if (!(CONSP (object)))
+	/* This is really the value.  */
+	return object;
+
       /* If the keymap contents looks like (STRING . DEFN),
 	 use DEFN.
 	 Keymap alist elements like (CHAR MENUSTRING . DEFN)
 	 will be used by HierarKey menus.  */
-      else if (CONSP (object)
-	       && STRINGP (XCONS (object)->car))
+      else if (STRINGP (XCONS (object)->car))
 	{
 	  object = XCONS (object)->cdr;
 	  /* Also remove a menu help string, if any,
@@ -571,6 +592,18 @@ get_keyelt (object, autoload)
 	    }
 	}
 
+      /* If the keymap contents looks like (menu-item name . DEFN)
+	 or (menu-item name DEFN ...) then use DEFN.
+	 This is a new format menu item.
+      */
+      else if (EQ (XCONS (object)->car, Qmenu_item)
+	       && CONSP (XCONS (object)->cdr))
+	{
+	  object = XCONS (XCONS (object)->cdr)->cdr;
+	  if (CONSP (object))
+	    object = XCONS (object)->car;
+	}
+
       else
 	/* Anything else is really the value.  */
 	return object;
@@ -584,8 +617,9 @@ store_in_keymap (keymap, idx, def)
      register Lisp_Object def;
 {
   /* If we are preparing to dump, and DEF is a menu element
-     with a menu item string, copy it to ensure it is not pure.  */
-  if (CONSP (def) && PURE_P (def) && STRINGP (XCONS (def)->car))
+     with a menu item indicator, copy it to ensure it is not pure.  */
+  if (CONSP (def) && PURE_P (def)
+      && (EQ (XCONS (def)->car, Qmenu_item) || STRINGP (XCONS (def)->car)))
     def = Fcons (XCONS (def)->car, XCONS (def)->cdr);
 
   if (!CONSP (keymap) || ! EQ (XCONS (keymap)->car, Qkeymap))
@@ -678,7 +712,7 @@ store_in_keymap (keymap, idx, def)
   return def;
 }
 
-Lisp_Object
+void
 copy_keymap_1 (chartable, idx, elt)
      Lisp_Object chartable, idx, elt;
 {
@@ -707,8 +741,7 @@ is not copied.")
       elt = XCONS (tail)->car;
       if (CHAR_TABLE_P (elt))
 	{
-	  Lisp_Object *indices
-	    = (Lisp_Object *) alloca (3 * sizeof (Lisp_Object));
+	  Lisp_Object indices[3];
 
 	  elt = Fcopy_sequence (elt);
 	  XCONS (tail)->car = elt;
@@ -728,42 +761,80 @@ is not copied.")
 	      XVECTOR (elt)->contents[i]
 		= Fcopy_keymap (XVECTOR (elt)->contents[i]);
 	}
-      else if (CONSP (elt))
+      else if (CONSP (elt) && CONSP (XCONS (elt)->cdr))
 	{
-	  /* Skip the optional menu string.  */
-	  if (CONSP (XCONS (elt)->cdr)
-	      && STRINGP (XCONS (XCONS (elt)->cdr)->car))
+	  Lisp_Object tem;
+	  tem = XCONS (elt)->cdr;
+
+	  /* Is this a new format menu item.  */
+	  if (EQ (XCONS (tem)->car,Qmenu_item))
 	    {
-	      Lisp_Object tem;
-
-	      /* Copy the cell, since copy-alist didn't go this deep.  */
-	      XCONS (elt)->cdr = Fcons (XCONS (XCONS (elt)->cdr)->car,
-					XCONS (XCONS (elt)->cdr)->cdr);
+	      /* Copy cell with menu-item marker.  */
+	      XCONS (elt)->cdr
+		= Fcons (XCONS (tem)->car, XCONS (tem)->cdr);
 	      elt = XCONS (elt)->cdr;
-
-	      /* Also skip the optional menu help string.  */
-	      if (CONSP (XCONS (elt)->cdr)
-		  && STRINGP (XCONS (XCONS (elt)->cdr)->car))
+	      tem = XCONS (elt)->cdr;
+	      if (CONSP (tem))
 		{
-		  XCONS (elt)->cdr = Fcons (XCONS (XCONS (elt)->cdr)->car,
-					    XCONS (XCONS (elt)->cdr)->cdr);
+		  /* Copy cell with menu-item name.  */
+		  XCONS (elt)->cdr
+		    = Fcons (XCONS (tem)->car, XCONS (tem)->cdr);
 		  elt = XCONS (elt)->cdr;
+		  tem = XCONS (elt)->cdr;
+		};
+	      if (CONSP (tem))
+		{
+		  /* Copy cell with binding and if the binding is a keymap,
+		     copy that.  */
+		  XCONS (elt)->cdr
+		    = Fcons (XCONS (tem)->car, XCONS (tem)->cdr);
+		  elt = XCONS (elt)->cdr;
+		  tem = XCONS (elt)->car;
+		  if (!(SYMBOLP (tem) || NILP (Fkeymapp (tem))))
+		    XCONS (elt)->car = Fcopy_keymap (tem);
+		  tem = XCONS (elt)->cdr;
+		  if (CONSP (tem) && CONSP (XCONS (tem)->car))
+		    /* Delete cache for key equivalences.  */
+		    XCONS (elt)->cdr = XCONS (tem)->cdr;
 		}
-	      /* There may also be a list that caches key equivalences.
-		 Just delete it for the new keymap.  */
-	      if (CONSP (XCONS (elt)->cdr)
-		  && CONSP (XCONS (XCONS (elt)->cdr)->car)
-		  && (NILP (tem = XCONS (XCONS (XCONS (elt)->cdr)->car)->car)
-		      || VECTORP (tem)))
-		XCONS (elt)->cdr = XCONS (XCONS (elt)->cdr)->cdr;
 	    }
-	  if (CONSP (elt)
-	      && ! SYMBOLP (XCONS (elt)->cdr)
-	      && ! NILP (Fkeymapp (XCONS (elt)->cdr)))
-	    XCONS (elt)->cdr = Fcopy_keymap (XCONS (elt)->cdr);
+	  else
+	    {
+	      /* It may be an old fomat menu item.
+		 Skip the optional menu string.
+	      */
+	      if (STRINGP (XCONS (tem)->car))
+		{
+		  /* Copy the cell, since copy-alist didn't go this deep.  */
+		  XCONS (elt)->cdr
+		    = Fcons (XCONS (tem)->car, XCONS (tem)->cdr);
+		  elt = XCONS (elt)->cdr;
+		  tem = XCONS (elt)->cdr;
+		  /* Also skip the optional menu help string.  */
+		  if (CONSP (tem) && STRINGP (XCONS (tem)->car))
+		    {
+		      XCONS (elt)->cdr
+			= Fcons (XCONS (tem)->car, XCONS (tem)->cdr);
+		      elt = XCONS (elt)->cdr;
+		      tem = XCONS (elt)->cdr;
+		    }
+		  /* There may also be a list that caches key equivalences.
+		     Just delete it for the new keymap.  */
+		  if (CONSP (tem)
+		      && CONSP (XCONS (tem)->car)
+		      && (NILP (XCONS (XCONS (tem)->car)->car)
+			  || VECTORP (XCONS (XCONS (tem)->car)->car)))
+		    XCONS (elt)->cdr = XCONS (tem)->cdr;
+		}
+	      if (CONSP (elt)
+		  && ! SYMBOLP (XCONS (elt)->cdr)
+		  && ! NILP (Fkeymapp (XCONS (elt)->cdr)))
+		XCONS (elt)->cdr = Fcopy_keymap (XCONS (elt)->cdr);
+	    }
+
 	}
     }
-
+	      
   return copy;
 }
 
@@ -1056,65 +1127,81 @@ current_minor_maps (modeptr, mapptr)
      Lisp_Object **modeptr, **mapptr;
 {
   int i = 0;
+  int list_number = 0;
   Lisp_Object alist, assoc, var, val;
+  Lisp_Object lists[2];
 
-  for (alist = Vminor_mode_map_alist;
-       CONSP (alist);
-       alist = XCONS (alist)->cdr)
-    if ((assoc = XCONS (alist)->car, CONSP (assoc))
-	&& (var = XCONS (assoc)->car, SYMBOLP (var))
-	&& (val = find_symbol_value (var), ! EQ (val, Qunbound))
-	&& ! NILP (val))
-      {
-	Lisp_Object temp;
+  lists[0] = Vminor_mode_overriding_map_alist;
+  lists[1] = Vminor_mode_map_alist;
 
-	if (i >= cmm_size)
-	  {
-	    Lisp_Object *newmodes, *newmaps;
+  for (list_number = 0; list_number < 2; list_number++)
+    for (alist = lists[list_number];
+	 CONSP (alist);
+	 alist = XCONS (alist)->cdr)
+      if ((assoc = XCONS (alist)->car, CONSP (assoc))
+	  && (var = XCONS (assoc)->car, SYMBOLP (var))
+	  && (val = find_symbol_value (var), ! EQ (val, Qunbound))
+	  && ! NILP (val))
+	{
+	  Lisp_Object temp;
 
-	    if (cmm_maps)
-	      {
-		BLOCK_INPUT;
-		cmm_size *= 2;
-		newmodes
-		  = (Lisp_Object *) realloc (cmm_modes,
-					     cmm_size * sizeof (Lisp_Object));
-		newmaps
-		  = (Lisp_Object *) realloc (cmm_maps,
-					     cmm_size * sizeof (Lisp_Object));
-		UNBLOCK_INPUT;
-	      }
-	    else
-	      {
-		BLOCK_INPUT;
-		cmm_size = 30;
-		newmodes
-		  = (Lisp_Object *) malloc (cmm_size * sizeof (Lisp_Object));
-		newmaps
-		  = (Lisp_Object *) malloc (cmm_size * sizeof (Lisp_Object));
-		UNBLOCK_INPUT;
-	      }
+	  /* If a variable has an entry in Vminor_mode_overriding_map_alist,
+	     and also an entry in Vminor_mode_map_alist,
+	     ignore the latter.  */
+	  if (list_number == 1)
+	    {
+	      val = assq_no_quit (var, lists[0]);
+	      if (!NILP (val))
+		break;
+	    }
 
-	    if (newmaps && newmodes)
-	      {
-		cmm_modes = newmodes;
-		cmm_maps = newmaps;
-	      }
-	    else
-	      break;
-	  }
+	  if (i >= cmm_size)
+	    {
+	      Lisp_Object *newmodes, *newmaps;
 
-	/* Get the keymap definition--or nil if it is not defined.  */
-	temp = internal_condition_case_1 (Findirect_function,
-					  XCONS (assoc)->cdr,
-					  Qerror, current_minor_maps_error);
-	if (!NILP (temp))
-	  {
-	    cmm_modes[i] = var;
-	    cmm_maps [i] = temp;
-	    i++;
-	  }
-      }
+	      if (cmm_maps)
+		{
+		  BLOCK_INPUT;
+		  cmm_size *= 2;
+		  newmodes
+		    = (Lisp_Object *) realloc (cmm_modes,
+					       cmm_size * sizeof (Lisp_Object));
+		  newmaps
+		    = (Lisp_Object *) realloc (cmm_maps,
+					       cmm_size * sizeof (Lisp_Object));
+		  UNBLOCK_INPUT;
+		}
+	      else
+		{
+		  BLOCK_INPUT;
+		  cmm_size = 30;
+		  newmodes
+		    = (Lisp_Object *) malloc (cmm_size * sizeof (Lisp_Object));
+		  newmaps
+		    = (Lisp_Object *) malloc (cmm_size * sizeof (Lisp_Object));
+		  UNBLOCK_INPUT;
+		}
+
+	      if (newmaps && newmodes)
+		{
+		  cmm_modes = newmodes;
+		  cmm_maps = newmaps;
+		}
+	      else
+		break;
+	    }
+
+	  /* Get the keymap definition--or nil if it is not defined.  */
+	  temp = internal_condition_case_1 (Findirect_function,
+					    XCONS (assoc)->cdr,
+					    Qerror, current_minor_maps_error);
+	  if (!NILP (temp))
+	    {
+	      cmm_modes[i] = var;
+	      cmm_maps [i] = temp;
+	      i++;
+	    }
+	}
 
   if (modeptr) *modeptr = cmm_modes;
   if (mapptr)  *mapptr  = cmm_maps;
@@ -1340,7 +1427,7 @@ DEFUN ("current-minor-mode-maps", Fcurrent_minor_mode_maps, Scurrent_minor_mode_
 
 /* Help functions for describing and documenting keymaps.		*/
 
-static Lisp_Object accessible_keymaps_char_table ();
+static void accessible_keymaps_char_table ();
 
 /* This function cannot GC.  */
 
@@ -1379,16 +1466,20 @@ then the value includes only maps for prefixes that start with PREFIX.")
 	     we don't have to deal with the possibility of a string.  */
 	  if (STRINGP (prefix))
 	    {
-	      int i;
+	      int i, i_byte, c;
 	      Lisp_Object copy;
 
 	      copy = Fmake_vector (make_number (XSTRING (prefix)->size), Qnil);
-	      for (i = 0; i < XSTRING (prefix)->size; i++)
+	      for (i = 0, i_byte; i < XSTRING (prefix)->size;)
 		{
-		  int c = XSTRING (prefix)->data[i];
+		  int i_before = i;
+		  if (STRING_MULTIBYTE (prefix))
+		    FETCH_STRING_CHAR_ADVANCE (c, prefix, i, i_byte);
+		  else
+		    c = XSTRING (prefix)->data[i++];
 		  if (c & 0200)
 		    c ^= 0200 | meta_modifier;
-		  XVECTOR (copy)->contents[i] = make_number (c);
+		  XVECTOR (copy)->contents[i_before] = make_number (c);
 		}
 	      prefix = copy;
 	    }
@@ -1434,8 +1525,7 @@ then the value includes only maps for prefixes that start with PREFIX.")
 
 	  if (CHAR_TABLE_P (elt))
 	    {
-	      Lisp_Object *indices
-		= (Lisp_Object *) alloca (3 * sizeof (Lisp_Object));
+	      Lisp_Object indices[3];
 
 	      map_char_table (accessible_keymaps_char_table, Qnil,
 			      elt, Fcons (maps, Fcons (tail, thisseq)),
@@ -1564,7 +1654,7 @@ then the value includes only maps for prefixes that start with PREFIX.")
   return Fnreverse (good_maps);
 }
 
-static Lisp_Object
+static void
 accessible_keymaps_char_table (args, index, cmd)
      Lisp_Object args, index, cmd;
 {
@@ -1572,7 +1662,7 @@ accessible_keymaps_char_table (args, index, cmd)
   Lisp_Object maps, tail, thisseq;
 
   if (NILP (cmd))
-    return Qnil;
+    return;
 
   maps = XCONS (args)->car;
   tail = XCONS (XCONS (args)->cdr)->car;
@@ -1590,7 +1680,6 @@ accessible_keymaps_char_table (args, index, cmd)
 	  nconc2 (tail, Fcons (Fcons (tem, cmd), Qnil));
 	}
     }
-  return Qnil;
 }
 
 Lisp_Object Qsingle_key_description, Qkey_description;
@@ -1605,7 +1694,7 @@ spaces are put between sequence elements, etc.")
      Lisp_Object keys;
 {
   int len;
-  int i;
+  int i, i_byte;
   Lisp_Object sep;
   Lisp_Object *args;
 
@@ -1613,14 +1702,21 @@ spaces are put between sequence elements, etc.")
     {
       Lisp_Object vector;
       vector = Fmake_vector (Flength (keys), Qnil);
-      for (i = 0; i < XSTRING (keys)->size; i++)
+      for (i = 0; i < XSTRING (keys)->size; )
 	{
-	  if (XSTRING (keys)->data[i] & 0x80)
-	    XSETFASTINT (XVECTOR (vector)->contents[i],
-			 meta_modifier | (XSTRING (keys)->data[i] & ~0x80));
+	  int c;
+	  int i_before = i;
+
+	  if (STRING_MULTIBYTE (keys))
+	    FETCH_STRING_CHAR_ADVANCE (c, keys, i, i_byte);
 	  else
-	    XSETFASTINT (XVECTOR (vector)->contents[i],
-			 XSTRING (keys)->data[i]);
+	    c = XSTRING (keys)->data[i++];
+
+	  if (c & 0x80)
+	    XSETFASTINT (XVECTOR (vector)->contents[i_before],
+			 meta_modifier | (c & ~0x80));
+	  else
+	    XSETFASTINT (XVECTOR (vector)->contents[i_before], c);
 	}
       keys = vector;
     }
@@ -1733,8 +1829,6 @@ push_key_description (c, p)
     }
   else if (c < 128)
     *p++ = c;
-  else if (c < 256)
-    *p++ = c;
   else if (c < 512)
     {
       *p++ = '\\';
@@ -1744,13 +1838,11 @@ push_key_description (c, p)
     }
   else
     {
-      *p++ = '\\';
-      *p++ = (7 & (c >> 15)) + '0';
-      *p++ = (7 & (c >> 12)) + '0';
-      *p++ = (7 & (c >> 9)) + '0';
-      *p++ = (7 & (c >> 6)) + '0';
-      *p++ = (7 & (c >> 3)) + '0';
-      *p++ = (7 & (c >> 0)) + '0';
+      unsigned char work[4], *str;
+      int i = CHAR_STRING (c, work, str);
+
+      bcopy (str, p, i);
+      p += i;
     }
 
   return p;  
@@ -1821,10 +1913,10 @@ Control characters turn into \"^char\", etc.")
 
   if (!SINGLE_BYTE_CHAR_P (XFASTINT (character)))
     {
-      char *str;
+      unsigned char *str;
       int len = non_ascii_char_to_string (XFASTINT (character), tem, &str);
 
-      return make_string (str, len);
+      return make_multibyte_string (str, 1, len);
     }
 
   *push_text_char_description (XINT (character) & 0377, tem) = 0;
@@ -1860,7 +1952,7 @@ ascii_sequence_p (seq)
 /* where-is - finding a command in a set of keymaps.			*/
 
 static Lisp_Object where_is_internal_1 ();
-static Lisp_Object where_is_internal_2 ();
+static void where_is_internal_2 ();
 
 /* This function can GC if Flookup_key autoloads any keymaps.  */
 
@@ -1885,22 +1977,28 @@ indirect definition itself.")
 {
   Lisp_Object maps;
   Lisp_Object found, sequences;
+  Lisp_Object keymap1;
   int keymap_specified = !NILP (keymap);
   struct gcpro gcpro1, gcpro2, gcpro3, gcpro4, gcpro5;
   /* 1 means ignore all menu bindings entirely.  */
   int nomenus = !NILP (firstonly) && !EQ (firstonly, Qnon_ascii);
 
+  /* Find keymaps accessible from `keymap' or the current
+     context.  But don't muck with the value of `keymap',
+     because `where_is_internal_1' uses it to check for
+     shadowed bindings. */
+  keymap1 = keymap;
   if (! keymap_specified)
     {
 #ifdef USE_TEXT_PROPERTIES
-      keymap = get_local_map (PT, current_buffer);
+      keymap1 = get_local_map (PT, current_buffer);
 #else
-      keymap = current_buffer->keymap;
+      keymap1 = current_buffer->keymap;
 #endif
     }
-
-  if (!NILP (keymap))
-    maps = nconc2 (Faccessible_keymaps (get_keymap (keymap), Qnil),
+    
+  if (!NILP (keymap1))
+    maps = nconc2 (Faccessible_keymaps (get_keymap (keymap1), Qnil),
 		   Faccessible_keymaps (get_keymap (current_global_map),
 					Qnil));
   else
@@ -1981,9 +2079,9 @@ indirect definition itself.")
 	    }
 	  else if (CHAR_TABLE_P (elt))
 	    {
-	      Lisp_Object *indices
-		= (Lisp_Object *) alloca (3 * sizeof (Lisp_Object));
+	      Lisp_Object indices[3];
 	      Lisp_Object args;
+
 	      args = Fcons (Fcons (Fcons (definition, noindirect),
 				   Fcons (keymap, Qnil)),
 			    Fcons (Fcons (this, last),
@@ -2053,7 +2151,7 @@ indirect definition itself.")
    Since map_char_table doesn't really use the return value from this function,
    we the result append to RESULT, the slot in ARGS.  */
 
-static Lisp_Object
+static void
 where_is_internal_2 (args, key, binding)
      Lisp_Object args, key, binding;
 {
@@ -2076,8 +2174,6 @@ where_is_internal_2 (args, key, binding)
   if (!NILP (sequence))
     XCONS (XCONS (XCONS (args)->car)->cdr)->cdr
       = Fcons (sequence, result);
-
-  return Qnil;
 }
 
 static Lisp_Object
@@ -2105,9 +2201,10 @@ where_is_internal_1 (binding, key, definition, noindirect, keymap, this, last,
 	      else
 		break;
 	    }
-	  /* If the contents are (STRING ...), reject.  */
+	  /* If the contents are (menu-item ...) or (STRING ...), reject.  */
 	  if (CONSP (definition)
-	      && STRINGP (XCONS (definition)->car))
+	      && (EQ (XCONS (definition)->car,Qmenu_item)
+		  || STRINGP (XCONS (definition)->car)))
 	    return Qnil;
 	}
       else
@@ -2176,40 +2273,48 @@ where_is_internal_1 (binding, key, definition, noindirect, keymap, this, last,
 
 /* describe-bindings - summarizing all the bindings in a set of keymaps.  */
 
-DEFUN ("describe-bindings", Fdescribe_bindings, Sdescribe_bindings, 0, 1, "",
+DEFUN ("describe-bindings-internal", Fdescribe_bindings_internal, Sdescribe_bindings_internal, 0, 2, "",
   "Show a list of all defined keys, and their definitions.\n\
-The list is put in a buffer, which is displayed.\n\
-An optional argument PREFIX, if non-nil, should be a key sequence;\n\
+We put that list in a buffer, and display the buffer.\n\
+\n\
+The optional argument MENUS, if non-nil, says to mention menu bindings.\n\
+\(Ordinarily these are omitted from the output.)\n\
+The optional argument PREFIX, if non-nil, should be a key sequence;\n\
 then we display only bindings that start with that prefix.")
-  (prefix)
-     Lisp_Object prefix;
+  (menus, prefix)
+     Lisp_Object menus, prefix;
 {
   register Lisp_Object thisbuf;
   XSETBUFFER (thisbuf, current_buffer);
   internal_with_output_to_temp_buffer ("*Help*",
 				       describe_buffer_bindings,
-				       Fcons (thisbuf, prefix));
+				       list3 (thisbuf, prefix, menus));
   return Qnil;
 }
 
-/* ARG is (BUFFER . PREFIX).  */
+/* ARG is (BUFFER PREFIX MENU-FLAG).  */
 
 static Lisp_Object
 describe_buffer_bindings (arg)
      Lisp_Object arg;
 {
   Lisp_Object descbuf, prefix, shadow;
+  int nomenu;
   register Lisp_Object start1;
   struct gcpro gcpro1;
 
   char *alternate_heading
     = "\
-Alternate Characters (use anywhere the nominal character is listed):\n\
-nominal         alternate\n\
--------         ---------\n";
+Keyboard translations:\n\n\
+You type        Translation\n\
+--------        -----------\n";
 
   descbuf = XCONS (arg)->car;
-  prefix = XCONS (arg)->cdr;
+  arg = XCONS (arg)->cdr;
+  prefix = XCONS (arg)->car;
+  arg = XCONS (arg)->cdr;
+  nomenu = NILP (XCONS (arg)->car);
+
   shadow = Qnil;
   GCPRO1 (shadow);
 
@@ -2248,7 +2353,7 @@ nominal         alternate\n\
 
   if (!NILP (Vkey_translation_map))
     describe_map_tree (Vkey_translation_map, 0, Qnil, prefix,
-		       "Key translations", 0, 1, 0);
+		       "Key translations", nomenu, 1, 0);
 
   {
     int i, nmaps;
@@ -2287,7 +2392,7 @@ nominal         alternate\n\
 	p += sizeof (" Minor Mode Bindings") - 1;
 	*p = 0;
 
-	describe_map_tree (maps[i], 1, shadow, prefix, title, 0, 0, 0);
+	describe_map_tree (maps[i], 1, shadow, prefix, title, nomenu, 0, 0);
 	shadow = Fcons (maps[i], shadow);
       }
   }
@@ -2303,17 +2408,17 @@ nominal         alternate\n\
   if (!NILP (start1))
     {
       describe_map_tree (start1, 1, shadow, prefix,
-			 "Major Mode Bindings", 0, 0, 0);
+			 "Major Mode Bindings", nomenu, 0, 0);
       shadow = Fcons (start1, shadow);
     }
 
   describe_map_tree (current_global_map, 1, shadow, prefix,
-		     "Global Bindings", 0, 0, 1);
+		     "Global Bindings", nomenu, 0, 1);
 
   /* Print the function-key-map translations under this prefix.  */
   if (!NILP (Vfunction_key_map))
     describe_map_tree (Vfunction_key_map, 0, Qnil, prefix,
-		       "Function key map translations", 0, 1, 0);
+		       "Function key map translations", nomenu, 1, 0);
 
   call0 (intern ("help-mode"));
   Fset_buffer (descbuf);
@@ -2348,7 +2453,7 @@ describe_map_tree (startmap, partial, shadow, prefix, title, nomenu, transl,
      int transl;
      int always_title;
 {
-  Lisp_Object maps, seen, sub_shadows;
+  Lisp_Object maps, orig_maps, seen, sub_shadows;
   struct gcpro gcpro1, gcpro2, gcpro3;
   int something = 0;
   char *key_heading
@@ -2356,7 +2461,7 @@ describe_map_tree (startmap, partial, shadow, prefix, title, nomenu, transl,
 key             binding\n\
 ---             -------\n";
 
-  maps = Faccessible_keymaps (startmap, prefix);
+  orig_maps = maps = Faccessible_keymaps (startmap, prefix);
   seen = Qnil;
   sub_shadows = Qnil;
   GCPRO3 (maps, seen, sub_shadows);
@@ -2437,7 +2542,16 @@ key             binding\n\
 	    sub_shadows = Fcons (shmap, sub_shadows);
 	}
 
-      describe_map (Fcdr (elt), Fcar (elt),
+      /* Maps we have already listed in this loop shadow this map.  */
+      for (tail = orig_maps; ! EQ (tail, maps); tail = XCDR (tail))
+	{
+	  Lisp_Object tem;
+	  tem = Fequal (Fcar (XCAR (tail)), prefix);
+	  if (! NILP (tem))
+	    sub_shadows = Fcons (XCDR (XCAR (tail)), sub_shadows);
+	}
+
+      describe_map (Fcdr (elt), prefix,
 		    transl ? describe_translation : describe_command,
 		    partial, sub_shadows, &seen, nomenu);
 
@@ -2548,7 +2662,7 @@ static void
 describe_map (map, keys, elt_describer, partial, shadow, seen, nomenu)
      register Lisp_Object map;
      Lisp_Object keys;
-     int (*elt_describer) ();
+     void (*elt_describer) P_ ((Lisp_Object));
      int partial;
      Lisp_Object shadow;
      Lisp_Object *seen;
@@ -2660,7 +2774,7 @@ describe_map (map, keys, elt_describer, partial, shadow, seen, nomenu)
   UNGCPRO;
 }
 
-static int
+static void
 describe_vector_princ (elt)
      Lisp_Object elt;
 {
@@ -2715,12 +2829,13 @@ This is text showing the elements of vector matched against indices.")
    indices at higher levels in this char-table,
    and CHAR_TABLE_DEPTH says how many levels down we have gone.  */
 
+void
 describe_vector (vector, elt_prefix, elt_describer,
 		 partial, shadow, entire_map,
 		 indices, char_table_depth)
      register Lisp_Object vector;
      Lisp_Object elt_prefix;
-     int (*elt_describer) ();
+     void (*elt_describer) P_ ((Lisp_Object));
      int partial;
      Lisp_Object shadow;
      Lisp_Object entire_map;
@@ -2736,8 +2851,6 @@ describe_vector (vector, elt_prefix, elt_describer,
   struct gcpro gcpro1, gcpro2, gcpro3, gcpro4;
   /* Range of elements to be handled.  */
   int from, to;
-  /* Flag to tell if we should handle multibyte characters.  */
-  int multibyte = !NILP (current_buffer->enable_multibyte_characters);
   /* A flag to tell if a leaf in this level of char-table is not a
      generic character (i.e. a complete multibyte character).  */
   int complete_char;
@@ -2912,7 +3025,8 @@ describe_vector (vector, elt_prefix, elt_describer,
 	      insert_string ("<");
 	      tem2 = CHARSET_TABLE_INFO (i - 128, CHARSET_SHORT_NAME_IDX);
 	      if (STRINGP (tem2))
-		insert_from_string (tem2, 0 , XSTRING (tem2)->size, 0);
+		insert_from_string (tem2, 0, 0, XSTRING (tem2)->size,
+				    STRING_BYTES (XSTRING (tem2)), 0);
 	      else
 		insert ("?", 1);
 	      insert (">", 1);
@@ -2926,7 +3040,7 @@ describe_vector (vector, elt_prefix, elt_describer,
       /* If we find a sub char-table within a char-table,
 	 scan it recursively; it defines the details for
 	 a character set or a portion of a character set.  */
-      if (multibyte && CHAR_TABLE_P (vector) && SUB_CHAR_TABLE_P (definition))
+      if (CHAR_TABLE_P (vector) && SUB_CHAR_TABLE_P (definition))
 	{
 	  insert ("\n", 1);
 	  describe_vector (definition, elt_prefix, elt_describer,
@@ -3053,6 +3167,7 @@ Return list of symbols found.")
   return apropos_accumulate;
 }
 
+void
 syms_of_keymap ()
 {
   Lisp_Object tem;
@@ -3113,6 +3228,13 @@ If two active keymaps bind the same key, the keymap appearing earlier\n\
 in the list takes precedence.");
   Vminor_mode_map_alist = Qnil;
 
+  DEFVAR_LISP ("minor-mode-overriding-map-alist", &Vminor_mode_overriding_map_alist,
+    "Alist of keymaps to use for minor modes, in current major mode.\n\
+This variable is a alist just like `minor-mode-map-alist', and it is\n\
+used the same way (and before `minor-mode-map-alist'); however,\n\
+it is provided for major modes to bind locally.");
+  Vminor_mode_overriding_map_alist = Qnil;
+
   DEFVAR_LISP ("function-key-map", &Vfunction_key_map,
   "Keymap mapping ASCII function key sequences onto their preferred forms.\n\
 This allows Emacs to recognize function keys sent from ASCII\n\
@@ -3152,6 +3274,9 @@ and applies even for keys that have ordinary bindings.");
   Qnon_ascii = intern ("non-ascii");
   staticpro (&Qnon_ascii);
 
+  Qmenu_item = intern ("menu-item");
+  staticpro (&Qmenu_item);
+
   defsubr (&Skeymapp);
   defsubr (&Skeymap_parent);
   defsubr (&Sset_keymap_parent);
@@ -3176,10 +3301,11 @@ and applies even for keys that have ordinary bindings.");
   defsubr (&Ssingle_key_description);
   defsubr (&Stext_char_description);
   defsubr (&Swhere_is_internal);
-  defsubr (&Sdescribe_bindings);
+  defsubr (&Sdescribe_bindings_internal);
   defsubr (&Sapropos_internal);
 }
 
+void
 keys_of_keymap ()
 {
   Lisp_Object tem;

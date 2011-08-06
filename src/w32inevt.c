@@ -52,6 +52,7 @@ extern Lisp_Object Vw32_alt_is_meta;
 
 /* from w32term */
 extern Lisp_Object Vw32_capslock_is_shiftlock;
+extern Lisp_Object Vw32_recognize_altgr;
 
 /* Event queue */
 #define EVENT_QUEUE_SIZE 50
@@ -103,8 +104,10 @@ w32_kbd_mods_to_emacs (DWORD mods, WORD key)
 {
   int retval = 0;
 
-  /* If AltGr has been pressed, remove it.  */
-  if ((mods & (RIGHT_ALT_PRESSED | LEFT_CTRL_PRESSED)) 
+  /* If we recognize right-alt and left-ctrl as AltGr, and it has been
+     pressed, remove the modifiers.  */
+  if (!NILP (Vw32_recognize_altgr) 
+      && (mods & (RIGHT_ALT_PRESSED | LEFT_CTRL_PRESSED)) 
       == (RIGHT_ALT_PRESSED | LEFT_CTRL_PRESSED))
     mods &= ~ (RIGHT_ALT_PRESSED | LEFT_CTRL_PRESSED);
 
@@ -121,11 +124,24 @@ w32_kbd_mods_to_emacs (DWORD mods, WORD key)
 
   /* Just in case someone wanted the original behaviour, make it
      optional by setting w32-capslock-is-shiftlock to t.  */
-  if (NILP (Vw32_capslock_is_shiftlock)
-      && ((key == VK_INSERT)
-	  || (key == VK_DELETE)
-	  || ((key >= VK_F1) && (key <= VK_F24))
-	  || ((key >= VK_PRIOR) && (key <= VK_DOWN))))
+  if (NILP (Vw32_capslock_is_shiftlock) &&
+#if 1
+      ( (key == VK_BACK) ||
+	(key == VK_TAB) ||
+	(key == VK_CLEAR) ||
+	(key == VK_RETURN) ||
+	(key == VK_ESCAPE) ||
+	( (key >= VK_SPACE) && (key <= VK_HELP)) ||
+	( (key >= VK_NUMPAD0) && (key <= VK_F24))
+	)
+#else
+      /* Perhaps easier to say which keys we *do* always want affected
+	 by capslock.  Not sure how this affects "alphabetic" keyboard
+	 input in non-English languages though - what virtual key codes
+	 are returned for accented letters, for instance?  */
+      !( (key >= '0' && key <= '9') || (key >= 'A' && key <= 'Z') )
+#endif
+      )
     {
       if ( (mods & SHIFT_PRESSED) == SHIFT_PRESSED)
 	retval |= shift_modifier;
@@ -164,7 +180,10 @@ w32_kbd_patch_key (KEY_EVENT_RECORD *event)
     keystate[VK_SHIFT] = 0x80;
   if (mods & CAPSLOCK_ON) 
     keystate[VK_CAPITAL] = 1;
-  if ((mods & LEFT_CTRL_PRESSED) && (mods & RIGHT_ALT_PRESSED))
+  /* If we recognize right-alt and left-ctrl as AltGr, set the key
+     states accordingly before invoking ToAscii.  */
+  if (!NILP (Vw32_recognize_altgr)
+      && (mods & LEFT_CTRL_PRESSED) && (mods & RIGHT_ALT_PRESSED))
     {
       keystate[VK_CONTROL] = 0x80;
       keystate[VK_LCONTROL] = 0x80;
@@ -290,7 +309,8 @@ static int map_virt_key[256] =
   -2,                 /* . */
   -2,                 /* / */
   -2,                 /* ` */
-      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0xcf */
+      -2, /* 0xc1: on Brazilian keyboards, this is the /(?) key. */
+          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0xcf */
   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0xda */
                                               -2, -2, -2, -2, -2, /* 0xdf */
   -2, -2, -2, -2, -2,
@@ -405,15 +425,15 @@ key_event (KEY_EVENT_RECORD *event, struct input_event *emacs_ev, int *isdead)
 
 /* Mouse position hook.  */
 void 
-w32_mouse_position (FRAME_PTR *f,
+w32_console_mouse_position (FRAME_PTR *f,
 #ifndef MULE
-		      int insist,
+			    int insist,
 #endif
-		      Lisp_Object *bar_window,
-		      enum scroll_bar_part *part,
-		      Lisp_Object *x,
-		      Lisp_Object *y,
-		      unsigned long *time)
+			    Lisp_Object *bar_window,
+			    enum scroll_bar_part *part,
+			    Lisp_Object *x,
+			    Lisp_Object *y,
+			    unsigned long *time)
 {
   BLOCK_INPUT;
 
@@ -530,7 +550,7 @@ resize_event (WINDOW_BUFFER_SIZE_RECORD *event)
 
 int 
 w32_console_read_socket (int sd, struct input_event *bufp, int numchars,
-			 int waitp, int expected)
+			 int expected)
 {
   BOOL no_events = TRUE;
   int nev, ret = 0, add;

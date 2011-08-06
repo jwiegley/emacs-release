@@ -31,6 +31,10 @@ Boston, MA 02111-1307, USA.  */
 #include <rmsdef.h>
 #endif
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 /* The d_nameln member of a struct dirent includes the '\0' character
    on some systems, but not on others.  What's worse, you can't tell
    at compile-time which one it will be, since it really depends on
@@ -78,21 +82,14 @@ extern struct direct *readdir ();
 #include "lisp.h"
 #include "buffer.h"
 #include "commands.h"
-
+#include "charset.h"
+#include "coding.h"
 #include "regex.h"
 
 /* Returns a search buffer, with a fastmap allocated and ready to go.  */
 extern struct re_pattern_buffer *compile_pattern ();
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
-
-/* Encode the file name NAME using the specified coding system
-   for file names, if any.  */
-#define ENCODE_FILE(name)					\
-  (! NILP (Vfile_name_coding_system)				\
-   && XFASTINT (Vfile_name_coding_system) != 0			\
-   ? Fencode_coding_string (name, Vfile_name_coding_system, Qt)	\
-   : name)
 
 /* if system does not have symbolic links, it does not have lstat.
    In that case, use ordinary stat instead.  */
@@ -103,7 +100,7 @@ extern struct re_pattern_buffer *compile_pattern ();
 
 extern int completion_ignore_case;
 extern Lisp_Object Vcompletion_regexp_list;
-extern Lisp_Object Vfile_name_coding_system;
+extern Lisp_Object Vfile_name_coding_system, Vdefault_file_name_coding_system;
 
 Lisp_Object Vcompletion_ignored_extensions;
 Lisp_Object Qcompletion_ignore_case;
@@ -129,6 +126,8 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.\n\
   Lisp_Object encoded_directory;
   Lisp_Object handler;
   struct re_pattern_buffer *bufp;
+  int needsep = 0;
+  struct gcpro gcpro1, gcpro2;
 
   /* If the file name has special constructs in it,
      call the corresponding file handler.  */
@@ -146,18 +145,14 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.\n\
       return Ffuncall (6, args);
     }
 
-  {
-    struct gcpro gcpro1, gcpro2;
-
-    /* Because of file name handlers, these functions might call
+  /* Because of file name handlers, these functions might call
      Ffuncall, and cause a GC.  */
-    GCPRO1 (match);
-    directory = Fexpand_file_name (directory, Qnil);
-    UNGCPRO;
-    GCPRO2 (match, directory);
-    dirfilename = Fdirectory_file_name (directory);
-    UNGCPRO;
-  }
+  GCPRO1 (match);
+  directory = Fexpand_file_name (directory, Qnil);
+  UNGCPRO;
+  GCPRO2 (match, directory);
+  dirfilename = Fdirectory_file_name (directory);
+  UNGCPRO;
 
   if (!NILP (match))
     {
@@ -166,11 +161,13 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.\n\
       /* MATCH might be a flawed regular expression.  Rather than
 	 catching and signaling our own errors, we just call
 	 compile_pattern to do the work for us.  */
+      /* Pass 1 for the MULTIBYTE arg
+	 because we do make multibyte strings if the contents warrant.  */
 #ifdef VMS
       bufp = compile_pattern (match, 0,
-			      buffer_defaults.downcase_table->contents, 0);
+			      buffer_defaults.downcase_table, 0, 1);
 #else
-      bufp = compile_pattern (match, 0, 0, 0);
+      bufp = compile_pattern (match, 0, Qnil, 0, 1);
 #endif
     }
 
@@ -190,53 +187,63 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.\n\
     report_file_error ("Opening directory", Fcons (directory, Qnil));
 
   list = Qnil;
-  dirnamelen = XSTRING (encoded_directory)->size;
+  dirnamelen = STRING_BYTES (XSTRING (directory));
   re_match_object = Qt;
+
+  /* Decide whether we need to add a directory separator.  */
+#ifndef VMS
+  if (dirnamelen == 0
+      || !IS_ANY_SEP (XSTRING (directory)->data[dirnamelen - 1]))
+    needsep = 1;
+#endif /* not VMS */
+
+  GCPRO2 (encoded_directory, list);
 
   /* Loop reading blocks */
   while (1)
     {
       DIRENTRY *dp = readdir (d);
-      int len;
 
       if (!dp) break;
-      len = NAMLEN (dp);
       if (DIRENTRY_NONEMPTY (dp))
 	{
+	  int len;
+
+	  len = NAMLEN (dp);
+	  name = DECODE_FILE (make_string (dp->d_name, len));
+	  len = STRING_BYTES (XSTRING (name));
+
 	  if (NILP (match)
-	      || (0 <= re_search (bufp, dp->d_name, len, 0, len, 0)))
+	      || (0 <= re_search (bufp, XSTRING (name)->data, len, 0, len, 0)))
 	    {
 	      if (!NILP (full))
 		{
 		  int afterdirindex = dirnamelen;
 		  int total = len + dirnamelen;
-		  int needsep = 0;
+		  int nchars;
+		  Lisp_Object fullname;
 
-		  /* Decide whether we need to add a directory separator.  */
-#ifndef VMS
-		  if (dirnamelen == 0
-		      || !IS_ANY_SEP (XSTRING (encoded_directory)->data[dirnamelen - 1]))
-		    needsep = 1;
-#endif /* VMS */
-
-		  name = make_uninit_string (total + needsep);
-		  bcopy (XSTRING (encoded_directory)->data, XSTRING (name)->data,
+		  fullname = make_uninit_multibyte_string (total + needsep,
+							   total + needsep);
+		  bcopy (XSTRING (directory)->data, XSTRING (fullname)->data,
 			 dirnamelen);
 		  if (needsep)
-		    XSTRING (name)->data[afterdirindex++] = DIRECTORY_SEP;
-		  bcopy (dp->d_name,
-			 XSTRING (name)->data + afterdirindex, len);
+		    XSTRING (fullname)->data[afterdirindex++] = DIRECTORY_SEP;
+		  bcopy (XSTRING (name)->data,
+			 XSTRING (fullname)->data + afterdirindex, len);
+		  nchars = chars_in_text (XSTRING (fullname)->data,
+					  afterdirindex + len);
+		  XSTRING (fullname)->size = nchars;
+		  if (nchars == STRING_BYTES (XSTRING (fullname)))
+		    SET_STRING_BYTES (XSTRING (fullname), -1);
+		  name = fullname;
 		}
-	      else
-		name = make_string (dp->d_name, len);
-	      if (! NILP (Vfile_name_coding_system))
-		name = Fdecode_coding_string (name, Vfile_name_coding_system,
-					      Qt);
 	      list = Fcons (name, list);
 	    }
 	}
     }
   closedir (d);
+  UNGCPRO;
   if (!NILP (nosort))
     return list;
   return Fsort (Fnreverse (list), Qstring_lessp);
@@ -294,6 +301,8 @@ These are all file names in directory DIRECTORY which begin with FILE.")
 
   return file_name_completion (file, directory, 1, 0);
 }
+
+static int file_name_completion_stat ();
 
 Lisp_Object
 file_name_completion (file, dirname, all_flag, ver_flag)
@@ -460,9 +469,7 @@ file_name_completion (file, dirname, all_flag, ver_flag)
 		name = make_string (dp->d_name, len);
 	      if (all_flag)
 		{
-		  if (! NILP (Vfile_name_coding_system))
-		    name = Fdecode_coding_string (name,
-						  Vfile_name_coding_system, Qt);
+		  name = DECODE_FILE (name);
 		  bestmatch = Fcons (name, bestmatch);
 		}
 	      else
@@ -530,10 +537,8 @@ file_name_completion (file, dirname, all_flag, ver_flag)
 
   if (all_flag || NILP (bestmatch))
     {
-      if (! NILP (Vfile_name_coding_system)
-	  && STRINGP (bestmatch))
-	bestmatch = Fdecode_coding_string (bestmatch,
-					   Vfile_name_coding_system, Qt);
+      if (STRINGP (bestmatch))
+	bestmatch = DECODE_FILE (bestmatch);
       return bestmatch;
     }
   if (matchcount == 1 && bestmatchsize == XSTRING (file)->size)
@@ -542,9 +547,7 @@ file_name_completion (file, dirname, all_flag, ver_flag)
 			  make_number (bestmatchsize));
   /* Now that we got the right initial segment of BESTMATCH,
      decode it from the coding system in use.  */
-  if (! NILP (Vfile_name_coding_system))
-    bestmatch = Fdecode_coding_string (bestmatch,
-				       Vfile_name_coding_system, Qt);
+  bestmatch = DECODE_FILE (bestmatch);
   return bestmatch;
 
  quit:
@@ -553,6 +556,7 @@ file_name_completion (file, dirname, all_flag, ver_flag)
   return Fsignal (Qquit, Qnil);
 }
 
+static int
 file_name_completion_stat (dirname, dp, st_addr)
      Lisp_Object dirname;
      DIRENTRY *dp;
@@ -748,6 +752,7 @@ If file does not exist, returns nil.")
   return Flist (sizeof(values) / sizeof(values[0]), values);
 }
 
+void
 syms_of_dired ()
 {
   Qdirectory_files = intern ("directory-files");

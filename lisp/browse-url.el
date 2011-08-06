@@ -1,12 +1,11 @@
 ;;; browse-url.el --- Pass a URL to a WWW browser
 
-;; Copyright 1995, 1996, 1997 Free Software Foundation, Inc.
+;; Copyright 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
 
 ;; Author: Denis Howe <dbh@doc.ic.ac.uk>
-;; Maintainer: Dave Love <d.love@dl.ac.uk>
+;; Maintainer: Dave Love <fx@gnu.org>
 ;; Created: 03 Apr 1995
 ;; Keywords: hypertext, hypermedia, mouse
-;; X-Home page: http://wombat.doc.ic.ac.uk/
 
 ;; This file is part of GNU Emacs.
 
@@ -27,9 +26,6 @@
 
 ;;; Commentary:
 
-;; The latest version of this package should be available from
-;; <URL:http://wombat.doc.ic.ac.uk/emacs/browse-url.el>.
-
 ;; This package provides functions which read a URL (Uniform Resource
 ;; Locator) from the minibuffer, defaulting to the URL around point,
 ;; and ask a World-Wide Web browser to load it.  It can also load the
@@ -39,8 +35,8 @@
 ;; is started.  Currently there is support for:
 
 ;; Function              Browser     Earliest version
-;; browse-url-netscape   Netscape    1.1b1	   
-;; browse-url-mosaic     XMosaic     <= 2.4
+;; browse-url-netscape   Netscape    1.1b1
+;; browse-url-mosaic     XMosaic/mMosaic <= 2.4
 ;; browse-url-cci        XMosaic     2.5
 ;; browse-url-w3         w3          0
 ;; browse-url-w3-gnudoit w3 remotely
@@ -50,10 +46,14 @@
 ;; browse-url-mmm        MMM         ?
 ;; browse-url-generic    arbitrary
 
+;; [The Netscape browser is now free software
+;; <URL:http://www.mozilla.org/>, albeit not GPLed, so it is
+;; reasonable to keep it as the default.]
+
 ;; Note that versions of Netscape before 1.1b1 did not have remote
 ;; control.  <URL:http://www.netscape.com/newsref/std/x-remote.html>.
 
-;; Netscape can cache Web pages so it may be necessary to tell it to
+;; Browsers can cache Web pages so it may be necessary to tell them to
 ;; reload the current page if it has changed (e.g. if you have edited
 ;; it).  There is currently no perfect automatic solution to this.
 
@@ -75,7 +75,7 @@
 ;; doesn't let you edit the URL like browse-url.
 ;; The `gnuserv' package that can be used to control it in another
 ;; Emacs process is available from
-;; <URL:http://hplbwww.hpl.hp.com/people/ange/gnuserv/>.
+;; <URL:ftp://ftp.splode.com/pub/users/friedman/packages/>.
 
 ;; Grail is the freely available WWW browser implemented in Python, a
 ;; cool object-oriented freely available interpreted language.  Grail
@@ -85,8 +85,8 @@
 ;; Python see <url:http://www.python.org/>.  Grail support in
 ;; browse-url.el written by Barry Warsaw <bwarsaw@python.org>.
 
-;; MMM is the freely available WWW browser implemented in Caml Special
-;; Light, a cool impure functional programming language, by Francois
+;; MMM is the freely available WWW browser implemented in Objective
+;; Caml, a cool impure functional programming language, by Francois
 ;; Rouaix.  See the MMM home page
 ;; <URL:http://pauillac.inria.fr/%7Erouaix/mmm/>.
 
@@ -96,14 +96,15 @@
 ;; Free graphical browsers that could be used by `browse-url-generic'
 ;; include Chimera <URL:ftp://ftp.cs.unlv.edu/pub/chimera> and
 ;; <URL:http://www.unlv.edu/chimera/>, Arena
-;; <URL:ftp://ftp.yggdrasil.com/pub/dist/web/arena>, Amaya
-;; <URL:ftp://ftp.w3.org/pub/amaya>, mMosaic
-;; <URL:ftp://sig.enst.fr/pub/multicast/mMosaic/> (the latter with
-;; development support for Java applets).
+;; <URL:ftp://ftp.yggdrasil.com/pub/dist/web/arena> and Amaya
+;; <URL:ftp://ftp.w3.org/pub/amaya>.  mMosaic
+;; <URL:ftp://sig.enst.fr/pub/multicast/mMosaic/> (with development
+;; support for Java applets and multicast) can be used like Mosaic by
+;; setting `browse-url-mosaic-program' appropriately.
 
-;; I [Denis Howe] recommend Nelson Minar <nelson@santafe.edu>'s excellent
-;; html-helper-mode.el for editing HTML and thank Nelson for
-;; his many useful comments on this code.
+;; I [Denis Howe, not Dave Love] recommend Nelson Minar
+;; <nelson@santafe.edu>'s excellent html-helper-mode.el for editing
+;; HTML and thank Nelson for his many useful comments on this code.
 ;; <URL:http://www.santafe.edu/%7Enelson/hhm-beta/>
 
 ;; See also hm--html-menus <URL:http://www.tnt.uni-hannover.de/%7Emuenkel/
@@ -113,11 +114,9 @@
 ;; with this.
 
 ;; This package generalises function html-previewer-process in Marc
-;; Andreessen <marca@ncsa.uiuc.edu>'s html-mode (LCD
-;; modes/html-mode.el.Z) and provides better versions of the URL
-;; functions in Michelangelo Grigni <mic@cs.ucsd.edu>'s ffap.el
-;; (find-file-at-point) <URL:ftp://cs.ucsd.edu:/pub/mic/>.  The huge
-;; hyperbole package also contains similar functions.
+;; Andreessen's html-mode (LCD modes/html-mode.el.Z).  See also the
+;; ffap.el package.  The huge hyperbole package also contains similar
+;; functions.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Help!
@@ -155,7 +154,8 @@
 ;; Customisation (~/.emacs)
 
 ;; To see what variables are available for customization, type
-;; `M-x set-variable browse-url TAB'.
+;; `M-x set-variable browse-url TAB'.  Better, use
+;; `M-x customize-group browse-url'.
 
 ;; Bind the browse-url commands to keys with the `C-c C-z' prefix
 ;; (as used by html-helper-mode):
@@ -165,12 +165,12 @@
 ;;	(global-set-key "\C-c\C-zu" 'browse-url)
 ;;	(global-set-key "\C-c\C-zv" 'browse-url-of-file)
 ;;	(add-hook 'dired-mode-hook
-;;		  (function (lambda ()
-;;			      (local-set-key "\C-c\C-zf" 'browse-url-of-dired-file))))
+;;		  (lambda ()
+;;	             (local-set-key "\C-c\C-zf" 'browse-url-of-dired-file)))
 
 ;; Browse URLs in mail messages by clicking mouse-2:
-;;	(add-hook 'rmail-mode-hook (function (lambda () ; rmail-mode startup
-;;	  (define-key rmail-mode-map [mouse-2] 'browse-url-at-mouse))))
+;;	(add-hook 'rmail-mode-hook (lambda () ; rmail-mode startup
+;;	  (define-key rmail-mode-map [mouse-2] 'browse-url-at-mouse)))
 
 ;; Browse URLs in Usenet messages by clicking mouse-2:
 ;;	(eval-after-load "gnus"
@@ -192,14 +192,14 @@
 ;;	(autoload 'browse-url-netscape-reload "browse-url"
 ;;	  "Ask a WWW browser to redisplay the current file." t)
 ;;	(add-hook 'html-helper-mode-hook
-;;		  (function (lambda ()
+;;		  (lambda ()
 ;;		     (add-hook 'local-write-file-hooks
-;;			       (function (lambda ()
+;;			       (lambda ()
 ;;				  (let ((local-write-file-hooks))
 ;;				    (save-buffer))
 ;;				  (browse-url-netscape-reload)
-;;				  t))			; => file written by hook
-;;			       t))))			; append to l-w-f-hooks
+;;				  t)			; => file written by hook
+;;			       t)))			; append to l-w-f-hooks
 ;;
 ;; OR have browse-url-of-file ask Netscape to load and then reload the
 ;; file:
@@ -218,14 +218,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Code:
 
-(eval-when-compile (require 'dired)
-		   (require 'thingatpt))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variables
 
+(eval-when-compile (require 'thingatpt)
+                   (require 'term))
+
 (defgroup browse-url nil
   "Use a web browser to look at a URL."
+  :prefix "browse-url-"
   :group 'hypermedia)
 
 ;;;###autoload
@@ -236,95 +237,126 @@ This is used by the `browse-url-at-point', `browse-url-at-mouse', and
 `browse-url-of-file' commands.
 
 If the value is not a function it should be a list of pairs
-(REGEXP.FUNCTION).  In this case the function called will be the one
+(REGEXP . FUNCTION).  In this case the function called will be the one
 associated with the first REGEXP which matches the current URL.  The
 function is passed the URL and any other args of `browse-url'.  The last
 regexp should probably be \".\" to specify a default browser."
-  :type 'function
+  :type '(choice
+           (function-item :tag "Emacs W3" :value  browse-url-w3)
+           (function-item :tag "W3 in another Emacs via `gnudoit'"
+                          :value  browse-url-w3-gnudoit)
+           (function-item :tag "Netscape" :value  browse-url-netscape)
+           (function-item :tag "Mosaic" :value  browse-url-mosaic)
+           (function-item :tag "Mosaic using CCI" :value  browse-url-cci)
+           (function-item :tag "IXI Mosaic" :value  browse-url-iximosaic)
+           (function-item :tag "Lynx in an xterm window"
+                          :value browse-url-lynx-xterm)
+           (function-item :tag "Lynx in an Emacs window"
+                          :value browse-url-lynx-emacs)
+           (function-item :tag "Grail" :value  browse-url-grail)
+           (function-item :tag "MMM" :value  browse-url-mmm)
+           (function-item :tag "Specified by `Browse Url Generic Program'"
+                          :value browse-url-generic)
+           (function :tag "Your own function"))
   :group 'browse-url)
 
 (defcustom browse-url-netscape-program "netscape"
-  "*The name by which to invoke Netscape."
+  ;; Info about netscape-remote from Kurt Swanson in gnu.emacs.gnus
+  "The name by which to invoke Netscape.
+
+It is said that source is available for a program `netscape-remote'
+which starts up very much quicker than `netscape' and that it is
+useful to set this variable to the name of a script which invokes that
+program like:
+ #!/bin/sh
+ /usr/local/bin/netscape-remote \"$@\" > /dev/null 2>&1
+"
   :type 'string
   :group 'browse-url)
 
 (defcustom browse-url-netscape-arguments nil
-  "*A list of strings to pass to Netscape as arguments."
+  "A list of strings to pass to Netscape as arguments."
   :type '(repeat (string :tag "Argument"))
   :group 'browse-url)
 
 (defcustom browse-url-netscape-startup-arguments browse-url-netscape-arguments
-  "*A list of strings to pass to Netscape when it starts up.
+  "A list of strings to pass to Netscape when it starts up.
 Defaults to the value of `browse-url-netscape-arguments' at the time
 `browse-url' is loaded."
   :type '(repeat (string :tag "Argument"))
   :group 'browse-url)
 
+;;;###autoload
 (defcustom browse-url-new-window-p nil
-  "*If non-nil, always open a new browser window.
-Passing an interactive argument to \\[browse-url-netscape] or
-\\[browse-url-cci] reverses the effect of this variable.  Requires
-Netscape version 1.1N or later or XMosaic version 2.5 or later."
+  "*If non-nil, always open a new browser window with appropriate browsers.
+Passing an interactive argument to \\[browse-url], or specific browser
+commands reverses the effect of this variable.  Requires Netscape version
+1.1N or later or XMosaic version 2.5 or later if using those browsers."
   :type 'boolean
   :group 'browse-url)
 
+;;;###autoload
 (defcustom browse-url-netscape-display nil
-  "*The X display for running Netscape, if not same as Emacs's."
+  "*The X display for running Netscape, if not same as Emacs'."
+  :type '(choice string (const :tag "Default" nil))
+  :group 'browse-url)
+
+(defcustom browse-url-mosaic-program "xmosaic"
+  "The name by which to invoke Mosaic (or mMosaic)."
   :type 'string
+  :version "20.3"
   :group 'browse-url)
 
 (defcustom browse-url-mosaic-arguments nil
-  "*A list of strings to pass to Mosaic as arguments."
+  "A list of strings to pass to Mosaic as arguments."
   :type '(repeat (string :tag "Argument"))
   :group 'browse-url)
 
-(defvar browse-url-path-regexp
-  "[^]\t\n \"'()<>[^`{}]*[^]\t\n \"'()<>[^`{}.,;]+"
-  "A regular expression to match the host, path or e-mail part of a URL.")
-
-(defvar browse-url-short-regexp
-  (concat "[-A-Za-z0-9.]+" browse-url-path-regexp)
-  "A regular expression probably matching a URL without an access scheme.
-Hostname matching is stricter in this case than for
-``browse-url-regexp''.")
-
-(defvar browse-url-regexp
-  (concat
-   "\\(https?://\\|ftp://\\|gopher://\\|telnet://\\|wais://\\|file:/\\|s?news:\\|mailto:\\)"
-   browse-url-path-regexp)
-  "A regular expression probably matching a complete URL.")
-
-(defvar browse-url-markedup-regexp
-  "<URL:[^>]+>"
-  "A regular expression matching a URL marked up per RFC1738.
-This may be broken across lines.")
-
-(defvar browse-url-filename-alist
-  '(("^/+" . "file:/"))
-  "An alist of (REGEXP . STRING) pairs.
+(defcustom browse-url-filename-alist
+  '(("^/\\(ftp@\\|anonymous@\\)?\\([^:]+\\):/*" . "ftp://\\2/")
+    ;; The above loses the username to avoid the browser prompting for
+    ;; it in anonymous cases.  If it's not anonymous the next regexp
+    ;; applies.
+    ("^/\\([^:@]+@\\)?\\([^:]+\\):/*" . "ftp://\\1\\2/")
+    ("^/+" . "file:/"))
+  "An alist of (REGEXP . STRING) pairs used by `browse-url-of-file'.
 Any substring of a filename matching one of the REGEXPs is replaced by
-the corresponding STRING.  All pairs are applied in the order given.
-The default value prepends `file:' to any path beginning with `/'.
-Used by the `browse-url-of-file' command.
+the corresponding STRING using `replace-match', not treating STRING
+literally.  All pairs are applied in the order given.  The default
+value converts ange-ftp/EFS-style paths into ftp URLs and prepends
+`file:' to any path beginning with `/'.
 
-For example, to map EFS filenames to URLs:
+For example, adding to the default a specific translation of an ange-ftp
+address to an HTTP URL:
 
     (setq browse-url-filename-alist
 	  '((\"/webmaster@webserver:/home/www/html/\" .
 	     \"http://www.acme.co.uk/\")
+            (\"^/\\(ftp@\\|anonymous@\\)?\\([^:]+\\):/*\" . \"ftp://\\2/\")
+            (\"^/\\([^:@]+@\\)?\\([^:]+\\):/*\" . \"ftp://\\1\\2/\")
 	    (\"^/+\" . \"file:/\")))
-")
+"
+  :type '(repeat (cons :format "%v"
+                       (regexp :tag "Regexp")
+                       (string :tag "Replacement")))
+  :version "20.3"
+  :group 'browse-url)
 
-(defvar browse-url-save-file nil
-  "If non-nil, save the buffer before displaying its file.
-Used by the `browse-url-of-file' command.")
+;;;###autoload
+(defcustom browse-url-save-file nil
+  "*If non-nil, save the buffer before displaying its file.
+Used by the `browse-url-of-file' command."
+  :type 'boolean
+  :group 'browse-url)
 
-(defvar browse-url-of-file-hook nil
-  "A hook to be run with run-hook after `browse-url-of-file' has asked
-a browser to load a file.
+(defcustom browse-url-of-file-hook nil
+  "Run after `browse-url-of-file' has asked a browser to load a file.
 
 Set this to `browse-url-netscape-reload' to force Netscape to load the
-file rather than displaying a cached copy.")
+file rather than displaying a cached copy."
+  :type 'hook
+  :options '(browse-url-netscape-reload)
+  :group 'browse-url)
 
 (defvar browse-url-usr1-signal
   (if (and (boundp 'emacs-major-version)
@@ -335,21 +367,25 @@ file rather than displaying a cached copy.")
 Emacs 19.29 accepts 'SIGUSR1, earlier versions require an integer
 which is 30 on SunOS and 16 on HP-UX and Solaris.")
 
-(defvar browse-url-CCI-port 3003
+(defcustom browse-url-CCI-port 3003
   "Port to access XMosaic via CCI.
 This can be any number between 1024 and 65535 but must correspond to
-the value set in the browser.")
+the value set in the browser."
+  :type 'integer
+  :group 'browse-url)
 
-(defvar browse-url-CCI-host "localhost"
+(defcustom browse-url-CCI-host "localhost"
   "*Host to access XMosaic via CCI.
 This should be the host name of the machine running XMosaic with CCI
-enabled.  The port number should be set in `browse-url-CCI-port'.")
+enabled.  The port number should be set in `browse-url-CCI-port'."
+  :type 'string
+  :group 'browse-url)
 
 (defvar browse-url-temp-file-name nil)
 (make-variable-buffer-local 'browse-url-temp-file-name)
 
 (defcustom browse-url-xterm-program "xterm"
-  "*The name of the terminal emulator used by `browse-url-lynx-xterm'.
+  "The name of the terminal emulator used by `browse-url-lynx-xterm'.
 This might, for instance, be a separate colour version of xterm."
   :type 'string
   :group 'browse-url)
@@ -360,8 +396,19 @@ These might set its size, for instance."
   :type '(repeat (string :tag "Argument"))
   :group 'browse-url)
 
+(defcustom browse-url-lynx-emacs-args (and (not window-system) 
+                                           '("-show_cursor"))
+  "A list of strings defining options for Lynx in an Emacs buffer.
+
+The default is none in a window system, otherwise `-show_cursor' to
+indicate the position of the current link in the absence of
+highlighting, assuming the normal default for showing the cursor."
+  :type '(repeat (string :tag "Argument"))
+  :version "20.3"
+  :group 'browse-url)
+
 (defcustom browse-url-gnudoit-program "gnudoit"
-  "*The name of the `gnudoit' program used by `browse-url-w3-gnudoit'."
+  "The name of the `gnudoit' program used by `browse-url-w3-gnudoit'."
   :type 'string
   :group 'browse-url)
 
@@ -371,9 +418,10 @@ These might set the port, for instance."
   :type '(repeat (string :tag "Argument"))
   :group 'browse-url)
 
+;;;###autoload
 (defcustom browse-url-generic-program nil
   "*The name of the browser program used by `browse-url-generic'."
-  :type 'string
+  :type '(choice string (const :tag "None" nil))
   :group 'browse-url)
 
 (defcustom browse-url-generic-args nil
@@ -381,21 +429,41 @@ These might set the port, for instance."
   :type '(repeat (string :tag "Argument"))
   :group 'browse-url)
 
-(defcustom browse-url-temp-dir
-  (or (getenv "TMPDIR") "/tmp")
-  "*The name of a directory in which to store temporary files
-generated by functions like `browse-url-of-region'.  You might want to
-set this to somewhere with restricted read permissions for privacy's sake."
+(defcustom browse-url-temp-dir temporary-file-directory
+  "The name of a directory for browse-url's temporary files.
+Such files are generated by functions like `browse-url-of-region'.
+You might want to set this to somewhere with restricted read permissions
+for privacy's sake."
   :type 'string
   :group 'browse-url)
 
 (defcustom browse-url-netscape-version
   3
-  "*The version of Netscape you are using.
+  "The version of Netscape you are using.
 This affects how URL reloading is done; the mechanism changed
 incompatibly at version 4."
   :type 'number
   :group 'browse-url)
+
+(defcustom browse-url-lynx-input-field 'avoid
+  "*Action on selecting an existing Lynx buffer at an input field.
+What to do when sending a new URL to an existing Lynx buffer in Emacs
+if the Lynx cursor is on an input field (in which case the `g' command
+would be entered as data).  Such fields are recognized by the
+underlines ____.  Allowed values: nil: disregard it, 'warn: warn the
+user and don't emit the URL, 'avoid: try to avoid the field by moving
+down (this *won't* always work)."
+  :type '(choice (const :tag "Move to try to avoid field" :value avoid)
+                 (const :tag "Disregard" :value nil)
+                 (const :tag "Warn, don't emit URL" :value warn))
+  :version "20.3"
+  :group 'browse-url)
+
+(defvar browse-url-lynx-input-attempts 10
+  "*How many times to try to move down from a series of lynx input fields.")
+
+(defcustom browse-url-lynx-input-delay 0.2
+  "How many seconds to wait for lynx between moves down from an input field.")
 
 (defvar browse-url-temp-file-list '())
 
@@ -423,6 +491,11 @@ negation if a prefix argument was given."
 	(not (eq (null browse-url-new-window-p)
 		 (null current-prefix-arg)))))
 
+(defun browse-url-maybe-new-window (arg)
+  (if (interactive-p)
+      arg
+    browse-url-new-window-p))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Browse current buffer
 
@@ -449,8 +522,7 @@ interactively.  Turn the filename into a URL with function
 
 (defun browse-url-file-url (file)
   "Return the URL corresponding to FILE.
-Use variable `browse-url-filename-alist' to map filenames to URLs.
-Convert EFS file names of the form /USER@HOST:PATH to ftp://HOST/PATH."
+Use variable `browse-url-filename-alist' to map filenames to URLs."
   ;; URL-encode special chars, do % first
   (let ((s 0))
     (while (setq s (string-match "%" file s))
@@ -466,12 +538,7 @@ Convert EFS file names of the form /USER@HOST:PATH to ftp://HOST/PATH."
 	     (to-string (cdr map)))
 	(setq maps (cdr maps))
 	(and (string-match from-re file)
-	     (setq file (replace-match to-string t t file))))))
-  ;; Check for EFS path
-  (and (string-match "^/\\([^:@]+@\\)?\\([^:]+\\):/*" file)
-       (setq file (concat "ftp://"
-			  (substring file (match-beginning 2) (match-end 2))
-			  "/" (substring file (match-end 0)))))
+	     (setq file (replace-match to-string t nil file))))))
   file)
 
 ;;;###autoload
@@ -535,7 +602,7 @@ narrowed."
   (interactive "r")
   (save-excursion
     (save-restriction
-      (narrow-to-region (mark) (point))
+      (narrow-to-region min max)
       (browse-url-of-buffer))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -544,34 +611,25 @@ narrowed."
 ;; A generic command to call the current browse-url-browser-function
 
 ;;;###autoload
-(defun browse-url (&rest args)
+(defun browse-url (url &rest args)
   "Ask a WWW browser to load URL.
 Prompts for a URL, defaulting to the URL at or before point.  Variable
 `browse-url-browser-function' says which browser to use."
   (interactive (browse-url-interactive-arg "URL: "))
-  (if (consp browse-url-browser-function)
-      (browse-url-choose-browser args)
-    (apply browse-url-browser-function args)))
-
-(defun browse-url-choose-browser (url &rest args)
-  "Pass URL to a browser function chosen.
-This is done according to the association list in variable
-`browse-url-browser-function'."
-  (let ((blist browse-url-browser-function)
-	re bf)
-    (while (consp blist)
-      (setq re (car (car blist))
-	    bf (cdr (car blist))
-	    blist (cdr blist))
-      (if (string-match re url)
-	  (progn (apply bf url args) (setq blist t))))
-    (or blist
-	(error "No browser in browse-url-browser-function matching URL %s" url))))
+  (let ((bf browse-url-browser-function) re)
+    (while (consp bf)
+      (setq re (car (car bf))
+	    bf (if (string-match re url)
+		   (cdr (car bf))	; The function
+		 (cdr bf))))		; More pairs
+    (or bf (error "No browser in browse-url-browser-function matching URL %s"
+                  url))
+    (apply bf url args)))
 
 ;;;###autoload
 (defun browse-url-at-point ()
   "Ask a WWW browser to load the URL at or before point.
-Doesn't let you edit the URL like browse-url.  Variable
+Doesn't let you edit the URL like `browse-url'.  Variable
 `browse-url-browser-function' says which browser to use."
   (interactive)
   (browse-url (browse-url-url-at-point)))
@@ -587,7 +645,7 @@ Doesn't let you edit the URL like browse-url.  Variable
   "Ask a WWW browser to load a URL clicked with the mouse.
 The URL is the one around or before the position of the mouse click
 but point is not changed.  Doesn't let you edit the URL like
-browse-url.  Variable `browse-url-browser-function' says which browser
+`browse-url'.  Variable `browse-url-browser-function' says which browser
 to use."
   (interactive "e")
   (save-excursion
@@ -596,7 +654,7 @@ to use."
     (let ((url (browse-url-url-at-point)))
       (if (string-equal url "")
 	  (error "No URL found"))
-      (browse-url url))))
+      (browse-url url browse-url-new-window-p))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Browser-specific commands
@@ -615,19 +673,13 @@ environment, otherwise just use the current environment."
 
 (defun browse-url-emacs-display ()
   "Return the X display Emacs is running on.
-This nil if the display is the same as the DISPLAY environment variable.
+This is nil if the display is the same as the DISPLAY environment variable.
 
-Actually Emacs could be using several screens on several displays, as
-listed by (emacs-display-list) and (x-display-screens DISPLAY), this
-just returns the display showing the selected frame.  You got a
-problem with that?"
-  (let (device display)
-    (and (fboundp 'selected-device) (fboundp 'device-type) (fboundp 'device-connection)
-	 (setq device (selected-device))
-	 (eq (device-type device) 'x)
-	 (setq display (device-connection device))
-	 (not (equal display (getenv "DISPLAY")))
-	 display)))
+Actually Emacs could be using several displays; this just returns the
+one showing the selected frame."
+  (let ((display (cdr-safe (assq 'display (frame-parameters)))))
+    (and (not (equal display (getenv "DISPLAY")))
+         display)))
 
 ;;;###autoload
 (defun browse-url-netscape (url &optional new-window)
@@ -644,9 +696,11 @@ the effect of `browse-url-new-window-p'.
 When called non-interactively, optional second argument NEW-WINDOW is
 used instead of `browse-url-new-window-p'."
   (interactive (browse-url-interactive-arg "Netscape URL: "))
-  ;; URL encode any commas in the URL
-  (while (string-match "," url)
-    (setq url (replace-match "%2C" t t url)))
+  ;; URL encode any `confusing' characters in the URL.  This needs to
+  ;; include at least commas; presumably also close parens.
+  (while (string-match "[,)]" url)
+    (setq url (replace-match
+	       (format "%x" (string-to-char (match-string 0 url))) t t url)))
   (let* ((process-environment (browse-url-process-environment))
          (process (apply 'start-process
  			(concat "netscape " url) nil
@@ -655,9 +709,11 @@ used instead of `browse-url-new-window-p'."
 				(if (eq window-system 'w32)
 				    (list url)
 				  (if new-window '("-noraise"))
-				  (list "-remote" 
-					(concat "openURL(" url 
-						(if new-window ",new-window")
+				  (list "-remote"
+					(concat "openURL(" url
+						(if (browse-url-maybe-new-window
+						     new-window)
+						    ",new-window")
 						")")))))))
     (set-process-sentinel process
 			  (list 'lambda '(process change)
@@ -674,7 +730,8 @@ used instead of `browse-url-new-window-p'."
 	       (append browse-url-netscape-startup-arguments (list url))))))
 
 (defun browse-url-netscape-reload ()
-  "Ask Netscape to reload its current document."
+  "Ask Netscape to reload its current document.
+How depends on `browse-url-netscape-version'."
   (interactive)
   ;; Backwards incompatibility reported by
   ;; <peter.kruse@psychologie.uni-regensburg.de>.
@@ -696,10 +753,22 @@ used instead of `browse-url-new-window-p'."
 (defun browse-url-mosaic (url &optional new-window)
   ;; new-window ignored
   "Ask the XMosaic WWW browser to load URL.
-Default to the URL around or before point."
+
+Default to the URL around or before point.  The strings in variable
+`browse-url-mosaic-arguments' are also passed to Mosaic and the
+program is invoked according to the variable
+`browse-url-mosaic-program'.
+
+When called interactively, if variable `browse-url-new-window-p' is
+non-nil, load the document in a new Mosaic window, otherwise use a
+random existing one.  A non-nil interactive prefix argument reverses
+the effect of `browse-url-new-window-p'.
+
+When called non-interactively, optional second argument NEW-WINDOW is
+used instead of `browse-url-new-window-p'."
   (interactive (browse-url-interactive-arg "Mosaic URL: "))
   (let ((pidfile (expand-file-name "~/.mosaicpid"))
-	pid pidbuf)
+	pid)
     (if (file-readable-p pidfile)
 	(save-excursion
 	  (find-file pidfile)
@@ -710,7 +779,10 @@ Default to the URL around or before point."
 	(save-excursion
 	  (find-file (format "/tmp/Mosaic.%d" pid))
 	  (erase-buffer)
-	  (insert "goto\n" url "\n")
+	  (insert (if (browse-url-maybe-new-window new-window)
+		      "newwin\n"
+		      "goto\n")
+		  url "\n")
 	  (save-buffer)
 	  (kill-buffer nil)
 	  ;; Send signal SIGUSR to Mosaic
@@ -722,7 +794,7 @@ Default to the URL around or before point."
 	  )
       ;; Mosaic not running - start it
       (message "Starting Mosaic...")
-      (apply 'start-process "xmosaic" nil "xmosaic"
+      (apply 'start-process "xmosaic" nil browse-url-mosaic-program
 	     (append browse-url-mosaic-arguments (list url)))
       (message "Starting Mosaic...done"))))
 
@@ -731,7 +803,7 @@ Default to the URL around or before point."
 ;;;###autoload
 (defvar browse-url-grail
   (concat (or (getenv "GRAILDIR") "~/.grail") "/user/rcgrail.py")
-  "*Location of Grail remote control client script `rcgrail.py'.
+  "Location of Grail remote control client script `rcgrail.py'.
 Typically found in $GRAILDIR/rcgrail.py, or ~/.grail/user/rcgrail.py.")
 
 ;;;###autoload
@@ -745,11 +817,14 @@ variable `browse-url-grail'."
     (set-buffer (get-buffer-create " *Shell Command Output*"))
     (erase-buffer)
     ;; don't worry about this failing.
-    (call-process browse-url-grail nil 0 nil url)
+    (if new-window
+	(call-process browse-url-grail nil 0 nil "-b" url)
+      (call-process browse-url-grail nil 0 nil url))
     (message "Sending URL to Grail... done")))
 
 ;; --- Mosaic using CCI ---
 
+;;;###autoload
 (defun browse-url-cci (url &optional new-window)
   "Ask the XMosaic WWW browser to load URL.
 Default to the URL around or before point.
@@ -771,7 +846,11 @@ used instead of `browse-url-new-window-p'."
   ;; Todo: start browser if fails
   (process-send-string "browse-url"
 		       (concat "get url (" url ") output "
-			       (if new-window "new" "current") "\r\n"))
+			       (if (browse-url-maybe-new-window
+				    new-window)
+				   "new"
+				 "current")
+			       "\r\n"))
   (process-send-string "browse-url" "disconnect\r\n")
   (delete-process "browse-url"))
 
@@ -790,11 +869,19 @@ Default to the URL around or before point."
 
 ;;;###autoload
 (defun browse-url-w3 (url &optional new-window)
-  ;; new-window ignored
   "Ask the w3 WWW browser to load URL.
-Default to the URL around or before point."
+Default to the URL around or before point.
+
+When called interactively, if variable `browse-url-new-window-p' is
+non-nil, load the document in a new window.  A non-nil interactive
+prefix argument reverses the effect of `browse-url-new-window-p'.
+
+When called non-interactively, optional second argument NEW-WINDOW is
+used instead of `browse-url-new-window-p'."
   (interactive (browse-url-interactive-arg "W3 URL: "))
-  (w3-fetch url))
+  (if (browse-url-maybe-new-window new-window)
+      (w3-fetch-other-window)
+    (w3-fetch url)))
 
 ;;;###autoload
 (defun browse-url-w3-gnudoit (url &optional new-window)
@@ -817,26 +904,73 @@ Default to the URL around or before point.  A new Lynx process is run
 in an Xterm window using the Xterm program named by `browse-url-xterm-program'
 with possible additional arguments `browse-url-xterm-args'."
   (interactive (browse-url-interactive-arg "Lynx URL: "))
-  (apply 'start-process (concat "lynx" url) nil browse-url-xterm-program
-             (append browse-url-xterm-args (list "-e" "lynx" url))))
+  (apply #'start-process `(,(concat "lynx" url) nil ,browse-url-xterm-program
+             ,@browse-url-xterm-args "-e" "lynx" ,url)))
 
 ;; --- Lynx in an Emacs "term" window ---
 
 ;;;###autoload
-(defun browse-url-lynx-emacs (url &optional new-window)
-  ;; new-window ignored
+(defun browse-url-lynx-emacs (url &optional new-buffer)
   "Ask the Lynx WWW browser to load URL.
-Default to the URL around or before point.  Run a new Lynx process in
-an Emacs buffer."
+Default to the URL around or before point.  With a prefix argument, run
+a new Lynx process in a new buffer.
+
+When called interactively, if variable `browse-url-new-window-p' is
+non-nil, load the document in a new lynx in a new term window,
+otherwise use any existing one.  A non-nil interactive prefix argument
+reverses the effect of `browse-url-new-window-p'.
+
+When called non-interactively, optional second argument NEW-WINDOW is
+used instead of `browse-url-new-window-p'."
   (interactive (browse-url-interactive-arg "Lynx URL: "))
-  (let ((system-uses-terminfo t))	; Lynx uses terminfo
-    (if (fboundp 'make-term)
-	(let ((term-term-name "vt100"))
-	  (set-buffer (make-term "browse-url" "lynx" nil url))
-	  (term-mode)
-	  (term-char-mode)
-	  (switch-to-buffer "*browse-url*"))
-      (terminal-emulator "*browse-url*" "lynx" (list url)))))
+  (let* ((system-uses-terminfo t)       ; Lynx uses terminfo
+	 ;; (term-term-name "vt100") ; ??
+	 (buf (get-buffer "*lynx*"))
+	 (proc (and buf (get-buffer-process buf)))
+	 (n browse-url-lynx-input-attempts))
+    (if (and (browse-url-maybe-new-window new-buffer) buf)
+	;; Rename away the OLD buffer. This isn't very polite, but
+	;; term insists on working in a buffer named *lynx* and would
+	;; choke on *lynx*<1>
+	(progn (set-buffer buf)
+	       (rename-uniquely)))
+    (if (or (browse-url-maybe-new-window new-buffer)
+	    (not buf)
+	    (not proc)
+	    (not (memq (process-status proc) '(run stop))))
+	;; start a new lynx
+	(progn
+          (setq buf
+                (apply #'make-term
+                       `("lynx" "lynx" nil ,@browse-url-lynx-emacs-args ,url)))
+          (switch-to-buffer buf)
+          (term-char-mode)
+          (set-process-sentinel
+           (get-buffer-process buf)
+           ;; Don't leave around a dead one (especially because of its
+           ;; munged keymap.)
+           (lambda (process event)
+             (if (not (memq (process-status process) '(run stop)))
+                 (let ((buf (process-buffer process)))
+                   (if buf (kill-buffer buf)))))))
+      ;; send the url to lynx in the old buffer
+      (let ((win (get-buffer-window buf t)))
+	(if win
+	    (select-window win)
+	  (switch-to-buffer buf)))
+      (if (eq (following-char) ?_)
+	  (cond ((eq browse-url-lynx-input-field 'warn)
+		 (error "Please move out of the input field first."))
+		((eq browse-url-lynx-input-field 'avoid)
+		 (while (and (eq (following-char) ?_) (> n 0))
+		   (term-send-down) ; down arrow
+		   (sit-for browse-url-lynx-input-delay))
+		 (if (eq (following-char) ?_)
+		     (error "Cannot move out of the input field, sorry.")))))
+      (term-send-string proc (concat "g" ; goto
+				     "\C-u" ; kill default url
+				     url
+				     "\r")))))
 
 ;; --- MMM ---
 
@@ -865,10 +999,18 @@ Default to the URL around or before point."
 Default to using the mailto: URL around or before point as the
 recipient's address.  Supplying a non-nil interactive prefix argument
 will cause the mail to be composed in another window rather than the
-current one."
+current one.
+
+When called interactively, if variable `browse-url-new-window-p' is
+non-nil use `compose-mail-other-window', otherwise `compose-mail'.  A
+non-nil interactive prefix argument reverses the effect of
+`browse-url-new-window-p'.
+
+When called non-interactively, optional second argument NEW-WINDOW is
+used instead of `browse-url-new-window-p'."
   (interactive (browse-url-interactive-arg "Mailto URL: "))
   (save-excursion
-    (let ((func (if new-window
+    (let ((func (if (browse-url-maybe-new-window new-window)
 		    'compose-mail-other-window
 		  'compose-mail))
 	  (to (if (string-match "^mailto:" url)

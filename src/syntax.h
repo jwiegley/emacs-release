@@ -1,5 +1,5 @@
 /* Declarations having to do with GNU Emacs syntax tables.
-   Copyright (C) 1985, 1993, 1994, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1985, 93, 94, 97, 1998 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -20,8 +20,7 @@ Boston, MA 02111-1307, USA.  */
 
 
 extern Lisp_Object Qsyntax_table_p;
-extern Lisp_Object Fsyntax_table_p (), Fsyntax_table (), Fset_syntax_table ();
-extern void update_syntax_table ();
+extern void update_syntax_table P_ ((int, int, int, Lisp_Object));
 
 /* The standard syntax table is stored where it will automatically
    be used in all new buffers.  */
@@ -50,9 +49,9 @@ enum syntaxcode
     Sendcomment, /* for a comment-ending character */
     Sinherit,    /* use the standard syntax table for this character */
     Scomment_fence, /* Starts/ends comment which is delimited on the
-		       other side by a char with the same syntaxcode.  */
+		       other side by any char with the same syntaxcode.  */
     Sstring_fence,  /* Starts/ends string which is delimited on the
-		       other side by a char with the same syntaxcode.  */
+		       other side by any char with the same syntaxcode.  */
     Smax	 /* Upper bound on codes that are meaningful */
   };
 
@@ -81,7 +80,7 @@ enum syntaxcode
      temp; })
 #else
 extern Lisp_Object syntax_temp;
-extern Lisp_Object syntax_parent_lookup ();
+extern Lisp_Object syntax_parent_lookup P_ ((Lisp_Object, int));
 
 #define SYNTAX_ENTRY_FOLLOW_PARENT(table, c)	    	\
   (syntax_temp = XCHAR_TABLE (table)->contents[(c)],	\
@@ -172,6 +171,8 @@ extern Lisp_Object syntax_parent_lookup ();
   Style a is always the default.
   */
 
+/* These macros extract a particular flag for a given character.  */
+
 #define SYNTAX_COMSTART_FIRST(c) ((SYNTAX_WITH_FLAGS (c) >> 16) & 1)
 
 #define SYNTAX_COMSTART_SECOND(c) ((SYNTAX_WITH_FLAGS (c) >> 17) & 1)
@@ -182,8 +183,22 @@ extern Lisp_Object syntax_parent_lookup ();
 
 #define SYNTAX_PREFIX(c) ((SYNTAX_WITH_FLAGS (c) >> 20) & 1)
 
-/* extract the comment style bit from the syntax table entry */
 #define SYNTAX_COMMENT_STYLE(c) ((SYNTAX_WITH_FLAGS (c) >> 21) & 1)
+
+/* These macros extract specific flags from an integer
+   that holds the syntax code and the flags.  */
+
+#define SYNTAX_FLAGS_COMSTART_FIRST(flags) (((flags) >> 16) & 1)
+
+#define SYNTAX_FLAGS_COMSTART_SECOND(flags) (((flags) >> 17) & 1)
+
+#define SYNTAX_FLAGS_COMEND_FIRST(flags) (((flags) >> 18) & 1)
+
+#define SYNTAX_FLAGS_COMEND_SECOND(flags) (((flags) >> 19) & 1)
+
+#define SYNTAX_FLAGS_PREFIX(flags) (((flags) >> 20) & 1)
+
+#define SYNTAX_FLAGS_COMMENT_STYLE(flags) (((flags) >> 21) & 1)
 
 /* This array, indexed by a character, contains the syntax code which that
  character signifies (as a char).  For example,
@@ -195,27 +210,61 @@ extern unsigned char syntax_spec_code[0400];
 
 extern char syntax_code_spec[16];
 
-/* Make syntax table state (gl_state) good for POS, assuming it is
-   currently good for a position before POS.  */
+/* Convert the byte offset BYTEPOS into a character position,
+   for the object recorded in gl_state with SETUP_SYNTAX_TABLE_FOR_OBJECT.
 
-#define UPDATE_SYNTAX_TABLE_FORWARD(pos)		\
-  ((pos) >= gl_state.e_property - gl_state.offset	\
-   ? (update_syntax_table ((pos) + gl_state.offset, 1, 0, Qnil), 1) : 0)
+   The value is meant for use in the UPDATE_SYNTAX_TABLE... macros.
+   These macros do nothing when parse_sexp_lookup_properties is 0,
+   so we return 0 in that case, for speed.  */
 
-/* Make syntax table state (gl_state) good for POS, assuming it is
-   currently good for a position after POS.  */
+#define SYNTAX_TABLE_BYTE_TO_CHAR(bytepos)				\
+  (! parse_sexp_lookup_properties					\
+   ? 0									\
+   : STRINGP (gl_state.object)						\
+   ? string_byte_to_char (gl_state.object, (bytepos))			\
+   : BUFFERP (gl_state.object)						\
+   ? buf_bytepos_to_charpos (XBUFFER (gl_state.object),			\
+			     (bytepos) + BUF_BEGV_BYTE (XBUFFER (gl_state.object)) - 1) - BUF_BEGV (XBUFFER (gl_state.object)) + 1	\
+   : NILP (gl_state.object)						\
+   ? BYTE_TO_CHAR ((bytepos) + BEGV_BYTE - 1) - BEGV + 1		\
+   : (bytepos))
 
-#define UPDATE_SYNTAX_TABLE_BACKWARD(pos)		\
-  ((pos) <= gl_state.b_property - gl_state.offset	\
-   ? (update_syntax_table ((pos) + gl_state.offset, -1, 0, Qnil), 1) : 0)
+/* Make syntax table state (gl_state) good for CHARPOS, assuming it is
+   currently good for a position before CHARPOS.  */
 
-/* Make syntax table good for POS.  */
+#define UPDATE_SYNTAX_TABLE_FORWARD(charpos)			\
+  (parse_sexp_lookup_properties					\
+   && (charpos) >= gl_state.e_property				\
+   ? (update_syntax_table ((charpos) + gl_state.offset, 1, 0,	\
+			   gl_state.object),			\
+      1)							\
+   : 0)
 
-#define UPDATE_SYNTAX_TABLE(pos)					\
-  ((pos) <= gl_state.b_property - gl_state.offset			\
-   ? (update_syntax_table ((pos) + gl_state.offset, -1, 0, Qnil), 1)	\
-   : ((pos) >= gl_state.e_property - gl_state.offset			\
-      ? (update_syntax_table ((pos) + gl_state.offset, 1, 0, Qnil), 1) : 0))
+/* Make syntax table state (gl_state) good for CHARPOS, assuming it is
+   currently good for a position after CHARPOS.  */
+
+#define UPDATE_SYNTAX_TABLE_BACKWARD(charpos)			\
+  (parse_sexp_lookup_properties					\
+   && (charpos) <= gl_state.b_property				\
+   ? (update_syntax_table ((charpos) + gl_state.offset, -1, 0,	\
+			   gl_state.object),			\
+      1)							\
+   : 0)
+
+/* Make syntax table good for CHARPOS.  */
+
+#define UPDATE_SYNTAX_TABLE(charpos)				\
+  (parse_sexp_lookup_properties					\
+   && (charpos) <= gl_state.b_property				\
+   ? (update_syntax_table ((charpos) + gl_state.offset, -1, 0,	\
+			   gl_state.object),			\
+      1)							\
+   : (parse_sexp_lookup_properties				\
+      && (charpos) >= gl_state.e_property			\
+      ? (update_syntax_table ((charpos) + gl_state.offset, 1, 0,\
+			      gl_state.object),			\
+	 1)							\
+      : 0))
 
 /* This macro should be called with FROM at the start of forward
    search, or after the last position of the backward search.  It
@@ -225,49 +274,70 @@ extern char syntax_code_spec[16];
    Sign of COUNT gives the direction of the search.
  */
 
-#define SETUP_SYNTAX_TABLE(from,count)					\
-  gl_state.b_property = BEGV - 1;					\
-  gl_state.e_property = ZV + 1;						\
-  gl_state.use_global = 0;						\
-  gl_state.offset = 0;							\
-  gl_state.current_syntax_table = current_buffer->syntax_table;		\
-  if (parse_sexp_lookup_properties) 					\
-    update_syntax_table ((count) > 0 ? (from) : (from) - 1, (count),	\
-			 1, Qnil);
+#define SETUP_SYNTAX_TABLE(FROM, COUNT)					\
+if (1)									\
+  {									\
+    gl_state.b_property = BEGV - 1;					\
+    gl_state.e_property = ZV + 1;					\
+    gl_state.object = Qnil;						\
+    gl_state.use_global = 0;						\
+    gl_state.offset = 0;						\
+    gl_state.current_syntax_table = current_buffer->syntax_table;	\
+    if (parse_sexp_lookup_properties)					\
+      if ((COUNT) > 0 || (FROM) > BEGV)					\
+        update_syntax_table ((COUNT) > 0 ? (FROM) : (FROM) - 1, (COUNT),\
+			     1, Qnil);					\
+  }									\
+else
 
 /* Same as above, but in OBJECT.  If OBJECT is nil, use current buffer.
    If it is t, ignore properties altogether.
 
    This is meant for regex.c to use.  For buffers, regex.c passes arguments
    to the UPDATE_SYNTAX_TABLE macros which are relative to BEGV.
-   So if it is a buffer,a we set the offset field to BEGV.  */
+   So if it is a buffer, we set the offset field to BEGV.  */
 
-#define SETUP_SYNTAX_TABLE_FOR_OBJECT(object, from, count)		\
-  if (BUFFERP (object) || NILP (object))				\
-    {									\
-      gl_state.b_property = BEGV - 1;					\
-      gl_state.e_property = ZV;						\
-      gl_state.offset = BEGV - 1;					\
-    }									\
-  else if (EQ (object, Qt))						\
-    {									\
-      gl_state.b_property = - 1;					\
-      gl_state.e_property = 1500000000;					\
-      gl_state.offset = 0;						\
-    }									\
-  else									\
-    {									\
-      gl_state.b_property = -1;						\
-      gl_state.e_property = 1 + XSTRING (object)->size;			\
-      gl_state.offset = 0;						\
-    }									\
-  gl_state.use_global = 0;						\
-  gl_state.current_syntax_table = current_buffer->syntax_table;		\
-  if (parse_sexp_lookup_properties) 					\
-      update_syntax_table (count > 0 ? (from) : (from) - 1, count, 1, object);
+#define SETUP_SYNTAX_TABLE_FOR_OBJECT(OBJECT, FROM, COUNT)		\
+if (1)									\
+  {									\
+    gl_state.object = (OBJECT);						\
+    if (BUFFERP (gl_state.object))					\
+      {									\
+	struct buffer *buf = XBUFFER (gl_state.object);			\
+	gl_state.b_property = 0;					\
+	gl_state.e_property = BUF_ZV (buf) - BUF_BEGV (buf) + 1;	\
+	gl_state.offset = BUF_BEGV (buf) - 1;				\
+      }									\
+    else if (NILP (gl_state.object))					\
+      {									\
+	gl_state.b_property = 0;					\
+	gl_state.e_property = ZV - BEGV + 1;				\
+	gl_state.offset = BEGV - 1;					\
+      }									\
+    else if (EQ (gl_state.object, Qt))					\
+      {									\
+	gl_state.b_property = - 1;					\
+	gl_state.e_property = 1500000000;				\
+	gl_state.offset = 0;						\
+      }									\
+    else								\
+      {									\
+	gl_state.b_property = -1;					\
+	gl_state.e_property = 1 + XSTRING (gl_state.object)->size;	\
+	gl_state.offset = 0;						\
+      }									\
+    gl_state.use_global = 0;						\
+    gl_state.current_syntax_table = current_buffer->syntax_table;	\
+    if (parse_sexp_lookup_properties)					\
+      update_syntax_table (((FROM) + gl_state.offset			\
+			    + (COUNT > 0 ? 0 :  -1)),			\
+			   COUNT, 1, gl_state.object);			\
+  }									\
+else
 
 struct gl_state_s
 {
+  Lisp_Object object;			/* The object we are scanning. */
   int start;				/* Where to stop. */
   int stop;				/* Where to stop. */
   int use_global;			/* Whether to use global_code
@@ -294,4 +364,6 @@ struct gl_state_s
 
 extern struct gl_state_s gl_state;
 extern int parse_sexp_lookup_properties;
-extern INTERVAL interval_of ();
+extern INTERVAL interval_of P_ ((int, Lisp_Object));
+
+extern int scan_words P_ ((int, int));

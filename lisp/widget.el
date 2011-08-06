@@ -36,13 +36,14 @@
 (eval-when-compile (require 'cl))
 
 (defmacro define-widget-keywords (&rest keys)
-  (`
-   (eval-and-compile
-     (let ((keywords (quote (, keys))))
-       (while keywords
-	 (or (boundp (car keywords))
-	     (set (car keywords) (car keywords)))
-	 (setq keywords (cdr keywords)))))))
+  ;; Don't use backquote, since that makes trouble trying to
+  ;; re-bootstrap from just the .el files.
+  (list 'eval-and-compile
+    (list 'let (list (list 'keywords (list 'quote keys)))
+      (list 'while 'keywords
+       (list 'or (list 'boundp (list 'car 'keywords))
+           (list 'set (list 'car 'keywords) (list 'car 'keywords)))
+       (list 'setq 'keywords (list 'cdr 'keywords))))))
 
 (define-widget-keywords :documentation-indent
   :complete-function :complete :button-overlay
@@ -65,17 +66,6 @@
   :must-match :type-error :value-inline :inline :match-inline :greedy
   :button-face-get :button-face :value-face :keymap :entry-from
   :entry-to :help-echo :documentation-property :tab-order) 
-
-;; These autoloads should be deleted when the file is added to Emacs.
-(unless (fboundp 'load-gc)
-  (autoload 'widget-apply "wid-edit")
-  (autoload 'widget-create "wid-edit")
-  (autoload 'widget-insert "wid-edit")
-  (autoload 'widget-prompt-value "wid-edit")
-  (autoload 'widget-browse "wid-browse" nil t)
-  (autoload 'widget-browse-other-window "wid-browse" nil t)
-  (autoload 'widget-browse-at "wid-browse" nil t)
-  (autoload 'widget-minor-mode "wid-browse" nil t))
 
 (defun define-widget (name class doc &rest args)
   "Define a new widget type named NAME from CLASS.

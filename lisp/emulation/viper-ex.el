@@ -1,6 +1,6 @@
 ;;; viper-ex.el --- functions implementing the Ex commands for Viper
 
-;; Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -107,8 +107,10 @@
 ;; List of addresses passed to Ex command
 (defvar ex-addresses nil)
 
-;; It seems that this flag is used only for `#', `print', and `list', which
-;; aren't implemented. Check later.
+;; This flag is supposed to be set only by `#', `print', and `list',
+;; none of which is implemented. So, it and the pices of the code it
+;; controls are dead weight. We keep it just in case this might be
+;; needed in the future.
 (defvar ex-flag nil)
 
 ;; "buffer" where Ex commands keep deleted data.
@@ -193,6 +195,7 @@ Don't put `-c' here, as it is added automatically."
 ;; File containing the shell command to be executed at Ex prompt,
 ;; e.g., :r !date
 (defvar ex-cmdfile nil)
+(defvar ex-cmdfile-args "")
   
 ;; flag used in viper-ex-read-file-name to indicate that we may be reading
 ;; multiple file names. Used for :edit and :next
@@ -454,8 +457,14 @@ reversed."
 		     "\\|" "jo.*"
 		     "\\|" "^[ \t]*ta.*"
 		     "\\|" "^[ \t]*una.*"
-		     "\\|" "^[ \t]*su.*"
-		     "\\|['`][a-z][ \t]*"
+		     ;; don't jump up in :s command
+		     "\\|" "^[ \t]*\\([`'][a-z]\\|[.,%]\\)*[ \t]*su.*"
+		     "\\|" "^[ \t]*\\([`'][a-z]\\|[.,%]\\)*[ \t]*s[^a-z].*"
+		     "\\|" "['`][a-z][ \t]*"
+		     ;; r! assumes that the next one is a shell command
+		     "\\|" "\\(r\\|re\\|rea\\|read\\)[ \t]*!"
+		     ;; w ! assumes that the next one is a shell command
+		     "\\|" "\\(w\\|wr\\|wri\\|writ.?\\)[ \t]+!"
 		     "\\|" "![ \t]*[a-zA-Z].*"
 		     "\\)"
 		     "!*")))
@@ -517,8 +526,8 @@ reversed."
     
 
 ;; Read Ex commands 
-(defun viper-ex (&optional string)
-  (interactive)
+(defun viper-ex (arg &optional string)
+  (interactive "P")
   (or string
       (setq ex-g-flag nil
 	    ex-g-variant nil))
@@ -526,16 +535,40 @@ reversed."
 	 (address nil)
 	 (cont t)
 	 (dot (point))
+	 reg-beg-line reg-end-line
+	 reg-beg reg-end
+	 initial-str
 	 prev-token-type com-str)
-	 
     (viper-add-keymap viper-ex-cmd-map map)
+
+    (if arg
+	(progn
+	  (viper-enlarge-region (mark t) (point))
+	  (if (> (point) (mark t))
+	      (setq reg-beg (mark t)
+		    reg-end (point))
+	    (setq reg-end (mark t)
+		  reg-beg (point)))
+	  (save-excursion
+	    (goto-char reg-beg)
+	    (setq reg-beg-line (1+ (count-lines (point-min) (point)))
+		  reg-end-line
+		  (+ reg-beg-line (count-lines reg-beg reg-end) -1)))))
+    (if reg-beg-line
+	(setq initial-str (format "%d,%d" reg-beg-line reg-end-line)))
     
-    (setq com-str (or string (viper-read-string-with-history
-			      ":" 
-			      nil
-			      'viper-ex-history
-			      (car viper-ex-history)
-			      map)))
+    (setq com-str 
+	  (or string (viper-read-string-with-history
+		      ":" 
+		      initial-str
+		      'viper-ex-history
+		      ;; no default when working on region
+		      (if initial-str
+			  "none"
+			(car viper-ex-history))
+		      map
+		      (if initial-str
+			  " [Type command to execute on current region]"))))
     (save-window-excursion
       ;; just a precaution
       (setq viper-ex-work-buf (get-buffer-create viper-ex-work-buf-name)) 
@@ -600,40 +633,53 @@ reversed."
     (set-buffer viper-ex-work-buf)
     (skip-chars-forward " \t")
     (if (looking-at "!")
+	;; this is probably a variant command r!
 	(progn
 	  (setq ex-g-variant (not ex-g-variant)
 		ex-g-flag (not ex-g-flag))
 	  (forward-char 1)
 	  (skip-chars-forward " \t")))
     (let ((c (following-char)))
-      (if (string-match "[0-9A-Za-z]" (format "%c" c))
-	  (error
-	   "Global regexp must be inside matching non-alphanumeric chars"))
+      (cond ((string-match "[0-9A-Za-z]" (format "%c" c))
+	     (error
+	      "Global regexp must be inside matching non-alphanumeric chars"))
+	    ((= c ??) (error "`?' is not an allowed pattern delimiter here")))
       (if (looking-at "[^\\\\\n]")
 	  (progn
 	    (forward-char 1)
 	    (set-mark (point))
 	    (let ((cont t))
-	      (while (and (not (eolp)) cont)
+	      ;; the use of eobp instead of eolp permits the use of newlines in
+	      ;; pat2 in s/pat1/pat2/
+	      (while (and (not (eobp)) cont)
 		(if (not (re-search-forward (format "[^%c]*%c" c c) nil t))
 		    (if (member ex-token '("global" "vglobal"))
-			(error
-			 "Missing closing delimiter for global regexp")
+			(error "Missing closing delimiter for global regexp")
 		      (goto-char (point-max))))
 		(if (not (viper-looking-back
 			  (format "[^\\\\]\\(\\\\\\\\\\)*\\\\%c" c)))
-		    (setq cont nil))))
+		    (setq cont nil)
+		  ;; we are at an escaped delimiter: unescape it and continue
+		  (delete-backward-char 2)
+		  (insert c)
+		  (if (eolp)
+		      ;; if at eol, exit loop and go to next line
+		      ;; later, delim will be inserted at the end
+		      (progn
+			(setq cont nil)
+			(forward-char))))
+		))
 	    (setq ex-token
 		  (if (= (mark t) (point)) ""
 		    (buffer-substring (1- (point)) (mark t))))
 	    (backward-char 1)
-	    ;; if the user doesn't specify the final pattern delimiter, we're
+	    ;; if the user didn't insert the final pattern delimiter, we're
 	    ;; at newline now. In this case, insert the initial delimiter
 	    ;; specified in variable c
-	    (if (looking-at "\n")
+	    (if (eolp)
 		(progn
-		    (insert c)
-		      (backward-char 1)))
+		  (insert c)
+		  (backward-char 1)))
 	    )
 	(setq ex-token nil))
       c)))
@@ -676,8 +722,8 @@ reversed."
   (cond ((null ex-addresses)
 	 (setq ex-addresses
 	       (if whole-flag
-		   (cons (point-max) (cons (point-min) nil))
-		 (cons (point) (cons (point) nil)))))
+		   (list (point-max) (point-min))
+		 (list (point) (point)))))
 	((null (cdr ex-addresses))
 	 (setq ex-addresses
 	       (cons (car ex-addresses) ex-addresses)))))
@@ -849,14 +895,16 @@ reversed."
       (message "%s" ret))
     ret))
 
-;; Get a file name and set ex-variant, `ex-append' and `ex-offset' if found
+;; Get a file name and set `ex-variant', `ex-append' and `ex-offset' if found
+;; If it is r!, then get the command name and whatever args
 (defun viper-get-ex-file ()
   (let (prompt)
     (setq ex-file nil
 	  ex-variant nil
 	  ex-append nil
 	  ex-offset nil
-	  ex-cmdfile nil)
+	  ex-cmdfile nil
+	  ex-cmdfile-args "")
     (save-excursion
       (save-window-excursion
 	(setq viper-ex-work-buf (get-buffer-create viper-ex-work-buf-name)) 
@@ -906,6 +954,8 @@ reversed."
 			  ;; if file name comes from history, don't leave
 			  ;; minibuffer when the user types space
 			  (setq viper-incomplete-ex-cmd nil)
+			  (setq ex-cmdfile-args
+				(substring ex-file (match-end 0) nil))
 			  ;; this must be the last clause in this progn
 			  (substring ex-file (match-beginning 0) (match-end 0))
 			  )
@@ -956,6 +1006,7 @@ reversed."
 (defun ex-cmd-accepts-multiple-files-p (token)
   (member token '("edit" "next" "Next")))
 
+;; Read file name from the minibuffer in an ex command.
 ;; If user doesn't enter anything, then "" is returned, i.e., the
 ;; prompt-directory is not returned.
 (defun viper-ex-read-file-name (prompt)
@@ -973,8 +1024,10 @@ reversed."
     (while cont
       (setq viper-keep-reading-filename nil
 	    val (read-file-name (concat prompt str) nil default-directory))
-      (if (string-match " " val)
-	  (setq val (concat "\\\"" val "\\\"")))
+      (setq val (expand-file-name val))
+      (if (and (string-match " " val)
+	       (ex-cmd-accepts-multiple-files-p ex-token))
+	  (setq val (concat "\"" val "\"")))
       (setq str  (concat str (if (equal val "") "" " ")
 			 val (if (equal val "") "" " ")))
 			 
@@ -1134,16 +1187,16 @@ reversed."
 	(copy-region-as-kill (point) (mark t)))
       (if ex-flag
 	  (progn
-	    (with-output-to-temp-buffer "*copy text*"
+	    (with-output-to-temp-buffer " *copy text*"
 	      (princ
 	       (if (or del-flag ex-g-flag ex-g-variant)
 		   (current-kill 0)
 		 (buffer-substring (point) (mark t)))))
 	    (condition-case nil
 		(progn
-		  (read-string "[Hit return to continue] ")
-		  (save-excursion (kill-buffer "*copy text*")))
-	      (quit (save-excursion (kill-buffer "*copy text*"))
+		  (read-string "[Hit return to confirm] ")
+		  (save-excursion (kill-buffer " *copy text*")))
+	      (quit (save-excursion (kill-buffer " *copy text*"))
 		    (signal 'quit nil))))))
     (if (= address 0)
 	(goto-char (point-min))
@@ -1172,7 +1225,7 @@ reversed."
 	    (with-output-to-temp-buffer " *delete text*"
 	      (princ (buffer-substring (point) (mark t))))
 	    (condition-case nil
-		(read-string "[Hit return to continue] ")
+		(read-string "[Hit return to confirm] ")
 	      (quit
 	       (save-excursion (kill-buffer " *delete text*"))
 	       (error "")))
@@ -1201,27 +1254,27 @@ reversed."
 	((string= ex-file "")
 	 (error viper-NoFileSpecified)))
       
-  (let (msg do-edit)
-    (if buffer-file-name
-	(cond ((buffer-modified-p)
-	       (setq msg
-		     (format "Buffer %s is modified. Discard changes? "
-			     (buffer-name))
-		     do-edit t))
-	      ((not (verify-visited-file-modtime (current-buffer)))
-	       (setq msg
-		     (format "File %s changed on disk.  Reread from disk? "
-			     buffer-file-name)
-		     do-edit t))
-	      (t (setq do-edit nil))))
-      
-    (if do-edit
-	(if (yes-or-no-p msg)
-	    (progn
-	      (set-buffer-modified-p nil)
-	      (kill-buffer (current-buffer)))
-	  (message "Buffer %s was left intact" (buffer-name))))
-    ) ; let
+;;;  (let (msg do-edit)
+;;;    (if buffer-file-name
+;;;	(cond ((buffer-modified-p)
+;;;	       (setq msg
+;;;		     (format "Buffer %s is modified. Discard changes? "
+;;;			     (buffer-name))
+;;;		     do-edit t))
+;;;	      ((not (verify-visited-file-modtime (current-buffer)))
+;;;	       (setq msg
+;;;		     (format "File %s changed on disk.  Reread from disk? "
+;;;			     buffer-file-name)
+;;;		     do-edit t))
+;;;	      (t (setq do-edit nil))))
+;;;      
+;;;    (if do-edit
+;;;	(if (yes-or-no-p msg)
+;;;	    (progn
+;;;	      (set-buffer-modified-p nil)
+;;;	      (kill-buffer (current-buffer)))
+;;;	  (message "Buffer %s was left intact" (buffer-name))))
+;;;    ) ; let
   
   (if (null (setq file (get-file-buffer ex-file)))
       (progn 
@@ -1243,7 +1296,7 @@ reversed."
   (ex-fixup-history viper-last-ex-prompt ex-file))
 
 ;; Find-file FILESPEC if it appears to specify a single file.
-;; Otherwise, assume that FILES{EC is a wildcard.
+;; Otherwise, assume that FILESPEC is a wildcard.
 ;; In this case, split it into substrings separated by newlines.
 ;; Each line is assumed to be a file name. find-file's each file thus obtained.
 (defun ex-find-file (filespec)
@@ -1349,14 +1402,14 @@ reversed."
       (if ex-flag
 	  ;; show text to be joined and ask for confirmation
 	  (progn
-	    (with-output-to-temp-buffer " *text*"
+	    (with-output-to-temp-buffer " *join text*"
 	      (princ (buffer-substring (point) (mark t))))
 	    (condition-case nil
 		(progn
-		  (read-string "[Hit return to continue] ")
+		  (read-string "[Hit return to confirm] ")
 		  (ex-line-subr com (point) (mark t)))
 	      (quit (ding)))
-	    (save-excursion (kill-buffer " *text*")))
+	    (save-excursion (kill-buffer " *join text*")))
 	(ex-line-subr com (point) (mark t)))
       (setq point (point)))
     (goto-char (1- point))
@@ -1546,10 +1599,12 @@ reversed."
 	  (setq ex-file buffer-file-name)))
     (if ex-cmdfile
 	(progn
-	  (setq command (ex-expand-filsyms ex-file (current-buffer)))
+	  (setq command 
+		(concat (ex-expand-filsyms ex-file (current-buffer))
+			ex-cmdfile-args))
 	  (shell-command command t))
       (insert-file-contents ex-file)))
-  (ex-fixup-history viper-last-ex-prompt ex-file))
+  (ex-fixup-history viper-last-ex-prompt ex-file ex-cmdfile-args))
   
 ;; this function fixes ex-history for some commands like ex-read, ex-edit
 (defun ex-fixup-history (&rest args)  
@@ -1614,7 +1669,7 @@ reversed."
 	(ask-if-save t)
 	(auto-cmd-label "; don't touch or else...")
 	(delete-turn-on-auto-fill-pattern
-	 "([ \t]*add-hook[ \t]+'viper-insert-state-hooks[ \t]+'turn-on-auto-fill.*)")
+	 "([ \t]*add-hook[ \t]+'viper-insert-state-hook[ \t]+'turn-on-auto-fill.*)")
 	actual-lisp-cmd lisp-cmd-del-pattern
 	val2 orig-var)
     (setq orig-var var)
@@ -1732,7 +1787,7 @@ reversed."
 	      (if (> val2 0)
 		  (viper-save-string-in-file
 		   (concat
-		    "(add-hook 'viper-insert-state-hooks 'turn-on-auto-fill) "
+		    "(add-hook 'viper-insert-state-hook 'turn-on-auto-fill) "
 		    auto-cmd-label)
 		   viper-custom-file-name
 		   delete-turn-on-auto-fill-pattern)
@@ -1864,8 +1919,12 @@ Please contact your system administrator. "
 		       (point-marker))))
 	  (goto-char (min (point) (mark t)))
 	  (while (< (point) limit)
-	    (end-of-line)
-	    (setq eol-mark (point-marker))
+	    (save-excursion
+	      (end-of-line)
+	      ;; This move allows the use of newline as the last character in
+	      ;; the substitution pattern
+	      (viper-forward-char-carefully)
+	      (setq eol-mark (point-marker)))
 	    (beginning-of-line)
 	    (if opt-g
 		(progn
@@ -1889,8 +1948,10 @@ Please contact your system administrator. "
 		    (if (not (stringp repl))
 			(error "Can't perform Ex substitution: No previous replacement pattern"))
 		    (replace-match repl t)))
-	      (end-of-line)
-	      (viper-forward-char-carefully))))))
+	      ;;(end-of-line)
+	      ;;(viper-forward-char-carefully)
+	      (goto-char eol-mark)
+	      )))))
     (if matched-pos (goto-char matched-pos))
     (beginning-of-line)
     (if opt-c (message "done"))))
@@ -1933,7 +1994,8 @@ Please contact your system administrator. "
     (if ex-cmdfile
 	(progn
 	  (viper-enlarge-region beg end)
-	  (shell-command-on-region (point) (mark t) ex-file))
+	  (shell-command-on-region (point) (mark t) 
+				   (concat ex-file ex-cmdfile-args)))
       (if (and (string= ex-file "") (not (buffer-file-name)))
 	  (setq ex-file
 		(read-file-name
@@ -1955,68 +2017,59 @@ Please contact your system administrator. "
       (setq file-exists (file-exists-p ex-file)
 	    writing-same-file (string= ex-file (buffer-file-name)))
 
+      ;; do actual writing
       (if (and writing-whole-file writing-same-file)
+	  ;; saving whole buffer in visited file
 	  (if (not (buffer-modified-p))
 	      (message "(No changes need to be saved)")
+	    (viper-maybe-checkout (current-buffer))
 	    (save-buffer)
 	    (save-restriction
 		 (widen)
 		 (ex-write-info file-exists ex-file (point-min) (point-max))
 		 ))
-	;; writing some other file or portion of the current file
-	(cond ((and file-exists
-		    (not writing-same-file)
-		    (not (yes-or-no-p
-			  (format "File %s exists. Overwrite? " ex-file))))
-	       (error "Quit"))
-	      ((and writing-whole-file (not ex-append))
-	       (unwind-protect
-		   (progn
-		     (set-visited-file-name ex-file)
-		     (set-buffer-modified-p t)
-		     (save-buffer))
-		 ;; restore the buffer file name
-		 (set-visited-file-name orig-buf-file-name)
-		 (set-buffer-modified-p buff-changed-p)
-		 ;; If the buffer wasn't visiting a file, restore buffer name.
-		 ;; Name could've been changed by packages such as uniquify.
-		 (or orig-buf-file-name
-		     (progn
-		       (unlock-buffer)
-		       (rename-buffer orig-buf-name))))
-	       (save-restriction
-		 (widen)
-		 (ex-write-info
-		  file-exists ex-file (point-min) (point-max))))
-	      (t ; writing a region
-	       (unwind-protect 
-		   (save-excursion
-		     (viper-enlarge-region beg end)
-		     (setq region (buffer-substring (point) (mark t)))
-		     ;; create temp buffer for the region
-		     (setq temp-buf (get-buffer-create " *ex-write*"))
-		     (set-buffer temp-buf)
-		     (set-visited-file-name ex-file 'noquerry)
-		     (erase-buffer)
-		     (if (and file-exists ex-append)
-			 (insert-file-contents ex-file))
-		     (goto-char (point-max))
-		     (insert region)
-		     (save-buffer)
-		     (ex-write-info
-		      file-exists ex-file (point-min) (point-max))
-		     ))
-	       (set-buffer temp-buf)
-	       (set-buffer-modified-p nil)
-	       (kill-buffer temp-buf))
-	      ))
-      (set-buffer orig-buf)
-      ;; this prevents the loss of data if writing part of the buffer
+	;; writing to non-visited file and it already exists
+	(if (and file-exists (not writing-same-file)
+		 (not (yes-or-no-p
+		       (format "File %s exists. Overwrite? " ex-file))))
+	    (error "Quit"))
+	;; writing a region or whole buffer to non-visited file
+	(unwind-protect 
+	    (save-excursion
+	      (viper-enlarge-region beg end)
+	      (setq region (buffer-substring (point) (mark t)))
+	      ;; create temp buffer for the region
+	      (setq temp-buf (get-buffer-create " *ex-write*"))
+	      (set-buffer temp-buf)
+	      (set-visited-file-name ex-file 'noquerry)
+	      (erase-buffer)
+	      (if (and file-exists ex-append)
+		  (insert-file-contents ex-file))
+	      (goto-char (point-max))
+	      (insert region)
+	      ;; ask user
+	      (viper-maybe-checkout (current-buffer))
+	      (save-buffer)
+	      (ex-write-info
+	       file-exists ex-file (point-min) (point-max))
+	      )
+	  ;; this must be under unwind-protect so that
+	  ;; temp-buf will be deleted in case of an error
+	  (set-buffer temp-buf)
+	  (set-buffer-modified-p nil)
+	  (kill-buffer temp-buf)
+	  ;; buffer/region has been written, now take care of details
+	  (set-buffer orig-buf)))
+      ;; set the right file modification time
       (if (and (buffer-file-name) writing-same-file)
 	  (set-visited-file-modtime))
+      ;; prevent loss of data if saving part of the buffer in visited file
       (or writing-whole-file 
 	  (not writing-same-file)
-	  (set-buffer-modified-p t))
+	  (progn
+	    (sit-for 2)
+	    (message "Warning: you have saved only part of the buffer!")
+	    (set-buffer-modified-p t)))
       (if q-flag
 	  (if (< viper-expert-level 2)
 	      (save-buffers-kill-emacs)
@@ -2115,10 +2168,9 @@ Please contact your system administrator. "
 	(message (concat file " " info))
       (save-window-excursion
 	(with-output-to-temp-buffer " *viper-info*"
-	  (princ (concat "\n"
-			 file "\n\n\t" info
-			 "\n\n\nPress any key to continue...\n\n")))
-	(viper-read-event)
+	  (princ (concat "\n" file "\n\n\t" info "\n\n")))
+	(let ((inhibit-quit t))
+	  (viper-set-unread-command-events (viper-read-event)))
 	(kill-buffer " *viper-info*")))
     ))
 

@@ -55,6 +55,12 @@
 
 ;;; Code:
 (require 'ring)
+(require 'sendmail)
+
+(defgroup mail-hist nil
+  "Headers and message body history for outgoing mail."
+  :prefix "mail-hist-"
+  :group 'mail)
 
 ;;;###autoload
 (defun mail-hist-define-keys ()
@@ -72,13 +78,17 @@
 Used for knowing which history list to look in when the user asks for
 previous/next input.")
 
-(defvar mail-hist-history-size (or kill-ring-max 1729)
+(defcustom mail-hist-history-size (or kill-ring-max 1729)
   "*The maximum number of elements in a mail field's history.
-Oldest elements are dumped first.")
+Oldest elements are dumped first."
+  :type 'integer
+  :group 'mail-hist)
 
 ;;;###autoload
-(defvar mail-hist-keep-history t
-  "*Non-nil means keep a history for headers and text of outgoing mail.")
+(defcustom mail-hist-keep-history t
+  "*Non-nil means keep a history for headers and text of outgoing mail."
+  :type 'boolean
+  :group 'mail-hist)
 
 ;; For handling repeated history requests
 (defvar mail-hist-access-count 0)
@@ -95,17 +105,11 @@ Oldest elements are dumped first.")
   "Get name of mail header point is currently in, without the colon.
 Returns nil if not in a header, implying that point is in the body of
 the message."
-  (if (save-excursion
-        (re-search-backward (concat "^" (regexp-quote mail-header-separator)
-				    "$")
-			    nil t))
+  (if (< (point) (mail-text-start))
       nil ; then we are in the body of the message
     (save-excursion
-      (let* ((body-start ; limit possibility of false headers
-              (save-excursion
-                (re-search-forward
-		 (concat "^" (regexp-quote mail-header-separator) "$")
-		 nil t)))
+      (let* ((body-start
+	      (mail-text-start))
              (name-start
               (re-search-backward mail-hist-header-regexp nil t))
              (name-end
@@ -123,12 +127,9 @@ nil.
 Places point on the first non-whitespace on the line following the
 colon after the header name, or on the second space following that if
 the header is empty."
-  (let ((boundary (save-excursion
-		    (re-search-forward
-		     (concat "^" (regexp-quote mail-header-separator) "$")
-		     nil t))))
+  (let ((boundary (mail-header-end)))
     (and
-     boundary
+     (> boundary 0)
      (let ((unstopped t))
        (setq boundary (save-excursion
                     (goto-char boundary)
@@ -171,8 +172,7 @@ colon, or just after the colon if it is not followed by whitespace."
     (mail-hist-beginning-of-header)
     (let ((start (point)))
       (or (mail-hist-forward-header 1)
-          (re-search-forward
-	   (concat "^" (regexp-quote mail-header-separator) "$")))
+          (goto-char (mail-header-start)))
       (beginning-of-line)
       (buffer-substring start (1- (point))))))
 
@@ -182,9 +182,11 @@ HEADER is a string without the colon."
   (setq header (downcase header))
   (cdr (assoc header mail-hist-header-ring-alist)))
 
-(defvar mail-hist-text-size-limit nil
+(defcustom mail-hist-text-size-limit nil
   "*Don't store any header or body with more than this many characters.
-If the value is nil, that means no limit on text size.")
+If the value is nil, that means no limit on text size."
+  :type '(choice (const nil) integer)
+  :group 'mail-hist)
 
 (defun mail-hist-text-too-long-p (text)
   "Return t if TEXT does not exceed mail-hist's size limit.
@@ -224,13 +226,7 @@ This function normally would be called when the message is sent."
        (mail-hist-add-header-contents-to-ring
         (mail-hist-current-header-name)))
      (let ((body-contents
-            (save-excursion
-	      (goto-char (point-min))
-	      (re-search-forward
-	       (concat "^" (regexp-quote mail-header-separator) "$")
-	       nil)
-	      (forward-line 1)
-	      (buffer-substring (point) (point-max)))))
+	    (buffer-substring (mail-text-start) (point-max))))
        (mail-hist-add-header-contents-to-ring "body" body-contents)))))
 
 (defun mail-hist-previous-input (header)

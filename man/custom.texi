@@ -63,9 +63,13 @@ negative argument always turns it off.
   Enabling or disabling some minor modes applies only to the current
 buffer; each buffer is independent of the other buffers.  Therefore, you
 can enable the mode in particular buffers and disable it in others.  The
-per-buffer minor modes include Auto Fill mode, Auto Save mode, Font-Lock
-mode, Hscroll mode, ISO Accents mode, Outline minor mode, Overwrite
-mode, and Binary Overwrite mode.
+per-buffer minor modes include Abbrev mode, Auto Fill mode, Auto Save
+mode, Font-Lock mode, Hscroll mode, ISO Accents mode, Outline minor
+mode, Overwrite mode, and Binary Overwrite mode.
+
+  Abbrev mode allows you to define abbreviations that automatically expand
+as you type them.  For example, @samp{amd} might expand to @samp{abbrev
+mode}.  @xref{Abbrevs}, for full information.
 
   Auto Fill mode allows you to enter filled text without breaking lines
 explicitly.  Emacs inserts newlines as necessary to prevent lines from
@@ -77,6 +81,9 @@ system crash.  @xref{Auto Save}.
 
   Enriched mode enables editing and saving of formatted text.
 @xref{Formatted Text}.
+
+  Flyspell mode automatically highlights misspelled words.
+@xref{Spelling}.
 
   Font-Lock mode automatically highlights certain textual units found in
 programs, such as comments, strings, and function names being defined.
@@ -116,10 +123,6 @@ Since each is enabled or disabled by the value of a variable, you
 @emph{can} set them differently for particular buffers, by explicitly
 making the corresponding variables local in those buffers.
 @xref{Locals}.
-
-  Abbrev mode allows you to define abbreviations that automatically expand
-as you type them.  For example, @samp{amd} might expand to @samp{abbrev
-mode}.  @xref{Abbrevs}, for full information.
 
   Icomplete mode displays an indication of available completions when
 you are in the minibuffer and completion is active.  @xref{Completion
@@ -440,12 +443,12 @@ appears in the customization buffer:
 
 @smallexample
 Load Path:
-[INS] [DEL] [Current dir?]: /usr/local/share/emacs/19.34.94/site-lisp
+[INS] [DEL] [Current dir?]: /usr/local/share/emacs/20.3/site-lisp
 [INS] [DEL] [Current dir?]: /usr/local/share/emacs/site-lisp
-[INS] [DEL] [Current dir?]: /usr/local/share/emacs/19.34.94/leim
-[INS] [DEL] [Current dir?]: /usr/local/share/emacs/19.34.94/lisp
-[INS] [DEL] [Current dir?]: /build/emacs/e19/lisp
-[INS] [DEL] [Current dir?]: /build/emacs/e19/lisp/gnus
+[INS] [DEL] [Current dir?]: /usr/local/share/emacs/20.3/leim
+[INS] [DEL] [Current dir?]: /usr/local/share/emacs/20.3/lisp
+[INS] [DEL] [Current dir?]: /build/emacs/e20/lisp
+[INS] [DEL] [Current dir?]: /build/emacs/e20/lisp/gnus
 [INS]
    [State]: this item has been changed outside the customization buffer.
 List of directories to search for files to load....
@@ -597,6 +600,9 @@ Set up a customization buffer with just one group, @var{group}.
 @item M-x customize-apropos @key{RET} @var{regexp} @key{RET}
 Set up a customization buffer with all the options, faces and groups
 that match @var{regexp}.
+@item M-x customize-changed-options @key{RET} @var{version} @key{RET}
+Set up a customization buffer with all the options, faces and groups
+whose meaning has changed since Emacs version @var{version}.
 @item M-x customize-saved 
 Set up a customization buffer containing all options and faces that you
 have saved with customization buffers.
@@ -631,6 +637,14 @@ all options, faces and groups whose names match this regular expression
 are set up in the customization buffer.  If you specify an empty regular
 expression, this includes @emph{all} groups, options and faces in the
 customization buffer (but that takes a long time).
+
+@findex customize-changed-options
+  When you upgrade to a new Emacs version, you might want to customize
+new options and options whose meanings or default values have changed.
+To do this, use @kbd{M-x customize-changed-options} and specify a
+previous Emacs version number using the minibuffer.  It creates a
+customization buffer which shows all the options (and groups) whose
+definitions have been changed since the specified version.
 
 @findex customize-saved
 @findex customize-customized
@@ -796,6 +810,7 @@ explicitly.  For example, here's how to obtain the default value of
 @node File Variables
 @subsection Local Variables in Files
 @cindex local variables in files
+@cindex file local variables
 
   A file can specify local variable values for use when you edit the
 file with Emacs.  Visiting the file checks for local variable
@@ -1634,7 +1649,7 @@ that they have special keys of their own.  Later, users found it
 convenient to distinguish in Emacs between these keys and the ``same''
 control characters typed with the @key{CTRL} key.
 
-  Emacs 19 distinguishes these two kinds of input, when used with the X
+  Emacs distinguishes these two kinds of input, when used with the X
 Window System.  It treats the ``special'' keys as function keys named
 @code{tab}, @code{return}, @code{backspace}, @code{linefeed},
 @code{escape}, and @code{delete}.  These function keys translate
@@ -1898,8 +1913,9 @@ Syntax Tables, elisp, The Emacs Lisp Reference Manual}.
   When Emacs is started, it normally loads a Lisp program from the file
 @file{.emacs} in your home directory.  We call this file your @dfn{init
 file} because it specifies how to initialize Emacs for you.  You can use
-the command line switches @samp{-q} and @samp{-u} to tell Emacs whether
-to load an init file, and which one (@pxref{Entering Emacs}).
+the command line switch @samp{-q} to prevent loading your init file, and
+@samp{-u} (or @samp{--user}) to specify a different user's init file
+(@pxref{Entering Emacs}).
 
   There can also be a @dfn{default init file}, which is the library
 named @file{default.el}, found via the standard search path for
@@ -2043,6 +2059,15 @@ Note that @code{text-mode} is used because it is the command for
 entering Text mode.  The single-quote before it makes the symbol a
 constant; otherwise, @code{text-mode} would be treated as a variable
 name.
+
+@need 1500
+@item
+Set up defaults for the Latin-1 character set
+which supports most of the languages of Western Europe.
+
+@example
+(set-language-environment "Latin-1")
+@end example
 
 @need 1500
 @item

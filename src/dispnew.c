@@ -1,5 +1,5 @@
 /* Updating of data structures for redisplay.
-   Copyright (C) 1985, 86, 87, 88, 93, 94, 95, 1997
+   Copyright (C) 1985, 86, 87, 88, 93, 94, 95, 97, 1998
        Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -27,6 +27,10 @@ Boston, MA 02111-1307, USA.  */
 #include <stdio.h>
 #include <ctype.h>
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #include "lisp.h"
 #include "termchar.h"
 #include "termopts.h"
@@ -43,6 +47,8 @@ Boston, MA 02111-1307, USA.  */
 #include "indent.h"
 #include "intervals.h"
 #include "blockinput.h"
+#include "process.h"
+#include "keyboard.h"
 
 /* I don't know why DEC Alpha OSF1 fail to compile this file if we
    include the following file.  */
@@ -64,6 +70,8 @@ Boston, MA 02111-1307, USA.  */
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
+#define minmax(floor, val, ceil) \
+	((val) < (floor) ? (floor) : (val) > (ceil) ? (ceil) : (val))
 
 /* Get number of chars of output now in the buffer of a stdio stream.
    This ought to be built in in stdio, but it isn't.
@@ -170,13 +178,22 @@ DEFUN ("redraw-frame", Fredraw_frame, Sredraw_frame, 1, 1, 0,
 
   CHECK_LIVE_FRAME (frame, 0);
   f = XFRAME (frame);
-  update_begin (f);
-  if (FRAME_MSDOS_P (f))
-    set_terminal_modes ();
-  clear_frame ();
-  clear_frame_records (f);
-  update_end (f);
-  fflush (stdout);
+
+  /* Erase the frame and its glyph records--if it has any records.
+     It may have none, in the case of the terminal frame
+     that initially exists but is never used
+     when Emacs is using a window system.  */
+  if (FRAME_CURRENT_GLYPHS (f) != 0)
+    {
+      update_begin (f);
+      if (FRAME_MSDOS_P (f))
+	set_terminal_modes ();
+      clear_frame ();
+      clear_frame_records (f);
+      update_end (f);
+      fflush (stdout);
+    }
+
   windows_or_buffers_changed++;
   /* Mark all windows as INaccurate,
      so that every window will have its redisplay done.  */
@@ -185,6 +202,7 @@ DEFUN ("redraw-frame", Fredraw_frame, Sredraw_frame, 1, 1, 0,
   return Qnil;
 }
 
+void
 redraw_frame (f)
      FRAME_PTR f;
 {
@@ -227,8 +245,8 @@ make_frame_glyphs (frame, empty)
      int empty;
 {
   register int i;
-  register width = FRAME_WINDOW_WIDTH (frame);
-  register height = FRAME_HEIGHT (frame);
+  register int width = FRAME_WINDOW_WIDTH (frame);
+  register int height = FRAME_HEIGHT (frame);
   register struct frame_glyphs *new
     = (struct frame_glyphs *) xmalloc (sizeof (struct frame_glyphs));
 
@@ -466,6 +484,7 @@ line_draw_cost (m, vpos)
 
 /* cancel_line eliminates any request to display a line at position `vpos' */
 
+void
 cancel_line (vpos, frame)
      int vpos;
      register FRAME_PTR frame;
@@ -473,6 +492,7 @@ cancel_line (vpos, frame)
   FRAME_DESIRED_GLYPHS (frame)->enable[vpos] = 0;
 }
 
+void
 clear_frame_records (frame)
      register FRAME_PTR frame;
 {
@@ -821,6 +841,7 @@ scroll_frame_lines (frame, from, end, amount, newpos)
    into the FRAME_DESIRED_GLYPHS (frame) from the FRAME_PHYS_GLYPHS (frame)
    so that update_frame will not change those columns.  */
 
+void
 preserve_other_columns (w)
      struct window *w;
 {
@@ -945,6 +966,7 @@ adjust_window_charstarts (w, vpos, adjust)
    for internal consistency.  We cannot check that they are "right";
    we can only look for something nonsensical.  */
 
+void
 verify_charstarts (w)
      struct window *w;
 {
@@ -1001,6 +1023,7 @@ verify_charstarts (w)
    cancel the columns of that window, so that when the window is
    displayed over again get_display_line will not complain.  */
 
+void
 cancel_my_columns (w)
      struct window *w;
 {
@@ -1196,7 +1219,7 @@ update_frame (f, force, inhibit_hairy_id)
   register int i;
   int pause;
   int preempt_count = baud_rate / 2400 + 1;
-  extern input_pending;
+  extern int input_pending;
 #ifdef HAVE_WINDOW_SYSTEM
   register int downto, leftmost;
 #endif
@@ -1345,11 +1368,18 @@ update_frame (f, force, inhibit_hairy_id)
 		}
 	      while (row > top && col == 0);
 
-	      if (col >= FRAME_WINDOW_WIDTH (f))
+	      /* Make sure COL is not out of range.  */
+	      if (col >= FRAME_CURSOR_X_LIMIT (f))
 		{
-		  col = 0;
+		  /* If we have another row, advance cursor into it.  */
 		  if (row < FRAME_HEIGHT (f) - 1)
-		    row++;
+		    {
+		      col = FRAME_LEFT_SCROLL_BAR_WIDTH (f);
+		      row++;
+		    }
+		  /* Otherwise move it back in range.  */
+		  else
+		    col = FRAME_CURSOR_X_LIMIT (f) - 1;
 		}
 	    }
 
@@ -1357,8 +1387,8 @@ update_frame (f, force, inhibit_hairy_id)
 	}
       else
 	cursor_to (FRAME_CURSOR_Y (f), 
-		   max (min (FRAME_CURSOR_X (f),
-			     FRAME_WINDOW_WIDTH (f) - 1), 0));
+		   minmax (0, FRAME_CURSOR_X (f),
+			   FRAME_CURSOR_X_LIMIT (f) - 1));
     }
 
   update_end (f);
@@ -1397,6 +1427,7 @@ quit_error_check ()
 
 extern void scrolling_1 ();
 
+int
 scrolling (frame)
      FRAME_PTR frame;
 {
@@ -1830,7 +1861,7 @@ update_line (frame, vpos)
 	  olen = nlen - (nsp - osp);
 	}
       cursor_to (vpos, osp);
-      insert_glyphs ((char *)0, nsp - osp);
+      insert_glyphs ((GLYPH *) 0, nsp - osp);
     }
   olen += nsp - osp;
 
@@ -2069,6 +2100,7 @@ window_change_signal (signalnum) /* If we don't have an argument, */
 
 /* Do any change in frame size that was requested by a signal.  */
 
+void
 do_pending_window_change ()
 {
   /* If window_change_signal should have run before, run it now.  */
@@ -2100,9 +2132,10 @@ do_pending_window_change ()
    redisplay.  Since this tries to resize windows, we can't call it
    from a signal handler.  */
 
+void
 change_frame_size (f, newheight, newwidth, pretend, delay)
      register FRAME_PTR f;
-     int newheight, newwidth, pretend;
+     int newheight, newwidth, pretend, delay;
 {
   Lisp_Object tail, frame;
 
@@ -2223,8 +2256,8 @@ change_frame_size_1 (frame, newheight, newwidth, pretend, delay)
   FRAME_HEIGHT (frame) = newheight;
   SET_FRAME_WIDTH (frame, newwidth);
 
-  if (FRAME_CURSOR_X (frame) >= FRAME_WINDOW_WIDTH (frame))
-    FRAME_CURSOR_X (frame) = FRAME_WINDOW_WIDTH (frame) - 1;
+  if (FRAME_CURSOR_X (frame) >= FRAME_CURSOR_X_LIMIT (frame))
+    FRAME_CURSOR_X (frame) = FRAME_CURSOR_X_LIMIT (frame) - 1;
   if (FRAME_CURSOR_Y (frame) >= FRAME_HEIGHT (frame))
     FRAME_CURSOR_Y (frame) = FRAME_HEIGHT (frame) - 1;
 
@@ -2249,12 +2282,14 @@ Control characters in STRING will have terminal-dependent effects.")
   (string)
      Lisp_Object string;
 {
+  /* ??? Perhaps we should do something special for multibyte strings here.  */
   CHECK_STRING (string, 0);
-  fwrite (XSTRING (string)->data, 1, XSTRING (string)->size, stdout);
+  fwrite (XSTRING (string)->data, 1, STRING_BYTES (XSTRING (string)), stdout);
   fflush (stdout);
   if (termscript)
     {
-      fwrite (XSTRING (string)->data, 1, XSTRING (string)->size, termscript);
+      fwrite (XSTRING (string)->data, 1, STRING_BYTES (XSTRING (string)),
+	      termscript);
       fflush (termscript);
     }
   return Qnil;
@@ -2281,6 +2316,7 @@ terminate any keyboard macro currently executing.")
   return Qnil;
 }
 
+void
 bitch_at_user ()
 {
   if (noninteractive)
@@ -2466,6 +2502,7 @@ char *terminal_type;
 /* Then invoke its decoding routine to set up variables
   in the terminal package */
 
+void
 init_display ()
 {
 #ifdef HAVE_X_WINDOWS
@@ -2601,6 +2638,7 @@ For types not defined in VMS, use  define emacs_term \"TYPE\".\n\
 #endif /* SIGWINCH */
 }
 
+void
 syms_of_display ()
 {
   defsubr (&Sredraw_frame);

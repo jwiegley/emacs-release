@@ -24,7 +24,6 @@ Boston, MA 02111-1307, USA.  */
 #include <ctype.h>
 #include "termchar.h"
 #include "termopts.h"
-#include "cm.h"
 #undef NULL
 #include "lisp.h"
 #include "charset.h"
@@ -33,8 +32,11 @@ Boston, MA 02111-1307, USA.  */
 #include "disptab.h"
 #include "termhooks.h"
 #include "keyboard.h"
-
-extern Lisp_Object Fmake_sparse_keymap ();
+#include "dispextern.h"
+#include "cm.h"
+#ifdef HAVE_X_WINDOWS
+#include "xterm.h"
+#endif
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -74,33 +76,33 @@ int no_redraw_on_reenter;
 /* Hook functions that you can set to snap out the functions in this file.
    These are all extern'd in termhooks.h  */
 
-int (*cursor_to_hook) ();
-int (*raw_cursor_to_hook) ();
+void (*cursor_to_hook) P_ ((int, int));
+void (*raw_cursor_to_hook) P_ ((int, int));
 
-int (*clear_to_end_hook) ();
-int (*clear_frame_hook) ();
-int (*clear_end_of_line_hook) ();
+void (*clear_to_end_hook) P_ ((void));
+void (*clear_frame_hook) P_ ((void));
+void (*clear_end_of_line_hook) P_ ((int));
 
-int (*ins_del_lines_hook) ();
+void (*ins_del_lines_hook) P_ ((int, int));
 
-int (*change_line_highlight_hook) ();
-int (*reassert_line_highlight_hook) ();
+void (*change_line_highlight_hook) P_ ((int, int, int));
+void (*reassert_line_highlight_hook) P_ ((int, int));
 
-int (*insert_glyphs_hook) ();
-int (*write_glyphs_hook) ();
-int (*delete_glyphs_hook) ();
+void (*insert_glyphs_hook) P_ ((GLYPH *, int));
+void (*write_glyphs_hook) P_ ((GLYPH *, int));
+void (*delete_glyphs_hook) P_ ((int));
 
-int (*ring_bell_hook) ();
+void (*ring_bell_hook) P_ ((void));
 
-int (*reset_terminal_modes_hook) ();
-int (*set_terminal_modes_hook) ();
-int (*update_begin_hook) ();
-int (*update_end_hook) ();
-int (*set_terminal_window_hook) ();
+void (*reset_terminal_modes_hook) P_ ((void));
+void (*set_terminal_modes_hook) P_ ((void));
+void (*update_begin_hook) P_ ((struct frame *));
+void (*update_end_hook) P_ ((struct frame *));
+void (*set_terminal_window_hook) P_ ((int));
 
-int (*read_socket_hook) ();
+int (*read_socket_hook) P_ ((int, struct input_event *, int, int));
 
-int (*frame_up_to_date_hook) ();
+void (*frame_up_to_date_hook) P_ ((struct frame *));
 
 /* Return the current position of the mouse.
 
@@ -120,19 +122,19 @@ int (*frame_up_to_date_hook) ();
 
    This should clear mouse_moved until the next motion
    event arrives.  */
-void (*mouse_position_hook) ( /* FRAME_PTR *f, int insist,
+void (*mouse_position_hook) P_ ((FRAME_PTR *f, int insist,
 				 Lisp_Object *bar_window,
 				 enum scroll_bar_part *part,
 				 Lisp_Object *x,
 				 Lisp_Object *y,
-				 unsigned long *time */ );
+				 unsigned long *time));
 
 /* When reading from a minibuffer in a different frame, Emacs wants
    to shift the highlight from the selected frame to the minibuffer's
    frame; under X, this means it lies about where the focus is.
    This hook tells the window system code to re-decide where to put
    the highlight.  */
-void (*frame_rehighlight_hook) ( /* FRAME_PTR f */ );
+void (*frame_rehighlight_hook) P_ ((FRAME_PTR f));
 
 /* If we're displaying frames using a window system that can stack
    frames on top of each other, this hook allows you to bring a frame
@@ -144,7 +146,7 @@ void (*frame_rehighlight_hook) ( /* FRAME_PTR f */ );
    If RAISE is non-zero, F is brought to the front, before all other
    windows.  If RAISE is zero, F is sent to the back, behind all other
    windows.  */
-void (*frame_raise_lower_hook) ( /* FRAME_PTR f, int raise */ );
+void (*frame_raise_lower_hook) P_ ((FRAME_PTR f, int raise));
 
 /* Set the vertical scroll bar for WINDOW to have its upper left corner
    at (TOP, LEFT), and be LENGTH rows high.  Set its handle to
@@ -152,8 +154,8 @@ void (*frame_raise_lower_hook) ( /* FRAME_PTR f, int raise */ );
    of WHOLE characters, starting at POSITION.  If WINDOW doesn't yet
    have a scroll bar, create one for it.  */
 void (*set_vertical_scroll_bar_hook)
-     ( /* struct window *window,
-	  int portion, int whole, int position */ );
+     P_ ((struct window *window,
+	  int portion, int whole, int position));
 
 
 /* The following three hooks are used when we're doing a thorough
@@ -176,11 +178,11 @@ void (*set_vertical_scroll_bar_hook)
    If non-zero, this hook should be safe to apply to any frame,
    whether or not it can support scroll bars, and whether or not it is
    currently displaying them.  */
-void (*condemn_scroll_bars_hook)( /* FRAME_PTR *frame */ );
+void (*condemn_scroll_bars_hook) P_ ((FRAME_PTR frame));
 
 /* Unmark WINDOW's scroll bar for deletion in this judgement cycle.
    Note that it's okay to redeem a scroll bar that is not condemned.  */
-void (*redeem_scroll_bar_hook)( /* struct window *window */ );
+void (*redeem_scroll_bar_hook) P_ ((struct window *window));
 
 /* Remove all scroll bars on FRAME that haven't been saved since the
    last call to `*condemn_scroll_bars_hook'.  
@@ -193,7 +195,7 @@ void (*redeem_scroll_bar_hook)( /* struct window *window */ );
    If non-zero, this hook should be safe to apply to any frame,
    whether or not it can support scroll bars, and whether or not it is
    currently displaying them.  */
-void (*judge_scroll_bars_hook)( /* FRAME_PTR *FRAME */ );
+void (*judge_scroll_bars_hook) P_ ((FRAME_PTR FRAME));
 
 
 /* Strings, numbers and flags taken from the termcap entry.  */
@@ -319,6 +321,7 @@ extern char *tgetstr ();
 #define FRAME_TERMCAP_P(_f_) 0
 #endif /* WINDOWSNT */
 
+void
 ring_bell ()
 {
   if (! NILP (Vring_bell_function))
@@ -349,6 +352,7 @@ ring_bell ()
   OUTPUT (TS_visible_bell && visible_bell ? TS_visible_bell : TS_bell);
 }
 
+void
 set_terminal_modes ()
 {
   if (! FRAME_TERMCAP_P (selected_frame))
@@ -362,11 +366,13 @@ set_terminal_modes ()
   losecursor ();
 }
 
+void
 reset_terminal_modes ()
 {
   if (! FRAME_TERMCAP_P (selected_frame))
     {
-      (*reset_terminal_modes_hook) ();
+      if (reset_terminal_modes_hook)
+	(*reset_terminal_modes_hook) ();
       return;
     }
   if (TN_standout_width < 0)
@@ -383,6 +389,7 @@ reset_terminal_modes ()
   cmputc ('\r');
 }
 
+void
 update_begin (f)
      FRAME_PTR f;
 {
@@ -391,6 +398,7 @@ update_begin (f)
     (*update_begin_hook) (f);
 }
 
+void
 update_end (f)
      FRAME_PTR f;
 {
@@ -406,6 +414,7 @@ update_end (f)
   updating_frame = 0;
 }
 
+void
 set_terminal_window (size)
      int size;
 {
@@ -420,6 +429,7 @@ set_terminal_window (size)
   set_scroll_region (0, specified_window);
 }
 
+void
 set_scroll_region (start, stop)
      int start, stop;
 {
@@ -444,6 +454,7 @@ set_scroll_region (start, stop)
   losecursor ();
 }
 
+void
 turn_on_insert ()
 {
   if (!insert_mode)
@@ -451,6 +462,7 @@ turn_on_insert ()
   insert_mode = 1;
 }
 
+void
 turn_off_insert ()
 {
   if (insert_mode)
@@ -465,6 +477,7 @@ turn_off_insert ()
    These functions are called on all terminals, but do nothing
    on terminals whose standout mode does not work that way.  */
 
+void
 turn_off_highlight ()
 {
   if (TN_standout_width < 0)
@@ -475,6 +488,7 @@ turn_off_highlight ()
     }
 }
 
+void
 turn_on_highlight ()
 {
   if (TN_standout_width < 0)
@@ -489,6 +503,7 @@ turn_on_highlight ()
    empty space inside windows.  What this is,
    depends on the user option inverse-video.  */
 
+void
 background_highlight ()
 {
   if (TN_standout_width >= 0)
@@ -501,7 +516,7 @@ background_highlight ()
 
 /* Set standout mode to the mode specified for the text to be output.  */
 
-static
+static void
 highlight_if_desired ()
 {
   if (TN_standout_width >= 0)
@@ -523,6 +538,7 @@ highlight_if_desired ()
 /* Write a standout marker or end-standout marker at the front of the line
    at vertical position vpos.  */
 
+void
 write_standout_marker (flag, vpos)
      int flag, vpos;
 {
@@ -540,6 +556,7 @@ write_standout_marker (flag, vpos)
    Call this when about to modify line at position VPOS
    and not change whether it is highlighted.  */
 
+void
 reassert_line_highlight (highlight, vpos)
      int highlight;
      int vpos;
@@ -561,6 +578,7 @@ reassert_line_highlight (highlight, vpos)
 /* Call this when about to modify line at position VPOS
    and change whether it is highlighted.  */
 
+void
 change_line_highlight (new_highlight, vpos, first_unused_hpos)
      int new_highlight, vpos, first_unused_hpos;
 {
@@ -597,6 +615,7 @@ change_line_highlight (new_highlight, vpos, first_unused_hpos)
 
 /* Move to absolute position, specified origin 0 */
 
+void
 cursor_to (row, col)
      int row, col;
 {
@@ -626,6 +645,7 @@ cursor_to (row, col)
 
 /* Similar but don't take any account of the wasted characters.  */
 
+void
 raw_cursor_to (row, col)
      int row, col;
 {
@@ -646,6 +666,7 @@ raw_cursor_to (row, col)
 /* Erase operations */
 
 /* clear from cursor to end of frame */
+void
 clear_to_end ()
 {
   register int i;
@@ -673,6 +694,7 @@ clear_to_end ()
 
 /* Clear entire frame */
 
+void
 clear_frame ()
 {
   if (clear_frame_hook
@@ -702,6 +724,7 @@ clear_frame ()
 
    Note that the cursor may be moved.  */
 
+void
 clear_end_of_line (first_unused_hpos)
      int first_unused_hpos;
 {
@@ -719,6 +742,7 @@ clear_end_of_line (first_unused_hpos)
 
    Note that the cursor may be moved, on terminals lacking a `ce' string.  */
 
+void
 clear_end_of_line_raw (first_unused_hpos)
      int first_unused_hpos;
 {
@@ -788,9 +812,14 @@ encode_terminal_code (src, dst, src_len, dst_len, consumed)
   register GLYPH g;
   unsigned int c;
   unsigned char workbuf[4], *buf;
-  int len, produced, processed;
+  int len;
   register int tlen = GLYPH_TABLE_LENGTH;
   register Lisp_Object *tbase = GLYPH_TABLE_BASE;
+  struct coding_system *coding;
+
+  coding = (CODING_REQUIRE_ENCODING (&terminal_coding)
+	    ? &terminal_coding
+	    : &safe_terminal_coding);
 
   while (src < src_end)
     {
@@ -828,21 +857,14 @@ encode_terminal_code (src, dst, src_len, dst_len, consumed)
 	      buf = GLYPH_STRING (tbase, g);
 	    }
 	  
-	  if (CODING_MAY_REQUIRE_NO_CONVERSION (&terminal_coding))
-	    /* We had better avoid sending Emacs' internal code to
-               terminal.  */
-	    produced = encode_coding (&safe_terminal_coding, buf, dst,
-				      len, dst_end - dst, &processed);
-	  else
-	    produced = encode_coding (&terminal_coding, buf, dst,
-				      len, dst_end - dst, &processed);
-	  if (processed < len)
+	  encode_coding (coding, buf, dst, len, dst_end - dst);
+	  if (coding->consumed < len)
 	    /* We get a carryover because the remaining output
 	       buffer is too short.  We must break the loop here
 	       without increasing SRC so that the next call of
 	       this function start from the same glyph.  */
 	    break;
-	  dst += produced;
+	  dst += coding->produced;
 	}
       src++;
     }
@@ -851,6 +873,7 @@ encode_terminal_code (src, dst, src_len, dst_len, consumed)
 }
 
 
+void
 write_glyphs (string, len)
      register GLYPH *string;
      register int len;
@@ -882,8 +905,9 @@ write_glyphs (string, len)
     return;
 
   cmplus (len);
-  /* The field `last_block' should be set to 1 only at the tail.  */
-  terminal_coding.last_block = 0;
+  /* The mode bit CODING_MODE_LAST_BLOCK should be set to 1 only at
+     the tail.  */
+  terminal_coding.mode &= ~CODING_MODE_LAST_BLOCK;
   while (len > 0)
     {
       /* We use shared conversion buffer of the current size (1024
@@ -903,20 +927,19 @@ write_glyphs (string, len)
       string += consumed;
     }
   /* We may have to output some codes to terminate the writing.  */
-  if (!CODING_MAY_REQUIRE_NO_CONVERSION (&terminal_coding))
+  if (CODING_REQUIRE_FLUSHING (&terminal_coding))
     {
-      terminal_coding.last_block = 1;
-      produced = encode_coding (&terminal_coding, (char *)0, conversion_buffer,
-				0, conversion_buffer_size,
-				&consumed);
-
-      if (produced > 0)
+      terminal_coding.mode |= CODING_MODE_LAST_BLOCK;
+      encode_coding (&terminal_coding, "", conversion_buffer,
+		     0, conversion_buffer_size);
+      if (terminal_coding.produced > 0)
 	{
-	  fwrite (conversion_buffer, 1, produced, stdout);
+	  fwrite (conversion_buffer, 1, terminal_coding.produced, stdout);
 	  if (ferror (stdout))
 	    clearerr (stdout);
 	  if (termscript)
-	    fwrite (conversion_buffer, 1, produced, termscript);
+	    fwrite (conversion_buffer, 1, terminal_coding.produced,
+		    termscript);
 	}
     }
   cmcheckmagic ();
@@ -924,6 +947,7 @@ write_glyphs (string, len)
 
 /* If start is zero, insert blanks instead of a string at start */
  
+void
 insert_glyphs (start, len)
      register GLYPH *start;
      register int len;
@@ -955,8 +979,8 @@ insert_glyphs (start, len)
 
   turn_on_insert ();
   cmplus (len);
-  /* The field `last_block' should be set to 1 only at the tail.  */
-  terminal_coding.last_block = 0;
+  /* The bit CODING_MODE_LAST_BLOCK should be set to 1 only at the tail.  */
+  terminal_coding.mode &= ~CODING_MODE_LAST_BLOCK;
   while (len-- > 0)
     {
       int produced, consumed;
@@ -978,7 +1002,7 @@ insert_glyphs (start, len)
 
       if (len <= 0)
 	/* This is the last glyph.  */
-	terminal_coding.last_block = 1;
+	terminal_coding.mode |= CODING_MODE_LAST_BLOCK;
 
       /* We use shared conversion buffer of the current size (1024
 	 bytes at least).  It is surely sufficient for just one glyph.  */
@@ -998,6 +1022,7 @@ insert_glyphs (start, len)
   cmcheckmagic ();
 }
 
+void
 delete_glyphs (n)
      register int n;
 {
@@ -1035,6 +1060,7 @@ delete_glyphs (n)
 
 /* Insert N lines at vpos VPOS.  If N is negative, delete -N lines.  */
 
+void
 ins_del_lines (vpos, n)
      int vpos, n;
 {
@@ -1095,7 +1121,7 @@ ins_del_lines (vpos, n)
 
   if (TN_standout_width >= 0)
     {
-      register lower_limit
+      register int lower_limit
 	= (scroll_region_ok
 	   ? specified_window
 	   : FRAME_HEIGHT (selected_frame));
@@ -1235,8 +1261,7 @@ calculate_ins_del_char_costs (frame)
     *p++ = (ins_startup_cost += ins_cost_per_char);
 }
 
-extern do_line_insertion_deletion_costs ();
-
+void
 calculate_costs (frame)
      FRAME_PTR frame;
 {
@@ -1536,6 +1561,7 @@ term_get_fkeys_1 ()
 }
 
 
+void
 term_init (terminal_type)
      char *terminal_type;
 {
@@ -1578,7 +1604,7 @@ term_init (terminal_type)
   FRAME_VERTICAL_SCROLL_BAR_TYPE (selected_frame) = vertical_scroll_bar_none;
 
   return;
-#endif /* WINDOWSNT */
+#else  /* not WINDOWSNT */
 
   Wcm_clear ();
 
@@ -1903,9 +1929,11 @@ to do `unset TERMCAP' (C-shell: `unsetenv TERMCAP') as well.",
 
   FRAME_CAN_HAVE_SCROLL_BARS (selected_frame) = 0;
   FRAME_VERTICAL_SCROLL_BAR_TYPE (selected_frame) = vertical_scroll_bar_none;
+#endif /* WINDOWSNT */
 }
 
 /* VARARGS 1 */
+void
 fatal (str, arg1, arg2)
      char *str, *arg1, *arg2;
 {
@@ -1916,6 +1944,7 @@ fatal (str, arg1, arg2)
   exit (1);
 }
 
+void
 syms_of_term ()
 {
   DEFVAR_BOOL ("system-uses-terminfo", &system_uses_terminfo,

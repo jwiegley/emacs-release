@@ -26,18 +26,28 @@
 
 ;; This mode provides an Emacs interface to the UNIX spell(1) program.
 ;; Entry points are `spell-buffer', `spell-word', `spell-region' and
-;; `spell-string'.  These facilities are documented in the Emacs user's
-;; manual.
+;; `spell-string'.
+
+;; See also ispell.el for an interface to the ispell program.
 
 ;;; Code:
 
-(defvar spell-command "spell"
-  "*Command to run the spell program.")
+(defgroup spell nil
+  "Interface to the UNIX spell(1) program."
+  :prefix "spell-"
+  :group 'applications)
 
-(defvar spell-filter nil
+(defcustom spell-command "spell"
+  "*Command to run the spell program."
+  :type 'string
+  :group 'spell)
+
+(defcustom spell-filter nil
   "*Filter function to process text before passing it to spell program.
 This function might remove text-processor commands.
-nil means don't alter the text before checking it.")
+nil means don't alter the text before checking it."
+  :type 'function
+  :group 'spell)
 
 ;;;###autoload
 (put 'spell-filter 'risky-local-variable t)

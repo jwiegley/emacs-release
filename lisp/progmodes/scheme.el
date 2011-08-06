@@ -1,8 +1,9 @@
 ;;; scheme.el --- Scheme (and DSSSL) editing mode.
 
-;; Copyright (C) 1986, 87, 88, 1997 Free Software Foundation, Inc.
+;; Copyright (C) 1986, 87, 88, 97, 1998 Free Software Foundation, Inc.
 
 ;; Author: Bill Rozas <jinx@martigny.ai.mit.edu>
+;; Adapted-by: Dave Love <d.love@dl.ac.uk>
 ;; Keywords: languages, lisp
 
 ;; This file is part of GNU Emacs.
@@ -22,10 +23,6 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-;; Originally adapted from Lisp mode by Bill Rozas, jinx@prep with a
-;; comment that the code should be merged back.  Merging done by
-;; d.love@dl.ac.uk when DSSSL features added.
-
 ;;; Commentary:
 
 ;; The major mode for editing Scheme-type Lisp code, very similar to
@@ -40,6 +37,17 @@
 ;; For interacting with a Scheme interpreter See also `run-scheme' in
 ;; the `cmuscheme' package and also the implementation-specific
 ;; `xscheme' package.
+
+;; Here's a recipe to generate a TAGS file for DSSSL, by the way:
+;; etags --lang=scheme --regex='/[ \t]*(\(mode\|element\)[ \t
+;; ]+\([^ \t(
+;; ]+\)/\2/' --regex='/[ \t]*(element[ \t
+;; ]*([^)]+[ \t
+;; ]+\([^)]+\)[ \t
+;; ]*)/\1/' --regex='/(declare[^ \t
+;; ]*[ \t
+;; ]+\([^ \t
+;; ]+\)/\1/' "$@"
 
 ;;; Code:
 
@@ -104,11 +112,11 @@
 
 (defvar scheme-imenu-generic-expression
       '((nil 
-	 "^(define\\(\\|-\\(generic\\(\\|-procedure\\)\\|method\\)\\)*\\s-+(?\\(\\(\\sw\\|\\s_\\)+\\)" 4)
-	(" Types" 
-	 "^(define-class\\s-+(?\\(\\(\\sw\\|\\s_\\)+\\)" 1)
-	(" Macros"
-	 "^(\\(defmacro\\|define-macro\\|define-syntax\\)\\s-+(?\\(\\(\\sw\\|\\s_\\)+\\)" 2))
+	 "^(define\\(\\|-\\(generic\\(\\|-procedure\\)\\|method\\)\\)*\\s-+(?\\(\\sw+\\)" 4)
+	("Types" 
+	 "^(define-class\\s-+(?\\(\\sw+\\)" 1)
+	("Macros"
+	 "^(\\(defmacro\\|define-macro\\|define-syntax\\)\\s-+(?\\(\\sw+\\)" 2))
   "Imenu generic expression for Scheme mode.  See `imenu-generic-expression'.")
 
 (defun scheme-mode-variables ()
@@ -127,6 +135,8 @@
   ;; because lisp-fill-paragraph should do the job.
   (make-local-variable 'adaptive-fill-mode)
   (setq adaptive-fill-mode nil)
+  (make-local-variable 'normal-auto-fill-function)
+  (setq normal-auto-fill-function 'lisp-mode-auto-fill)
   (make-local-variable 'indent-line-function)
   (setq indent-line-function 'lisp-indent-line)
   (make-local-variable 'parse-sexp-ignore-comments)
@@ -148,8 +158,18 @@
   (make-local-variable 'lisp-indent-function)
   (set lisp-indent-function 'scheme-indent-function)
   (setq mode-line-process '("" scheme-mode-line-process))
+  (make-local-variable 'imenu-case-fold-search)
+  (setq imenu-case-fold-search t)
   (make-local-variable 'imenu-generic-expression)
-  (setq imenu-generic-expression scheme-imenu-generic-expression))
+  (setq imenu-generic-expression scheme-imenu-generic-expression)
+  (make-local-variable 'imenu-syntax-alist)
+  (setq imenu-syntax-alist '(("+-*/.<>=?!$%_&~^:" . "w")))
+  (make-local-variable 'font-lock-defaults)  
+  (setq font-lock-defaults
+        '((scheme-font-lock-keywords
+           scheme-font-lock-keywords-1 scheme-font-lock-keywords-2)
+          nil t (("+-*/.<>=!?$%_&~^:" . "w")) beginning-of-defun
+          (font-lock-mark-block-function . mark-defun))))
 
 (defvar scheme-mode-line-process "")
 
@@ -162,15 +182,19 @@ All commands in `shared-lisp-mode-map' are inherited by this map.")
   (let ((map (make-sparse-keymap "Scheme")))
     (setq scheme-mode-map
 	  (nconc (make-sparse-keymap) shared-lisp-mode-map))
-    (define-key scheme-mode-map "\e\t" 'lisp-complete-symbol)
     (define-key scheme-mode-map [menu-bar] (make-sparse-keymap))
     (define-key scheme-mode-map [menu-bar scheme]
       (cons "Scheme" map))
     (define-key map [run-scheme] '("Run Inferior Scheme" . run-scheme))
+    (define-key map [uncomment-region]
+      '("Uncomment Out Region" . (lambda (beg end)
+                                   (interactive "r")
+                                   (comment-region beg end '(4)))))
     (define-key map [comment-region] '("Comment Out Region" . comment-region))
     (define-key map [indent-region] '("Indent Region" . indent-region))
     (define-key map [indent-line] '("Indent Line" . lisp-indent-line))
     (put 'comment-region 'menu-enable 'mark-active)
+    (put 'uncomment-region 'menu-enable 'mark-active)
     (put 'indent-region 'menu-enable 'mark-active)))
 
 ;; Used by cmuscheme
@@ -222,9 +246,23 @@ Set this to nil if you normally use another dialect."
   "<!DOCTYPE style-sheet PUBLIC \"-//James Clark//DTD DSSSL Style Sheet//EN\">
 "
   "*An SGML declaration for the DSSSL file.
-This will be inserted into an empty buffer in dsssl-mode if it is
-defined as a string.  It is typically James Clark's style-sheet
+If it is defined as a string this will be inserted into an empty buffer
+which is in dsssl-mode.  It is typically James Clark's style-sheet
 doctype, as required for Jade."
+  :type '(choice (string :tag "Specified string") 
+                 (const :tag "None" :value nil))
+  :group 'scheme)
+
+(defcustom scheme-mode-hook nil
+  "Normal hook (list of functions) run when entering scheme-mode.
+See `run-hooks'."
+  :type 'hook
+  :group 'scheme)
+
+(defcustom dsssl-mode-hook nil
+  "Normal hook (list of functions) run when entering dsssl-mode.
+See `run-hooks'."
+  :type 'hook
   :group 'scheme)
 
 (defvar dsssl-imenu-generic-expression
@@ -232,17 +270,75 @@ doctype, as required for Jade."
   ;; not sure it's the best way to organize it; perhaps one type
   ;; should be at the first level, though you don't see this anyhow if
   ;; it gets split up.
-  '((" Defines" 
-     "^(define\\s-+(?\\(\\(\\sw\\|\\s_\\)+\\)" 1)
-    (" Modes"
-     "^\\s-*(mode\\s-+\\(\\(\\sw\\|\\s-\\|\\s_\\)+\\)" 1)
-    (" Elements"
+  '(("Defines" 
+     "^(define\\s-+(?\\(\\sw+\\)" 1)
+    ("Modes"
+     "^\\s-*(mode\\s-+\\(\\(\\sw\\|\\s-\\)+\\)" 1)
+    ("Elements"
      ;; (element foo ...) or (element (foo bar ...) ...)
      ;; Fixme: Perhaps it should do `root'.
-     "^\\s-*(element\\s-+(?\\(\\(\\sw\\|\\s-\\|\\s_\\)+\\))?" 1)
-    (" Declarations" 
-     "^(declare\\(-\\sw+\\)+\\>\\s-+\\(\\(\\sw\\|\\s_\\)+\\)" 2))
+     "^\\s-*(element\\s-+(?\\(\\(\\sw\\|\\s-\\)+\\))?" 1)
+    ("Declarations" 
+     "^(declare\\(-\\sw+\\)+\\>\\s-+\\(\\sw+\\)" 2))
   "Imenu generic expression for DSSSL mode.  See `imenu-generic-expression'.")
+
+(defconst scheme-font-lock-keywords-1
+  (eval-when-compile
+    (list
+     ;;
+     ;; Declarations.  Hannes Haug <hannes.haug@student.uni-tuebingen.de> says
+     ;; this works for SOS, STklos, SCOOPS, Meroon and Tiny CLOS.
+     (list (concat "(\\(define\\*?\\("
+		   ;; Function names.
+		   "\\(\\|-public\\|-method\\|-generic\\(-procedure\\)?\\)\\|"
+		   ;; Macro names, as variable names.  A bit dubious, this.
+		   "\\(-syntax\\)\\|"
+		   ;; Class names.
+		   "-class"
+                   ;; Guile modules.
+                   "\\|-module"
+		   "\\)\\)\\>"
+		   ;; Any whitespace and declared object.
+		   "[ \t]*(?"
+		   "\\(\\sw+\\)?")
+	   '(1 font-lock-keyword-face)
+	   '(6 (cond ((match-beginning 3) font-lock-function-name-face)
+		     ((match-beginning 5) font-lock-variable-name-face)
+		     (t font-lock-type-face))
+	       nil t))
+     ))
+  "Subdued expressions to highlight in Scheme modes.")
+
+(defconst scheme-font-lock-keywords-2
+  (append scheme-font-lock-keywords-1
+   (eval-when-compile
+     (list
+      ;;
+      ;; Control structures.
+      (cons
+       (concat
+	"(" (regexp-opt
+	     '("begin" "call-with-current-continuation" "call/cc"
+	       "call-with-input-file" "call-with-output-file" "case" "cond"
+	       "do" "else" "for-each" "if" "lambda"
+	       "let" "let*" "let-syntax" "letrec" "letrec-syntax"
+	       ;; Hannes Haug <hannes.haug@student.uni-tuebingen.de> wants:
+	       "and" "or" "delay"
+	       ;; Stefan Monnier <stefan.monnier@epfl.ch> says don't bother:
+	       ;;"quasiquote" "quote" "unquote" "unquote-splicing"
+	       "map" "syntax" "syntax-rules") t)
+	"\\>") 1)
+      ;;
+      ;; David Fox <fox@graphics.cs.nyu.edu> for SOS/STklos class specifiers.
+      '("\\<<\\sw+>\\>" . font-lock-type-face)
+      ;;
+      ;; Scheme `:' keywords as builtins.
+      '("\\<:\\sw+\\>" . font-lock-builtin-face)
+      )))
+  "Gaudy expressions to highlight in Scheme modes.")
+
+(defvar scheme-font-lock-keywords scheme-font-lock-keywords-1
+  "Default expressions to highlight in Scheme modes.")
 
 ;;;###autoload
 (defun dsssl-mode ()
@@ -253,19 +349,13 @@ Commands:
 Delete converts tabs to spaces as it moves back.
 Blank lines separate paragraphs.  Semicolons start comments.
 \\{scheme-mode-map}
-Entry to this mode calls the value of dsssl-mode-hook
-if that value is non-nil and inserts the value of
-`dsssl-sgml-declaration' if that variable's value is a string."
+Entering this mode runs the hooks `scheme-mode-hook' and then
+`dsssl-mode-hook' and inserts the value of `dsssl-sgml-declaration' if
+that variable's value is a string."
   (interactive)
   (kill-all-local-variables)
   (use-local-map scheme-mode-map)
   (scheme-mode-initialize)
-  (make-local-variable 'font-lock-defaults)
-  (setq font-lock-defaults '(dsssl-font-lock-keywords
-			     nil t (("+-*/.<>=!?$%_&~^:" . "w"))
-			     beginning-of-defun
-			     (font-lock-comment-start-regexp . ";")
-			     (font-lock-mark-block-function . mark-defun)))
   (make-local-variable 'page-delimiter)
   (setq page-delimiter "^;;;" ; ^L not valid SGML char
 	major-mode 'dsssl-mode
@@ -275,10 +365,16 @@ if that value is non-nil and inserts the value of
        (stringp dsssl-sgml-declaration)
        (not buffer-read-only)
        (insert dsssl-sgml-declaration))
-  (run-hooks 'scheme-mode-hook)
-  (run-hooks 'dsssl-mode-hook)
   (scheme-mode-variables)
-  (setq imenu-generic-expression dsssl-imenu-generic-expression))
+  (setq font-lock-defaults '(dsssl-font-lock-keywords
+			     nil t (("+-*/.<>=?$%_&~^:" . "w"))
+			     beginning-of-defun
+			     (font-lock-mark-block-function . mark-defun)))
+  (setq imenu-case-fold-search nil)
+  (setq imenu-generic-expression dsssl-imenu-generic-expression)
+  (setq imenu-syntax-alist '(("+-*/.<>=?$%_&~^:" . "w")))
+  (run-hooks 'scheme-mode-hook)
+  (run-hooks 'dsssl-mode-hook))
 
 ;; Extra syntax for DSSSL.  This isn't separated from Scheme, but
 ;; shouldn't cause much trouble in scheme-mode.
@@ -311,7 +407,7 @@ if that value is non-nil and inserts the value of
      '("(\\(element\\)\\>[ 	]*(\\(\\S)+\\))"
        (1 font-lock-keyword-face)
        (2 font-lock-type-face))
-     '("\\<\\sw+:\\>" . font-lock-reference-face) ; trailing `:' c.f. scheme
+     '("\\<\\sw+:\\>" . font-lock-constant-face) ; trailing `:' c.f. scheme
      ;; SGML markup (from sgml-mode) :
      '("<\\([!?][-a-z0-9]+\\)" 1 font-lock-keyword-face)
      '("<\\(/?[-a-z0-9]+\\)" 1 font-lock-function-name-face)))
@@ -356,7 +452,7 @@ if that value is non-nil and inserts the value of
 	       (lisp-indent-specform method state
 				     indent-point normal-indent))
 	      (method
-		(funcall method state indent-point)))))))
+		(funcall method state indent-point normal-indent)))))))
 
 
 ;;; Let is different in Scheme
@@ -378,11 +474,11 @@ if that value is non-nil and inserts the value of
 ;;      (scheme-indent-specform 2 state indent-point)
 ;;      (scheme-indent-specform 1 state indent-point)))
 
-(defun scheme-let-indent (state indent-point)
+(defun scheme-let-indent (state indent-point normal-indent)
   (skip-chars-forward " \t")
   (if (looking-at "[-a-zA-Z0-9+*/?!@$%^&_:~]")
-      (lisp-indent-specform 2 state indent-point (current-column))
-      (lisp-indent-specform 1 state indent-point (current-column))))
+      (lisp-indent-specform 2 state indent-point normal-indent)
+    (lisp-indent-specform 1 state indent-point normal-indent)))
 
 ;; (put 'begin 'scheme-indent-function 0), say, causes begin to be indented
 ;; like defun if the first form is placed on the next line, otherwise
@@ -396,7 +492,11 @@ if that value is non-nil and inserts the value of
 (put 'let 'scheme-indent-function 'scheme-let-indent)
 (put 'let* 'scheme-indent-function 1)
 (put 'letrec 'scheme-indent-function 1)
-(put 'sequence 'scheme-indent-function 0)
+(put 'sequence 'scheme-indent-function 0) ; SICP, not r4rs
+(put 'let-syntax 'scheme-indent-function 1)
+(put 'letrec-syntax 'scheme-indent-function 1)
+(put 'syntax-rules 'scheme-indent-function 1)
+
 
 (put 'call-with-input-file 'scheme-indent-function 1)
 (put 'with-input-from-file 'scheme-indent-function 1)
@@ -404,6 +504,8 @@ if that value is non-nil and inserts the value of
 (put 'call-with-output-file 'scheme-indent-function 1)
 (put 'with-output-to-file 'scheme-indent-function 1)
 (put 'with-output-to-port 'scheme-indent-function 1)
+(put 'call-with-values 'scheme-indent-function 1) ; r5rs?
+(put 'dynamic-wind 'scheme-indent-function 3) ; r5rs?
 
 ;;;; MIT Scheme specific indentation.
 
@@ -411,7 +513,6 @@ if that value is non-nil and inserts the value of
     (progn
       (put 'fluid-let 'scheme-indent-function 1)
       (put 'in-package 'scheme-indent-function 1)
-      (put 'let-syntax 'scheme-indent-function 1)
       (put 'local-declare 'scheme-indent-function 1)
       (put 'macro 'scheme-indent-function 1)
       (put 'make-environment 'scheme-indent-function 0)

@@ -22,10 +22,6 @@ Boston, MA 02111-1307, USA.  */
 #ifndef _FONTSET_H
 #define _FONTSET_H
 
-/* 
-
-#define GENERIC_FONT_PTR void
-
 /* This data type is used for the font_table field of window system
    depending data area (e.g. struct x_display_info on X window).  */
 
@@ -128,7 +124,7 @@ struct font_info
 /* A value which may appear in the member encoding of struch font_info
    indicating that a font itself doesn't tell which encoding to be
    used.  */
-#define FONT_ENCODING_NOT_DECIDED 4
+#define FONT_ENCODING_NOT_DECIDED 255
 
 #define FONT_NOT_OPENED -1
 #define FONT_NOT_FOUND  -2
@@ -170,40 +166,56 @@ struct fontset_data
   int n_fontsets;
 };
 
+/* Forward declaration for prototypes.  */
+struct frame;
+
 /* The following six are window system dependent functions.
    Initialization routine of each window system should set appropriate
    functions to these variables.  For instance, in case of X window,
    x_term_init does this.  */
 
 /* Return a pointer to struct font_info of font FONT_IDX of frame F.  */
-extern struct font_info *(*get_font_info_func) (/* FRAME_PTR f;
-						    int font_idx */);
+extern struct font_info *(*get_font_info_func) P_ ((struct frame *f,
+						    int font_idx));
 
 /* Return a list of font names which matches PATTERN.  See the document of
    `x-list-fonts' for more detail.  */
-extern Lisp_Object (*list_fonts_func) (/* Lisp_Object pattern, face, frame,
-					  width */);
+extern Lisp_Object (*list_fonts_func) P_ ((Lisp_Object pattern,
+					   Lisp_Object face,
+					   Lisp_Object frame,
+					   Lisp_Object width));
 
 /* Load a font named NAME for frame F and return a pointer to the
    information of the loaded font.  If loading is failed, return -1.  */
-extern struct font_info *(*load_font_func) (/* FRAME_PTR f; char *name */);
+extern struct font_info *(*load_font_func) P_ ((struct frame *f,
+						char *name, int));
 
 /* Return a pointer to struct font_info of a font named NAME for frame F.
    If no such font is loaded, return NULL.  */
-extern struct font_info *(*query_font_func) (/* FRAME_PTR f; char *name */);
+extern struct font_info *(*query_font_func) P_ ((struct frame *f, char *name));
 
 /* Additional function for setting fontset or changing fontset
    contents of frame F.  This function may change the coordinate of
    the frame.  */
-extern void (*set_frame_fontset_func) (/* FRAME_PTR f; Lisp_Object arg, oldval */);
+extern void (*set_frame_fontset_func) P_ ((struct frame *f, Lisp_Object arg,
+					   Lisp_Object oldval));
+
+/* To find a CCL program, fs_load_font calls this function.
+   The argument is a pointer to the struct font_info.
+   This function set the memer `encoder' of the structure.  */
+extern void (*find_ccl_program_func) P_ ((struct font_info *));
 
 /* Check if any window system is used now.  */
-extern void (*check_window_system_func) ();
+extern void (*check_window_system_func) P_ ((void));
 
-extern struct fontset_data *alloc_fontset_data ();
-extern void free_fontset_data ();
-extern struct font_info *fs_load_font ();
-extern Lisp_Object list_fontsets ();
+extern struct fontset_data *alloc_fontset_data P_ ((void));
+extern void free_fontset_data P_ ((struct fontset_data *));
+extern struct font_info *fs_load_font P_ ((struct frame *, struct font_info *,
+					   int, char *, int));
+extern int fs_query_fontset P_ ((struct frame *, char *));
+extern int fs_register_fontset P_ ((struct frame *, Lisp_Object));
+EXFUN (Fquery_fontset, 2);
+extern Lisp_Object list_fontsets P_ ((struct frame *, Lisp_Object, int));
 extern Lisp_Object Vglobal_fontset_alist;
 
 extern Lisp_Object Qfontset;

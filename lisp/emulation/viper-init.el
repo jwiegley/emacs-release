@@ -30,6 +30,9 @@
 (defvar viper-current-state)
 (defvar viper-version)
 (defvar viper-expert-level)
+(defvar current-input-method)
+(defvar default-input-method)
+(defvar describe-current-input-method-function)
 ;; end pacifier
 
 
@@ -51,16 +54,17 @@
 (defun viper-window-display-p ()
   (and (viper-device-type) (not (memq (viper-device-type) '(tty stream pc)))))
 
-(defcustom viper-ms-style-os-p (memq system-type '(ms-dos windows-nt windows-95))
+(defcustom viper-ms-style-os-p (memq system-type
+				     '(ms-dos windows-nt windows-95))
   "Tells if Emacs is running under an MS-style OS: ms-dos, windows-nt, W95."
   :type 'boolean
   :tag "Is it Microsoft-made OS?"
-  :group 'viper)
+  :group 'viper-misc)
 (defcustom viper-vms-os-p (memq system-type '(vax-vms axp-vms))
   "Tells if Emacs is running under VMS."
   :type 'boolean
   :tag "Is it VMS?"
-  :group 'viper)
+  :group 'viper-misc)
 
 (defcustom viper-force-faces nil
   "If t, Viper will think that it is running on a display that supports faces.
@@ -68,7 +72,7 @@ This is provided as a temporary relief for users of graphics-capable terminals
 that Viper doesn't know about.
 In all likelihood, you don't need to bother with this setting."
   :type 'boolean
-  :group 'viper)
+  :group 'viper-highlighting)
 
 (defun viper-has-face-support-p ()
   (cond ((viper-window-display-p))
@@ -203,28 +207,28 @@ the Ex command :map!.")
 (viper-deflocalvar viper-replace-minor-mode nil
   "Minor mode in effect in replace state (cw, C, and the like commands).")
 
-;; Mode for vital things like \C-z and \C-x)
-;; This is t, by default. So, any new buffer will have C-z defined as
-;; switch to Vi, unless we switched states in this buffer
-(viper-deflocalvar viper-emacs-intercept-minor-mode t)
+;; Mode for vital things like \C-z and \C-x) This is set to t, when viper-mode
+;; is invoked. So, any new buffer will have C-z defined as switch to Vi, unless
+;; we switched states in this buffer
+(viper-deflocalvar viper-emacs-intercept-minor-mode nil)
   
-(viper-deflocalvar viper-emacs-local-user-minor-mode t
+(viper-deflocalvar viper-emacs-local-user-minor-mode nil
   "Minor mode for local user bindings effective in Emacs state.
 Users can use it to override Emacs bindings when Viper is in its Emacs
 state.")  
   
-(viper-deflocalvar viper-emacs-global-user-minor-mode t
+(viper-deflocalvar viper-emacs-global-user-minor-mode nil
   "Minor mode for global user bindings in effect in Emacs state.
 Users can use it to override Emacs bindings when Viper is in its Emacs
 state.")  
 
-(viper-deflocalvar viper-emacs-kbd-minor-mode t
+(viper-deflocalvar viper-emacs-kbd-minor-mode nil
   "Minor mode for Vi style macros in Emacs state.
 The corresponding keymap stores key bindings of Vi macros defined with
 `viper-record-kbd-macro' command. There is no Ex-level command to do this
 interactively.")
 
-(viper-deflocalvar viper-emacs-state-modifier-minor-mode t
+(viper-deflocalvar viper-emacs-state-modifier-minor-mode nil
   "Minor mode used to make major-mode-specific modification to Emacs state.
 For instance, a Vi purist may want to bind `dd' in Dired mode to a function
 that deletes a file.")
@@ -301,6 +305,7 @@ Use `M-x viper-set-expert-level' to change this.")
 			     (or current-input-method default-input-method))
 		   "")))
     ))
+
 ;; viper hook to run on input-method deactivation
 (defun viper-inactivate-input-method-action ()
   (if (null viper-mule-hook-flag)
@@ -366,14 +371,7 @@ it better fits your working style."
 
 ;; Replace mode and changing text
 
-;; Viper's own after/before change functions, which get viper-add-hook'ed to
-;; Emacs's
-(viper-deflocalvar viper-after-change-functions nil "")
-(viper-deflocalvar viper-before-change-functions nil "")
-(viper-deflocalvar viper-post-command-hooks nil "")
-(viper-deflocalvar viper-pre-command-hooks nil "")
-
-;; Can be used to pass global states around for short period of time
+;; Hack used to pass global states around for short period of time
 (viper-deflocalvar viper-intermediate-command nil "")
 
 ;; This is used to pass the right Vi command key sequence to
@@ -470,7 +468,7 @@ color displays. By default, the delimiters are used only on TTYs."
 This is a list where Viper keeps the history of previously inserted pieces of
 text."
   :type 'integer
-  :group 'viper)
+  :group 'viper-misc)
 ;; The insertion ring.
 (defvar viper-insertion-ring nil)
 ;; This is temp insertion ring. Used to do rotation for display purposes.
@@ -481,7 +479,7 @@ text."
 (defcustom viper-command-ring-size 14
   "The size of history of Vi commands repeatable with dot."
   :type 'integer
-  :group 'viper)
+  :group 'viper-misc)
 ;; The command ring.
 (defvar viper-command-ring nil)
 ;; This is temp command ring. Used to do rotation for display purposes.
@@ -494,7 +492,7 @@ text."
 Setting this too high may slow down your typing. Setting this value too low
 will make it hard to use Vi-stile timeout macros."
   :type 'integer
-  :group 'viper)
+  :group 'viper-misc)
 
 (defcustom viper-ESC-keyseq-timeout (if (viper-window-display-p)
 				      0 viper-fast-keyseq-timeout)
@@ -503,7 +501,7 @@ Setting this too high may slow down switching from insert to vi state. Setting
 this value too low will make it impossible to use function keys in insert mode
 on a dumb terminal."
   :type 'integer
-  :group 'viper)
+  :group 'viper-misc)
 
 ;; Modes and related variables
 
@@ -541,7 +539,9 @@ programs and LaTeX documents."
   :group 'viper)
 
 (defcustom viper-shift-width 8
-  "*The shiftwidth variable."
+  "*The value of the shiftwidth.
+This determines the number of columns by which the Ctl-t moves the cursor in
+the Insert state."
   :type 'integer
   :group 'viper)
 
@@ -612,6 +612,11 @@ to a new place after repeating previous Vi command."
 
 ;;; Variables for Moves and Searches
 
+(defgroup viper-search nil
+  "Variables that define the search and query-replace behavior of Viper."
+  :prefix "viper-"
+  :group 'viper)
+
 ;; For use by `;' command.
 (defvar viper-f-char nil)
 
@@ -638,13 +643,13 @@ to a new place after repeating previous Vi command."
 (defcustom viper-case-fold-search nil
   "*If not nil, search ignores cases."
   :type 'boolean
-  :group 'viper)
+  :group 'viper-search)
 
 (defcustom viper-re-search t
   "*If not nil, search is regexp search, otherwise vanilla search."
   :type 'boolean
   :tag "Regexp Search"
-  :group 'viper)
+  :group 'viper-search)
 
 (defcustom viper-search-scroll-threshold 2
   "*If search lands within this threshnold from the window top/bottom,
@@ -652,19 +657,19 @@ the window will be scrolled up or down appropriately, to reveal context.
 If you want Viper search to behave as usual in Vi, set this variable to a
 negative number."
   :type 'boolean
-  :group 'viper)
+  :group 'viper-search)
 
 (defcustom viper-re-query-replace t
   "*If t then do regexp replace, if nil then do string replace."
   :type 'boolean
   :tag "Regexp Query Replace"
-  :group 'viper)
+  :group 'viper-search)
 
 (defcustom viper-re-replace t
   "*If t, do regexp replace. nil means do string replace."
   :type 'boolean
   :tag "Regexp Replace"
-  :group 'viper)
+  :group 'viper-search)
 
 (defcustom viper-parse-sexp-ignore-comments t
   "*If t, `%' ignores the parentheses that occur inside comments."
@@ -707,20 +712,20 @@ If nil, the cursor will move backwards without deleting anything."
 (defcustom viper-buffer-search-char nil
   "*Key used for buffer-searching. Must be a character type, e.g., ?g."
   :type '(choice (const nil) character)
-  :group 'viper)
+  :group 'viper-search)
 
 (defcustom viper-search-wrap-around-t t
   "*If t, search wraps around."
   :type 'boolean
   :tag "Search Wraps Around"
-  :group 'viper)
+  :group 'viper-search)
   
 (viper-deflocalvar viper-related-files-and-buffers-ring nil "")
 (defcustom viper-related-files-and-buffers-ring nil
   "*List of file and buffer names that are considered to be related to the current buffer.
 Related buffers can be cycled through via :R and :P commands."
   :type 'boolean
-  :group 'viper)
+  :group 'viper-misc)
 (put 'viper-related-files-and-buffers-ring 'permanent-local t)
 
 ;; Used to find out if we are done with searching the current buffer.
@@ -785,15 +790,6 @@ Related buffers can be cycled through via :R and :P commands."
 
 ;;; Face-saving tricks
 
-;;(defcustom viper-replace-overlay-pixmap "gray3"
-;;  "Pixmap to use for search face on non-color displays."
-;;  :type 'string
-;;  :group 'viper)
-;;(defcustom viper-search-face-pixmap "gray3"
-;;  "Pixmap to use for search face on non-color displays."
-;;  :type 'string
-;;  :group 'viper)
-
 (defun viper-hide-face (face)
   (if (and (viper-has-face-support-p) viper-emacs-p)
       (add-to-list 'facemenu-unlisted-faces face)))
@@ -804,21 +800,6 @@ Related buffers can be cycled through via :R and :P commands."
   :prefix "viper-"
   :group 'viper)
 
-;;(defvar viper-search-face
-;;  (if (viper-has-face-support-p)
-;;      (progn
-;;	(make-face 'viper-search-face)
-;;	(or (face-differs-from-default-p 'viper-search-face)
-;;	    ;; face wasn't set in .viper or .Xdefaults
-;;	    (if (viper-can-use-colors "Black" "khaki")
-;;		(progn
-;;		  (set-face-background 'viper-search-face "khaki")
-;;		  (set-face-foreground 'viper-search-face "Black"))
-;;	      (set-face-underline-p 'viper-search-face t)
-;;	      (viper-set-face-pixmap 'viper-search-face
-;;				     viper-search-face-pixmap))) 
-;;	'viper-search-face))
-;;  "*Face used to flash out the search pattern.")
 
 (defface viper-search-face
   '((((class color)) (:foreground "Black" :background "khaki"))
@@ -826,25 +807,13 @@ Related buffers can be cycled through via :R and :P commands."
   "*Face used to flash out the search pattern."
   :group 'viper-highlighting)
 ;; An internal variable. Viper takes the face from here.
-(defvar viper-search-face 'viper-search-face)
+(defvar viper-search-face 'viper-search-face
+  "Face used to flash out the search pattern.
+DO NOT CHANGE this variable. Instead, use the customization widget
+to customize the actual face object `viper-search-face'
+this variable represents.")
 (viper-hide-face 'viper-search-face)
   
-;;(defvar viper-replace-overlay-face
-;;  (if (viper-has-face-support-p)
-;;      (progn
-;;	(make-face 'viper-replace-overlay-face)
-;;	(or (face-differs-from-default-p 'viper-replace-overlay-face)
-;;	    (progn
-;;	      (if (viper-can-use-colors "darkseagreen2" "Black")
-;;		  (progn
-;;		    (set-face-background
-;;		     'viper-replace-overlay-face "darkseagreen2")
-;;		    (set-face-foreground 'viper-replace-overlay-face "Black")))
-;;	      (set-face-underline-p 'viper-replace-overlay-face t)
-;;	      (viper-set-face-pixmap
-;;	       'viper-replace-overlay-face viper-replace-overlay-pixmap)))
-;;	'viper-replace-overlay-face))
-;;  "*Face for highlighting replace regions on a window display.")
 
 (defface viper-replace-overlay-face
   '((((class color)) (:foreground "Black" :background "darkseagreen2"))
@@ -852,34 +821,13 @@ Related buffers can be cycled through via :R and :P commands."
   "*Face for highlighting replace regions on a window display."
   :group 'viper-highlighting)
 ;; An internal variable. Viper takes the face from here.
-(defvar viper-replace-overlay-face 'viper-replace-overlay-face)
+(defvar viper-replace-overlay-face 'viper-replace-overlay-face
+  "Face for highlighting replace regions on a window display.
+DO NOT CHANGE this variable. Instead, use the customization widget
+to customize the actual face object `viper-replace-overlay-face'
+this variable represents.")
 (viper-hide-face 'viper-replace-overlay-face)
 
-;;(defvar viper-minibuffer-emacs-face
-;;  (if (viper-has-face-support-p)
-;;      (progn
-;;	(make-face 'viper-minibuffer-emacs-face)
-;;	(or (face-differs-from-default-p 'viper-minibuffer-emacs-face)
-;;	    ;; face wasn't set in .viper or .Xdefaults
-;;	    (if viper-vi-style-in-minibuffer
-;;		;; emacs state is an exception in the minibuffer
-;;		(if (viper-can-use-colors "darkseagreen2" "Black")
-;;		    (progn
-;;		      (set-face-background
-;;		       'viper-minibuffer-emacs-face "darkseagreen2")
-;;		      (set-face-foreground
-;;		       'viper-minibuffer-emacs-face "Black"))
-;;		  (copy-face 'modeline 'viper-minibuffer-emacs-face))
-;;	      ;; emacs state is the main state in the minibuffer
-;;	      (if (viper-can-use-colors "Black" "pink")
-;;		  (progn
-;;		    (set-face-background 'viper-minibuffer-emacs-face "pink") 
-;;		    (set-face-foreground
-;;		     'viper-minibuffer-emacs-face "Black"))
-;;		(copy-face 'italic 'viper-minibuffer-emacs-face))
-;;	      ))
-;;	'viper-minibuffer-emacs-face))
-;;  "Face used in the Minibuffer when it is in Emacs state.")
 
 (defface viper-minibuffer-emacs-face
   '((((class color)) (:foreground "Black" :background "darkseagreen2"))
@@ -887,32 +835,13 @@ Related buffers can be cycled through via :R and :P commands."
   "Face used in the Minibuffer when it is in Emacs state."
   :group 'viper-highlighting)
 ;; An internal variable. Viper takes the face from here.
-(defvar viper-minibuffer-emacs-face 'viper-minibuffer-emacs-face)
+(defvar viper-minibuffer-emacs-face 'viper-minibuffer-emacs-face
+  "Face used in the Minibuffer when it is in Emacs state.
+DO NOT CHANGE this variable. Instead, use the customization widget
+to customize the actual face object `viper-minibuffer-emacs-face'
+this variable represents.")
 (viper-hide-face 'viper-minibuffer-emacs-face)
     
-;;(defvar viper-minibuffer-insert-face
-;;  (if (viper-has-face-support-p)
-;;      (progn
-;;	(make-face 'viper-minibuffer-insert-face)
-;;	(or (face-differs-from-default-p 'viper-minibuffer-insert-face)
-;;	    (if viper-vi-style-in-minibuffer
-;;		(if (viper-can-use-colors "Black" "pink")
-;;		    (progn
-;;		      (set-face-background 'viper-minibuffer-insert-face "pink") 
-;;		      (set-face-foreground
-;;		       'viper-minibuffer-insert-face "Black"))
-;;		  (copy-face 'italic 'viper-minibuffer-insert-face))
-;;	      ;; If Insert state is an exception
-;;	      (if (viper-can-use-colors "darkseagreen2" "Black")
-;;		  (progn
-;;		    (set-face-background
-;;		     'viper-minibuffer-insert-face "darkseagreen2")
-;;		    (set-face-foreground
-;;		     'viper-minibuffer-insert-face "Black"))
-;;		(copy-face 'modeline 'viper-minibuffer-insert-face))
-;;	      (viper-italicize-face 'viper-minibuffer-insert-face)))
-;;	'viper-minibuffer-insert-face))
-;;  "Face used in the Minibuffer when it is in Insert state.")
 
 (defface viper-minibuffer-insert-face
   '((((class color)) (:foreground "Black" :background "pink"))
@@ -920,24 +849,13 @@ Related buffers can be cycled through via :R and :P commands."
   "Face used in the Minibuffer when it is in Insert state."
   :group 'viper-highlighting)
 ;; An internal variable. Viper takes the face from here.
-(defvar viper-minibuffer-insert-face 'viper-minibuffer-insert-face)
+(defvar viper-minibuffer-insert-face 'viper-minibuffer-insert-face
+  "Face used in the Minibuffer when it is in Insert state.
+DO NOT CHANGE this variable. Instead, use the customization widget
+to customize the actual face object `viper-minibuffer-insert-face'
+this variable represents.")
 (viper-hide-face 'viper-minibuffer-insert-face)
     
-;;(defvar viper-minibuffer-vi-face
-;;  (if (viper-has-face-support-p)
-;;      (progn
-;;	(make-face 'viper-minibuffer-vi-face)
-;;	(or (face-differs-from-default-p 'viper-minibuffer-vi-face)
-;;	    (if viper-vi-style-in-minibuffer
-;;		(if (viper-can-use-colors "Black" "grey")
-;;		    (progn
-;;		      (set-face-background 'viper-minibuffer-vi-face "grey")
-;;		      (set-face-foreground 'viper-minibuffer-vi-face "Black"))
-;;		  (copy-face 'bold 'viper-minibuffer-vi-face))
-;;	      (copy-face 'bold 'viper-minibuffer-vi-face)
-;;	      (invert-face 'viper-minibuffer-vi-face)))
-;;	'viper-minibuffer-vi-face))
-;;  "Face used in the Minibuffer when it is in Vi state.")
 
 (defface viper-minibuffer-vi-face
   '((((class color)) (:foreground "DarkGreen" :background "grey"))
@@ -945,11 +863,16 @@ Related buffers can be cycled through via :R and :P commands."
   "Face used in the Minibuffer when it is in Vi state."
   :group 'viper-highlighting)
 ;; An internal variable. Viper takes the face from here.
-(defvar viper-minibuffer-vi-face 'viper-minibuffer-vi-face)
+(defvar viper-minibuffer-vi-face 'viper-minibuffer-vi-face
+  "Face used in the Minibuffer when it is in Vi state.
+DO NOT CHANGE this variable. Instead, use the customization widget
+to customize the actual face object `viper-minibuffer-vi-face'
+this variable represents.")
 (viper-hide-face 'viper-minibuffer-vi-face)
     
 ;; the current face to be used in the minibuffer
-(viper-deflocalvar viper-minibuffer-current-face viper-minibuffer-emacs-face "")
+(viper-deflocalvar
+  viper-minibuffer-current-face viper-minibuffer-emacs-face "")
 
 
 ;;; Miscellaneous
@@ -960,12 +883,12 @@ Related buffers can be cycled through via :R and :P commands."
 (defcustom viper-spell-function 'ispell-region
   "Spell function used by #s<move> command to spell."
   :type 'function
-  :group 'viper)
+  :group 'viper-misc)
 
 (defcustom viper-tags-file-name "TAGS"
   "The tags file used by Viper."
   :type 'string
-  :group 'viper)
+  :group 'viper-misc)
 
 ;; Minibuffer
 
@@ -979,9 +902,9 @@ Should be set in `~/.viper' file."
 (viper-deflocalvar viper-minibuffer-overlay nil)
 
 ;; Hook, specific to Viper, which is run just *before* exiting the minibuffer.
-;; Beginning with Emacs 19.26, the standard `minibuffer-exit-hook' is run
-;; *after* exiting the minibuffer
-(defvar viper-minibuffer-exit-hook '(viper-minibuffer-trim-tail))
+;; This is needed because beginning with Emacs 19.26, the standard
+;; `minibuffer-exit-hook' is run *after* exiting the minibuffer
+(defvar viper-minibuffer-exit-hook nil)
        
 
 ;; Mode line
@@ -995,27 +918,32 @@ Should be set in `~/.viper' file."
   "Mode line tag identifying the Replace mode of Viper.")
 
 
+(defgroup viper-hooks nil
+  "Viper hooks."
+  :prefix "viper-"
+  :group 'viper)
+
 (defcustom viper-vi-state-hook nil
   "*Hooks run just before the switch to Vi mode is completed."
   :type 'hook
-  :group 'viper)
+  :group 'viper-hooks)
 (defcustom viper-insert-state-hook nil
   "*Hooks run just before the switch to Insert mode is completed."
   :type 'hook
-  :group 'viper)
+  :group 'viper-hooks)
 (defcustom viper-replace-state-hook nil
   "*Hooks run just before the switch to Replace mode is completed."
   :type 'hook
-  :group 'viper)
+  :group 'viper-hooks)
 (defcustom viper-emacs-state-hook nil
   "*Hooks run just before the switch to Emacs mode is completed."
   :type 'hook
-  :group 'viper)
+  :group 'viper-hooks)
   
 (defcustom viper-load-hook nil
   "Hooks run just after loading Viper."
   :type 'hook
-  :group 'viper)
+  :group 'viper-hooks)
   
 
 ;;; Local Variables:

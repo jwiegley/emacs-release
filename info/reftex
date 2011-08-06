@@ -1,0 +1,81 @@
+This is Info file ../info/reftex, produced by Makeinfo version 1.68
+from the input file reftex.texi.
+
+   This file documents RefTeX, a package to do labels, references and
+citations for LaTeX documents with Emacs.
+
+   This is edition 1.19 of the RefTeX User Manual for RefTeX 3.21
+
+   Copyright (c) 1997, 1998 Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the entire resulting derived work is distributed under the terms
+of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Free Software Foundation.
+
+
+Indirect:
+reftex-1: 1021
+reftex-2: 49658
+reftex-3: 94798
+
+Tag Table:
+(Indirect)
+Node: Top1021
+Node: Introduction4359
+Node: Entering RefTeX Minor Mode5073
+Node: RefTeX in a Nutshell5565
+Node: Labels and References8932
+Node: Creating Labels10330
+Node: Referencing Labels12706
+Node: Builtin Label Environments17955
+Node: Defining Label Environments19335
+Node: Theorem and Axiom20616
+Node: Quick Equation24502
+Node: Figure Wrapper26029
+Node: Adding Magic Words27892
+Node: Using \eqref28842
+Node: Putting it Together29515
+Node: Displaying Cross References30182
+Node: xr (LaTeX package)30737
+Node: varioref (LaTeX package)31910
+Node: Citations32582
+Node: Creating Citations33397
+Node: Citation Styles36471
+Node: Displaying Citations38007
+Node: Chapterbib and Bibunits38661
+Node: Citations Outside LaTeX39324
+Node: Table of Contents40270
+Node: Keybindings42537
+Node: Faces43894
+Node: Social Matters44430
+Node: AUCTeX44811
+Node: Bib-Cite47316
+Node: Multifile Documents48454
+Node: Optimizations49658
+Node: Problems and Work-Arounds54357
+Node: Imprint58190
+Node: Commands59880
+Node: Options64071
+Node: Options (Defining Label Environments)64756
+Node: Options (Creating Labels)72656
+Node: Options (Referencing Labels)76362
+Node: Options (Creating Citations)79463
+Node: Options (Table of Contents)83910
+Node: Options (Optimizations)84392
+Node: Options (Fontification)88665
+Node: Options (Misc)91325
+Node: Keymaps93226
+Node: Hooks93784
+Node: Index94798
+
+End Tag Table

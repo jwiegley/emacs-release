@@ -1,14 +1,16 @@
 ;;; cc-mode.el --- major mode for editing C, C++, Objective-C, and Java code
 
-;; Copyright (C) 1985,87,92,93,94,95,96,97 Free Software Foundation, Inc.
+;; Copyright (C) 1985,87,92,93,94,95,96,97,98 Free Software Foundation, Inc.
 
 ;; Authors:    1992-1997 Barry A. Warsaw
 ;;             1987 Dave Detlefs and Stewart Clamen
 ;;             1985 Richard M. Stallman
 ;; Maintainer: cc-mode-help@python.org
 ;; Created:    a long, long, time ago. adapted from the original c-mode.el
-;; Version:    5.17
 ;; Keywords:   c languages oop
+
+(defconst c-version "5.21"
+  "CC Mode version number.")
 
 ;; NOTE: Read the commentary below for the right way to submit bug reports!
 ;; NOTE: See the accompanying texinfo manual for details on using this mode!
@@ -77,9 +79,25 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cc-menus))
+
 (require 'cc-defs)
+
+;; sigh.  give in to the pressure, but make really sure all the
+;; definitions we need are here
+(if (or (not (fboundp 'functionp))
+	(not (fboundp 'char-before))
+	(not (c-safe (char-after) t))
+	(not (fboundp 'when))
+	(not (fboundp 'unless)))
+    (require 'cc-mode-19))
+
+(require 'cc-menus)
+(require 'cc-vars)
+(require 'cc-engine)
+(require 'cc-langs)
+(require 'cc-align)
+(require 'cc-styles)
+(require 'cc-cmds)
 
 (defvar c-buffer-is-cc-mode nil
   "Non-nil for all buffers with a `major-mode' derived from CC Mode.
@@ -90,6 +108,7 @@ other non-CC Mode mode that calls `c-initialize-cc-mode'
 (make-variable-buffer-local 'c-buffer-is-cc-mode)
 (put 'c-buffer-is-cc-mode 'permanent-local t)
 
+
 
 ;; Other modes and packages which depend on CC Mode should do the
 ;; following to make sure everything is loaded and available for their
@@ -99,27 +118,14 @@ other non-CC Mode mode that calls `c-initialize-cc-mode'
 ;; (c-initialize-cc-mode)
 
 ;;;###autoload
-(defun c-initialize-cc-mode ()
+(defun c-initialize-cc-mode (&optional skip-styles)
   (setq c-buffer-is-cc-mode t)
-  ;; sigh.  give in to the pressure, but make really sure all the
-  ;; definitions we need are here
-  (if (or (not (fboundp 'functionp))
-	  (not (fboundp 'char-before))
-	  (not (c-safe (char-after) t)))
-      (require 'cc-mode-19))
-  ;; make sure all necessary components of CC Mode are loaded in.
   (let ((initprop 'cc-mode-is-initialized))
-    (require 'cc-vars)
-    (require 'cc-engine)
-    (require 'cc-langs)
-    (require 'cc-menus)
-    (require 'cc-align)
-    (require 'cc-styles)
-    (require 'cc-cmds)
     ;; run the initialization hook, but only once
     (or (get 'c-initialize-cc-mode initprop)
 	(progn
-	  (c-initialize-builtin-style)
+	  (or skip-styles
+	      (c-initialize-builtin-style))
 	  (run-hooks 'c-initialization-hook)
 	  (put 'c-initialize-cc-mode initprop t)))
     ))
@@ -156,7 +162,8 @@ Key bindings:
 	c-class-key c-C-class-key
 	c-baseclass-key nil
 	c-comment-start-regexp c-C++-comment-start-regexp
-	imenu-generic-expression cc-imenu-c-generic-expression)
+	imenu-generic-expression cc-imenu-c-generic-expression
+        imenu-case-fold-search nil)
   (run-hooks 'c-mode-common-hook)
   (run-hooks 'c-mode-hook)
   (c-update-modeline))
@@ -195,7 +202,8 @@ Key bindings:
 	c-class-key c-C++-class-key
 	c-access-key c-C++-access-key
 	c-recognize-knr-p nil
-	imenu-generic-expression cc-imenu-c++-generic-expression)
+	imenu-generic-expression cc-imenu-c++-generic-expression
+        imenu-case-fold-search nil)
   (run-hooks 'c-mode-common-hook)
   (run-hooks 'c++-mode-hook)
   (c-update-modeline))
@@ -234,7 +242,10 @@ Key bindings:
  	c-class-key c-ObjC-class-key
 	c-baseclass-key nil
 	c-access-key c-ObjC-access-key
-	c-method-key c-ObjC-method-key)
+	c-method-key c-ObjC-method-key
+	imenu-create-index-function 'cc-imenu-objc-function
+	imenu-case-fold-search nil
+	)
   (run-hooks 'c-mode-common-hook)
   (run-hooks 'objc-mode-hook)
   (c-update-modeline))
@@ -243,7 +254,7 @@ Key bindings:
 ;;;###autoload
 (defun java-mode ()
   "Major mode for editing Java code.
-To submit a problem report, enter `\\[c-submit-bug-report]' from an
+To submit a problem report, enter `\\[c-submit-bug-report]' from a
 java-mode buffer.  This automatically sets up a mail buffer with
 version information already added.  You just need to add a description
 of the problem, including a reproducible test case and send the
@@ -273,12 +284,13 @@ Key bindings:
  	c-conditional-key c-Java-conditional-key
  	c-comment-start-regexp c-Java-comment-start-regexp
   	c-class-key c-Java-class-key
-	c-method-key c-Java-method-key
+	c-method-key nil
  	c-baseclass-key nil
 	c-recognize-knr-p nil
  	c-access-key c-Java-access-key
 	;defun-prompt-regexp c-Java-defun-prompt-regexp
 	imenu-generic-expression cc-imenu-java-generic-expression
+        imenu-case-fold-search nil
 	)
   (c-set-style "java")
   (run-hooks 'c-mode-common-hook)
@@ -318,16 +330,16 @@ Key bindings:
 	c-comment-start-regexp c-C++-comment-start-regexp
 	c-class-key c-C++-class-key
 	c-access-key c-C++-access-key
-	c-recognize-knr-p nil)
-;;	imenu-generic-expression cc-imenu-c++-generic-expression)
+	c-recognize-knr-p nil
+;;	imenu-generic-expression cc-imenu-c++-generic-expression
+;;	imenu-case-fold-search nil
+	)
   (run-hooks 'c-mode-common-hook)
   (run-hooks 'idl-mode-hook)
   (c-update-modeline))
 
 
-;; defuns for submitting bug reports
-(defconst c-version "5.17"
-  "CC Mode version number.")
+;; bug reporting
 
 (defconst c-mode-help-address
   "bug-gnu-emacs@prep.ai.mit.edu, cc-mode-help@python.org"
@@ -339,13 +351,10 @@ Key bindings:
   (message "Using CC Mode version %s" c-version)
   (c-keep-region-active))
 
-;; Get reporter-submit-bug-report when byte-compiling
-(eval-when-compile
-  (require 'reporter))
-
 (defun c-submit-bug-report ()
   "Submit via mail a bug report on CC Mode."
   (interactive)
+  (require 'reporter)
   (require 'cc-vars)
   ;; load in reporter
   (let ((reporter-prompt-for-summary-p t)
@@ -381,7 +390,7 @@ Key bindings:
 		   'c-hanging-comment-ender-p
 		   'c-indent-comments-syntactically-p
 		   'c-tab-always-indent
-		   'c-recognize-knr-p
+		   'c-comment-continuation-stars
 		   'c-label-minimum-indentation
 		   'defun-prompt-regexp
 		   'tab-width
@@ -403,7 +412,7 @@ Key bindings:
 	  (format "c-emacs-features: %s\n" c-features)
 	  )))
       nil
-      "Dear Barry,"
+      "Dear Barry and Martin,"
       ))))
 
 

@@ -1,13 +1,13 @@
 ;;; cc-langs.el --- specific language support for CC Mode
 
-;; Copyright (C) 1985,87,92,93,94,95,96,97 Free Software Foundation, Inc.
+;; Copyright (C) 1985,87,92,93,94,95,96,97,98 Free Software Foundation, Inc.
 
 ;; Authors:    1992-1997 Barry A. Warsaw
 ;;             1987 Dave Detlefs and Stewart Clamen
 ;;             1985 Richard M. Stallman
 ;; Maintainer: cc-mode-help@python.org
 ;; Created:    22-Apr-1997 (split from cc-mode.el)
-;; Version:    5.17
+;; Version:    See cc-mode.el
 ;; Keywords:   c languages oop
 
 ;; This file is part of GNU Emacs.
@@ -27,7 +27,6 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-(require 'cc-defs)
 
 
 (require 'cc-defs)
@@ -55,6 +54,8 @@
 ;; keywords introducing class definitions.  language specific
 (defconst c-C-class-key "\\(struct\\|union\\)")
 (defconst c-C++-class-key "\\(class\\|struct\\|union\\)")
+(defconst c-C-extra-toplevel-key "\\(extern\\)[^_]")
+(defconst c-C++-extra-toplevel-key "\\(extern\\|namespace\\)[^_]")
 
 (defconst c-ObjC-class-key
   (concat
@@ -75,6 +76,9 @@
 
 (defvar c-class-key c-C-class-key)
 (make-variable-buffer-local 'c-class-key)
+
+(defvar c-extra-toplevel-key c-C-extra-toplevel-key)
+(make-variable-buffer-local 'c-extra-toplevel-key)
 
 
 ;; regexp describing access protection clauses.  language specific
@@ -115,13 +119,6 @@
    ;; since it is considered the end of //-comments.
    "[ \t\n]*" c-symbol-key))
 
-(defconst c-Java-method-key
-  (concat
-   "^\\s *[+-]\\s *"
-   "\\(([^)]*)\\)?"			; return type
-   ;; \\s- in java syntax table does not include \n
-   ;; since it is considered the end of //-comments.
-   "[ \t\n]*" c-symbol-key))
 
 
 ;; comment starter definitions for various languages.  language specific
@@ -164,6 +161,10 @@
 ;; Regexp describing the beginning of a Java top-level definition.
 (defconst c-Java-defun-prompt-regexp
   "^[ \t]*\\(\\(\\(public\\|protected\\|private\\|const\\|abstract\\|synchronized\\|final\\|static\\|threadsafe\\|transient\\|native\\|volatile\\)\\s-+\\)*\\(\\(\\([[a-zA-Z][][_$.a-zA-Z0-9]*[][_$.a-zA-Z0-9]+\\|[[a-zA-Z]\\)\\s-*\\)\\s-+\\)\\)?\\(\\([[a-zA-Z][][_$.a-zA-Z0-9]*\\s-+\\)\\s-*\\)?\\([_a-zA-Z][^][ \t:;.,{}()=]*\\|\\([_$a-zA-Z][_$.a-zA-Z0-9]*\\)\\)\\s-*\\(([^);{}]*)\\)?\\([] \t]*\\)\\(\\s-*\\<throws\\>\\s-*\\(\\([_$a-zA-Z][_$.a-zA-Z0-9]*\\)[, \t\n\r\f]*\\)+\\)?\\s-*")
+
+;; Regexp describing Javadoc markup that always starts paragraphs.
+(defconst c-Java-javadoc-paragraph-start
+  "@\\(author\\|exception\\|param\\|return\\|see\\|version\\)")
 
 
 
@@ -255,8 +256,12 @@ For use with the variable `java-mode-hook'."
 Currently, this function simply applies any style and offset settings
 found in the file's Local Variable list.  It first applies any style
 setting found in `c-file-style', then it applies any offset settings
-it finds in `c-file-offsets'."
+it finds in `c-file-offsets'.
+
+Note that the style variables are always made local to the buffer."
   ;; apply file styles and offsets
+  (if (or c-file-style c-file-offsets)
+      (c-make-styles-buffer-local t))
   (and c-file-style
        (c-set-style c-file-style))
   (and c-file-offsets
@@ -335,15 +340,15 @@ it finds in `c-file-offsets'."
   (define-key c-mode-base-map ";"         'c-electric-semi&comma)
   (define-key c-mode-base-map "#"         'c-electric-pound)
   (define-key c-mode-base-map ":"         'c-electric-colon)
-  ;; Lucid Emacs 19.9 defined these two, the second of which was
-  ;; commented out...
-  ;; (define-key c-mode-base-map "\e{" 'c-insert-braces)
-  ;; Commented out electric square brackets because nobody likes them.
-  ;; (define-key c-mode-base-map "[" 'c-insert-brackets)
-  (define-key c-mode-base-map "\C-c\C-m"  'c-mark-function)
+  ;; Separate M-BS from C-M-h.  The former should remain
+  ;; backward-kill-word.
+  (define-key c-mode-base-map [(control meta h)] 'c-mark-function)
   (define-key c-mode-base-map "\e\C-q"    'c-indent-exp)
   (define-key c-mode-base-map "\ea"       'c-beginning-of-statement)
   (define-key c-mode-base-map "\ee"       'c-end-of-statement)
+  ;; RMS says don't make these the default.
+;;  (define-key c-mode-base-map "\e\C-a"    'c-beginning-of-defun)
+;;  (define-key c-mode-base-map "\e\C-e"    'c-end-of-defun)
   (define-key c-mode-base-map "\C-c\C-n"  'c-forward-conditional)
   (define-key c-mode-base-map "\C-c\C-p"  'c-backward-conditional)
   (define-key c-mode-base-map "\C-c\C-u"  'c-up-conditional)
@@ -394,10 +399,10 @@ it finds in `c-file-offsets'."
 
 (defun c-mode-menu (modestr)
   (let ((m
-	 '(["Comment Out Region"     comment-region (mark)]
+	 '(["Comment Out Region"     comment-region (mark t)]
 	   ["Uncomment Region"
 	    (comment-region (region-beginning) (region-end) '(4))
-	    (mark)]
+	    (mark t)]
 	   ["Fill Comment Paragraph" c-fill-paragraph t]
 	   "---"
 	   ["Indent Expression"      c-indent-exp
@@ -409,8 +414,8 @@ it finds in `c-file-offsets'."
 	   ["Backward Statement"     c-beginning-of-statement t]
 	   ["Forward Statement"      c-end-of-statement t]
 	   "---"
-	   ["Macro Expand Region"    c-macro-expand (mark)]
-	   ["Backslashify"           c-backslash-region (mark)]
+	   ["Macro Expand Region"    c-macro-expand (mark t)]
+	   ["Backslashify"           c-backslash-region (mark t)]
 	   )))
     (cons modestr m)))
 

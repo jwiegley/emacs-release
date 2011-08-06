@@ -26,11 +26,14 @@
 
 (require 'rmail)
 
+(defvar rmail-old-text)
+
 (defvar rmail-edit-map nil)
 (if rmail-edit-map
     nil
   ;; Make a keymap that inherits text-mode-map.
-  (setq rmail-edit-map (nconc (make-sparse-keymap) text-mode-map))
+  (setq rmail-edit-map (make-sparse-keymap))
+  (set-keymap-parent rmail-edit-map text-mode-map)
   (define-key rmail-edit-map "\C-c\C-c" 'rmail-cease-edit)
   (define-key rmail-edit-map "\C-c\C-]" 'rmail-abort-edit))
 
@@ -45,6 +48,7 @@ to return to regular RMAIL:
      you have made and returns to RMAIL
   *  rmail-cease-edit makes them permanent.
 \\{rmail-edit-map}"
+  (text-mode)
   (use-local-map rmail-edit-map)
   (setq major-mode 'rmail-edit-mode)
   (setq mode-name "RMAIL Edit")
@@ -55,13 +59,28 @@ to return to regular RMAIL:
       (save-excursion
 	(set-buffer rmail-summary-buffer)
 	(rmail-summary-disable)))
-  (run-hooks 'text-mode-hook 'rmail-edit-mode-hook))
+  (run-hooks 'rmail-edit-mode-hook))
+
+(defvar rmail-old-pruned nil)
+(put 'rmail-old-pruned 'permanent-local t)
+
+(defvar rmail-edit-saved-coding-system nil)
+(put 'rmail-edit-saved-coding-system 'permanent-local t)
 
 ;;;###autoload
 (defun rmail-edit-current-message ()
   "Edit the contents of this message."
   (interactive)
+  (make-local-variable 'rmail-old-pruned)
+  (setq rmail-old-pruned (rmail-msg-is-pruned))
+  (make-local-variable 'rmail-edit-saved-coding-system)
+  (setq rmail-edit-saved-coding-system save-buffer-coding-system)
+  (rmail-toggle-header 0)
   (rmail-edit-mode)
+  ;; As the local value of save-buffer-coding-system is deleted by
+  ;; rmail-edit-mode, we restore the original value.
+  (make-local-variable 'save-buffer-coding-system)
+  (setq save-buffer-coding-system rmail-edit-saved-coding-system)
   (make-local-variable 'rmail-old-text)
   (setq rmail-old-text (buffer-substring (point-min) (point-max)))
   (setq buffer-read-only nil)
@@ -70,7 +89,7 @@ to return to regular RMAIL:
 	   (eq (key-binding "\C-c\C-]") 'rmail-abort-edit))
       (message "Editing: Type C-c C-c to return to Rmail, C-c C-] to abort")
     (message "%s" (substitute-command-keys
-	       "Editing: Type \\[rmail-cease-edit] to return to Rmail, \\[rmail-abort-edit] to abort"))))
+		   "Editing: Type \\[rmail-cease-edit] to return to Rmail, \\[rmail-abort-edit] to abort"))))
 
 (defun rmail-cease-edit ()
   "Finish editing message; switch back to Rmail proper."
@@ -89,7 +108,12 @@ to return to regular RMAIL:
 		(point)))
   (let ((old rmail-old-text))
     (force-mode-line-update)
+    (kill-all-local-variables)
     (rmail-mode-1)
+    (rmail-variables)
+    ;; As the local value of save-buffer-coding-system is changed by
+    ;; rmail-variables, we restore the original value.
+    (setq save-buffer-coding-system rmail-edit-saved-coding-system)
     (if (and (= (length old) (- (point-max) (point-min)))
 	     (string= old (buffer-substring (point-min) (point-max))))
 	()
@@ -100,14 +124,16 @@ to return to regular RMAIL:
 	    (aset rmail-summary-vector (1- rmail-current-message) nil)
 	    (save-excursion
 	      (rmail-widen-to-current-msgbeg
-	        (function (lambda ()
+		(function (lambda ()
 			    (forward-line 2)
 			    (if (looking-at "Summary-line: ")
 				(let ((buffer-read-only nil))
 				  (delete-region (point)
 						 (progn (forward-line 1)
-							(point))))))))
-	      (rmail-show-message))))))
+							(point))))))))))))
+    (save-excursion
+      (rmail-show-message)
+      (rmail-toggle-header (if rmail-old-pruned 1 0))))
   (setq buffer-read-only t))
 
 (defun rmail-abort-edit ()

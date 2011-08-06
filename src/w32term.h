@@ -590,8 +590,11 @@ extern void w32_unload_font ();
 
 /* Define for earlier versions of Visual C */
 #ifndef WM_MOUSEWHEEL
-#define WM_MOUSEWHEEL                  (0x020A)
+#define WM_MOUSEWHEEL 		       (WM_MOUSELAST + 1)
 #endif /* WM_MOUSEWHEEL */
+#ifndef MSH_MOUSEWHEEL
+#define MSH_MOUSEWHEEL		       "MSWHEEL_ROLLMSG"
+#endif /* MSH_MOUSEWHEEL */
 
 #define WM_EMACS_START                 (WM_USER + 1)
 #define WM_EMACS_KILL                  (WM_EMACS_START + 0x00)
@@ -603,7 +606,9 @@ extern void w32_unload_font ();
 #define WM_EMACS_DESTROYWINDOW         (WM_EMACS_START + 0x06)
 #define WM_EMACS_TRACKPOPUPMENU        (WM_EMACS_START + 0x07)
 #define WM_EMACS_SETFOCUS              (WM_EMACS_START + 0x08)
-#define WM_EMACS_END                   (WM_EMACS_START + 0x10)
+#define WM_EMACS_SETFOREGROUND         (WM_EMACS_START + 0x09)
+#define WM_EMACS_SETLOCALE             (WM_EMACS_START + 0x0a)
+#define WM_EMACS_END                   (WM_EMACS_START + 0x0b)
 
 #define WND_FONTWIDTH_INDEX    (0) 
 #define WND_LINEHEIGHT_INDEX   (4) 
@@ -640,6 +645,8 @@ extern CRITICAL_SECTION critsect;
 
 extern void init_crit ();
 extern void delete_crit ();
+
+extern void signal_quit ();
 
 #define enter_crit() EnterCriticalSection (&critsect)
 #define leave_crit() LeaveCriticalSection (&critsect)

@@ -40,6 +40,7 @@ Boston, MA 02111-1307, USA.  */
 #include "termhooks.h"
 
 #include <commdlg.h>
+#include <shellapi.h>
 
 extern void abort ();
 extern void free_frame_menubar ();
@@ -176,6 +177,9 @@ static unsigned mouse_button_timer;	/* non-zero when timer is active */
 static W32Msg saved_mouse_move_msg;
 static unsigned mouse_move_timer;
 
+/* W95 mousewheel handler */
+unsigned int msh_mousewheel = 0;	
+
 #define MOUSE_BUTTON_ID	1
 #define MOUSE_MOVE_ID	2
 
@@ -184,6 +188,8 @@ extern Lisp_Object Qheight, Qminibuffer, Qname, Qonly, Qwidth;
 extern Lisp_Object Qunsplittable, Qmenu_bar_lines, Qbuffer_predicate, Qtitle;
 
 extern Lisp_Object Vwindow_system_version;
+
+Lisp_Object Qface_set_after_frame_default;
 
 extern Lisp_Object last_mouse_scroll_bar;
 extern int last_mouse_scroll_bar_pos;
@@ -2042,6 +2048,7 @@ x_set_font (f, arg, oldval)
      Lisp_Object arg, oldval;
 {
   Lisp_Object result;
+  Lisp_Object frame;
 
   CHECK_STRING (arg, 1);
 
@@ -2060,6 +2067,9 @@ x_set_font (f, arg, oldval)
     }
   else
     abort ();
+
+  XSETFRAME (frame, f);
+  call1 (Qface_set_after_frame_default, frame);
 }
 
 void
@@ -2311,9 +2321,11 @@ x_set_vertical_scroll_bars (f, arg, oldval)
     {
       FRAME_VERTICAL_SCROLL_BAR_TYPE (f) = NILP (arg) ?
 	vertical_scroll_bar_none :
-	EQ (Qright, arg)
-	? vertical_scroll_bar_right 
-	: vertical_scroll_bar_left;
+	/* Put scroll bars on the right by default, as is conventional
+           on MS-Windows.  */
+	EQ (Qleft, arg)
+	? vertical_scroll_bar_left 
+	: vertical_scroll_bar_right;
 
       /* We set this parameter before creating the window for the
 	 frame, so we can get the geometry right from the start.
@@ -2886,6 +2898,9 @@ w32_createwindow (f)
       SetWindowLong (hwnd, WND_SCROLLBAR_INDEX, f->output_data.w32->vertical_scroll_bar_extra);
       SetWindowLong (hwnd, WND_BACKGROUND_INDEX, f->output_data.w32->background_pixel);
 
+      /* Enable drag-n-drop.  */
+      DragAcceptFiles (hwnd, TRUE);
+      
       /* Do this to discard the default setting specified by our parent. */
       ShowWindow (hwnd, SW_HIDE);
     }
@@ -3121,6 +3136,8 @@ static void
 w32_msg_pump (deferred_msg * msg_buf)
 {
   MSG msg;
+
+  msh_mousewheel = RegisterWindowMessage (MSH_MOUSEWHEEL);
   
   while (GetMessage (&msg, NULL, 0, 0))
     {
@@ -3132,6 +3149,10 @@ w32_msg_pump (deferred_msg * msg_buf)
 	      w32_createwindow ((struct frame *) msg.wParam);
 	      if (!PostThreadMessage (dwMainThreadId, WM_EMACS_DONE, 0, 0))
 		abort ();
+	      break;
+	    case WM_EMACS_SETLOCALE:
+	      SetThreadLocale (msg.wParam);
+	      /* Reply is not expected.  */
 	      break;
 	    default:
 	      /* No need to be so draconian!  */
@@ -3393,7 +3414,10 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
 
 	    /* The choice of message is somewhat arbitrary, as long as
 	       the main thread handler just ignores it. */
-	    msg = WM_QUIT;
+	    msg = WM_NULL;
+
+	    /* Interrupt any blocking system calls.  */
+	    signal_quit ();
 	  }
       }
 #endif
@@ -3572,6 +3596,11 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
       return 0;
 
+    case WM_DROPFILES:
+      wmsg.dwModifiers = w32_get_modifiers ();
+      my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
+      return 0;
+
     case WM_TIMER:
       /* Flush out saved messages if necessary. */
       if (wParam == mouse_button_timer)
@@ -3651,6 +3680,75 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       if (f)
 	f->output_data.w32->menubar_active = 0;
       goto dflt;
+
+    case WM_MEASUREITEM:
+      f = x_window_to_frame (dpyinfo, hwnd);
+      if (f)
+	{
+	  MEASUREITEMSTRUCT * pMis = (MEASUREITEMSTRUCT *) lParam;
+
+	  if (pMis->CtlType == ODT_MENU)
+	    {
+	      /* Work out dimensions for popup menu titles. */
+	      char * title = (char *) pMis->itemData;
+	      HDC hdc = GetDC (hwnd);
+	      HFONT menu_font = GetCurrentObject (hdc, OBJ_FONT);
+	      LOGFONT menu_logfont;
+	      HFONT old_font;
+	      SIZE size;
+
+	      GetObject (menu_font, sizeof (menu_logfont), &menu_logfont);
+	      menu_logfont.lfWeight = FW_BOLD;
+	      menu_font = CreateFontIndirect (&menu_logfont);
+	      old_font = SelectObject (hdc, menu_font);
+
+	      GetTextExtentPoint32 (hdc, title, strlen (title), &size);
+	      pMis->itemWidth = size.cx;
+	      pMis->itemHeight = GetSystemMetrics (SM_CYMENUSIZE);
+	      if (pMis->itemHeight < size.cy)
+		pMis->itemHeight = size.cy;
+
+	      SelectObject (hdc, old_font);
+	      DeleteObject (menu_font);
+	      ReleaseDC (hwnd, hdc);
+	      return TRUE;
+	    }
+	}
+      return 0;
+
+    case WM_DRAWITEM:
+      f = x_window_to_frame (dpyinfo, hwnd);
+      if (f)
+	{
+	  DRAWITEMSTRUCT * pDis = (DRAWITEMSTRUCT *) lParam;
+
+	  if (pDis->CtlType == ODT_MENU)
+	    {
+	      /* Draw popup menu title. */
+	      char * title = (char *) pDis->itemData;
+	      HDC hdc = pDis->hDC;
+	      HFONT menu_font = GetCurrentObject (hdc, OBJ_FONT);
+	      LOGFONT menu_logfont;
+	      HFONT old_font;
+
+	      GetObject (menu_font, sizeof (menu_logfont), &menu_logfont);
+	      menu_logfont.lfWeight = FW_BOLD;
+	      menu_font = CreateFontIndirect (&menu_logfont);
+	      old_font = SelectObject (hdc, menu_font);
+
+	      /* Always draw title as if not selected.  */
+	      ExtTextOut (hdc,
+			  pDis->rcItem.left + GetSystemMetrics (SM_CXMENUCHECK),
+			  pDis->rcItem.top,
+			  ETO_OPAQUE, &pDis->rcItem,
+			  title, strlen (title), NULL);
+
+	      SelectObject (hdc, old_font);
+	      DeleteObject (menu_font);
+	      return TRUE;
+	    }
+	}
+      return 0;
 
 #if 0
       /* Still not right - can't distinguish between clicks in the
@@ -3771,6 +3869,9 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
     case WM_EMACS_SHOWWINDOW:
       return ShowWindow ((HWND) wParam, (WPARAM) lParam);
 
+    case WM_EMACS_SETFOREGROUND:
+      return SetForegroundWindow ((HWND) wParam);
+
     case WM_EMACS_SETWINDOWPOS:
       {
 	WINDOWPOS * pos = (WINDOWPOS *) wParam;
@@ -3779,6 +3880,7 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       }
 
     case WM_EMACS_DESTROYWINDOW:
+      DragAcceptFiles ((HWND) wParam, FALSE);
       return DestroyWindow ((HWND) wParam);
 
     case WM_EMACS_TRACKPOPUPMENU:
@@ -3793,6 +3895,10 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
 	else if (button_state & RMOUSE)
 	  flags |= TPM_RIGHTBUTTON;
 	
+	/* Remember we did a SetCapture on the initial mouse down event,
+	   so for safety, we make sure the capture is cancelled now.  */
+	ReleaseCapture ();
+
 	/* Use menubar_active to indicate that WM_INITMENU is from
            TrackPopupMenu below, and should be ignored.  */
 	f = x_window_to_frame (dpyinfo, hwnd);
@@ -3816,12 +3922,6 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
 		retval = 0;
 	      }
 	    button_state = 0;
-
-	    /* Remember we did a SetCapture on the initial mouse down
-	       event, but window focus will usually have changed to the
-	       popup menu before we released the mouse button.  For
-	       safety, we make sure the capture is cancelled now.  */
-	    ReleaseCapture ();
 	  }
 	else
 	  {
@@ -3832,6 +3932,14 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       }
 
     default:
+      /* Check for messages registered at runtime. */
+      if (msg == msh_mousewheel)
+	{
+	  wmsg.dwModifiers = w32_get_modifiers ();
+	  my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
+	  return 0;
+	}
+      
     dflt:
       return DefWindowProc (hwnd, msg, wParam, lParam);
     }
@@ -4709,7 +4817,7 @@ enum_font_cb2 (lplf, lptm, FontType, lpef)
   {
     char buf[100];
 
-    if (!NILP (*(lpef->pattern)) && FontType == TRUETYPE_FONTTYPE)
+    if (!NILP (*(lpef->pattern)) && FontType != RASTER_FONTTYPE)
       {
 	lplf->elfLogFont.lfHeight = lpef->logfont.lfHeight;
 	lplf->elfLogFont.lfWidth = lpef->logfont.lfWidth;
@@ -4742,7 +4850,7 @@ enum_font_cb1 (lplf, lptm, FontType, lpef)
 }
 
 
-DEFUN ("x-list-fonts", Fx_list_fonts, Sx_list_fonts, 1, 3, 0,
+DEFUN ("x-list-fonts", Fx_list_fonts, Sx_list_fonts, 1, 4, 0,
   "Return a list of the names of available fonts matching PATTERN.\n\
 If optional arguments FACE and FRAME are specified, return only fonts\n\
 the same size as FACE on FRAME.\n\
@@ -4757,9 +4865,12 @@ The return value is a list of strings, suitable as arguments to\n\
 set-face-font.\n\
 \n\
 Fonts Emacs can't use (i.e. proportional fonts) may or may not be excluded\n\
-even if they match PATTERN and FACE.")
-  (pattern, face, frame)
-    Lisp_Object pattern, face, frame;
+even if they match PATTERN and FACE.\n\
+\n\
+The optional fourth argument MAXIMUM sets a limit on how many\n\
+fonts to match.  The first MAXIMUM fonts are reported.")
+  (pattern, face, frame, maximum)
+    Lisp_Object pattern, face, frame, maximum;
 {
   int num_fonts;
   char **names;
@@ -5543,6 +5654,9 @@ syms_of_w32fns ()
   Qdisplay = intern ("display");
   staticpro (&Qdisplay);
   /* This is the end of symbol initialization.  */
+
+  Qface_set_after_frame_default = intern ("face-set-after-frame-default");
+  staticpro (&Qface_set_after_frame_default);
 
   Fput (Qundefined_color, Qerror_conditions,
 	Fcons (Qundefined_color, Fcons (Qerror, Qnil)));

@@ -6,7 +6,7 @@
 ;; Maintainer: Lars Lindberg <Lars.Lindberg@sypro.cap.se>
 ;; Created: 16 Mars 1992
 ;; Lindberg's last update version: 5.7
-;; Keywords: abbrev expand completion
+;; Keywords: abbrev expand completion convenience
 
 ;; This file is part of GNU Emacs.
 
@@ -88,7 +88,7 @@
 ;;  [tromey]	Tom Tromey <tromey@busco.lanl.gov>
 ;;  [Rolf]	Rolf Schreiber <rolf@mathematik.uni-stuttgart.de>
 ;;  [Petri]	Petri Raitio <per@tekla.fi>
-;;  [ejb]	Jay Berkenbilt <ejb@ERA.COM>
+;;  [ejb]	Jay Berkenbilt <ejb@ql.org>
 ;;  [hawley]	Bob Hawley <rth1@quartet.mt.att.com>
 ;;  ... and to all the people who have participated in the beta tests.
 
@@ -101,7 +101,8 @@
 (defgroup dabbrev nil
   "Dynamic Abbreviations"
   :tag "Dynamic Abbreviations"
-  :group 'abbrev)
+  :group 'abbrev
+  :group 'convenience)
 
 (defcustom dabbrev-backward-only nil
   "*If non-nil, `dabbrev-expand' only looks backwards."
@@ -133,8 +134,8 @@ A value of `case-fold-search' means case is significant
  if `case-fold-search' is nil.
 Any other non-nil version means case is not significant."
   :type '(choice (const :tag "off" nil)
-		 (const :tag "on" t)
-		 (const :tag "like search" case-fold-search))
+		 (const :tag "like search" case-fold-search)
+		 (other :tag "on" t))
   :group 'dabbrev)
 
 (defcustom dabbrev-upcase-means-case-search nil
@@ -155,8 +156,8 @@ Any other non-nil version means do not preserve case.
 This variable has an effect only when the value of
 `dabbrev-case-fold-search' specifies to ignore case."
   :type '(choice (const :tag "off" nil)
-		 (const :tag "on" t)
-		 (const :tag "like M-x query-replace" case-replace))
+		 (const :tag "like M-x query-replace" case-replace)
+		 (other :tag "on" t))
   :group 'dabbrev)
 
 (defcustom dabbrev-abbrev-char-regexp nil
@@ -192,9 +193,15 @@ Dabbrev always searches the current buffer first.  Then, if
 designated by `dabbrev-select-buffers-function'.
 
 Then, if `dabbrev-check-all-buffers' is non-nil, dabbrev searches
-all the other buffers."
+all the other buffers, except those named in `dabbrev-ignored-buffer-names'."
   :type 'boolean
   :group 'dabbrev)
+
+(defcustom dabbrev-ignored-buffer-names '("*Messages*" "*Buffer List*")
+  "*List of buffer names that dabbrev should not check."
+  :type '(repeat (string :tag "Buffer name"))
+  :group 'dabbrev
+  :version "20.3")
 
 (defcustom dabbrev-check-other-buffers t
   "*Should \\[dabbrev-expand] look in other buffers?\
@@ -209,7 +216,7 @@ buffers too.
 The default value is t."
   :type '(choice (const :tag "off" nil)
 		 (const :tag "on" t)
-		 (const :tag "ask" other))
+		 (other :tag "ask" other))
   :group 'dabbrev)
 
 ;; I guess setting this to a function that selects all C- or C++-
@@ -754,7 +761,9 @@ See also `dabbrev-abbrev-char-regexp' and \\[dabbrev-completion]."
 			(nreverse
 			 (dabbrev-filter-elements
 			  buffer (buffer-list)
-			  (not (memq buffer dabbrev--friend-buffer-list))))
+			  (and (not (member (buffer-name buffer)
+					    dabbrev-ignored-buffer-names))
+			       (not (memq buffer dabbrev--friend-buffer-list)))))
 			dabbrev--friend-buffer-list
 			(append dabbrev--friend-buffer-list
 				non-friend-buffer-list)))))
@@ -824,7 +833,7 @@ See also `dabbrev-abbrev-char-regexp' and \\[dabbrev-completion]."
     (if old
 	(save-excursion
 	  (search-backward old))
-      ;;(store-match-data (list (point-marker) (point-marker)))
+      ;;(set-match-data (list (point-marker) (point-marker)))
       (search-backward abbrev))
     ;; Make case of replacement conform to case of abbreviation
     ;; provided (1) that kind of thing is enabled in this buffer

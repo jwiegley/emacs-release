@@ -3,6 +3,7 @@
 ;; Copyright (C) 1990, 1991, 1993, 1994, 1995 Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
+;; Maintainer: FSF
 ;; Created: 04 Apr 1990
 ;; Keywords: unix
 
@@ -93,27 +94,38 @@
 
 ;;; Code:
 
-(defvar tar-anal-blocksize 20
+(defgroup tar nil
+  "Simple editing of tar files."
+  :prefix "tar-"
+  :group 'data)
+
+(defcustom tar-anal-blocksize 20
   "*The blocksize of tar files written by Emacs, or nil, meaning don't care.
 The blocksize of a tar file is not really the size of the blocks; rather, it is
 the number of blocks written with one system call.  When tarring to a tape, 
 this is the size of the *tape* blocks, but when writing to a file, it doesn't
 matter much.  The only noticeable difference is that if a tar file does not
 have a blocksize of 20, tar will tell you that; all this really controls is
-how many null padding bytes go on the end of the tar file.")
+how many null padding bytes go on the end of the tar file."
+  :type '(choice integer (const nil))
+  :group 'tar)
 
-(defvar tar-update-datestamp nil
-  "*Non-nil means tar-mode should play fast and loose with sub-file datestamps.
+(defcustom tar-update-datestamp nil
+  "*Non-nil means Tar mode should play fast and loose with sub-file datestamps.
 If this is true, then editing and saving a tar file entry back into its
 tar file will update its datestamp.  If false, the datestamp is unchanged.
 You may or may not want this - it is good in that you can tell when a file
 in a tar archive has been changed, but it is bad for the same reason that
 editing a file in the tar archive at all is bad - the changed version of 
-the file never exists on disk.")
+the file never exists on disk."
+  :type 'boolean
+  :group 'tar)
 
-(defvar tar-mode-show-date nil
+(defcustom tar-mode-show-date nil
   "*Non-nil means Tar mode should show the date/time of each subfile.
-This information is useful, but it takes screen space away from file names.")
+This information is useful, but it takes screen space away from file names."
+  :type 'boolean
+  :group 'tar)
 
 (defvar tar-parse-info nil)
 (defvar tar-header-offset nil)
@@ -294,7 +306,7 @@ write-date, checksum, link-type, and link-name."
     (tar-dotimes (i L)
        (if (or (< (aref string i) ?0)
 	       (> (aref string i) ?7))
-	   (error "'%c' is not an octal digit"))))
+	   (error "`%c' is not an octal digit"))))
   (tar-parse-octal-integer string))
 
 
@@ -483,7 +495,7 @@ is visible (and the real data of the buffer is hidden)."
   (setq tar-mode-map (make-keymap))
   (suppress-keymap tar-mode-map)
   (define-key tar-mode-map " " 'tar-next-line)
-  (define-key tar-mode-map "c" 'tar-copy)
+  (define-key tar-mode-map "C" 'tar-copy)
   (define-key tar-mode-map "d" 'tar-flag-deleted)
   (define-key tar-mode-map "\^D" 'tar-flag-deleted)
   (define-key tar-mode-map "e" 'tar-extract)
@@ -497,9 +509,10 @@ is visible (and the real data of the buffer is hidden)."
   (define-key tar-mode-map [down] 'tar-next-line)
   (define-key tar-mode-map "o" 'tar-extract-other-window)
   (define-key tar-mode-map "p" 'tar-previous-line)
+  (define-key tar-mode-map "q" 'tar-quit)
   (define-key tar-mode-map "\^P" 'tar-previous-line)
   (define-key tar-mode-map [up] 'tar-previous-line)
-  (define-key tar-mode-map "r" 'tar-rename-entry)
+  (define-key tar-mode-map "R" 'tar-rename-entry)
   (define-key tar-mode-map "u" 'tar-unflag)
   (define-key tar-mode-map "v" 'tar-view)
   (define-key tar-mode-map "x" 'tar-expunge)
@@ -521,7 +534,7 @@ is visible (and the real data of the buffer is hidden)."
 (define-key tar-mode-map [menu-bar immediate view]
   '("View This File" . tar-view))
 (define-key tar-mode-map [menu-bar immediate display]
-  '("Display in Other Window" . tar-display-other-file))
+  '("Display in Other Window" . tar-display-other-window))
 (define-key tar-mode-map [menu-bar immediate find-file-other-window]
   '("Find in Other Window" . tar-extract-other-window))
 (define-key tar-mode-map [menu-bar immediate find-file]
@@ -584,8 +597,8 @@ See also: variables `tar-update-datestamp' and `tar-anal-blocksize'.
   (setq require-final-newline nil) ; binary data, dude...
   (make-local-variable 'revert-buffer-function)
   (setq revert-buffer-function 'tar-mode-revert)
-  (make-local-variable 'enable-local-variables)
-  (setq enable-local-variables nil)
+  (make-local-variable 'local-enable-local-variables)
+  (setq local-enable-local-variables nil)
   (make-local-variable 'next-line-add-newlines)
   (setq next-line-add-newlines nil)
   (setq major-mode 'tar-mode)
@@ -597,7 +610,8 @@ See also: variables `tar-update-datestamp' and `tar-anal-blocksize'.
   (widen)
   (if (and (boundp 'tar-header-offset) tar-header-offset)
       (narrow-to-region 1 tar-header-offset)
-      (tar-summarize-buffer))
+      (tar-summarize-buffer)
+      (tar-next-line 0))
   (run-hooks 'tar-mode-hook)
   )
 
@@ -623,7 +637,7 @@ appear on disk when you save the tar-file's buffer."
 	 (make-local-variable 'local-write-file-hooks)
 	 (setq local-write-file-hooks '(tar-subfile-save-buffer))
 	 ;; turn off auto-save.
-	 (auto-save-mode nil)
+	 (auto-save-mode -1)
 	 (setq buffer-auto-save-file-name nil)
 	 (run-hooks 'tar-subfile-mode-hook))
 	(t
@@ -726,9 +740,42 @@ appear on disk when you save the tar-file's buffer."
 		(insert-buffer-substring tar-buffer start end)
 		(goto-char 0)
 		(setq buffer-file-name
-		      (expand-file-name (concat tarname ":" name)))
+		      ;; `:' is not allowed on Windows
+		      (expand-file-name (concat tarname "!" name)))
 		(setq buffer-file-truename
 		      (abbreviate-file-name buffer-file-name))
+		;; We need to mimic the parts of insert-file-contents
+		;; which determine the coding-system and decode the text.
+		(let ((coding
+		       (and set-auto-coding-function
+			    (save-excursion
+			      (funcall set-auto-coding-function
+				       name (point-max)))))
+		      (multibyte enable-multibyte-characters)
+		      (detected (detect-coding-region
+				 1 (min 16384 (point-max)) t)))
+		  (if coding
+		      (or (numberp (coding-system-eol-type coding))
+			  (setq coding (coding-system-change-eol-conversion
+					coding
+					(coding-system-eol-type detected))))
+		    (setq coding
+			  (or (find-new-buffer-file-coding-system detected)
+			      (let ((file-coding
+				     (find-operation-coding-system
+				      'insert-file-contents buffer-file-name)))
+				(if (consp file-coding)
+				    (setq file-coding (car file-coding))
+				  file-coding)))))
+		  (if (or (eq coding 'no-conversion)
+			  (eq (coding-system-type coding) 5))
+		      (setq multibyte (set-buffer-multibyte nil)))
+		  (or multibyte
+		      (setq coding
+			    (coding-system-change-text-conversion
+			     coding 'raw-text)))
+		  (decode-coding-region 1 (point-max) coding)
+		  (set-buffer-file-coding-system coding))
 		;; Set the default-directory to the dir of the
 		;; superior buffer. 
 		(setq default-directory
@@ -1043,7 +1090,8 @@ for this to be permanent."
 	        (buffer-substring start (+ start 512))
 	        chk (tar-header-name tokens))
 	      )))
-      (narrow-to-region 1 tar-header-offset))))
+      (narrow-to-region 1 tar-header-offset)
+      (tar-next-line 0))))
 
 
 (defun tar-octal-time (timeval)
@@ -1067,6 +1115,7 @@ to make your changes permanent."
   (save-excursion
   (let ((subfile (current-buffer))
 	(subfile-size (buffer-size))
+	(coding buffer-file-coding-system)
 	(descriptor tar-superior-descriptor))
     (set-buffer tar-superior-buffer)
     (let* ((tokens (tar-desc-tokens descriptor))
@@ -1088,6 +1137,9 @@ to make your changes permanent."
 	  ;; insert the new data...
 	  (goto-char data-start)
 	  (insert-buffer subfile)
+	  (setq subfile-size
+		(encode-coding-region
+		 data-start (+ data-start subfile-size) coding))
 	  ;;
 	  ;; pad the new data out to a multiple of 512...
 	  (let ((subfile-size-pad (ash (ash (+ subfile-size 511) -9) 9)))
@@ -1147,10 +1199,13 @@ to make your changes permanent."
 	(tar-pad-to-blocksize))
        (narrow-to-region 1 tar-header-offset)))
     (set-buffer-modified-p t)   ; mark the tar file as modified
+    (tar-next-line 0)
     (set-buffer subfile)
     (set-buffer-modified-p nil) ; mark the tar subfile as unmodified
     (message "Saved into tar-buffer `%s'.  Be sure to save that buffer!"
 	     (buffer-name tar-superior-buffer))
+    ;; Prevent basic-save-buffer from changing our coding-system.
+    (setq last-coding-system-used buffer-file-coding-system)
     ;; Prevent ordinary saving from happening.
     t)))
 
@@ -1191,12 +1246,21 @@ Leaves the region wide."
 	;; Doing this here confuses things - the region gets left too wide!
 	;; I suppose this is run in a context where changing the buffer is bad.
 	;; (tar-pad-to-blocksize)
-	(write-region tar-header-offset (point-max) buffer-file-name nil t)
+	;; tar-header-offset turns out to be null for files fetched with W3,
+	;; at least.
+	(write-region (or tar-header-offset (point-min)) (point-max)
+		      buffer-file-name nil t)
 	(tar-clear-modification-flags)
 	(set-buffer-modified-p nil))
     (narrow-to-region 1 tar-header-offset))
   ;; return T because we've written the file.
   t)
+
+(defun tar-quit ()
+  "Kill the current tar buffer."
+  (interactive)
+  (kill-buffer nil))
+
 
 (provide 'tar-mode)
 

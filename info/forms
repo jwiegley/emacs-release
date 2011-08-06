@@ -1,6 +1,12 @@
 This is Info file ../info/forms, produced by Makeinfo version 1.68 from
 the input file forms.texi.
 
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Forms: (forms).	Emacs package for editing data bases
+			  by filling in forms.
+END-INFO-DIR-ENTRY
+
    This file documents Forms mode, a form-editing major mode for GNU
 Emacs.
 
@@ -759,7 +765,7 @@ Hanche-Olsen (`hanche@imf.unit.no'), `cwitty@portia.stanford.edu',
 Jonathan I. Kamens, Per Cederqvist  (`ceder@signum.se'), Michael Lipka
 (`lipka@lip.hanse.de'), Andy Piper (`ajp@eng.cam.ac.uk'), Frederic
 Pierresteguy  (`F.Pierresteguy@frcl.bull.fr'), Ignatios Souvatzis and
-Richard Stallman (`rms@gnu.ai.mit.edu').
+Richard Stallman (`rms@gnu.org').
 
    This documentation was slightly inspired by the documentation of
 "rolo mode" by Paul Davis at Schlumberger Cambridge Research
@@ -840,18 +846,18 @@ Index
 
 
 Tag Table:
-Node: Top343
-Node: Forms Example1749
-Node: Entering and Exiting Forms Mode2968
-Node: Forms Commands5174
-Node: Data File Format8975
-Node: Control File Format10314
-Node: Format Description14942
-Node: Modifying Forms Contents18284
-Node: Miscellaneous20171
-Node: Error Messages21709
-Node: Long Example25952
-Node: Credits29043
-Node: Index29803
+Node: Top490
+Node: Forms Example1896
+Node: Entering and Exiting Forms Mode3115
+Node: Forms Commands5321
+Node: Data File Format9122
+Node: Control File Format10461
+Node: Format Description15089
+Node: Modifying Forms Contents18431
+Node: Miscellaneous20318
+Node: Error Messages21856
+Node: Long Example26099
+Node: Credits29190
+Node: Index29943
 
 End Tag Table

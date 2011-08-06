@@ -4,7 +4,7 @@
 
 ;; Author: Simon Marshall <simon@gnu.ai.mit.edu>
 ;; Keywords: faces files
-;; Version: 3.12.03
+;; Version: 3.13
 
 ;;; This file is part of GNU Emacs.
 
@@ -219,7 +219,7 @@
 ;  "Submit via mail a bug report on fast-lock.el."
 ;  (interactive)
 ;  (let ((reporter-prompt-for-summary-p t))
-;    (reporter-submit-bug-report "simon@gnu.ai.mit.edu" "fast-lock 3.12.03"
+;    (reporter-submit-bug-report "simon@gnu.ai.mit.edu" "fast-lock 3.13"
 ;     '(fast-lock-cache-directories fast-lock-minimum-size
 ;       fast-lock-save-others fast-lock-save-events fast-lock-save-faces
 ;       fast-lock-verbose)
@@ -306,8 +306,8 @@ Font Lock cache files saved.  Ownership may be unknown for networked files."
   "*If non-nil, means show status messages for cache processing.
 If a number, only buffers greater than this size have processing messages."
   :type '(choice (const :tag "never" nil)
-		 (const :tag "always" t)
-		 (integer :tag "size"))
+		 (integer :tag "size")
+		 (other :tag "always" t))
   :group 'fast-lock)
 
 (defvar fast-lock-save-faces
@@ -535,7 +535,7 @@ See `fast-lock-cache-directory'."
       (concat buffer-file-name ".flc")
     (let* ((bufile (expand-file-name buffer-file-truename))
 	   (chars-alist
-	    (if (eq system-type 'emx)
+	    (if (memq system-type '(emx windowsnt))
 		'((?/ . (?#)) (?# . (?# ?#)) (?: . (?\;)) (?\; . (?\; ?\;)))
 	      '((?/ . (?#)) (?# . (?# ?#)))))
 	   (mapchars
@@ -592,11 +592,12 @@ See `fast-lock-cache-directory'."
   (setq font-lock-syntactic-keywords (font-lock-eval-keywords
 				      font-lock-syntactic-keywords))
   ;; Compile all keywords in case some are and some aren't.
-  (setq font-lock-syntactic-keywords (font-lock-compile-keywords
-				      font-lock-syntactic-keywords)
-	syntactic-keywords (font-lock-compile-keywords syntactic-keywords)
-
-	font-lock-keywords (font-lock-compile-keywords font-lock-keywords)
+  (when font-lock-syntactic-keywords
+    (setq font-lock-syntactic-keywords (font-lock-compile-keywords
+					font-lock-syntactic-keywords)))
+  (when syntactic-keywords
+    (setq syntactic-keywords (font-lock-compile-keywords syntactic-keywords)))
+  (setq font-lock-keywords (font-lock-compile-keywords font-lock-keywords)
 	keywords (font-lock-compile-keywords keywords))
   ;; Use the Font Lock cache SYNTACTIC-PROPERTIES and FACE-PROPERTIES if we're
   ;; using cache VERSION format 3, the current buffer's file timestamp matches

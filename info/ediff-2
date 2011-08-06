@@ -1,5 +1,10 @@
-This is Info file ../info/ediff, produced by Makeinfo-1.64 from the
-input file ediff.texi.
+This is Info file ../info/ediff, produced by Makeinfo version 1.68 from
+the input file ediff.texi.
+
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* Ediff: (ediff).       A visual interface for comparing and merging programs.
+END-INFO-DIR-ENTRY
 
    This file documents Ediff, a comprehensive visual interface to Unix
 diff and patch utilities.
@@ -30,7 +35,7 @@ two.  The same algorithm works when you type `C-l' (`ediff-recenter'),
 `p' (`ediff-previous-difference'), `n' (`ediff-next-difference'), etc.
 
    The above behavior also depends on whether the current frame is
-splittable, dedicated, etc. Unfortunately, the margin of this book is
+splittable, dedicated, etc.  Unfortunately, the margin of this book is
 too narrow to present the details of this remarkable algorithm.
 
    The upshot of all this is that you can compare buffers in one frame
@@ -47,7 +52,7 @@ automatically adapting itself to the multi-frame mode.
      etc.  The X resource name of Ediff Control Panel frames is
      `Ediff'.  Under X-windows, you can use this name to set up
      preferences in your `~/.Xdefaults', `~/.xrdb', or whatever X
-     resource file is in use. Usually this is preferable to changing
+     resource file is in use.  Usually this is preferable to changing
      `ediff-control-frame-parameters' directly.  For instance, you can
      specify in `~/.Xdefaults' the color of the control frame using the
      resource `Ediff*background'.
@@ -59,7 +64,7 @@ automatically adapting itself to the multi-frame mode.
      The preferred way of specifying the position of the control frame
      is by setting the variable `ediff-control-frame-position-function'
      to an appropriate function.  The default value of this variable is
-     `ediff-make-frame-position'. This function places the control
+     `ediff-make-frame-position'.  This function places the control
      frame in the vicinity of the North-East corner of the frame
      displaying buffer A.
 
@@ -89,20 +94,15 @@ by `ediff-make-frame-position' and for related customization.
      To start Ediff with an iconified Control Panel, you should set this
      variable to `t' and `ediff-prefer-long-help-message' to `nil'
      (*note Quick Help Customization::.).  This behavior is useful only
-     if the window manager is TWM or a derivative. Also, this doesn't
-     work under XEmacs, since this editor ignores input from icons.
+     if the window manager is TWM or a derivative.
 
    To make more creative changes in the way Ediff sets up windows, you
 can rewrite the function `ediff-setup-windows'.  However, we believe
 that detaching Ediff Control Panel from the rest and making it into a
 separate frame offers an important opportunity by allowing you to
-iconify that frame.  Under Emacs, the icon will usually accept all of
-the Ediff commands, but will free up valuable real estate on your screen
-(this may depend on your window manager, though).  Iconifying won't do
-any good under XEmacs since XEmacs icons are not sensitive to keyboard
-input.  The saving grace is that, even if not iconified, the control
-frame is very small, smaller than some icons, so it does not take much
-space in any case.
+iconify that frame.  The icon will usually accept all of the Ediff
+commands, but will free up valuable real estate on your screen (this may
+depend on your window manager, though).
 
    The following variable controls how windows are set up:
 
@@ -155,36 +155,36 @@ REGEXP-B, etc.  Whether `and' or `or' will be used depends on how you
 respond to a question.
 
    When scanning difference regions for the aforesaid regular
-expressions, Ediff narrows the buffers to those regions. This means
+expressions, Ediff narrows the buffers to those regions.  This means
 that you can use the expressions `\`' and `\'' to tie search to the
 beginning or end of the difference regions.
 
    On the other hand, typing `#h' lets you specify (hide) uninteresting
-regions. That is, if a difference region in buffer A matches REGEXP-A,
+regions.  That is, if a difference region in buffer A matches REGEXP-A,
 the corresponding region in buffer B matches REGEXP-B and (if
 applicable) buffer C's region matches REGEXP-C, then the region will be
-ignored by the commands `n'/SPC (`ediff-next-difference') and `p'/DEL
-(`ediff-previous-difference') commands.
+ignored by the commands `n'/<SPC> (`ediff-next-difference') and
+`p'/<DEL> (`ediff-previous-difference') commands.
 
    Typing `#f' and `#h' toggles selective browsing on and off.
 
    Note that selective browsing affects only `ediff-next-difference'
-and `ediff-previous-difference', i.e., the commands `n'/SPC and
-`p'/DEL.  `#f' and `#h' do not change the position of the point in the
-buffers.  And you can still jump directly (using `j')  to any numbered
-difference.
+and `ediff-previous-difference', i.e., the commands `n'/<SPC> and
+`p'/<DEL>.  `#f' and `#h' do not change the position of the point in
+the buffers.  And you can still jump directly (using `j')  to any
+numbered difference.
 
    Users can supply their own functions to specify how Ediff should do
-selective browsing. To change the default Ediff function, add a
+selective browsing.  To change the default Ediff function, add a
 function to `ediff-load-hook' which will do the following assignments:
 
      (setq ediff-hide-regexp-matches-function 'your-hide-function)
      (setq ediff-focus-on-regexp-matches-function 'your-focus-function)
 
    *Useful hint*: To specify a regexp that matches everything, don't
-simply type RET in response to a prompt. Typing RET tells Ediff to
-accept the default value, which may not be what you want. Instead, you
-should enter something like ^ or $. These match every line.
+simply type <RET> in response to a prompt.  Typing <RET> tells Ediff to
+accept the default value, which may not be what you want.  Instead, you
+should enter something like <^> or <$>.  These match every line.
 
    You can use the status command, `i', to find out whether selective
 browsing is currently in effect.
@@ -204,7 +204,7 @@ variable:
 `ediff-ignore-similar-regions'
      If `t', causes Ediff to skip over "uninteresting" difference
      regions, which are the regions where the variants differ only in
-     the amount of the white space and newlines. This feature can be
+     the amount of the white space and newlines.  This feature can be
      toggled on/off interactively, via the command `##'.
 
    *Note:* In order for this feature to work, auto-refining of
@@ -234,7 +234,7 @@ regions:
 `ediff-after-flag-mol'
      These variables hold strings that Ediff uses to mark the beginning
      and the end of the differences found in files A, B, and C on
-     devices where Emacs cannot display faces. Ediff uses different
+     devices where Emacs cannot display faces.  Ediff uses different
      flags to highlight regions that begin/end at the beginning/end of
      a line or in a middle of a line.
 
@@ -243,8 +243,8 @@ regions:
 `ediff-current-diff-face-C'
      Ediff uses these faces to highlight current differences on devices
      where Emacs can display faces.  These and subsequently described
-     faces can be set either in `.emacs' or in `.Xdefaults'. The X
-     resource for Ediff is `Ediff', *not* `emacs'. Please refer to
+     faces can be set either in `.emacs' or in `.Xdefaults'.  The X
+     resource for Ediff is `Ediff', *not* `emacs'.  Please refer to
      Emacs manual for the information on how to set X resources.
 
 `ediff-fine-diff-face-A'
@@ -260,14 +260,14 @@ regions:
 `ediff-odd-diff-face-B'
 `ediff-odd-diff-face-C'
      Non-current difference regions are displayed using these
-     alternating faces. The odd and the even faces are actually
+     alternating faces.  The odd and the even faces are actually
      identical on monochrome displays, because without colors options
      are limited.  So, Ediff uses italics to highlight non-current
      differences.
 
 `ediff-force-faces'
      Ediff generally can detect when Emacs is running on a device where
-     it can use highlighting with faces. However, if it fails to
+     it can use highlighting with faces.  However, if it fails to
      determine that faces can be used, the user can set this variable
      to `t' to make sure that Ediff uses faces to highlight differences.
 
@@ -296,13 +296,13 @@ If you want to change the default settings for `ediff-force-faces' and
    You can also change the defaults for the faces used to highlight the
 difference regions.  There are two ways to do this.  The simplest and
 the preferred way is to use the customization widget accessible from the
-menubar. Ediff's customization group is located under "Tools", which in
-turn is under "Programming". The faces that are used to highlight
+menubar.  Ediff's customization group is located under "Tools", which in
+turn is under "Programming".  The faces that are used to highlight
 difference regions are located in the "Highlighting" subgroup of the
 Ediff customization group.
 
    The second, much more arcane, method to change default faces is to
-include some Lisp code in `~/.emacs'. For instance,
+include some Lisp code in `~/.emacs'.  For instance,
 
      (setq ediff-current-diff-face-A
            (copy-face 'bold-italic 'ediff-current-diff-face-A))
@@ -313,7 +313,7 @@ way).
 
    If you are unhappy with just *some* of the aspects of the default
 faces, you can modify them when Ediff is being loaded using
-`ediff-load-hook'. For instance:
+`ediff-load-hook'.  For instance:
 
      (add-hook 'ediff-load-hook
                (function (lambda ()
@@ -324,10 +324,10 @@ faces, you can modify them when Ediff is being loaded using
                            (make-face-italic
                              ediff-current-diff-face-B))))
 
-   *Note:* it is not recommended to use `internal-get-face' (or
-`get-face' in XEmacs) when defining Ediff's faces, since this may cause
-problems when there are several frames with different font sizes.
-Instead, use `copy-face' or `set/make-face-...' as shown above.
+   *Note:* it is not recommended to use `internal-get-face' when
+defining Ediff's faces, since this may cause problems when there are
+several frames with different font sizes.  Instead, use `copy-face' or
+`set/make-face-...' as shown above.
 
 
 File: ediff,  Node: Narrowing,  Next: Refinement of Difference Regions,  Prev: Highlighting Difference Regions,  Up: Customization
@@ -403,16 +403,17 @@ refinement.  Note that refinement ignores spaces, tabs, and newlines.
 
      Fine differences are computed by first splitting the current
      difference region into words and then passing the result to
-     `ediff-diff-program'. For the default forward word function (which
-     is `ediff-forward-word'), a word is a string consisting of letters,
-     `-', or `_'; a string of punctuation symbols; a string of digits,
-     or a string consisting of symbols that are neither space, nor a
-     letter.
+     `ediff-diff-program'.  For the default forward word function
+     (which is `ediff-forward-word'), a word is a string consisting of
+     letters, `-', or `_'; a string of punctuation symbols; a string of
+     digits, or a string consisting of symbols that are neither space,
+     nor a letter.
 
      This default behavior is controlled by four variables:
-     `ediff-word-1', ..., `ediff-word-4'. See the on-line documentation
-     for these variables and for the function `ediff-forward-word' for
-     an explanation of how to modify these variables.
+     `ediff-word-1', ..., `ediff-word-4'.  See the on-line
+     documentation for these variables and for the function
+     `ediff-forward-word' for an explanation of how to modify these
+     variables.
 
    Sometimes, when a region has too many differences between the
 variants, highlighting of fine differences is inconvenient, especially
@@ -450,7 +451,7 @@ used for applying patches and for computing the main difference regions
      format yet.
 
 `ediff-patch-program'
-     The program to use to apply patches. Since there are certain
+     The program to use to apply patches.  Since there are certain
      incompatibilities between the different versions of the patch
      program, the best way to stay out of trouble is to use a
      GNU-compatible version.  Otherwise, you may have to tune the
@@ -465,20 +466,20 @@ used for applying patches and for computing the main difference regions
      `ediff-backup-specs', not in `ediff-patch-options'.
 
      It is recommended to pass the `-f' option to the patch program, so
-     it won't ask questions. However, some implementations don't accept
-     this option, in which case the default value of this variable
-     should be changed.
+     it won't ask questions.  However, some implementations don't
+     accept this option, in which case the default value of this
+     variable should be changed.
 
 `ediff-backup-extension'
-     Backup extension used by the patch program. Must be specified,
+     Backup extension used by the patch program.  Must be specified,
      even if `ediff-backup-specs' is given.
 
 `ediff-backup-specs'
      Backup directives to pass to the patch program.  Ediff requires
      that the old version of the file (before applying the patch) is
-     saved in a file named `the-patch-file.extension'. Usually
+     saved in a file named `the-patch-file.extension'.  Usually
      `extension' is `.orig', but this can be changed by the user, and
-     may also be system-dependent. Therefore, Ediff needs to know the
+     may also be system-dependent.  Therefore, Ediff needs to know the
      backup extension used by the patch program.
 
      Some versions of the patch program let the user specify `-b
@@ -487,9 +488,10 @@ used for applying patches and for computing the main difference regions
      use `-z<backup-extension>'.
 
      Note that both `ediff-backup-extension' and `ediff-backup-specs'
-     must be properly set. If your patch program takes the option `-b',
-     but not `-b extension', the variable `ediff-backup-extension' must
-     still be set so Ediff will know which extension to use.
+     must be properly set.  If your patch program takes the option
+     `-b', but not `-b extension', the variable
+     `ediff-backup-extension' must still be set so Ediff will know
+     which extension to use.
 
 `ediff-custom-diff-program'
 `ediff-custom-diff-options'
@@ -499,16 +501,17 @@ used for applying patches and for computing the main difference regions
      specified via the above two variables.
 
      The output generated by `ediff-custom-diff-program' (which doesn't
-     even have to be a standard-style `diff'!) is not used by Ediff. It
-     is provided exclusively so that you can refer to it later, send it
-     over email, etc.  For instance, after reviewing the differences,
-     you may want to send context differences to a colleague.  Since
-     Ediff ignores the `-c' option in `ediff-diff-program', you would
-     have to run `diff -c' separately just to produce the list of
-     differences. Fortunately, `ediff-custom-diff-program' and
-     `ediff-custom-diff-options' eliminate this nuisance by keeping a
-     copy of a difference list in the desired format in a buffer that
-     can be displayed via the command `D'.
+     even have to be a standard-style `diff'!) is not used by Ediff.
+     It is provided exclusively so that you can refer to it later, send
+     it over email, etc.  For instance, after reviewing the
+     differences, you may want to send context differences to a
+     colleague.  Since Ediff ignores the `-c' option in
+     `ediff-diff-program', you would have to run `diff -c' separately
+     just to produce the list of differences.  Fortunately,
+     `ediff-custom-diff-program' and `ediff-custom-diff-options'
+     eliminate this nuisance by keeping a copy of a difference list in
+     the desired format in a buffer that can be displayed via the
+     command `D'.
 
 `ediff-patch-default-directory'
      Specifies the default directory to look for patches.
@@ -557,7 +560,7 @@ the difference region of buffer A; the second string goes between the
 regions; the third goes after region B, as shown in the above example.
 
    In addition to the state of the difference, Ediff displays the state
-of the merge for each region. If a difference came from buffer A by
+of the merge for each region.  If a difference came from buffer A by
 default (because both regions A and B were different from the ancestor
 and `ediff-default-variant' was set to `default-A') then `[=diff(A)
 default-A]' is displayed in the mode line.  If the difference in buffer
@@ -578,21 +581,21 @@ invisible) ancestor buffer is empty via the *AncestorEmpty* indicator.
 This helps determine if the changes made to the original in variants A
 and B represent pure insertion or deletion of text: if the mode line
 shows *AncestorEmpty* and the corresponding region in buffers A or B is
-not empty, this means that new text was inserted. If this indicator is
+not empty, this means that new text was inserted.  If this indicator is
 not present and the difference regions in buffers A or B are non-empty,
-this means that text was modified. Otherwise, the original text was
+this means that text was modified.  Otherwise, the original text was
 deleted.
 
    Although the ancestor buffer is normally invisible, Ediff maintains
 difference regions there and advances the current difference region
-accordingly. All highlighting of difference regions is provided in the
+accordingly.  All highlighting of difference regions is provided in the
 ancestor buffer, except for the fine differences.  Therefore, if
 desired, the user can put the ancestor buffer in a separate frame and
-watch it there. However, on a TTY, only one frame can be visible at any
-given time, and Ediff doesn't support any single-frame window
+watch it there.  However, on a TTY, only one frame can be visible at
+any given time, and Ediff doesn't support any single-frame window
 configuration where all buffers, including the ancestor buffer, would
-be visible. However, the ancestor buffer can be displayed by typing `/'
-to the control window. (Type `C-l' to hide it again.)
+be visible.  However, the ancestor buffer can be displayed by typing
+`/' to the control window.  (Type `C-l' to hide it again.)
 
    Note that the state-of-difference indicators `=diff(A)' and
 `=diff(B)' above are not redundant, even in the presence of a
@@ -626,9 +629,9 @@ to tell where the various regions in the merge buffer came from.
 consist entirely of white space.  For instance, if, say, the current
 region in buffer A consists of the white space only (or if it is
 empty), Ediff will not take it into account for the purpose of
-computing fine differences. The result is that Ediff can provide a
+computing fine differences.  The result is that Ediff can provide a
 better visual information regarding the actual fine differences in the
-non-white regions in buffers B and C. Moreover, if the regions in
+non-white regions in buffers B and C.  Moreover, if the regions in
 buffers B and C differ in the white space only, then a message to this
 effect will be displayed.
 
@@ -664,20 +667,20 @@ region directly using the command `j' (with a prefix argument
 specifying the difference number).
 
    The variable `ediff-autostore-merges' controls what happens to the
-merge buffer when Ediff quits. If the value is `nil', nothing is done
+merge buffer when Ediff quits.  If the value is `nil', nothing is done
 to the merge buffer--it will be the user's responsibility to save it.
 If the value is `t', the user will be asked where to save the buffer
-and whether to delete it afterwards. It the value is neither `nil' nor
+and whether to delete it afterwards.  It the value is neither `nil' nor
 `t', the merge buffer is saved *only* if this merge session was invoked
 from a group of related Ediff session, such as those that result from
 `ediff-merge-directories', `ediff-merge-directory-revisions', etc.
-*Note Session Groups::. This behavior is implemented in the function
+*Note Session Groups::.  This behavior is implemented in the function
 `ediff-maybe-save-and-delete-merge', which is a hook in
-`ediff-quit-merge-hook'. The user can supply a different hook, if
+`ediff-quit-merge-hook'.  The user can supply a different hook, if
 necessary.
 
    The variable `ediff-autostore-merges' is buffer-local, so it can be
-set in a per-buffer manner. Therefore, use `setq-default' to globally
+set in a per-buffer manner.  Therefore, use `setq-default' to globally
 change this variable.
 
 
@@ -687,15 +690,15 @@ Support for Version Control
 ===========================
 
    Ediff supports version control and lets you compare versions of files
-visited by Emacs buffers via the function `ediff-revision'. This
+visited by Emacs buffers via the function `ediff-revision'.  This
 feature is controlled by the following variables:
 
 `ediff-version-control-package'
-     A symbol. The default is `vc'.
+     A symbol.  The default is `vc'.
 
      If you are like most Emacs users, Ediff will use VC as the version
-     control package. This is the standard Emacs interface to RCS, CVS,
-     and SCCS.
+     control package.  This is the standard Emacs interface to RCS,
+     CVS, and SCCS.
 
      However, if your needs are better served by other interfaces, you
      will have to tell Ediff which version control package you are
@@ -708,13 +711,11 @@ feature is controlled by the following variables:
      Kremer <sk@thp.Uni-Koeln.DE> and is available as
           `ftp.cs.buffalo.edu:pub/Emacs/rcs.tar.Z'
           `ftp.uni-koeln.de:/pub/gnu/emacs/rcs.tar.Z'
-     The packages `pcl-cvs.el' and `generic-sc.el' are found in XEmacs
-     distribution.
 
    Ediff's interface to the above packages allows the user to compare
 the versions of the current buffer or to merge them (with or without an
-ancestor-version). These operations can also be performed on directories
-containing files under version control.
+ancestor-version).  These operations can also be performed on
+directories containing files under version control.
 
    In case of `pcl-cvs.el', Ediff can also be invoked via the function
 `run-ediff-from-cvs-buffer'--see the documentation string for this
@@ -757,7 +758,7 @@ Miscellaneous
      Note that if Ediff detects that all the buffers it compares are
      displayed in separate frames, it assumes that the user wants them
      to be so displayed and stops splitting windows.  Instead, it
-     arranges for each buffer to be displayed in a separate frame. You
+     arranges for each buffer to be displayed in a separate frame.  You
      can switch to the one-frame mode by hiding one of the buffers
      A/B/C.
 
@@ -791,11 +792,11 @@ Miscellaneous
      previously used for files A, B, or C, respectively.
 
 `ediff-no-emacs-help-in-control-buffer'
-     If `t', makes `C-h' behave like the DEL key, i.e., it will move
+     If `t', makes `C-h' behave like the <DEL> key, i.e., it will move
      you back to the previous difference rather than invoking help.
      This is useful when, in an xterm window or a text-only terminal,
      the Backspace key is bound to `C-h' and is positioned more
-     conveniently than the DEL key.
+     conveniently than the <DEL> key.
 
 `ediff-toggle-read-only-function'
      This variable's value is a function that Ediff uses to toggle the
@@ -811,11 +812,11 @@ Miscellaneous
 
 `ediff-keep-variants'
      The default is `t', meaning that the buffers being compared or
-     merged will be preserved when Ediff quits. Setting this to `nil'
+     merged will be preserved when Ediff quits.  Setting this to `nil'
      causes Ediff to offer the user a chance to delete these buffers
      (if they are not modified).  Supplying a prefix argument to the
      quit command (`q') temporarily reverses the meaning of this
-     variable. This is convenient when the user prefers one of the
+     variable.  This is convenient when the user prefers one of the
      behaviors most of the time, but occasionally needs the other
      behavior.
 
@@ -837,7 +838,7 @@ Miscellaneous
      appropriate Ediff's frame.  However, some users prefer to move the
      mouse by themselves.  The above variable, if set to `maybe', will
      prevent Ediff from grabbing the mouse in many situations, usually
-     after commands that may take more time than usual. In other
+     after commands that may take more time than usual.  In other
      situation, Ediff will continue grabbing the mouse and putting it
      where it believes is appropriate.  If the value is `nil', then
      mouse is entirely user's responsibility.  Try different settings
@@ -852,10 +853,10 @@ Notes on Heavy-duty Customization
    Some users need to customize Ediff in rather sophisticated ways,
 which requires different defaults for different kinds of files (e.g.,
 SGML, etc.).  Ediff supports this kind of customization in several
-ways.  First, most customization variables are buffer-local. Those that
-aren't are usually accessible from within Ediff Control Panel, so one
-can make them local to the panel by calling make-local-variable from
-within `ediff-startup-hook'.
+ways.  First, most customization variables are buffer-local.  Those
+that aren't are usually accessible from within Ediff Control Panel, so
+one can make them local to the panel by calling make-local-variable
+from within `ediff-startup-hook'.
 
    Second, the function `ediff-setup' accepts an optional sixth
 argument which has the form `((VAR-NAME-1 . VAL-1) (VAR-NAME-2 . VAL-2)
@@ -873,10 +874,10 @@ variables `ediff-brief-help-message-function' and
 strings.
 
    When customizing Ediff, some other variables are useful, although
-they are not user-definable. They are local to the Ediff control
+they are not user-definable.  They are local to the Ediff control
 buffer, so this buffer must be current when you access these variables.
 The control buffer is accessible via the variable
-`ediff-control-buffer', which is also local to that buffer. It is
+`ediff-control-buffer', which is also local to that buffer.  It is
 usually used for checking if the current buffer is also the control
 buffer.
 
@@ -893,7 +894,7 @@ buffer.
      variable is nil.
 
 `ediff-window-A'
-     The window displaying buffer A. If buffer A is not visible, this
+     The window displaying buffer A.  If buffer A is not visible, this
      variable is nil or it may be a dead window.
 
 `ediff-window-B'
@@ -913,10 +914,10 @@ File: ediff,  Node: Credits,  Next: Index,  Prev: Customization,  Up: Top
 Credits
 *******
 
-   Ediff was written by Michael Kifer <kifer@cs.sunysb.edu>. It was
+   Ediff was written by Michael Kifer <kifer@cs.sunysb.edu>.  It was
 inspired by emerge.el written by Dale R. Worley <drw@math.mit.edu>.  An
 idea due to Boris Goldowsky <boris@cs.rochester.edu> made it possible
-to highlight fine differences in Ediff buffers. Alastair Burt
+to highlight fine differences in Ediff buffers.  Alastair Burt
 <burt@dfki.uni-kl.de> ported Ediff to XEmacs, Eric Freudenthal
 <freudent@jan.ultra.nyu.edu> made it work with VC, Marc Paquette
 <marcpa@cam.org> wrote the toolbar support package for Ediff, and
@@ -927,13 +928,15 @@ package.
 Without them, Ediff would not be nearly as useful as it is today.  Here
 is a full list of contributors (I hope I didn't miss anyone):
 
+     Steve Baur (steve@xemacs.org),
      Neal Becker (neal@ctd.comsat.com),
+     E. Jay Berkenbilt (ejb@ql.org),
      Alastair Burt (burt@dfki.uni-kl.de),
      Paul Bibilo (peb@delcam.co.uk),
      Kevin Broadey (KevinB@bartley.demon.co.uk),
      Harald Boegeholz (hwb@machnix.mathematik.uni-stuttgart.de),
      Bradley A. Bosch (brad@lachman.com),
-     Michael D. Carney  (carney@ltx-tr.com),
+     Michael D. Carney (carney@ltx-tr.com),
      Jin S. Choi (jin@atype.com),
      Scott Cummings (cummings@adc.com),
      Albert Dvornik (bert@mit.edu),
@@ -941,15 +944,17 @@ is a full list of contributors (I hope I didn't miss anyone):
      Paul Eggert (eggert@twinsun.com),
      Kevin Esler (esler@ch.hp.com),
      Robert Estes (estes@ece.ucdavis.edu),
+     Jay Finger (jayf@microsoft.com),
      Xavier Fornari (xavier@europe.cma.fr),
      Eric Freudenthal (freudent@jan.ultra.nyu.edu),
      Job Ganzevoort (Job.Ganzevoort@cwi.nl),
      Boris Goldowsky (boris@cs.rochester.edu),
      Allan Gottlieb (gottlieb@allan.ultra.nyu.edu),
+     Thorbjoern Hansen (thorbjoern.hansen@mchp.siemens.de),
      Xiaoli Huang (hxl@epic.com),
      Lars Magne Ingebrigtsen (larsi@ifi.uio.no),
      Larry Gouge (larry@itginc.com),
-     Karl Heuer (kwzh@gnu.ai.mit.edu),
+     Karl Heuer (kwzh@gnu.org),
      (irvine@lks.csi.com),
      (jaffe@chipmunk.cita.utoronto.ca),
      David Karr (dkarr@nmo.gtegsc.com),
@@ -963,7 +968,7 @@ is a full list of contributors (I hope I didn't miss anyone):
      Richard Levitte (levitte@e.kth.se),
      Mike Long (mike.long@analog.com),
      Martin Maechler (maechler@stat.math.ethz.ch),
-     Simon Marshall (simon@gnu.ai.mit.edu),
+     Simon Marshall (simon@gnu.org),
      Richard Mlynarik (mly@adoc.xerox.com),
      Chris Murphy (murphycm@sun.aston.ac.uk),
      Erik Naggum (erik@naggum.no),
@@ -982,7 +987,7 @@ is a full list of contributors (I hope I didn't miss anyone):
      Andy Scott (ascott@pcocd2.intel.com),
      Axel Seibert (axel@tumbolia.ppp.informatik.uni-muenchen.de),
      Scott O. Sherman (Scott.Sherman@mci.com),
-     Richard Stallman (rms@gnu.ai.mit.edu),
+     Richard Stallman (rms@gnu.org),
      Richard Stanton (stanton@haas.berkeley.edu),
      Ake Stenhoff (etxaksf@aom.ericsson.se),
      Stig (stig@hackvan.com),
@@ -990,6 +995,7 @@ is a full list of contributors (I hope I didn't miss anyone):
      Chuck Thompson (cthomp@cs.uiuc.edu),
      Ray Tomlinson (tomlinso@bbn.com),
      Raymond Toy (toy@rtp.ericsson.se),
+     Jan Vroonhof (vroonhof@math.ethz.ch),
      Philippe Waroquiers (philippe.waroquiers@eurocontrol.be),
      Klaus Weber (gizmo@zork.north.de),
      Ben Wing (wing@666.com),

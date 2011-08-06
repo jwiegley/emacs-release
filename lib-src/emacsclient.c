@@ -29,10 +29,15 @@ Boston, MA 02111-1307, USA.  */
 
 #include <stdio.h>
 #include <getopt.h>
+#ifdef STDC_HEADERS
+#include <stdlib.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 char *getenv (), *getwd ();
 char *getcwd ();
-int geteuid ();
 
 /* This is defined with -D from the compilation command,
    which extracts it from ../lisp/version.el.  */
@@ -46,6 +51,8 @@ char *progname;
 
 /* Nonzero means don't wait for a response from Emacs.  --no-wait.  */
 int nowait = 0;
+
+void print_help_and_exit ();
 
 struct option longopts[] =
 {
@@ -94,6 +101,7 @@ decode_options (argc, argv)
     }
 }
 
+void
 print_help_and_exit ()
 {
   fprintf (stderr,

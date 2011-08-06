@@ -188,30 +188,44 @@ Boston, MA 02111-1307, USA.  */
 
 /* Declared in alloc.c */
 
-extern INTERVAL make_interval ();
+extern INTERVAL make_interval P_ ((void));
 
 /* Declared in intervals.c */
 
-extern INTERVAL create_root_interval ();
-extern void copy_properties ();
-extern int intervals_equal ();
-extern void traverse_intervals ();
-extern INTERVAL split_interval_right (), split_interval_left ();
-extern INLINE INTERVAL find_interval ();
-extern INTERVAL next_interval (), previous_interval ();
-extern INTERVAL merge_interval_left (), merge_interval_right ();
-extern void delete_interval ();
-extern INLINE void offset_intervals ();
-extern void graft_intervals_into_buffer ();
-extern void set_point ();
-extern INLINE void temp_set_point ();
-extern void verify_interval_modification ();
-extern INTERVAL balance_intervals ();
-extern INLINE void copy_intervals_to_string ();
-extern INTERVAL copy_intervals ();
-extern Lisp_Object textget ();
-extern Lisp_Object get_local_map ();
-extern INTERVAL update_interval ();
+extern INTERVAL create_root_interval P_ ((Lisp_Object));
+extern void copy_properties P_ ((INTERVAL, INTERVAL));
+extern int intervals_equal P_ ((INTERVAL, INTERVAL));
+extern void traverse_intervals P_ ((INTERVAL, int, int,
+				    void (*) (INTERVAL, Lisp_Object),
+				    Lisp_Object));
+extern INTERVAL split_interval_right P_ ((INTERVAL, int));
+extern INTERVAL split_interval_left P_ ((INTERVAL, int));
+extern INTERVAL find_interval P_ ((INTERVAL, int));
+extern INTERVAL next_interval P_ ((INTERVAL));
+extern INTERVAL previous_interval P_ ((INTERVAL));
+extern INTERVAL merge_interval_left P_ ((INTERVAL));
+extern INTERVAL merge_interval_right P_ ((INTERVAL));
+extern void delete_interval P_ ((INTERVAL));
+extern INLINE void offset_intervals P_ ((struct buffer *, int, int));
+extern void graft_intervals_into_buffer P_ ((INTERVAL, int, int,
+					     struct buffer *, int));
+extern void set_point P_ ((struct buffer *, int));
+extern INLINE void temp_set_point P_ ((struct buffer *, int));
+extern void set_point_both P_ ((struct buffer *, int, int));
+extern INLINE void temp_set_point_both P_ ((struct buffer *, int, int));
+extern void verify_interval_modification P_ ((struct buffer *, int, int));
+extern INTERVAL balance_intervals P_ ((INTERVAL));
+extern INLINE void copy_intervals_to_string P_ ((Lisp_Object, struct buffer *,
+						 int, int));
+extern INTERVAL copy_intervals P_ ((INTERVAL, int, int));
+extern Lisp_Object textget P_ ((Lisp_Object, Lisp_Object));
+extern void move_if_not_intangible P_ ((int));
+extern Lisp_Object get_local_map P_ ((int, struct buffer *));
+extern INTERVAL update_interval P_ ((INTERVAL, int));
+extern void set_intervals_multibyte P_ ((int));
+
+/* Defined in xdisp.c */
+extern int invisible_ellipsis_p P_ ((Lisp_Object, Lisp_Object));
 
 /* Declared in textprop.c */
 
@@ -234,13 +248,19 @@ extern Lisp_Object Vdefault_text_properties;
 /* Sticky properties */
 extern Lisp_Object Qfront_sticky, Qrear_nonsticky;
 
-extern Lisp_Object Fget_char_property (), Fget_text_property ();
-extern Lisp_Object Ftext_properties_at ();
-extern Lisp_Object Fnext_property_change (), Fprevious_property_change ();
-extern Lisp_Object Fadd_text_properties (), Fset_text_properties ();
-extern Lisp_Object Fremove_text_properties (), Ferase_text_properties ();
-extern Lisp_Object Ftext_property_any (), Ftext_property_not_all ();
-extern Lisp_Object copy_text_properties ();
+EXFUN (Fget_char_property, 3);
+EXFUN (Fget_text_property, 3);
+EXFUN (Ftext_properties_at, 2);
+EXFUN (Fnext_property_change, 3);
+EXFUN (Fprevious_property_change, 3);
+EXFUN (Fadd_text_properties, 4);
+EXFUN (Fset_text_properties, 4);
+EXFUN (Fremove_text_properties, 4);
+EXFUN (Ftext_property_any, 5);
+EXFUN (Ftext_property_not_all, 5);
+extern Lisp_Object copy_text_properties P_ ((Lisp_Object, Lisp_Object,
+					     Lisp_Object, Lisp_Object,
+					     Lisp_Object, Lisp_Object));
 
 extern void syms_of_textprop ();
 

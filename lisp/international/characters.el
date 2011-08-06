@@ -54,13 +54,13 @@
 
 ;; For each group (row) of 2-byte character sets.
 
-(define-category ?A "Alpha numeric characters of 2-byte character sets")
+(define-category ?A "Alpha-numeric characters of 2-byte character sets")
 (define-category ?C "Chinese (Han) characters of 2-byte character sets")
-(define-category ?G "Greek characters of 2-byte characters sets")
+(define-category ?G "Greek characters of 2-byte character sets")
 (define-category ?H "Japanese Hiragana characters of 2-byte character sets")
 (define-category ?K "Japanese Katakana characters of 2-byte character sets")
 (define-category ?N "Korean Hangul characters of 2-byte character sets")
-(define-category ?Y "Cyrillic character of 2-byte character sets")
+(define-category ?Y "Cyrillic characters of 2-byte character sets")
 (define-category ?I "Indian Glyphs")
 
 ;; For phonetic classifications.
@@ -79,7 +79,11 @@
 ;; For filling.
 (define-category ?| "While filling, we can break a line at this character.")
 
-;; Keep the followings for `kinsoku' processing.  See comments in
+;; For indentation calculation.
+(define-category ? 
+  "This character counts as a space for indentation purposes.")
+
+;; Keep the following for `kinsoku' processing.  See comments in
 ;; kinsoku.el.
 (define-category ?> "A character which can't be placed at beginning of line.")
 (define-category ?< "A character which can't be placed at end of line.")
@@ -252,14 +256,14 @@
     (while (< i len)
       (if (= (aref chars i) ?-)
 	  (setq i (1+ i)
-		to (sref chars i))
-	(setq ch (sref chars i)
+		to (aref chars i))
+	(setq ch (aref chars i)
 	      to ch))
       (while (<= ch to)
 	(modify-syntax-entry ch syntax)
 	(modify-category-entry ch category)
 	(setq ch (1+ ch)))
-      (setq i (+ i (char-bytes to))))
+      (setq i (1+ i)))
     (setq deflist (cdr deflist))))
 
 ;; Ethiopic character set
@@ -278,6 +282,12 @@
 (modify-category-entry (make-char 'latin-iso8859-3) ?l)
 (modify-category-entry (make-char 'latin-iso8859-4) ?l)
 (modify-category-entry (make-char 'latin-iso8859-9) ?l)
+
+(modify-category-entry (make-char 'latin-iso8859-1 160) ?\ )
+(modify-category-entry (make-char 'latin-iso8859-2 160) ?\ )
+(modify-category-entry (make-char 'latin-iso8859-3 160) ?\ )
+(modify-category-entry (make-char 'latin-iso8859-4 160) ?\ )
+(modify-category-entry (make-char 'latin-iso8859-9 160) ?\ )
 
 ;; Greek character set (ISO-8859-7)
 
@@ -307,6 +317,37 @@
 (modify-category-entry (make-char 'indian-is13194) ?i)
 (modify-category-entry (make-char 'indian-2-column) ?I)
 (modify-category-entry (make-char 'indian-1-column) ?I)
+
+(let ((deflist	
+	'(;; chars	syntax	category
+	  ("(5!"#(B"	"w"	?7) ; vowel-modifying diacritical mark
+				    ; chandrabindu, anuswar, visarga
+	  ("(5$(B-(52(B"	"w"	?1) ; base (independent) vowel
+	  ("(53(B-(5X(B"	"w"	?0) ; consonant
+	  ("(5Z(B-(5g(B"	"w"	?8) ; matra
+	  ("(5q(B-(5z(B"	"w"	?6) ; digit
+	  ))
+      elm chars len syntax category to ch i)
+  (while deflist
+    (setq elm (car deflist))
+    (setq chars (car elm)
+	  len (length chars)
+	  syntax (nth 1 elm)
+	  category (nth 2 elm)
+	  i 0)
+    (while (< i len)
+      (if (= (aref chars i) ?-)
+	  (setq i (1+ i)
+		to (aref chars i))
+	(setq ch (aref chars i)
+	      to ch))
+      (while (<= ch to)
+	(modify-syntax-entry ch syntax)
+	(modify-category-entry ch category)
+	(setq ch (1+ ch)))
+      (setq i (1+ i)))
+    (setq deflist (cdr deflist))))
+
 
 ;; Japanese character set (JISX0201-kana, JISX0201-roman, JISX0208, JISX0212)
 
@@ -415,14 +456,14 @@
     (while (< i len)
       (if (= (aref chars i) ?-)
 	  (setq i (1+ i)
-		to (sref chars i))
-	(setq ch (sref chars i)
+		to (aref chars i))
+	(setq ch (aref chars i)
 	      to ch))
       (while (<= ch to)
 	(modify-syntax-entry ch syntax)
 	(modify-category-entry ch category)
 	(setq ch (1+ ch)))
-      (setq i (+ i (char-bytes to))))
+      (setq i (1+ i)))
     (setq deflist (cdr deflist))))
 
 ;; Thai character set (TIS620)
@@ -449,14 +490,14 @@
     (while (< i len)
       (if (= (aref chars i) ?-)
 	  (setq i (1+ i)
-		to (sref chars i))
-	(setq ch (sref chars i)
+		to (aref chars i))
+	(setq ch (aref chars i)
 	      to ch))
       (while (<= ch to)
 	(modify-syntax-entry ch syntax)
 	(modify-category-entry ch category)
 	(setq ch (1+ ch)))
-      (setq i (+ i (char-bytes to))))
+      (setq i (1+ i)))
     (setq deflist (cdr deflist))))
 
 ;; Tibetan character set
@@ -495,14 +536,14 @@
     (while (< i len)
       (if (= (aref chars i) ?-)
 	  (setq i (1+ i)
-		to (sref chars i))
-	(setq ch (sref chars i)
+		to (aref chars i))
+	(setq ch (aref chars i)
 	      to ch))
       (while (<= ch to)
 	(modify-syntax-entry ch syntax)
 	(modify-category-entry ch category)
 	(setq ch (1+ ch)))
-      (setq i (+ i (char-bytes to))))
+      (setq i (1+ i)))
     (setq deflist (cdr deflist))))
 
 ;; Vietnamese character set
@@ -534,3 +575,59 @@
 	(?C . ?A)			; Chinese - Alpha numeric
 	(?C . ?K)			; Chinese - Katakana
 	))
+
+
+;; For each character set, put the information of the most proper
+;; coding system to encode it by `prefered-coding-system' property.
+
+(let ((l '((latin-iso8859-1	. iso-latin-1)
+	   (latin-iso8859-2	. iso-latin-2)
+	   (latin-iso8859-3	. iso-latin-3)
+	   (latin-iso8859-4	. iso-latin-4)
+	   (thai-tis620		. thai-tis620)
+	   (greek-iso8859-7	. greek-iso-8bit)
+	   (arabic-iso8859-6	. iso-2022-7bit)
+	   (hebrew-iso8859-8	. hebrew-iso-8bit)
+	   (katakana-jisx0201	. japanese-shift-jis)
+	   (latin-jisx0201	. japanese-shift-jis)
+	   (cyrillic-iso8859-5	. cyrillic-iso-8bit)
+	   (latin-iso8859-9	. iso-latin-5)
+	   (japanese-jisx0208-1978 . iso-2022-jp)
+	   (chinese-gb2312	. cn-gb-2312)
+	   (japanese-jisx0208	. iso-2022-jp)
+	   (korean-ksc5601	. iso-2022-kr)
+	   (japanese-jisx0212	. iso-2022-jp)
+	   (chinese-cns11643-1	. iso-2022-cn)
+	   (chinese-cns11643-2	. iso-2022-cn)
+	   (chinese-big5-1	. chinese-big5)
+	   (chinese-big5-2	. chinese-big5)
+	   (chinese-sisheng	. iso-2022-7bit)
+	   (ipa			. iso-2022-7bit)
+	   (vietnamese-viscii-lower . vietnamese-viscii)
+	   (vietnamese-viscii-upper . vietnamese-viscii)
+	   (arabic-digit	. iso-2022-7bit)
+	   (arabic-1-column	. iso-2022-7bit)
+	   (ascii-right-to-left	. iso-2022-7bit)
+	   (lao			. lao)
+	   (arabic-2-column	. iso-2022-7bit)
+	   (indian-is13194	. devanagari)
+	   (indian-1-column	. devanagari)
+	   (tibetan-1-column	. tibetan)
+	   (ethiopic		. iso-2022-jp)
+	   (chinese-cns11643-3	. iso-2022-cn)
+	   (chinese-cns11643-4	. iso-2022-cn)
+	   (chinese-cns11643-5	. iso-2022-cn)
+	   (chinese-cns11643-6	. iso-2022-cn)
+	   (chinese-cns11643-7	. iso-2022-cn)
+	   (indian-2-column	. devanagari)
+	   (tibetan		. tibetan))))
+  (while l
+    (put-charset-property (car (car l)) 'prefered-coding-system (cdr (car l)))
+    (setq l (cdr l))))
+  
+
+;;; Local Variables:
+;;; coding: iso-2022-7bit
+;;; End:
+
+;;; end of characters.el

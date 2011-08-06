@@ -1,7 +1,13 @@
 This is Info file ../info/ccmode, produced by Makeinfo version 1.68
 from the input file cc-mode.texi.
 
-   Copyright (C) 1995, 1996 Free Software Foundation, Inc.
+INFO-DIR-SECTION Editors
+START-INFO-DIR-ENTRY
+* CC mode: (ccmode).	The GNU Emacs mode for editing C, C++, Objective-C
+			  and Java code.
+END-INFO-DIR-ENTRY
+
+   Copyright (C) 1995,96,97,98 Free Software Foundation, Inc.
 
 
 File: ccmode,  Node: Built-in Styles,  Next: Adding Styles,  Up: Styles
@@ -13,7 +19,9 @@ Built-in Styles
 you're looking for.  These include:
 
    * `gnu' -- coding style blessed by the Free Software Foundation for
-     C code in GNU programs.
+     C code in GNU programs.  This is the default style for all newly
+     created buffers, but you can change this by setting the variable
+     `c-default-style'.
 
    * `k&r' -- The classic Kernighan and Ritchie style for C code.
 
@@ -34,6 +42,23 @@ you're looking for.  These include:
 
    * `java' -- The style for editing Java code.  Note that this style is
      automatically installed when you enter `java-mode'.
+
+   * `user' -- This is a special style for several reasons.  First, if
+     you customize CC Mode by using either the new Custom interface or
+     by doing `setq''s at the top level of your `.emacs' file, these
+     settings will be captured in the `user' style.  Also, all other
+     styles implicitly inherit their settings from `user' style.  This
+     means that for any styles you add via `c-add-style' (*Note Adding
+     Styles::) you need only define the differences between your new
+     style and `user' style.
+
+     Note however that `user' style is *not* the default style.  `gnu'
+     is the default style for all newly created buffers, but you can
+     change this by setting variable `c-default-style'.  Be careful if
+     you customize CC Mode as described above; since your changes will
+     be captured in the `user' style, you will also have to change
+     `c-default-style' to "user" to see the effect of your
+     customizations.
 
    If you'd like to experiment with these built-in styles you can simply
 type the following in a CC Mode buffer:
@@ -58,16 +83,6 @@ You would add this:
        ;; other customizations can go here
        )
      (add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
-
-   There is one other special style you can use, called `cc-mode'
-style.  This style is special because all other styles implicitly
-inherit from it; in other words, whenever you set a style, `cc-mode' is
-applied before the one you selected.  This means your style need only
-define the differences between it and `cc-mode' style.
-
-   Note *you should never change any of the default styles*.  Instead,
-it's better to add a new style using `c-add-style' (*Note Adding
-Styles::).  This is especially true for `cc-mode' and `java' styles.
 
    Note that for BOCM compatibility, `gnu' is the default style, and
 any non-style based customizations you make (i.e. in
@@ -116,7 +131,8 @@ on a per-file basis by including a "Local Variable" block at the end of
 the file.  So far, you've only seen a functional interface to CC Mode
 customization, which is highly inconvenient for use in a Local Variable
 block.  CC Mode provides two variables that make it easier for you to
-customize your style on a per-file basis(1)
+customize your style on a per-file basis.  It works via the standard
+Emacs hook variable `hack-local-variables-hook'.
 
    The variable `c-file-style' can be set to a style name string.  When
 the file is visited, CC Mode will automatically set the file's style to
@@ -128,13 +144,9 @@ visited, CC Mode will automatically institute these offets using
 `c-set-offset'.
 
    Note that file style settings (i.e. `c-file-style') are applied
-before file offset settings (i.e. `c-file-offsets').
-
-   ---------- Footnotes ----------
-
-   (1) Note that this feature doesn't work with Emacs versions before
-XEmacs 19.12 and Emacs 19.29.  It works via the standard Emacs hook
-variable `hack-local-variables-hook'.
+before file offset settings (i.e. `c-file-offsets').  Also, if either
+of these are set in a file's local variable section, all the style
+variable values are made local to that buffer.
 
 
 File: ccmode,  Node: Advanced Customizations,  Prev: Styles,  Up: Customizing Indentation
@@ -260,10 +272,20 @@ used by the default styles.
      close argument lists will line up under the parenthesis that
      opened the argument list.
 
+   * `c-lineup-close-paren' -- lines up the closing parenthesis under
+     its corresponding open parenthesis if that one is followed by code.
+     Otherwise, if the open parenthesis ends its line, no indentation is
+     added.  Works with any `...-close' symbol.
+
    * `c-lineup-streamop' -- lines up C++ stream operators (e.g. `<<'
      and `>>').
 
    * `c-lineup-multi-inher' -- lines up multiple inheritance lines.
+
+   * `c-indent-one-line-block' -- adds `c-basic-offset' to the
+     indentation if the line is a one line block, otherwise 0.
+     Intended to be used with any opening brace symbol, e.g.
+     `substatement-open'.
 
    * `c-lineup-C-comments' -- lines up C block comment continuation
      lines.
@@ -287,6 +309,10 @@ used by the default styles.
    * `c-lineup-ObjC-method-args-2' -- similar to
      `c-lineup-ObjC-method-args' but lines up the colon on the current
      line with the colon on the previous line.
+
+   * `c-lineup-dont-change' -- this lineup function returns the
+     indentation of the current line.  Think of it as an identity
+     function for lineups; it is used for `cpp-macro-cont' lines.
 
    ---------- Footnotes ----------
 
@@ -397,19 +423,29 @@ list containing a single function which inserts newlines only after
 semi-colons which do not appear inside parenthesis lists (i.e. those
 that separate `for'-clause statements).
 
-   Here's an example of a criteria function that will prevent newlines
-from being inserted after semicolons when there is a non-blank following
-line.  Otherwise, it makes no determination.  To use, add this to the
-front of the `c-hanging-semi&comma-criteria' list.
+   Here's an example of a criteria function, provided by CC Mode, that
+will prevent newlines from being inserted after semicolons when there is
+a non-blank following line.  Otherwise, it makes no determination.  To
+use, add this to the front of the `c-hanging-semi&comma-criteria' list.
 
 
-     (defun my-semicolon-criteria ()
+     (defun c-semi&comma-no-newlines-before-nonblanks ()
        (save-excursion
          (if (and (eq last-command-char ?\;)
                   (zerop (forward-line 1))
                   (not (looking-at "^[ \t]*$")))
              'stop
            nil)))
+
+   The default value of `c-hanging-semi&comma-criteria' is a list
+containing just the function `c-semi&comma-inside-parenlist', which
+suppresses newlines after semicolons inside parenthesis lists (e.g.
+`for'-loops).  In addition to
+`c-semi&comma-no-newlines-before-nonblanks' described above, CC Mode
+also comes with the criteria function
+`c-semi&comma-no-newlines-for-oneline-inliners', which suppresses
+newlines after semicolons inside one-line inline method definitions
+(i.e. in C++ or Java).
 
 
 File: ccmode,  Node: Other Special Indentations,  Prev: Customizing Semi-colons and Commas,  Up: Advanced Customizations
@@ -555,7 +591,10 @@ description.  More detailed descriptions follow below.
 
    * `inclass' -- the line is nested inside a class definition
 
-   * `cpp-macro' -- the start of a cpp macro
+   * `cpp-macro' -- the start of a C preprocessor macro definition
+
+   * `cpp-macro-cont' -- subsequent lines of a multi-line C
+     preprocessor macro definition
 
    * `friend' -- a C++ friend declaration
 
@@ -573,7 +612,14 @@ description.  More detailed descriptions follow below.
    * `extern-lang-close' -- brace that closes an external language block
 
    * `inextern-lang' -- analogous to `inclass' syntactic symbol, but
-     for `extern' blocks.
+     used inside external language blocks (e.g. `extern "C" {').
+
+   * `namespace-open' -- brace that opens a C++ namespace block.
+
+   * `namespace-close' -- brace that closes a C++ namespace block.
+
+   * `innamespace' -- analogous to `inextern-lang' syntactic symbol,
+     but used inside C++ namespace blocks.
 
    * `template-args-cont' -- C++ template argument list continuations
 
@@ -822,10 +868,23 @@ symbols.  In this example:
         4:     int thing_two( double );
         5: }
 
-line 2 is given the `extern-lang-open' syntax while line 5 is given the
-`extern-lang-close' syntax.  The analysis for line 3 yields:
+line 2 is given the `extern-lang-open' syntax, while line 5 is given
+the `extern-lang-close' syntax.  The analysis for line 3 yields:
 `((inextern-lang) (topmost-intro . 14))', where `inextern-lang' is a
 modifier similar in purpose to `inclass'.
+
+   Similarly, C++ namespace constructs have their own associated
+syntactic symbols.  In this example:
+
+        1: namespace foo
+        2: {
+        3:     void xxx() {}
+        4: }
+
+line 2 is given the `namespace-open' syntax, while line 4 is given the
+`namespace-close' syntax.  The analysis for line 3 yields:
+`((innamespace) (topmost-intro . 17))', where `innamespace' is a
+modifier similar in purpose to `inextern-lang' and `inclass'.
 
    A number of syntactic symbols are associated with parenthesis lists,
 a.k.a argument lists, as found in function declarations and function
@@ -912,9 +971,26 @@ covered are illustrated by this C++ example:
 
    * line 11, assigned `block-open' syntax;
 
-   * lines 12 and 14, assigned `cpp-macro' syntax;
+   * lines 12 and 14, assigned `cpp-macro' syntax.
 
    * line 17, assigned `stream-op' syntax.
+
+   Multi-line C preprocessor macros are now (somewhat) supported.  At
+least CC Mode now recognizes the fact that it is inside a multi-line
+macro, and it properly skips such macros as syntactic whitespace.  In
+this example:
+
+        1: #define LIST_LOOP(cons, listp)                           \
+        2:   for (cons = listp; !NILP (cons); cons = XCDR (cons))   \
+        3:      if (!CONSP (cons))                                  \
+        4:        signal_error ("Invalid list format", listp);      \
+        5:      else
+
+line 1 is given the syntactic symbol `cpp-macro'.  This first line of a
+macro is always given this symbol.  The second and subsequent lines
+(e.g. lines 2 through 5) are given the `cpp-macro-cont' syntactic
+symbol, with a relative buffer position pointing to the `#' which
+starts the macro definition.
 
    In Objective-C buffers, there are three additional syntactic symbols
 assigned to various message calling constructs.  Here's an example
@@ -983,12 +1059,12 @@ slower the mode gets.  Some coding styles can even force CC Mode to
 scan from the beginning of the buffer for every line of code!
 
    One of the simplest things you can do to reduce scan time, is make
-sure any brace that opens a top-level block construct always appears in
-the leftmost column.  This is actually an Emacs constraint, as embodied
-in the `beginning-of-defun' function which CC Mode uses heavily.  If
-you insist on hanging top-level open braces on the right side of the
-line, then you should set the variable `defun-prompt-regexp' to
-something reasonable (2), however that "something reasonable" is
+sure any brace that opens a top-level construct(2) always appears in the
+leftmost column.  This is actually an Emacs constraint, as embodied in
+the `beginning-of-defun' function which CC Mode uses heavily.  If you
+insist on hanging top-level open braces on the right side of the line,
+then you might want to set the variable `defun-prompt-regexp' to
+something reasonable (3), however that "something reasonable" is
 difficult to define, so CC Mode doesn't do it for you.
 
    A special note about `defun-prompt-regexp' in Java mode: while much
@@ -997,19 +1073,20 @@ that opens a class is hung on the right side of the line, this is not a
 good style to pursue in Emacs.  CC Mode comes with a variable
 `c-Java-defun-prompt-regexp' which tries to define a regular expression
 usable for this style, but there are problems with it.  In some cases
-it can cause `beginning-of-defun' to hang(3).  For this reason, it is
+it can cause `beginning-of-defun' to hang(4).  For this reason, it is
 not used by default, but if you feel adventurous, you can set
 `defun-prompt-regexp' to it in your mode hook.  In any event, setting
 and rely on `defun-prompt-regexp' will definitely slow things down!
 
    You will probably notice pathological behavior from CC Mode when
-working in files containing large amounts of cpp macros.  This is
-because Emacs cannot be made to quickly skip backwards over these lines.
+working in files containing large amounts of C preprocessor macros.
+This is because Emacs cannot skip backwards over these lines as quickly
+as it can comment.
 
    Previous versions of CC Mode had potential performance problems when
 recognizing K&R style function argument declarations.  This was because
 there are ambiguities in the C syntax when K&R style argument lists are
-used(4).  CC Mode has adopted BOCM's convention for limiting the
+used(5).  CC Mode has adopted BOCM's convention for limiting the
 search: it assumes that argdecls are indented at least one space, and
 that the function headers are not indented at all.  With current
 versions of CC Mode, user customization of `c-recognize-knr-p' is
@@ -1018,23 +1095,26 @@ deprecated.  Just don't put argdecls in column zero!
    You might want to investigate the speed-ups contained in the file
 `cc-lobotomy.el', which comes as part of the CC Mode distribution, but
 is completely unsupported.  As mentioned previous, CC Mode always
-trades accuracy for speed, however it is recognized that sometimes you
+trades speed for accuracy, however it is recognized that sometimes you
 need speed and can sacrifice some accuracy in indentation.  The file
 `cc-lobotomy.el' contains hacks that will "dumb down" CC Mode in some
-specific ways, making that trade-off of speed for accuracy.  I won't go
-into details of its use here; you should read the comments at the top
-of the file, and look at the variable `cc-lobotomy-pith-list' for
+specific ways, making that trade-off of accurancy for speed.  I won't
+go into details of its use here; you should read the comments at the
+top of the file, and look at the variable `cc-lobotomy-pith-list' for
 details.
 
    ---------- Footnotes ----------
 
    (1) such as the output of `lex(1)'!
 
-   (2) Note that this variable is only defined in Emacs 19.
+   (2) e.g. a function in C, or outermost class definition in C++ or
+Java.
 
-   (3) This has been observed in Emacs 19.34 and XEmacs 19.15.
+   (3) Note that this variable is only defined in Emacs 19.
 
-   (4) It is hard to distinguish them from top-level declarations.
+   (4) This has been observed in Emacs 19.34 and XEmacs 19.15.
+
+   (5) It is hard to distinguish them from top-level declarations.
 
 
 File: ccmode,  Node: Frequently Asked Questions,  Next: Getting the latest CC Mode release,  Prev: Performance Issues,  Up: Top
@@ -1045,24 +1125,24 @@ Frequently Asked Questions
      *Q.* *How do I re-indent the whole file?*
 
      *A.* Visit the file and hit `C-x h' to mark the whole buffer. Then
-     hit `<ESC> C-\'.
+     hit `ESC C-\'.
 
-     *Q.* *How do I re-indent the entire function?  `<ESC> C-x' doesn't
+     *Q.* *How do I re-indent the entire function?  `ESC C-x' doesn't
      work.*
 
-     *A.* `<ESC> C-x' is reserved for future Emacs use.  To re-indent
-     the entire function hit `C-c C-q'.
+     *A.* `ESC C-x' is reserved for future Emacs use.  To re-indent the
+     entire function hit `C-c C-q'.
 
      *Q.* *How do I re-indent the current block?*
 
-     *A.* First move to the brace which opens the block with `<ESC>
-     C-u', then re-indent that expression with `<ESC> C-q'.
+     *A.* First move to the brace which opens the block with `ESC C-u',
+     then re-indent that expression with `ESC C-q'.
 
-     *Q.* *Why doesn't the <RET> key indent the line to where the new
+     *Q.* *Why doesn't the `RET' key indent the line to where the new
      text should go after inserting the newline?*
 
-     *A.* Emacs' convention is that <RET> just adds a newline, and that
-     <C-j> adds a newline and indents it.  You can make <RET> do this
+     *A.* Emacs' convention is that `RET' just adds a newline, and that
+     `C-j' adds a newline and indents it.  You can make `RET' do this
      too by adding this to your `c-mode-common-hook' (see the sample
      `.emacs' file *Note Sample .emacs File::):
 
@@ -1093,6 +1173,14 @@ Frequently Asked Questions
      *A.* "Syntax Colorization" is a standard Emacs feature, controlled
      by `font-lock-mode'.  It is not part of CC Mode.
 
+     *Q.* *`M-a' and `M-e' used to move over entire balanced brace
+     lists, but now they move into blocks.  How do I get the old
+     behavior back?*
+
+     *A.* Use `C-M-f' and `C-M-b' to move over balanced brace blocks.
+     Use `M-a' and `M-e' to move by statements, which will move into
+     blocks.
+
 
 
 File: ccmode,  Node: Getting the latest CC Mode release,  Next: Sample .emacs File,  Prev: Frequently Asked Questions,  Up: Top
@@ -1100,12 +1188,11 @@ File: ccmode,  Node: Getting the latest CC Mode release,  Next: Sample .emacs Fi
 Getting the latest CC Mode release
 **********************************
 
-   CC Mode is now standard with later versions Emacs 19 and XEmacs 19.
-It is also the standard for XEmacs 20, and will be the standard for
-Emacs 20 (unreleased as of this writing).  You would typically just use
-the version that comes with your X/Emacs.  These may be slightly out of
-date due to release schedule skew, so you should always check the
-canonical site for the latest version.
+   CC Mode is now standard with the latest versions of Emacs 19 and
+XEmacs 19.  It is also the standard for Emacs 20 and XEmacs 20.  You
+would typically just use the version that comes with your X/Emacs.
+These may be slightly out of date due to release schedule skew, so you
+should always check the canonical site for the latest version.
 
 
          World Wide Web:
@@ -1139,105 +1226,4 @@ or just send the message "help" for more information on ftpmail.
 Response times will vary with the number of requests in the queue.  I am
 in no way connected to this service, so I make no claims or guarantees
 about its availability!
-
-
-File: ccmode,  Node: Sample .emacs File,  Next: Limitations and Known Bugs,  Prev: Getting the latest CC Mode release,  Up: Top
-
-Sample .emacs file
-******************
-
-     ;; Here's a sample .emacs file that might help you along the way.  Just
-     ;; copy this region and paste it into your .emacs file.  You may want to
-     ;; change some of the actual values.
-     
-     (defconst my-c-style
-       '((c-tab-always-indent        . t)
-         (c-comment-only-line-offset . 4)
-         (c-hanging-braces-alist     . ((substatement-open after)
-                                        (brace-list-open)))
-         (c-hanging-colons-alist     . ((member-init-intro before)
-                                        (inher-intro)
-                                        (case-label after)
-                                        (label after)
-                                        (access-label after)))
-         (c-cleanup-list             . (scope-operator
-                                        empty-defun-braces
-                                        defun-close-semi))
-         (c-offsets-alist            . ((arglist-close . c-lineup-arglist)
-                                        (substatement-open . 0)
-                                        (case-label        . 4)
-                                        (block-open        . 0)
-                                        (knr-argdecl-intro . -)))
-         (c-echo-syntactic-information-p . t)
-         )
-       "My C Programming Style")
-     
-     ;; Customizations for all of c-mode, c++-mode, and objc-mode
-     (defun my-c-mode-common-hook ()
-       ;; add my personal style and set it for the current buffer
-       (c-add-style "PERSONAL" my-c-style t)
-       ;; offset customizations not in my-c-style
-       (c-set-offset 'member-init-intro '++)
-       ;; other customizations
-       (setq tab-width 8
-             ;; this will make sure spaces are used instead of tabs
-             indent-tabs-mode nil)
-       ;; we like auto-newline and hungry-delete
-       (c-toggle-auto-hungry-state 1)
-       ;; keybindings for all supported languages.  We can put these in
-       ;; c-mode-base-map because c-mode-map, c++-mode-map, objc-mode-map,
-       ;; java-mode-map, and idl-mode-map inherit from it.
-       (define-key c-mode-base-map "\C-m" 'newline-and-indent)
-       )
-     
-     (add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
-
-
-File: ccmode,  Node: Limitations and Known Bugs,  Next: Mailing Lists and Submitting Bug Reports,  Prev: Sample .emacs File,  Up: Top
-
-Limitations and Known Bugs
-**************************
-
-   * Multi-line macros are not handled properly.
-
-   * Re-indenting large regions or expressions can be slow.
-
-   * Add-on fill packages may not work as well as CC Mode's built-in
-     filling routines.  I no longer recommend you use `filladapt' to
-     fill comments.
-
-   * `c-indent-exp' has not been fully optimized.  It essentially
-     equivalent to hitting `TAB' (`c-indent-command') on every line.
-     Some information is cached from line to line, but such caching
-     invariable causes inaccuracies in analysis in some bizarre
-     situations.
-
-
-File: ccmode,  Node: Mailing Lists and Submitting Bug Reports,  Next: Concept Index,  Prev: Limitations and Known Bugs,  Up: Top
-
-Mailing Lists and Submitting Bug Reports
-****************************************
-
-   To report bugs, use the `C-c C-b' (`c-submit-bug-report') command.
-This provides vital information I need to reproduce your problem.  Make
-sure you include a concise, but complete code example.  Please try to
-boil your example down to just the essential code needed to reproduce
-the problem, and include an exact recipe of steps needed to expose the
-bug.  Be especially sure to include any code that appears *before* your
-bug example, if you think it might affect my ability to reproduce it.
-
-   Bug reports are now sent to the following email addresses:
-`cc-mode-help@python.org' and `bug-gnu-emacs@prep.ai.mit.edu'; the
-latter is mirrored on the Usenet newsgroup `gnu.emacs.bug'.  You can
-send other questions and suggestions (kudos? `;-)' to
-`cc-mode-help@python.org', or `help-gnu-emacs@prep.ai.mit.edu' which is
-mirrored on newsgroup `gnu.emacs.help'.
-
-   If you want to get announcements of new CC Mode releases, send the
-word *subscribe* in the body of a message to
-`cc-mode-announce-request@python.org'.  Announcements will also be
-posted to the Usenet newsgroups `gnu.emacs.sources', `comp.emacs',
-`comp.emacs.xemacs', and possibly some of the language oriented
-newsgroups.  Note that the `cc-mode-victims@python.org' mailing list
-was recently decommissioned.
 

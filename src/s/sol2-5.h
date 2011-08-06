@@ -2,14 +2,15 @@
 
 #include "sol2-4.h"
 
-/* If this is not defined, Emacs crashes (perhaps just in batch mode).
-   Reported by drew@staff.prodigy.com.  */
-#define SYSTEM_MALLOC
-
 /* -lgen is needed for the regex and regcmp functions
    which are used by Motif.  In the future we can try changing
    regex.c to provide them in Emacs, but this is safer for now.  */
 #define LIB_MOTIF -lXm -lgen
+
+/* This is the only known way to avoid some crashes
+   that seem to relate to screwed up malloc data
+   after deleting a frame.  */
+#define SYSTEM_MALLOC
 
 #if 0 /* A recent patch in unexelf.c should eliminate the need for this.  */
 /* Don't use the shared libraries for -lXt and -lXaw,

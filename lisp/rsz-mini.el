@@ -7,7 +7,7 @@
 ;; Maintainer: friedman@prep.ai.mit.edu
 ;; Keywords: minibuffer, window, frame, display
 
-;; $Id: rsz-mini.el,v 1.17 1997/06/23 08:21:26 friedman Exp $
+;; $Id: rsz-mini.el,v 1.21 1998/06/04 16:00:22 done Exp $
 
 ;; This file is part of GNU Emacs.
 
@@ -63,9 +63,15 @@
 
 ;;;###autoload
 (defcustom resize-minibuffer-mode nil
-  "*If non-`nil', resize the minibuffer so its entire contents are visible."
+  "*If non-`nil', resize the minibuffer so its entire contents are visible.
+You must modify via \\[customize] for this variable to have an effect."
+  :set (lambda (symbol value)
+	 (resize-minibuffer-mode (if value 1 -1)))
+  :initialize 'custom-initialize-default
   :type 'boolean
-  :group 'resize-minibuffer)
+  :group 'resize-minibuffer
+  :require 'rsz-mini
+  :version "20.3")
 
 ;;;###autoload
 (defcustom resize-minibuffer-window-max-height nil
@@ -114,9 +120,9 @@ resizing."
 
 ;;;###autoload
 (defun resize-minibuffer-mode (&optional prefix)
-  "Enable or disable resize-minibuffer mode.
-A negative prefix argument disables this mode.  A positive argument or
-argument of 0 enables it.
+  "Toggle resize-minibuffer mode.
+With argument, enable resize-minibuffer mode if and only if argument
+is positive.
 
 When this minor mode is enabled, the minibuffer is dynamically resized to
 contain the entire region of text put in it as you type.
@@ -138,13 +144,11 @@ The variable `resize-minibuffer-frame' controls whether this should be
 done.  The variables `resize-minibuffer-frame-max-height' and
 `resize-minibuffer-frame-exactly' are analogous to their window
 counterparts."
-  (interactive "p")
-  (or prefix (setq prefix 0))
-  (cond
-   ((>= prefix 0)
-    (setq resize-minibuffer-mode t))
-   (t
-    (setq resize-minibuffer-mode nil)))
+  (interactive "P")
+  (setq resize-minibuffer-mode
+	(if prefix
+	    (> (prefix-numeric-value prefix) 0)
+	  (not resize-minibuffer-mode)))
   (add-hook 'minibuffer-setup-hook 'resize-minibuffer-setup))
 
 (defun resize-minibuffer-setup ()
@@ -261,6 +265,9 @@ respectively."
   (set-frame-size (window-frame (minibuffer-window))
                   (frame-width)
                   resize-minibuffer-frame-original-height))
+
+(if resize-minibuffer-mode
+    (resize-minibuffer-mode 1))
 
 (provide 'rsz-mini)
 

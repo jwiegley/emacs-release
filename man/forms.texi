@@ -15,6 +15,12 @@
 @c      @smallbook
 @comment %**end of header (This is for running Texinfo on a region.)
 
+@dircategory Editors
+@direntry
+* Forms: (forms).	Emacs package for editing data bases
+			  by filling in forms.
+@end direntry
+
 @ifinfo
 This file documents Forms mode, a form-editing major mode for GNU Emacs.
 
@@ -951,7 +957,7 @@ Michael Lipka (@code{lipka@@lip.hanse.de}),
 Andy Piper (@code{ajp@@eng.cam.ac.uk}),
 Frederic Pierresteguy  (@code{F.Pierresteguy@@frcl.bull.fr}),
 Ignatios Souvatzis
-and Richard Stallman (@code{rms@@gnu.ai.mit.edu}).
+and Richard Stallman (@code{rms@@gnu.org}).
 
 This documentation was slightly inspired by the documentation of ``rolo
 mode'' by Paul Davis at Schlumberger Cambridge Research

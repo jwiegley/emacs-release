@@ -22,9 +22,10 @@ command that the argument is for.  The prompt normally ends with a colon.
 @cindex default argument
   Sometimes a @dfn{default argument} appears in parentheses after the
 colon; it too is part of the prompt.  The default will be used as the
-argument value if you enter an empty argument (e.g., just type @key{RET}).
-For example, commands that read buffer names always show a default, which
-is the name of the buffer that will be used if you type just @key{RET}.
+argument value if you enter an empty argument (for example, just type
+@key{RET}).  For example, commands that read buffer names always show a
+default, which is the name of the buffer that will be used if you type
+just @key{RET}.
 
   The simplest way to enter a minibuffer argument is to type the text
 you want, terminated by @key{RET} which exits the minibuffer.  You can
@@ -148,6 +149,14 @@ minibuffer window expands vertically as necessary to hold the text that
 you put in the minibuffer.  Use @kbd{M-x resize-minibuffer-mode} to
 enable or disable this minor mode (@pxref{Minor Modes}).
 
+@vindex minibuffer-scroll-overlap
+  Scrolling works specially in the minibuffer window.  When the
+minibuffer is just one line high, and it contains a long line of text
+that won't fit on the screen, scrolling automatically maintains an
+overlap of a certain number of characters from one continuation line to
+the next.  The variable @code{minibuffer-scroll-overlap} specifies how
+many characters of overlap; the default is 20.
+
   If while in the minibuffer you issue a command that displays help text
 of any sort in another window, you can use the @kbd{C-M-v} command while
 in the minibuffer to scroll the help text.  This lasts until you exit
@@ -206,14 +215,15 @@ case does not matter.
 @findex minibuffer-complete
   A concrete example may help here.  If you type @kbd{M-x au @key{TAB}},
 the @key{TAB} looks for alternatives (in this case, command names) that
-start with @samp{au}.  There are only two: @code{auto-fill-mode} and
-@code{auto-save-mode}.  These are the same as far as @code{auto-}, so the
-@samp{au} in the minibuffer changes to @samp{auto-}.@refill
+start with @samp{au}.  There are several, including
+@code{auto-fill-mode} and @code{auto-save-mode}---but they are all the
+same as far as @code{auto-}, so the @samp{au} in the minibuffer changes
+to @samp{auto-}.@refill
 
   If you type @key{TAB} again immediately, there are multiple
-possibilities for the very next character---it could be @samp{s} or
-@samp{f}---so no more characters are added; instead, @key{TAB} displays
-a list of all possible completions in another window.
+possibilities for the very next character---it could be any of
+@samp{cfilrs}---so no more characters are added; instead, @key{TAB}
+displays a list of all possible completions in another window.
 
   If you go on to type @kbd{f @key{TAB}}, this @key{TAB} sees
 @samp{auto-f}.  The only command name starting this way is
@@ -382,10 +392,12 @@ in the minibuffer.  They discard the old minibuffer contents, so you can
 think of them as moving through the history of previous arguments.
 
 @table @kbd
-@item M-p
+@item @key{up}
+@itemx M-p
 Move to the next earlier argument string saved in the minibuffer history
 (@code{previous-history-element}).
-@item M-n
+@item @key{down}
+@itemx M-n
 Move to the next later argument string saved in the minibuffer history
 (@code{next-history-element}).
 @item M-r @var{regexp} @key{RET}
@@ -402,9 +414,10 @@ match for @var{regexp} (@code{next-matching-history-element}).
 @findex previous-history-element
   The simplest way to reuse the saved arguments in the history list is
 to move through the history list one element at a time.  While in the
-minibuffer, type @kbd{M-p} (@code{previous-history-element}) to ``move
-to'' the next earlier minibuffer input, and use @kbd{M-n}
-(@code{next-history-element}) to ``move to'' the next later input.
+minibuffer, use @kbd{M-p} or up-arrow (@code{previous-history-element})
+to ``move to'' the next earlier minibuffer input, and use @kbd{M-n} or
+down-arrow (@code{next-history-element}) to ``move to'' the next later
+input.
 
   The previous input that you fetch from the history entirely replaces
 the contents of the minibuffer.  To use it as the argument, exit the
@@ -431,7 +444,9 @@ expression that you specify with the minibuffer.  @kbd{M-r}
 the history, while @kbd{M-s} (@code{next-matching-history-element})
 searches newer elements.  By special dispensation, these commands can
 use the minibuffer to read their arguments even though you are already
-in the minibuffer when you issue them.
+in the minibuffer when you issue them.  As with incremental searching,
+an uppercase letter in the regular expression makes the search
+case-sensitive (@pxref{Search Case}).
 
 @ignore
   We may change the precise way these commands read their arguments.
@@ -446,11 +461,15 @@ actually available, type @kbd{C-h f previous-matching-history-element}.
   All uses of the minibuffer record your input on a history list, but
 there are separate history lists for different kinds of arguments.  For
 example, there is a list for file names, used by all the commands that
-read file names.  There is a list for arguments of commands like
-@code{query-replace}.  There are several very specific history lists,
-including one for command names read by @key{M-x} and one for
-compilation commands read by @code{compile}.  Finally, there is one
-``miscellaneous'' history list that most minibuffer arguments use.
+read file names.  (As a special feature, this history list records
+the absolute file name, no more and no less, even if that is not how
+you entered the file name.)
+
+  There are several other very specific history lists, including one for
+command names read by @kbd{M-x}, one for buffer names, one for arguments
+of commands like @code{query-replace}, and one for compilation commands
+read by @code{compile}.  Finally, there is one ``miscellaneous'' history
+list that most minibuffer arguments use.
 
 @vindex history-length
   The variable @code{history-length} specifies the maximum length of a
@@ -511,5 +530,5 @@ you can edit its expression as usual and then resubmit it by typing
   The list of previous minibuffer-using commands is stored as a Lisp
 list in the variable @code{command-history}.  Each element is a Lisp
 expression which describes one command and its arguments.  Lisp programs
-can reexecute a command by calling @code{eval} with the
+can re-execute a command by calling @code{eval} with the
 @code{command-history} element.

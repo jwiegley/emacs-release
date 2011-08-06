@@ -1,4 +1,4 @@
-;;; ogonek.el --- basic editing commands for Emacs
+;;; ogonek.el --- change the encoding of Polish diacritics
 
 ;; Copyright (C) 1997 Free Software Foundation, Inc.
 
@@ -30,6 +30,13 @@
 ;;              Then, you may get a short info by calling one of
 ;;                 M-x ogonek-jak        -- in Polish  
 ;;                 M-x ogonek-how        -- in English  "
+
+;;; Code:
+
+(defgroup ogonek nil
+  "Change the encoding of Polish diacritic characters."
+  :prefix "ogonek-"
+  :group 'i18n)
 
 (defconst ogonek-name-encoding-alist
   '(("ascii"      . (?A  ?C  ?E  ?L  ?N  ?O  ?S  ?Z  ?Z 
@@ -260,17 +267,31 @@ The functions come in the following groups.
   (beginning-of-buffer))
 
 ;; ---- Variables keeping the suggested answers to dialogue questions -----
-
-(defvar ogonek-from-encoding "iso8859-2"
-  "*Encoding in the source file of recoding.")
-(defvar ogonek-to-encoding "ascii"
-  "*Encoding in the target file of recoding.")
-(defvar ogonek-prefix-char ?/
-  "*Prefix character for prefix encodings.") 
-(defvar ogonek-prefix-from-encoding "iso8859-2"
-  "*Encoding in the source file subject to prefixifation.") 
-(defvar ogonek-prefix-to-encoding "iso8859-2"
-  "*Encoding in the target file subject to deprefixifation.") 
+(defvar ogonek-encoding-choices
+  (cons 'choice  
+	(mapcar (lambda (x) (list 'const (car x)))
+		ogonek-name-encoding-alist))
+  "List of ogonek encodings.  Used only for customization.")
+(defcustom ogonek-from-encoding "iso8859-2"
+  "*Encoding in the source file of recoding."
+  :type ogonek-encoding-choices
+  :group 'ogonek)
+(defcustom ogonek-to-encoding "ascii"
+  "*Encoding in the target file of recoding."
+  :type ogonek-encoding-choices
+  :group 'ogonek)
+(defcustom ogonek-prefix-char ?/
+  "*Prefix character for prefix encodings."
+  :type 'character
+  :group 'ogonek)
+(defcustom ogonek-prefix-from-encoding "iso8859-2"
+  "*Encoding in the source file subject to prefixifation."
+  :type ogonek-encoding-choices
+  :group 'ogonek)
+(defcustom ogonek-prefix-to-encoding "iso8859-2"
+  "*Encoding in the target file subject to deprefixifation."
+  :type ogonek-encoding-choices
+  :group 'ogonek)
 
 ;; ---- Auxiliary functions for reading parameters in interactive mode ----
 

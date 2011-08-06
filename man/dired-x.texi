@@ -18,6 +18,12 @@
 @setfilename ../info/dired-x
 @c dired-x.el REVISION NUMBER
 @settitle Dired Extra Version 2 User's Manual
+
+@dircategory Editors
+@direntry
+* Dired-X: (dired-x).   Dired Extra Features.
+@end direntry
+
 @iftex
 @finalout
 @end iftex
@@ -1197,7 +1203,7 @@ gives you the name of that directory, without looking for marked files.
 
 @vindex dired-marked-files
 The list of names is also stored onto the variable @code{dired-marked-files}
-for use, e.g., in an @kbd{ESC ESC} (@code{eval-expression}) command.
+for use, e.g., in the @kbd{M-:} (@code{eval-expression}) command.
 
 As this command also displays what was pushed onto the kill ring you can
 use it to display the list of currently marked files in the
