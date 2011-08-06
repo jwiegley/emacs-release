@@ -109,6 +109,9 @@ void globals_of_w32 ();
 extern Lisp_Object Vw32_downcase_file_names;
 extern Lisp_Object Vw32_generate_fake_inodes;
 extern Lisp_Object Vw32_get_true_file_attributes;
+/* Defined in process.c for its own purpose.  */
+extern Lisp_Object Qlocal;
+
 extern int w32_num_mouse_buttons;
 
 
@@ -1779,6 +1782,8 @@ closedir (DIR *dirp)
 struct direct *
 readdir (DIR *dirp)
 {
+  int downcase = !NILP (Vw32_downcase_file_names);
+
   if (wnet_enum_handle != INVALID_HANDLE_VALUE)
     {
       if (!read_unc_volume (wnet_enum_handle,
@@ -1816,11 +1821,23 @@ readdir (DIR *dirp)
   dir_static.d_reclen = sizeof (struct direct) - MAXNAMLEN + 3 +
     dir_static.d_namlen - dir_static.d_namlen % 4;
 
-  dir_static.d_namlen = strlen (dir_find_data.cFileName);
-  strcpy (dir_static.d_name, dir_find_data.cFileName);
+  /* If the file name in cFileName[] includes `?' characters, it means
+     the original file name used characters that cannot be represented
+     by the current ANSI codepage.  To avoid total lossage, retrieve
+     the short 8+3 alias of the long file name.  */
+  if (_mbspbrk (dir_find_data.cFileName, "?"))
+    {
+      strcpy (dir_static.d_name, dir_find_data.cAlternateFileName);
+      /* 8+3 aliases are returned in all caps, which could break
+	 various alists that look at filenames' extensions.  */
+      downcase = 1;
+    }
+  else
+    strcpy (dir_static.d_name, dir_find_data.cFileName);
+  dir_static.d_namlen = strlen (dir_static.d_name);
   if (dir_is_fat)
     _strlwr (dir_static.d_name);
-  else if (!NILP (Vw32_downcase_file_names))
+  else if (downcase)
     {
       register char *p;
       for (p = dir_static.d_name; *p; p++)
@@ -2373,6 +2390,8 @@ int
 stat (const char * path, struct stat * buf)
 {
   char *name, *r;
+  char drive_root[4];
+  UINT devtype;
   WIN32_FIND_DATA wfd;
   HANDLE fh;
   DWORD fake_inode;
@@ -2474,7 +2493,19 @@ stat (const char * path, struct stat * buf)
 	}
     }
 
-  if (!NILP (Vw32_get_true_file_attributes)
+  /* GetDriveType needs the root directory of NAME's drive.  */
+  if (!(strlen (name) >= 2 && IS_DEVICE_SEP (name[1])))
+    devtype = GetDriveType (NULL); /* use root of current diectory */
+  else
+    {
+      strncpy (drive_root, name, 3);
+      drive_root[3] = '\0';
+      devtype = GetDriveType (drive_root);
+    }
+
+  if (!(NILP (Vw32_get_true_file_attributes)
+	|| (EQ (Vw32_get_true_file_attributes, Qlocal) &&
+	    devtype != DRIVE_FIXED && devtype != DRIVE_RAMDISK))
       /* No access rights required to get info.  */
       && (fh = CreateFile (name, 0, 0, NULL, OPEN_EXISTING,
 			   FILE_FLAG_BACKUP_SEMANTICS, NULL))

@@ -1,7 +1,8 @@
-This is ../info/emacs, produced by makeinfo version 4.8 from emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.11 from
+emacs.texi.
 
-   This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 22.2.
+This is the Sixteenth edition of the `GNU Emacs Manual',
+updated for Emacs version 22.3.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
@@ -262,7 +263,7 @@ font.
    Colors, fonts, and other attributes of the frame's display can also
 be customized by setting frame parameters in the variable
 `default-frame-alist' (*note Creating Frames::).  For a detailed
-description of frame parameters and customization, see *Note Frame
+description of frame parameters and customization, see *note Frame
 Parameters: (elisp)Frame Parameters.
 
 
@@ -569,14 +570,14 @@ all the related activities:
      your language environment (*note Language Environments::) takes
      care of setting up the coding systems and other options for a
      specific language or culture.  Alternatively, you can specify how
-     Emacs should encode or decode text for each command; see *Note
+     Emacs should encode or decode text for each command; see *note
      Text Coding::.
 
    * You can display non-ASCII characters encoded by the various
      scripts.  This works by using appropriate fonts on graphics
      displays (*note Defining Fontsets::), and by sending special codes
      to text-only displays (*note Terminal Coding::).  If some
-     characters are displayed incorrectly, refer to *Note Undisplayable
+     characters are displayed incorrectly, refer to *note Undisplayable
      Characters::, which describes possible problems and explains how
      to solve them.
 
@@ -587,11 +588,11 @@ all the related activities:
      keyboard can produce non-ASCII characters, you can select an
      appropriate keyboard coding system (*note Terminal Coding::), and
      Emacs will accept those characters.  Latin-1 characters can also
-     be input by using the `C-x 8' prefix, see *Note Unibyte Mode::.
+     be input by using the `C-x 8' prefix, see *note Unibyte Mode::.
 
      On X Window systems, your locale should be set to an appropriate
      value to make sure Emacs interprets keyboard input correctly; see
-     *Note locales: Language Environments.
+     *note locales: Language Environments.
 
    The rest of this chapter describes these issues in detail.
 
@@ -1785,7 +1786,7 @@ still handle _one_ of these character codes at a time.  To specify
 _which_ of these codes to use, invoke `M-x set-language-environment'
 and specify a suitable language environment such as `Latin-N'.
 
-   For more information about unibyte operation, see *Note Enabling
+   For more information about unibyte operation, see *note Enabling
 Multibyte::.  Note particularly that you probably want to ensure that
 your initialization files are read as unibyte if they contain non-ASCII
 characters.
@@ -2719,7 +2720,7 @@ as filling it.  This means that extra spaces are inserted to make the
 right margin line up exactly at the fill column.  To remove the extra
 spaces, use `M-q' with no argument.  (Likewise for `fill-region'.)
 Another way to control justification, and choose other styles of
-filling, is with the `justification' text property; see *Note Format
+filling, is with the `justification' text property; see *note Format
 Justification::.
 
    The command `M-s' (`center-line') centers the current line within
@@ -4309,7 +4310,7 @@ region.
 variable.  Setting the variable directly affects only the current
 buffer.  However, customizing it in a Custom buffer sets (as always)
 the default value for buffers that do not override it.  *Note Locals::,
-and *Note Easy Customization::.
+and *note Easy Customization::.
 
 
 File: emacs,  Node: Format Properties,  Next: Forcing Enriched Mode,  Prev: Format Justification,  Up: Formatted Text
@@ -4535,7 +4536,7 @@ cells.  These commands are:
 `M-x table-unrecognize-cell'
      Deactivate the cell under point.
 
-   For another way of converting text into tables, see *Note Table
+   For another way of converting text into tables, see *note Table
 Conversion::.
 
 
@@ -4896,7 +4897,7 @@ in these modes.
    Separate manuals are available for the modes for Ada (*note Ada
 Mode: (ada-mode)Top.), C/C++/Objective C/Java/Corba IDL/Pike/AWK (*note
 CC Mode: (ccmode)Top.) and the IDLWAVE modes (*note IDLWAVE:
-(idlwave)Top.).  For Fortran mode, see *Note Fortran::.
+(idlwave)Top.).  For Fortran mode, see *note Fortran::.
 
    Turning on a major mode runs a normal hook called the "mode hook",
 which is the value of a Lisp variable.  Each major mode has a mode
@@ -5313,7 +5314,7 @@ the indentation of the "anchor statement".
      Select a predefined style STYLE (`c-set-style').
 
    A "style" is a named collection of customizations that can be used
-in C mode and the related modes.  *Note Styles: (ccmode)Styles, for a
+in C mode and the related modes.  *note Styles: (ccmode)Styles, for a
 complete description.  Emacs comes with several predefined styles,
 including `gnu', `k&r', `bsd', `stroustrup', `linux', `python', `java',
 `whitesmith', `ellemtel', and `awk'.  Some of these styles are
@@ -5349,7 +5350,7 @@ Project for C; it is the default, so as to encourage use of our
 recommended style.
 
    *Note Indentation Engine Basics: (ccmode)Indentation Engine Basics,
-and *Note Customizing Indentation: (ccmode)Customizing Indentation, for
+and *note Customizing Indentation: (ccmode)Customizing Indentation, for
 more information on customizing indentation for C and related modes,
 including how to override parts of an existing style and how to define
 your own styles.
@@ -5669,7 +5670,7 @@ flexibly than for most buffers by setting the variables
 `c-indent-comment-alist' and `c-indent-comments-syntactically-p'.  For
 example, on a line ending in a closing brace, `M-;' puts the comment
 one space after the brace rather than at `comment-column'.  For full
-details see *Note Comment Commands: (ccmode)Comment Commands.
+details see *note Comment Commands: (ccmode)Comment Commands.
 
 
 File: emacs,  Node: Multi-Line Comments,  Next: Options for Comments,  Prev: Comment Commands,  Up: Comments
@@ -5877,7 +5878,7 @@ pops up a window with possible candidates asking you to choose one of
 them.
 
    For more information about setting up and using `M-x woman', see
-*Note WoMan: (woman)Top.
+*note WoMan: (woman)Top.
 
    ---------- Footnotes ----------
 

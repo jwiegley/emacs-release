@@ -83,6 +83,7 @@
 (defvar mac-apple-event-map)
 (defvar mac-font-panel-mode)
 (defvar mac-ts-active-input-overlay)
+(defvar mac-ts-active-input-buf)
 (defvar x-invocation-args)
 
 (defvar x-command-line-resources nil)
@@ -1709,6 +1710,19 @@ in `selection-converter-alist', which see."
 	      (setq modifiers (cons (car modifier-mask) modifiers)))))
     modifiers))
 
+(defun mac-ae-reopen-application (event)
+  "Show some frame in response to the Apple event EVENT.
+The frame to be shown is chosen from visible or iconified frames
+if possible.  If there's no such frame, a new frame is created."
+  (interactive "e")
+  (unless (frame-visible-p (selected-frame))
+    (let ((frame (or (car (visible-frame-list))
+		     (car (filtered-frame-list 'frame-visible-p)))))
+      (if frame
+	  (select-frame frame)
+	(switch-to-buffer-other-frame "*scratch*"))))
+  (select-frame-set-input-focus (selected-frame)))
+
 (defun mac-ae-open-documents (event)
   "Open the documents specified by the Apple event EVENT."
   (interactive "e")
@@ -1725,11 +1739,11 @@ in `selection-converter-alist', which see."
 	     (let ((line (car selection-range))
 		   (start (cadr selection-range))
 		   (end (nth 2 selection-range)))
-	       (if (> line 0)
-		   (goto-line line)
-		 (if (and (> start 0) (> end 0))
-		     (progn (set-mark start)
-			    (goto-char end))))))
+	       (if (>= line 0)
+		   (goto-line (1+ line))
+		 (if (and (>= start 0) (>= end 0))
+		     (progn (set-mark (1+ start))
+			    (goto-char (1+ end)))))))
 	    ((stringp search-text)
 	     (re-search-forward
 	      (mapconcat 'regexp-quote (split-string search-text) "\\|")
@@ -1765,9 +1779,9 @@ Currently the `mailto' scheme is supported."
 (define-key mac-apple-event-map [core-event open-application] 0)
 
 ;; Received when a dock or application icon is clicked and Emacs is
-;; already running.  Simply ignored.  Another idea is to make a new
-;; frame if all frames are invisible.
-(define-key mac-apple-event-map [core-event reopen-application] 'ignore)
+;; already running.
+(define-key mac-apple-event-map [core-event reopen-application]
+  'mac-ae-reopen-application)
 
 (define-key mac-apple-event-map [core-event open-documents]
   'mac-ae-open-documents)
@@ -1846,8 +1860,6 @@ With numeric ARG, display the font panel if and only if ARG is positive."
 ) ;; (fboundp 'mac-set-font-panel-visible-p)
 
 ;;; Text Services
-(defvar mac-ts-active-input-buf ""
-  "Byte sequence of the current Mac TSM active input area.")
 (defvar mac-ts-update-active-input-area-seqno 0
   "Number of processed update-active-input-area events.")
 (setq mac-ts-active-input-overlay (make-overlay 0 0))
@@ -2253,7 +2265,7 @@ See also `mac-dnd-known-types'."
 	 (handler (cdr type-info))
 	 (w (posn-window (event-start event))))
     (when handler
-      (if (and (windowp w) (window-live-p w)
+      (if (and (window-live-p w)
 	       (not (window-minibuffer-p w))
 	       (not (window-dedicated-p w)))
 	  ;; If dropping in an ordinary window which we could use,

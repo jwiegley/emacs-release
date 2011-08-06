@@ -1,4 +1,5 @@
-This is ../info/elisp, produced by makeinfo version 4.8 from elisp.texi.
+This is ../info/elisp, produced by makeinfo version 4.11 from
+elisp.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -6,7 +7,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.2.
+corresponding to Emacs version 22.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
@@ -32,7 +33,7 @@ Emacs Lisp
 **********
 
 This Info file contains edition 2.9 of the GNU Emacs Lisp Reference
-Manual, corresponding to GNU Emacs version 22.2.
+Manual, corresponding to GNU Emacs version 22.3.
 
 * Menu:
 
@@ -1357,7 +1358,7 @@ chapters describe features that are peculiar to Emacs Lisp or relate
 specifically to editing.
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.2.
+corresponding to Emacs version 22.3.
 
 * Menu:
 
@@ -3794,7 +3795,7 @@ The functions in this section test for numbers, or for a specific type
 of number.  The functions `integerp' and `floatp' can take any type of
 Lisp object as argument (they would not be of much use otherwise), but
 the `zerop' predicate requires a number as its argument.  See also
-`integer-or-marker-p' and `number-or-marker-p', in *Note Predicates on
+`integer-or-marker-p' and `number-or-marker-p', in *note Predicates on
 Markers::.
 
  -- Function: floatp object
@@ -4175,7 +4176,7 @@ not check for overflow.  Thus `(1+ 268435455)' may evaluate to
              (* (floor DIVIDEND DIVISOR) DIVISOR))
 
      always equals DIVIDEND, subject to rounding error if either
-     argument is floating point.  For `floor', see *Note Numeric
+     argument is floating point.  For `floor', see *note Numeric
      Conversions::.
 
 
@@ -4601,7 +4602,7 @@ buffers or other strings also copy the properties of the characters
 being copied.
 
    *Note Text::, for information about functions that display strings or
-copy them into buffers.  *Note Character Type::, and *Note String
+copy them into buffers.  *Note Character Type::, and *note String
 Type::, for information about the syntax of characters and strings.
 *Note Non-ASCII Characters::, for functions to convert between text
 representations and to encode and decode character codes.
@@ -4613,7 +4614,7 @@ File: elisp,  Node: Predicates for Strings,  Next: Creating Strings,  Prev: Stri
 ==============================
 
 For more information about general sequence and array predicates, see
-*Note Sequences Arrays Vectors::, and *Note Arrays::.
+*note Sequences Arrays Vectors::, and *note Arrays::.
 
  -- Function: stringp object
      This function returns `t' if OBJECT is a string, `nil' otherwise.
@@ -4754,8 +4755,8 @@ putting strings together, or by taking them apart.
      Conversion::).
 
      For information about other concatenation functions, see the
-     description of `mapconcat' in *Note Mapping Functions::, `vconcat'
-     in *Note Vector Functions::, and `append' in *Note Building
+     description of `mapconcat' in *note Mapping Functions::, `vconcat'
+     in *note Vector Functions::, and `append' in *note Building
      Lists::.
 
  -- Function: split-string string &optional separators omit-nulls
@@ -4992,10 +4993,10 @@ File: elisp,  Node: Text Comparison,  Next: String Conversion,  Prev: Modifying 
      strings or symbols rather than an actual alist.  *Note Association
      Lists::.
 
-   See also the `compare-buffer-substrings' function in *Note Comparing
+   See also the `compare-buffer-substrings' function in *note Comparing
 Text::, for a way to compare text in buffers.  The function
 `string-match', which matches a regular expression against a string,
-can be used for a kind of string comparison; see *Note Regexp Search::.
+can be used for a kind of string comparison; see *note Regexp Search::.
 
 
 File: elisp,  Node: String Conversion,  Next: Formatting Strings,  Prev: Text Comparison,  Up: Strings and Characters
@@ -5054,7 +5055,7 @@ primarily for making help messages.
 
      `int-to-string' is a semi-obsolete alias for this function.
 
-     See also the function `format' in *Note Formatting Strings::.
+     See also the function `format' in *note Formatting Strings::.
 
  -- Function: string-to-number string &optional base
      This function returns the numeric value of the characters in
@@ -5263,9 +5264,9 @@ takes precedence.
 
    The flag `#' specifies an "alternate form" which depends on the
 format in use.  For `%o', it ensures that the result begins with a `0'.
-For `%x' and `%X', it prefixes the result with `0x' or `0X'.  For
-`%e', `%f', and `%g', the `#' flag means include a decimal point even
-if the precision is zero.
+For `%x' and `%X', it prefixes the result with `0x' or `0X'.  For `%e',
+`%f', and `%g', the `#' flag means include a decimal point even if the
+precision is zero.
 
    The flag `-' causes the padding inserted by the width specifier, if
 any, to be inserted on the right rather than the left.  The flag `0'
@@ -5544,7 +5545,7 @@ Lists in Lisp are not a primitive data type; they are built up from
 "cons cells".  A cons cell is a data object that represents an ordered
 pair.  That is, it has two slots, and each slot "holds", or "refers
 to", some Lisp object.  One slot is known as the CAR, and the other is
-known as the CDR.  (These names are traditional; see *Note Cons Cell
+known as the CDR.  (These names are traditional; see *note Cons Cell
 Type::.)  CDR is pronounced "could-er."
 
    We say that "the CAR of this cons cell is" whatever object its CAR
@@ -5630,7 +5631,7 @@ others, but they are used so often that it is worth having all of them.)
      This function returns `t' if OBJECT is `nil', and returns `nil'
      otherwise.  This function is identical to `not', but as a matter
      of clarity we use `null' when OBJECT is considered a list and
-     `not' when it is considered a truth value (see `not' in *Note
+     `not' when it is considered a truth value (see `not' in *note
      Combining Conditions::).
 
           (null '(1))
@@ -5857,7 +5858,7 @@ for Emacs than `cons'.
      SEQUENCES.  The SEQUENCES may be lists, vectors, bool-vectors, or
      strings, but the last one should usually be a list.  All arguments
      except the last one are copied, so none of the arguments is
-     altered.  (See `nconc' in *Note Rearrangement::, for a way to join
+     altered.  (See `nconc' in *note Rearrangement::, for a way to join
      lists with no copying.)
 
      More generally, the final argument to `append' may be any Lisp
@@ -6325,7 +6326,7 @@ functions "destructive" because they chew up the original lists passed
 to them as arguments, relinking their cons cells to form a new list that
 is the returned value.
 
-   See `delq', in *Note Sets And Lists::, for another function that
+   See `delq', in *note Sets And Lists::, for another function that
 modifies cons cells.
 
  -- Function: nconc &rest lists
@@ -6462,7 +6463,7 @@ modifies cons cells.
           (setq nums (sort nums '<))
 
      *Note Sorting::, for more functions that perform sorting.  See
-     `documentation' in *Note Accessing Documentation::, for a useful
+     `documentation' in *note Accessing Documentation::, for a useful
      example of `sort'.
 
 
@@ -6643,7 +6644,7 @@ Predicates::.
      `equal' occurrences of an element in LIST, `delete-dups' keeps the
      first one.
 
-   See also the function `add-to-list', in *Note List Variables::, for
+   See also the function `add-to-list', in *note List Variables::, for
 a way to add an element to a list stored in a variable and used as a
 set.
 
@@ -7052,7 +7053,7 @@ sequence.
           (length (make-bool-vector 5 nil))
               => 5
 
-See also `string-bytes', in *Note Text Representations::.
+See also `string-bytes', in *note Text Representations::.
 
  -- Function: elt sequence index
      This function returns the element of SEQUENCE indexed by INDEX.
@@ -7097,8 +7098,8 @@ See also `string-bytes', in *Note Text Representations::.
      This function does not work for dotted lists.  Trying to copy a
      circular list may cause an infinite loop.
 
-     See also `append' in *Note Building Lists::, `concat' in *Note
-     Creating Strings::, and `vconcat' in *Note Vector Functions::, for
+     See also `append' in *note Building Lists::, `concat' in *note
+     Creating Strings::, and `vconcat' in *note Vector Functions::, for
      other ways to copy sequences.
 
           (setq bar '(1 2))
@@ -7141,7 +7142,7 @@ list.
 "vectors", "bool-vectors" and "char-tables".  A vector is a general
 array; its elements can be any Lisp objects.  A string is a specialized
 array; its elements must be characters.  Each type of array has its own
-read syntax.  *Note String Type::, and *Note Vector Type::.
+read syntax.  *Note String Type::, and *note Vector Type::.
 
    All four kinds of array share these characteristics:
 

@@ -1,7 +1,8 @@
-This is ../info/emacs, produced by makeinfo version 4.8 from emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.11 from
+emacs.texi.
 
-   This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 22.2.
+This is the Sixteenth edition of the `GNU Emacs Manual',
+updated for Emacs version 22.3.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
@@ -34,13 +35,13 @@ The Emacs Editor
 Emacs is the extensible, customizable, self-documenting real-time
 display editor.  This Info file describes how to edit with Emacs and
 some of how to customize it; it corresponds to GNU Emacs version
-22.2.
+22.3.
 
    To learn more about the Info documentation system, type `h', and
 Emacs will take you to a programmed instruction sequence for the Info
 commands.
 
-   For information on extending Emacs, see *Note Emacs Lisp: (elisp)Top.
+   For information on extending Emacs, see *note Emacs Lisp: (elisp)Top.
 
 * Menu:
 
@@ -620,7 +621,7 @@ Maintaining Large Programs
 
 * Change Log::	        Maintaining a change history for your program.
 * Format of ChangeLog:: What the change log file looks like.
-* Tags::	        Go direct to any function in your program in one
+* Tags::	        Go directly to any function in your program in one
 			  command.  Tags remembers which file it is in.
 * Emerge::              A convenient way of merging two versions of a program.
 
@@ -1170,7 +1171,7 @@ add `done' at the end when they are finished.  They may also indicate
 progress with percentages.
 
    Echo-area informative messages are saved in an editor buffer named
-`*Messages*'.  (We have not explained buffers yet; see *Note Buffers::,
+`*Messages*'.  (We have not explained buffers yet; see *note Buffers::,
 for more information about them.)  If you miss a message that appears
 briefly on the screen, you can switch to the `*Messages*' buffer to see
 it again.  (Successive progress messages are often collapsed into one
@@ -1202,7 +1203,7 @@ the echo area; it is the next-to-last line in the frame.  On a
 text-only terminal, the mode line is in inverse video if the terminal
 supports that; on a graphics display, the mode line has a 3D box
 appearance to help it stand out.  The mode line of the selected window
-is highlighted if possible; see *Note Optional Mode Line::, for more
+is highlighted if possible; see *note Optional Mode Line::, for more
 information.
 
    Normally, the mode line looks like this:
@@ -1258,8 +1259,8 @@ display the status of the subprocess.
    MINOR is a list of some of the "minor modes" that are turned on at
 the moment in the window's chosen buffer.  For example, `Fill' means
 that Auto Fill mode is on.  `Abbrev' means that Word Abbrev mode is on.
-`Ovwrt' means that Overwrite mode is on.  *Note Minor Modes::, for
-more information.
+`Ovwrt' means that Overwrite mode is on.  *Note Minor Modes::, for more
+information.
 
    `Narrow' means that the buffer being displayed has editing
 restricted to only a portion of its text.  (This is not really a minor
@@ -1449,7 +1450,7 @@ characters.
 "input events".  *Note Input Events: (elisp)Input Events, for the full
 Lisp-level details.  If you are not doing Lisp programming, but simply
 want to redefine the meaning of some characters or non-character
-events, see *Note Customization::.
+events, see *note Customization::.
 
    ASCII terminals cannot really send anything to the computer except
 ASCII characters.  These terminals use a sequence of characters to
@@ -1538,7 +1539,7 @@ usually made of a few English words separated by dashes; for example,
 definition" which is a Lisp program; this is how the command does its
 work.  In Emacs Lisp, a command is a Lisp function with special options
 to read arguments and for interactive use.  For more information on
-commands and functions, see *Note What Is a Function: (elisp)What Is a
+commands and functions, see *note What Is a Function: (elisp)What Is a
 Function.  (The definition here is simplified slightly.)
 
    The bindings between keys and commands are recorded in tables called
@@ -1800,7 +1801,7 @@ If you type a printing character and then type <DEL>, they cancel out.
    On most computers, Emacs sets up <DEL> automatically.  In some
 cases, especially with text-only terminals, Emacs may guess wrong.  If
 the key that ought to erase the last character doesn't do it in Emacs,
-see *Note DEL Does Not Delete::.
+see *note DEL Does Not Delete::.
 
    Most PC keyboards have both a <BACKSPACE> key a little ways above
 <RET> or <ENTER>, and a <DELETE> key elsewhere.  On these keyboards,
@@ -1937,7 +1938,7 @@ sophisticated things.
      point, but it is commonly used to do so.  If your keyboard has a
      <PAGEDOWN> or <PRIOR> key, it does the same thing.
 
-     Scrolling commands are described further in *Note Scrolling::.
+     Scrolling commands are described further in *note Scrolling::.
 
 `M-v'
 `<PAGEUP>'
@@ -2096,7 +2097,7 @@ existed.  This creates an empty buffer, in which you can insert the
 text you want to put in the file.  Emacs actually creates the file the
 first time you save this buffer with `C-x C-s'.
 
-   To learn more about using files in Emacs, see *Note Files::.
+   To learn more about using files in Emacs, see *note Files::.
 
 
 File: emacs,  Node: Basic Help,  Next: Blank Lines,  Prev: Basic Files,  Up: Basic
@@ -2221,7 +2222,7 @@ parts of the buffer, and to count lines.
      Optional Mode Line::.
 
    `M-x what-line' displays the current line number in the echo area.
-You can also see the current line number in the mode line; see *Note
+You can also see the current line number in the mode line; see *note
 Mode Line::; but if you narrow the buffer, the line number in the mode
 line is relative to the accessible portion (*note Narrowing::).  By
 contrast, `what-line' shows both the line number relative to the
@@ -3712,7 +3713,7 @@ Using `C-x C-x' a second time, if necessary, puts the mark at the new
 position with point back at its original position.
 
    For more facilities that allow you to go to previously set marks, see
-*Note Mark Ring::.
+*note Mark Ring::.
 
    There is no such character as `C-<SPC>' in ASCII; when you type
 <SPC> while holding down <CTRL> on a text terminal, what you get is the
@@ -4137,7 +4138,7 @@ fit your keyboard.  The uniform plan is that the ASCII <DEL> character
 deletes, and the ASCII <BS> (backspace) character asks for help (it is
 the same as `C-h').  If this is not right for your keyboard, such as if
 you find that the key which ought to delete backwards enters Help
-instead, see *Note DEL Does Not Delete::.
+instead, see *note DEL Does Not Delete::.
 
    The other delete commands are those which delete only whitespace
 characters: spaces, tabs and newlines.  `M-\'
@@ -5239,11 +5240,11 @@ with completion, and then set that face to use the specified color.
 Changing the colors of the `default' face also changes the foreground
 and background colors on all frames, both existing and those to be
 created in the future.  (You can also set foreground and background
-colors for the current frame only; see *Note Frame Parameters::.)
+colors for the current frame only; see *note Frame Parameters::.)
 
    If you want to alter the appearance of all Emacs frames, you need to
 customize the frame parameters in the variable `default-frame-alist';
-see *Note default-frame-alist: Creating Frames.
+see *note default-frame-alist: Creating Frames.
 
    Emacs can correctly display variable-width fonts, but Emacs commands
 that calculate width and indentation do not know how to calculate
@@ -5333,7 +5334,7 @@ own faces for this purpose.)
 
 `trailing-whitespace'
      The face for highlighting excess spaces and tabs at the end of a
-     line when `show-trailing-whitespace' is non-`nil'; see *Note
+     line when `show-trailing-whitespace' is non-`nil'; see *note
      Useless Whitespace::.
 
 `nobreak-space'
@@ -5764,7 +5765,7 @@ three dots do not appear at the end of a line that precedes hidden
 lines.  Then there is no visible indication of the hidden lines.  This
 variable becomes local automatically when set.
 
-   See also *Note Outline Mode:: for another way to hide part of the
+   See also *note Outline Mode:: for another way to hide part of the
 text in a buffer.
 
 
@@ -5991,7 +5992,7 @@ normally `nil'.
 forces truncation rather than continuation in any window less than the
 full width of the screen or frame, regardless of the value of
 `truncate-lines'.  For information about side-by-side windows, see
-*Note Split Window::.  See also *Note Display: (elisp)Display.
+*note Split Window::.  See also *note Display: (elisp)Display.
 
    If the variable `overflow-newline-into-fringe' is non-`nil' on a
 graphical display, then Emacs does not continue or truncate a line
@@ -6040,9 +6041,9 @@ or off, customize the group `cursor'.  You can also control the amount
 of time Emacs must remain busy before the busy indicator is displayed,
 by setting the variable `hourglass-delay'.
 
-   On graphical display, this variables specifies the vertical position
-of an overline above the text, including the height of the overline
-itself (1 pixel).  The default value is 2 pixels.
+   On graphical display, the variable `overline-margin' specifies the
+vertical position of an overline above the text, including the height
+of the overline itself (1 pixel).  The default value is 2 pixels.
 
    On graphical display, Emacs normally draws an underline at the
 baseline level of the font.  If `x-underline-at-descent-line' is
@@ -6475,7 +6476,7 @@ search, you can search without having to know them.
 with `C-s <RET> C-w'.  This is followed by the search string, which
 must always be terminated with <RET>.  Being nonincremental, this
 search does not start until the argument is terminated.  It works by
-constructing a regular expression and searching for that; see *Note
+constructing a regular expression and searching for that; see *note
 Regexp Search::.
 
    Use `C-r <RET> C-w' to do backward word search.

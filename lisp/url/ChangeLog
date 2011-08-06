@@ -1,3 +1,25 @@
+2008-09-05  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 22.3 released.
+
+2008-08-30  Glenn Morris  <rgm@gnu.org>
+
+	* url-http.el (url-https-expand-file-name): Resolve directly to
+	url-default-expander rather than via another alias.
+	(url-default-expander): Autoload an autoload.  (Bug#825).
+
+2008-04-04  Magnus Henoch  <mange@freemail.hu>
+
+	* url-http.el (url-http-chunked-encoding-after-change-function):
+	Remove superfluous CRLF at end of file.  (bug #42)
+
+2008-03-31  John Wiegley  <johnw@newartisans.com>
+
+	* url-auth.el (url-digest-auth): Changed an if so that the
+	interaction between the PROMPT and OVERWRITE arguments can no
+	longer result in the user being queried twice for the same login
+	and password information.
+
 2008-02-28  Teodor Zlatanov  <tzz@lifelogs.com>
 
 	* url-util.el (url-get-normalized-date): Simplify

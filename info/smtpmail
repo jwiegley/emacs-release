@@ -1,7 +1,7 @@
-This is ../info/smtpmail, produced by makeinfo version 4.8 from
+This is ../info/smtpmail, produced by makeinfo version 4.11 from
 smtpmail.texi.
 
-   Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Free Software
+Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -592,13 +592,12 @@ File: smtpmail,  Node: GNU Free Documentation License,  Next: Index,  Prev: Debu
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -835,14 +834,14 @@ File: smtpmail,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
 
 
 Tag Table:
-Node: Top1266
-Node: How Mail Works2909
-Node: Emacs Speaks SMTP5682
-Node: Authentication8640
-Node: Queued delivery12552
-Node: Server workarounds13811
-Node: Debugging14986
-Node: GNU Free Documentation License16123
-Node: Index38334
+Node: Top1264
+Node: How Mail Works2907
+Node: Emacs Speaks SMTP5680
+Node: Authentication8638
+Node: Queued delivery12550
+Node: Server workarounds13809
+Node: Debugging14984
+Node: GNU Free Documentation License16121
+Node: Index38320
 
 End Tag Table

@@ -948,7 +948,11 @@ the end of the document."
 		  (url-http-debug "Saw end of stream chunk!")
 		  (setq read-next-chunk nil)
 		  (url-display-percentage nil nil)
-		  (goto-char (match-end 1))
+		  ;; Every chunk, even the last 0-length one, is
+		  ;; terminated by CRLF.  Skip it.
+		  (when (looking-at "\r?\n")
+		    (url-http-debug "Removing terminator of last chunk")
+		    (delete-region (match-beginning 0) (match-end 0)))
 		  (if (re-search-forward "^\r*$" nil t)
 		      (url-http-debug "Saw end of trailers..."))
 		  (if (url-http-parse-headers)
@@ -1357,8 +1361,9 @@ p3p
 (defconst url-https-default-port 443 "Default HTTPS port.")
 ;;;###autoload
 (defconst url-https-asynchronous-p t "HTTPS retrievals are asynchronous.")
+;;;###autoload (autoload 'url-default-expander "url-expand")
 ;;;###autoload
-(defalias 'url-https-expand-file-name 'url-http-expand-file-name)
+(defalias 'url-https-expand-file-name 'url-default-expander)
 
 (defmacro url-https-create-secure-wrapper (method args)
   `(defun ,(intern (format (if method "url-https-%s" "url-https") method)) ,args

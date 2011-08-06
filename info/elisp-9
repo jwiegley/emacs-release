@@ -1,4 +1,5 @@
-This is ../info/elisp, produced by makeinfo version 4.8 from elisp.texi.
+This is ../info/elisp, produced by makeinfo version 4.11 from
+elisp.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -6,7 +7,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.2.
+corresponding to Emacs version 22.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
@@ -209,7 +210,7 @@ This chapter is about starting and getting out of Emacs, access to
 values in the operating system environment, and terminal input, output,
 and flow control.
 
-   *Note Building Emacs::, for related information.  See also *Note
+   *Note Building Emacs::, for related information.  See also *note
 Display::, for additional operating system status information
 pertaining to the terminal and the screen.
 
@@ -492,7 +493,7 @@ initializations for terminals that do not have their own libraries.
      You can use `term-setup-hook' to override the definitions made by a
      terminal-specific file.
 
-   See `window-setup-hook' in *Note Window Systems::, for a related
+   See `window-setup-hook' in *note Window Systems::, for a related
 feature.
 
 
@@ -553,7 +554,7 @@ and how you can customize them.
      arguments is in `command-line-args'.)
 
      The command-line arguments are parsed by the `command-line-1'
-     function in the `startup.el' file.  See also *Note Command Line
+     function in the `startup.el' file.  See also *note Command Line
      Arguments for Emacs Invocation: (emacs)Emacs Invocation.
 
  -- Variable: command-line-args
@@ -614,7 +615,7 @@ killing Emacs is `kill-emacs'.
 
      If EXIT-DATA is an integer, then it is used as the exit status of
      the Emacs process.  (This is useful primarily in batch operation;
-     see *Note Batch Mode::.)
+     see *note Batch Mode::.)
 
      If EXIT-DATA is a string, its contents are stuffed into the
      terminal input buffer so that the shell (or whatever program next
@@ -1624,8 +1625,8 @@ set up to repeat will subsequently run another time, one by one.
  -- Function: current-idle-time
      If Emacs is idle, this function returns the length of time Emacs
      has been idle, as a list of three integers: `(HIGH LOW MICROSEC)'.
-     The integers HIGH and LOW combine to give the number of seconds
-     of idleness, which is HIGH * 2**16 + LOW.
+     The integers HIGH and LOW combine to give the number of seconds of
+     idleness, which is HIGH * 2**16 + LOW.
 
      The third element, MICROSEC, gives the microseconds since the
      start of the current second (or 0 for systems that return time with
@@ -1680,7 +1681,7 @@ File: elisp,  Node: Terminal Input,  Next: Terminal Output,  Prev: Idle Timers, 
 ====================
 
 This section describes functions and variables for recording or
-manipulating terminal input.  See *Note Display::, for related
+manipulating terminal input.  See *note Display::, for related
 functions.
 
 * Menu:
@@ -1844,7 +1845,7 @@ than optimal.  To fix the problem, set `baud-rate'.
      You close the termscript file by calling this function with an
      argument of `nil'.
 
-     See also `open-dribble-file' in *Note Recording Input::.
+     See also `open-dribble-file' in *note Recording Input::.
 
           (open-termscript "../junk/termscript")
                => nil
@@ -2021,7 +2022,7 @@ Appendix A Emacs 21 Antinews
 
 For those users who live backwards in time, here is information about
 downgrading to Emacs version 21.4.  We hope you will enjoy the greater
-simplicity that results from the absence of many Emacs 22.2 features.
+simplicity that results from the absence of many Emacs 22.3 features.
 
 A.1 Old Lisp Features in Emacs 21
 =================================
@@ -2600,13 +2601,12 @@ Appendix B GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -6006,7 +6006,7 @@ handled.
      `"Scan error"'
      This happens when certain syntax-parsing functions find invalid
      syntax or mismatched parentheses.
-     *Note List Motion::, and *Note Parsing Expressions::.
+     *Note List Motion::, and *note Parsing Expressions::.
 
 `search-failed'
      `"Search failed"'
@@ -6171,7 +6171,7 @@ variables will not be listed here.
      *Note Desktop Save Mode::.
 
 `enable-multibyte-characters'
-     *Note Text Representations::.
+     *note Text Representations::.
 
 `fill-column'
      *Note Margins::.

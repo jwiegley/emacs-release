@@ -1,6 +1,6 @@
-This is ../info/mh-e, produced by makeinfo version 4.8 from mh-e.texi.
+This is ../info/mh-e, produced by makeinfo version 4.11 from mh-e.texi.
 
-   This is version 8.0.3 of `The MH-E Manual', last updated 2006-11-12.
+This is version 8.0.3 of `The MH-E Manual', last updated 2006-11-12.
 
    Copyright (C) 1995, 2001, 2002, 2003, 2005, 2006, 2007, 2008 Free
 Software Foundation, Inc.
@@ -180,13 +180,13 @@ them.
 
    The MH-E package is distributed with GNU Emacs(1), so you shouldn't
 have to do anything special to use it. This manual covers MH-E version
-8.0.3. To help you decide which version you have, see *Note Getting
+8.0.3. To help you decide which version you have, see *note Getting
 Started::.
 
    If you don't already use GNU Emacs but want to learn more, you can
 read an online tutorial by starting GNU Emacs and typing `C-h t'
-(`help-with-tutorial'). (To learn about this notation, see *Note
-Conventions::.) If you want to take the plunge, consult the *Note GNU
+(`help-with-tutorial'). (To learn about this notation, see *note
+Conventions::.) If you want to take the plunge, consult the *note GNU
 Emacs Manual: (emacs)top, from the Free Software Foundation.
 
    If more information is needed, you can go to the Unix manual pages of
@@ -296,7 +296,7 @@ of your MH-E buffers. Use the command `M-x customize-face' to do this.
 Manual'.
 
    Commands often offer "hooks" which enable you to extend or modify
-the way a command works.  *Note Hooks: (emacs)Hooks, in `The GNU Emacs
+the way a command works.  *note Hooks: (emacs)Hooks, in `The GNU Emacs
 Manual' for a description about "normal hooks" and "abnormal hooks".
 MH-E uses normal hooks in nearly all cases, so you can assume that we
 are talking about normal hooks unless we explicitly mention that a hook
@@ -708,15 +708,15 @@ find out how you can:
 
    * Read HTML messages (*note HTML::).
 
-   * Use aliases and identities (see *Note Aliases::, *note
+   * Use aliases and identities (see *note Aliases::, *note
      Identities::).
 
-   * Create different views of your mail (see *Note Threading::, *note
+   * Create different views of your mail (see *note Threading::, *note
      Limits::).
 
    * Deal with junk mail (*note Junk::).
 
-   * Handle signed and encrypted messages (see *Note Reading PGP::,
+   * Handle signed and encrypted messages (see *note Reading PGP::,
      *note Sending PGP::).
 
    * Process mail that was sent with `shar' or `uuencode' (*note Files
@@ -724,8 +724,8 @@ find out how you can:
 
    * Use sequences conveniently (*note Sequences::).
 
-   * Use the speedbar, tool bar, and menu bar (see *Note Speedbar::,
-     see *Note Tool Bar::, *note Menu Bar::).
+   * Use the speedbar, tool bar, and menu bar (see *note Speedbar::,
+     see *note Tool Bar::, *note Menu Bar::).
 
    * Show header fields in different fonts (*note Reading Mail::).
 
@@ -757,7 +757,7 @@ read this manual via Info. The online help is quite good; try running
 `C-h C-h'. This brings up a list of available help topics, one of which
 displays the documentation for a given key (like `C-h k C-n'). Another
 useful help feature is to view the manual section that describes a
-given key (such as `C-h K i'). In addition, review *Note Conventions::,
+given key (such as `C-h K i'). In addition, review *note Conventions::,
 if any of the GNU Emacs conventions are strange to you.
 
    In addition to all of the commands, it is also possible to
@@ -817,7 +817,7 @@ mh-lpr-command-format <RET>'. In the buffer that appears, modify the
 string to the right of the variable. For example, you may change the
 `lpr' command with `nenscript -G -r -2 -i'%s''. Then use the `State'
 combo box and select `Save for Future Sessions'. To read more about
-`mh-lpr-command-format', see *Note Printing::.
+`mh-lpr-command-format', see *note Printing::.
 
    Options can also hold boolean values. In Emacs Lisp, the boolean
 values are `nil', which means false, and `t', which means true. The
@@ -1075,7 +1075,7 @@ summaries of each incorporated message. You can perform most MH
 commands on these messages via one- or two-letter commands in either
 the MH-Folder or MH-Show buffers or by using the `Message' menu.  See
 `scan'(1) for a description of the contents of the scan lines, and see
-the Figure in *Note Reading Mail Tour::, for an example.
+the Figure in *note Reading Mail Tour::, for an example.
 
 `?'
      Display cheat sheet for the MH-E commands (`mh-help').  
@@ -1676,8 +1676,8 @@ first moves to the next button, wrapping to the beginning of the
 message if necessary. You can also provide a numeric prefix argument
 (as in `4 K i') to view the attachment labeled with that number.
 
-   For additional information on buttons, see *Note Article Buttons:
-(gnus)Article Buttons, and *Note MIME Commands: (gnus)MIME Commands.
+   For additional information on buttons, see *note Article Buttons:
+(gnus)Article Buttons, and *note MIME Commands: (gnus)MIME Commands.
 
    ---------- Footnotes ----------
 
@@ -1708,7 +1708,7 @@ you'll see a button like this:
 
      [1. text/html; foo.html]...
 
-   To see how to read the contents of this body part, see *Note Viewing
+   To see how to read the contents of this body part, see *note Viewing
 Attachments::.
 
    The browser that MH-E uses is determined by the option
@@ -1872,7 +1872,7 @@ passphrase to decrypt the message. You should see something like this:
      [[PGP Encrypted Part:Failed]]
 
    You can read the contents of this button using the methods described
-in *Note Viewing Attachments::. If the message were corrupted, you'd see
+in *note Viewing Attachments::. If the message were corrupted, you'd see
 this:
 
      [[PGP Encrypted Part:Failed]
@@ -2705,7 +2705,7 @@ Here's an example of how you would use this hook.
 
      Prepare draft for editing via mh-letter-mode-hook
 
-   The function, `add-enriched-text' is defined in the example in *Note
+   The function, `add-enriched-text' is defined in the example in *note
 Adding Attachments::.
 
    The second hook, a function really, is `mh-compose-letter-function'.
@@ -3868,7 +3868,7 @@ Composing::. This behavior can be controlled with the option
 Don't Warn If No Alias', `Flash and Warn If No Alias', and `Don't Flash
 Nor Warn If No Alias'.
 
-   For another way to verify the alias expansion, see *Note Checking
+   For another way to verify the alias expansion, see *note Checking
 Recipients::.
 
 Loading Aliases
@@ -5390,7 +5390,7 @@ to obtain a list of these variables. You will also have to call
 Emacs start with 0). Note that unlike most of the user options
 described in this manual, these are variables and must be set with
 `setq' instead of in a customization buffer. For help with regular
-expressions, see *Note Syntax of Regular Expressions: (emacs)Regexps.
+expressions, see *note Syntax of Regular Expressions: (emacs)Regexps.
 
    The first variable has to do with pruning out garbage.
 
@@ -6277,13 +6277,12 @@ Appendix E GNU FREE DOCUMENTATION LICENSE
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications",
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor

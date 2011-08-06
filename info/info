@@ -1,6 +1,6 @@
-This is ../info/info, produced by makeinfo version 4.8 from info.texi.
+This is ../info/info, produced by makeinfo version 4.11 from info.texi.
 
-   This file describes how to use Info, the on-line, menu-driven GNU
+This file describes how to use Info, the on-line, menu-driven GNU
 documentation system.
 
    Copyright (C) 1989, 1992, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
@@ -743,7 +743,7 @@ File: info,  Node: Advanced,  Next: Expert Info,  Prev: Getting Started,  Up: To
 
 This chapter describes various advanced Info commands.  (If you are
 using a stand-alone Info reader, there are additional commands specific
-to it, which are documented in several chapters of *Note GNU Info:
+to it, which are documented in several chapters of *note GNU Info:
 (info-stnd)Top.)
 
    One advanced command useful with most of the others described here
@@ -853,7 +853,7 @@ File: info,  Node: Go to node,  Next: Choose menu subtopic,  Prev: Search Index,
 
 If you know a node's name, you can go there by typing `g', the name,
 and <RET>.  Thus, `gTop<RET>' would go to the node called `Top' in this
-file.  (This is equivalent to `t', see *Note Help-Int::.)  `gGo to
+file.  (This is equivalent to `t', see *note Help-Int::.)  `gGo to
 node<RET>' would come back here.
 
    Unlike `m', `g' does not allow the use of abbreviations.  But it
@@ -927,7 +927,7 @@ The following variables may modify the behavior of Info-mode in Emacs;
 you may wish to set one or several of these variables interactively, or
 in your init file.  *Note Examining and Setting Variables:
 (emacs)Examining.  The stand-alone Info reader program has its own set
-of variables, described in *Note Manipulating Variables:
+of variables, described in *note Manipulating Variables:
 (info-stnd)Variables.
 
 `Info-directory-list'
@@ -949,13 +949,12 @@ of variables, described in *Note Manipulating Variables:
 `Info-mode-hook'
      Hooks run when `Info-mode' is called.  By default, it contains the
      hook `turn-on-font-lock' which enables highlighting of Info files.
-     You can change how the highlighting looks by customizing the
-     faces `info-node', `info-xref', `info-xref-visited',
-     `info-header-xref', `info-header-node', `info-menu-header',
-     `info-menu-star', and `info-title-N' (where N is the level of the
-     section, a number between 1 and 4).  To customize a face, type
-     `M-x customize-face <RET> FACE <RET>', where FACE is one of the
-     face names listed here.
+     You can change how the highlighting looks by customizing the faces
+     `info-node', `info-xref', `info-xref-visited', `info-header-xref',
+     `info-header-node', `info-menu-header', `info-menu-star', and
+     `info-title-N' (where N is the level of the section, a number
+     between 1 and 4).  To customize a face, type `M-x customize-face
+     <RET> FACE <RET>', where FACE is one of the face names listed here.
 
 `Info-fontify-maximum-menu-size'
      Maximum size of menu to fontify if `font-lock-mode' is non-`nil'.
@@ -1215,7 +1214,7 @@ new users should do when they learn a new package.
 something quickly in a manual--that is, when you need to use a manual
 as a reference rather than as a tutorial.  We urge you to learn these
 search commands as well.  If you want to do that now, follow this cross
-reference to *Note Advanced::.
+reference to *note Advanced::.
 
    Yet another set of commands are meant for experienced users; you can
 find them by looking in the Directory node for documentation on Info.
@@ -1335,22 +1334,22 @@ topics discussed in this document.
 * Info-directory-list:                   Emacs Info Variables.
                                                               (line  13)
 * Info-enable-active-nodes:              Emacs Info Variables.
-                                                              (line  73)
+                                                              (line  72)
 * Info-exit:                             Help-Q.              (line   6)
 * Info-follow-reference:                 Help-Xref.           (line  12)
 * Info-fontify-maximum-menu-size:        Emacs Info Variables.
-                                                              (line  40)
+                                                              (line  39)
 * Info-fontify-visited-nodes:            Emacs Info Variables.
-                                                              (line  43)
+                                                              (line  42)
 * Info-goto-node:                        Go to node.          (line   6)
 * Info-hide-note-references:             Emacs Info Variables.
-                                                              (line  52)
+                                                              (line  51)
 * Info-history:                          Help-Int.            (line  45)
 * Info-history-back:                     Help-Int.            (line  26)
 * Info-history-forward:                  Help-Int.            (line  41)
 * Info-index:                            Search Index.        (line   6)
 * Info-isearch-search:                   Emacs Info Variables.
-                                                              (line  70)
+                                                              (line  69)
 * Info-menu:                             Help-M.              (line  85)
 * Info-mode-hook:                        Emacs Info Variables.
                                                               (line  29)
@@ -1359,7 +1358,7 @@ topics discussed in this document.
                                                               (line   6)
 * Info-scroll-down:                      Help-^L.             (line  15)
 * Info-scroll-prefer-subnodes:           Emacs Info Variables.
-                                                              (line  60)
+                                                              (line  59)
 * Info-scroll-up:                        Help-^L.             (line  15)
 * Info-search:                           Search Text.         (line  16)
 * Info-summary:                          Help-^L.             (line  74)
@@ -1367,7 +1366,7 @@ topics discussed in this document.
 * Info-top-node:                         Help-Int.            (line  59)
 * Info-up:                               Help-FOO.            (line  13)
 * Info-use-header-line:                  Emacs Info Variables.
-                                                              (line  47)
+                                                              (line  46)
 * Info-validate:                         Checking.            (line  17)
 * invisible text in Emacs:               Help-Inv.            (line  10)
 * isearch:                               Search Text.         (line  32)
@@ -1411,35 +1410,35 @@ topics discussed in this document.
 
 
 Tag Table:
-Node: Top1436
-Node: Getting Started2515
-Node: Help-Small-Screen3368
-Node: Help5322
-Node: Help-P6970
-Node: Help-^L8173
-Ref: Help-^L-Footnote-112704
-Node: Help-Inv13077
-Node: Help-]14756
-Node: Help-M16316
-Node: Help-FOO24869
-Node: Help-Xref25829
-Node: Help-Int29401
-Node: Advanced32406
-Node: Search Text33614
-Node: Search Index35615
-Node: Go to node37831
-Node: Choose menu subtopic38853
-Node: Create Info buffer40035
-Node: Emacs Info Variables41117
-Node: Expert Info44904
-Node: Add46253
-Ref: Add-Footnote-149250
-Node: Menus49503
-Node: Cross-refs52390
-Node: Help-Cross53161
-Node: Help-Q53825
-Node: Tags54978
-Node: Checking56489
-Node: Index57411
+Node: Top1434
+Node: Getting Started2513
+Node: Help-Small-Screen3366
+Node: Help5320
+Node: Help-P6968
+Node: Help-^L8171
+Ref: Help-^L-Footnote-112702
+Node: Help-Inv13075
+Node: Help-]14754
+Node: Help-M16314
+Node: Help-FOO24867
+Node: Help-Xref25827
+Node: Help-Int29399
+Node: Advanced32404
+Node: Search Text33612
+Node: Search Index35613
+Node: Go to node37829
+Node: Choose menu subtopic38851
+Node: Create Info buffer40033
+Node: Emacs Info Variables41115
+Node: Expert Info44897
+Node: Add46246
+Ref: Add-Footnote-149243
+Node: Menus49496
+Node: Cross-refs52383
+Node: Help-Cross53154
+Node: Help-Q53818
+Node: Tags54971
+Node: Checking56482
+Node: Index57404
 
 End Tag Table

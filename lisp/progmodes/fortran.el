@@ -360,7 +360,7 @@ program\\|subroutine\\)\\>[ \t]*\\(\\sw+\\)?"
            ;; Builtin operators.
            (concat "\\." (regexp-opt
                           '("and" "or" "not" "lt" "le" "eq" "ge"
-                            "gt" "ne" "true" "false")
+                            "gt" "ne" "eqv" "neqv" "true" "false")
                           'paren) "\\.")
            ;; do/goto keywords and targets, and goto tags.
            '("\\<\\(do\\|go *to\\)\\>[ \t]*\\([0-9]+\\)?"
@@ -1122,12 +1122,12 @@ Auto-indent does not happen if a numeric ARG is used."
 		 (fortran-check-end-prog-re)))
 	  (forward-line)
 	(beginning-of-line 2)
-	(catch 'ok
-	  (while (re-search-forward fortran-end-prog-re nil 'move)
-	    (if (fortran-check-end-prog-re)
-		(throw 'ok t))))
-	(goto-char (match-beginning 0))
-	(forward-line)))))
+	(when (catch 'ok
+                (while (re-search-forward fortran-end-prog-re nil 'move)
+                  (if (fortran-check-end-prog-re)
+                      (throw 'ok t))))
+          (goto-char (match-beginning 0))
+          (forward-line))))))
 
 (defun fortran-previous-statement ()
   "Move point to beginning of the previous Fortran statement.

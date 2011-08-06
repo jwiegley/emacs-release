@@ -1,7 +1,8 @@
-This is ../info/emacs, produced by makeinfo version 4.8 from emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.11 from
+emacs.texi.
 
-   This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 22.2.
+This is the Sixteenth edition of the `GNU Emacs Manual',
+updated for Emacs version 22.3.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
@@ -33,7 +34,7 @@ File: emacs,  Node: Regexps,  Next: Regexp Backslash,  Prev: Regexp Search,  Up:
 
 This manual describes regular expression features that users typically
 want to use.  There are additional features that are mainly used in
-Lisp programs; see *Note Regular Expressions: (elisp)Regular
+Lisp programs; see *note Regular Expressions: (elisp)Regular
 Expressions.
 
    Regular expressions have a syntax in which a few characters are
@@ -722,7 +723,7 @@ exits the `query-replace' and then kills to end of line.
 minibuffer to read its arguments.  *Note C-x ESC ESC: Repetition.
 
    *Note Operating on Files::, for the Dired `Q' command which performs
-query replace on selected files.  See also *Note Transforming File
+query replace on selected files.  See also *note Transforming File
 Names::, for Dired commands to rename, copy, or link files by replacing
 regexp matches in file names.
 
@@ -755,7 +756,7 @@ of the buffer, or on the active region in Transient Mark mode.
      select it.
 
      After using `M-x occur', you can use `next-error' to visit the
-     occurrences found, one by one.  *Note Compilation Mode::.
+     occurrences found, one by one.  *note Compilation Mode::.
 
 `M-x list-matching-lines'
      Synonym for `M-x occur'.
@@ -1793,7 +1794,7 @@ file name to use for them.)  You enter the file name using the
 minibuffer (*note Minibuffer::).  "Completion" is available (*note
 Completion::) to make it easier to specify long file names.  When
 completing file names, Emacs ignores those whose file-name extensions
-appear in the variable `completion-ignored-extensions'; see *Note
+appear in the variable `completion-ignored-extensions'; see *note
 Completion Options::.
 
    For most operations, there is a "default file name" which is used if
@@ -1876,7 +1877,7 @@ Name Coding::.
 
    (1) On MS-Windows and MS-DOS systems, where a user doesn't have a
 home directory, Emacs replaces `~/' with the value of the environment
-variable `HOME'; see *Note General Variables::.  On these systems, the
+variable `HOME'; see *note General Variables::.  On these systems, the
 `~USER-ID/' construct is supported only for the current user, i.e.,
 only if USER-ID is the current user's login name.
 
@@ -1943,7 +1944,7 @@ the command with the name of the file you wish to visit, terminated by a
 defaulting and completion in the standard manner (*note File Names::).
 While in the minibuffer, you can abort `C-x C-f' by typing `C-g'.
 File-name completion ignores certain file names; for more about this,
-see *Note Completion Options::.
+see *note Completion Options::.
 
    Your confirmation that `C-x C-f' has completed successfully is the
 appearance of new text on the screen and a new buffer name in the mode
@@ -1973,13 +1974,13 @@ bar) use the toolkit's standard File Selection dialog instead of
 prompting for the file name in the minibuffer.  On Unix and GNU/Linux
 platforms, Emacs does that when built with GTK, LessTif, and Motif
 toolkits; on MS-Windows and Mac, the GUI version does that by default.
-For information on how to customize this, see *Note Dialog Boxes::.
+For information on how to customize this, see *note Dialog Boxes::.
 
    Secondly, Emacs supports "drag and drop"; dropping a file into an
 ordinary Emacs window visits the file using that window.  However,
 dropping a file into a window displaying a Dired buffer moves or copies
-the file into the displayed directory.  For details, see *Note Drag and
-Drop::, and *Note Misc Dired Features::.
+the file into the displayed directory.  For details, see *note Drag and
+Drop::, and *note Misc Dired Features::.
 
    What if you want to create a new file?  Just visit it.  Emacs
 displays `(New file)' in the echo area, but in other respects behaves
@@ -3433,7 +3434,7 @@ revision control log.
    In the `*VC-Log*' buffer, `C-c C-f' (`M-x log-edit-show-files')
 shows the list of files to be committed in case you need to check that.
 (This can be a list of more than one file if you use VC Dired mode or
-PCL-CVS.  *Note VC Dired Mode::, and *Note About PCL-CVS: (pcl-cvs)Top.)
+PCL-CVS.  *Note VC Dired Mode::, and *note About PCL-CVS: (pcl-cvs)Top.)
 
    When you have finished editing the log message, type `C-c C-c' to
 exit the buffer and commit the change.
@@ -3834,8 +3835,8 @@ current line.
 files, so that you can lock or check in several files at once.  If it
 operates on more than one file, it handles each file according to its
 current state; thus, it might lock one file, but check in another file.
-This could be confusing; it is up to you to avoid confusing behavior
-by marking a set of files that are in a similar state.  If no files are
+This could be confusing; it is up to you to avoid confusing behavior by
+marking a set of files that are in a similar state.  If no files are
 marked, `v v' operates on the file in the current line.
 
    If any files call for check-in, `v v' reads a single log entry, then
@@ -4522,7 +4523,7 @@ this variable to `nil'.
 file registered in more than one system (*note Local Version
 Control::), VC uses the system that comes first in
 `vc-handled-backends' by default.  The order is also significant when
-you register a file for the first time, see *Note Registering::, for
+you register a file for the first time, see *note Registering::, for
 details.
 
 * Menu:
@@ -4694,7 +4695,7 @@ is a list of all the files in a directory.  Emacs provides commands to
 create and delete directories, and to make directory listings in brief
 format (file names only) and verbose format (sizes, dates, and authors
 included).  Emacs also includes a directory browser feature called
-Dired; see *Note Dired::.
+Dired; see *note Dired::.
 
 `C-x C-d DIR-OR-PATTERN <RET>'
      Display a brief directory listing (`list-directory').
@@ -4757,7 +4758,7 @@ compares it with the source file that it is a backup of.
 
    The command `M-x compare-windows' compares the text in the current
 window with that in the next window.  (For more information about
-windows in Emacs, *Note Windows::.)  Comparison starts at point in each
+windows in Emacs, *note Windows::.)  Comparison starts at point in each
 window, after pushing each initial point value on the mark ring in its
 respective buffer.  Then it moves point forward in each window, one
 character at a time, until it reaches characters that don't match.
@@ -4899,7 +4900,7 @@ the contents of the region into the specified file.  `M-x
 append-to-file' adds the text of the region to the end of the specified
 file.  *Note Accumulating Text::.  The variable
 `write-region-inhibit-fsync' applies to these commands, as well as
-saving files; see *Note Customize Save::.
+saving files; see *note Customize Save::.
 
    `M-x delete-file' deletes the specified file, like the `rm' command
 in the shell.  If you are deleting many files in one directory, it may
@@ -5119,7 +5120,7 @@ file whose name is `~hack' in directory `/tmp'.
    Quoting with `/:' is also a way to enter in the minibuffer a file
 name that contains `$'.  In order for this to work, the `/:' must be at
 the beginning of the minibuffer contents.  (You can also double each
-`$'; see *Note File Names with $::.)
+`$'; see *note File Names with $::.)
 
    You can also quote wildcard characters with `/:', for visiting.  For
 example, `/:/tmp/foo*bar' visits the file `/tmp/foo*bar'.
@@ -5350,7 +5351,7 @@ configuration, set the variable `even-window-heights' to `nil'.
    You can control how certain buffers are handled by these commands by
 customizing the variables `special-display-buffer-names',
 `special-display-regexps', `same-window-buffer-names', and
-`same-window-regexps'.  See *Note Force Same Window::, and *Note
+`same-window-regexps'.  See *note Force Same Window::, and *note
 Special Buffer Frames::, for more about these variables.  In addition,
 if the value of `display-buffer-reuse-frames' is non-`nil', and the
 buffer you want to switch to is already displayed in some frame, Emacs
@@ -5667,7 +5668,7 @@ already requested, or you can kill it, or pay no further attention to
 it.
 
    The list in the `*Buffer List*' buffer looks exactly like the buffer
-list described in *Note List Buffers::, because they really are the
+list described in *note List Buffers::, because they really are the
 same.  The only difference between `buffer-menu' and `list-buffers' is
 that `buffer-menu' switches to the `*Buffer List*' buffer in the
 selected window; `list-buffers' displays the same buffer in another

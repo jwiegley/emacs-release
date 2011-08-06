@@ -1,4 +1,5 @@
-This is ../info/elisp, produced by makeinfo version 4.8 from elisp.texi.
+This is ../info/elisp, produced by makeinfo version 4.11 from
+elisp.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -6,7 +7,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.2.
+corresponding to Emacs version 22.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
@@ -56,7 +57,7 @@ arrays.
           (aref "abcdefg" 1)
                => 98           ; `b' is ASCII code 98.
 
-     See also the function `elt', in *Note Sequence Functions::.
+     See also the function `elt', in *note Sequence Functions::.
 
  -- Function: aset array index object
      This function sets the INDEXth element of ARRAY to be OBJECT.  It
@@ -201,9 +202,9 @@ Here are some functions that relate to vectors:
      Formatting Strings::) or `number-to-string' (*note String
      Conversion::).
 
-     For other concatenation functions, see `mapconcat' in *Note
-     Mapping Functions::, `concat' in *Note Creating Strings::, and
-     `append' in *Note Building Lists::.
+     For other concatenation functions, see `mapconcat' in *note
+     Mapping Functions::, `concat' in *note Creating Strings::, and
+     `append' in *note Building Lists::.
 
    The `append' function also provides a way to convert a vector into a
 list with the same elements:
@@ -714,8 +715,8 @@ File: elisp,  Node: Symbols,  Next: Evaluation,  Prev: Hash Tables,  Up: Top
 A "symbol" is an object with a unique name.  This chapter describes
 symbols, their components, their property lists, and how they are
 created and interned.  Separate chapters describe the use of symbols as
-variables and as function names; see *Note Variables::, and *Note
-Functions::.  For the precise read syntax for symbols, see *Note Symbol
+variables and as function names; see *note Variables::, and *note
+Functions::.  For the precise read syntax for symbols, see *note Symbol
 Type::.
 
    You can test whether an arbitrary Lisp object is a symbol with
@@ -744,14 +745,14 @@ another object:
 
 Print name
      The "print name cell" holds a string that names the symbol for
-     reading and printing.  See `symbol-name' in *Note Creating
+     reading and printing.  See `symbol-name' in *note Creating
      Symbols::.
 
 Value
      The "value cell" holds the current value of the symbol as a
      variable.  When a symbol is used as a form, the value of the form
      is the contents of the symbol's value cell.  See `symbol-value' in
-     *Note Accessing Variables::.
+     *note Accessing Variables::.
 
 Function
      The "function cell" holds the function definition of the symbol.
@@ -760,11 +761,11 @@ Function
      for a keymap or a keyboard macro, for editor command execution.
      Because each symbol has separate value and function cells,
      variables names and function names do not conflict.  See
-     `symbol-function' in *Note Function Cells::.
+     `symbol-function' in *note Function Cells::.
 
 Property list
      The "property list cell" holds the property list of the symbol.
-     See `symbol-plist' in *Note Property Lists::.
+     See `symbol-plist' in *note Property Lists::.
 
    The print name cell always holds a string, and cannot be changed.
 The other three cells can be set individually to any specified Lisp
@@ -775,7 +776,7 @@ Since symbols are represented textually by their names, it is important
 not to have two symbols with the same name.  The Lisp reader ensures
 this: every time it reads a symbol, it looks for an existing symbol with
 the specified name before it creates a new one.  (In GNU Emacs Lisp,
-this lookup uses a hashing algorithm and an obarray; see *Note Creating
+this lookup uses a hashing algorithm and an obarray; see *note Creating
 Symbols::.)
 
    The value cell holds the symbol's value as a variable (*note
@@ -826,7 +827,7 @@ The property list cell contains the list `(variable-documentation
 29529)' which tells the documentation functions where to find the
 documentation string for the variable `buffer-file-name' in the
 `DOC-VERSION' file.  (29529 is the offset from the beginning of the
-`DOC-VERSION' file to where that documentation string begins--see *Note
+`DOC-VERSION' file to where that documentation string begins--see *note
 Documentation Basics::.)  The function cell contains the function for
 returning the name of the file.  `buffer-file-name' names a primitive
 function, which has no read syntax and prints in hash notation (*note
@@ -851,7 +852,7 @@ supply an initial value for the variable, plus documentation for the
 variable.
 
    `defvar' and `defconst' are special forms that define a symbol as a
-global variable.  They are documented in detail in *Note Defining
+global variable.  They are documented in detail in *note Defining
 Variables::.  For defining user option variables that can be
 customized, use `defcustom' (*note Customization::).
 
@@ -900,7 +901,7 @@ obarray is a "bucket" which holds all the symbols with a given hash
 code; to look for a given name, it is sufficient to look through all
 the symbols in the bucket for that name's hash code.  (The same idea is
 used for general Emacs hash tables, but they are a different data type;
-see *Note Hash Tables::.)
+see *note Hash Tables::.)
 
    If a symbol with the desired name is found, the reader uses that
 symbol.  If the obarray does not contain a symbol with that name, the
@@ -1038,7 +1039,7 @@ not a string, or if the obarray is not a vector.
           count
                => 1871
 
-     See `documentation' in *Note Accessing Documentation::, for another
+     See `documentation' in *note Accessing Documentation::, for another
      example using `mapatoms'.
 
  -- Function: unintern symbol &optional obarray
@@ -1063,10 +1064,10 @@ File: elisp,  Node: Property Lists,  Prev: Creating Symbols,  Up: Symbols
 A "property list" ("plist" for short) is a list of paired elements
 stored in the property list cell of a symbol.  Each of the pairs
 associates a property name (usually a symbol) with a property or value.
-Property lists are generally used to record information about a
-symbol, such as its documentation as a variable, the name of the file
-where it was defined, or perhaps even the grammatical class of the
-symbol (representing a word) in a language-understanding system.
+Property lists are generally used to record information about a symbol,
+such as its documentation as a variable, the name of the file where it
+was defined, or perhaps even the grammatical class of the symbol
+(representing a word) in a language-understanding system.
 
    Character positions in a string or buffer can also have property
 lists.  *Note Text Properties::.
@@ -1188,8 +1189,8 @@ stored in places other than symbols:
                => 4
           (plist-get '(foo 4 bad) 'foo)
                => 4
-          (plist-get '(foo 4 bad) 'bar)
-               => `wrong-type-argument' error
+          (plist-get '(foo 4 bad) 'bad)
+               => `nil'
 
      It accepts a malformed PLIST argument and always returns `nil' if
      PROPERTY is not found in the PLIST.  For example,
@@ -1398,7 +1399,7 @@ File: elisp,  Node: Symbol Forms,  Next: Classifying Lists,  Prev: Self-Evaluati
 When a symbol is evaluated, it is treated as a variable.  The result is
 the variable's value, if it has one.  If it has none (if its value cell
 is void), an error is signaled.  For more information on the use of
-variables, see *Note Variables::.
+variables, see *note Variables::.
 
    In the following example, we set the value of a symbol with `setq'.
 Then we evaluate the symbol, and get back the value that `setq' stored.
@@ -2864,7 +2865,7 @@ The `unwind-protect' construct is essential whenever you temporarily
 put a data structure in an inconsistent state; it permits you to make
 the data consistent again in the event of an error or throw.  (Another
 more specific cleanup construct that is used only for changes in buffer
-contents is the atomic change group; *Note Atomic Changes::.)
+contents is the atomic change group; *note Atomic Changes::.)
 
  -- Special Form: unwind-protect body-form cleanup-forms...
      `unwind-protect' executes BODY-FORM with a guarantee that the
@@ -3081,7 +3082,7 @@ the global value is kept.
 example, if there are nested `let' forms that bind it).  In such a
 case, the most recently created local binding that still exists is the
 "current binding" of the variable.  (This rule is called "dynamic
-scoping"; see *Note Variable Scoping::.)  If there are no local
+scoping"; see *note Variable Scoping::.)  If there are no local
 bindings, the variable's global binding is its current binding.  We
 sometimes call the current binding the "most-local existing binding",
 for emphasis.  Ordinary evaluation of a symbol always returns the value
@@ -3449,7 +3450,7 @@ complete list:
      The value specifies options for a command.
 
    When you define a variable, always consider whether you should mark
-it as "risky"; see *Note File Local Variables::.
+it as "risky"; see *note File Local Variables::.
 
    When defining and initializing a variable that holds a complicated
 value (such as a keymap with bindings in it), it's best to put the
@@ -3838,7 +3839,7 @@ additional, unusual kinds of variable binding, such as "buffer-local"
 bindings, which apply only in one buffer.  Having different values for
 a variable in different buffers is an important customization method.
 (A few variables have bindings that are local to each terminal; see
-*Note Multiple Displays::.)
+*note Multiple Displays::.)
 
 * Menu:
 
@@ -4508,7 +4509,7 @@ function-like objects.
      because it is fundamental, because it provides a low-level
      interface to operating system services, or because it needs to run
      fast.  Primitives can be modified or added only by changing the C
-     sources and recompiling the editor.  See *Note Writing Emacs
+     sources and recompiling the editor.  See *note Writing Emacs
      Primitives::.
 
 "lambda expression"
@@ -4520,7 +4521,7 @@ function-like objects.
      not evaluate all of its arguments in the usual way.  It may
      evaluate only some of the arguments, or may evaluate them in an
      unusual order, or several times.  Many special forms are described
-     in *Note Control Structures::.
+     in *note Control Structures::.
 
 "macro"
      A "macro" is a construct defined in Lisp by the programmer.  It
@@ -4855,7 +4856,7 @@ function, equivalent to the list or subr-object that its function cell
 refers to.  The contents of the function cell are also called the
 symbol's "function definition".  The procedure of using a symbol's
 function definition in place of the symbol is called "symbol function
-indirection"; see *Note Function Indirection::.
+indirection"; see *note Function Indirection::.
 
    In practice, nearly all functions are given names in this way and
 referred to through their names.  For example, the symbol `car' works
@@ -5062,7 +5063,7 @@ how many arguments to pass, use `apply'.
           (apply 'append '((a b c) nil (x y z) nil))
                => (a b c x y z)
 
-     For an interesting example of using `apply', see *Note Definition
+     For an interesting example of using `apply', see *note Definition
      of mapcar::.
 
    It is common for Lisp functions to accept functions as arguments or
@@ -5105,8 +5106,8 @@ use the function `map-char-table' (*note Char-Tables::).
 
      The argument SEQUENCE can be any kind of sequence except a
      char-table; that is, a list, a vector, a bool-vector, or a string.
-     The result is always a list.  The length of the result is the
-     same as the length of SEQUENCE.  For example:
+     The result is always a list.  The length of the result is the same
+     as the length of SEQUENCE.  For example:
 
           (mapcar 'car '((a b) (c d) (e f)))
                => (a c e)
@@ -5256,7 +5257,7 @@ is equivalent to
      In this, it is equivalent to `quote'.  However, it serves as a
      note to the Emacs Lisp compiler that FUNCTION-OBJECT is intended
      to be used only as a function, and therefore can safely be
-     compiled.  Contrast this with `quote', in *Note Quoting::.
+     compiled.  Contrast this with `quote', in *note Quoting::.
 
    *Note describe-symbols example::, for a realistic example using
 `function' and an anonymous function.
@@ -5315,7 +5316,7 @@ can make it void once more using `fmakunbound'.
      This function makes SYMBOL's function cell void, so that a
      subsequent attempt to access this cell will cause a
      `void-function' error.  It returns SYMBOL.  (See also
-     `makunbound', in *Note Void Variables::.)
+     `makunbound', in *note Void Variables::.)
 
           (defun foo (x) x)
                => foo
@@ -5337,7 +5338,7 @@ can make it void once more using `fmakunbound'.
         * Copying one symbol's function definition to another--in other
           words, making an alternate name for a function.  (If you
           think of this as the definition of the new name, you should
-          use `defalias' instead of `fset'; see *Note Definition of
+          use `defalias' instead of `fset'; see *note Definition of
           defalias::.)
 
         * Giving a symbol a function definition that is not a list and
@@ -5498,58 +5499,58 @@ calling and function definitions.  They are documented elsewhere, but
 we provide cross references here.
 
 `apply'
-     See *Note Calling Functions::.
+     See *note Calling Functions::.
 
 `autoload'
-     See *Note Autoload::.
+     See *note Autoload::.
 
 `call-interactively'
-     See *Note Interactive Call::.
+     See *note Interactive Call::.
 
 `called-interactively-p'
-     See *Note Distinguish Interactive::.
+     See *note Distinguish Interactive::.
 
 `commandp'
-     See *Note Interactive Call::.
+     See *note Interactive Call::.
 
 `documentation'
-     See *Note Accessing Documentation::.
+     See *note Accessing Documentation::.
 
 `eval'
-     See *Note Eval::.
+     See *note Eval::.
 
 `funcall'
-     See *Note Calling Functions::.
+     See *note Calling Functions::.
 
 `function'
-     See *Note Anonymous Functions::.
+     See *note Anonymous Functions::.
 
 `ignore'
-     See *Note Calling Functions::.
+     See *note Calling Functions::.
 
 `indirect-function'
-     See *Note Function Indirection::.
+     See *note Function Indirection::.
 
 `interactive'
-     See *Note Using Interactive::.
+     See *note Using Interactive::.
 
 `interactive-p'
-     See *Note Distinguish Interactive::.
+     See *note Distinguish Interactive::.
 
 `mapatoms'
-     See *Note Creating Symbols::.
+     See *note Creating Symbols::.
 
 `mapcar'
-     See *Note Mapping Functions::.
+     See *note Mapping Functions::.
 
 `map-char-table'
-     See *Note Char-Tables::.
+     See *note Char-Tables::.
 
 `mapconcat'
-     See *Note Mapping Functions::.
+     See *note Mapping Functions::.
 
 `undefined'
-     See *Note Functions for Key Lookup::.
+     See *note Functions for Key Lookup::.
 
 
 File: elisp,  Node: Macros,  Next: Customization,  Prev: Functions,  Up: Top
@@ -6645,7 +6646,7 @@ example just `string' as a customization type is equivalent to
 * Type Keywords::
 * Defining New Types::
 
-   All customization types are implemented as widgets; see *Note
+   All customization types are implemented as widgets; see *note
 Introduction: (widget)Top, for details.
 
 
@@ -6705,7 +6706,7 @@ This section describes all the simple customization types.
      that is obsolete usage).  This customization type is used for hook
      variables.  You can use the `:options' keyword in a hook variable's
      `defcustom' to specify a list of functions recommended for use in
-     the hook; see *Note Variable Definitions::.
+     the hook; see *note Variable Definitions::.
 
 `alist'
      The value must be a list of cons-cells, the CAR of each cell
@@ -6723,7 +6724,7 @@ This section describes all the simple customization types.
 
      The user can add any key matching the specified key type, but you
      can give some keys a preferential treatment by specifying them
-     with the `:options' (see *Note Variable Definitions::).  The
+     with the `:options' (see *note Variable Definitions::).  The
      specified keys will always be shown in the customize buffer
      (together with a suitable value), with a checkbox to include or
      exclude or disable the key/value pair from the alist.  The user

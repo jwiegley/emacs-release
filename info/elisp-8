@@ -1,4 +1,5 @@
-This is ../info/elisp, produced by makeinfo version 4.8 from elisp.texi.
+This is ../info/elisp, produced by makeinfo version 4.11 from
+elisp.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -6,7 +7,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.2.
+corresponding to Emacs version 22.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
@@ -109,7 +110,7 @@ much like text written into a file.  *Note Coding Systems::.
      decoding output is `undecided', meaning deduce the encoding from
      the actual data, then redisplay sometimes cannot continue once
      non-ASCII characters are encountered.  There are fundamental
-     reasons why it is hard to fix this; see *Note Output from
+     reasons why it is hard to fix this; see *note Output from
      Processes::.)
 
      Otherwise the function `call-process' does no redisplay, and the
@@ -153,9 +154,9 @@ much like text written into a file.  *Note Coding Systems::.
  -- Function: process-file program &optional infile buffer display
           &rest args
      This function processes files synchronously in a separate process.
-     It is similar to `call-process' but may invoke a file handler
-     based on the value of the variable `default-directory'.  The
-     current working directory of the subprocess is `default-directory'.
+     It is similar to `call-process' but may invoke a file handler based
+     on the value of the variable `default-directory'.  The current
+     working directory of the subprocess is `default-directory'.
 
      The arguments are handled in almost the same way as for
      `call-process', with the following differences:
@@ -255,7 +256,7 @@ much like text written into a file.  *Note Coding Systems::.
 
    ---------- Footnotes ----------
 
-   (1) On other systems, Emacs uses a Lisp emulation of `ls'; see *Note
+   (1) On other systems, Emacs uses a Lisp emulation of `ls'; see *note
 Contents of Directories::.
 
 
@@ -506,7 +507,7 @@ is provided for interactive use.
  -- Function: process-tty-name process
      This function returns the terminal name that PROCESS is using for
      its communication with Emacs--or `nil' if it is using pipes
-     instead of a terminal (see `process-connection-type' in *Note
+     instead of a terminal (see `process-connection-type' in *note
      Asynchronous Processes::).
 
  -- Function: process-coding-system process
@@ -662,7 +663,7 @@ shell, this is the shell itself.
 communicate with the subprocess, because the operating system does not
 support the distinction in the case of pipes.  For the same reason,
 job-control shells won't work when a pipe is used.  See
-`process-connection-type' in *Note Asynchronous Processes::.
+`process-connection-type' in *note Asynchronous Processes::.
 
  -- Function: interrupt-process &optional process current-group
      This function interrupts the process PROCESS by sending the signal
@@ -2239,9 +2240,9 @@ input.
 
    `redisplay' with no argument tries immediately to redisplay, but has
 no effect on the usual rules for what parts of the screen to redisplay.
-By contrast, the following function adds certain windows to the
-pending redisplay work (as if their contents had completely changed),
-but doesn't immediately try to do any redisplay work.
+By contrast, the following function adds certain windows to the pending
+redisplay work (as if their contents had completely changed), but
+doesn't immediately try to do any redisplay work.
 
  -- Function: force-window-update &optional object
      This function forces some or all windows to be updated on next
@@ -2276,7 +2277,7 @@ binding `redisplay-dont-pause' to a non-`nil' value.
      redisplay, and redisplay cannot be preempted by input.
 
      This variable is only obeyed on graphical terminals.  For text
-     terminals, see *Note Terminal Output::.
+     terminals, see *note Terminal Output::.
 
 
 File: elisp,  Node: Truncation,  Next: The Echo Area,  Prev: Forcing Redisplay,  Up: Display
@@ -2375,7 +2376,7 @@ messages.  Many other Emacs features display messages there, too.
  -- Function: message format-string &rest arguments
      This function displays a message in the echo area.  The argument
      FORMAT-STRING is similar to a C language `printf' format string.
-     See `format' in *Note Formatting Strings::, for the details on the
+     See `format' in *note Formatting Strings::, for the details on the
      conversion specifications.  `message' returns the constructed
      string.
 
@@ -2418,7 +2419,7 @@ messages.  Many other Emacs features display messages there, too.
      either `nil' or a list--then it uses a dialog box or pop-up menu to
      display the message.  Otherwise, it uses the echo area.  (This is
      the same criterion that `y-or-n-p' uses to make a similar
-     decision; see *Note Yes-or-No Queries::.)
+     decision; see *note Yes-or-No Queries::.)
 
      You can force use of the mouse or of the echo area by binding
      `last-nonmenu-event' to a suitable value around the call.
@@ -3455,7 +3456,7 @@ them:
 `help-echo'
      If an overlay has a `help-echo' property, then when you move the
      mouse onto the text in the overlay, Emacs displays a help string
-     in the echo area, or in the tooltip window.  For details see *Note
+     in the echo area, or in the tooltip window.  For details see *note
      Text help-echo::.
 
 `modification-hooks'
@@ -3613,7 +3614,7 @@ File: elisp,  Node: Width,  Next: Line Height,  Prev: Overlays,  Up: Display
 ===========
 
 Since not all characters have the same width, these functions let you
-check the width of a character.  *Note Primitive Indent::, and *Note
+check the width of a character.  *Note Primitive Indent::, and *note
 Screen Lines::, for related functions.
 
  -- Function: char-width char
@@ -6315,9 +6316,9 @@ called `insert-...button'.
 
    The button-creation functions all take the `&rest' argument
 PROPERTIES, which should be a sequence of PROPERTY VALUE pairs,
-specifying properties to add to the button; see *Note Button
+specifying properties to add to the button; see *note Button
 Properties::.  In addition, the keyword argument `:type' may be used to
-specify a button-type from which to inherit other properties; see *Note
+specify a button-type from which to inherit other properties; see *note
 Button Types::.  Any properties not explicitly specified during
 creation will be inherited from the button's type (if the type defines
 such a property).
@@ -6470,8 +6471,8 @@ File: elisp,  Node: Abstract Display,  Next: Blinking,  Prev: Buttons,  Up: Disp
 
 The Ewoc package constructs buffer text that represents a structure of
 Lisp objects, and updates the text to follow changes in that structure.
-This is like the "view" component in the "model/view/controller"
-design paradigm.
+This is like the "view" component in the "model/view/controller" design
+paradigm.
 
    An "ewoc" is a structure that organizes information required to
 construct buffer text that represents certain Lisp data.  The buffer
@@ -6921,9 +6922,9 @@ A display table is actually a char-table (*note Char-Tables::) with
 
    The ordinary elements of the display table are indexed by character
 codes; the element at index C says how to display the character code C.
-The value should be `nil' or a vector of the glyphs to be output
-(*note Glyphs::).  `nil' says to display the character C according to
-the usual display conventions (*note Usual Display::).
+The value should be `nil' or a vector of the glyphs to be output (*note
+Glyphs::).  `nil' says to display the character C according to the
+usual display conventions (*note Usual Display::).
 
    *Warning:* if you use the display table to change the display of
 newline characters, the whole buffer will be displayed as one long

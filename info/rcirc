@@ -1,6 +1,7 @@
-This is ../info/rcirc, produced by makeinfo version 4.8 from rcirc.texi.
+This is ../info/rcirc, produced by makeinfo version 4.11 from
+rcirc.texi.
 
-   Copyright (C) 2006, 2007, 2008 Free Software Foundation, Inc.
+Copyright (C) 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -781,13 +782,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1220,24 +1220,24 @@ Index
 
 
 Tag Table:
-Node: Top1239
-Node: Basics2147
-Node: Internet Relay Chat2408
-Node: Getting started with rcirc3923
-Node: Reference6372
-Node: rcirc commands6700
-Node: Useful IRC commands10087
-Node: Configuration10814
-Node: Hacking and Tweaking15539
-Node: Skipping /away messages using handlers15984
-Node: Using fly spell mode16731
-Node: Scrolling conservatively17152
-Node: Changing the time stamp format17824
-Node: Defining a new command18200
-Node: Reconnecting after you have lost the connection19020
-Node: GNU Free Documentation License20885
-Node: Key Index43126
-Node: Variable Index44288
-Node: Index45709
+Node: Top1237
+Node: Basics2145
+Node: Internet Relay Chat2406
+Node: Getting started with rcirc3921
+Node: Reference6370
+Node: rcirc commands6698
+Node: Useful IRC commands10085
+Node: Configuration10812
+Node: Hacking and Tweaking15537
+Node: Skipping /away messages using handlers15982
+Node: Using fly spell mode16729
+Node: Scrolling conservatively17150
+Node: Changing the time stamp format17822
+Node: Defining a new command18198
+Node: Reconnecting after you have lost the connection19018
+Node: GNU Free Documentation License20883
+Node: Key Index43112
+Node: Variable Index44274
+Node: Index45695
 
 End Tag Table

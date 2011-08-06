@@ -1,7 +1,7 @@
-This is ../info/dired-x, produced by makeinfo version 4.8 from
+This is ../info/dired-x, produced by makeinfo version 4.11 from
 dired-x.texi.
 
-   Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
+Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
 2007, 2008  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -527,6 +527,12 @@ list of marked files.
                            "BAR-COMMAND-2"))))
 
      This will override any predefined rules for the same extensions.
+
+`dired-guess-shell-case-fold-search'
+     Default: `t'
+
+     Non-`nil' means `dired-guess-shell-alist-default' and
+     `dired-guess-shell-alist-user' are matched case-insensitively.
 
 `dired-guess-shell-gnutar'
      Default: `nil'
@@ -1183,13 +1189,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1396,7 +1401,7 @@ Concept Index
 * Guessing shell commands for files.:    Shell Command Guessing.
                                                                (line  6)
 * gzip:                                  Shell Command Guessing.
-                                                               (line 66)
+                                                               (line 72)
 * How to make omitting the default in Dired: Omitting Variables.
                                                                (line 11)
 * Jumping to Dired listing containing file.: Miscellaneous Commands.
@@ -1416,7 +1421,7 @@ Concept Index
 * Omitting RCS files in Dired:           Omitting Examples.    (line  6)
 * Omitting tib files in Dired:           Omitting Examples.    (line 18)
 * Passing GNU Tar its z switch.:         Shell Command Guessing.
-                                                               (line 58)
+                                                               (line 64)
 * Perusing ls listings:                  Virtual Dired.        (line  6)
 * RCS files, how to omit them in Dired:  Omitting Examples.    (line  6)
 * Reading mail.:                         Miscellaneous Commands.
@@ -1440,7 +1445,7 @@ Concept Index
 * Working directory:                     Multiple Dired Directories.
                                                                (line  6)
 * znew:                                  Shell Command Guessing.
-                                                               (line 72)
+                                                               (line 78)
 
 
 File: dired-x,  Node: Command Index,  Next: Key Index,  Prev: Concept Index,  Up: Top
@@ -1570,12 +1575,14 @@ Variable Index
                                                                (line 21)
 * dired-guess-shell-alist-user:          Shell Command Guessing.
                                                                (line 26)
-* dired-guess-shell-gnutar:              Shell Command Guessing.
+* dired-guess-shell-case-fold-search:    Shell Command Guessing.
                                                                (line 58)
+* dired-guess-shell-gnutar:              Shell Command Guessing.
+                                                               (line 64)
 * dired-guess-shell-gzip-quiet:          Shell Command Guessing.
-                                                               (line 66)
-* dired-guess-shell-znew-switches nil:   Shell Command Guessing.
                                                                (line 72)
+* dired-guess-shell-znew-switches nil:   Shell Command Guessing.
+                                                               (line 78)
 * dired-latex-unclean-extensions:        Advanced Cleaning Variables.
                                                                (line 27)
 * dired-local-variables-file:            Local Variables.      (line  6)
@@ -1587,7 +1594,7 @@ Variable Index
 * dired-patch-unclean-extensions:        Advanced Cleaning Variables.
                                                                (line 10)
 * dired-shell-command-history nil:       Shell Command Guessing.
-                                                               (line 79)
+                                                               (line 85)
 * dired-tex-unclean-extensions:          Advanced Cleaning Variables.
                                                                (line 16)
 * dired-texinfo-unclean-extensions:      Advanced Cleaning Variables.
@@ -1599,32 +1606,32 @@ Variable Index
 
 
 Tag Table:
-Node: Top1366
-Node: Introduction2002
-Node: Features2803
-Node: Technical Details3784
-Node: Installation4233
-Node: Optional Installation Dired Jump5355
-Node: Optional Installation File At Point6937
-Node: Omitting Files in Dired7989
-Node: Omitting Variables9477
-Node: Omitting Examples12686
-Node: Omitting Technical13916
-Node: Local Variables14313
-Node: Shell Command Guessing16191
-Node: Virtual Dired19264
-Node: Advanced Mark Commands20789
-Node: Advanced Cleaning Functions22188
-Node: Advanced Cleaning Variables22994
-Node: Special Marking Function24117
-Node: Multiple Dired Directories25680
-Node: Find File At Point26897
-Node: Miscellaneous Commands29657
-Node: Bugs33143
-Node: GNU Free Documentation License33737
-Node: Concept Index55968
-Node: Command Index60265
-Node: Key Index63912
-Node: Variable Index66062
+Node: Top1364
+Node: Introduction2000
+Node: Features2801
+Node: Technical Details3782
+Node: Installation4231
+Node: Optional Installation Dired Jump5353
+Node: Optional Installation File At Point6935
+Node: Omitting Files in Dired7987
+Node: Omitting Variables9475
+Node: Omitting Examples12684
+Node: Omitting Technical13914
+Node: Local Variables14311
+Node: Shell Command Guessing16189
+Node: Virtual Dired19446
+Node: Advanced Mark Commands20971
+Node: Advanced Cleaning Functions22370
+Node: Advanced Cleaning Variables23176
+Node: Special Marking Function24299
+Node: Multiple Dired Directories25862
+Node: Find File At Point27079
+Node: Miscellaneous Commands29839
+Node: Bugs33325
+Node: GNU Free Documentation License33919
+Node: Concept Index56138
+Node: Command Index60435
+Node: Key Index64082
+Node: Variable Index66232
 
 End Tag Table

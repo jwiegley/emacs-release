@@ -1,4 +1,5 @@
-This is ../info/elisp, produced by makeinfo version 4.8 from elisp.texi.
+This is ../info/elisp, produced by makeinfo version 4.11 from
+elisp.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -6,7 +7,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.2.
+corresponding to Emacs version 22.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
@@ -528,7 +529,7 @@ these functions yourself.
      `t' only for objects that `call-interactively' could call--thus,
      not for keyboard macros.
 
-     See `documentation' in *Note Accessing Documentation::, for a
+     See `documentation' in *note Accessing Documentation::, for a
      realistic example of using `commandp'.
 
  -- Function: call-interactively command &optional record-flag keys
@@ -885,7 +886,7 @@ There are two kinds of input you can get from the keyboard: ordinary
 keys, and function keys.  Ordinary keys correspond to characters; the
 events they generate are represented in Lisp as characters.  The event
 type of a character event is the character itself (an integer); see
-*Note Classifying Events::.
+*note Classifying Events::.
 
    An input character event consists of a "basic code" between 0 and
 524287, plus any or all of these "modifier bits":
@@ -1456,7 +1457,7 @@ A few other event types represent occurrences within the system.
 
      The precise meaning of the event parameters and the way these
      parameters are used to display the help-echo text are described in
-     *Note Text help-echo::.
+     *note Text help-echo::.
 
 `sigusr1'
 `sigusr2'
@@ -1872,12 +1873,12 @@ File: elisp,  Node: Reading Input,  Next: Special Events,  Prev: Input Events,  
 The editor command loop reads key sequences using the function
 `read-key-sequence', which uses `read-event'.  These and other
 functions for event input are also available for use in Lisp programs.
-See also `momentary-string-display' in *Note Temporary Displays::, and
-`sit-for' in *Note Waiting::.  *Note Terminal Input::, for functions
+See also `momentary-string-display' in *note Temporary Displays::, and
+`sit-for' in *note Waiting::.  *Note Terminal Input::, for functions
 and variables for controlling terminal input modes and debugging
 terminal input.
 
-   For higher-level input facilities, see *Note Minibuffers::.
+   For higher-level input facilities, see *note Minibuffers::.
 
 * Menu:
 
@@ -2561,10 +2562,10 @@ that normal quitting is permitted after the first character of input.
  -- Command: keyboard-quit
      This function signals the `quit' condition with `(signal 'quit
      nil)'.  This is the same thing that quitting does.  (See `signal'
-     in *Note Errors::.)
+     in *note Errors::.)
 
    You can specify a character other than `C-g' to use for quitting.
-See the function `set-input-mode' in *Note Terminal Input::.
+See the function `set-input-mode' in *note Terminal Input::.
 
 
 File: elisp,  Node: Prefix Command Arguments,  Next: Recursive Editing,  Prev: Quitting,  Up: Command Loop
@@ -3023,7 +3024,7 @@ an input event, in its Lisp form.  *Note Input Events::.  For example,
 the vector `[?\C-x ?l]' represents the key sequence `C-x l'.
 
    For examples of key sequences written in string and vector
-representations, *Note Init Rebinding: (emacs)Init Rebinding.
+representations, *note Init Rebinding: (emacs)Init Rebinding.
 
  -- Macro: kbd keyseq-text
      This macro converts the text KEYSEQ-TEXT (a string constant) into
@@ -3450,7 +3451,7 @@ regardless of the current buffer, such as `C-f'.  The variable
 contain new or overriding definitions for keys.  The current buffer's
 local keymap is always active except when `overriding-local-map'
 overrides it.  The `local-map' text or overlay property can specify an
-alternative local keymap for certain parts of the buffer; see *Note
+alternative local keymap for certain parts of the buffer; see *note
 Special Properties::.
 
    Each minor mode can have a keymap; if it does, the keymap is active
@@ -3549,7 +3550,7 @@ description of the order and conditions for searching them:
 
 The FIND-IN and FIND-IN-ANY are pseudo functions that search in one
 keymap and in an alist of keymaps, respectively.  (Searching a single
-keymap for a binding is called "key lookup"; see *Note Key Lookup::.)
+keymap for a binding is called "key lookup"; see *note Key Lookup::.)
 If the key sequence starts with a mouse event, or a symbolic prefix
 event followed by a mouse event, that event's position is used instead
 of point and the current buffer.  Mouse events on an embedded string
@@ -3648,7 +3649,7 @@ File: elisp,  Node: Controlling Active Maps,  Next: Key Lookup,  Prev: Searching
      minor modes so that they don't interfere with each other.  If you
      do this properly, the order will not matter.
 
-     See *Note Keymaps and Minor Modes::, for more information about
+     See *note Keymaps and Minor Modes::, for more information about
      minor modes.  See also `minor-mode-key-binding' (*note Functions
      for Key Lookup::).
 
@@ -3758,7 +3759,7 @@ COMMAND
 ARRAY
      The array (either a string or a vector) is a keyboard macro.  The
      events used so far in the lookup form a complete key, and the
-     array is its binding.  See *Note Keyboard Macros::, for more
+     array is its binding.  See *note Keyboard Macros::, for more
      information.
 
 KEYMAP
@@ -3864,7 +3865,7 @@ Here are the functions and variables pertaining to key lookup.
      KEY.  Otherwise, `lookup-key' reports only bindings for the
      specific sequence KEY, ignoring default bindings except when you
      explicitly ask about them.  (To do this, supply `t' as an element
-     of KEY; see *Note Format of Keymaps::.)
+     of KEY; see *note Format of Keymaps::.)
 
      If KEY contains a meta character (not a function key), that
      character is implicitly replaced by a two-character sequence: the
@@ -4000,7 +4001,7 @@ key sequence.
      than one event long, the change is actually made in another keymap
      reached from KEYMAP.)  The argument BINDING can be any Lisp
      object, but only certain types are meaningful.  (For a list of
-     meaningful types, see *Note Key Lookup::.)  The value returned by
+     meaningful types, see *note Key Lookup::.)  The value returned by
      `define-key' is BINDING.
 
      If KEY is `[t]', this sets the default binding in KEYMAP.  When an
@@ -4685,7 +4686,7 @@ non-selectable string, the binding looks like this:
      (menu-item ITEM-NAME)
 
 A string starting with two or more dashes specifies a separator line;
-see *Note Menu Separators::.
+see *note Menu Separators::.
 
    To define a real menu item which can be selected, the extended format
 binding looks like this:
@@ -4898,7 +4899,7 @@ File: elisp,  Node: Mouse Menus,  Next: Keyboard Menus,  Prev: Defining Menus,  
 
 The usual way to make a menu keymap produce a menu is to make it the
 definition of a prefix key.  (A Lisp program can explicitly pop up a
-menu and receive the user's choice--see *Note Pop-Up Menus::.)
+menu and receive the user's choice--see *note Pop-Up Menus::.)
 
    If the prefix key ends with a mouse event, Emacs handles the menu
 keymap by popping up a visible menu, so that the user can select a
@@ -4914,10 +4915,10 @@ the user can select a menu item by releasing the button.
 arrange for this.  The way to do this is to make a keymap for each pane,
 then create a binding for each of those maps in the main keymap of the
 menu.  Give each of these bindings an item string that starts with `@'.
-The rest of the item string becomes the name of the pane.  See the
-file `lisp/mouse.el' for an example of this.  Any ordinary bindings
-with `@'-less item strings are grouped into one pane, which appears
-along with the other panes explicitly created for the submaps.
+The rest of the item string becomes the name of the pane.  See the file
+`lisp/mouse.el' for an example of this.  Any ordinary bindings with
+`@'-less item strings are grouped into one pane, which appears along
+with the other panes explicitly created for the submaps.
 
    X toolkit menus don't have panes; instead, they can have submenus.
 Every nested keymap becomes a submenu, whether the item string starts
@@ -5333,7 +5334,7 @@ enable individually.
    This chapter describes how to write both major and minor modes, how
 to indicate them in the mode line, and how they run hooks supplied by
 the user.  For related topics such as keymaps and syntax tables, see
-*Note Keymaps::, and *Note Syntax Tables::.
+*note Keymaps::, and *note Syntax Tables::.
 
 * Menu:
 
@@ -5727,7 +5728,7 @@ the usual conventions, please make it compatible.
      this is not required.  Such a mode should call the parent mode
      command inside a `delay-mode-hooks' form.  (Using
      `define-derived-mode' does this automatically.)  *Note Derived
-     Modes::, and *Note Mode Hooks::.
+     Modes::, and *note Mode Hooks::.
 
    * If something special should be done if the user switches a buffer
      from this mode to any other major mode, this mode can set up a
@@ -6395,7 +6396,7 @@ the initialization function, and the use of keymaps and other tables.
 
    In addition, there are several conventions that are specific to
 minor modes.  (The easiest way to follow all the conventions is to use
-the macro `define-minor-mode'; *Note Defining Minor Modes::.)
+the macro `define-minor-mode'; *note Defining Minor Modes::.)
 
    * Make a variable whose name ends in `-mode' to control the minor
      mode.  We call this the "mode variable".  The minor mode command
@@ -6522,8 +6523,8 @@ mode in one self-contained definition.
  -- Macro: define-minor-mode mode doc [init-value [lighter [keymap]]]
           keyword-args... body...
      This macro defines a new minor mode whose name is MODE (a symbol).
-     It defines a command named MODE to toggle the minor mode, with
-     DOC as its documentation string.  It also defines a variable named
+     It defines a command named MODE to toggle the minor mode, with DOC
+     as its documentation string.  It also defines a variable named
      MODE, which is set to `t' or `nil' by enabling or disabling the
      mode.  The variable is initialized to INIT-VALUE.  Except in
      unusual circumstances (see below), this value must be `nil'.
@@ -6751,7 +6752,7 @@ defined to have mode-line constructs as their values.
 `STRING'
      A string as a mode-line construct appears verbatim except for
      "`%'-constructs" in it.  These stand for substitution of other
-     data; see *Note %-Constructs::.
+     data; see *note %-Constructs::.
 
      If parts of the string have `face' properties, they control
      display of the text just as they would text in the buffer.  Any

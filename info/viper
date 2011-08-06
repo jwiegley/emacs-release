@@ -1,6 +1,7 @@
-This is ../info/viper, produced by makeinfo version 4.8 from viper.texi.
+This is ../info/viper, produced by makeinfo version 4.11 from
+viper.texi.
 
-   Copyright (C) 1995, 1996, 1997, 2001, 2002, 2003, 2004, 2005, 2006,
+Copyright (C) 1995, 1996, 1997, 2001, 2002, 2003, 2004, 2005, 2006,
 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -299,8 +300,8 @@ Viper has four states, Emacs, Vi, Insert, and Replace.
      used in this mode.  Most Ex commands can also be used.  For a full
      list of Ex commands supported by Viper, type `:' and then <TAB>.
      To get help on any issue, including the Ex commands, type `:help'.
-     This will invoke Viper Info (if it is installed).  Then typing
-     `i' will prompt you for a topic to search in the index.  Note: to
+     This will invoke Viper Info (if it is installed).  Then typing `i'
+     will prompt you for a topic to search in the index.  Note: to
      search for Ex commands in the index, you should start them with a
      `:', e.g., `:WW'.
 
@@ -1032,8 +1033,7 @@ File: viper,  Node: Movement and Markers,  Next: New Commands,  Prev: Abbreviati
 
 Viper can be set free from the line-limited movements in Vi, such as `l'
 refusing to move beyond the line, <ESC> moving one character back, etc.
-These derive from Ex, which is a line editor.  If your `.viper'
-contains
+These derive from Ex, which is a line editor.  If your `.viper' contains
 
      `(setq viper-ex-style-motion nil)'
 
@@ -1715,8 +1715,8 @@ get the full list of Vi variables, type `:se <SPC> <TAB>'.
 
 `viper-load-hook nil'
      List of (parameterless) functions called just after loading Viper.
-     This is the last chance to do customization before Viper is up
-     and running.
+     This is the last chance to do customization before Viper is up and
+     running.
    You can reset some of these constants in Viper with the Ex command
 `:set' (when so indicated in the table).  Or you can include a line
 like this in your `.viper' file:
@@ -2422,11 +2422,10 @@ can't be bound to a macro.)
 
    Fourth, in Viper, one can define macros that are specific to a given
 buffer, a given major mode, or macros that are defined for all buffers.
-In fact, the same macro name can have several different definitions:
-one global, several definitions for various major modes, and
-definitions for various specific buffers.  Buffer-specific definitions
-override mode-specific definitions, which, in turn, override global
-definitions.
+In fact, the same macro name can have several different definitions: one
+global, several definitions for various major modes, and definitions
+for various specific buffers.  Buffer-specific definitions override
+mode-specific definitions, which, in turn, override global definitions.
 
    As if all that is not enough, Viper (through its interface to Emacs
 macros) lets the user define keyboard macros that ask for confirmation
@@ -3004,7 +3003,7 @@ File: viper,  Node: Marking,  Next: Appending Text,  Prev: Move Commands,  Up: T
 
 Emacs mark is referred to in the region specifiers `r' and `R'.  *Note
 Emacs Preliminaries::, and *Note Basics::, for explanation.  Also see
-*Note Mark: (emacs)Mark, for an explanation of the Emacs mark ring.
+*note Mark: (emacs)Mark, for an explanation of the Emacs mark ring.
 
 `m<a-z>'
      Mark the current file and position with the specified letter.
@@ -4227,13 +4226,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -4817,7 +4815,7 @@ Function Index
 * toggle-viper-mode:                     States in Viper.     (line   6)
 * viper-add-local-keys:                  Key Bindings.        (line 183)
 * viper-buffer-search-enable:            Viper Specials.      (line  21)
-* viper-describe-kbd-macros:             Vi Macros.           (line 254)
+* viper-describe-kbd-macros:             Vi Macros.           (line 253)
 * viper-glob-function:                   Rudimentary Changes. (line 206)
 * viper-go-away <1>:                     Viper Specials.      (line 188)
 * viper-go-away:                         States in Viper.     (line   6)
@@ -4836,8 +4834,8 @@ Function Index
 * viper-set-searchstyle-toggling-macros: Viper Specials.      (line  45)
 * viper-set-syntax-preference <1>:       Groundwork.          (line 147)
 * viper-set-syntax-preference:           Movement and Markers.
-                                                              (line  50)
-* viper-unrecord-kbd-macro:              Vi Macros.           (line 127)
+                                                              (line  49)
+* viper-unrecord-kbd-macro:              Vi Macros.           (line 126)
 * viper-zap-local-keys:                  Key Bindings.        (line 183)
 
 
@@ -4911,7 +4909,7 @@ Variable Index
 * viper-surrounding-word-function:       Rudimentary Changes. (line 370)
 * viper-syntax-preference <1>:           Groundwork.          (line 147)
 * viper-syntax-preference:               Movement and Markers.
-                                                              (line  18)
+                                                              (line  17)
 * viper-tags-file-name:                  Rudimentary Changes. (line 370)
 * viper-toggle-key:                      Rudimentary Changes. (line 370)
 * viper-vi-global-user-map:              Key Bindings.        (line 183)
@@ -5150,13 +5148,13 @@ Concept Index
 * substitution:                          Changing Text.       (line   6)
 * syntax table <1>:                      Groundwork.          (line 147)
 * syntax table:                          Movement and Markers.
-                                                              (line  18)
+                                                              (line  17)
 * tabbing:                               Options.             (line  72)
 * text:                                  Emacs Preliminaries. (line   6)
 * text processing:                       Search and Replace.  (line  37)
 * textmarkers <1>:                       Move Commands.       (line   6)
 * textmarkers <2>:                       Movement and Markers.
-                                                              (line  58)
+                                                              (line  57)
 * textmarkers <3>:                       Undo and Backups.    (line  17)
 * textmarkers:                           Multiple Files in Viper.
                                                               (line  11)
@@ -5188,60 +5186,60 @@ Concept Index
 
 
 Tag Table:
-Node: Top1394
-Node: Overview3879
-Node: Emacs Preliminaries5475
-Node: Loading Viper10830
-Node: States in Viper13016
-Node: Emacs State18080
-Node: Vi State19561
-Node: Insert State26437
-Node: Replace State29315
-Node: The Minibuffer30979
-Node: Multiple Files in Viper32636
-Node: Unimplemented Features36078
-Node: Improvements over Vi36801
-Node: Basics37887
-Node: Undo and Backups40338
-Node: History41511
-Node: Macros and Registers43117
-Node: Completion44801
-Node: Improved Search45235
-Node: Abbreviation Facilities47595
-Node: Movement and Markers48575
-Node: New Commands51626
-Node: Useful Packages57464
-Node: Customization59526
-Node: Rudimentary Changes61333
-Node: Key Bindings77948
-Node: Packages that Change Keymaps87793
-Node: Viper Specials93667
-Node: Vi Macros111381
-Node: Commands124785
-Node: Groundwork125522
-Node: Text Handling131990
-Node: Move Commands132552
-Node: Marking136305
-Node: Appending Text137547
-Node: Editing in Insert State139885
-Node: Deleting Text140475
-Node: Changing Text141819
-Node: Search and Replace144821
-Node: Yanking147085
-Node: Undoing148006
-Node: Display148349
-Node: File and Buffer Handling149661
-Node: Mapping154187
-Node: Shell Commands155885
-Node: Options157725
-Node: Emacs Related Commands159928
-Node: Mouse-bound Commands161504
-Node: Acknowledgments162371
-Node: GNU Free Documentation License165512
-Node: Key Index187706
-Node: Function Index205243
-Node: Variable Index216920
-Node: Package Index222659
-Node: Concept Index223313
+Node: Top1392
+Node: Overview3877
+Node: Emacs Preliminaries5473
+Node: Loading Viper10828
+Node: States in Viper13014
+Node: Emacs State18078
+Node: Vi State19559
+Node: Insert State26435
+Node: Replace State29313
+Node: The Minibuffer30977
+Node: Multiple Files in Viper32634
+Node: Unimplemented Features36076
+Node: Improvements over Vi36799
+Node: Basics37885
+Node: Undo and Backups40336
+Node: History41509
+Node: Macros and Registers43115
+Node: Completion44799
+Node: Improved Search45233
+Node: Abbreviation Facilities47593
+Node: Movement and Markers48573
+Node: New Commands51624
+Node: Useful Packages57462
+Node: Customization59524
+Node: Rudimentary Changes61331
+Node: Key Bindings77946
+Node: Packages that Change Keymaps87791
+Node: Viper Specials93665
+Node: Vi Macros111379
+Node: Commands124783
+Node: Groundwork125520
+Node: Text Handling131988
+Node: Move Commands132550
+Node: Marking136303
+Node: Appending Text137545
+Node: Editing in Insert State139883
+Node: Deleting Text140473
+Node: Changing Text141817
+Node: Search and Replace144819
+Node: Yanking147083
+Node: Undoing148004
+Node: Display148347
+Node: File and Buffer Handling149659
+Node: Mapping154185
+Node: Shell Commands155883
+Node: Options157723
+Node: Emacs Related Commands159926
+Node: Mouse-bound Commands161502
+Node: Acknowledgments162369
+Node: GNU Free Documentation License165510
+Node: Key Index187692
+Node: Function Index205229
+Node: Variable Index216906
+Node: Package Index222645
+Node: Concept Index223299
 
 End Tag Table

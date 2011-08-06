@@ -306,7 +306,10 @@ See variables `compilation-parse-errors-function' and
     ;; we know here that next-error-function is a valid symbol we can funcall
     (with-current-buffer next-error-last-buffer
       (funcall next-error-function (prefix-numeric-value arg) reset)
-      (run-hooks 'next-error-hook))))
+      (run-hooks 'next-error-hook)))
+  ;; This is a workaround for a redisplay bug (bug#197).  The proper
+  ;; fix is in the trunk: see the 2008-07-28 change to xdisp.c by cyd.
+  (redisplay))
 
 (defun next-error-internal ()
   "Visit the source code corresponding to the `next-error' message at point."
@@ -4356,7 +4359,8 @@ The variable `selective-display' has a separate value for each buffer."
   "Toggle whether to fold or truncate long lines for the current buffer.
 With prefix argument ARG, truncate long lines if ARG is positive,
 otherwise don't truncate them.  Note that in side-by-side
-windows, truncation is always enabled."
+windows, this command has no effect if `truncate-partial-width-windows'
+is non-nil."
   (interactive "P")
   (setq truncate-lines
 	(if (null arg)

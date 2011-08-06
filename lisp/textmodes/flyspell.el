@@ -1512,7 +1512,7 @@ The buffer to mark them in is `flyspell-large-region-buffer'."
     ;; this is done, we can start checking...
     (if flyspell-issue-message-flag (message "Checking region..."))
     (set-buffer curbuf)
-    (ispell-check-version)
+    (ispell-maybe-find-aspell-dictionaries)
     (let ((c (apply 'ispell-call-process-region beg
 		    end
 		    ispell-program-name
@@ -1558,6 +1558,7 @@ The buffer to mark them in is `flyspell-large-region-buffer'."
 (defun flyspell-region (beg end)
   "Flyspell text between BEG and END."
   (interactive "r")
+  (ispell-maybe-find-aspell-dictionaries)
   (if (= beg end)
       ()
     (save-excursion

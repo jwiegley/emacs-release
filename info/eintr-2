@@ -1,4 +1,4 @@
-This is ../info/eintr, produced by makeinfo version 4.8 from
+This is ../info/eintr, produced by makeinfo version 4.11 from
 emacs-lisp-intro.texi.
 
 INFO-DIR-SECTION Emacs
@@ -540,7 +540,7 @@ first of which holds the address of `violet', and the second of which
 holds the address of `buttercup'.
 
    A pair of address-boxes is called a "cons cell" or "dotted pair".
-*Note Cons Cell and List Types: (elisp)Cons Cell Type, and *Note Dotted
+*Note Cons Cell and List Types: (elisp)Cons Cell Type, and *note Dotted
 Pair Notation: (elisp)Dotted Pair Notation, for more information about
 cons cells and dotted pairs.
 
@@ -608,7 +608,7 @@ where the buried treasure lies.
 
    (In addition to its name, symbol definition, and variable value, a
 symbol has a `drawer' for a "property list" which can be used to record
-other information.  Property lists are not discussed here; see *Note
+other information.  Property lists are not discussed here; see *note
 Property Lists: (elisp)Property Lists.)
 
    Here is a fanciful representation:
@@ -1993,7 +1993,7 @@ as different robots, the first robot must wait for the second to
 complete its job, which must wait until the third completes, and so on.
 
    There is a way around this kind of waiting, which we will discuss in
-*Note Recursion without Deferments: No Deferment.
+*note Recursion without Deferments: No Deferment.
 
 
 File: eintr,  Node: Recursion with cond,  Next: Recursive Patterns,  Prev: Recursive triangle function,  Up: Recursion
@@ -2447,13 +2447,13 @@ File: eintr,  Node: Looping exercise,  Prev: Recursion,  Up: Loops & Recursion
      written in Texinfo.)
 
      Many of the functions you will need are described in two of the
-     previous chapters, *Note Cutting and Storing Text: Cutting &
-     Storing Text, and *Note Yanking Text Back: Yanking.  If you use
+     previous chapters, *note Cutting and Storing Text: Cutting &
+     Storing Text, and *note Yanking Text Back: Yanking.  If you use
      `forward-paragraph' to put the index entry at the beginning of the
      paragraph, you will have to use `C-h f' (`describe-function') to
      find out how to make the command go backwards.
 
-     For more information, see *Note Indicating Definitions:
+     For more information, see *note Indicating Definitions:
      (texinfo)Indicating.
 
 
@@ -2467,8 +2467,8 @@ functions, `forward-sentence' and `forward-paragraph', illustrate these
 searches well.  They use regular expressions to find where to move
 point.  The phrase `regular expression' is often written as `regexp'.
 
-   Regular expression searches are described in *Note Regular
-Expression Search: (emacs)Regexp Search, as well as in *Note Regular
+   Regular expression searches are described in *note Regular
+Expression Search: (emacs)Regexp Search, as well as in *note Regular
 Expressions: (elisp)Regular Expressions.  In writing this chapter, I am
 presuming that you have at least a mild acquaintance with them.  The
 major point to remember is that regular expressions permit you to
@@ -2957,7 +2957,7 @@ variable in sequence, one after another, and variables in the latter
 part of the varlist can make use of the values to which Emacs set
 variables in the earlier part of the varlist.
 
-   (*Note `save-excursion' in `append-to-buffer': append
+   (*note `save-excursion' in `append-to-buffer': append
 save-excursion.)
 
    In the `let*' expression in this function, Emacs binds a total of
@@ -3355,7 +3355,7 @@ directory and run the compile command `make tags':
 (The `make tags' command works well with the GNU Emacs sources, as well
 as with some other source packages.)
 
-   For more information, see *Note Tag Tables: (emacs)Tags.
+   For more information, see *note Tag Tables: (emacs)Tags.
 
 
 File: eintr,  Node: Regexp Review,  Next: re-search Exercises,  Prev: etags,  Up: Regexp Search
@@ -3589,8 +3589,8 @@ this is:
 
 The buffer's syntax table determines which characters are and are not
 word constituents.  (*Note What Constitutes a Word or Symbol?: Syntax,
-for more about syntax.  Also, see *Note Syntax: (emacs)Syntax, and
-*Note Syntax Tables: (elisp)Syntax Tables.)
+for more about syntax.  Also, see *note Syntax: (emacs)Syntax, and
+*note Syntax Tables: (elisp)Syntax Tables.)
 
    The search expression looks like this:
 
@@ -4288,8 +4288,8 @@ specifying one or more _word constituent_ characters.  Word constituent
 characters are members of one syntax category.  Other syntax categories
 include the class of punctuation characters, such as the period and the
 comma, and the class of whitespace characters, such as the blank space
-and the tab character.  (For more information, see *Note Syntax:
-(emacs)Syntax, and *Note Syntax Tables: (elisp)Syntax Tables.)
+and the tab character.  (For more information, see *note Syntax:
+(emacs)Syntax, and *note Syntax Tables: (elisp)Syntax Tables.)
 
    Syntax tables specify which characters belong to which categories.
 Usually, a hyphen is not specified as a `word constituent character'.
@@ -5688,7 +5688,7 @@ lead us to the second version of the function:
      graph-blank must be the same number of columns wide
      as graph-symbol.")
 
-(For an explanation of `defvar', see *Note Initializing a Variable with
+(For an explanation of `defvar', see *note Initializing a Variable with
 `defvar': defvar.)
 
      ;;; Second version.
@@ -5828,7 +5828,7 @@ not redraw the screen until the function exits.
    We can test `graph-body-print' with a short list of numbers.
 
   1. Install `graph-symbol', `graph-blank', `column-of-graph', which
-     are in *Note Columns of a graph::, and `graph-body-print'.
+     are in *note Columns of a graph::, and `graph-body-print'.
 
   2. Copy the following expression:
 
@@ -6014,8 +6014,8 @@ particularly fonts, that I find easier to manipulate using the
 `customize' command.  I combine the two methods.)
 
    Most of this chapter is about writing expressions yourself.  It
-describes a simple `.emacs' file; for more information, see *Note The
-Init File: (emacs)Init File, and *Note The Init File: (elisp)Init File.
+describes a simple `.emacs' file; for more information, see *note The
+Init File: (emacs)Init File, and *note The Init File: (elisp)Init File.
 
    ---------- Footnotes ----------
 
@@ -6121,7 +6121,7 @@ intended to offer convenient choices to a user.
 in which group the variable is located.  This tells where to find it.
 
    The `defcustom' function recognizes more than a dozen keywords.  For
-more information, see *Note Writing Customization Definitions:
+more information, see *note Writing Customization Definitions:
 (elisp)Customization.
 
    Consider `text-mode-hook' as an example.
@@ -6539,7 +6539,7 @@ with other Texinfo mode key bindings.)
 well as in the various mode libraries, such as `cc-mode.el' and
 `lisp-mode.el'.
 
-   *Note Customizing Key Bindings: (emacs)Key Bindings, and *Note
+   *Note Customizing Key Bindings: (emacs)Key Bindings, and *note
 Keymaps: (elisp)Keymaps, for more information about keymaps.
 
 
@@ -6708,7 +6708,7 @@ key bindings for each different make of terminal.)
 
      (global-set-key [f6] 'line-to-top-of-window)
 
-   For more information, see *Note Rebinding Keys in Your Init File:
+   For more information, see *note Rebinding Keys in Your Init File:
 (emacs)Init Rebinding.
 
    If you run two versions of GNU Emacs, such as versions 21 and 22, and
@@ -7039,7 +7039,7 @@ consists of a property list,  a property name, in this case,
 `help-echo', followed by a value, in this case, a string.  The second,
 third, and fourth elements of this new string format can be repeated.
 
-   *Note Text Properties: (elisp)Text Properties, and see *Note Mode
+   *Note Text Properties: (elisp)Text Properties, and see *note Mode
 Line Format: (elisp)Mode Line Format, for more information.
 
    `mode-line-buffer-identification' displays the current buffer name.
@@ -7093,7 +7093,7 @@ GNU Emacs has two debuggers, `debug' and `edebug'.  The first is built
 into the internals of Emacs and is always with you; the second requires
 that you instrument a function before you can use it.
 
-   Both debuggers are described extensively in *Note Debugging Lisp
+   Both debuggers are described extensively in *note Debugging Lisp
 Programs: (elisp)Debugging.  In this chapter, I will walk through a
 short example of each.
 
@@ -7306,7 +7306,7 @@ you want the debugger to start, like this:
            (setq number (1= number)))      ; Error here.
          total))
 
-   The `debug' function is described in detail in *Note The Lisp
+   The `debug' function is described in detail in *note The Lisp
 Debugger: (elisp)Debugger.
 
 
@@ -7322,7 +7322,7 @@ which line you are currently executing.
    You can walk through the execution of a function, line by line, or
 run quickly until reaching a "breakpoint" where execution stops.
 
-   Edebug is described in *Note Edebug: (elisp)edebug.
+   Edebug is described in *note Edebug: (elisp)edebug.
 
    Here is a bugged function definition for `triangle-recursively'.
 *Note Recursion in place of a counter: Recursive triangle function, for
@@ -7413,5 +7413,5 @@ error or at specified stopping points; you can cause it to display the
 changing values of various expressions; you can find out how many times
 a function is called, and more.
 
-   Edebug is described in *Note Edebug: (elisp)edebug.
+   Edebug is described in *note Edebug: (elisp)edebug.
 

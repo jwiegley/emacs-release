@@ -1,7 +1,8 @@
-This is ../info/tramp, produced by makeinfo version 4.8 from tramp.texi.
+This is ../info/tramp, produced by makeinfo version 4.11 from
+tramp.texi.
 
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005,   2006,
-2007, 2008 Free Software Foundation, Inc.
+Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005,   2006, 2007,
+2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -30,11 +31,11 @@ END-INFO-DIR-ENTRY
 
 File: tramp,  Node: Top,  Next: Overview,  Prev: (dir),  Up: (dir)
 
-TRAMP version 2.0.57 User Manual
-********************************
+TRAMP version 2.0.58-pre User Manual
+************************************
 
-This file documents TRAMP version 2.0.57, a remote file editing package
-for GNU Emacs.
+This file documents TRAMP version 2.0.58-pre, a remote file editing
+package for GNU Emacs.
 
    TRAMP stands for `Transparent Remote (file) Access, Multiple
 Protocol'.  This package provides remote file editing, similar to
@@ -422,7 +423,7 @@ startup may drown out the improvement in file transfer times.
 
    External transfer methods should be configured such a way that they
 don't require a password (with `ssh-agent', or such alike).  If it
-isn't possible, you should consider *Note Password caching::, otherwise
+isn't possible, you should consider *note Password caching::, otherwise
 you will be prompted for a password every copy action.
 
    A variant of the inline methods are the "multi-hop methods".  These
@@ -452,7 +453,7 @@ access to external commands to perform that task.
    TRAMP checks the availability and usability of commands like
 `mimencode' (part of the `metamail' package) or `uuencode' on the
 remote host.  The first reliable command will be used.  The search path
-can be customized, see *Note Remote Programs::.
+can be customized, see *note Remote Programs::.
 
    If both commands aren't available on the remote host, TRAMP
 transfers a small piece of Perl code to the remote host, and tries to
@@ -572,7 +573,7 @@ password on the command line.(1) If you use `rsync' via `ssh' then the
 same rule must apply to that connection.
 
    If you cannot get an external method to run without asking for a
-password you should consider *Note Password caching::.
+password you should consider *note Password caching::.
 
 `rcp'  --  `rsh' and `rcp'
      This method uses the `rsh' and `rcp' commands to connect to the
@@ -700,7 +701,7 @@ password you should consider *Note Password caching::.
 
      Since authorization is done on share level, you will be prompted
      always for a password if you access another share on the same host.
-     This can be suppressed by *Note Password caching::.
+     This can be suppressed by *note Password caching::.
 
      MS Windows uses for authorization both a user name and a domain
      name.  Because of this, the TRAMP syntax has been extended: you can
@@ -1029,8 +1030,8 @@ TRAMP depends on a number of programs on the remote host in order to
 function, including `ls', `test', `find' and `cat'.
 
    In addition to these required tools, there are various tools that
-may be required based on the connection method. See *Note Inline
-methods:: and *Note External transfer methods:: for details on these.
+may be required based on the connection method. See *note Inline
+methods:: and *note External transfer methods:: for details on these.
 
    Certain other tools, such as `perl' (or `perl5') and `grep' will be
 used if they can be found. When they are available, they are used to
@@ -1064,7 +1065,7 @@ File: tramp,  Node: Remote shell setup,  Next: Windows setup hints,  Prev: Remot
 4.10 Remote shell setup hints
 =============================
 
-As explained in the *Note Overview:: section, TRAMP connects to the
+As explained in the *note Overview:: section, TRAMP connects to the
 remote host and talks to the shell it finds there.  Of course, when you
 log in, the shell executes its init files.  Suppose your init file
 requires you to enter the birth date of your mother; clearly TRAMP does
@@ -1385,7 +1386,7 @@ is `rsh:out@gate:telnet:kai@real.host' and specifies the hops.  The
 final part is `/path/to.file' and specifies the file name on the remote
 host.
 
-   The first part and the final part should be clear.  See *Note
+   The first part and the final part should be clear.  See *note
 Multi-hop Methods::, for a list of alternatives for the method
 specification.
 
@@ -2135,13 +2136,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -2512,45 +2512,45 @@ Concept Index
 
 
 Tag Table:
-Node: Top1378
-Node: Overview6137
-Ref: Overview-Footnote-112205
-Node: Obtaining Tramp12357
-Node: History13932
-Node: Configuration14653
-Node: Connection types16598
-Node: Inline methods18766
-Node: External transfer methods23870
-Ref: External transfer methods-Footnote-131899
-Node: Multi-hop Methods31978
-Node: Default Method34915
-Node: Customizing Methods38825
-Node: Customizing Completion39235
-Node: Password caching42643
-Node: Remote Programs44301
-Node: Remote shell setup45930
-Node: Auto-save and Backup52458
-Node: Windows setup hints54914
-Node: Usage56692
-Node: Filename Syntax57978
-Node: Multi-hop filename syntax60108
-Node: Filename completion61891
-Node: Dired63591
-Node: Compilation64055
-Node: Bug Reports64856
-Node: Frequently Asked Questions66456
-Node: Version Control72148
-Node: Version Controlled Files73290
-Node: Remote Commands73704
-Node: Changed workfiles74606
-Node: Checking out files75477
-Node: Miscellaneous Version Control75935
-Node: Remote File Ownership76356
-Node: Back-end Versions77669
-Node: Files directories and localnames79139
-Node: Localname deconstruction79469
-Node: Issues80172
-Node: GNU Free Documentation License82243
-Node: Concept Index104452
+Node: Top1376
+Node: Overview6147
+Ref: Overview-Footnote-112215
+Node: Obtaining Tramp12367
+Node: History13942
+Node: Configuration14663
+Node: Connection types16608
+Node: Inline methods18776
+Node: External transfer methods23880
+Ref: External transfer methods-Footnote-131909
+Node: Multi-hop Methods31988
+Node: Default Method34925
+Node: Customizing Methods38835
+Node: Customizing Completion39245
+Node: Password caching42653
+Node: Remote Programs44311
+Node: Remote shell setup45940
+Node: Auto-save and Backup52468
+Node: Windows setup hints54924
+Node: Usage56702
+Node: Filename Syntax57988
+Node: Multi-hop filename syntax60118
+Node: Filename completion61901
+Node: Dired63601
+Node: Compilation64065
+Node: Bug Reports64866
+Node: Frequently Asked Questions66466
+Node: Version Control72158
+Node: Version Controlled Files73300
+Node: Remote Commands73714
+Node: Changed workfiles74616
+Node: Checking out files75487
+Node: Miscellaneous Version Control75945
+Node: Remote File Ownership76366
+Node: Back-end Versions77679
+Node: Files directories and localnames79149
+Node: Localname deconstruction79479
+Node: Issues80182
+Node: GNU Free Documentation License82253
+Node: Concept Index104450
 
 End Tag Table

@@ -1,4 +1,4 @@
-This is ../info/eintr, produced by makeinfo version 4.8 from
+This is ../info/eintr, produced by makeinfo version 4.11 from
 emacs-lisp-intro.texi.
 
 INFO-DIR-SECTION Emacs
@@ -702,7 +702,7 @@ paragraphs.  This book is intended as an approachable hill, rather than
 as a daunting mountain.
 
    This introduction to `Programming in Emacs Lisp' has a companion
-document, *Note The GNU Emacs Lisp Reference Manual: (elisp)Top.  The
+document, *note The GNU Emacs Lisp Reference Manual: (elisp)Top.  The
 reference manual has more detail than this introduction.  In the
 reference manual, all the information about one topic is concentrated
 in one place.  You should turn to it if you are like the programmer
@@ -821,7 +821,7 @@ Sometimes a list is preceded by a single apostrophe or quotation mark,
 
    (1) The single apostrophe or quotation mark is an abbreviation for
 the function `quote'; you need not think about functions now; functions
-are defined in *Note Generate an Error Message: Making Errors.
+are defined in *note Generate an Error Message: Making Errors.
 
 
 File: eintr,  Node: Lisp Lists,  Next: Run a Program,  Prev: List Processing,  Up: List Processing
@@ -2187,10 +2187,9 @@ the value returned by evaluating `(buffer-file-name)' is
    The former is the name of the buffer and the latter is the name of
 the file.  In Info, the buffer name is `"*info*"'.  Info does not point
 to any file, so the result of evaluating `(buffer-file-name)' is `nil'.
-The symbol `nil' is from the Latin word for `nothing'; in this case,
-it means that the buffer is not associated with any file.  (In Lisp,
-`nil' is also used to mean `false' and is a synonym for the empty list,
-`()'.)
+The symbol `nil' is from the Latin word for `nothing'; in this case, it
+means that the buffer is not associated with any file.  (In Lisp, `nil'
+is also used to mean `false' and is a synonym for the empty list, `()'.)
 
    When I am writing, the name of my buffer is
 `"introduction.texinfo"'.  The name of the file to which it points is
@@ -2671,7 +2670,7 @@ By evaluating this `defun', you have just installed `multiply-by-seven'
 in Emacs.  The function is now just as much a part of Emacs as
 `forward-word' or any other editing function you use.
 (`multiply-by-seven' will stay installed until you quit Emacs.  To
-reload code automatically whenever you start Emacs, see *Note
+reload code automatically whenever you start Emacs, see *note
 Installing Code Permanently: Permanent Installation.)
 
 * Menu:
@@ -2732,7 +2731,7 @@ that follows a semicolon is a comment.  The end of the line is the end
 of the comment.  To stretch a comment over two or more lines, begin
 each line with a semicolon.
 
-   *Note Beginning a `.emacs' File: Beginning a .emacs File, and *Note
+   *Note Beginning a `.emacs' File: Beginning a .emacs File, and *note
 Comments: (elisp)Comments, for more about comments.
 
    You can install this version of the `multiply-by-seven' function by
@@ -3886,7 +3885,7 @@ the command to execute:
 
      M-x compile RET etags *.el RET
 
-   For more information, see *Note Create Your Own `TAGS' File: etags.
+   For more information, see *note Create Your Own `TAGS' File: etags.
 
    After you become more familiar with Emacs Lisp, you will find that
 you will frequently use `find-tags' to navigate your way around source
@@ -4218,7 +4217,7 @@ File: eintr,  Node: append interactive,  Next: append-to-buffer body,  Prev: app
 
 Since the `append-to-buffer' function will be used interactively, the
 function must have an `interactive' expression.  (For a review of
-`interactive', see *Note Making a Function Interactive: Interactive.)
+`interactive', see *note Making a Function Interactive: Interactive.)
 The expression reads as follows:
 
      (interactive
@@ -5053,7 +5052,7 @@ argument that is not a cons cell.
 
    (Since I do not explain a cons cell for many more chapters, please
 consider ignoring the function `consp'.  *Note How Lists are
-Implemented: List Implementation, and *Note Cons Cell and List Types:
+Implemented: List Implementation, and *note Cons Cell and List Types:
 (elisp)Cons Cell Type.)
 
    The `"P"' in the `interactive' expression tells Emacs to pass a
@@ -5793,7 +5792,7 @@ front of `daisy' and `buttercup'.
    ---------- Footnotes ----------
 
    (1) Actually, you can `cons' an element to an atom to produce a
-dotted pair.  Dotted pairs are not discussed here; see *Note Dotted
+dotted pair.  Dotted pairs are not discussed here; see *note Dotted
 Pair Notation: (elisp)Dotted Pair Notation.
 
 
@@ -6039,7 +6038,7 @@ the function replaces the second and subsequent elements of a list
 rather than the first element.
 
    (To see how to change the last element of a list, look ahead to
-*Note The `kill-new' function: kill-new function, which uses the
+*note The `kill-new' function: kill-new function, which uses the
 `nthcdr' and `setcdr' functions.)
 
    To see how this works, set the value of the variable to a list of
@@ -6619,7 +6618,7 @@ expression which will in turn compute the value.  In this case, the
 is the converse of `when'.  The `unless' macro is an `if' without a
 then clause
 
-   For more about Lisp macros, see *Note Macros: (elisp)Macros.  The C
+   For more about Lisp macros, see *note Macros: (elisp)Macros.  The C
 programming language also provides macros.  These are different, but
 also useful.
 

@@ -1,7 +1,7 @@
-This is ../info/sc, produced by makeinfo version 4.8 from sc.texi.
+This is ../info/sc, produced by makeinfo version 4.11 from sc.texi.
 
-   This document describes the Supercite Version 3.1 package for citing
-and attributing the replies for various GNU Emacs mail and news reading
+This document describes the Supercite Version 3.1 package for citing and
+attributing the replies for various GNU Emacs mail and news reading
 subsystems.
 
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
@@ -95,8 +95,8 @@ re-initialized in each new reply buffer.
 in the following environments:
 
 Emacs versions:
-     	GNU Emacs 18.57 through 18.59, all Emacs 19, 	all current Lucid
-     Emacs, and Epoch 4.
+     	GNU Emacs 18.57 through 18.59, all Emacs 19, 	all current
+     Lucid Emacs, and Epoch 4.
 
 MUAs:
      	VM 4.37 and beyond (including VM version 5), RMAIL, MH-E 3.7 and
@@ -1799,9 +1799,9 @@ steps:
      within this region.  Supercite will not venture outside the region
      for any reason, and anything within the region is fair game, so
      don't put anything that *must* remain unchanged inside the region.
-     Further note that for Emacs 19, the region need not be set
-     active.  Supercite will work properly when the region is inactive,
-     as should any other like-minded package.
+     Further note that for Emacs 19, the region need not be set active.
+     Supercite will work properly when the region is inactive, as
+     should any other like-minded package.
 
   3. Run the hook `mail-citation-hook'. You will probably want to
      provide some kind of default citation functions in cases where the
@@ -2163,13 +2163,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -2887,49 +2886,49 @@ each appears under its `sc-'VARIABLE name and its VARIABLE name.
 
 
 Tag Table:
-Node: Top1466
-Node: Introduction2201
-Node: Usage Overview4167
-Node: What Supercite Does Not Do5329
-Node: What Supercite Does6461
-Node: Citations9293
-Node: Citation Elements11583
-Node: Recognizing Citations13466
-Node: Information Keys and the Info Alist15225
-Node: Reference Headers17812
-Node: The Built-in Header Rewrite Functions19378
-Node: Electric References21828
-Node: Getting Connected24708
-Node: Emacs 19 MUAs28226
-Node: Emacs 18 MUAs29062
-Node: MH-E with any Emacsen30418
-Node: VM with any Emacsen32183
-Node: GNEWS with any Emacsen33251
-Node: Overloading for Non-conforming MUAs33978
-Node: Replying and Yanking37232
-Node: Reply Buffer Initialization37568
-Node: Filling Cited Text44456
-Node: Selecting an Attribution47929
-Node: Attribution Preferences48787
-Node: Anonymous Attributions52703
-Node: Author Names55743
-Node: Configuring the Citation Engine58231
-Node: Using Regi59956
-Node: Frames You Can Customize63831
-Node: Post-yank Formatting Commands66359
-Node: Citing Commands67505
-Node: Insertion Commands70222
-Node: Variable Toggling Shortcuts71162
-Node: Mail Field Commands73521
-Node: Miscellaneous Commands75893
-Node: Hints to MUA Authors77165
-Node: Version 3 Changes81187
-Node: Thanks and History83886
-Node: The Supercite Mailing List85485
-Node: GNU Free Documentation License86616
-Node: Concept Index108864
-Node: Command Index118902
-Node: Key Index127711
-Node: Variable Index130636
+Node: Top1464
+Node: Introduction2199
+Node: Usage Overview4165
+Node: What Supercite Does Not Do5327
+Node: What Supercite Does6459
+Node: Citations9291
+Node: Citation Elements11581
+Node: Recognizing Citations13464
+Node: Information Keys and the Info Alist15223
+Node: Reference Headers17810
+Node: The Built-in Header Rewrite Functions19376
+Node: Electric References21826
+Node: Getting Connected24706
+Node: Emacs 19 MUAs28224
+Node: Emacs 18 MUAs29060
+Node: MH-E with any Emacsen30416
+Node: VM with any Emacsen32181
+Node: GNEWS with any Emacsen33249
+Node: Overloading for Non-conforming MUAs33976
+Node: Replying and Yanking37230
+Node: Reply Buffer Initialization37566
+Node: Filling Cited Text44454
+Node: Selecting an Attribution47927
+Node: Attribution Preferences48785
+Node: Anonymous Attributions52701
+Node: Author Names55741
+Node: Configuring the Citation Engine58229
+Node: Using Regi59954
+Node: Frames You Can Customize63829
+Node: Post-yank Formatting Commands66357
+Node: Citing Commands67503
+Node: Insertion Commands70220
+Node: Variable Toggling Shortcuts71160
+Node: Mail Field Commands73519
+Node: Miscellaneous Commands75891
+Node: Hints to MUA Authors77163
+Node: Version 3 Changes81184
+Node: Thanks and History83883
+Node: The Supercite Mailing List85482
+Node: GNU Free Documentation License86613
+Node: Concept Index108849
+Node: Command Index118887
+Node: Key Index127696
+Node: Variable Index130621
 
 End Tag Table

@@ -1,4 +1,5 @@
-This is ../info/elisp, produced by makeinfo version 4.8 from elisp.texi.
+This is ../info/elisp, produced by makeinfo version 4.11 from
+elisp.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -6,7 +7,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.2.
+corresponding to Emacs version 22.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
@@ -222,7 +223,7 @@ right.
 
 `%n'
      `Narrow' when narrowing is in effect; nothing otherwise (see
-     `narrow-to-region' in *Note Narrowing::).
+     `narrow-to-region' in *note Narrowing::).
 
 `%p'
      The percentage of the buffer text above the *top* of window, or
@@ -773,8 +774,8 @@ behavior using the OVERRIDE element of a SUBEXP-HIGHLIGHTER.
      If LAXMATCH is non-`nil', it means there should be no error if
      there is no subexpression numbered SUBEXP in MATCHER.  Obviously,
      fontification of the subexpression numbered SUBEXP will not occur.
-     However, fontification of other subexpressions (and other
-     regexps) will continue.  If LAXMATCH is `nil', and the specified
+     However, fontification of other subexpressions (and other regexps)
+     will continue.  If LAXMATCH is `nil', and the specified
      subexpression is missing, then an error is signaled which
      terminates search-based fontification.
 
@@ -1423,9 +1424,9 @@ of documentation strings is not sufficient as a manual because a good
 manual is not organized in that fashion; it is organized in terms of
 topics of discussion.
 
-   For commands to display documentation strings, see *Note Help:
+   For commands to display documentation strings, see *note Help:
 (emacs)Help.  For the conventions for writing documentation strings,
-see *Note Documentation Tips::.
+see *note Documentation Tips::.
 
 * Menu:
 
@@ -1458,7 +1459,7 @@ string.  Also, you should not indent the second line of a documentation
 string, if it has one, because that looks odd when you use `C-h f'
 (`describe-function') or `C-h v' (`describe-variable') to view the
 documentation string.  There are many other conventions for doc
-strings; see *Note Documentation Tips::.
+strings; see *note Documentation Tips::.
 
    Documentation strings can contain several special substrings, which
 stand for key bindings to be looked up in the current keymaps when the
@@ -1626,7 +1627,7 @@ more information.
 
    The asterisk `*' as the first character of a variable's doc string,
 as shown above for the `goal-column' variable, means that it is a user
-option; see the description of `defvar' in *Note Defining Variables::.
+option; see the description of `defvar' in *note Defining Variables::.
 
  -- Function: Snarf-documentation filename
      This function is used only during Emacs initialization, just before
@@ -1813,7 +1814,7 @@ File: elisp,  Node: Help Functions,  Prev: Describing Characters,  Up: Documenta
 
 Emacs provides a variety of on-line help functions, all accessible to
 the user as subcommands of the prefix `C-h'.  For more information
-about them, see *Note Help: (emacs)Help.  Here we describe some
+about them, see *note Help: (emacs)Help.  Here we describe some
 program-level interfaces to the same information.
 
  -- Command: apropos pattern &optional do-all
@@ -1866,7 +1867,7 @@ program-level interfaces to the same information.
      This function expects to be called inside a
      `with-output-to-temp-buffer' special form, and expects
      `standard-output' to have the value bound by that special form.
-     For an example of its use, see the long example in *Note Accessing
+     For an example of its use, see the long example in *note Accessing
      Documentation::.
 
  -- Variable: help-char
@@ -1917,8 +1918,8 @@ program-level interfaces to the same information.
  -- Function: describe-prefix-bindings
      This function calls `describe-bindings' to display a list of all
      the subcommands of the prefix key of the most recent key sequence.
-     The prefix described consists of all but the last event of that
-     key sequence.  (The last event is, presumably, the help character.)
+     The prefix described consists of all but the last event of that key
+     sequence.  (The last event is, presumably, the help character.)
 
    The following two functions are meant for modes that want to provide
 help without relinquishing control, such as the "electric" modes.
@@ -1981,8 +1982,8 @@ File: elisp,  Node: Files,  Next: Backups and Auto-Saving,  Prev: Documentation,
 In Emacs, you can find, create, view, save, and otherwise work with
 files and file directories.  This chapter describes most of the
 file-related functions of Emacs Lisp, but a few others are described in
-*Note Buffers::, and those related to backups and auto-saving are
-described in *Note Backups and Auto-Saving::.
+*note Buffers::, and those related to backups and auto-saving are
+described in *note Backups and Auto-Saving::.
 
    Many of the file functions take one or more arguments that are file
 names.  A file name is actually a string.  Most of these functions
@@ -2074,7 +2075,7 @@ temporary buffer.  Visiting the file is not necessary and takes longer.
 
           (switch-to-buffer (find-file-noselect filename nil nil wildcards))
 
-     (See `switch-to-buffer' in *Note Displaying Buffers::.)
+     (See `switch-to-buffer' in *note Displaying Buffers::.)
 
      If WILDCARDS is non-`nil', which is always true in an interactive
      call, then `find-file' expands wildcard characters in FILENAME and
@@ -2134,7 +2135,7 @@ temporary buffer.  Visiting the file is not necessary and takes longer.
  -- Command: find-file-other-window filename &optional wildcards
      This command selects a buffer visiting the file FILENAME, but does
      so in a window other than the selected window.  It may use another
-     existing window or split a window; see *Note Displaying Buffers::.
+     existing window or split a window; see *note Displaying Buffers::.
 
      When this command is called interactively, it prompts for FILENAME.
 
@@ -2196,7 +2197,7 @@ are sometimes useful in user Lisp code: `create-file-buffer' and
      This function creates a suitably named buffer for visiting
      FILENAME, and returns it.  It uses FILENAME (sans directory) as
      the name if that name is free; otherwise, it appends a string such
-     as `<2>' to get an unused name.  See also *Note Creating Buffers::.
+     as `<2>' to get an unused name.  See also *note Creating Buffers::.
 
      *Please note:* `create-file-buffer' does _not_ associate the new
      buffer with a file and does not select the buffer.  It also does
@@ -2433,7 +2434,7 @@ You can copy a file from the disk and insert it into a buffer using the
      The function `insert-file-contents' checks the file contents
      against the defined file formats, and converts the file contents if
      appropriate.  *Note Format Conversion::.  It also calls the
-     functions in the list `after-insert-file-functions'; see *Note
+     functions in the list `after-insert-file-functions'; see *note
      Saving Properties::.  Normally, one of the functions in the
      `after-insert-file-functions' list determines the coding system
      (*note Coding Systems::) used for decoding the file's contents,
@@ -2474,7 +2475,7 @@ You can copy a file from the disk and insert it into a buffer using the
 
    If you want to pass a file name to another process so that another
 program can read the file, use the function `file-local-copy'; see
-*Note Magic File Names::.
+*note Magic File Names::.
 
 
 File: elisp,  Node: Writing to Files,  Next: File Locks,  Prev: Reading from Files,  Up: Files
@@ -2551,7 +2552,7 @@ visited; that could cause confusion in the mechanisms for visiting.
      The function `write-region' converts the data which it writes to
      the appropriate file formats specified by `buffer-file-format'.
      *Note Format Conversion::.  It also calls the functions in the list
-     `write-region-annotate-functions'; see *Note Saving Properties::.
+     `write-region-annotate-functions'; see *note Saving Properties::.
 
      Normally, `write-region' displays the message `Wrote FILENAME' in
      the echo area.  If VISIT is neither `t' nor `nil' nor a string,
@@ -2570,7 +2571,7 @@ visited; that could cause confusion in the mechanisms for visiting.
      The current buffer is restored even in case of an abnormal exit via
      `throw' or error (*note Nonlocal Exits::).
 
-     See also `with-temp-buffer' in *Note The Current Buffer:
+     See also `with-temp-buffer' in *note The Current Buffer:
      Definition of with-temp-buffer.
 
 
@@ -2593,7 +2594,7 @@ that you and another user will both lock the same file "simultaneously."
 If this happens, it is possible for the two users to make changes
 simultaneously, but Emacs will still warn the user who saves second.
 Also, the detection of modification of a buffer visiting a file changed
-on disk catches some cases of simultaneous editing; see *Note
+on disk catches some cases of simultaneous editing; see *note
 Modification Time::.
 
  -- Function: file-locked-p filename
@@ -2985,7 +2986,7 @@ parent directories.
        4. The time of last access, as a list of two integers.  The
           first integer has the high-order 16 bits of time, the second
           has the low 16 bits.  (This is similar to the value of
-          `current-time'; see *Note Time of Day::.)
+          `current-time'; see *note Time of Day::.)
 
        5. The time of last modification as a list of two integers (as
           above).  
@@ -3108,7 +3109,7 @@ for a file.
      name as its single argument.  If PREDICATE is `nil' or unspecified,
      `locate-file' uses `file-readable-p' as the default predicate.
      Useful non-default predicates include `file-executable-p',
-     `file-directory-p', and other predicates described in *Note Kinds
+     `file-directory-p', and other predicates described in *note Kinds
      of Files::.
 
      For compatibility, PREDICATE can also be one of the symbols
@@ -3193,7 +3194,7 @@ with its (recursive) target.
      names for one file are not allowed.  Some systems implement
      multiple names by copying the file instead.
 
-     See also `file-nlinks' in *Note File Attributes::.
+     See also `file-nlinks' in *note File Attributes::.
 
  -- Command: rename-file filename newname &optional ok-if-already-exists
      This command renames the file FILENAME as NEWNAME.
@@ -3245,7 +3246,7 @@ with its (recursive) target.
      with its target, but it does follow symbolic links at all levels
      of parent directories.
 
-     See also `delete-directory' in *Note Create/Delete Dirs::.
+     See also `delete-directory' in *note Create/Delete Dirs::.
 
  -- Function: define-logical-name varname string
      This function defines the logical name VARNAME to have the value
@@ -3825,7 +3826,7 @@ File: elisp,  Node: File Name Completion,  Next: Standard File Names,  Prev: Uni
 ---------------------------
 
 This section describes low-level subroutines for completing a file
-name.  For higher level functions, see *Note Reading File Names::.
+name.  For higher level functions, see *note Reading File Names::.
 
  -- Function: file-name-all-completions partial-filename directory
      This function returns a list of all possible completions for a file
@@ -4514,9 +4515,9 @@ File: elisp,  Node: Making Backups,  Next: Rename or Copy,  Up: Backup Files
      This variable's value is a function to be called on certain
      occasions to decide whether a file should have backup files.  The
      function receives one argument, an absolute file name to consider.
-     If the function returns `nil', backups are disabled for that
-     file.  Otherwise, the other variables in this section say whether
-     and how to make backups.
+     If the function returns `nil', backups are disabled for that file.
+     Otherwise, the other variables in this section say whether and how
+     to make backups.
 
      The default value is `normal-backup-enable-predicate', which checks
      for files in `temporary-file-directory' and
@@ -5136,11 +5137,11 @@ effective only in a particular buffer.  This feature allows each buffer
 to override the values of certain variables.  Most major modes override
 variables such as `fill-column' or `comment-column' in this way.  For
 more information about buffer-local variables and functions related to
-them, see *Note Buffer-Local Variables::.
+them, see *note Buffer-Local Variables::.
 
    For functions and variables related to visiting files in buffers, see
-*Note Visiting Files:: and *Note Saving Buffers::.  For functions and
-variables related to the display of buffers in windows, see *Note
+*note Visiting Files:: and *note Saving Buffers::.  For functions and
+variables related to the display of buffers in windows, see *note
 Buffers and Windows::.
 
  -- Function: bufferp object
@@ -5172,7 +5173,7 @@ current, to prevent confusion: the buffer that the cursor is in when
 Emacs reads a command is the buffer that the command will apply to.
 (*Note Command Loop::.)  Therefore, `set-buffer' is not the way to
 switch visibly to a different buffer so that the user can edit it.  For
-that, you must use the functions described in *Note Displaying
+that, you must use the functions described in *note Displaying
 Buffers::.
 
    *Warning:* Lisp functions that change to a different current buffer
@@ -5291,7 +5292,7 @@ and `throw', as well as ordinary evaluation.
      The current buffer is restored even in case of an abnormal exit via
      `throw' or error (*note Nonlocal Exits::).
 
-     See also `with-temp-file' in *Note Writing to Files: Definition of
+     See also `with-temp-file' in *note Writing to Files: Definition of
      with-temp-file.
 
 
@@ -5310,7 +5311,7 @@ argument called BUFFER must be an actual buffer object, not a name.
 have names starting with a space, so that the `list-buffers' and
 `buffer-menu' commands don't mention them (but if such a buffer visits
 a file, it *is* mentioned).  A name starting with space also initially
-disables recording undo information; see *Note Undo::.
+disables recording undo information; see *note Undo::.
 
  -- Function: buffer-name &optional buffer
      This function returns the name of BUFFER as a string.  If BUFFER
@@ -5357,7 +5358,7 @@ disables recording undo information; see *Note Undo::.
           (get-buffer "Frazzle-nots")
                => nil
 
-     See also the function `get-buffer-create' in *Note Creating
+     See also the function `get-buffer-create' in *note Creating
      Buffers::.
 
  -- Function: generate-new-buffer-name starting-name &optional ignore
@@ -5381,7 +5382,7 @@ disables recording undo information; see *Note Undo::.
           (generate-new-buffer-name "foo" "foo<6>")
                => "foo<5>"
 
-     See the related function `generate-new-buffer' in *Note Creating
+     See the related function `generate-new-buffer' in *note Creating
      Buffers::.
 
 
@@ -5425,7 +5426,7 @@ Visiting Files::.
      This buffer-local variable holds the abbreviated truename of the
      file visited in the current buffer, or `nil' if no file is visited.
      It is a permanent local, unaffected by `kill-all-local-variables'.
-     *Note Truenames::, and *Note Definition of abbreviate-file-name::.
+     *Note Truenames::, and *note Definition of abbreviate-file-name::.
 
  -- Variable: buffer-file-number
      This buffer-local variable holds the file number and directory
@@ -5436,7 +5437,7 @@ Visiting Files::.
      The value is normally a list of the form `(FILENUM DEVNUM)'.  This
      pair of numbers uniquely identifies the file among all files
      accessible on the system.  See the function `file-attributes', in
-     *Note File Attributes::, for more information about them.
+     *note File Attributes::, for more information about them.
 
      If `buffer-file-name' is the name of a symbolic link, then both
      numbers refer to the recursive target.
@@ -5531,7 +5532,7 @@ does not match the newly-visited file, even if it is unchanged from the
 file formerly visited.
 
    The functions that modify the contents of buffers are described in
-*Note Text::.
+*note Text::.
 
  -- Function: buffer-modified-p &optional buffer
      This function returns `t' if the buffer BUFFER has been modified
@@ -5626,7 +5627,7 @@ how to examine a file's modification time.)
      This function returns the current buffer's recorded last file
      modification time, as a list of the form `(HIGH LOW)'.  (This is
      the same format that `file-attributes' uses to return time values;
-     see *Note File Attributes::.)
+     see *note File Attributes::.)
 
      If the buffer has no recorded last modification time, this function
      returns zero.  This case occurs, for instance, if the buffer is not
@@ -5671,7 +5672,7 @@ how to examine a file's modification time.)
      occasions.  It exists so you can customize Emacs by redefining it.
      See the file `userlock.el' for the standard definition.
 
-     See also the file locking mechanism in *Note File Locks::.
+     See also the file locking mechanism in *note File Locks::.
 
 
 File: elisp,  Node: Read Only Buffers,  Next: The Buffer List,  Prev: Modification Time,  Up: Buffers
@@ -5758,7 +5759,7 @@ the buffer list.
 own version of the buffer list, in which the buffers that have been
 selected in that frame come first, starting with the buffers most
 recently selected _in that frame_.  (This order is recorded in FRAME's
-`buffer-list' frame parameter; see *Note Buffer Parameters::.)  The
+`buffer-list' frame parameter; see *note Buffer Parameters::.)  The
 buffers that were never selected in FRAME come afterward, ordered
 according to the fundamental Emacs buffer list.
 
@@ -5879,7 +5880,7 @@ can also create a buffer (*note Processes::).
 
      The major mode for a newly created buffer is set to Fundamental
      mode.  (The variable `default-major-mode' is handled at a higher
-     level; see *Note Auto Major Mode::.)  If the name begins with a
+     level; see *note Auto Major Mode::.)  If the name begins with a
      space, the buffer initially disables undo information recording
      (*note Undo::).
 
@@ -5904,7 +5905,7 @@ can also create a buffer (*note Processes::).
      variable `default-major-mode' is handled at a higher level.  *Note
      Auto Major Mode::.
 
-     See the related function `generate-new-buffer-name' in *Note
+     See the related function `generate-new-buffer-name' in *note
      Buffer Names::.
 
 
@@ -6103,7 +6104,7 @@ File: elisp,  Node: Windows,  Next: Frames,  Prev: Buffers,  Up: Top
 **********
 
 This chapter describes most of the functions and variables related to
-Emacs windows.  See *Note Display::, for information on how text is
+Emacs windows.  See *note Display::, for information on how text is
 displayed in windows.
 
 * Menu:
@@ -6210,7 +6211,7 @@ In contrast, Emacs windows are "tiled"; they never overlap, and
 together they fill the whole screen or frame.  Because of the way in
 which Emacs creates new windows and resizes them, not all conceivable
 tilings of windows on an Emacs frame are actually possible.  *Note
-Splitting Windows::, and *Note Size of Window::.
+Splitting Windows::, and *note Size of Window::.
 
    *Note Display::, for information on how the contents of the window's
 buffer are displayed in the window.
@@ -6313,7 +6314,7 @@ previously visible in the window that was split.
      Normally, Emacs indicates the border between two side-by-side
      windows with a scroll bar (*note Scroll Bars: Layout Parameters.)
      or `|' characters.  The display table can specify alternative
-     border characters; see *Note Display Tables::.
+     border characters; see *note Display Tables::.
 
  -- Command: split-window-vertically &optional size
      This function splits the selected window into two windows, one
@@ -6556,7 +6557,7 @@ offering various criteria for the choice.
 
      The optional arguments MINIBUF and ALL-FRAMES specify the set of
      windows to include in the scan.  See the description of
-     `next-window' in *Note Cyclic Window Ordering::, for details.
+     `next-window' in *note Cyclic Window Ordering::, for details.
 
 
 File: elisp,  Node: Cyclic Window Ordering,  Next: Buffers and Windows,  Prev: Selecting Windows,  Up: Windows
@@ -6690,8 +6691,8 @@ window; use these functions when you need complete control.
  -- Function: set-window-buffer window buffer-or-name &optional
           keep-margins
      This function makes WINDOW display BUFFER-OR-NAME as its contents.
-     It returns `nil'.  BUFFER-OR-NAME must be a buffer, or the name
-     of an existing buffer.  This is the fundamental primitive for
+     It returns `nil'.  BUFFER-OR-NAME must be a buffer, or the name of
+     an existing buffer.  This is the fundamental primitive for
      changing which buffer is displayed in a window, and all ways of
      doing that call this function.
 

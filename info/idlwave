@@ -1,4 +1,4 @@
-This is ../info/idlwave, produced by makeinfo version 4.8 from
+This is ../info/idlwave, produced by makeinfo version 4.11 from
 idlwave.texi.
 
 INFO-DIR-SECTION Emacs
@@ -690,8 +690,8 @@ available IDL code libraries for coding style pointers, but, due to the
 variety of IDL syntax elements, replicating this style can be
 challenging at best.  Luckily, IDLWAVE understands the structure of IDL
 code very well, and takes care of almost all formatting issues for you.
-After configuring it to match your coding standards, you can rely on
-it to help keep your code neat and organized.
+After configuring it to match your coding standards, you can rely on it
+to help keep your code neat and organized.
 
 
 File: idlwave,  Node: Code Indentation,  Next: Continued Statement Indentation,  Prev: Code Formatting,  Up: Code Formatting
@@ -1879,7 +1879,7 @@ your `.emacs' file:
    For more information, see the documentation string for the function
 `idlwave-action-and-binding'.  For information on controlling the case
 of routines, keywords, classes, and methods as they are completed, see
-*Note Completion::.
+*note Completion::.
 
  -- User Option: idlwave-abbrev-change-case (`nil')
      Non-`nil' means all abbrevs will be forced to either upper or lower
@@ -2114,8 +2114,8 @@ and IDL sessions.  Here is a list of commonly used commands:
    In addition to these standard `comint' commands,
 `idlwave-shell-mode' provides many of the same commands which simplify
 writing IDL code available in IDLWAVE buffers.  This includes
-abbreviations, online help, and completion.  See *Note Routine Info::
-and *Note Online Help:: and *Note Completion:: for more information on
+abbreviations, online help, and completion.  See *note Routine Info::
+and *note Online Help:: and *note Completion:: for more information on
 these commands.
 
 `<TAB>'   Completion of file names (between quotes and after executive
@@ -2200,7 +2200,7 @@ current.
 from the user, but this is configurable.  The custom variable
 `idlwave-abbrev-show-commands' allows you to configure which commands
 sent to the shell are shown there.  For a related customization for
-separating the output of _examine_ commands, see *Note Examining
+separating the output of _examine_ commands, see *note Examining
 Variables::.
 
  -- User Option: idlwave-shell-show-commands (`'(run misc breakpoint)')
@@ -2297,7 +2297,7 @@ chapter we will assume that the `C-c C-d' bindings are active, but each
 of these bindings will have an equivalent shortcut if modifiers are
 given in the `idlwave-shell-debug-modifiers' variable (*note Lesson II
 -- Customization::).  A much simpler and faster form of debugging for
-running code is also available by default -- see *Note Electric Debug
+running code is also available by default -- see *note Electric Debug
 Mode::.
 
  -- User Option: idlwave-shell-prefix-key (`C-c C-d')
@@ -2829,7 +2829,7 @@ File: idlwave,  Node: Sources of Routine Info,  Next: HTML Help Browser Tips,  P
 Appendix A Sources of Routine Info
 **********************************
 
-In *Note Routine Info:: and *Note Completion:: we showed how IDLWAVE
+In *note Routine Info:: and *note Completion:: we showed how IDLWAVE
 displays the calling sequence and keywords of routines, and completes
 routine names and keywords.  For these features to work, IDLWAVE must
 know about the accessible routines.
@@ -3906,13 +3906,12 @@ Appendix F GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -4607,77 +4606,77 @@ Index
 
 
 Tag Table:
-Node: Top1421
-Node: Introduction5059
-Ref: Introduction-Footnote-18720
-Node: IDLWAVE in a Nutshell8843
-Node: Getting Started11676
-Node: Lesson I -- Development Cycle11953
-Node: Lesson II -- Customization19865
-Node: Lesson III -- User Catalog24853
-Node: The IDLWAVE Major Mode27621
-Node: Code Formatting28710
-Node: Code Indentation30020
-Node: Continued Statement Indentation31547
-Node: Comment Indentation34770
-Node: Continuation Lines35757
-Node: Syntax Highlighting38207
-Node: Octals and Highlighting39236
-Node: Routine Info40316
-Ref: Routine Info-Footnote-146954
-Node: Online Help47120
-Node: Help with HTML Documentation51168
-Node: Help with Source54727
-Node: Completion57644
-Node: Case of Completed Words61757
-Node: Object Method Completion and Class Ambiguity63571
-Node: Object Method Completion in the Shell66251
-Node: Class and Keyword Inheritance67101
-Node: Structure Tag Completion69417
-Node: Routine Source71167
-Node: Resolving Routines72273
-Node: Code Templates73253
-Node: Abbreviations73751
-Node: Actions77622
-Node: Block Boundary Check79459
-Node: Padding Operators80508
-Node: Case Changes82635
-Node: Doc Header84124
-Node: Motion Commands85383
-Node: Misc Options86462
-Node: The IDLWAVE Shell87060
-Node: Starting the Shell88067
-Node: Using the Shell91622
-Ref: Using the Shell-Footnote-195448
-Node: Commands Sent to the Shell95636
-Node: Debugging IDL Programs97754
-Node: A Tale of Two Modes99151
-Node: Debug Key Bindings100276
-Node: Breakpoints and Stepping102156
-Node: Compiling Programs107991
-Node: Walking the Calling Stack109448
-Node: Electric Debug Mode110541
-Ref: Electric Debug Mode-Footnote-1116504
-Node: Examining Variables116631
-Ref: Examining Variables-Footnote-1121496
-Node: Custom Expression Examination121582
-Ref: Custom Expression Examination-Footnote-1125071
-Node: Acknowledgements125275
-Node: Sources of Routine Info127298
-Node: Routine Definitions128008
-Node: Routine Information Sources129389
-Node: Catalogs132893
-Node: Library Catalogs135507
-Node: User Catalog138381
-Ref: User Catalog-Footnote-1141442
-Ref: User Catalog-Footnote-2141525
-Node: Load-Path Shadows141561
-Node: Documentation Scan144150
-Node: HTML Help Browser Tips145622
-Node: Configuration Examples148769
-Node: Windows and MacOS155858
-Node: Troubleshooting158054
-Node: GNU Free Documentation License167783
-Node: Index190017
+Node: Top1422
+Node: Introduction5060
+Ref: Introduction-Footnote-18721
+Node: IDLWAVE in a Nutshell8844
+Node: Getting Started11677
+Node: Lesson I -- Development Cycle11954
+Node: Lesson II -- Customization19866
+Node: Lesson III -- User Catalog24854
+Node: The IDLWAVE Major Mode27622
+Node: Code Formatting28711
+Node: Code Indentation30021
+Node: Continued Statement Indentation31548
+Node: Comment Indentation34771
+Node: Continuation Lines35758
+Node: Syntax Highlighting38208
+Node: Octals and Highlighting39237
+Node: Routine Info40317
+Ref: Routine Info-Footnote-146955
+Node: Online Help47121
+Node: Help with HTML Documentation51169
+Node: Help with Source54728
+Node: Completion57645
+Node: Case of Completed Words61758
+Node: Object Method Completion and Class Ambiguity63572
+Node: Object Method Completion in the Shell66252
+Node: Class and Keyword Inheritance67102
+Node: Structure Tag Completion69418
+Node: Routine Source71168
+Node: Resolving Routines72274
+Node: Code Templates73254
+Node: Abbreviations73752
+Node: Actions77623
+Node: Block Boundary Check79460
+Node: Padding Operators80509
+Node: Case Changes82636
+Node: Doc Header84125
+Node: Motion Commands85384
+Node: Misc Options86463
+Node: The IDLWAVE Shell87061
+Node: Starting the Shell88068
+Node: Using the Shell91623
+Ref: Using the Shell-Footnote-195449
+Node: Commands Sent to the Shell95637
+Node: Debugging IDL Programs97755
+Node: A Tale of Two Modes99152
+Node: Debug Key Bindings100277
+Node: Breakpoints and Stepping102157
+Node: Compiling Programs107992
+Node: Walking the Calling Stack109449
+Node: Electric Debug Mode110542
+Ref: Electric Debug Mode-Footnote-1116505
+Node: Examining Variables116632
+Ref: Examining Variables-Footnote-1121497
+Node: Custom Expression Examination121583
+Ref: Custom Expression Examination-Footnote-1125072
+Node: Acknowledgements125276
+Node: Sources of Routine Info127299
+Node: Routine Definitions128009
+Node: Routine Information Sources129390
+Node: Catalogs132894
+Node: Library Catalogs135508
+Node: User Catalog138382
+Ref: User Catalog-Footnote-1141443
+Ref: User Catalog-Footnote-2141526
+Node: Load-Path Shadows141562
+Node: Documentation Scan144151
+Node: HTML Help Browser Tips145623
+Node: Configuration Examples148770
+Node: Windows and MacOS155859
+Node: Troubleshooting158055
+Node: GNU Free Documentation License167784
+Node: Index190006
 
 End Tag Table

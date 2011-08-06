@@ -350,7 +350,7 @@ comments and strings, or that point is within brackets/parens."
 		    (error nil))))))))
 
 (defun python-comment-line-p ()
-  "Return non-nil iff current line has only a comment."
+  "Return non-nil if and only if current line has only a comment."
   (save-excursion
     (end-of-line)
     (when (eq 'comment (syntax-ppss-context (syntax-ppss)))
@@ -358,7 +358,7 @@ comments and strings, or that point is within brackets/parens."
       (looking-at (rx (or (syntax comment-start) line-end))))))
 
 (defun python-blank-line-p ()
-  "Return non-nil iff current line is blank."
+  "Return non-nil if and only if current line is blank."
   (save-excursion
     (beginning-of-line)
     (looking-at "\\s-*$")))
@@ -852,7 +852,7 @@ multi-line bracketed expressions."
   "Skip out of any nested brackets.
 Skip forward if FORWARD is non-nil, else backward.
 If SYNTAX is non-nil it is the state returned by `syntax-ppss' at point.
-Return non-nil iff skipping was done."
+Return non-nil if and only if skipping was done."
   (let ((depth (syntax-ppss-depth (or syntax (syntax-ppss))))
 	(forward (if forward -1 1)))
     (unless (zerop depth)
@@ -1355,7 +1355,9 @@ buffer for a list of commands.)"
   ;; invoked.  Would support multiple processes better.
   (when (or new (not (comint-check-proc python-buffer)))
     (with-current-buffer
-        (let* ((cmdlist (append (python-args-to-list cmd) '("-i")))
+	(let* ((cmdlist
+		(append (python-args-to-list cmd)
+			'("-i" "-c" "import sys; sys.path.remove('')")))
                (path (getenv "PYTHONPATH"))
                (process-environment	; to import emacs.py
                 (cons (concat "PYTHONPATH=" data-directory
@@ -2291,9 +2293,11 @@ with skeleton expansions for compound statement templates.
 						 (current-column))))
 	 (^ '(- (1+ (current-indentation))))))
   (add-hook 'pre-abbrev-expand-hook 'python-pea-hook nil t)
-  (if (featurep 'hippie-exp)
-      (set (make-local-variable 'hippie-expand-try-functions-list)
-	   (cons 'python-try-complete hippie-expand-try-functions-list)))
+  ;; Let's not mess with hippie-expand.  Symbol-completion should rather be
+  ;; bound to another key, since it has different performance requirements.
+  ;; (if (featurep 'hippie-exp)
+  ;;     (set (make-local-variable 'hippie-expand-try-functions-list)
+  ;;          (cons 'python-try-complete hippie-expand-try-functions-list)))
   ;; Python defines TABs as being 8-char wide.
   (set (make-local-variable 'tab-width) 8)
   (when python-guess-indent (python-guess-indent))

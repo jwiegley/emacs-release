@@ -159,6 +159,9 @@ int auto_saving;
    a new file with the same mode as the original */
 int auto_save_mode_bits;
 
+/* Set by auto_save_1 if an error occurred during the last auto-save. */
+int auto_save_error_occurred;
+
 /* The symbol bound to coding-system-for-read when
    insert-file-contents is called for recovering a file.  This is not
    an actual coding system name, but just an indicator to tell
@@ -204,6 +207,9 @@ Lisp_Object Vwrite_region_annotations_so_far;
 
 /* File name in which we write a list of all our auto save files.  */
 Lisp_Object Vauto_save_list_file_name;
+
+/* Whether or not files are auto-saved into themselves.  */
+Lisp_Object Vauto_save_visited_file_name;
 
 /* Function to call to read a file name.  */
 Lisp_Object Vread_file_name_function;
@@ -1063,6 +1069,7 @@ See also the function `substitute-in-file-name'.  */)
   int length;
   Lisp_Object handler, result;
   int multibyte;
+  Lisp_Object hdir;
 
   CHECK_STRING (name);
 
@@ -1142,11 +1149,10 @@ See also the function `substitute-in-file-name'.  */)
   nm = SDATA (name);
   multibyte = STRING_MULTIBYTE (name);
 
-#ifdef DOS_NT
-  /* We will force directory separators to be either all \ or /, so make
-     a local copy to modify, even if there ends up being no change. */
+  /* Make a local copy of nm[] to protect it from GC in DECODE_FILE below. */
   nm = strcpy (alloca (strlen (nm) + 1), nm);
 
+#ifdef DOS_NT
   /* Note if special escape prefix is present, but remove for now.  */
   if (nm[0] == '/' && nm[1] == ':')
     {
@@ -1333,7 +1339,7 @@ See also the function `substitute-in-file-name'.  */)
 	    }
 	  return name;
 #else /* not DOS_NT */
-	  if (nm == SDATA (name))
+	  if (strcmp (nm, SDATA (name)) == 0)
 	    return name;
 	  return make_specified_string (nm, -1, strlen (nm), multibyte);
 #endif /* not DOS_NT */
@@ -1366,9 +1372,19 @@ See also the function `substitute-in-file-name'.  */)
 #endif /* VMS */
 	  || nm[1] == 0)	/* ~ by itself */
 	{
+	  Lisp_Object tem;
+
 	  if (!(newdir = (unsigned char *) egetenv ("HOME")))
 	    newdir = (unsigned char *) "";
 	  nm++;
+	  /* egetenv may return a unibyte string, which will bite us since
+	     we expect the directory to be multibyte.  */
+	  tem = build_string (newdir);
+	  if (!STRING_MULTIBYTE (tem))
+	    {
+	      hdir = DECODE_FILE (tem);
+	      newdir = SDATA (hdir);
+	    }
 #ifdef DOS_NT
 	  collapse_newdir = 0;
 #endif
@@ -2868,7 +2884,6 @@ This is what happens in interactive use with M-x.  */)
   return Qnil;
 }
 
-#ifdef S_IFLNK
 DEFUN ("make-symbolic-link", Fmake_symbolic_link, Smake_symbolic_link, 2, 3,
        "FMake symbolic link to file: \nGMake symbolic link to file %s: \np",
        doc: /* Make a symbolic link to FILENAME, named LINKNAME.
@@ -2913,6 +2928,7 @@ This happens for interactive use with M-x.  */)
     RETURN_UNGCPRO (call4 (handler, Qmake_symbolic_link, filename,
 			   linkname, ok_if_already_exists));
 
+#ifdef S_IFLNK
   encoded_filename = ENCODE_FILE (filename);
   encoded_linkname = ENCODE_FILE (linkname);
 
@@ -2939,8 +2955,13 @@ This happens for interactive use with M-x.  */)
     }
   UNGCPRO;
   return Qnil;
-}
+
+#else
+  UNGCPRO;
+  xsignal1 (Qfile_error, build_string ("Symbolic links are not supported"));
+
 #endif /* S_IFLNK */
+}
 
 #ifdef VMS
 
@@ -5757,6 +5778,8 @@ auto_save_error (error)
   char *msgbuf;
   USE_SAFE_ALLOCA;
 
+  auto_save_error_occurred = 1;
+
   ring_bell ();
 
   args[0] = build_string ("Auto-saving %s: %s");
@@ -5803,9 +5826,9 @@ auto_save_1 ()
     }
 
   return
-    Fwrite_region (Qnil, Qnil,
-		   current_buffer->auto_save_file_name,
-		   Qnil, Qlambda, Qnil, Qnil);
+    Fwrite_region (Qnil, Qnil, current_buffer->auto_save_file_name, Qnil,
+		   NILP (Vauto_save_visited_file_name) ? Qlambda : Qt,
+		   Qnil, Qnil);
 }
 
 static Lisp_Object
@@ -5928,6 +5951,7 @@ A non-nil CURRENT-ONLY argument means save only current buffer.  */)
 			 make_number (minibuffer_auto_raise));
   minibuffer_auto_raise = 0;
   auto_saving = 1;
+  auto_save_error_occurred = 0;
 
   /* On first pass, save all files that don't have handlers.
      On second pass, save all files that do have handlers.
@@ -6042,8 +6066,9 @@ A non-nil CURRENT-ONLY argument means save only current buffer.  */)
 	  sit_for (make_number (1), 0, 0);
 	  restore_message ();
 	}
-      else
-	/* If we displayed a message and then restored a state
+      else if (!auto_save_error_occurred)
+	/* Don't overwrite the error message if an error occurred.
+	   If we displayed a message and then restored a state
 	   with no message, leave a "done" message on the screen.  */
 	message1 ("Auto-saving...done");
     }
@@ -6749,6 +6774,11 @@ shortly after Emacs reads your `.emacs' file, if you have not yet given it
 a non-nil value.  */);
   Vauto_save_list_file_name = Qnil;
 
+  DEFVAR_LISP ("auto-save-visited-file-name", &Vauto_save_visited_file_name,
+	       doc: /* Non-nil says auto-save a buffer in the file it is visiting, when practical.
+Normally auto-save files are written under other names.  */);
+  Vauto_save_visited_file_name = Qnil;
+
 #ifdef HAVE_FSYNC
   DEFVAR_BOOL ("write-region-inhibit-fsync", &write_region_inhibit_fsync,
 	       doc: /* *Non-nil means don't call fsync in `write-region'.
@@ -6772,9 +6802,7 @@ A non-nil value may result in data loss!  */);
   defsubr (&Sdelete_file);
   defsubr (&Srename_file);
   defsubr (&Sadd_name_to_file);
-#ifdef S_IFLNK
   defsubr (&Smake_symbolic_link);
-#endif /* S_IFLNK */
 #ifdef VMS
   defsubr (&Sdefine_logical_name);
 #endif /* VMS */

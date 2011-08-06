@@ -1,7 +1,7 @@
-This is ../info/pcl-cvs, produced by makeinfo version 4.8 from
+This is ../info/pcl-cvs, produced by makeinfo version 4.11 from
 pcl-cvs.texi.
 
-   Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
+Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software
 Foundation, Inc.
 
@@ -391,7 +391,7 @@ command.
    This scheme might seem a little complicated, but once one gets used
 to it, it is quite powerful.
 
-   For commands to mark and unmark files, see *Note Marking files::.
+   For commands to mark and unmark files, see *note Marking files::.
 
 
 File: pcl-cvs,  Node: Commands,  Next: Log Edit Mode,  Prev: Selected files,  Up: Top
@@ -433,7 +433,7 @@ File: pcl-cvs,  Node: Entering PCL-CVS,  Next: Setting flags,  Prev: Commands,  
 Most commands in PCL-CVS require that you have a `*cvs*' buffer.  The
 commands that you use to get one are listed below.  For each, a `cvs'
 process will be run, the output will be parsed by PCL-CVS, and the
-result will be printed in the `*cvs*' buffer (see *Note Buffer
+result will be printed in the `*cvs*' buffer (see *note Buffer
 contents::, for a description of the buffer's contents).
 
 `M-x cvs-update'
@@ -975,7 +975,7 @@ File: pcl-cvs,  Node: Customization,  Next: Bugs,  Prev: Log View Mode,  Up: Top
 
 If you have an idea about any customization that would be handy but
 isn't present in this list, please tell us!  For info on how to reach
-us, see *Note Bugs::.
+us, see *note Bugs::.
 
 `cvs-auto-remove-handled'
      If this variable is set to any non-`nil' value,
@@ -1344,13 +1344,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1837,38 +1836,38 @@ this manual.
 
 
 Tag Table:
-Node: Top1407
-Node: About PCL-CVS3925
-Node: Contributors5013
-Node: Getting started7562
-Node: Buffer contents10258
-Node: Selected files14547
-Node: Commands16181
-Node: Entering PCL-CVS17583
-Node: Setting flags19799
-Node: Updating the buffer22269
-Node: Movement commands23329
-Node: Marking files23906
-Node: Committing changes25042
-Node: Editing files26954
-Node: Getting info about files27861
-Node: Adding and removing files28375
-Node: Undoing changes29643
-Node: Removing handled entries30114
-Node: Ignoring files30969
-Node: Viewing differences31524
-Node: Invoking Ediff33096
-Node: Updating files33953
-Node: Tagging files34214
-Node: Miscellaneous commands34987
-Node: Log Edit Mode35952
-Node: Log View Mode37290
-Node: Customization37861
-Node: Customizing Faces41488
-Node: Bugs42283
-Node: GNU Free Documentation License43822
-Node: Function and Variable Index66067
-Node: Concept Index73473
-Node: Key Index81892
+Node: Top1405
+Node: About PCL-CVS3923
+Node: Contributors5011
+Node: Getting started7560
+Node: Buffer contents10256
+Node: Selected files14545
+Node: Commands16179
+Node: Entering PCL-CVS17581
+Node: Setting flags19797
+Node: Updating the buffer22267
+Node: Movement commands23327
+Node: Marking files23904
+Node: Committing changes25040
+Node: Editing files26952
+Node: Getting info about files27859
+Node: Adding and removing files28373
+Node: Undoing changes29641
+Node: Removing handled entries30112
+Node: Ignoring files30967
+Node: Viewing differences31522
+Node: Invoking Ediff33094
+Node: Updating files33951
+Node: Tagging files34212
+Node: Miscellaneous commands34985
+Node: Log Edit Mode35950
+Node: Log View Mode37288
+Node: Customization37859
+Node: Customizing Faces41486
+Node: Bugs42281
+Node: GNU Free Documentation License43820
+Node: Function and Variable Index66053
+Node: Concept Index73459
+Node: Key Index81878
 
 End Tag Table

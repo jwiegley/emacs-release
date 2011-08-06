@@ -1,3 +1,27 @@
+2008-09-05  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 22.3 released.
+
+2008-08-05  Ulrich Mueller  <ulm@gentoo.org>
+
+	* pop.c (socket_connection): Add conditionals for
+	HAVE_KRB5_ERROR_TEXT and HAVE_KRB5_ERROR_E_TEXT to support
+	compilation with MIT Kerberos and Heimdal, respectively.
+
+2008-04-24  Adam Go,B3j(Bbiowski  <adamg@pld-linux.org>  (tiny change)
+
+	* Makefile.in (etags${EXEEXT}, ctags${EXEEXT}): Fix quote typo.
+
+2008-04-18  Steve Grubb  <sgrubb@redhat.com>  (tiny change)
+
+	* vcdiff: Use mktemp (CVE-2008-1694).
+
+2008-04-10  Jason Rumney  <jasonr@gnu.org>
+
+	* makefile.w32-in (CLIENTRES): New variable and target.
+	(TRES): Remove.
+	($(BLD)/emacsclientw.exe): Use $(CLIENTRES) instead of $(TRES).
+
 2008-03-26  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 22.2 released.

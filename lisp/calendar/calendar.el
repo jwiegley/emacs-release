@@ -1321,15 +1321,17 @@ with descriptive strings such as
 (defconst lunar-phases-buffer "*Phases of Moon*"
   "Name of the buffer used for the lunar phases.")
 
-(defmacro increment-calendar-month (mon yr n)
+(defmacro increment-calendar-month (mon yr n &optional nmonths)
   "Increment the variables MON and YR by N months.
 Forward if N is positive or backward if N is negative.
-A negative YR is interpreted as BC; -1 being 1 BC, and so on."
-  `(let (macro-y)
+A negative YR is interpreted as BC; -1 being 1 BC, and so on.
+Optional NMONTHS is the number of months per year (default 12)."
+  `(let ((nmonths (or ,nmonths 12))
+         macro-y)
      (if (< ,yr 0) (setq ,yr (1+ ,yr))) ; -1 BC -> 0 AD, etc
-     (setq macro-y (+ (* ,yr 12) ,mon -1 ,n)
-           ,mon (1+ (mod macro-y 12))
-           ,yr (/ macro-y 12))
+     (setq macro-y (+ (* ,yr nmonths) ,mon -1 ,n)
+           ,mon (1+ (mod macro-y nmonths))
+           ,yr (/ macro-y nmonths))
      (and (< macro-y 0) (> ,mon 1) (setq ,yr (1- ,yr)))
      (if (< ,yr 1) (setq ,yr (1- ,yr))))) ; 0 AD -> -1 BC, etc
 
@@ -3052,12 +3054,11 @@ date d, and applying it to d+7 gives the DAYNAME following absolute date d."
   (- date (% (- date dayname) 7)))
 
 (defun calendar-nth-named-absday (n dayname month year &optional day)
-  "The absolute date of Nth DAYNAME in MONTH, YEAR before/after optional DAY.
-A DAYNAME of 0 means Sunday, 1 means Monday, and so on.  If N<0,
-return the Nth DAYNAME before MONTH DAY, YEAR (inclusive).
+  "Absolute date of the Nth DAYNAME after/before MONTH YEAR DAY.
+A DAYNAME of 0 means Sunday, 1 means Monday, and so on.
 If N>0, return the Nth DAYNAME after MONTH DAY, YEAR (inclusive).
-
-If DAY is omitted, it defaults to 1 if N>0, and MONTH's last day otherwise."
+If N<0, return the Nth DAYNAME before MONTH DAY, YEAR (inclusive).
+DAY defaults to 1 if N>0, and MONTH's last day otherwise."
   (if (> n 0)
       (+ (* 7 (1- n))
 	 (calendar-dayname-on-or-before
@@ -3073,12 +3074,8 @@ If DAY is omitted, it defaults to 1 if N>0, and MONTH's last day otherwise."
 	       year))))))
 
 (defun calendar-nth-named-day (n dayname month year &optional day)
-  "The date of Nth DAYNAME in MONTH, YEAR before/after optional DAY.
-A DAYNAME of 0 means Sunday, 1 means Monday, and so on.  If N<0,
-return the Nth DAYNAME before MONTH DAY, YEAR (inclusive).
-If N>0, return the Nth DAYNAME after MONTH DAY, YEAR (inclusive).
-
-If DAY is omitted, it defaults to 1 if N>0, and MONTH's last day otherwise."
+  "Date of the Nth DAYNAME after/before MONTH YEAR DAY.
+Like `calendar-nth-named-absday', but returns a Gregorian date."
   (calendar-gregorian-from-absolute
    (calendar-nth-named-absday n dayname month year day)))
 

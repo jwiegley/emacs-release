@@ -483,6 +483,15 @@ otherwise do not."
 
 (defconst gdb-source-file-regexp "\\(.+?\\), \\|\\([^, \n].*$\\)")
 
+(defun gdb-init-buffer ()
+  (set (make-local-variable 'gud-minor-mode)
+       (buffer-local-value 'gud-minor-mode gud-comint-buffer))
+  (set (make-local-variable 'tool-bar-map) gud-tool-bar-map)
+  (when gud-tooltip-mode
+    (make-local-variable 'gdb-define-alist)
+    (gdb-create-define-alist)
+    (add-hook 'after-save-hook 'gdb-create-define-alist nil t)))
+
 (defun gdb-set-gud-minor-mode-existing-buffers ()
   "Create list of source files for current GDB session."
   (goto-char (point-min))
@@ -495,12 +504,7 @@ otherwise do not."
 	(when (and buffer-file-name
 		   (member (file-name-nondirectory buffer-file-name)
 			   gdb-source-file-list))
-	  (set (make-local-variable 'gud-minor-mode) 'gdba)
-	  (set (make-local-variable 'tool-bar-map) gud-tool-bar-map)
-	  (when gud-tooltip-mode
-	    (make-local-variable 'gdb-define-alist)
-	    (gdb-create-define-alist)
-	    (add-hook 'after-save-hook 'gdb-create-define-alist nil t))))))
+	  (gdb-init-buffer)))))
   (gdb-force-mode-line-update
    (propertize "ready" 'face font-lock-variable-name-face)))
 
@@ -1311,7 +1315,7 @@ want the GDB Graphical Interface."
   (setq gdb-flush-pending-output t)
   (setq gud-running nil)
   (gdb-force-mode-line-update
-   (propertize "stopped"'face font-lock-warning-face))
+   (propertize "stopped" 'face font-lock-warning-face))
   (setq gdb-output-sink 'user)
   (setq gdb-input-queue nil)
   (setq gdb-pending-triggers nil)
@@ -1907,43 +1911,40 @@ static char *magick[] = {
     (with-current-buffer (gdb-get-buffer 'gdb-breakpoints-buffer)
       (save-excursion
 	(let ((buffer-read-only nil))
-	(goto-char (point-min))
-	(while (< (point) (- (point-max) 1))
-	  (forward-line 1)
-	  (if (looking-at gdb-breakpoint-regexp)
-	      (progn
-		(setq bptno (or (match-string 1) (match-string 2)))
-		(setq flag (char-after (match-beginning 3)))
-		(if (match-string 1)
-		    (setq gdb-parent-bptno-enabled (eq flag ?y)))
-		(add-text-properties
-		 (match-beginning 3) (match-end 3)
-		 (if (eq flag ?y)
-		     '(face font-lock-warning-face)
-		   '(face font-lock-type-face)))
-		(let ((bl (point))
-		      (el (line-end-position)))
-		  (if (re-search-forward " in \\(.*\\) at\\s-+" el t)
-		      (progn
-			(add-text-properties
-			 (match-beginning 1) (match-end 1)
-			 '(face font-lock-function-name-face))
-			(looking-at "\\(\\S-+\\):\\([0-9]+\\)")
+	  (goto-char (point-min))
+	  (while (< (point) (- (point-max) 1))
+	    (forward-line 1)
+	    (if (looking-at gdb-breakpoint-regexp)
+		(progn
+		  (setq bptno (or (match-string 1) (match-string 2)))
+		  (setq flag (char-after (match-beginning 3)))
+		  (if (match-string 1)
+		      (setq gdb-parent-bptno-enabled (eq flag ?y)))
+		  (add-text-properties
+		   (match-beginning 3) (match-end 3)
+		   (if (eq flag ?y)
+		       '(face font-lock-warning-face)
+		     '(face font-lock-type-face)))
+		  (let ((bl (point))
+			(el (line-end-position)))
+		    (when (re-search-forward " in \\(.*\\) at" el t)
+		      (add-text-properties
+		       (match-beginning 1) (match-end 1)
+		       '(face font-lock-function-name-face)))
+		    (if (re-search-forward
+			 ".*\\s-+\\(\\S-+\\):\\([0-9]+\\)$" nil t)
 			(let ((line (match-string 2))
 			      (file (match-string 1)))
 			  (add-text-properties bl el
-			   '(mouse-face highlight
-			     help-echo "mouse-2, RET: visit breakpoint"))
+			       '(mouse-face highlight
+				 help-echo "mouse-2, RET: visit breakpoint"))
 			  (unless (file-exists-p file)
 			    (setq file (cdr (assoc bptno gdb-location-alist))))
 			  (if (and file
 				   (not (string-equal file "File not found")))
 			      (with-current-buffer
 				  (find-file-noselect file 'nowarn)
-				(set (make-local-variable 'gud-minor-mode)
-				     'gdba)
-				(set (make-local-variable 'tool-bar-map)
-				     gud-tool-bar-map)
+				(gdb-init-buffer)
 				;; Only want one breakpoint icon at each
 				;; location.
 				(save-excursion
@@ -1957,20 +1958,20 @@ static char *magick[] = {
 			    (gdb-enqueue-input
 			     (list (concat gdb-server-prefix "info source\n")
 				   `(lambda () (gdb-get-location
-						,bptno ,line ,flag)))))))
-		    (if (re-search-forward
-			 "<\\(\\(\\sw\\|[_.]\\)+\\)\\(\\+[0-9]+\\)?>"
-			 el t)
+						,bptno ,line ,flag))))))
+		      (if (re-search-forward
+			   "<\\(\\(\\sw\\|[_.]\\)+\\)\\(\\+[0-9]+\\)?>"
+			   el t)
+			  (add-text-properties
+			   (match-beginning 1) (match-end 1)
+			   '(face font-lock-function-name-face))
+			(end-of-line)
+			(re-search-backward "\\s-\\(\\S-*\\)"
+					    bl t)
 			(add-text-properties
 			 (match-beginning 1) (match-end 1)
-			 '(face font-lock-function-name-face))
-		      (end-of-line)
-		      (re-search-backward "\\s-\\(\\S-*\\)"
-					  bl t)
-		      (add-text-properties
-		       (match-beginning 1) (match-end 1)
-		       '(face font-lock-variable-name-face)))))))
-	  (end-of-line))))))
+			 '(face font-lock-variable-name-face)))))))
+	    (end-of-line))))))
   (if (gdb-get-buffer 'gdb-assembler-buffer) (gdb-assembler-custom)))
 
 (defun gdb-mouse-set-clear-breakpoint (event)
@@ -1978,7 +1979,7 @@ static char *magick[] = {
   (interactive "e")
   (mouse-minibuffer-check event)
   (let ((posn (event-end event)))
-    (if (buffer-file-name)
+    (if (or (buffer-file-name) (eq major-mode 'gdb-assembler-mode))
 	(if (numberp (posn-point posn))
 	    (with-selected-window (posn-window posn)
 	      (save-excursion
@@ -2130,7 +2131,7 @@ static char *magick[] = {
   (if event (posn-set-point (event-end event)))
   (save-excursion
     (beginning-of-line 1)
-    (if (looking-at "\\([0-9]+\\.?[0-9]*\\) .+ in .+ at\\s-+\\(\\S-+\\):\\([0-9]+\\)")
+    (if (looking-at "\\([0-9]+\\.?[0-9]*\\) .*\\s-+\\(\\S-+\\):\\([0-9]+\\)$")
 	(let ((bptno (match-string 1))
 	      (file  (match-string 2))
 	      (line  (match-string 3)))
@@ -2147,7 +2148,7 @@ static char *magick[] = {
       (error "No location specified."))))
 
 
-;; Frames buffer.  This displays a perpetually correct bactracktrace
+;; Frames buffer.  This displays a perpetually correct backtrace
 ;; (from the command `where').
 ;;
 ;; Alas, if your stack is deep, it is costly.
@@ -3108,7 +3109,7 @@ Kills the gdb buffers, and resets variables and the source buffers."
   (remove-hook 'after-save-hook 'gdb-create-define-alist t))
 
 (defun gdb-source-info ()
-  "Find the source file where the program starts and displays it with related
+  "Find the source file where the program starts and display it with related
 buffers."
   (goto-char (point-min))
   (if (and (search-forward "Located in " nil t)
@@ -3142,9 +3143,7 @@ Add directory to search path for source files using the GDB command, dir."))
       (throw 'file-not-found nil))
     (with-current-buffer
 	(find-file-noselect (match-string 0))
-      (save-current-buffer
-	(set (make-local-variable 'gud-minor-mode) 'gdba)
-	(set (make-local-variable 'tool-bar-map) gud-tool-bar-map))
+      (gdb-init-buffer)
       ;; only want one breakpoint icon at each location
       (save-excursion
 	(goto-line (string-to-number line))
@@ -3166,9 +3165,7 @@ of the current session."
 		    buffer-file-name)
 		  gdb-source-file-list)
 	  (with-current-buffer (find-buffer-visiting buffer-file-name)
-	    (set (make-local-variable 'gud-minor-mode)
-		 (buffer-local-value 'gud-minor-mode gud-comint-buffer))
-	    (set (make-local-variable 'tool-bar-map) gud-tool-bar-map)))))
+	    (gdb-init-buffer)))))
 
 ;;from put-image
 (defun gdb-put-string (putstring pos &optional dprop &rest sprops)
@@ -3340,7 +3337,7 @@ BUFFER nil or omitted means use the current buffer."
 	  (with-current-buffer buffer
 	    (save-excursion
 	      (goto-char (point-min))
-	      (if (search-forward address nil t)
+	      (if (re-search-forward (concat "^0x0*" address) nil t)
 		  (gdb-put-breakpoint-icon (eq flag ?y) bptno)))))))
     (if (not (equal gdb-pc-address "main"))
 	(with-current-buffer buffer
@@ -3493,13 +3490,7 @@ is set in them."
   (dolist (buffer (buffer-list))
     (with-current-buffer buffer
       (when (member buffer-file-name gdb-source-file-list)
-	(set (make-local-variable 'gud-minor-mode)
-	     (buffer-local-value 'gud-minor-mode gud-comint-buffer))
-	(set (make-local-variable 'tool-bar-map) gud-tool-bar-map)
-	(when gud-tooltip-mode
-	  (make-local-variable 'gdb-define-alist)
-	  (gdb-create-define-alist)
-	  (add-hook 'after-save-hook 'gdb-create-define-alist nil t)))))
+	(gdb-init-buffer))))
   (gdb-force-mode-line-update
    (propertize "ready" 'face font-lock-variable-name-face)))
 

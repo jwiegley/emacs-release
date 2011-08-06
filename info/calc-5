@@ -1,6 +1,6 @@
-This is ../info/calc, produced by makeinfo version 4.8 from calc.texi.
+This is ../info/calc, produced by makeinfo version 4.11 from calc.texi.
 
-   This file documents Calc, the GNU Emacs calculator.
+This file documents Calc, the GNU Emacs calculator.
 
    Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
 2008 Free Software Foundation, Inc.
@@ -2144,13 +2144,12 @@ Appendix B GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -2366,7 +2365,7 @@ by putting the appropriate lines in your .emacs file; *Note Init File:
 
    Some of the customizable variables are regular expressions.  A
 regular expression is basically a pattern that Calc can search for.
-See *Note Regular Expression Search: (emacs)Regexp Search.  to see how
+See *note Regular Expression Search: (emacs)Regexp Search.  to see how
 regular expressions work.
 
  -- Variable: calc-settings-file
@@ -2380,18 +2379,18 @@ regular expressions work.
      The default value for this variable is `"~/.calc.el"'.
 
  -- Variable: calc-gnuplot-name
-     See *Note Graphics::.
+     See *note Graphics::.
      The variable `calc-gnuplot-name' should be the name of the GNUPLOT
      program (a string).  If you have GNUPLOT installed on your system
      but Calc is unable to find it, you may need to set this variable.
      (*note Customizing Calc::) You may also need to set some Lisp
      variables to show Calc how to run GNUPLOT on your system, see
-     *Note Graphical Devices: Devices .  The default value of
+     *note Graphical Devices: Devices .  The default value of
      `calc-gnuplot-name' is `"gnuplot"'.
 
  -- Variable: calc-gnuplot-plot-command
  -- Variable: calc-gnuplot-print-command
-     See *Note Graphical Devices: Devices.
+     See *note Graphical Devices: Devices.
      The variables `calc-gnuplot-plot-command' and
      `calc-gnuplot-print-command' represent system commands to display
      and print the output of GNUPLOT, respectively.  These may be `nil'
@@ -2404,7 +2403,7 @@ regular expressions work.
      default value of `calc-gnuplot-print-command' is `"lp %s"'.
 
  -- Variable: calc-language-alist
-     See *Note Basic Embedded Mode::.
+     See *note Basic Embedded Mode::.
      The variable `calc-language-alist' controls the languages that
      Calc will associate with major modes.  When Calc embedded mode is
      enabled, it will try to use the current major mode to determine
@@ -2430,7 +2429,7 @@ regular expressions work.
 
  -- Variable: calc-embedded-announce-formula
  -- Variable: calc-embedded-announce-formula-alist
-     See *Note Customizing Embedded Mode::.
+     See *note Customizing Embedded Mode::.
      The variable `calc-embedded-announce-formula' helps determine what
      formulas `C-x * a' will activate in a buffer.  It is a regular
      expression, and when activating embedded formulas with `C-x * a',
@@ -2465,7 +2464,7 @@ regular expressions work.
  -- Variable: calc-embedded-open-formula
  -- Variable: calc-embedded-close-formula
  -- Variable: calc-embedded-open-close-formula-alist
-     See *Note Customizing Embedded Mode::.
+     See *note Customizing Embedded Mode::.
      The variables `calc-embedded-open-formula' and
      `calc-embedded-open-formula' control the region that Calc will
      activate as a formula when Embedded mode is entered with `C-x * e'.
@@ -2498,7 +2497,7 @@ regular expressions work.
  -- Variable: calc-embedded-open-word
  -- Variable: calc-embedded-close-word
  -- Variable: calc-embedded-open-close-word-alist
-     See *Note Customizing Embedded Mode::.
+     See *note Customizing Embedded Mode::.
      The variables `calc-embedded-open-word' and
      `calc-embedded-close-word' control the region that Calc will
      activate when Embedded mode is entered with `C-x * w'.  They are
@@ -2518,7 +2517,7 @@ regular expressions work.
  -- Variable: calc-embedded-open-plain
  -- Variable: calc-embedded-close-plain
  -- Variable: calc-embedded-open-close-plain-alist
-     See *Note Customizing Embedded Mode::.
+     See *note Customizing Embedded Mode::.
      The variables `calc-embedded-open-plain' and
      `calc-embedded-open-plain' are used to delimit "plain" formulas.
      Note that these are actual strings, not regular expressions,
@@ -2554,7 +2553,7 @@ regular expressions work.
  -- Variable: calc-embedded-open-new-formula
  -- Variable: calc-embedded-close-new-formula
  -- Variable: calc-embedded-open-close-new-formula-alist
-     See *Note Customizing Embedded Mode::.
+     See *note Customizing Embedded Mode::.
      The variables `calc-embedded-open-new-formula' and
      `calc-embedded-close-new-formula' are strings which are inserted
      before and after a new formula when you type `C-x * f'.
@@ -2579,7 +2578,7 @@ regular expressions work.
  -- Variable: calc-embedded-open-mode
  -- Variable: calc-embedded-close-mode
  -- Variable: calc-embedded-open-close-mode-alist
-     See *Note Customizing Embedded Mode::.
+     See *note Customizing Embedded Mode::.
      The variables `calc-embedded-open-mode' and
      `calc-embedded-close-mode' are strings which Calc will place before
      and after any mode annotations that it inserts.  Calc never scans
@@ -4154,7 +4153,7 @@ Index of Key Sequences
                                                               (line  55)
 * I b M:                                 Related Financial Functions.
                                                               (line  14)
-* I b N:                                 Present Value.       (line  66)
+* I b N:                                 Present Value.       (line  65)
 * I b P:                                 Present Value.       (line  28)
 * I b T:                                 Related Financial Functions.
                                                               (line  43)

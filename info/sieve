@@ -1,6 +1,7 @@
-This is ../info/sieve, produced by makeinfo version 4.8 from sieve.texi.
+This is ../info/sieve, produced by makeinfo version 4.11 from
+sieve.texi.
 
-   This file documents the Emacs Sieve package, for server-side mail
+This file documents the Emacs Sieve package, for server-side mail
 filtering.
 
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
@@ -509,13 +510,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -742,14 +742,14 @@ Index
 
 
 Tag Table:
-Node: Top1357
-Node: Installation2421
-Node: Sieve Mode2894
-Node: Managing Sieve3862
-Node: Examples5362
-Node: Manage Sieve API6675
-Node: Standards8135
-Node: GNU Free Documentation License8622
-Node: Index30848
+Node: Top1355
+Node: Installation2419
+Node: Sieve Mode2892
+Node: Managing Sieve3860
+Node: Examples5360
+Node: Manage Sieve API6673
+Node: Standards8133
+Node: GNU Free Documentation License8620
+Node: Index30834
 
 End Tag Table

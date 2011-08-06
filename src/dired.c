@@ -374,7 +374,9 @@ If MATCH is non-nil, mention only file names that match the regexp MATCH.
 If NOSORT is non-nil, the list is not sorted--its order is unpredictable.
  NOSORT is useful if you plan to sort the result yourself.
 ID-FORMAT specifies the preferred format of attributes uid and gid, see
-`file-attributes' for further documentation. */)
+`file-attributes' for further documentation.
+On MS-Windows, performance depends on `w32-get-true-file-attributes',
+which see.  */)
      (directory, full, match, nosort, id_format)
      Lisp_Object directory, full, match, nosort, id_format;
 {
@@ -921,7 +923,10 @@ Elements of the attribute list are:
   this is a cons cell containing two integers: first the high part,
   then the low 16 bits.
 11. Device number.  If it is larger than the Emacs integer, this is
-  a cons cell, similar to the inode number.  */)
+  a cons cell, similar to the inode number.
+
+On MS-Windows, performance depends on `w32-get-true-file-attributes',
+which see.  */)
      (filename, id_format)
      Lisp_Object filename, id_format;
 {
@@ -976,8 +981,16 @@ Elements of the attribute list are:
      shorter than an int (e.g., `short'), GCC whines about comparison
      being always false due to limited range of data type.  Fix by
      copying s.st_uid and s.st_gid into int variables.  */
+#ifdef WINDOWSNT
+  /* Windows uses signed short for the uid and gid in the stat structure,
+     but we use an int for getuid (limited to the range 0-60000).
+     So users with uid > 32767 need their uid patched back here.  */ 
+  uid = (unsigned short) s.st_uid;
+  gid = (unsigned short) s.st_gid;
+#else
   uid = s.st_uid;
   gid = s.st_gid;
+#endif
   if (NILP (id_format) || EQ (id_format, Qinteger))
     {
       values[2] = make_fixnum_or_float (uid);
@@ -1020,7 +1033,17 @@ Elements of the attribute list are:
   values[9] = (gid != getegid ()) ? Qt : Qnil;
 #endif	/* BSD4_2 (or BSD4_3) */
   /* Shut up GCC warnings in FIXNUM_OVERFLOW_P below.  */
+#ifdef WINDOWSNT
+  {
+    /* The bit-shuffling we do in w32.c:stat can turn on the MSB, which
+       will produce negative inode numbers.  People don't like that, so
+       force a positive inode instead.  */
+    unsigned short tem = s.st_ino;
+    ino = tem;
+  }
+#else
   ino = s.st_ino;
+#endif
   if (FIXNUM_OVERFLOW_P (ino))
     /* To allow inode numbers larger than VALBITS, separate the bottom
        16 bits.  */
@@ -1030,8 +1053,11 @@ Elements of the attribute list are:
     /* But keep the most common cases as integers.  */
     values[10] = make_number (ino);
 
-  /* Likewise for device.  */
-  if (FIXNUM_OVERFLOW_P (s.st_dev))
+  /* Likewise for device, but don't let it become negative.  We used
+     to use FIXNUM_OVERFLOW_P here, but that won't catch large
+     positive numbers such as 0xFFEEDDCC.  */
+  if ((EMACS_INT)s.st_dev < 0
+      || (EMACS_INT)s.st_dev > MOST_POSITIVE_FIXNUM)
     values[11] = Fcons (make_number (s.st_dev >> 16),
 			make_number (s.st_dev & 0xffff));
   else

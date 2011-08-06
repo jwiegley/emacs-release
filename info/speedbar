@@ -1,7 +1,7 @@
-This is ../info/speedbar, produced by makeinfo version 4.8 from
+This is ../info/speedbar, produced by makeinfo version 4.11 from
 speedbar.texi.
 
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
 2008  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -266,7 +266,7 @@ extra text characters at the end of the line.  File mode uses boolean
 flags, such as a `*' to indicate that a file has been checked out of a
 versioning system.
 
-   For additional flags, see *Note File Mode::, and *Note Version
+   For additional flags, see *note File Mode::, and *note Version
 Control::.
 
 2.2.0.4 Unadorned Text
@@ -1094,7 +1094,7 @@ File: speedbar,  Node: Creating a display,  Prev: Tagging Extensions,  Up: Exten
 ======================
 
 Rendering a display in speedbar is completely flexible.  When your
-button function is called, see *Note Minor Display Modes::, and *Note
+button function is called, see *note Minor Display Modes::, and *note
 Major Display Modes::, you have control to `insert' anything you want.
 
    The conventions allow almost anything to be inserted, but several
@@ -1415,13 +1415,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1714,33 +1713,33 @@ Concept Index
 
 
 Tag Table:
-Node: Top1370
-Node: Introduction3212
-Node: Basic Navigation4734
-Node: Basic Key Bindings5174
-Node: Basic Visuals7310
-Node: Mouse Bindings11260
-Node: Displays Submenu12880
-Node: File Mode13555
-Node: Directory Display14157
-Node: Hidden Files17192
-Node: File Key Bindings18408
-Node: Buffer Mode19837
-Node: Minor Modes20947
-Node: RMAIL21801
-Node: Info22694
-Node: GDB23296
-Node: Customizing24089
-Node: Frames and Faces24895
-Node: Tag Hierarchy Methods26228
-Node: Version Control28449
-Node: Hooks29786
-Node: Extending31037
-Node: Minor Display Modes32103
-Node: Major Display Modes34089
-Node: Tagging Extensions38859
-Node: Creating a display40255
-Node: GNU Free Documentation License44793
-Node: Index67022
+Node: Top1368
+Node: Introduction3210
+Node: Basic Navigation4732
+Node: Basic Key Bindings5172
+Node: Basic Visuals7308
+Node: Mouse Bindings11258
+Node: Displays Submenu12878
+Node: File Mode13553
+Node: Directory Display14155
+Node: Hidden Files17190
+Node: File Key Bindings18406
+Node: Buffer Mode19835
+Node: Minor Modes20945
+Node: RMAIL21799
+Node: Info22692
+Node: GDB23294
+Node: Customizing24087
+Node: Frames and Faces24893
+Node: Tag Hierarchy Methods26226
+Node: Version Control28447
+Node: Hooks29784
+Node: Extending31035
+Node: Minor Display Modes32101
+Node: Major Display Modes34087
+Node: Tagging Extensions38857
+Node: Creating a display40253
+Node: GNU Free Documentation License44791
+Node: Index67008
 
 End Tag Table

@@ -1,7 +1,7 @@
-This is ../info/eshell, produced by makeinfo version 4.8 from
+This is ../info/eshell, produced by makeinfo version 4.11 from
 eshell.texi.
 
-   This manual is for Eshell, the Emacs shell.
+This manual is for Eshell, the Emacs shell.
 
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
 2008 Free Software Foundation, Inc.
@@ -1111,13 +1111,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1350,44 +1349,44 @@ Key Index
 
 
 Tag Table:
-Node: Top1340
-Node: What is Eshell?2247
-Ref: What is Eshell?-Footnote-14896
-Ref: What is Eshell?-Footnote-24986
-Node: Contributors to Eshell5179
-Node: Command basics6333
-Node: Commands verbs6889
-Node: Command arguments8653
-Node: Commands9904
-Node: Invocation10287
-Ref: Invocation-Footnote-110913
-Node: Completion11006
-Node: Aliases11122
-Node: History11229
-Node: Scripts11590
-Node: Built-ins11696
-Node: Arguments12565
-Node: The Parser12756
-Node: Variables12856
-Node: Substitution12975
-Node: Globbing13098
-Node: Predicates13214
-Node: Input/Output13313
-Node: Process control13433
-Node: Extension modules13567
-Node: Writing a module13872
-Node: Module testing14003
-Node: Directory handling14157
-Node: Key rebinding14316
-Node: Smart scrolling14466
-Node: Terminal emulation14620
-Node: Built-in UNIX commands14789
-Node: Extras and Goodies14942
-Node: Bugs and ideas15087
-Node: Known problems15682
-Node: GNU Free Documentation License30831
-Node: Concept Index53071
-Node: Function and Variable Index54251
-Node: Key Index54651
+Node: Top1338
+Node: What is Eshell?2245
+Ref: What is Eshell?-Footnote-14894
+Ref: What is Eshell?-Footnote-24984
+Node: Contributors to Eshell5177
+Node: Command basics6331
+Node: Commands verbs6887
+Node: Command arguments8651
+Node: Commands9902
+Node: Invocation10285
+Ref: Invocation-Footnote-110911
+Node: Completion11004
+Node: Aliases11120
+Node: History11227
+Node: Scripts11588
+Node: Built-ins11694
+Node: Arguments12563
+Node: The Parser12754
+Node: Variables12854
+Node: Substitution12973
+Node: Globbing13096
+Node: Predicates13212
+Node: Input/Output13311
+Node: Process control13431
+Node: Extension modules13565
+Node: Writing a module13870
+Node: Module testing14001
+Node: Directory handling14155
+Node: Key rebinding14314
+Node: Smart scrolling14464
+Node: Terminal emulation14618
+Node: Built-in UNIX commands14787
+Node: Extras and Goodies14940
+Node: Bugs and ideas15085
+Node: Known problems15680
+Node: GNU Free Documentation License30829
+Node: Concept Index53057
+Node: Function and Variable Index54237
+Node: Key Index54637
 
 End Tag Table

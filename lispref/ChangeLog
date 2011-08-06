@@ -1,3 +1,12 @@
+2008-09-05  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 22.3 released.
+
+2008-08-05  Chong Yidong  <cyd@stupidchicken.com>
+
+	* symbols.texi (Other Plists): Fix incorrect example.
+	Suggested by Florian Beck.
+
 2008-03-26  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 22.2 released.

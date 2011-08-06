@@ -1,7 +1,7 @@
-This is ../info/ebrowse, produced by makeinfo version 4.8 from
+This is ../info/ebrowse, produced by makeinfo version 4.11 from
 ebrowse.texi.
 
-   This file documents Ebrowse, a C++ class browser for GNU Emacs.
+This file documents Ebrowse, a C++ class browser for GNU Emacs.
 
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 Free Software Foundation, Inc.
@@ -444,7 +444,7 @@ File: ebrowse,  Node: Go to Class,  Next: Quitting,  Prev: Member Display,  Up: 
 
      If the branch of the class tree containing the class searched for
      is currently collapsed, the class itself and all its base classes
-     are recursively made visible.  (See also *Note Expanding and
+     are recursively made visible.  (See also *note Expanding and
      Collapsing::.)
 
      This function is also available from the tree buffer's context
@@ -500,7 +500,7 @@ File: ebrowse,  Node: Expanding and Collapsing,  Next: Tree Indentation,  Prev: 
 You can expand and collapse parts of a tree to reduce the complexity of
 large class hierarchies.  Expanding or collapsing branches of a tree has
 no impact on the functionality of other commands, like `/'.  (See also
-*Note Go to Class::.)
+*note Go to Class::.)
 
    Collapsed branches are indicated with an ellipsis following the class
 name like in the example below.
@@ -863,7 +863,7 @@ File: ebrowse,  Node: Regexp Display,  Next: Switching Classes,  Prev: Long and 
      expressions matching member definitions.
 
    Regular expressions will only be displayed when the Lisp database has
-not been produced with the `ebrowse' option `--no-regexps', see *Note
+not been produced with the `ebrowse' option `--no-regexps', see *note
 -no-regexps: Matching.
 
 
@@ -956,8 +956,8 @@ File: ebrowse,  Node: Finding and Viewing,  Next: Position Stack,  Prev: Tags-li
 6.1 Finding and Viewing Members
 ===============================
 
-The functions in this section are similar to those described in *Note
-Source Display::, and also in *Note Finding/Viewing::, except that they
+The functions in this section are similar to those described in *note
+Source Display::, and also in *note Finding/Viewing::, except that they
 work in a C++ source buffer, not in member and tree buffers created by
 Ebrowse.
 
@@ -1338,13 +1338,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1717,51 +1716,51 @@ Concept Index
 
 
 Tag Table:
-Node: Top1344
-Node: Overview1934
-Node: Generating browser files5527
-Node: Input files6648
-Node: Output file7912
-Node: Structs and unions8821
-Node: Matching9265
-Node: Verbosity11229
-Node: Loading a Tree11663
-Node: Tree Buffers12677
-Node: Source Display13827
-Node: Member Display14614
-Node: Go to Class16391
-Node: Quitting17118
-Node: File Name Display17316
-Node: Expanding and Collapsing18223
-Node: Tree Indentation19220
-Node: Killing Classes19607
-Node: Saving a Tree19977
-Node: Statistics20348
-Node: Marking Classes20627
-Node: Member Buffers21442
-Node: Switching Member Lists22898
-Node: Finding/Viewing23702
-Node: Inherited Members24757
-Node: Searching Members25075
-Node: Switching to Tree25983
-Node: Filters26331
-Node: Attributes27076
-Node: Long and Short Display28143
-Node: Regexp Display29097
-Node: Switching Classes29641
-Node: Killing/Burying30446
-Node: Column Width30673
-Node: Redisplay30947
-Node: Getting Help31334
-Node: Tags-like Functions31459
-Node: Finding and Viewing32239
-Node: Position Stack33777
-Node: Search & Replace35077
-Node: Members in Files36202
-Node: Apropos36475
-Node: Symbol Completion37095
-Node: Member Buffer Display37324
-Node: GNU Free Documentation License37584
-Node: Concept Index59830
+Node: Top1342
+Node: Overview1932
+Node: Generating browser files5525
+Node: Input files6646
+Node: Output file7910
+Node: Structs and unions8819
+Node: Matching9263
+Node: Verbosity11227
+Node: Loading a Tree11661
+Node: Tree Buffers12675
+Node: Source Display13825
+Node: Member Display14612
+Node: Go to Class16389
+Node: Quitting17116
+Node: File Name Display17314
+Node: Expanding and Collapsing18221
+Node: Tree Indentation19218
+Node: Killing Classes19605
+Node: Saving a Tree19975
+Node: Statistics20346
+Node: Marking Classes20625
+Node: Member Buffers21440
+Node: Switching Member Lists22896
+Node: Finding/Viewing23700
+Node: Inherited Members24755
+Node: Searching Members25073
+Node: Switching to Tree25981
+Node: Filters26329
+Node: Attributes27074
+Node: Long and Short Display28141
+Node: Regexp Display29095
+Node: Switching Classes29639
+Node: Killing/Burying30444
+Node: Column Width30671
+Node: Redisplay30945
+Node: Getting Help31332
+Node: Tags-like Functions31457
+Node: Finding and Viewing32237
+Node: Position Stack33775
+Node: Search & Replace35075
+Node: Members in Files36200
+Node: Apropos36473
+Node: Symbol Completion37093
+Node: Member Buffer Display37322
+Node: GNU Free Documentation License37582
+Node: Concept Index59816
 
 End Tag Table

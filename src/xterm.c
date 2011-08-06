@@ -6848,6 +6848,8 @@ handle_one_xevent (dpyinfo, eventp, finish, hold_quit)
         if (
 #ifdef USE_GTK
             ! popup_activated ()
+            /* Gtk+ menus only react to the first three buttons. */
+            && event.xbutton.button < 3
             &&
 #endif
             f && event.type == ButtonPress
@@ -11032,8 +11034,9 @@ x_delete_display (dpyinfo)
 	  tail->next = tail->next->next;
     }
 
-#ifndef USE_X_TOOLKIT   /* I'm told Xt does this itself.  */
+#if ! defined (USE_X_TOOLKIT) && ! defined (USE_GTK)
 #ifndef AIX		/* On AIX, XCloseDisplay calls this.  */
+  /* Xt and GTK does this themselves. */
   XrmDestroyDatabase (dpyinfo->xrdb);
 #endif
 #endif

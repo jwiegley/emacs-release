@@ -1,4 +1,4 @@
-This is ../info/erc, produced by makeinfo version 4.8 from erc.texi.
+This is ../info/erc, produced by makeinfo version 4.11 from erc.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -237,8 +237,8 @@ necessarily have to be byte-compiled.  It will yield a speed increase,
 though.
 
    A working copy of Emacs or XEmacs is needed in order to compile ERC.
-By default, the program that is installed with the name `emacs' will
-be used.
+By default, the program that is installed with the name `emacs' will be
+used.
 
    If you want to use the `xemacs' binary to perform the compilation,
 you would need to edit `Makefile' in the top-level directory as
@@ -1174,13 +1174,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1436,24 +1435,24 @@ Index
 
 
 Tag Table:
-Node: Top1158
-Node: Introduction3429
-Node: Obtaining ERC4098
-Node: Releases4757
-Node: Development5332
-Node: Installation6921
-Node: Getting Started8558
-Node: Sample Session9524
-Node: Special Features11927
-Node: Keystroke Summary14219
-Node: Modules16756
-Node: Advanced Usage18820
-Node: Connecting19167
-Node: Sample Configuration22516
-Node: Options25880
-Node: Getting Help and Reporting Bugs26132
-Node: History27269
-Node: GNU Free Documentation License29292
-Node: Concept Index51522
+Node: Top1159
+Node: Introduction3430
+Node: Obtaining ERC4099
+Node: Releases4758
+Node: Development5333
+Node: Installation6922
+Node: Getting Started8559
+Node: Sample Session9525
+Node: Special Features11928
+Node: Keystroke Summary14220
+Node: Modules16757
+Node: Advanced Usage18821
+Node: Connecting19168
+Node: Sample Configuration22517
+Node: Options25881
+Node: Getting Help and Reporting Bugs26133
+Node: History27270
+Node: GNU Free Documentation License29293
+Node: Concept Index51511
 
 End Tag Table

@@ -1,7 +1,7 @@
-This is ../info/vip, produced by makeinfo version 4.8 from vip.texi.
+This is ../info/vip, produced by makeinfo version 4.11 from vip.texi.
 
-   Copyright (C) 1987, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-Free Software Foundation, Inc.
+Copyright (C) 1987, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
+Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1432,8 +1432,8 @@ in the global keymap.  See GNU Emacs Manual for details.
 
 `N C-t'
      Interchange characters around point, moving forward one character.
-     With count N, take character before point and drag it forward
-     past N other characters.  If no argument and at end of line, the
+     With count N, take character before point and drag it forward past
+     N other characters.  If no argument and at end of line, the
      previous two characters are exchanged (`transpose-chars').
 
 `N C-v'
@@ -1671,10 +1671,10 @@ in VIP from that in Vi/Ex.
 `(1,$) w[rite] ! FILE'
      Write out specified lines into file FILE.  If no FILE is given,
      text will be written to the file associated to the current buffer.
-     Unless `!' is given, if FILE is different from the file
-     associated to the current buffer and if the file FILE exists, the
-     command will not be executed.  Unlike Ex, FILE becomes the file
-     associated to the current buffer.
+     Unless `!' is given, if FILE is different from the file associated
+     to the current buffer and if the file FILE exists, the command
+     will not be executed.  Unlike Ex, FILE becomes the file associated
+     to the current buffer.
 
 `(1,$) w[rite]>> FILE'
      Write out specified lines at the end of file FILE.  FILE becomes
@@ -2021,13 +2021,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -2529,50 +2528,50 @@ Concept Index
 
 
 Tag Table:
-Node: Top1261
-Node: Survey2315
-Node: Basic Concepts2801
-Node: Loading VIP4455
-Node: Modes in VIP5198
-Node: Emacs Mode7760
-Node: Vi Mode8123
-Node: Insert Mode8440
-Node: Differences from Vi9072
-Node: Undoing10071
-Node: Changing10435
-Node: Searching11062
-Node: z Command11784
-Node: Counts12126
-Node: Marking12638
-Node: Region Commands13147
-Node: New Commands13824
-Node: New Bindings16584
-Node: Window Commands18760
-Node: Buffer Commands19236
-Node: File Commands19730
-Node: Misc Commands20106
-Node: Vi Commands20531
-Node: Numeric Arguments21470
-Node: Important Keys21965
-Node: Buffers and Windows23714
-Node: Files25943
-Node: Viewing the Buffer29194
-Node: Mark Commands31102
-Node: Motion Commands31944
-Node: Searching and Replacing37487
-Node: Modifying Commands39767
-Node: Delete Commands41178
-Node: Yank Commands42890
-Node: Put Back Commands43781
-Node: Change Commands45241
-Node: Repeating and Undoing Modifications46269
-Node: Other Vi Commands47093
-Node: Commands in Insert Mode50730
-Node: Ex Commands52808
-Node: Ex Command Reference53984
-Node: Customization60452
-Node: Customizing Constants60870
-Node: Customizing Key Bindings62199
-Node: GNU Free Documentation License63256
+Node: Top1259
+Node: Survey2313
+Node: Basic Concepts2799
+Node: Loading VIP4453
+Node: Modes in VIP5196
+Node: Emacs Mode7758
+Node: Vi Mode8121
+Node: Insert Mode8438
+Node: Differences from Vi9070
+Node: Undoing10069
+Node: Changing10433
+Node: Searching11060
+Node: z Command11782
+Node: Counts12124
+Node: Marking12636
+Node: Region Commands13145
+Node: New Commands13822
+Node: New Bindings16582
+Node: Window Commands18758
+Node: Buffer Commands19234
+Node: File Commands19728
+Node: Misc Commands20104
+Node: Vi Commands20529
+Node: Numeric Arguments21468
+Node: Important Keys21963
+Node: Buffers and Windows23712
+Node: Files25941
+Node: Viewing the Buffer29192
+Node: Mark Commands31100
+Node: Motion Commands31942
+Node: Searching and Replacing37485
+Node: Modifying Commands39765
+Node: Delete Commands41176
+Node: Yank Commands42888
+Node: Put Back Commands43779
+Node: Change Commands45239
+Node: Repeating and Undoing Modifications46267
+Node: Other Vi Commands47091
+Node: Commands in Insert Mode50728
+Node: Ex Commands52806
+Node: Ex Command Reference53982
+Node: Customization60450
+Node: Customizing Constants60868
+Node: Customizing Key Bindings62197
+Node: GNU Free Documentation License63254
 
 End Tag Table

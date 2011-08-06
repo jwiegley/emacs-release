@@ -1,7 +1,7 @@
-This is ../info/flymake, produced by makeinfo version 4.8 from
+This is ../info/flymake, produced by makeinfo version 4.11 from
 flymake.texi.
 
-   This manual is for GNU Flymake (version 0.3, April 2004), which is a
+This manual is for GNU Flymake (version 0.3, April 2004), which is a
 universal on-the-fly syntax checker for GNU Emacs.
 
    Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation,
@@ -259,7 +259,7 @@ File: flymake,  Node: Customizable variables,  Next: Adding support for a new sy
 This section summarizes variables used for Flymake configuration.
 
 `flymake-log-level'
-     Controls logging output, see *Note Troubleshooting::.
+     Controls logging output, see *note Troubleshooting::.
 
 `flymake-allowed-file-name-masks'
      A list of `(filename-regexp, init-function, cleanup-function
@@ -437,7 +437,7 @@ functions for `make'. We just add a new entry to the
                  "SYNTAX_CHECK_MODE=1"
                  "check-syntax"))
 
-   `base-dir' is a directory containing `Makefile', see *Note Locating
+   `base-dir' is a directory containing `Makefile', see *note Locating
 the buildfile::.
 
    Thus, `Makefile' must contain the `check-syntax' target. In our case
@@ -505,7 +505,7 @@ Syntax check is considered possible if there's an entry in
 
 
    These modes are handled inside init/cleanup/getfname functions, see
-*Note Adding support for a new syntax check tool::.
+*note Adding support for a new syntax check tool::.
 
    Flymake contains implementations of all functionality required to
 support different syntax check modes described above (making temporary
@@ -566,7 +566,7 @@ of each file are parsed.
 
    For `file.h', the include directives to look for are `#include
 "file.h"', `#include "../file.h"', etc. Each include is checked against
-a list of include directories (see *Note Getting the include
+a list of include directories (see *note Getting the include
 directories::) to be sure it points to the correct `file.h'.
 
    First matching master file found stops the search. The master file
@@ -935,13 +935,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1190,32 +1189,32 @@ Index
 
 
 Tag Table:
-Node: Top1382
-Node: Overview of Flymake1647
-Node: Installing Flymake3458
-Node: Using Flymake4145
-Node: Flymake mode4441
-Node: Running the syntax check4972
-Node: Navigating to error lines5492
-Node: Viewing error messages6247
-Node: Syntax check statuses6835
-Node: Troubleshooting8597
-Node: Configuring Flymake9113
-Node: Customizable variables9491
-Node: Adding support for a new syntax check tool11742
-Node: Example -- Configuring a tool called directly13976
-Node: Example -- Configuring a tool called via make15586
-Node: Flymake Implementation17034
-Node: Determining whether syntax check is possible18128
-Node: Making a temporary copy19503
-Node: Locating a master file20808
-Node: Getting the include directories22184
-Node: Locating the buildfile23236
-Node: Starting the syntax check process24708
-Node: Parsing the output25240
-Node: Highlighting erroneous lines26680
-Node: Interaction with other modes27188
-Node: GNU Free Documentation License28257
-Node: Index50498
+Node: Top1380
+Node: Overview of Flymake1645
+Node: Installing Flymake3456
+Node: Using Flymake4143
+Node: Flymake mode4439
+Node: Running the syntax check4970
+Node: Navigating to error lines5490
+Node: Viewing error messages6245
+Node: Syntax check statuses6833
+Node: Troubleshooting8595
+Node: Configuring Flymake9111
+Node: Customizable variables9489
+Node: Adding support for a new syntax check tool11740
+Node: Example -- Configuring a tool called directly13974
+Node: Example -- Configuring a tool called via make15584
+Node: Flymake Implementation17032
+Node: Determining whether syntax check is possible18126
+Node: Making a temporary copy19501
+Node: Locating a master file20806
+Node: Getting the include directories22182
+Node: Locating the buildfile23234
+Node: Starting the syntax check process24706
+Node: Parsing the output25238
+Node: Highlighting erroneous lines26678
+Node: Interaction with other modes27186
+Node: GNU Free Documentation License28255
+Node: Index50484
 
 End Tag Table

@@ -5,7 +5,7 @@
 
 @c The edition number appears in several places in this file
 @set EDITION   Sixteenth
-@set EMACSVER  22.2
+@set EMACSVER  22.3
 
 @copying
 This is the @value{EDITION} edition of the @cite{GNU Emacs Manual},@*
@@ -715,7 +715,7 @@ Maintaining Large Programs
 
 * Change Log::	        Maintaining a change history for your program.
 * Format of ChangeLog:: What the change log file looks like.
-* Tags::	        Go direct to any function in your program in one
+* Tags::	        Go directly to any function in your program in one
 			  command.  Tags remembers which file it is in.
 * Emerge::              A convenient way of merging two versions of a program.
 

@@ -1,6 +1,6 @@
-This is ../info/eudc, produced by makeinfo version 4.8 from eudc.texi.
+This is ../info/eudc, produced by makeinfo version 4.11 from eudc.texi.
 
-   This file documents EUDC v1.30b.
+This file documents EUDC v1.30b.
 
    EUDC is the Emacs Unified Directory Client, a common interface to
 directory servers using various protocols such as LDAP or the CCSO white
@@ -111,7 +111,7 @@ protocol for directory applications defined in RFC 1777.
 
    LDAP servers usually store (but are not limited to) information about
 people such as their name, phone number, email address, office
-location, etc.... More information about LDAP can be found at
+location, etc... More information about LDAP can be found at
 `http://www.openldap.org/'
 
    EUDC requires external support to access LDAP directory servers
@@ -1114,13 +1114,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1409,31 +1408,31 @@ Variables Index
 
 
 Tag Table:
-Node: Top1500
-Node: Overview2137
-Node: LDAP3206
-Node: CCSO PH/QI4182
-Node: BBDB5234
-Node: Installation6251
-Node: LDAP Requirements7135
-Node: Usage7594
-Node: Querying Servers8446
-Node: Selecting a Server8965
-Node: Return Attributes10785
-Node: Duplicate Attributes11863
-Node: Query Form14435
-Node: Display of Query Results16917
-Node: Inline Query Expansion19887
-Node: The Server Hotlist24336
-Node: The Hotlist Edit Buffer25940
-Node: Multi-server Queries27000
-Node: Creating BBDB Records28283
-Ref: Creating BBDB Records-Footnote-133185
-Node: Server/Protocol Locals33314
-Node: Manipulating local bindings33821
-Node: Credits36488
-Node: GNU Free Documentation License36811
-Node: Command and Function Index59055
-Node: Variables Index63267
+Node: Top1498
+Node: Overview2135
+Node: LDAP3204
+Node: CCSO PH/QI4179
+Node: BBDB5231
+Node: Installation6248
+Node: LDAP Requirements7132
+Node: Usage7591
+Node: Querying Servers8443
+Node: Selecting a Server8962
+Node: Return Attributes10782
+Node: Duplicate Attributes11860
+Node: Query Form14432
+Node: Display of Query Results16914
+Node: Inline Query Expansion19884
+Node: The Server Hotlist24333
+Node: The Hotlist Edit Buffer25937
+Node: Multi-server Queries26997
+Node: Creating BBDB Records28280
+Ref: Creating BBDB Records-Footnote-133182
+Node: Server/Protocol Locals33311
+Node: Manipulating local bindings33818
+Node: Credits36485
+Node: GNU Free Documentation License36808
+Node: Command and Function Index59040
+Node: Variables Index63252
 
 End Tag Table

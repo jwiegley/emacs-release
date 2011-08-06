@@ -1,7 +1,8 @@
-This is ../info/emacs, produced by makeinfo version 4.8 from emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.11 from
+emacs.texi.
 
-   This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 22.2.
+This is the Sixteenth edition of the `GNU Emacs Manual',
+updated for Emacs version 22.3.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
@@ -977,13 +978,12 @@ Appendix B GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1409,7 +1409,7 @@ of these files or substitute other files for them.
      buffers and strings are unibyte unless you (or a Lisp program)
      explicitly ask for a multibyte buffer or string.  (Note that Emacs
      always loads Lisp files in multibyte mode, even if `--unibyte' is
-     specified; see *Note Enabling Multibyte::.)  Setting the
+     specified; see *note Enabling Multibyte::.)  Setting the
      environment variable `EMACS_UNIBYTE' has the same effect (*note
      General Variables::).
 
@@ -1501,7 +1501,7 @@ software) inherit the environment from Emacs, too.
    Inside Emacs, the command `M-x getenv' gets the value of an
 environment variable.  `M-x setenv' sets a variable in the Emacs
 environment.  (Environment variable substitutions with `$' work in the
-value just as in file names; see *Note File Names with $::.)
+value just as in file names; see *note File Names with $::.)
 
    The way to set environment variables outside of Emacs depends on the
 operating system, and especially the shell that you are using.  For
@@ -2501,7 +2501,7 @@ class that it belongs to:
 
 `menuBar' (class `MenuBar')
      Give frames menu bars if `on'; don't have menu bars if `off'.
-     *Note Lucid Resources::, and *Note LessTif Resources::, for how to
+     *Note Lucid Resources::, and *note LessTif Resources::, for how to
      control the appearance of the menu bar if you have one.
 
 `minibuffer' (class `Minibuffer')
@@ -2532,8 +2532,8 @@ class that it belongs to:
 
 `selectionFont' (class `SelectionFont')
      Font name for pop-up menu items, in non-toolkit versions of Emacs.
-     (For toolkit versions, see *Note Lucid Resources::, also see
-     *Note LessTif Resources::.)
+     (For toolkit versions, see *note Lucid Resources::, also see *note
+     LessTif Resources::.)
 
 `selectionTimeout' (class `SelectionTimeout')
      Number of milliseconds to wait for a selection reply.  If the
@@ -3119,8 +3119,8 @@ possible states are:
      PIXMAP should be the image file name.  GTK can use a number of
      image file formats, including XPM, XBM, GIF, JPEG and PNG.  If you
      want a widget to use the same image as its parent, use `<parent>'.
-     If you don't want any image, use `<none>'.  `<none>' is the way
-     to cancel a background image inherited from a parent style.
+     If you don't want any image, use `<none>'.  `<none>' is the way to
+     cancel a background image inherited from a parent style.
 
      You can't specify the file by its absolute file name.  GTK looks
      for the pixmap file in directories specified in `pixmap_path'.
@@ -3198,7 +3198,7 @@ Appendix E Emacs 21 Antinews
 
 For those users who live backwards in time, here is information about
 downgrading to Emacs version 21.4.  We hope you will enjoy the greater
-simplicity that results from the absence of many Emacs 22.2 features.
+simplicity that results from the absence of many Emacs 22.3 features.
 
    * The buffer position and line number are now displayed at the end of
      the mode line, where they can be more easily seen.
@@ -3939,10 +3939,12 @@ and also knows about drive letters in file names.
    On MS-DOS/MS-Windows, file names are case-insensitive, so Emacs by
 default ignores letter-case in file names during completion.
 
-   If the variable `w32-get-true-file-attributes' is non-`nil' (the
-default), Emacs tries to determine the accurate link counts for files.
-This option is only useful on NTFS volumes, and it considerably slows
-down Dired and other features, so use it only on fast machines.
+   If the variable `w32-get-true-file-attributes' is `local' (the
+default), Emacs tries to determine the accurate link counts and file
+types for files on local fixed drives.  Any other non-`nil' value means
+do this even on remote and removable volumes, where it could slow down
+Dired and other similar features; `nil' means never do this.  Setting
+this option to non-`nil' is only useful on NTFS volumes.
 
 
 File: emacs,  Node: ls in Lisp,  Next: Windows HOME,  Prev: Windows Files,  Up: Microsoft Windows
@@ -4443,7 +4445,7 @@ G.10 Emacs and MS-DOS
 This section briefly describes the peculiarities of using Emacs on the
 MS-DOS "operating system" (also known as "MS-DOG").  Information about
 peculiarities common to MS-DOS and Microsoft's current operating
-systems Windows (also known as "Losedows") is in *Note Microsoft
+systems Windows (also known as "Losedows") is in *note Microsoft
 Windows::.
 
    If you build Emacs for MS-DOS, the binary will also run on Windows

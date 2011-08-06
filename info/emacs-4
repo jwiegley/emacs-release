@@ -1,7 +1,8 @@
-This is ../info/emacs, produced by makeinfo version 4.8 from emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.11 from
+emacs.texi.
 
-   This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 22.2.
+This is the Sixteenth edition of the `GNU Emacs Manual',
+updated for Emacs version 22.3.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
@@ -562,7 +563,7 @@ highlighted, instead of the entire source line.
 similar to `M-x grep', but it supplies a different initial default for
 the command--one that runs both `find' and `grep', so as to search
 every file in a directory tree.  See also the `find-grep-dired'
-command, in *Note Dired and Find::.
+command, in *note Dired and Find::.
 
    The commands `M-x lgrep' (local grep) and `M-x rgrep' (recursive
 grep) are more user-friendly versions of `grep' and `grep-find', which
@@ -605,7 +606,7 @@ and `M-x flymake-goto-prev-error'.  To display any error messages
 associated with the current line, use `M-x
 flymake-display-err-menu-for-current-line'.
 
-   For more details about using Flymake, see *Note Flymake:
+   For more details about using Flymake, see *note Flymake:
 (flymake)Top.
 
 
@@ -643,7 +644,7 @@ to a particular debugger program.
 
 `M-x gdb <RET> FILE <RET>'
      Run GDB as a subprocess of Emacs.  By default, this uses an
-     IDE-like graphical interface; see *Note GDB Graphical Interface::.
+     IDE-like graphical interface; see *note GDB Graphical Interface::.
      Only GDB works with the graphical interface.
 
 `M-x dbx <RET> FILE <RET>'
@@ -1508,7 +1509,7 @@ particularly useful for this purpose.
 
 * Change Log::	        Maintaining a change history for your program.
 * Format of ChangeLog:: What the change log file looks like.
-* Tags::	        Go direct to any function in your program in one
+* Tags::	        Go directly to any function in your program in one
 			  command.  Tags remembers which file it is in.
 
 * Emerge::              A convenient way of merging two versions of a program.
@@ -1800,7 +1801,7 @@ File: emacs,  Node: Create Tags Table,  Next: Etags Regexps,  Prev: Tag Syntax, 
 ---------------------------
 
 The `etags' program is used to create a tags table file.  It knows the
-syntax of several languages, as described in *Note Tag Syntax::.  Here
+syntax of several languages, as described in *note Tag Syntax::.  Here
 is how to run `etags':
 
      etags INPUTFILES...
@@ -1867,12 +1868,12 @@ typing a dash in place of the file names, like this:
      find . -name "*.[chCH]" -print | etags -
 
    Use the option `--language=NAME' to specify the language explicitly.
-You can intermix these options with file names; each one applies to
-the file names that follow it.  Specify `--language=auto' to tell
-`etags' to resume guessing the language from the file names and file
-contents.  Specify `--language=none' to turn off language-specific
-processing entirely; then `etags' recognizes tags by regexp matching
-alone (*note Etags Regexps::).
+You can intermix these options with file names; each one applies to the
+file names that follow it.  Specify `--language=auto' to tell `etags'
+to resume guessing the language from the file names and file contents.
+Specify `--language=none' to turn off language-specific processing
+entirely; then `etags' recognizes tags by regexp matching alone (*note
+Etags Regexps::).
 
    The option `--parse-stdin=FILE' is mostly useful when calling
 `etags' from programs.  It can be used (only once) in place of a file
@@ -2246,8 +2247,8 @@ File: emacs,  Node: Emerge,  Prev: Tags,  Up: Maintaining
 It's not unusual for programmers to get their signals crossed and
 modify the same program in two different directions.  To recover from
 this confusion, you need to merge the two versions.  Emerge makes this
-easier.  For other ways to compare files, see *Note Comparing Files::,
-and *Note Ediff: (ediff)Top.
+easier.  For other ways to compare files, see *note Comparing Files::,
+and *note Ediff: (ediff)Top.
 
 * Menu:
 
@@ -2588,9 +2589,9 @@ this:
 While this example shows C preprocessor conditionals delimiting the two
 alternative versions, you can specify the strings to use by setting the
 variable `emerge-combine-versions-template' to a string of your choice.
-In the string, `%a' says where to put version A, and `%b' says where
-to put version B.  The default setting, which produces the results
-shown above, looks like this:
+In the string, `%a' says where to put version A, and `%b' says where to
+put version B.  The default setting, which produces the results shown
+above, looks like this:
 
      "#ifdef NEW\n%a#else /* not NEW */\n%b#endif /* not NEW */\n"
 
@@ -4188,7 +4189,7 @@ system; often it is `/var/mail/USERNAME', `/usr/spool/mail/USERNAME', or
 `/usr/mail/USERNAME'.
 
    You can specify the inbox file(s) for any Rmail file with the
-command `set-rmail-inbox-list'; see *Note Rmail Files::.
+command `set-rmail-inbox-list'; see *note Rmail Files::.
 
    There are two reasons for having separate Rmail files and inboxes.
 
@@ -4895,8 +4896,8 @@ characters displayed as empty boxes, this may have happened.
 
    You can correct the problem by decoding the message again using the
 right coding system, if you can figure out or guess which one is right.
-To do this, invoke the `M-x rmail-redecode-body' command.  It reads
-the name of a coding system, encodes the message body using whichever
+To do this, invoke the `M-x rmail-redecode-body' command.  It reads the
+name of a coding system, encodes the message body using whichever
 coding system was used to decode it before, then redecodes it using the
 coding system you specified.  If you specified the right coding system,
 the result should be readable.
@@ -5032,7 +5033,7 @@ formats, such as plain UNIX mailboxes, `maildir' and `MH' mailboxes,
 etc.  It is able to retrieve remote mail using POP3 or IMAP4 protocol,
 and can retrieve mail from them using a TLS encrypted channel.  It also
 accepts mailbox argument in the URL form.  The detailed description of
-mailbox URLs can be found in *Note URL: (mailutils)URL.  In short, a URL
+mailbox URLs can be found in *note URL: (mailutils)URL.  In short, a URL
 is:
 
      PROTO://[USER[:PASSWORD]@]HOST-OR-FILE-NAME
@@ -5261,7 +5262,7 @@ switches can include short options (that is, single characters)
 requiring no arguments, and long options (starting with `--') whose
 arguments are specified with `='.
 
-   On MS-Windows and MS-DOS systems, Emacs _emulates_ `ls'; see *Note
+   On MS-Windows and MS-DOS systems, Emacs _emulates_ `ls'; see *note
 ls in Lisp::, for options and peculiarities of that emulation.
 
    To display the Dired buffer in another window rather than in the
@@ -5789,7 +5790,7 @@ files, using a new name made by transforming the existing name.
    Like the basic Dired file-manipulation commands (*note Operating on
 Files::), the commands described here operate either on the next N
 files, or on all files marked with `*', or on the current file.  (To
-mark files, use the commands described in *Note Marks vs Flags::.)
+mark files, use the commands described in *note Marks vs Flags::.)
 
    All of the commands described in this section work _interactively_:
 they ask you to confirm the operation for each candidate file.  Thus,
@@ -6106,9 +6107,9 @@ use `M-x find-grep-dired'.  This command reads two minibuffer
 arguments, DIRECTORY and REGEXP; it chooses all the files in DIRECTORY
 or its subdirectories that contain a match for REGEXP.  It works by
 running the programs `find' and `grep'.  See also `M-x grep-find', in
-*Note Grep Searching::.  Remember to write the regular expression for
+*note Grep Searching::.  Remember to write the regular expression for
 `grep', not for Emacs.  (An alternative method of showing files whose
-contents match a given regexp is the `% g REGEXP' command, see *Note
+contents match a given regexp is the `% g REGEXP' command, see *note
 Marks vs Flags::.)
 
    The most general command in this series is `M-x find-dired', which

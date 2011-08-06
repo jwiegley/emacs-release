@@ -1,7 +1,7 @@
-This is ../info/autotype, produced by makeinfo version 4.8 from
+This is ../info/autotype, produced by makeinfo version 4.11 from
 autotype.texi.
 
-   Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
+Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
 2007, 2008  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -826,13 +826,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1107,22 +1106,22 @@ Variable Index
 
 
 Tag Table:
-Node: Top1437
-Node: Using Skeletons3948
-Node: Wrapping Skeletons5419
-Node: Skeletons as Abbrevs8023
-Node: Skeleton Language8910
-Node: Inserting Pairs12488
-Node: Autoinserting14870
-Node: Copyrights18656
-Node: Executables20524
-Node: Timestamps22221
-Node: QuickURL23596
-Node: Tempo24462
-Node: Hippie Expand25645
-Node: GNU Free Documentation License26677
-Node: Concept Index48918
-Node: Command Index50029
-Node: Variable Index51489
+Node: Top1435
+Node: Using Skeletons3946
+Node: Wrapping Skeletons5417
+Node: Skeletons as Abbrevs8021
+Node: Skeleton Language8908
+Node: Inserting Pairs12486
+Node: Autoinserting14868
+Node: Copyrights18654
+Node: Executables20522
+Node: Timestamps22219
+Node: QuickURL23594
+Node: Tempo24460
+Node: Hippie Expand25643
+Node: GNU Free Documentation License26675
+Node: Concept Index48904
+Node: Command Index50015
+Node: Variable Index51475
 
 End Tag Table

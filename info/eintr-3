@@ -1,4 +1,4 @@
-This is ../info/eintr, produced by makeinfo version 4.8 from
+This is ../info/eintr, produced by makeinfo version 4.11 from
 emacs-lisp-intro.texi.
 
 INFO-DIR-SECTION Emacs
@@ -48,7 +48,7 @@ File: eintr,  Node: Debugging Exercises,  Prev: edebug,  Up: Debugging
      enter the built-in debugger when you call it.  Run the command on a
      region containing two words.  You will need to press `d' a
      remarkable number of times.  On your system, is a `hook' called
-     after the command finishes?  (For information on hooks, see *Note
+     after the command finishes?  (For information on hooks, see *note
      Command Loop Overview: (elisp)Command Overview.)
 
    * Copy `count-words-region' into the `*scratch*' buffer, instrument
@@ -95,7 +95,7 @@ But only some.  There are a great many more brackets and hinges that are
 easy to use that we have not touched.
 
    A path you can follow right now lies among the sources to GNU Emacs
-and in *Note The GNU Emacs Lisp Reference Manual: (elisp)Top.
+and in *note The GNU Emacs Lisp Reference Manual: (elisp)Top.
 
    The Emacs Lisp sources are an adventure.  When you read the sources
 and come across a function or expression that is unfamiliar, you need to
@@ -130,7 +130,7 @@ not studied: `skip-chars-forward', `indent-to', `current-column' and
 `insert-and-inherit'.
 
    Consider the `skip-chars-forward' function.  (It is part of the
-function definition for `back-to-indentation', which is shown in *Note
+function definition for `back-to-indentation', which is shown in *note
 Review: Review.)
 
    In GNU Emacs, you can find out more about `skip-chars-forward' by
@@ -207,8 +207,8 @@ one or more spaces, tabs, or newlines.  However, it does not detect
 duplicated words on different lines, since the ending of the first
 word, the end of the line, is different from the ending of the second
 word, a space.  (For more information about regular expressions, see
-*Note Regular Expression Searches: Regexp Search, as well as *Note
-Syntax of Regular Expressions: (emacs)Regexps, and *Note Regular
+*note Regular Expression Searches: Regexp Search, as well as *note
+Syntax of Regular Expressions: (emacs)Regexps, and *note Regular
 Expressions: (elisp)Regular Expressions.)
 
    You might try searching just for duplicated word-constituent
@@ -391,7 +391,7 @@ which means that all the functions that call it set the value
 indirectly: `kill-append', `copy-region-as-kill', `kill-ring-save',
 `kill-line', and `kill-region'.
 
-   Here is the line in `kill-new', which is explained in *Note The
+   Here is the line in `kill-new', which is explained in *note The
 `kill-new' function: kill-new function.
 
      (setq kill-ring-yank-pointer kill-ring)
@@ -953,8 +953,8 @@ multiple of five.  We can use this value as the Y axis height.
    A fairly simply way to determine whether a number is a multiple of
 five is to divide it by five and see if the division results in a
 remainder.  If there is no remainder, the number is a multiple of five.
-Thus, seven divided by five has a remainder of two, and seven is not
-an integral multiple of five.  Put in slightly different language, more
+Thus, seven divided by five has a remainder of two, and seven is not an
+integral multiple of five.  Put in slightly different language, more
 reminiscent of the classroom, five goes into seven once, with a
 remainder of two.  However, five goes into ten twice, with no
 remainder: ten is an integral multiple of five.
@@ -2671,7 +2671,7 @@ Index
 * Body of graph:                         Readying a Graph.    (line   6)
 * Buffer size:                           Buffer Size & Locations.
                                                               (line   6)
-* Buffer, history of word:               Buffer Names.        (line  67)
+* Buffer, history of word:               Buffer Names.        (line  66)
 * buffer-file-name:                      Buffer Names.        (line   6)
 * buffer-menu, bound to key:             Keybindings.         (line  69)
 * buffer-name:                           Buffer Names.        (line   6)

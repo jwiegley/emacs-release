@@ -1,6 +1,6 @@
-This is ../info/gnus, produced by makeinfo version 4.8 from gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.11 from gnus.texi.
 
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
+Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -611,7 +611,7 @@ include:
 shown, because they clutter reading the actual e-mail.  You can type `K
 b' manually to display the information.  Use the
 `gnus-buttonized-mime-types' and `gnus-unbuttonized-mime-types'
-variables to control this permanently.  *Note MIME Commands:: for
+variables to control this permanently.  *note MIME Commands:: for
 further details, and hints on how to customize these variables to
 always display security information.
 
@@ -880,7 +880,7 @@ a MIME button:
      (`gnus-mime-inline-part') as `text/plain'.  If given a prefix,
      insert the raw contents without decoding.  If given a numerical
      prefix, you can do semi-manual charset stuff (see
-     `gnus-summary-show-article-charset-alist' in *Note Paging the
+     `gnus-summary-show-article-charset-alist' in *note Paging the
      Article::).
 
 `E (Article)'
@@ -2718,7 +2718,7 @@ are deleted?  How awful!
    But, no, it means that old messages are "expired" according to some
 scheme or other.  For news messages, the expire process is controlled by
 the news administrator; for mail, the expire process is controlled by
-you.  The expire process for mail is covered in depth in *Note Expiring
+you.  The expire process for mail is covered in depth in *note Expiring
 Mail::.
 
    What many Gnus users find, after using it a while for both news and
@@ -2994,7 +2994,7 @@ default values.
 
      There is also the variable `nnmail-resplit-incoming', if you set
      that to a non-`nil' value, then the normal splitting process is
-     applied to all the files from the directory, *Note Splitting
+     applied to all the files from the directory, *note Splitting
      Mail::.
 
      Keywords:
@@ -3212,7 +3212,7 @@ default values.
 
     `:mailbox'
           The name of the mailbox to get mail from.  The default is
-          `INBOX' which normally is the mailbox which receive incoming
+          `INBOX' which normally is the mailbox which receives incoming
           mail.
 
     `:predicate'
@@ -3336,8 +3336,8 @@ variables.
      deletion will only happen when receiving new mail).  You may also
      set `mail-source-delete-incoming' to `nil' and call
      `mail-source-delete-old-incoming' from a hook or interactively.
-     `mail-source-delete-incoming' defaults to `2' in alpha Gnusae and
-     `10' in released Gnusae.  *Note Gnus Development::.
+     `mail-source-delete-incoming' defaults to `10' in alpha Gnusae and
+     `2' in released Gnusae.  *Note Gnus Development::.
 
 `mail-source-delete-old-incoming-confirm'
      If non-`nil', ask for confirmation before deleting old incoming
@@ -4405,10 +4405,10 @@ will keep your marks.
      else; do not choose a directory already used for other purposes).
      Each maildir will be represented in Gnus as a newsgroup on that
      server; the filename of the symlink will be the name of the group.
-     Any filenames in the directory starting with `.' are ignored.
-     The directory is scanned when you first start Gnus, and each time
-     you type `g' in the group buffer; if any maildirs have been
-     removed or added, `nnmaildir' notices at these times.
+     Any filenames in the directory starting with `.' are ignored.  The
+     directory is scanned when you first start Gnus, and each time you
+     type `g' in the group buffer; if any maildirs have been removed or
+     added, `nnmaildir' notices at these times.
 
      The value of the `directory' parameter should be a Lisp form which
      is processed by `eval' and `expand-file-name' to get the path of
@@ -4947,8 +4947,8 @@ though.)
 a recursive copy of the server directory.  There is no need to shut
 down Gnus, so archiving may be invoked by `cron' or similar.  You
 restore the data by restoring the directory tree, and adding a server
-definition pointing to that directory in Gnus.  The *Note Article
-Backlog::, *Note Asynchronous Fetching:: and other things might
+definition pointing to that directory in Gnus.  The *note Article
+Backlog::, *note Asynchronous Fetching:: and other things might
 interfere with overwriting data, so you may want to shut down Gnus
 before you restore the data.
 
@@ -5584,7 +5584,7 @@ server:
 `nnimap-authinfo-file'
      A file containing credentials used to log in on servers.  The
      format is (almost) the same as the `ftp' `~/.netrc' file.  See the
-     variable `nntp-authinfo-file' for exact syntax; also see *Note
+     variable `nntp-authinfo-file' for exact syntax; also see *note
      NNTP::.  An example of an .authinfo line for an IMAP server, is:
 
           machine students.uio.no login larsi password geheimnis port imap
@@ -6724,7 +6724,7 @@ File: gnus,  Node: Email Based Diary,  Next: Gnus Unplugged,  Prev: Combined Gro
 This section describes a special mail back end called `nndiary', and
 its companion library `gnus-diary'.  It is "special" in the sense that
 it is not meant to be one of the standard alternatives for reading mail
-with Gnus.  See *Note Choosing a Mail Back End:: for that.  Instead, it
+with Gnus.  See *note Choosing a Mail Back End:: for that.  Instead, it
 is used to treat _some_ of your mails in a special way, namely, as
 event reminders.
 
@@ -6775,7 +6775,7 @@ know `nnml', you're already familiar with the message storing scheme of
 
    Before anything, there is one requirement to be able to run
 `nndiary' properly: you _must_ use the group timestamp feature of Gnus.
-This adds a timestamp to each group's parameters.  *Note Group
+This adds a timestamp to each group's parameters.  *note Group
 Timestamp:: to see how it's done.
 
 * Menu:
@@ -7025,8 +7025,9 @@ prompts you for values or corrections if needed.
 
    This function is hooked into the `nndiary' back end, so that moving
 or copying an article to a diary group will trigger it automatically.
-It is also bound to `C-c D c' in `message-mode' and `article-edit-mode'
-in order to ease the process of converting a usual mail to a diary one.
+It is also bound to `C-c C-f d' in `message-mode' and
+`article-edit-mode' in order to ease the process of converting a usual
+mail to a diary one.
 
    This function takes a prefix argument which will force prompting of
 all diary headers, regardless of their presence or validity.  That way,

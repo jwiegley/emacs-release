@@ -1,6 +1,6 @@
-This is ../info/pgg, produced by makeinfo version 4.8 from pgg.texi.
+This is ../info/pgg, produced by makeinfo version 4.11 from pgg.texi.
 
-   This file describes PGG, an Emacs interface to various PGP
+This file describes PGG, an Emacs interface to various PGP
 implementations.
 
    Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008 Free Software
@@ -369,7 +369,7 @@ File: pgg,  Node: Backend methods,  Next: Getting output,  Prev: Initializing,  
 ===================
 
 In each backend, these methods must be present.  The output of these
-methods is stored in special buffers (*Note Getting output::), so that
+methods is stored in special buffers (*note Getting output::), so that
 these methods must tell the status of the execution.
 
  -- Method: pgg-scheme-lookup-key scheme string &optional type
@@ -423,7 +423,7 @@ File: pgg,  Node: Getting output,  Prev: Backend methods,  Up: Architecture
 4.3 Getting output
 ==================
 
-The output of the backend methods (*Note Backend methods::) is stored in
+The output of the backend methods (*note Backend methods::) is stored in
 special buffers, so that these methods must tell the status of the
 execution.
 
@@ -690,13 +690,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -944,22 +943,22 @@ Variable Index
 
 
 Tag Table:
-Node: Top778
-Node: Overview1388
-Node: Prerequisites1873
-Node: How to use2865
-Node: User Commands4068
-Node: Selecting an implementation7279
-Node: Caching passphrase8285
-Ref: Caching passphrase-Footnote-111571
-Node: Default user identity11736
-Node: Architecture12776
-Node: Initializing13424
-Node: Backend methods14149
-Node: Getting output16586
-Node: Parsing OpenPGP packets17218
-Node: GNU Free Documentation License17933
-Node: Function Index40180
-Node: Variable Index41714
+Node: Top776
+Node: Overview1386
+Node: Prerequisites1871
+Node: How to use2863
+Node: User Commands4066
+Node: Selecting an implementation7277
+Node: Caching passphrase8283
+Ref: Caching passphrase-Footnote-111569
+Node: Default user identity11734
+Node: Architecture12774
+Node: Initializing13422
+Node: Backend methods14147
+Node: Getting output16584
+Node: Parsing OpenPGP packets17216
+Node: GNU Free Documentation License17931
+Node: Function Index40166
+Node: Variable Index41700
 
 End Tag Table

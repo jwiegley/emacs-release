@@ -1,7 +1,7 @@
-This is ../info/widget, produced by makeinfo version 4.8 from
+This is ../info/widget, produced by makeinfo version 4.11 from
 widget.texi.
 
-   Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -407,7 +407,7 @@ have been created, `widget-setup' must be called to enable them.
 
  -- Function: widget-create type [ keyword argument ]...
      Create and return a widget of type TYPE.  The syntax for the TYPE
-     argument is described in *Note Basic Types::.
+     argument is described in *note Basic Types::.
 
      The keyword arguments can be used to overwrite the keyword
      arguments that are part of TYPE.
@@ -739,7 +739,7 @@ This widget will match all string values.
 
 `:value-face'
      Face used for highlighting the editable field.  Default is
-     `widget-field-face', see *Note User Interface::.
+     `widget-field-face', see *note User Interface::.
 
 `:secret'
      Character used to display the value.  You can set this to e.g. `?*'
@@ -1814,13 +1814,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -2231,39 +2230,39 @@ variables, and widgets described in this manual.
 
 
 Tag Table:
-Node: Top1420
-Node: Introduction1840
-Node: User Interface4911
-Node: Programming Example10632
-Node: Setting Up the Buffer13978
-Node: Basic Types15697
-Node: link22318
-Node: url-link22826
-Node: info-link23130
-Node: push-button23412
-Node: editable-field23979
-Node: text25367
-Node: menu-choice25656
-Node: radio-button-choice26504
-Node: item28086
-Node: choice-item28466
-Node: toggle28956
-Node: checkbox29703
-Node: checklist30002
-Node: editable-list31437
-Node: group32611
-Node: Sexp Types32891
-Node: constants33235
-Node: generic34303
-Node: atoms34853
-Node: composite36774
-Node: Widget Properties39754
-Node: Defining New Widgets42807
-Node: Widget Browser48835
-Node: Widget Minor Mode49688
-Node: Utilities50237
-Node: Widget Wishlist50720
-Node: GNU Free Documentation License51977
-Node: Index74210
+Node: Top1418
+Node: Introduction1838
+Node: User Interface4909
+Node: Programming Example10630
+Node: Setting Up the Buffer13976
+Node: Basic Types15695
+Node: link22316
+Node: url-link22824
+Node: info-link23128
+Node: push-button23410
+Node: editable-field23977
+Node: text25365
+Node: menu-choice25654
+Node: radio-button-choice26502
+Node: item28084
+Node: choice-item28464
+Node: toggle28954
+Node: checkbox29701
+Node: checklist30000
+Node: editable-list31435
+Node: group32609
+Node: Sexp Types32889
+Node: constants33233
+Node: generic34301
+Node: atoms34851
+Node: composite36772
+Node: Widget Properties39752
+Node: Defining New Widgets42805
+Node: Widget Browser48833
+Node: Widget Minor Mode49686
+Node: Utilities50235
+Node: Widget Wishlist50718
+Node: GNU Free Documentation License51975
+Node: Index74196
 
 End Tag Table

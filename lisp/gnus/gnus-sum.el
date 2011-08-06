@@ -2134,7 +2134,7 @@ increase the score of each group you read."
 	  ["Set mark below..." gnus-score-set-mark-below t]
 	  ["Set expunge below..." gnus-score-set-expunge-below t]
 	  ["Edit current score file" gnus-score-edit-current-scores t]
-	  ["Edit score file" gnus-score-edit-file t]
+	  ["Edit score file..." gnus-score-edit-file t]
 	  ["Trace score" gnus-score-find-trace t]
 	  ["Find words" gnus-score-find-favourite-words t]
 	  ["Rescore buffer" gnus-summary-rescore t]
@@ -2408,6 +2408,29 @@ gnus-summary-show-article-from-menu-as-charset-%s" cs))))
 	["Followup via news" gnus-summary-followup-to-mail t]
 	["Followup via news and yank"
 	 gnus-summary-followup-to-mail-with-original t]
+	["Strip signature on reply"
+	 (lambda ()
+	   (interactive)
+	   (if (not (memq message-cite-function
+			  '(message-cite-original-without-signature
+			    message-cite-original)))
+	       ;; Stupid workaround for XEmacs not honoring :visible.
+	       (message "Can't toggle this value of `message-cite-function'")
+	     (setq message-cite-function
+		   (if (eq message-cite-function
+			   'message-cite-original-without-signature)
+		       'message-cite-original
+		     'message-cite-original-without-signature))))
+	 ;; XEmacs barfs on :visible.
+	 ,@(if (featurep 'xemacs) nil
+	     '(:visible (memq message-cite-function
+			      '(message-cite-original-without-signature
+				message-cite-original))))
+	 :style toggle
+	 :selected (eq message-cite-function
+		       'message-cite-original-without-signature)
+	 ,@(if (featurep 'xemacs) nil
+	     '(:help "Strip signature from cited article when replying."))]
 	;;("Draft"
 	;;["Send" gnus-summary-send-draft t]
 	;;["Send bounced" gnus-resend-bounced-mail t])
@@ -3233,13 +3256,13 @@ display only a single character."
 	(i 32))
     ;; Nix out all the control chars...
     (while (>= (setq i (1- i)) 0)
-      (aset table i [??]))
+      (gnus-put-display-table i [??] table))
    ;; ... but not newline and cr, of course.  (cr is necessary for the
     ;; selective display).
-    (aset table ?\n nil)
-    (aset table ?\r nil)
+    (gnus-put-display-table ?\n nil table)
+    (gnus-put-display-table ?\r nil table)
     ;; We keep TAB as well.
-    (aset table ?\t nil)
+    (gnus-put-display-table ?\t nil table)
     ;; We nix out any glyphs 127 through 255, or 127 through 159 in
     ;; Emacs 23 (unicode), that are not set already.
     (let ((i (if (ignore-errors (= (make-char 'latin-iso8859-1 160) 160))
@@ -3247,8 +3270,8 @@ display only a single character."
 	       256)))
       (while (>= (setq i (1- i)) 127)
 	;; Only modify if the entry is nil.
-	(unless (aref table i)
-	  (aset table i [??]))))
+	(unless (gnus-get-display-table i table)
+	  (gnus-put-display-table i [??] table))))
     (setq buffer-display-table table)))
 
 (defun gnus-summary-set-article-display-arrow (pos)
@@ -7249,7 +7272,7 @@ If optional argument UNREAD is non-nil, only unread article is selected."
   (gnus-summary-position-point))
 
 (defun gnus-summary-goto-subject (article &optional force silent)
-  "Go the subject line of ARTICLE.
+  "Go to the subject line of ARTICLE.
 If FORCE, also allow jumping to articles not currently shown."
   (interactive "nArticle number: ")
   (unless (numberp article)

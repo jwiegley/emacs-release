@@ -1129,6 +1129,9 @@ Special value `always' suppresses confirmation."
 		 (other :tag "ask" t))
   :group 'dired)
 
+;; This is a fluid var used in dired-handle-overwrite.  It should be
+;; let-bound whenever dired-copy-file etc are called.  See
+;; dired-create-files for an example.
 (defvar dired-overwrite-confirmed)
 
 (defun dired-handle-overwrite (to)
@@ -1177,9 +1180,15 @@ Special value `always' suppresses confirmation."
 	    (if (file-exists-p to)
 		(or top (dired-handle-overwrite to))
 	      (condition-case err
-		  (progn
-		    (make-directory to)
-		    (set-file-modes to #o700))
+		  ;; We used to call set-file-modes here, but on some
+		  ;; Linux kernels, that returns an error on vfat
+		  ;; filesystems
+		  (let ((default-mode (default-file-modes)))
+		    (unwind-protect
+			(progn
+			  (set-default-file-modes #o700)
+			  (make-directory to))
+		      (set-default-file-modes default-mode)))
 		(file-error
 		 (push (dired-make-relative from)
 		       dired-create-files-failures)

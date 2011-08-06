@@ -1,4 +1,5 @@
-This is ../info/woman, produced by makeinfo version 4.8 from woman.texi.
+This is ../info/woman, produced by makeinfo version 4.11 from
+woman.texi.
 
 This file documents WoMan: A program to browse Unix manual pages `W.O.
 (without) man'.
@@ -169,7 +170,7 @@ program is to squeeze consecutive blank lines into a single blank line.
 
 For some time, Emacs has offered an improved interface for browsing man
 pages in the form of the Emacs `man' (or `manual-entry') command, see
-*Note man: (emacs)Documentation.  This command runs `man' as described
+*note man: (emacs)Documentation.  This command runs `man' as described
 above, perhaps in the background, and then post-processes the output to
 remove much of the `nroff' pagination such as page headers and footers,
 and places the result into an Emacs buffer.  It puts this buffer into a
@@ -887,9 +888,9 @@ browse, and the appearance of the browsing interface.
      The default value is currently 2, a good general compromise.  If
      the `woman' command is slow to find files then try 3, which may be
      particularly beneficial with large remote-mounted man directories.
-     Run the `woman' command with a prefix argument or delete the
-     cache file `woman-cache-filename' for a change to take effect.
-     (Values < 1 behave like 1; values > 3 behave like 3.)
+     Run the `woman' command with a prefix argument or delete the cache
+     file `woman-cache-filename' for a change to take effect.  (Values
+     < 1 behave like 1; values > 3 behave like 3.)
 
 `woman-cache-filename'
      Either a string representing the full pathname of the WoMan
@@ -1428,13 +1429,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1791,35 +1791,35 @@ Concept Index
 
 
 Tag Table:
-Node: Top1367
-Node: Introduction2479
-Node: Background4997
-Node: Finding12254
-Node: Topic13810
-Node: Cache18195
-Node: Word at point19903
-Node: Filename20835
-Node: Automatic23085
-Node: Browsing24643
-Node: Fonts25869
-Node: Navigation26525
-Node: References27403
-Node: Changing28793
-Node: Convenience30801
-Node: Imenu31540
-Node: Customization32333
-Node: Interface Options34317
-Node: Formatting Options43015
-Node: Faces44565
-Node: Special symbols45844
-Node: Log47071
-Node: Technical48186
-Node: Bugs48897
-Node: Acknowledgements49644
-Node: GNU Free Documentation License51566
-Node: Command Index73798
-Node: Variable Index75783
-Node: Keystroke Index78412
-Node: Concept Index80167
+Node: Top1368
+Node: Introduction2480
+Node: Background4998
+Node: Finding12255
+Node: Topic13811
+Node: Cache18196
+Node: Word at point19904
+Node: Filename20836
+Node: Automatic23086
+Node: Browsing24644
+Node: Fonts25870
+Node: Navigation26526
+Node: References27404
+Node: Changing28794
+Node: Convenience30802
+Node: Imenu31541
+Node: Customization32334
+Node: Interface Options34318
+Node: Formatting Options43017
+Node: Faces44567
+Node: Special symbols45846
+Node: Log47073
+Node: Technical48188
+Node: Bugs48899
+Node: Acknowledgements49646
+Node: GNU Free Documentation License51568
+Node: Command Index73788
+Node: Variable Index75773
+Node: Keystroke Index78402
+Node: Concept Index80157
 
 End Tag Table

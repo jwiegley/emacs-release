@@ -1,6 +1,6 @@
-This is ../info/gnus, produced by makeinfo version 4.8 from gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.11 from gnus.texi.
 
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
+Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -615,13 +615,13 @@ File: gnus,  Node: Starting Up,  Next: Group Buffer,  Prev: Top,  Up: Top
 1 Starting Gnus
 ***************
 
-If you haven't used Emacs much before using Gnus, read *Note Emacs for
+If you haven't used Emacs much before using Gnus, read *note Emacs for
 Heathens:: first.
 
    If your system administrator has set things up properly, starting
 Gnus and reading news is extremely easy--you just type `M-x gnus' in
 your Emacs.  If not, you should customize the variable
-`gnus-select-method' as described in *Note Finding the News::.  For a
+`gnus-select-method' as described in *note Finding the News::.  For a
 minimal setup for posting should also customize the variables
 `user-full-name' and `user-mail-address'.
 
@@ -2333,7 +2333,7 @@ which is an alist of regexps and values.
 `(agent parameters)'
      If the agent has been enabled, you can set any of the its
      parameters to control the behavior of the agent in individual
-     groups. See Agent Parameters in *Note Category Syntax::.  Most
+     groups. See Agent Parameters in *note Category Syntax::.  Most
      users will choose to set agent parameters in either an agent
      category or group topic to minimize the configuration effort.
 
@@ -3074,7 +3074,7 @@ File: gnus,  Node: Topic Parameters,  Prev: Topic Topology,  Up: Group Topics
 All groups in a topic will inherit group parameters from the parent
 (and ancestor) topic parameters.  All valid group parameters are valid
 topic parameters (*note Group Parameters::).  When the agent is
-enabled, all agent parameters (See Agent Parameters in *Note Category
+enabled, all agent parameters (See Agent Parameters in *note Category
 Syntax::) are also valid topic parameters.
 
    In addition, the following parameters are only valid as topic
@@ -3984,7 +3984,7 @@ File: gnus,  Node: Choosing Commands,  Next: Choosing Variables,  Up: Choosing A
 None of the following movement commands understand the numeric prefix,
 and they all select and display an article.
 
-   If you want to fetch new articles or redisplay the group, see *Note
+   If you want to fetch new articles or redisplay the group, see *note
 Exiting the Summary Buffer::.
 
 `SPACE'
@@ -4922,7 +4922,7 @@ cache.  For more information, *note Process/Prefix::.
      (`gnus-summary-save-process-mark').
 
 
-   Also see the `&' command in *Note Searching for Articles::, for how
+   Also see the `&' command in *note Searching for Articles::, for how
 to set process marks based on article body contents.
 
 
@@ -5054,7 +5054,7 @@ articles.  In a perfect world, this would be enough to build pretty
 trees, but unfortunately, the `References' header is often broken or
 simply missing.  Weird news propagation exacerbates the problem, so one
 has to employ other heuristics to get pleasing results.  A plethora of
-approaches exists, as detailed in horrible detail in *Note Customizing
+approaches exists, as detailed in horrible detail in *note Customizing
 Threading::.
 
    First, a quick overview of the concepts:
@@ -5670,11 +5670,11 @@ want to save as dormant, and don't worry.
 
    The entering/removal of articles from the cache is controlled by the
 `gnus-cache-enter-articles' and `gnus-cache-remove-articles' variables.
-Both are lists of symbols.  The first is `(ticked dormant)' by
-default, meaning that ticked and dormant articles will be put in the
-cache.  The latter is `(read)' by default, meaning that articles marked
-as read are removed from the cache.  Possibly symbols in these two
-lists are `ticked', `dormant', `unread' and `read'.
+Both are lists of symbols.  The first is `(ticked dormant)' by default,
+meaning that ticked and dormant articles will be put in the cache.  The
+latter is `(read)' by default, meaning that articles marked as read are
+removed from the cache.  Possibly symbols in these two lists are
+`ticked', `dormant', `unread' and `read'.
 
    So where does the massive article-fetching and storing come into the
 picture?  The `gnus-jog-cache' command will go through all subscribed
@@ -7402,7 +7402,7 @@ the same manner:
      If displaying `text/html' is discouraged, see
      `mm-discouraged-alternatives', images or other material inside a
      "multipart/related" part might be overlooked when this variable is
-     `nil'.  *Note Display Customization: (emacs-mime)Display
+     `nil'.  *note Display Customization: (emacs-mime)Display
      Customization.
 
 `gnus-mime-display-multipart-as-mixed'

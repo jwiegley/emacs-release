@@ -1,7 +1,7 @@
-This is ../info/newsticker, produced by makeinfo version 4.8 from
+This is ../info/newsticker, produced by makeinfo version 4.11 from
 newsticker.texi.
 
-   This manual is for Newsticker (version 1.9, November 2005).
+This manual is for Newsticker (version 1.9, November 2005).
 
 Copyright (C) 2004, 2005, 2006, 2007, 2008  Free Software Foundation,
 Inc.
@@ -446,13 +446,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -662,14 +661,14 @@ Index
 
 
 Tag Table:
-Node: Top1317
-Node: Overview1860
-Node: Requirements3455
-Node: Installation4085
-Node: Usage4556
-Node: Configuration5464
-Node: Remarks7502
-Node: GNU Free Documentation License7907
-Node: Index30136
+Node: Top1315
+Node: Overview1858
+Node: Requirements3453
+Node: Installation4083
+Node: Usage4554
+Node: Configuration5462
+Node: Remarks7500
+Node: GNU Free Documentation License7905
+Node: Index30122
 
 End Tag Table

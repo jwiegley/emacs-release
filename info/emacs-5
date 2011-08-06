@@ -1,7 +1,8 @@
-This is ../info/emacs, produced by makeinfo version 4.8 from emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.11 from
+emacs.texi.
 
-   This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 22.2.
+This is the Sixteenth edition of the `GNU Emacs Manual',
+updated for Emacs version 22.3.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free
@@ -1457,7 +1458,7 @@ Usenet news.  It can also be used to read and respond to messages from a
 number of other sources--mail, remote directories, digests, and so on.
 
    Here we introduce Gnus and describe several basic features.  For
-full details, see *Note Gnus: (gnus)Top.
+full details, see *note Gnus: (gnus)Top.
 
    To start Gnus, type `M-x gnus <RET>'.
 
@@ -1920,8 +1921,8 @@ of the special key bindings of Shell mode:
 
 `M-x send-invisible <RET> TEXT <RET>'
      Send TEXT as input to the shell, after reading it without echoing.
-     This is useful when a shell command runs a program that asks for
-     a password.
+     This is useful when a shell command runs a program that asks for a
+     password.
 
      Please note that Emacs will not echo passwords by default.  If you
      really want them to be echoed, evaluate the following Lisp
@@ -2271,7 +2272,7 @@ Emacs buffer, use `M-x term'.  This creates (or reuses) a buffer named
 and output going to that buffer.
 
    The terminal emulator uses Term mode, which has two input modes.  In
-line mode, Term basically acts like Shell mode; see *Note Shell Mode::.
+line mode, Term basically acts like Shell mode; see *note Shell Mode::.
 
    In char mode, each character is sent directly to the inferior
 subshell, as "terminal input."  Any "echoing" of your input is the
@@ -2307,7 +2308,7 @@ File: emacs,  Node: Term Mode,  Next: Paging in Term,  Prev: Terminal emulator, 
 ==============
 
 The terminal emulator uses Term mode, which has two input modes.  In
-line mode, Term basically acts like Shell mode; see *Note Shell Mode::.
+line mode, Term basically acts like Shell mode; see *note Shell Mode::.
 In char mode, each character is sent directly to the inferior subshell,
 except for the Term escape character, normally `C-c'.
 
@@ -2394,7 +2395,7 @@ that is part of Emacs.  Here is how.
 
    First, the preparations.  Within Emacs, call the function
 `server-start'.  (Your `.emacs' init file can do this automatically if
-you add the expression `(server-start)' to it, see *Note Init File::.)
+you add the expression `(server-start)' to it, see *note Init File::.)
 Then, outside Emacs, set the `EDITOR' environment variable to
 `emacsclient'.  (Note that some programs use a different environment
 variable; for example, to make TeX use `emacsclient', you should set
@@ -3239,11 +3240,11 @@ point instead.)
 
    Info mode, Help mode and the Dired-like modes are examples of modes
 that have links in the buffer.  The Tags facility links between uses
-and definitions in source files, see *Note Tags::.  Imenu provides
-navigation amongst items indexed in the current buffer, see *Note
+and definitions in source files, see *note Tags::.  Imenu provides
+navigation amongst items indexed in the current buffer, see *note
 Imenu::.  Info-lookup provides mode-specific lookup of definitions in
-Info indexes, see *Note Documentation::.  Speedbar maintains a frame in
-which links to files, and locations in files are displayed, see *Note
+Info indexes, see *note Documentation::.  Speedbar maintains a frame in
+which links to files, and locations in files are displayed, see *note
 Speedbar::.
 
    Other non-mode-specific facilities described in this section enable
@@ -3408,9 +3409,9 @@ texts produce the best results.
 
    A positive argument to `M-x dissociated-press' tells it to operate
 character by character, and specifies the number of overlap characters.
-A negative argument tells it to operate word by word, and specifies
-the number of overlap words.  In this mode, whole words are treated as
-the elements to be permuted, rather than characters.  No argument is
+A negative argument tells it to operate word by word, and specifies the
+number of overlap words.  In this mode, whole words are treated as the
+elements to be permuted, rather than characters.  No argument is
 equivalent to an argument of two.  For your againformation, the output
 goes only into the buffer `*Dissociation*'.  The buffer you start with
 is not changed.
@@ -3987,9 +3988,9 @@ File: emacs,  Node: Face Customization,  Next: Specific Customization,  Prev: Sa
 ------------------------
 
 In addition to variables, some customization groups also include faces.
-When you show the contents of a group, both the variables and the
-faces in the group appear in the customization buffer.  Here is an
-example of how a face looks:
+When you show the contents of a group, both the variables and the faces
+in the group appear in the customization buffer.  Here is an example of
+how a face looks:
 
      Custom Changed Face:(sample) [Hide Face]
         [State]: STANDARD.
@@ -4753,9 +4754,9 @@ and <ESC> as prefix keys appear in the global map, so these prefix keys
 are always available.
 
    Aside from ordinary prefix keys, there is a fictitious "prefix key"
-which represents the menu bar; see *Note Menu Bar: (elisp)Menu Bar, for
+which represents the menu bar; see *note Menu Bar: (elisp)Menu Bar, for
 special information about menu bar key bindings.  Mouse button events
-that invoke pop-up menus are also prefix keys; see *Note Menu Keymaps:
+that invoke pop-up menus are also prefix keys; see *note Menu Keymaps:
 (elisp)Menu Keymaps, for more details.
 
    Some prefix keymaps are stored in variables with names:
@@ -5327,7 +5328,7 @@ some English text to explain its meaning.
 
    A syntax table is actually a Lisp object, a char-table, whose
 elements are cons cells.  For full information on the syntax table, see
-*Note Syntax Tables: (elisp)Syntax Tables.
+*note Syntax Tables: (elisp)Syntax Tables.
 
 
 File: emacs,  Node: Init File,  Prev: Syntax,  Up: Customization
@@ -5834,7 +5835,7 @@ File: emacs,  Node: Lossage,  Next: Bugs,  Prev: Quitting,  Up: Top
 
 This section describes various conditions in which Emacs fails to work
 normally, and how to recognize them and correct them.  For a list of
-additional problems you might encounter, see *Note Bugs and problems:
+additional problems you might encounter, see *note Bugs and problems:
 (efaq)Bugs and problems, and the file `etc/PROBLEMS' in the Emacs
 distribution.  Type `C-h C-f' to read the FAQ; type `C-h C-e' to read
 the `PROBLEMS' file.
@@ -6129,7 +6130,7 @@ order to do so effectively, you must know when and how to do it.
    Before reporting a bug, it is a good idea to see if it is already
 known.  You can find the list of known problems in the file
 `etc/PROBLEMS' in the Emacs distribution; type `C-h C-e' to read it.
-Some additional user-level problems can be found in *Note Bugs and
+Some additional user-level problems can be found in *note Bugs and
 problems: (efaq)Bugs and problems.  Looking up your problem in these
 two documents might provide you with a solution or a work-around, or
 give you additional information about related issues.
@@ -6179,9 +6180,9 @@ to conclusions, show the problem to someone who knows for certain.
 possible definition for editing with.  This is a very important sort of
 problem, but it is also a matter of judgment.  Also, it is easy to come
 to such a conclusion out of ignorance of some of the existing features.
-It is probably best not to complain about such a problem until you
-have checked the documentation in the usual ways, feel confident that
-you understand it, and know for certain that what you want is not
+It is probably best not to complain about such a problem until you have
+checked the documentation in the usual ways, feel confident that you
+understand it, and know for certain that what you want is not
 available.  Ask other Emacs users, too.  If you are not sure what the
 command is supposed to do after a careful reading of the manual, check
 the index and glossary for any terms that may be unclear.
@@ -6261,9 +6262,9 @@ same address.)
 newsgroup `gnu.emacs.bug'; keep in mind, however, that as a spectator
 you should not criticize anything about what you see there.  The
 purpose of bug reports is to give information to the Emacs maintainers.
-Spectators are welcome only as long as they do not interfere with
-this.  In particular, some bug reports contain fairly large amounts of
-data; spectators should not complain about this.
+Spectators are welcome only as long as they do not interfere with this.
+In particular, some bug reports contain fairly large amounts of data;
+spectators should not complain about this.
 
    Please do not post bug reports using netnews; mail is more reliable
 than netnews about reporting your correct address, which we may need in

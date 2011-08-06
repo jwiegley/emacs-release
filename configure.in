@@ -1271,7 +1271,7 @@ case "${machine}" in
 esac
 
 case "${opsys}" in
-     bsd386 | bsdos2-1 |  bsdos2 | bsdos3 | bsdos4 | bsd4-1 | bsd4-2 | bsd4-3 | usg5-0 | usg5-2-2 | usg5-2 | usg5-3 | ultrix4-3 | 386bsd | hpux | hpux8 | hpux9 | hpux9shr | hpux10 | hpux10-20 | aix3-1 | aix3-2-5 | aix3-2 | aix4-1 | nextstep | ux4800 | uxpds | uxpv )
+     bsd386 | bsdos2-1 |  bsdos2 | bsdos3 | bsdos4 | bsd4-1 | bsd4-2 | bsd4-3 | usg5-0 | usg5-2-2 | usg5-2 | usg5-3 | ultrix4-3 | 386bsd | hpux | hpux8 | hpux9 | hpux9shr | hpux10 | aix3-1 | aix3-2-5 | aix3-2 | aix4-1 | nextstep | ux4800 | uxpds | uxpv )
      	  echo "The system that you are configuring on: ${canonical} is considered to be obsolete"
 	  echo "and it is planned to be desupported in the next version of Emacs"
 	  echo "Please email emacs-devel@gnu.org as soon as possible if this system is still in use."
@@ -2553,6 +2553,7 @@ AC_CHECK_HEADER(malloc/malloc.h, AC_DEFINE(HAVE_MALLOC_MALLOC_H, 1, [Define to 1
 ### Use Mac OS X Carbon API to implement GUI.
 if test "${HAVE_CARBON}" = "yes"; then
   AC_DEFINE(HAVE_CARBON, 1, [Define to 1 if you are using the Carbon API on Mac OS X.])
+  AC_CHECK_HEADERS(AvailabilityMacros.h)
   ## Specify the install directory
   carbon_appdir=
   if test "${carbon_appdir_x}" != ""; then
@@ -2623,7 +2624,7 @@ AC_CHECK_FUNCS(gethostname getdomainname dup2 \
 rename closedir mkdir rmdir sysinfo getrusage get_current_dir_name \
 random lrand48 bcopy bcmp logb frexp fmod rint cbrt ftime res_init setsid \
 strerror fpathconf select mktime euidaccess getpagesize tzset setlocale \
-utimes setrlimit setpgid getcwd getwd shutdown getaddrinfo \
+utimes getrlimit setrlimit setpgid getcwd getwd shutdown getaddrinfo \
 __fpending mblen mbrlen mbsinit strsignal setitimer ualarm index rindex \
 sendto recvfrom getsockopt setsockopt getsockname getpeername \
 gai_strerror mkstemp getline getdelim mremap memmove fsync sync bzero \
@@ -2699,7 +2700,9 @@ if test "${with_kerberos+set}" = set; then
   fi
 
   if test "${with_kerberos5+set}" = set; then
-    AC_CHECK_HEADERS(krb5.h)
+    AC_CHECK_HEADERS(krb5.h,
+      AC_CHECK_MEMBERS([krb5_error.text, krb5_error.e_text],,,
+		       [#include <krb5.h>]))
   else
     AC_CHECK_HEADERS(des.h,,
 		     [AC_CHECK_HEADERS(kerberosIV/des.h,,
@@ -3334,6 +3337,16 @@ fi
 test "${exec_prefix}" != NONE &&
   exec_prefix=`echo "${exec_prefix}" | sed 's,\([^/]\)/*$,\1,'`]
 
+# Now get this: Some word that is part of the ${srcdir} directory name
+# or the ${configuration} value might, just might, happen to be an
+# identifier like `sun4' or `i386' or something, and be predefined by
+# the C preprocessor to some helpful value like 1, or maybe the empty
+# string.  Needless to say consequent macro substitutions are less
+# than conducive to the makefile finding the correct directory.
+[cpp_undefs="`echo $srcdir $configuration $canonical |
+  sed -e 's/[^a-zA-Z0-9_]/ /g' -e 's/^/ /' -e 's/  *$//' \
+  -e 's/  */ -U/g' -e 's/-U[0-9][^ ]*//g'`"]
+
 ## Check if the C preprocessor will convert `..' to `. .'.  If so, set
 ## CPP_NEED_TRADITIONAL to `yes' so that the code to generate Makefile
 ## from Makefile.c can correctly provide the arg `-traditional' to the
@@ -3357,17 +3370,6 @@ done
 # and lib-src/Makefile from ${srcdir}/lib-src/Makefile.c
 # This must be done after src/config.h is built, since we rely on that file.
 
-# Now get this: Some word that is part of the ${srcdir} directory name
-# or the ${configuration} value might, just might, happen to be an
-# identifier like `sun4' or `i386' or something, and be predefined by
-# the C preprocessor to some helpful value like 1, or maybe the empty
-# string.  Needless to say consequent macro substitutions are less
-# than conducive to the makefile finding the correct directory.
-[undefs="`echo $top_srcdir $configuration $canonical |
-sed -e 's/[^a-zA-Z0-9_]/ /g' -e 's/^/ /' -e 's/  *$//' \
-    -e 's/  */ -U/g' -e 's/-U[0-9][^ ]*//g' \
-`"]
-
 echo creating src/epaths.h
 ${MAKE-make} epaths-force
 
@@ -3386,7 +3388,7 @@ echo creating lib-src/Makefile
   sed -e '1,/start of cpp stuff/d'\
       -e 's,/\*\*/#\(.*\)$,/* \1 */,' \
       < Makefile.c > junk.c
-  $CPP $undefs -I. -I$srcdir/src $CPPFLAGS junk.c | \
+  $CPP $cpp_undefs -I. -I$srcdir/src $CPPFLAGS junk.c | \
       sed -e 's/^ /	/' -e '/^#/d' -e '/^[ 	]*$/d' > junk2.c
   cat junk1.c junk2.c > Makefile.new
   rm -f junk.c junk1.c junk2.c
@@ -3402,7 +3404,7 @@ echo creating src/Makefile
   sed -e '1,/start of cpp stuff/d'\
       -e 's,/\*\*/#\(.*\)$,/* \1 */,' \
       < Makefile.c > junk.c
-  $CPP $undefs -I. -I$srcdir/src $CPPFLAGS junk.c | \
+  $CPP $cpp_undefs -I. -I$srcdir/src $CPPFLAGS junk.c | \
       sed -e 's/^ /	/' -e '/^#/d' -e '/^[ 	]*$/d' > junk2.c
   cat junk1.c junk2.c > Makefile.new
   rm -f junk.c junk1.c junk2.c
@@ -3418,7 +3420,7 @@ fi
 # This is how we know whether to re-run configure in certain cases.
 touch src/config.stamp
 
-], [GCC="$GCC" NON_GNU_CPP="$NON_GNU_CPP" CPP="$CPP" CPP_NEED_TRADITIONAL="$CPP_NEED_TRADITIONAL" CPPFLAGS="$CPPFLAGS"])
+], [GCC="$GCC" NON_GNU_CPP="$NON_GNU_CPP" CPP="$CPP" CPP_NEED_TRADITIONAL="$CPP_NEED_TRADITIONAL" CPPFLAGS="$CPPFLAGS" cpp_undefs="$cpp_undefs"])
 
 m4_if(dnl	Do not change this comment
    arch-tag: 156a4dd5-bddc-4d18-96ac-f37742cf6a5e

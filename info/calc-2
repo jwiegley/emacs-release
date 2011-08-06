@@ -1,6 +1,6 @@
-This is ../info/calc, produced by makeinfo version 4.8 from calc.texi.
+This is ../info/calc, produced by makeinfo version 4.11 from calc.texi.
 
-   This file documents Calc, the GNU Emacs calculator.
+This file documents Calc, the GNU Emacs calculator.
 
    Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
 2008 Free Software Foundation, Inc.
@@ -2025,12 +2025,12 @@ L'.
 of Calc's letter prefix keys may be typed shifted as well as unshifted.
 If you are typing, say, `a S' (`calc-solve-for') quite often you might
 find it easier to turn this mode on so that you can type `A S' instead.
-When this mode is enabled, the commands that used to be on those
-single shifted letters (e.g., `A' (`calc-abs')) can now be invoked by
-pressing the shifted letter twice: `A A'.  Note that the `v' prefix key
-always works both shifted and unshifted, and the `z' and `Z' prefix
-keys are always distinct.  Also, the `h' prefix is not affected by this
-mode.  Press `m S' again to disable shifted-prefix mode.
+When this mode is enabled, the commands that used to be on those single
+shifted letters (e.g., `A' (`calc-abs')) can now be invoked by pressing
+the shifted letter twice: `A A'.  Note that the `v' prefix key always
+works both shifted and unshifted, and the `z' and `Z' prefix keys are
+always distinct.  Also, the `h' prefix is not affected by this mode.
+Press `m S' again to disable shifted-prefix mode.
 
 
 File: calc,  Node: Precision,  Next: Inverse and Hyperbolic,  Prev: General Mode Commands,  Up: Mode Settings
@@ -2279,8 +2279,8 @@ around vectors in useful ways.
 
    Press `m v' (`calc-matrix-mode') once to enter Matrix mode.  In this
 mode, all objects are assumed to be matrices unless provably otherwise.
-One major effect is that Calc will no longer consider multiplication
-to be commutative.  (Recall that in matrix arithmetic, `A*B' is not the
+One major effect is that Calc will no longer consider multiplication to
+be commutative.  (Recall that in matrix arithmetic, `A*B' is not the
 same as `B*A'.)  This assumption affects rewrite rules and algebraic
 simplification.  Another effect of this mode is that calculations that
 would normally produce constants like 0 and 1 (e.g., `a - a' and `a /
@@ -3430,12 +3430,12 @@ the stack, or to apply a certain command to an element buried deep in
 the stack.
 
    Pressing `d t' by itself moves the `.' to the line the cursor is on.
-Thus, this line and all those below it become hidden.  To un-hide
-these lines, move down to the end of the buffer and press `d t'.  With
-a positive numeric prefix argument `n', `d t' hides the bottom `n'
-values in the buffer.  With a negative argument, it hides all but the
-top `n' values.  With an argument of zero, it hides zero values, i.e.,
-moves the `.' all the way down to the bottom.
+Thus, this line and all those below it become hidden.  To un-hide these
+lines, move down to the end of the buffer and press `d t'.  With a
+positive numeric prefix argument `n', `d t' hides the bottom `n' values
+in the buffer.  With a negative argument, it hides all but the top `n'
+values.  With an argument of zero, it hides zero values, i.e., moves
+the `.' all the way down to the bottom.
 
    The `d [' (`calc-truncate-up') and `d ]' (`calc-truncate-down')
 commands move the `.' up or down one line at a time (or several lines
@@ -5690,10 +5690,10 @@ form into a Unix time value, which is the number of seconds since
 midnight on Jan 1, 1970, or vice-versa.  The numeric result will be an
 integer if the current precision is 12 or less; for higher precisions,
 the result may be a float with (PRECISION-12) digits after the decimal.
-Just as for `t J', the numeric time is interpreted in the GMT time
-zone and the date form is interpreted in the current or specified zone.
-Some systems use Unix-like numbering but with the local time zone;
-give a prefix of zero to suppress the adjustment if so.
+Just as for `t J', the numeric time is interpreted in the GMT time zone
+and the date form is interpreted in the current or specified zone.
+Some systems use Unix-like numbering but with the local time zone; give
+a prefix of zero to suppress the adjustment if so.
 
    The `t C' (`calc-convert-time-zones') [`tzconv'] command converts a
 date form from one time zone to another.  You are prompted for each
@@ -5988,10 +5988,10 @@ date arithmetic commands that include a time zone argument) takes the
 zone argument from the top of the stack.  (In the case of `t J' and `t
 U', the normal argument is then taken from the second-to-top stack
 position.)  This allows you to give a non-integer time zone adjustment.
-The time-zone argument can also be an HMS form, or it can be a
-variable which is a time zone name in upper- or lower-case.  For
-example `tzone(PST) = tzone(8)' and `tzone(pdt) = tzone(7)' (for
-Pacific standard and daylight saving times, respectively).
+The time-zone argument can also be an HMS form, or it can be a variable
+which is a time zone name in upper- or lower-case.  For example
+`tzone(PST) = tzone(8)' and `tzone(pdt) = tzone(7)' (for Pacific
+standard and daylight saving times, respectively).
 
    North American and European time zone names are defined as follows;
 note that for each time zone there is one name for standard time,
@@ -6354,11 +6354,10 @@ all the same!
    The `npv' function can actually have two or more arguments.
 Multiple arguments are interpreted in the same way as for the vector
 statistical functions like `vsum'.  *Note Single-Variable Statistics::.
-Basically, if there are several payment arguments, each either a
-vector or a plain number, all these values are collected left-to-right
-into the complete list of payments.  A numeric prefix argument on the
-`b N' command says how many payment values or vectors to take from the
-stack.
+Basically, if there are several payment arguments, each either a vector
+or a plain number, all these values are collected left-to-right into
+the complete list of payments.  A numeric prefix argument on the `b N'
+command says how many payment values or vectors to take from the stack.
 
    The `I b N' [`npvb'] command computes the net present value where
 payments occur at the beginning of each interval rather than at the end.

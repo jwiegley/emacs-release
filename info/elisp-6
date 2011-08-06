@@ -1,4 +1,5 @@
-This is ../info/elisp, produced by makeinfo version 4.8 from elisp.texi.
+This is ../info/elisp, produced by makeinfo version 4.11 from
+elisp.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -6,7 +7,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.2.
+corresponding to Emacs version 22.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
@@ -112,7 +113,7 @@ the described features.
 
      If the variable `pop-up-windows' is non-`nil', windows may be
      split to create a new window that is different from the original
-     window.  For details, see *Note Choosing Window::.
+     window.  For details, see *note Choosing Window::.
 
      If OTHER-WINDOW is non-`nil', `pop-to-buffer' finds or creates
      another window even if BUFFER-OR-NAME is already visible in the
@@ -1637,7 +1638,7 @@ parameter when you create the frame.
    Emacs treats each X server as a separate terminal, giving each one
 its own selected frame and its own minibuffer windows.  However, only
 one of those frames is "_the_ selected frame" at any given moment, see
-*Note Input Focus::.
+*note Input Focus::.
 
    A few Lisp variables are "terminal-local"; that is, they have a
 separate binding for each terminal.  The binding in effect at any time
@@ -1953,12 +1954,12 @@ text-only terminals they count characters or lines instead.
 
 `height'
      The height of the frame contents, in characters.  (To get the
-     height in pixels, call `frame-pixel-height'; see *Note Size and
+     height in pixels, call `frame-pixel-height'; see *note Size and
      Position::.)
 
 `width'
      The width of the frame contents, in characters.  (To get the width
-     in pixels, call `frame-pixel-width'; see *Note Size and
+     in pixels, call `frame-pixel-width'; see *note Size and
      Position::.)
 
 `user-size'
@@ -2043,8 +2044,8 @@ which buffers have been, or should, be displayed in the frame.
 `minibuffer'
      Whether this frame has its own minibuffer.  The value `t' means
      yes, `nil' means no, `only' means this frame is just a minibuffer.
-     If the value is a minibuffer window (in some other frame), the
-     new frame uses that minibuffer.
+     If the value is a minibuffer window (in some other frame), the new
+     frame uses that minibuffer.
 
 `buffer-predicate'
      The buffer-predicate function for this frame.  The function
@@ -2258,7 +2259,7 @@ usual fashion.
 
    Here are some special features for working with sizes and positions.
 (For the precise meaning of "selected frame" used by these functions,
-see *Note Input Focus::.)
+see *note Input Focus::.)
 
  -- Function: set-frame-position frame left top
      This function sets the position of the top left corner of FRAME to
@@ -2502,7 +2503,7 @@ File: elisp,  Node: Finding All Frames,  Next: Frames and Windows,  Prev: Deleti
      Like `next-frame', but cycles through all frames in the opposite
      direction.
 
-   See also `next-window' and `previous-window', in *Note Cyclic Window
+   See also `next-window' and `previous-window', in *note Cyclic Window
 Ordering::.
 
 
@@ -3209,7 +3210,7 @@ numerical RGB specification of colors.)
 
    These functions provide a way to determine which color names are
 valid, and what they look like.  In some cases, the value depends on the
-"selected frame", as described below; see *Note Input Focus::, for the
+"selected frame", as described below; see *note Input Focus::, for the
 meaning of the term "selected frame."
 
  -- Function: color-defined-p color &optional frame
@@ -3301,7 +3302,7 @@ the standard set of colors and will try to use them automatically.
 are used by Emacs.
 
    Several of these functions use or return "rgb values", described in
-*Note Color Names::.
+*note Color Names::.
 
    These functions accept a display (either a frame or the name of a
 terminal) as an optional argument.  We hope in the future to make Emacs
@@ -3409,7 +3410,7 @@ display to ask the question about.  It can be a display name, a frame
 (which designates the display that frame is on), or `nil' (which refers
 to the selected frame's display, *note Input Focus::).
 
-   *Note Color Names::, *Note Text Terminal Colors::, for other
+   *Note Color Names::, *note Text Terminal Colors::, for other
 functions to obtain information about displays.
 
  -- Function: display-popup-menus-p &optional display
@@ -3922,7 +3923,7 @@ control characters are displayed.
      corresponding to the buffer position POS.  If POS is `nil' or
      omitted, the current buffer position is used.
 
-   Also see the functions `bolp' and `eolp' in *Note Near Point::.
+   Also see the functions `bolp' and `eolp' in *note Near Point::.
 These functions do not move point, but test whether it is already at the
 beginning or end of a line.
 
@@ -4079,9 +4080,9 @@ File: elisp,  Node: List Motion,  Next: Skipping Characters,  Prev: Screen Lines
 Here are several functions concerned with balanced-parenthesis
 expressions (also called "sexps" in connection with moving across them
 in Emacs).  The syntax table controls how these functions interpret
-various characters; see *Note Syntax Tables::.  *Note Parsing
+various characters; see *note Syntax Tables::.  *Note Parsing
 Expressions::, for lower-level primitives for scanning sexps or parts of
-sexps.  For user-level commands, see *Note Commands for Editing with
+sexps.  For user-level commands, see *note Commands for Editing with
 Parentheses: (emacs)Parentheses.
 
  -- Command: forward-list &optional arg
@@ -4168,7 +4169,7 @@ File: elisp,  Node: Skipping Characters,  Prev: List Motion,  Up: Motion
 
 The following two functions move point over a specified set of
 characters.  For example, they are often used to skip whitespace.  For
-related functions, see *Note Motion and Syntax::.
+related functions, see *note Motion and Syntax::.
 
    These functions convert the set string to multibyte if the buffer is
 multibyte, and they convert it to unibyte if the buffer is unibyte, as
@@ -4234,7 +4235,7 @@ buffer, and its values of point and the mark, and restores them after
 the completion of the excursion.
 
    The forms for saving and restoring the configuration of windows are
-described elsewhere (see *Note Window Configurations::, and *note Frame
+described elsewhere (see *note Window Configurations::, and *note Frame
 Configurations::).
 
  -- Special Form: save-excursion body...
@@ -4979,7 +4980,7 @@ File: elisp,  Node: Near Point,  Next: Buffer Contents,  Up: Text
 
 Many functions are provided to look at the characters around point.
 Several simple functions are described here.  See also `looking-at' in
-*Note Regexp Search::.
+*note Regexp Search::.
 
    In the following four functions, "beginning" or "end" of buffer
 refers to the beginning or end of the accessible portion.
@@ -5035,7 +5036,7 @@ refers to the beginning or end of the accessible portion.
  -- Function: bobp
      This function returns `t' if point is at the beginning of the
      buffer.  If narrowing is in effect, this means the beginning of the
-     accessible portion of the text.  See also `point-min' in *Note
+     accessible portion of the text.  See also `point-min' in *note
      Point::.
 
  -- Function: eobp
@@ -5353,7 +5354,7 @@ programs.
 
      This command performs abbrev expansion if Abbrev mode is enabled
      and the inserted character does not have word-constituent syntax.
-     (*Note Abbrevs::, and *Note Syntax Class Table::.)  It is also
+     (*Note Abbrevs::, and *note Syntax Class Table::.)  It is also
      responsible for calling `blink-paren-function' when the inserted
      character has close parenthesis syntax (*note Blinking::).
 
@@ -5736,9 +5737,9 @@ copy into the buffer.
  -- Function: insert-for-yank string
      This function normally works like `insert' except that it doesn't
      insert the text properties in the `yank-excluded-properties' list.
-     However, if any part of STRING has a non-`nil' `yank-handler'
-     text property, that property can do various special processing on
-     that part of the text being inserted.
+     However, if any part of STRING has a non-`nil' `yank-handler' text
+     property, that property can do various special processing on that
+     part of the text being inserted.
 
  -- Function: insert-buffer-substring-as-yank buf &optional start end
      This function resembles `insert-buffer-substring' except that it
@@ -6011,7 +6012,7 @@ Most buffers have an "undo list", which records all changes made to the
 buffer's text so that they can be undone.  (The buffers that don't have
 one are usually special-purpose buffers for which Emacs assumes that
 undoing is not useful.  In particular, any buffer whose name begins
-with a space has its undo recording off by default; see *Note Buffer
+with a space has its undo recording off by default; see *note Buffer
 Names::.)  All the primitives that modify the text in the buffer
 automatically add elements to the front of the undo list, which is in
 the variable `buffer-undo-list'.
@@ -6460,7 +6461,7 @@ When "Adaptive Fill Mode" is enabled, Emacs determines the fill prefix
 automatically from the text in each paragraph being filled rather than
 using a predetermined value.  During filling, this fill prefix gets
 inserted at the start of the second and subsequent lines of the
-paragraph as described in *Note Filling::, and in *Note Auto Filling::.
+paragraph as described in *note Filling::, and in *note Auto Filling::.
 
  -- User Option: adaptive-fill-mode
      Adaptive Fill mode is enabled when this variable is non-`nil'.  It
@@ -6545,7 +6546,7 @@ File: elisp,  Node: Auto Filling,  Next: Sorting,  Prev: Adaptive Fill,  Up: Tex
 Auto Fill mode is a minor mode that fills lines automatically as text
 is inserted.  This section describes the hook used by Auto Fill mode.
 For a description of functions that you can call explicitly to fill and
-justify existing text, see *Note Filling::.
+justify existing text, see *note Filling::.
 
    Auto Fill mode also enables the functions that change the margins and
 justification style to refill portions of the text.  *Note Margins::.

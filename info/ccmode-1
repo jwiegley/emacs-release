@@ -1,7 +1,7 @@
-This is ../info/ccmode, produced by makeinfo version 4.8 from
+This is ../info/ccmode, produced by makeinfo version 4.11 from
 cc-mode.texi.
 
-   This manual is for CC Mode in Emacs.
+This manual is for CC Mode in Emacs.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
@@ -276,10 +276,10 @@ c-basic-offset
 The (indentation) style
      The basic "shape" of indentation created by CC Mode--by default,
      this is `gnu' style (except for Java and AWK buffers).  A list of
-     the available styles and their descriptions can be found in *Note
+     the available styles and their descriptions can be found in *note
      Built-in Styles::.  A complete specification of the CC Mode style
      system, including how to create your own style, can be found in
-     the chapter *Note Styles::.  To set your style to `linux', either
+     the chapter *note Styles::.  To set your style to `linux', either
      customize `c-default-style' or put this into your `.emacs':
 
           (setq c-default-style '((java-mode . "java")
@@ -297,7 +297,7 @@ Electric Indentation
           (setq-default c-electric-flag nil)
 
      Details of this and other similar "Minor Modes" appear in the
-     section *Note Minor Modes::.
+     section *note Minor Modes::.
 
 Making the <RET> key indent the new line
      The standard Emacs binding for <RET> just adds a new line.  If you
@@ -312,7 +312,7 @@ Making the <RET> key indent the new line
 
      This example demonstrates the use of a very powerful CC Mode (and
      Emacs) facility, the hook.  The use of CC Mode's hooks is described
-     in *Note CC Hooks::.
+     in *note CC Hooks::.
 
    All these settings should occur in your `.emacs' _before_ any CC
 Mode buffers get loaded--in particular, before any call of
@@ -320,7 +320,7 @@ Mode buffers get loaded--in particular, before any call of
 
    As you get to know the mode better, you may want to make more
 ambitious changes to your configuration.  For this, you should start
-reading the chapter *Note Config Basics::.
+reading the chapter *note Config Basics::.
 
    If you are upgrading an existing CC Mode installation, please see
 the `README' file for installation details.  In particular, if you are
@@ -356,7 +356,7 @@ configuring it).  "Commands" here means both control key sequences and
 "electric keys", these being characters such as `;' which, as well as
 inserting themselves into the buffer, also do other things.
 
-   You might well want to review *Note Moving by Parens: (emacs)Moving
+   You might well want to review *note Moving by Parens: (emacs)Moving
 by Parens, which describes commands for moving around brace and
 parenthesis structures.
 
@@ -594,7 +594,7 @@ CC Mode contains some useful commands for moving around in C code.
      These functions are analogous to the Emacs built-in commands
      `beginning-of-defun' and `end-of-defun', except they eliminate the
      constraint that the top-level opening brace of the defun must be
-     in column zero.  See *Note Defuns: (emacs)Defuns, for more
+     in column zero.  See *note Defuns: (emacs)Defuns, for more
      information.
 
 `C-M-a' (AWK Mode) (`c-awk-beginning-of-defun')
@@ -797,9 +797,9 @@ syntactic-indentation mode
      as the previous one and `<TAB>' adjusts the indentation in steps
      of `c-basic-offset'.
 
-   Full details on how these minor modes work are at *Note Electric
-Keys::, *Note Auto-newlines::, *Note Hungry WS Deletion::, *Note
-Subword Movement::, and *Note Indentation Engine Basics::.
+   Full details on how these minor modes work are at *note Electric
+Keys::, *note Auto-newlines::, *note Hungry WS Deletion::, *note
+Subword Movement::, and *note Indentation Engine Basics::.
 
    You can toggle each of these minor modes on and off, and you can
 configure CC Mode so that it starts up with your favourite combination
@@ -1018,8 +1018,8 @@ won't have to bother.
 such as after a `}' when you're about to type a `;'.  Hungry deletion
 can help here (*note Hungry WS Deletion::), or you can activate an
 appropriate "clean-up", which will remove the excess whitespace after
-you've typed the `;'.  See *Note Clean-ups:: for a full description.
-See also *Note Electric Keys:: for a summary of clean-ups listed by key.
+you've typed the `;'.  See *note Clean-ups:: for a full description.
+See also *note Electric Keys:: for a summary of clean-ups listed by key.
 
    ---------- Footnotes ----------
 
@@ -1134,7 +1134,7 @@ to them.  You might need to modify this yourself if the defaults are
 unsuitable.
 
    Getting your <Backspace> and <Delete> keys properly set up can
-sometimes be tricky.  The information in *Note DEL Does Not Delete:
+sometimes be tricky.  The information in *note DEL Does Not Delete:
 (emacs)DEL Does Not Delete, might be helpful if you're having trouble
 with this in GNU Emacs.
 
@@ -1214,10 +1214,10 @@ Here are the various other commands that didn't fit anywhere else:
 
      Setting a style in this way does _not_ automatically reindent your
      file.  For commands that you can use to view the effect of your
-     changes, see *Note Indentation Commands:: and *Note Filling and
+     changes, see *note Indentation Commands:: and *note Filling and
      Breaking::.
 
-     For details of the CC Mode style system, see *Note Styles::.
+     For details of the CC Mode style system, see *note Styles::.
 
 `C-c :' (`c-scope-operator')
      In C++, it is also sometimes desirable to insert the double-colon
@@ -1238,7 +1238,7 @@ Here are the various other commands that didn't fit anywhere else:
      region.  If the region ends at the start of a line, it always
      deletes the backslash (if any) at the end of the previous line.
 
-     To customize the precise workings of this command, *Note Custom
+     To customize the precise workings of this command, *note Custom
      Macros::.
 
 The recommended line breaking function, `c-context-line-break' (*note
@@ -1280,7 +1280,7 @@ Lock, for ways to enable font locking in CC Mode buffers.
 
    *Please note:* The font locking in AWK mode is currently not
 integrated with the rest of CC Mode.  Only the last section of this
-chapter, *Note AWK Mode Font Locking::, applies to AWK.  The other
+chapter, *note AWK Mode Font Locking::, applies to AWK.  The other
 sections apply to the other languages.
 
 * Menu:
@@ -1646,7 +1646,7 @@ Hooks
             (setq c-basic-offset 6))
           (add-hook 'java-mode-hook 'my-java-mode-hook)
 
-     See *Note CC Hooks:: for more details on the use of CC Mode hooks.
+     See *note CC Hooks:: for more details on the use of CC Mode hooks.
 
 Styles
      A CC Mode "style" is a coherent collection of customizations with
@@ -1662,7 +1662,7 @@ Styles
                                   (awk-mode . "awk")
                                   (other . "free-group-style")))
 
-     See *Note Styles:: for fuller details on using CC Mode styles and
+     See *note Styles:: for fuller details on using CC Mode styles and
      how to create them.
 
 File Styles
@@ -1719,7 +1719,7 @@ addition, each language mode has its own hook, allowing you to fine
 tune your settings individually for the different CC Mode languages,
 and there is a package initialization hook.  Finally, there is
 `c-special-indent-hook', which enables you to solve anomalous
-indentation problems.  It is described in *Note Other Indentation::,
+indentation problems.  It is described in *note Other Indentation::,
 not here.  All these hooks adhere to the standard Emacs conventions.
 
    When you open a buffer, CC Mode first initializes it with the
@@ -1948,7 +1948,7 @@ override the one that the style system would have given the variable.
 
    To set a buffer's style interactively, use the command `C-c .'
 (*note Other Commands::).  To set it from a file's local variable list,
-*Note File Styles::.
+*note File Styles::.
 
  -- User Option: c-default-style
      This variable specifies which style to install by default in new
@@ -1989,7 +1989,7 @@ If none of the built-in styles is appropriate, you'll probably want to
 create a new "style definition", possibly based on an existing style.
 To do this, put the new style's settings into a list with the following
 format - the list can then be passed as an argument to the function
-`c-add-style'.  You can see an example of a style definition in *Note
+`c-add-style'.  You can see an example of a style definition in *note
 Sample .emacs File::.
 
 Structure of a Style Definition List
@@ -2001,7 +2001,7 @@ Structure of a Style Definition List
      not specified, the style inherits from the table of factory
      default values(1) instead.  All styles eventually inherit from
      this internal table.  Style loops generate errors.  The list of
-     pre-existing styles can be seen in *Note Built-in Styles::.
+     pre-existing styles can be seen in *note Built-in Styles::.
 
      The dotted pairs (VARIABLE . VALUE) each consist of a variable and
      the value it is to be set to when the style is later activated.(2)
@@ -2016,7 +2016,7 @@ Structure of a Style Definition List
 
                (SYNTACTIC-SYMBOL . OFFSET)
 
-          as described in *Note c-offsets-alist::.  These are passed to
+          as described in *note c-offsets-alist::.  These are passed to
           `c-set-offset' so there is no need to set every syntactic
           symbol in your style, only those that are different from the
           inherited style.
@@ -2209,7 +2209,7 @@ from a mode hook, e.g. with something like this in your `.emacs':
      uses the normal indentation engine to indent the line.  Thus, the
      right way to fix the indentation is by customizing the `c'
      syntactic symbol.  It defaults to `c-lineup-C-comments', which
-     handles the indentation of most common comment styles, see *Note
+     handles the indentation of most common comment styles, see *note
      Line-Up Functions::.
 
  -- User Option: c-ignore-auto-fill
@@ -2295,7 +2295,7 @@ Braces and Colons
      - this is any combination of before and after the brace or colon.
      If no alist element is found, newlines are inserted both before
      and after a brace, but none are inserted around a colon.  See
-     *Note Hanging Braces:: and *Note Hanging Colons::.
+     *note Hanging Braces:: and *note Hanging Colons::.
 
 Semicolons and Commas
      The variable `c-hanging-semi&comma-criteria' contains a list of
@@ -2335,7 +2335,7 @@ File: ccmode,  Node: Hanging Braces,  Next: Hanging Colons,  Prev: Custom Auto-n
 To specify which kinds of braces you want auto-newlines put around, you
 set the style variable `c-hanging-braces-alist'.  Its structure and
 semantics are described in this section.  Details of how to set it up,
-and its relationship to CC Mode's style system are given in *Note Style
+and its relationship to CC Mode's style system are given in *note Style
 Variables::.
 
    Say you wanted an auto-newline after (but not before) the following
@@ -2842,7 +2842,7 @@ File: ccmode,  Node: Indentation Engine Basics,  Next: Customizing Indentation, 
 This chapter will briefly cover how CC Mode indents lines of code.  It
 is helpful to understand the indentation model being used so that you
 will know how to customize CC Mode for your personal coding style.  All
-the details are in *Note Customizing Indentation::.
+the details are in *note Customizing Indentation::.
 
    CC Mode has an indentation engine that provides a flexible and
 general mechanism for customizing indentation.  When CC Mode indents a
@@ -2860,12 +2860,12 @@ line of code, it separates its calculations into two steps:
      this line one more level" is a typical offset.  CC Mode then
      applies these offset(s) to the anchor position, giving the
      indentation for the line.  The different sorts of offsets are
-     described in *Note c-offsets-alist::.
+     described in *note c-offsets-alist::.
 
    In exceptional circumstances, the syntax directed indentation
 described here may be a nuisance rather than a help.  You can disable
 it by setting `c-syntactic-indentation' to `nil'.  (To set the variable
-interactively, *Note Minor Modes::).
+interactively, *note Minor Modes::).
 
  -- User Option: c-syntactic-indentation
      When this is non-`nil' (which it is by default), the indentation
@@ -3009,8 +3009,8 @@ File: ccmode,  Node: Syntactic Symbols,  Next: Indentation Calculation,  Prev: S
 
 This section is a complete list of the syntactic symbols which appear
 in the `c-offsets-alist' style variable, along with brief descriptions.
-The previous section (*note Syntactic Analysis::) states what
-syntactic symbols are and how the indentation engine uses them.
+The previous section (*note Syntactic Analysis::) states what syntactic
+symbols are and how the indentation engine uses them.
 
    More detailed descriptions of these symbols, together with snippets
 of source code to which they apply, appear in the examples in the
@@ -3035,33 +3035,33 @@ examples.  Remember that you can see the syntax of any source code line
 by using `C-c C-s'.
 
 `string'
-     Inside a multiline string.  *Note Literal Symbols::.
+     Inside a multiline string.  *note Literal Symbols::.
 
 `c'
-     Inside a multiline C style block comment.  *Note Literal Symbols::.
+     Inside a multiline C style block comment.  *note Literal Symbols::.
 
 `defun-open'
-     Brace that opens a top-level function definition.  *Note Function
+     Brace that opens a top-level function definition.  *note Function
      Symbols::.
 
 `defun-close'
-     Brace that closes a top-level function definition.  *Note Function
+     Brace that closes a top-level function definition.  *note Function
      Symbols::.
 
 `defun-block-intro'
-     The first line in a top-level defun.  *Note Function Symbols::.
+     The first line in a top-level defun.  *note Function Symbols::.
 
 `class-open'
-     Brace that opens a class definition.  *Note Class Symbols::.
+     Brace that opens a class definition.  *note Class Symbols::.
 
 `class-close'
-     Brace that closes a class definition.  *Note Class Symbols::.
+     Brace that closes a class definition.  *note Class Symbols::.
 
 `inline-open'
-     Brace that opens an in-class inline method.  *Note Class Symbols::.
+     Brace that opens an in-class inline method.  *note Class Symbols::.
 
 `inline-close'
-     Brace that closes an in-class inline method.  *Note Class
+     Brace that closes an in-class inline method.  *note Class
      Symbols::.
 
 `func-decl-cont'
@@ -3069,225 +3069,225 @@ by using `C-c C-s'.
      function opening brace (excluding K&R argument declarations).  In
      C, you cannot put anything but whitespace and comments in this
      region, however in C++ and Java, `throws' declarations and other
-     things can appear here.  *Note Literal Symbols::.
+     things can appear here.  *note Literal Symbols::.
 
 `knr-argdecl-intro'
-     First line of a K&R C argument declaration.  *Note K&R Symbols::.
+     First line of a K&R C argument declaration.  *note K&R Symbols::.
 
 `knr-argdecl'
-     Subsequent lines in a K&R C argument declaration.  *Note K&R
+     Subsequent lines in a K&R C argument declaration.  *note K&R
      Symbols::.
 
 `topmost-intro'
-     The first line in a "topmost" definition.  *Note Function
+     The first line in a "topmost" definition.  *note Function
      Symbols::.
 
 `topmost-intro-cont'
      Topmost definition continuation lines.  This is only used in the
      parts that aren't covered by other symbols such as
-     `func-decl-cont' and `knr-argdecl'.  *Note Function Symbols::.
+     `func-decl-cont' and `knr-argdecl'.  *note Function Symbols::.
 
 `member-init-intro'
-     First line in a member initialization list.  *Note Class Symbols::.
+     First line in a member initialization list.  *note Class Symbols::.
 
 `member-init-cont'
-     Subsequent member initialization list lines.  *Note Class
+     Subsequent member initialization list lines.  *note Class
      Symbols::.
 
 `inher-intro'
-     First line of a multiple inheritance list.  *Note Class Symbols::.
+     First line of a multiple inheritance list.  *note Class Symbols::.
 
 `inher-cont'
-     Subsequent multiple inheritance lines.  *Note Class Symbols::.
+     Subsequent multiple inheritance lines.  *note Class Symbols::.
 
 `block-open'
-     Statement block open brace.  *Note Literal Symbols::.
+     Statement block open brace.  *note Literal Symbols::.
 
 `block-close'
-     Statement block close brace.  *Note Conditional Construct
+     Statement block close brace.  *note Conditional Construct
      Symbols::.
 
 `brace-list-open'
-     Open brace of an enum or static array list.  *Note Brace List
+     Open brace of an enum or static array list.  *note Brace List
      Symbols::.
 
 `brace-list-close'
-     Close brace of an enum or static array list.  *Note Brace List
+     Close brace of an enum or static array list.  *note Brace List
      Symbols::.
 
 `brace-list-intro'
-     First line in an enum or static array list.  *Note Brace List
+     First line in an enum or static array list.  *note Brace List
      Symbols::.
 
 `brace-list-entry'
-     Subsequent lines in an enum or static array list.  *Note Brace
+     Subsequent lines in an enum or static array list.  *note Brace
      List Symbols::.
 
 `brace-entry-open'
      Subsequent lines in an enum or static array list where the line
-     begins with an open brace.  *Note Brace List Symbols::.
+     begins with an open brace.  *note Brace List Symbols::.
 
 `statement'
-     A statement.  *Note Function Symbols::.
+     A statement.  *note Function Symbols::.
 
 `statement-cont'
-     A continuation of a statement.  *Note Function Symbols::.
+     A continuation of a statement.  *note Function Symbols::.
 
 `statement-block-intro'
-     The first line in a new statement block.  *Note Conditional
+     The first line in a new statement block.  *note Conditional
      Construct Symbols::.
 
 `statement-case-intro'
-     The first line in a case block.  *Note Switch Statement Symbols::.
+     The first line in a case block.  *note Switch Statement Symbols::.
 
 `statement-case-open'
-     The first line in a case block that starts with a brace.  *Note
+     The first line in a case block that starts with a brace.  *note
      Switch Statement Symbols::.
 
 `substatement'
-     The first line after a conditional or loop construct.  *Note
+     The first line after a conditional or loop construct.  *note
      Conditional Construct Symbols::.
 
 `substatement-open'
-     The brace that opens a substatement block.  *Note Conditional
+     The brace that opens a substatement block.  *note Conditional
      Construct Symbols::.
 
 `substatement-label'
      The first line after a conditional or loop construct if it's a
-     label.  *Note Conditional Construct Symbols::.
+     label.  *note Conditional Construct Symbols::.
 
 `case-label'
-     A label in a `switch' block.  *Note Switch Statement Symbols::.
+     A label in a `switch' block.  *note Switch Statement Symbols::.
 
 `access-label'
-     C++ access control label.  *Note Class Symbols::.
+     C++ access control label.  *note Class Symbols::.
 
 `label'
-     Any other label.  *Note Literal Symbols::.
+     Any other label.  *note Literal Symbols::.
 
 `do-while-closure'
-     The `while' line that ends a `do'-`while' construct.  *Note
+     The `while' line that ends a `do'-`while' construct.  *note
      Conditional Construct Symbols::.
 
 `else-clause'
-     The `else' line of an `if'-`else' construct.  *Note Conditional
+     The `else' line of an `if'-`else' construct.  *note Conditional
      Construct Symbols::.
 
 `catch-clause'
      The `catch' or `finally' (in Java) line of a `try'-`catch'
-     construct.  *Note Conditional Construct Symbols::.
+     construct.  *note Conditional Construct Symbols::.
 
 `comment-intro'
-     A line containing only a comment introduction.  *Note Literal
+     A line containing only a comment introduction.  *note Literal
      Symbols::.
 
 `arglist-intro'
-     The first line in an argument list.  *Note Paren List Symbols::.
+     The first line in an argument list.  *note Paren List Symbols::.
 
 `arglist-cont'
      Subsequent argument list lines when no arguments follow on the same
-     line as the arglist opening paren.  *Note Paren List Symbols::.
+     line as the arglist opening paren.  *note Paren List Symbols::.
 
 `arglist-cont-nonempty'
      Subsequent argument list lines when at least one argument follows
-     on the same line as the arglist opening paren.  *Note Paren List
+     on the same line as the arglist opening paren.  *note Paren List
      Symbols::.
 
 `arglist-close'
-     The solo close paren of an argument list.  *Note Paren List
+     The solo close paren of an argument list.  *note Paren List
      Symbols::.
 
 `stream-op'
-     Lines continuing a stream operator (C++ only).  *Note Literal
+     Lines continuing a stream operator (C++ only).  *note Literal
      Symbols::.
 
 `inclass'
-     The line is nested inside a class definition.  *Note Class
+     The line is nested inside a class definition.  *note Class
      Symbols::.
 
 `cpp-macro'
-     The start of a preprocessor macro definition.  *Note Literal
+     The start of a preprocessor macro definition.  *note Literal
      Symbols::.
 
 `cpp-define-intro'
      The first line inside a multiline preprocessor macro if
-     `c-syntactic-indentation-in-macros' is set.  *Note Multiline Macro
+     `c-syntactic-indentation-in-macros' is set.  *note Multiline Macro
      Symbols::.
 
 `cpp-macro-cont'
      All lines inside multiline preprocessor macros if
-     `c-syntactic-indentation-in-macros' is `nil'.  *Note Multiline
+     `c-syntactic-indentation-in-macros' is `nil'.  *note Multiline
      Macro Symbols::.
 
 `friend'
-     A C++ friend declaration.  *Note Class Symbols::.
+     A C++ friend declaration.  *note Class Symbols::.
 
 `objc-method-intro'
-     The first line of an Objective-C method definition.  *Note
+     The first line of an Objective-C method definition.  *note
      Objective-C Method Symbols::.
 
 `objc-method-args-cont'
-     Lines continuing an Objective-C method definition.  *Note
+     Lines continuing an Objective-C method definition.  *note
      Objective-C Method Symbols::.
 
 `objc-method-call-cont'
-     Lines continuing an Objective-C method call.  *Note Objective-C
+     Lines continuing an Objective-C method call.  *note Objective-C
      Method Symbols::.
 
 `extern-lang-open'
      Brace that opens an `extern' block (e.g. `extern "C" {...}').
-     *Note External Scope Symbols::.
+     *note External Scope Symbols::.
 
 `extern-lang-close'
-     Brace that closes an `extern' block.  *Note External Scope
+     Brace that closes an `extern' block.  *note External Scope
      Symbols::.
 
 `inextern-lang'
      Analogous to `inclass' syntactic symbol, but used inside `extern'
-     blocks.  *Note External Scope Symbols::.
+     blocks.  *note External Scope Symbols::.
 
 `namespace-open'
 `namespace-close'
 `innamespace'
      These are analogous to the three `extern-lang' symbols above, but
-     are returned for C++ namespace blocks.  *Note External Scope
+     are returned for C++ namespace blocks.  *note External Scope
      Symbols::.
 
 `module-open'
 `module-close'
 `inmodule'
-     Analogous to the above, but for CORBA IDL `module' blocks.  *Note
+     Analogous to the above, but for CORBA IDL `module' blocks.  *note
      External Scope Symbols::.
 
 `composition-open'
 `composition-close'
 `incomposition'
      Analogous to the above, but for CORBA CIDL `composition' blocks.
-     *Note External Scope Symbols::.
+     *note External Scope Symbols::.
 
 `template-args-cont'
-     C++ template argument list continuations.  *Note Class Symbols::.
+     C++ template argument list continuations.  *note Class Symbols::.
 
 `inlambda'
      Analogous to `inclass' syntactic symbol, but used inside lambda
-     (i.e. anonymous) functions.  Only used in Pike mode.  *Note
+     (i.e. anonymous) functions.  Only used in Pike mode.  *note
      Statement Block Symbols::.
 
 `lambda-intro-cont'
      Lines continuing the header of a lambda function, i.e. between the
      `lambda' keyword and the function body.  Only used in Pike mode.
-     *Note Statement Block Symbols::.
+     *note Statement Block Symbols::.
 
 `inexpr-statement'
      A statement block inside an expression.  The gcc C and C++
      extension for this is recognized.  It's also used for the special
      functions that take a statement block as an argument in Pike.
-     *Note Statement Block Symbols::.
+     *note Statement Block Symbols::.
 
 `inexpr-class'
      A class definition inside an expression.  This is used for
      anonymous classes in Java.  It's also used for anonymous array
-     initializers in Java.  *Note Anonymous Class Symbol::.
+     initializers in Java.  *note Anonymous Class Symbol::.
 
 * Menu:
 
@@ -4020,10 +4020,10 @@ File: ccmode,  Node: Customizing Indentation,  Next: Custom Macros,  Prev: Inden
 The principal variable for customizing indentation is the style
 variable `c-offsets-alist', which gives an "offset" (an indentation
 rule) for each syntactic symbol.  Its structure and semantics are
-completely described in *Note c-offsets-alist::.  The various ways you
+completely described in *note c-offsets-alist::.  The various ways you
 can set the variable, including the use of the CC Mode style system,
-are described in *Note Config Basics:: and its sections, in particular
-*Note Style Variables::.
+are described in *note Config Basics:: and its sections, in particular
+*note Style Variables::.
 
    The simplest and most used kind of "offset" setting in
 `c-offsets-alist' is in terms of multiples of `c-basic-offset':
@@ -4039,7 +4039,7 @@ is a line-up function (or even a list of them), either one supplied by
 CC Mode (*note Line-Up Functions::) or one you write yourself (*note
 Custom Line-Up::).
 
-   Finally, in *Note Other Indentation:: you'll find the tool of last
+   Finally, in *note Other Indentation:: you'll find the tool of last
 resort: a hook which is called after a line has been indented.  You can
 install functions here to make ad-hoc adjustments to any line's
 indentation.
@@ -4061,7 +4061,7 @@ File: ccmode,  Node: c-offsets-alist,  Next: Interactive Customization,  Prev: C
 This section explains the structure and semantics of the style variable
 `c-offset-alist', the principal variable for configuring indentation.
 Details of how to set it up, and its relationship to CC Mode's style
-system are given in *Note Style Variables::.
+system are given in *note Style Variables::.
 
  -- User Option: c-offsets-alist
      This is an alist which associates an offset with each syntactic
@@ -4161,7 +4161,7 @@ A function or lambda expression
      The function will be called and its return value will in turn be
      evaluated as an offset specification.  Functions are useful when
      more context than just the syntactic symbol is needed to get the
-     desired indentation.  *Note Line-Up Functions::, and *Note Custom
+     desired indentation.  *Note Line-Up Functions::, and *note Custom
      Line-Up::, for details about them.
 
 A symbol with a variable binding
@@ -4318,7 +4318,7 @@ one rather than indenting relative to its "anchor point".  CC Mode
 provides this flexibility with "line-up functions".
 
    The way you associate a line-up function with a syntactic symbol is
-described in *Note c-offsets-alist::.  CC Mode comes with many
+described in *note c-offsets-alist::.  CC Mode comes with many
 predefined line-up functions for common situations.  If none of these
 does what you want, you can write your own.  *Note Custom Line-Up::.
 Sometimes, it is easier to tweak the standard indentation by adding a
@@ -4329,7 +4329,7 @@ with them.  Some of them might work serendipitously.  There shouldn't be
 any problems writing custom line-up functions for AWK mode.
 
    The calling convention for line-up functions is described fully in
-*Note Custom Line-Up::.  Roughly speaking, the return value is either an
+*note Custom Line-Up::.  Roughly speaking, the return value is either an
 offset itself (such as `+' or `[0]') or it's `nil', meaning "this
 function is inappropriate in this case - try a different one".  *Note
 c-offsets-alist::.
@@ -4537,7 +4537,7 @@ File: ccmode,  Node: List Line-Up,  Next: Operator Line-Up,  Prev: Brace/Paren L
 The line-up functions here calculate the indentation for lines which
 form lists of items, usually separated by commas.
 
-   The function *Note c-lineup-arglist-close-under-paren::, which is
+   The function *note c-lineup-arglist-close-under-paren::, which is
 mainly for indenting a close parenthesis, is also useful for the lines
 contained within parentheses.
 
@@ -5009,7 +5009,7 @@ you're very welcome to contribute it; please contact
 element (see below).  The return value is a `c-offsets-alist' offset
 specification: for example, an integer, a symbol such as `+', a vector,
 `nil'(1), or even another line-up function.  Full details of these are
-in *Note c-offsets-alist::.
+in *note c-offsets-alist::.
 
    Line-up functions must not move point or change the content of the
 buffer (except temporarily).  They are however allowed to do "hidden
@@ -5392,7 +5392,7 @@ File: ccmode,  Node: Limitations and Known Bugs,  Next: FAQ,  Prev: Performance 
      currently no intention to change this goal.
 
      If you want to reformat old code, you're probably better off using
-     some other tool instead, e.g. *Note GNU indent: (indent)Top, which
+     some other tool instead, e.g. *note GNU indent: (indent)Top, which
      has more powerful reformatting capabilities than CC Mode.
 
    * The support for C++ templates (in angle brackets) is not yet
@@ -5768,13 +5768,12 @@ Appendix D GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor

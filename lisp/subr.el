@@ -944,7 +944,8 @@ is converted into a string by expressing it in decimal."
 (make-obsolete 'focus-frame "it does nothing." "22.1")
 (defalias 'unfocus-frame 'ignore "")
 (make-obsolete 'unfocus-frame "it does nothing." "22.1")
-(make-obsolete 'make-variable-frame-local "use a frame-parameter instead." "22.2")
+(make-obsolete 'make-variable-frame-local
+	       "explicitly check for a frame-parameter instead." "22.2")
 
 ;;;; Obsolescence declarations for variables, and aliases.
 
@@ -1401,7 +1402,7 @@ to the specified name LIBRARY.
 If the optional third arg PATH is specified, that list of directories
 is used instead of `load-path'.
 
-When called from a program, the file name is normaly returned as a
+When called from a program, the file name is normally returned as a
 string.  When run interactively, the argument INTERACTIVE-CALL is t,
 and the file name is displayed in the echo area."
   (interactive (list (completing-read "Locate library: "
@@ -2023,9 +2024,7 @@ BEG and END default respectively to the beginning and end of buffer."
 (defvar temp-buffer-show-hook nil
   "Normal hook run by `with-output-to-temp-buffer' after displaying the buffer.
 When the hook runs, the temporary buffer is current, and the window it
-was displayed in is selected.  This hook is normally set up with a
-function to make the buffer read only, and find function names and
-variable names in it, provided the major mode is still Help mode.")
+was displayed in is selected.")
 
 (defvar temp-buffer-setup-hook nil
   "Normal hook run by `with-output-to-temp-buffer' at the start.

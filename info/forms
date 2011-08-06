@@ -1,7 +1,7 @@
-This is ../info/forms, produced by makeinfo version 4.8 from forms.texi.
+This is ../info/forms, produced by makeinfo version 4.11 from
+forms.texi.
 
-   This file documents Forms mode, a form-editing major mode for GNU
-Emacs.
+This file documents Forms mode, a form-editing major mode for GNU Emacs.
 
    Copyright (C) 1989, 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
 2008 Free Software Foundation, Inc.
@@ -204,7 +204,7 @@ provide its own menu with a number of Forms mode commands.
      (`forms-insert-record').  It starts out with empty (or default)
      contents for its fields; you can then edit the fields.  With a
      numeric argument, the new record is created _after_ the current
-     one.  See also `forms-modified-record-filter' in *Note Modifying
+     one.  See also `forms-modified-record-filter' in *note Modifying
      Forms Contents::.
 
 `C-c C-k'
@@ -310,7 +310,7 @@ should set the following Lisp variables to suitable values:
 
 `forms-format-list'
      This variable describes the way the fields of the record are
-     formatted on the screen.  For details, see *Note Format
+     formatted on the screen.  For details, see *note Format
      Description::.
 
 `forms-number-of-fields'
@@ -573,8 +573,8 @@ even if they have different properties.
 `find-file' or a like command, you can switch to Forms mode with the
 command `M-x forms-mode'.  If you put `-*- forms -*-' in the first line
 of the control file, then visiting it enables Forms mode automatically.
-But this makes it hard to edit the control file itself, so you'd
-better think twice before using this.
+But this makes it hard to edit the control file itself, so you'd better
+think twice before using this.
 
    The default format for the data file, using `"\t"' to separate
 fields and `"\^k"' to separate lines within a field, matches the file
@@ -1020,13 +1020,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1287,19 +1286,19 @@ Index
 
 
 Tag Table:
-Node: Top1381
-Node: Forms Example2855
-Node: Entering and Exiting Forms Mode4055
-Node: Forms Commands6265
-Node: Data File Format10067
-Node: Control File Format11407
-Node: Format Description16036
-Node: Modifying Forms Contents19369
-Node: Miscellaneous21247
-Node: Error Messages22786
-Node: Long Example27030
-Node: Credits30112
-Node: GNU Free Documentation License30886
-Node: Index53117
+Node: Top1379
+Node: Forms Example2853
+Node: Entering and Exiting Forms Mode4053
+Node: Forms Commands6263
+Node: Data File Format10065
+Node: Control File Format11405
+Node: Format Description16034
+Node: Modifying Forms Contents19367
+Node: Miscellaneous21245
+Node: Error Messages22784
+Node: Long Example27028
+Node: Credits30110
+Node: GNU Free Documentation License30884
+Node: Index53103
 
 End Tag Table

@@ -6333,7 +6333,8 @@ comment at the start of cc-engine.el for more info."
       ;; the searchable range.
       (let* ((macro-start (c-query-macro-start))
 	     (lim (max (or lim (point-min)) (or macro-start (point-min))))
-	     before-lparen after-rparen)
+	     before-lparen after-rparen
+	     (pp-count-out 20))	; Max number of paren/brace constructs before we give up
 	(narrow-to-region lim (c-point 'eol))
 
 	;; Search backwards for the defun's argument list.  We give up if we
@@ -6355,7 +6356,8 @@ comment at the start of cc-engine.el for more info."
 	;; {
 
 	(catch 'knr
-	  (while t ; go round one paren/bracket construct each time round.
+	  (while (> pp-count-out 0) ; go back one paren/bracket pair each time.
+	    (setq pp-count-out (1- pp-count-out))
 	    (c-syntactic-skip-backward "^)]}")
 	    (cond ((eq (char-before) ?\))
 		   (setq after-rparen (point)))
@@ -8249,21 +8251,24 @@ comment at the start of cc-engine.el for more info."
 	      (c-add-syntax 'inher-cont (c-point 'boi)))
 
 	     ;; CASE 5D.5: Continuation of the "expression part" of a
-	     ;; top level construct.
+	     ;; top level construct.  Or, perhaps, an unrecognised construct.
 	     (t
-	      (while (and (eq (car (c-beginning-of-decl-1 containing-sexp))
+	      (while (and (setq placeholder (point))
+			  (eq (car (c-beginning-of-decl-1 containing-sexp))
 			      'same)
 			  (save-excursion
 			    (c-backward-syntactic-ws)
-			    (eq (char-before) ?}))))
+			    (eq (char-before) ?}))
+			  (< (point) placeholder)))
 	      (c-add-stmt-syntax
-	       (if (eq char-before-ip ?,)
+	       (cond
+		((eq (point) placeholder) 'statement) ; unrecognised construct
 		   ;; A preceding comma at the top level means that a
 		   ;; new variable declaration starts here.  Use
 		   ;; topmost-intro-cont for it, for consistency with
 		   ;; the first variable declaration.  C.f. case 5N.
-		   'topmost-intro-cont
-		 'statement-cont)
+		((eq char-before-ip ?,) 'topmost-intro-cont)
+		(t 'statement-cont))
 	       nil nil containing-sexp paren-state))
 	     ))
 

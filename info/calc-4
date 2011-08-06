@@ -1,6 +1,6 @@
-This is ../info/calc, produced by makeinfo version 4.8 from calc.texi.
+This is ../info/calc, produced by makeinfo version 4.11 from calc.texi.
 
-   This file documents Calc, the GNU Emacs calculator.
+This file documents Calc, the GNU Emacs calculator.
 
    Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
 2008 Free Software Foundation, Inc.
@@ -405,9 +405,8 @@ import-with-renaming feature may fail to rename sub-imports properly.
      patterns.  No special knowledge of the properties of the function
      `f' is used in this case; `+' is not commutative or associative.
      Unlike `quote', the arguments `x1,x2,...' are treated as patterns.
-     If you wish them to be treated "plainly" as well, you must
-     enclose them with more `plain' markers: `plain(plain(-a) + plain(b
-     c))'.
+     If you wish them to be treated "plainly" as well, you must enclose
+     them with more `plain' markers: `plain(plain(-a) + plain(b c))'.
 
 `opt(x,def)'
      Here `x' must be a variable name.  This must appear as an argument
@@ -3522,7 +3521,7 @@ This notation has the advantage that the `%' character begins a comment
 in TeX and LaTeX, so if your formula is embedded in a TeX or LaTeX
 document its plain version will be invisible in the final printed copy.
 Certain major modes have different delimiters to ensure that the
-"plain" version will be in a comment for those modes, also.  See *Note
+"plain" version will be in a comment for those modes, also.  See *note
 Customizing Embedded Mode:: to see how to change the "plain" formula
 delimiters.
 

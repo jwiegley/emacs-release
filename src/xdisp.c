@@ -1700,7 +1700,10 @@ glyph_to_pixel_coords (w, hpos, vpos, frame_x, frame_y)
    text, or we can't tell because W's current matrix is not up to
    date.  */
 
-static struct glyph *
+#ifndef HAVE_CARBON
+static
+#endif
+struct glyph *
 x_y_to_hpos_vpos (w, x, y, hpos, vpos, dx, dy, area)
      struct window *w;
      int x, y;
@@ -4674,7 +4677,7 @@ next_overlay_string (it)
       /* If we're at the end of the buffer, record that we have
 	 processed the overlay strings there already, so that
 	 next_element_from_buffer doesn't try it again.  */
-      if (IT_CHARPOS (*it) >= it->end_charpos)
+      if (NILP (it->string) && IT_CHARPOS (*it) >= it->end_charpos)
 	it->overlay_strings_at_end_processed_p = 1;
 
       /* If we have to display `...' for invisible text, set
@@ -6928,6 +6931,30 @@ move_it_to (it, to_charpos, to_x, to_y, to_vpos, op)
     }
 
  out:
+
+  /* On text terminals, we may stop at the end of a line in the middle
+     of a multi-character glyph.  If the glyph itself is continued,
+     i.e. it is actually displayed on the next line, don't treat this
+     stopping point as valid; move to the next line instead (unless
+     that brings us offscreen).  */
+  if (!FRAME_WINDOW_P (it->f)
+      && op & MOVE_TO_POS
+      && IT_CHARPOS (*it) == to_charpos
+      && it->what == IT_CHARACTER
+      && it->nglyphs > 1
+      && !it->truncate_lines_p
+      && it->current_x == it->last_visible_x - 1
+      && it->c != '\n'
+      && it->c != '\t'
+      && it->vpos < XFASTINT (it->w->window_end_vpos))
+    {
+      it->continuation_lines_width += it->current_x;
+      it->current_x = it->hpos = it->max_ascent = it->max_descent = 0;
+      it->current_y += it->max_ascent + it->max_descent;
+      ++it->vpos;
+      last_height = it->max_ascent + it->max_descent;
+      last_max_ascent = it->max_ascent;
+    }
 
   TRACE_MOVE ((stderr, "move_it_to: reached %d\n", reached));
 }
@@ -9444,7 +9471,7 @@ update_tool_bar (f, save_match_data)
      struct frame *f;
      int save_match_data;
 {
-#ifdef USE_GTK
+#if defined (USE_GTK) || USE_MAC_TOOLBAR
   int do_update = FRAME_EXTERNAL_TOOL_BAR (f);
 #else
   int do_update = WINDOWP (f->tool_bar_window)
@@ -9910,7 +9937,7 @@ redisplay_tool_bar (f)
   struct it it;
   struct glyph_row *row;
 
-#ifdef USE_GTK
+#if defined (USE_GTK) || USE_MAC_TOOLBAR
   if (FRAME_EXTERNAL_TOOL_BAR (f))
     update_frame_tool_bar (f);
   return 0;
@@ -13062,7 +13089,6 @@ redisplay_window (window, just_this_one_p)
     {
       /* We set this later on if we have to adjust point.  */
       int new_vpos = -1;
-      int val;
 
       w->force_start = Qnil;
       w->vscroll = 0;
@@ -13096,16 +13122,15 @@ redisplay_window (window, just_this_one_p)
 
       /* Redisplay, then check if cursor has been set during the
 	 redisplay.  Give up if new fonts were loaded.  */
-      val = try_window (window, startp, 1);
-      if (!val)
+      /* We used to issue a CHECK_MARGINS argument to try_window here,
+	 but this causes scrolling to fail when point begins inside
+	 the scroll margin (bug#148) -- cyd  */
+      if (!try_window (window, startp, 0))
 	{
 	  w->force_start = Qt;
 	  clear_glyph_matrix (w->desired_matrix);
 	  goto need_larger_matrices;
 	}
-      /* Point was outside the scroll margins.  */
-      if (val < 0)
-	new_vpos = window_box_height (w) / 2;
 
       if (w->cursor.vpos < 0 && !w->frozen_window_start_p)
 	{
@@ -13546,7 +13571,7 @@ redisplay_window (window, just_this_one_p)
         display_menu_bar (w);
 
 #ifdef HAVE_WINDOW_SYSTEM
-#ifdef USE_GTK
+#if defined (USE_GTK) || USE_MAC_TOOLBAR
       redisplay_tool_bar_p = FRAME_EXTERNAL_TOOL_BAR (f);
 #else
       redisplay_tool_bar_p = WINDOWP (f->tool_bar_window)
@@ -13664,7 +13689,7 @@ try_window (window, pos, check_margins)
 	     seems to give wrong results.  We don't want to recenter
 	     when the last line is partly visible, we want to allow
 	     that case to be handled in the usual way.  */
-	  || (w->cursor.y + 1) > it.last_visible_y)
+	  || w->cursor.y > it.last_visible_y - this_scroll_margin - 1)
 	{
 	  w->cursor.vpos = -1;
 	  clear_glyph_matrix (w->desired_matrix);
@@ -22079,7 +22104,10 @@ cursor_in_mouse_face_p (w)
 	 in 20.x as well, and I think it's too risky to install
 	 so near the release of 21.1.  2001-09-25 gerd.  */
 
-static int
+#ifndef HAVE_CARBON
+static
+#endif
+int
 fast_find_position (w, charpos, hpos, vpos, x, y, stop)
      struct window *w;
      int charpos;
@@ -24122,7 +24150,7 @@ If you want scrolling to always be a line at a time, you should set
     doc: /* *Scroll up to this many lines, to bring point back on screen.
 If point moves off-screen, redisplay will scroll by up to
 `scroll-conservatively' lines in order to bring point just barely
-onto the screen again.   If that cannot be done, then redisplay
+onto the screen again.  If that cannot be done, then redisplay
 recenters point as usual.
 
 A value of zero means always recenter point if it moves off screen.  */);

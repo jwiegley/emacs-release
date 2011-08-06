@@ -1,7 +1,7 @@
-This is ../info/emacs-mime, produced by makeinfo version 4.8 from
+This is ../info/emacs-mime, produced by makeinfo version 4.11 from
 emacs-mime.texi.
 
-   This file documents the Emacs MIME interface functionality.
+This file documents the Emacs MIME interface functionality.
 
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
 2007, 2008 Free Software Foundation, Inc.
@@ -274,7 +274,7 @@ File: emacs-mime,  Node: Display Customization,  Next: Files and Directories,  P
      Adding `"image/.*"' might also be useful.  Spammers use images as
      the preferred part of `multipart/alternative' messages, so you
      might not notice there are other parts.  See also
-     `gnus-buttonized-mime-types', *Note MIME Commands: (gnus)MIME
+     `gnus-buttonized-mime-types', *note MIME Commands: (gnus)MIME
      Commands.  After adding `"multipart/alternative"' to
      `gnus-buttonized-mime-types' you can choose manually which
      alternative you'd like to view.  For example, you can set those
@@ -1821,13 +1821,12 @@ File: emacs-mime,  Node: GNU Free Documentation License,  Next: Index,  Prev: St
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -2194,47 +2193,47 @@ File: emacs-mime,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
 
 
 
+Tag Table:
+Node: Top1366
+Node: Decoding and Viewing2713
+Node: Dissection3494
+Node: Non-MIME3868
+Node: Handles4982
+Node: Display5834
+Node: Display Customization6555
+Ref: Display Customization-Footnote-112867
+Ref: Display Customization-Footnote-212947
+Node: Files and Directories13074
+Node: New Viewers14795
+Node: Composing15919
+Node: Simple MML Example16880
+Node: MML Definition17523
+Node: Advanced MML Example21344
+Node: Encoding Customization24084
+Node: Charset Translation27251
+Node: Conversion29787
+Node: Flowed text30908
+Node: Interface Functions31993
+Node: Basic Functions37551
+Node: rfc204538595
+Node: rfc223139110
+Node: ietf-drums40399
+Node: rfc204741484
+Node: time-date44272
+Node: qp47639
+Node: base6448606
+Node: binhex49559
+Node: uudecode49955
+Node: yenc50311
+Node: rfc184350589
+Node: mailcap51198
+Node: Standards52122
+Node: GNU Free Documentation License53543
+Node: Index75744
+
+End Tag Table
+
+
 Local Variables:
 coding: iso-8859-1
 End:
-
-
-Tag Table:
-Node: Top1368
-Node: Decoding and Viewing2715
-Node: Dissection3496
-Node: Non-MIME3870
-Node: Handles4984
-Node: Display5836
-Node: Display Customization6557
-Ref: Display Customization-Footnote-112869
-Ref: Display Customization-Footnote-212949
-Node: Files and Directories13076
-Node: New Viewers14797
-Node: Composing15921
-Node: Simple MML Example16882
-Node: MML Definition17525
-Node: Advanced MML Example21346
-Node: Encoding Customization24086
-Node: Charset Translation27253
-Node: Conversion29789
-Node: Flowed text30910
-Node: Interface Functions31995
-Node: Basic Functions37553
-Node: rfc204538597
-Node: rfc223139112
-Node: ietf-drums40401
-Node: rfc204741486
-Node: time-date44274
-Node: qp47641
-Node: base6448608
-Node: binhex49561
-Node: uudecode49957
-Node: yenc50313
-Node: rfc184350591
-Node: mailcap51200
-Node: Standards52124
-Node: GNU Free Documentation License53545
-Node: Index75758
-
-End Tag Table

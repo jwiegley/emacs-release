@@ -1,6 +1,6 @@
-This is ../info/gnus, produced by makeinfo version 4.8 from gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.11 from gnus.texi.
 
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
+Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -1293,10 +1293,10 @@ File: gnus,  Node: Score Variables,  Next: Score File Format,  Prev: Group Score
      these functions will be called with the group name as argument, and
      all the returned lists of score files will be applied.  These
      functions can also return lists of lists of score alists directly.
-     In that case, the functions that return these non-file score
-     alists should probably be placed before the "real" score file
-     functions, to ensure that the last score file returned is the
-     local score file.  Phu.
+     In that case, the functions that return these non-file score alists
+     should probably be placed before the "real" score file functions,
+     to ensure that the last score file returned is the local score
+     file.  Phu.
 
      For example, to do hierarchical scoring but use a
      non-server-specific overall score file, you could use the value
@@ -1914,7 +1914,7 @@ article from the back end to find matches.  This takes a long time in
 big groups.
 
    Now, there's not much you can do about this for news groups, but for
-mail groups, you have greater control.  In *Note To From Newsgroups::,
+mail groups, you have greater control.  In *note To From Newsgroups::,
 it's explained in greater detail what this mechanism does, but here's a
 cookbook example for `nnml' on how to allow scoring on the `To' and
 `Cc' headers.
@@ -2901,7 +2901,7 @@ say `%3(hello%)' to have `hello' mouse-highlighted with
 `gnus-balloon-face-*' variables should be either strings or symbols
 naming functions that return a string.  When the mouse passes over text
 with this property set, a balloon window will appear and display the
-string.  Please refer to *Note Tooltips: (emacs)Tooltips, (in GNU
+string.  Please refer to *note Tooltips: (emacs)Tooltips, (in GNU
 Emacs) or the doc string of `balloon-help-mode' (in XEmacs) for more
 information on this.  (For technical reasons, the guillemets have been
 approximated as `<<' and `>>' in this paragraph.)
@@ -4847,7 +4847,7 @@ of the job for me:
      Because of the `gnus-group-spam-classification-spam' entry, all
      messages are marked as spam (with `$').  When I find a false
      positive, I mark the message with some other ham mark
-     (`ham-marks', *Note Spam and Ham Processors::).  On group exit,
+     (`ham-marks', *note Spam and Ham Processors::).  On group exit,
      those messages are copied to both groups, `INBOX' (where I want to
      have the article) and `training.ham' (for training bogofilter) and
      deleted from the `spam.detected' folder.
@@ -4974,7 +4974,7 @@ regular expression syntax.
 
    Conversely, whitelists tell Gnus what addresses are considered
 legitimate.  All messages from whitelisted addresses are considered
-non-spam.  Also see *Note BBDB Whitelists::.  Whitelist entries use the
+non-spam.  Also see *note BBDB Whitelists::.  Whitelist entries use the
 Emacs regular expression syntax.
 
    The blacklist and whitelist file locations can be customized with the
@@ -6162,10 +6162,10 @@ with, of course.
 *IMAP - RFC 1730/2060, RFC 2195, RFC 2086, RFC 2359, RFC 2595, RFC 1731*
      RFC 1730 is IMAP version 4, updated somewhat by RFC 2060 (IMAP 4
      revision 1).  RFC 2195 describes CRAM-MD5 authentication for IMAP.
-     RFC 2086 describes access control lists (ACLs) for IMAP.  RFC
-     2359 describes a IMAP protocol enhancement.  RFC 2595 describes
-     the proper TLS integration (STARTTLS) with IMAP.  RFC 1731
-     describes the GSSAPI/Kerberos4 mechanisms for IMAP.
+     RFC 2086 describes access control lists (ACLs) for IMAP.  RFC 2359
+     describes a IMAP protocol enhancement.  RFC 2595 describes the
+     proper TLS integration (STARTTLS) with IMAP.  RFC 1731 describes
+     the GSSAPI/Kerberos4 mechanisms for IMAP.
 
 
    If you ever notice Gnus acting non-compliant with regards to the
@@ -6178,7 +6178,7 @@ File: gnus,  Node: Emacsen,  Next: Gnus Development,  Prev: Conformity,  Up: His
 10.2.6 Emacsen
 --------------
 
-Gnus should work on:
+This Gnus version should work on:
 
    * Emacs 21.1 and up.
 
@@ -7000,7 +7000,7 @@ New features in Gnus 5.10:
           the complete Sieve script is generated using `D g' from the
           Group buffer, and then uploaded to the server using `C-c C-l'
           in the generated Sieve buffer.  *Note Sieve Commands::, and
-          the new Sieve manual *Note Top: (sieve)Top.
+          the new Sieve manual *note Top: (sieve)Top.
 
 
    * Changes in group mode
@@ -7388,6 +7388,10 @@ New features in Gnus 5.10:
           See `mml-dnd-protocol-alist' and `mml-dnd-attach-options'.
           *Note MIME: (message)MIME.
 
+        * `auto-fill-mode' is enabled by default in Message mode.  See
+          `message-fill-column'.  *Note Message Headers:
+          (message)Various Message Variables.
+
 
    * Changes in back ends
 
@@ -7428,7 +7432,8 @@ New features in Gnus 5.10:
 
         * The tool bars have been updated to use GNOME icons in Group,
           Summary and Message mode.  You can also customize the tool
-          bars.  This is a new feature in Gnus 5.10.9.  (Only for
+          bars: `M-x customize-apropos RET -tool-bar$' should get you
+          started.  This is a new feature in Gnus 5.10.10.  (Only for
           Emacs, not in XEmacs.)
 
         * The tool bar icons are now (de)activated correctly in the
@@ -7465,7 +7470,7 @@ New features in Gnus 5.10:
 
         * Dired integration
 
-          `gnus-dired-minor-mode' (see *Note Other modes::) installs key
+          `gnus-dired-minor-mode' (see *note Other modes::) installs key
           bindings in dired buffers to send a file as an attachment,
           open a file using the appropriate mailcap entry, and print a
           file using the mailcap entry.

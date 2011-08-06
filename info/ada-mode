@@ -1,7 +1,7 @@
-This is ../info/ada-mode, produced by makeinfo version 4.8 from
+This is ../info/ada-mode, produced by makeinfo version 4.11 from
 ada-mode.texi.
 
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
 2008  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -131,7 +131,7 @@ File: ada-mode,  Node: Customization,  Next: Compiling Executing,  Prev: Install
 Here we assume you are familiar with setting variables in Emacs, either
 thru 'customize' or in elisp (in your `.emacs' file). For a basic
 introduction to customize, elisp, and Emacs in general, see the
-tutorial in *Note The GNU Emacs Manual: (emacs)Top.
+tutorial in *note The GNU Emacs Manual: (emacs)Top.
 
    These global Emacs settings are strongly recommended (put them in
 your .emacs):
@@ -204,7 +204,7 @@ By default, Ada mode is configured to use the Gnu Ada compiler GNAT.
 
    To use a different Ada compiler, you must specify the command lines
 used to run that compiler, either in lisp variables or in Emacs Ada
-mode project files. See *Note Project file variables:: for the list of
+mode project files. See *note Project file variables:: for the list of
 project variables, and the corresponding lisp variables.
 
 
@@ -488,9 +488,9 @@ directory `"."' is the project file directory.
      cross-referencing even when there are errors.
 
      If source code for the project is in multiple directories, the
-     appropriate compiler options must be added here. *Note Set source
+     appropriate compiler options must be added here. *note Set source
      search path:: for examples of this. Alternately, GNAT project
-     files may be used; *Note Use GNAT project file::.
+     files may be used; *note Use GNAT project file::.
 
      Lisp variable: `ada-prj-default-comp-opt'.
 
@@ -699,7 +699,7 @@ error in `hello_pkg.adb':
    This demonstrates that gnatmake finds the files needed by the main
 program. However, it cannot find files in a different directory, unless
 you use an Emacs Ada mode project file to specify the other directories;
-*Note Set source search path::, or a GNAT project file; *Note Use GNAT
+*Note Set source search path::, or a GNAT project file; *note Use GNAT
 project file::.
 
    Invoke <Ada | Show main>; this displays `Ada mode main_unit:
@@ -784,12 +784,12 @@ like (the directory paths will be different):
      hello.adb:4:12: (style) space required
      gnatmake: "hello.adb" compilation error
 
-   Compare this to the compiler output in *Note No project files::; the
+   Compare this to the compiler output in *note No project files::; the
 gnatmake option `-cargs -gnatq -gnatQ' has been replaced by `-cargs
 -gnaty', and an additional error is reported in `hello.adb' on line 4.
 This shows that `hello.adp' is being used to set the compiler options.
 
-   Fixing the error, linking and running the code proceed as in *Note
+   Fixing the error, linking and running the code proceed as in *note
 No project files::.
 
 
@@ -799,7 +799,7 @@ File: ada-mode,  Node: Set source search path,  Next: Use GNAT project file,  Pr
 ==========================
 
 In this example, we show how to deal with files in more than one
-directory. We start with the same code as in *Note No project files::;
+directory. We start with the same code as in *note No project files::;
 create those files (with the errors present)
 
    Create the directory `Example_3', containing:
@@ -859,7 +859,7 @@ directory paths will be different):
      hello_pkg.adb:2:08: keyword "body" expected here [see file name]
      gnatmake: "C:\Examples\Example_3\hello_pkg.adb" compilation error
 
-   Compare the `-cargs' option to the compiler output in *Note Set
+   Compare the `-cargs' option to the compiler output in *note Set
 compiler options::; this shows that `other.adp' is being used to set
 the compiler options.
 
@@ -867,7 +867,7 @@ the compiler options.
 directories given by `src_dir' for the file mentioned in the compiler
 error message.
 
-   Fixing the error, linking and running the code proceed as in *Note
+   Fixing the error, linking and running the code proceed as in *note
 No project files::.
 
 
@@ -939,11 +939,11 @@ directory paths will be different):
      hello_pkg.adb:2:08: keyword "body" expected here [see file name]
      gnatmake: "c:\examples\example_4\hello_pkg.adb" compilation error
 
-   Compare the `gcc' options to the compiler output in *Note Set
+   Compare the `gcc' options to the compiler output in *note Set
 compiler options::; this shows that `hello_4.gpr' is being used to set
 the compiler options.
 
-   Fixing the error, linking and running the code proceed as in *Note
+   Fixing the error, linking and running the code proceed as in *note
 No project files::.
 
 
@@ -1562,13 +1562,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -1816,33 +1815,33 @@ Index
 
 
 Tag Table:
-Node: Top1387
-Node: Overview2419
-Node: Installation3722
-Node: Customization4845
-Node: Non-standard file names5747
-Node: Other compiler7239
-Node: Other customization7737
-Node: Compiling Executing8385
-Node: Compile commands9051
-Node: Compiler errors11853
-Node: Project files12727
-Node: Project File Overview13228
-Node: GUI Editor15243
-Node: Project file variables15713
-Node: Compiling Examples20598
-Node: No project files21355
-Node: Set compiler options26034
-Node: Set source search path27994
-Node: Use GNAT project file30266
-Node: Moving Through Ada Code32447
-Node: Identifier completion34398
-Node: Automatic Smart Indentation35959
-Node: Formatting Parameter Lists38771
-Node: Automatic Casing39172
-Node: Statement Templates42420
-Node: Comment Handling43883
-Node: GNU Free Documentation License44409
-Node: Index66645
+Node: Top1385
+Node: Overview2417
+Node: Installation3720
+Node: Customization4843
+Node: Non-standard file names5745
+Node: Other compiler7237
+Node: Other customization7735
+Node: Compiling Executing8383
+Node: Compile commands9049
+Node: Compiler errors11851
+Node: Project files12725
+Node: Project File Overview13226
+Node: GUI Editor15241
+Node: Project file variables15711
+Node: Compiling Examples20596
+Node: No project files21353
+Node: Set compiler options26032
+Node: Set source search path27992
+Node: Use GNAT project file30264
+Node: Moving Through Ada Code32445
+Node: Identifier completion34396
+Node: Automatic Smart Indentation35957
+Node: Formatting Parameter Lists38769
+Node: Automatic Casing39170
+Node: Statement Templates42418
+Node: Comment Handling43881
+Node: GNU Free Documentation License44407
+Node: Index66631
 
 End Tag Table

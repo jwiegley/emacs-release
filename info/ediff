@@ -1,7 +1,8 @@
-This is ../info/ediff, produced by makeinfo version 4.8 from ediff.texi.
+This is ../info/ediff, produced by makeinfo version 4.11 from
+ediff.texi.
 
-   This file documents Ediff, a comprehensive visual interface to Unix
-diff and patch utilities.
+This file documents Ediff, a comprehensive visual interface to Unix diff
+and patch utilities.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
@@ -2553,13 +2554,12 @@ Appendix A GNU Free Documentation License
      an item describing the Modified    Version as stated in the
      previous sentence.
      J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and
-     likewise    the network locations given in the Document for
-     previous versions    it was based on.  These may be placed in the
-     "History" section.     You may omit a network location for a work
-     that was published at    least four years before the Document
-     itself, or if the original    publisher of the version it refers
-     to gives permission.
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on.  These may be placed in the "History" section.
+       You may omit a network location for a work that was published at
+       least four years before the Document itself, or if the original
+      publisher of the version it refers to gives permission.
      K. For any section Entitled "Acknowledgements" or "Dedications,"
      Preserve the Title of the section, and preserve in the section all
        the substance and tone of each of the contributor
@@ -3069,31 +3069,31 @@ Index
 
 
 Tag Table:
-Node: Top1424
-Node: Introduction2094
-Node: Major Entry Points4484
-Node: Session Commands14393
-Node: Quick Help Commands15911
-Node: Other Session Commands34361
-Node: Registry of Ediff Sessions37161
-Node: Session Groups38717
-Node: Remote and Compressed Files44882
-Node: Customization46114
-Node: Hooks48067
-Node: Quick Help Customization53366
-Node: Window and Frame Configuration54377
-Node: Selective Browsing60342
-Node: Highlighting Difference Regions65438
-Node: Narrowing70180
-Node: Refinement of Difference Regions71458
-Node: Patch and Diff Programs74393
-Node: Merging and diff378960
-Node: Support for Version Control88763
-Node: Customizing the Mode Line90388
-Node: Miscellaneous91242
-Node: Notes on Heavy-duty Customization96490
-Node: Credits99075
-Node: GNU Free Documentation License104086
-Node: Index126310
+Node: Top1422
+Node: Introduction2092
+Node: Major Entry Points4482
+Node: Session Commands14391
+Node: Quick Help Commands15909
+Node: Other Session Commands34359
+Node: Registry of Ediff Sessions37159
+Node: Session Groups38715
+Node: Remote and Compressed Files44880
+Node: Customization46112
+Node: Hooks48065
+Node: Quick Help Customization53364
+Node: Window and Frame Configuration54375
+Node: Selective Browsing60340
+Node: Highlighting Difference Regions65436
+Node: Narrowing70178
+Node: Refinement of Difference Regions71456
+Node: Patch and Diff Programs74391
+Node: Merging and diff378958
+Node: Support for Version Control88761
+Node: Customizing the Mode Line90386
+Node: Miscellaneous91240
+Node: Notes on Heavy-duty Customization96488
+Node: Credits99073
+Node: GNU Free Documentation License104084
+Node: Index126296
 
 End Tag Table

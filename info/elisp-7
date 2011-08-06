@@ -1,4 +1,5 @@
-This is ../info/elisp, produced by makeinfo version 4.8 from elisp.texi.
+This is ../info/elisp, produced by makeinfo version 4.11 from
+elisp.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -6,7 +7,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
    This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.2.
+corresponding to Emacs version 22.3.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
@@ -54,7 +55,7 @@ also ignore overlays and text properties, aside from invisibility.
      the characters between the start of the current line and point.
 
      For an example of using `current-column', see the description of
-     `count-lines' in *Note Text Lines::.
+     `count-lines' in *note Text Lines::.
 
  -- Function: move-to-column column &optional force
      This function moves point to COLUMN in the current line.  The
@@ -1058,7 +1059,7 @@ each Emacs command.  *Note Adjusting Point::.
      the beginning and end of the inserted text.  The functions are
      called _after_ the actual insertion takes place.
 
-     See also *Note Change Hooks::, for other hooks that are called
+     See also *note Change Hooks::, for other hooks that are called
      when you change text in a buffer.
 
 `point-entered'
@@ -1126,7 +1127,7 @@ File: elisp,  Node: Format Properties,  Next: Sticky Properties,  Prev: Special 
 ---------------------------------
 
 These text properties affect the behavior of the fill commands.  They
-are used for representing formatted text.  *Note Filling::, and *Note
+are used for representing formatted text.  *Note Filling::, and *note
 Margins::.
 
 `hard'
@@ -1692,7 +1693,7 @@ finding the boundaries of intervals, assuming that intervals are always
 coalesced whenever possible.  *Note Property Search::.
 
    Emacs also provides explicit intervals as a presentation feature; see
-*Note Overlays::.
+*note Overlays::.
 
 
 File: elisp,  Node: Substitution,  Next: Transposition,  Prev: Text Properties,  Up: Text
@@ -1952,7 +1953,7 @@ digests.
 
    ---------- Footnotes ----------
 
-   (1) For an explanation of what is an RFC, see the footnote in *Note
+   (1) For an explanation of what is an RFC, see the footnote in *note
 Base 64::.
 
 
@@ -2044,7 +2045,7 @@ File: elisp,  Node: Change Hooks,  Prev: Atomic Changes,  Up: Text
 
 These hook variables let you arrange to take notice of all changes in
 all buffers (or in a particular buffer, if you make them buffer-local).
-See also *Note Special Properties::, for how to detect changes to
+See also *note Special Properties::, for how to detect changes to
 specific parts of the text.
 
    The functions you use in these hooks should save and restore the
@@ -2859,9 +2860,9 @@ Here are the Lisp facilities for working with coding systems:
 
  -- Function: coding-system-list &optional base-only
      This function returns a list of all coding system names (symbols).
-     If BASE-ONLY is non-`nil', the value includes only the base
-     coding systems.  Otherwise, it includes alias and variant coding
-     systems as well.
+     If BASE-ONLY is non-`nil', the value includes only the base coding
+     systems.  Otherwise, it includes alias and variant coding systems
+     as well.
 
  -- Function: coding-system-p object
      This function returns `t' if OBJECT is a coding system name or
@@ -2886,11 +2887,11 @@ Here are the Lisp facilities for working with coding systems:
 
      If this function returns a vector, Emacs will decide, as part of
      the text encoding or decoding process, what eol conversion to use.
-     For decoding, the end-of-line format of the text is
-     auto-detected, and the eol conversion is set to match it (e.g.,
-     DOS-style CRLF format will imply `dos' eol conversion).  For
-     encoding, the eol conversion is taken from the appropriate default
-     coding system (e.g., `default-buffer-file-coding-system' for
+     For decoding, the end-of-line format of the text is auto-detected,
+     and the eol conversion is set to match it (e.g., DOS-style CRLF
+     format will imply `dos' eol conversion).  For encoding, the eol
+     conversion is taken from the appropriate default coding system
+     (e.g., `default-buffer-file-coding-system' for
      `buffer-file-coding-system'), or from the default eol conversion
      appropriate for the underlying platform.
 
@@ -3452,7 +3453,7 @@ future, symbols may also be usable as input method names.
      it is good for.
 
    The fundamental interface to input methods is through the variable
-`input-method-function'.  *Note Reading One Event::, and *Note Invoking
+`input-method-function'.  *Note Reading One Event::, and *note Invoking
 the Input Method::.
 
 
@@ -3537,7 +3538,7 @@ portions of it.
 
    The `skip-chars...' functions also perform a kind of searching.
 *Note Skipping Characters::.  To search for changes in character
-properties, see *Note Property Search::.
+properties, see *note Property Search::.
 
 
 File: elisp,  Node: String Search,  Next: Searching and Case,  Up: Searching and Matching
@@ -4371,7 +4372,7 @@ File: elisp,  Node: Regexp Search,  Next: POSIX Regexps,  Prev: Regular Expressi
 
 In GNU Emacs, you can search for the next match for a regular
 expression either incrementally or not.  For incremental search
-commands, see *Note Regular Expression Search: (emacs)Regexp Search.
+commands, see *note Regular Expression Search: (emacs)Regexp Search.
 Here we describe only the search functions useful in programs.  The
 principal one is `re-search-forward'.
 
@@ -4904,9 +4905,8 @@ this.
           fixedcase literal subexp start
      This function copies STRING and searches it for matches for
      REGEXP, and replaces them with REP.  It returns the modified copy.
-     If START is non-`nil', the search for matches starts at that
-     index in STRING, so matches starting before that index are not
-     changed.
+     If START is non-`nil', the search for matches starts at that index
+     in STRING, so matches starting before that index are not changed.
 
      This function uses `replace-match' to do the replacement, and it
      passes the optional arguments FIXEDCASE, LITERAL and SUBEXP along
@@ -6125,7 +6125,7 @@ expression; in fact, normally they are never used except by the code
 that handles abbrevs.  Therefore, it is safe to use them in an
 extremely nonstandard way.  *Note Creating Symbols::.
 
-   For the user-level commands for abbrevs, see *Note Abbrev Mode:
+   For the user-level commands for abbrevs, see *note Abbrev Mode:
 (emacs)Abbrevs.
 
 * Menu:
@@ -6567,7 +6567,7 @@ argument which specifies where the standard output from the program will
 go.  It should be a buffer or a buffer name; if it is a buffer name,
 that will create the buffer if it does not already exist.  It can also
 be `nil', which says to discard the output unless a filter function
-handles it.  (*Note Filter Functions::, and *Note Read and Print::.)
+handles it.  (*Note Filter Functions::, and *note Read and Print::.)
 Normally, you should avoid having multiple processes send output to the
 same buffer because their output would be intermixed randomly.
 
