@@ -1,7 +1,7 @@
 ;;; elide-head.el --- hide headers in files
 
 ;; Copyright (C) 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009 Free Software Foundation, Inc.
+;;   2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Dave Love <fx@gnu.org>
 ;; Keywords: outlines tools
@@ -97,7 +97,7 @@ This is suitable as an entry on `find-file-hook' or appropriate mode hooks."
 			rest nil))))
 	    (if rest (setq rest (cdr rest))))
 	  (if (not (and beg end))
-	      (if (interactive-p)
+	      (if (called-interactively-p 'interactive)
 		  (message "No header found"))
 	    (goto-char beg)
 	    (end-of-line)
@@ -114,7 +114,7 @@ This is suitable as an entry on `find-file-hook' or appropriate mode hooks."
   (if (and (overlayp elide-head-overlay)
 	   (overlay-buffer elide-head-overlay))
       (delete-overlay elide-head-overlay)
-    (if (interactive-p)
+    (if (called-interactively-p 'interactive)
 	(message "No header hidden"))))
 
 (provide 'elide-head)

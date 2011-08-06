@@ -4,7 +4,7 @@
 
 
 ;;;### (autoloads (holiday-bahai-ridvan holiday-bahai-new-year holiday-bahai)
-;;;;;;  "cal-bahai" "cal-bahai.el" (19005 47388))
+;;;;;;  "cal-bahai" "cal-bahai.el" (19383 49278))
 ;;; Generated autoloads from cal-bahai.el
 
 (autoload 'holiday-bahai "cal-bahai" "\
@@ -31,7 +31,7 @@ Only considers the first, ninth, and twelfth days, unless ALL or
 
 ;;;### (autoloads (holiday-chinese holiday-chinese-winter-solstice
 ;;;;;;  holiday-chinese-qingming holiday-chinese-new-year) "cal-china"
-;;;;;;  "cal-china.el" (19005 47388))
+;;;;;;  "cal-china.el" (19383 49278))
 ;;; Generated autoloads from cal-china.el
 
 (autoload 'holiday-chinese-new-year "cal-china" "\
@@ -64,7 +64,7 @@ Returns nil if it is not visible in the current calendar window.
 
 ;;;### (autoloads (holiday-hebrew-misc holiday-hebrew-tisha-b-av
 ;;;;;;  holiday-hebrew-passover holiday-hebrew-hanukkah holiday-hebrew-rosh-hashanah
-;;;;;;  holiday-hebrew) "cal-hebrew" "cal-hebrew.el" (19005 47388))
+;;;;;;  holiday-hebrew) "cal-hebrew" "cal-hebrew.el" (19383 49284))
 ;;; Generated autoloads from cal-hebrew.el
 
 (autoload 'holiday-hebrew "cal-hebrew" "\
@@ -119,7 +119,7 @@ Kiddush HaHamah.
 ;;;***
 
 ;;;### (autoloads (holiday-islamic-new-year holiday-islamic) "cal-islam"
-;;;;;;  "cal-islam.el" (19005 47388))
+;;;;;;  "cal-islam.el" (19383 49278))
 ;;; Generated autoloads from cal-islam.el
 
 (autoload 'holiday-islamic "cal-islam" "\
@@ -137,8 +137,8 @@ Holiday entry for the Islamic New Year, if visible in the calendar window.
 
 ;;;***
 
-;;;### (autoloads (holiday-julian) "cal-julian" "cal-julian.el" (19005
-;;;;;;  47388))
+;;;### (autoloads (holiday-julian) "cal-julian" "cal-julian.el" (19383
+;;;;;;  49278))
 ;;; Generated autoloads from cal-julian.el
 
 (autoload 'holiday-julian "cal-julian" "\
@@ -152,7 +152,7 @@ nil if it is not visible in the current calendar window.
 ;;;***
 
 ;;;### (autoloads (solar-equinoxes-solstices) "solar" "solar.el"
-;;;;;;  (19005 47389))
+;;;;;;  (19383 49282))
 ;;; Generated autoloads from solar.el
 
 (autoload 'solar-equinoxes-solstices "solar" "\
@@ -168,7 +168,7 @@ Requires floating point.
 ;;;;;;  "cal-mayan.el" "cal-menu.el" "cal-move.el" "cal-persia.el"
 ;;;;;;  "cal-tex.el" "cal-x.el" "calendar.el" "diary-lib.el" "diary-loaddefs.el"
 ;;;;;;  "holidays.el" "icalendar.el" "lunar.el" "parse-time.el" "time-date.el"
-;;;;;;  "timeclock.el" "todo-mode.el") (19056 26496 684549))
+;;;;;;  "timeclock.el" "todo-mode.el") (19428 55160 509863))
 
 ;;;***
 

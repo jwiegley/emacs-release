@@ -1,6 +1,6 @@
 ;;; ecomplete.el --- electric completion of addresses and the like
 
-;; Copyright (C) 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+;; Copyright (C) 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: mail
@@ -26,6 +26,11 @@
 
 (eval-when-compile
   (require 'cl))
+
+(eval-when-compile
+  (unless (fboundp 'with-no-warnings)
+    (defmacro with-no-warnings (&rest body)
+      `(progn ,@body))))
 
 (defgroup ecomplete nil
   "Electric completion of email addresses and the like."
@@ -56,7 +61,11 @@
 (defun ecomplete-add-item (type key text)
   (let ((elems (assq type ecomplete-database))
 	(now (string-to-number
-	      (format "%.0f" (time-to-seconds (current-time)))))
+	      (format "%.0f" (if (and (fboundp 'float-time)
+				      (subrp (symbol-function 'float-time)))
+				 (float-time)
+			       (with-no-warnings
+				 (time-to-seconds (current-time)))))))
 	entry)
     (unless elems
       (push (setq elems (list type)) ecomplete-database))

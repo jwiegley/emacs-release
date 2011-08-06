@@ -1,7 +1,7 @@
 ;;; scroll-bar.el --- window system-independent scroll bar support
 
 ;; Copyright (C) 1993, 1994, 1995, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: hardware
@@ -156,7 +156,7 @@ Horizontal scroll bars aren't implemented yet."
 
 ;;;; Buffer navigation using the scroll bar.
 
-;;; This was used for up-events on button 2, but no longer.
+;; This was used for up-events on button 2, but no longer.
 (defun scroll-bar-set-window-start (event)
   "Set the window start according to where the scroll bar is dragged.
 EVENT should be a scroll bar click or drag event."
@@ -164,8 +164,7 @@ EVENT should be a scroll bar click or drag event."
   (let* ((end-position (event-end event))
 	 (window (nth 0 end-position))
 	 (portion-whole (nth 2 end-position)))
-    (save-excursion
-      (set-buffer (window-buffer window))
+    (with-current-buffer (window-buffer window)
       (save-excursion
 	(goto-char (+ (point-min)
 		      (scroll-bar-scale portion-whole
@@ -195,8 +194,7 @@ EVENT should be a scroll bar click or drag event."
 	 portion-start
 	 next-portion-start
 	 (current-start (window-start window)))
-    (save-excursion
-      (set-buffer (window-buffer window))
+    (with-current-buffer (window-buffer window)
       (setq portion-start (scroll-bar-drag-position portion-whole))
       (setq next-portion-start (max
 				(scroll-bar-drag-position next-portion-whole)
@@ -212,14 +210,14 @@ EVENT should be a scroll bar click or drag event."
   (let* ((start-position (event-start event))
 	 (window (nth 0 start-position))
 	 (portion-whole (nth 2 start-position)))
-    (save-excursion
-      (set-buffer (window-buffer window))
-      ;; Calculate position relative to the accessible part of the buffer.
-      (goto-char (+ (point-min)
-		    (scroll-bar-scale portion-whole
-				      (- (point-max) (point-min)))))
-      (vertical-motion 0 window)
-      (set-window-start window (point)))))
+    (save-excursion 
+      (with-current-buffer (window-buffer window)
+	;; Calculate position relative to the accessible part of the buffer.
+	(goto-char (+ (point-min)
+		      (scroll-bar-scale portion-whole
+					(- (point-max) (point-min)))))
+	(vertical-motion 0 window)
+	(set-window-start window (point))))))
 
 (defun scroll-bar-drag (event)
   "Scroll the window by dragging the scroll bar slider.
@@ -339,7 +337,7 @@ EVENT should be a scroll bar click."
 
 ;;;; Bindings.
 
-;;; For now, we'll set things up to work like xterm.
+;; For now, we'll set things up to work like xterm.
 (cond ((and (boundp 'x-toolkit-scroll-bars) x-toolkit-scroll-bars)
        (global-set-key [vertical-scroll-bar mouse-1]
 		       'scroll-bar-toolkit-scroll))

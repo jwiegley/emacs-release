@@ -1,7 +1,7 @@
 ;;; mouse.el --- window system-independent mouse support
 
 ;; Copyright (C) 1993, 1994, 1995, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: hardware, mouse
@@ -158,7 +158,8 @@ items `Turn Off' and `Help'."
    (list (completing-read
 	  "Minor mode indicator: "
 	  (describe-minor-mode-completion-table-for-indicator))))
-  (let ((minor-mode (lookup-minor-mode-from-indicator indicator)))
+  (let* ((minor-mode (lookup-minor-mode-from-indicator indicator))
+         (mm-fun (or (get minor-mode :minor-mode-function) minor-mode)))
     (unless minor-mode (error "Cannot find minor mode for `%s'" indicator))
     (let* ((map (cdr-safe (assq minor-mode minor-mode-map-alist)))
            (menu (and (keymapp map) (lookup-key map [menu-bar]))))
@@ -167,10 +168,10 @@ items `Turn Off' and `Help'."
                 (mouse-menu-non-singleton menu)
 	      `(keymap
                 ,indicator
-                (turn-off menu-item "Turn Off minor mode" ,minor-mode)
+                (turn-off menu-item "Turn Off minor mode" ,mm-fun)
                 (help menu-item "Help for minor mode"
                       (lambda () (interactive)
-                        (describe-function ',minor-mode))))))
+                        (describe-function ',mm-fun))))))
       (popup-menu menu))))
 
 (defun mouse-minor-mode-menu (event)
@@ -681,26 +682,26 @@ This should be bound to a mouse click event type."
 This should be bound to a mouse drag event."
   (interactive "e")
   (mouse-minibuffer-check click)
-  (let ((posn (event-start click))
-	(end (event-end click)))
-    (select-window (posn-window posn))
-    (if (numberp (posn-point posn))
-	(goto-char (posn-point posn)))
-    ;; If mark is highlighted, no need to bounce the cursor.
-    ;; On X, we highlight while dragging, thus once again no need to bounce.
+  (select-window (posn-window (event-start click)))
+  (let ((beg (posn-point (event-start click)))
+	(end (posn-point (event-end click))))
+    (and mouse-drag-copy-region (integerp beg) (integerp end)
+	 ;; Don't set this-command to `kill-region', so a following
+	 ;; C-w won't double the text in the kill ring.  Ignore
+	 ;; `last-command' so we don't append to a preceding kill.
+	 (let (this-command last-command deactivate-mark)
+	   (copy-region-as-kill beg end)))
+    (if (numberp beg) (goto-char beg))
+    ;; On a text terminal, bounce the cursor.
     (or transient-mark-mode
-	(memq (framep (selected-frame)) '(x pc w32 ns))
+	(window-system)
 	(sit-for 1))
     (push-mark)
+    ;; If `select-active-regions' is non-nil, `set-mark' sets the
+    ;; primary selection to the buffer's region, overriding the role
+    ;; of `copy-region-as-kill'; that's why we did the copy first.
     (set-mark (point))
-    (if (numberp (posn-point end))
-	(goto-char (posn-point end)))
-    ;; Don't set this-command to kill-region, so that a following
-    ;; C-w will not double the text in the kill ring.
-    ;; Ignore last-command so we don't append to a preceding kill.
-    (when mouse-drag-copy-region
-      (let (this-command last-command deactivate-mark)
-	(copy-region-as-kill (mark) (point))))
+    (if (numberp end) (goto-char end))
     (mouse-set-region-1)))
 
 (defun mouse-set-region-1 ()
@@ -927,6 +928,11 @@ will be deleted after return.  DO-MOUSE-DRAG-REGION-POST-PROCESS
 should only be used by mouse-drag-region."
   (mouse-minibuffer-check start-event)
   (setq mouse-selection-click-count-buffer (current-buffer))
+  ;; We must call deactivate-mark before repositioning point.
+  ;; Otherwise, for select-active-regions non-nil, we get the wrong
+  ;; selection if the user drags a region, clicks elsewhere to
+  ;; reposition point, then middle-clicks to paste the selection.
+  (deactivate-mark)
   (let* ((original-window (selected-window))
          ;; We've recorded what we needed from the current buffer and
          ;; window, now let's jump to the place of the event, where things
@@ -971,7 +977,6 @@ should only be used by mouse-drag-region."
     (mouse-move-drag-overlay mouse-drag-overlay start-point start-point
                              click-count)
     (overlay-put mouse-drag-overlay 'window start-window)
-    (deactivate-mark)
     (let (event end end-point last-end-point)
       (track-mouse
 	(while (progn
@@ -1046,15 +1051,19 @@ should only be used by mouse-drag-region."
 			      (overlay-start mouse-drag-overlay))
 			   region-termination))
 		       last-command this-command)
+		  ;; We copy the region before setting the mark so
+		  ;; that `select-active-regions' can override
+		  ;; `copy-region-as-kill'.
+		  (and mouse-drag-copy-region
+		       do-mouse-drag-region-post-process
+		       (let (deactivate-mark)
+			 (copy-region-as-kill region-commencement
+					      region-termination)))
 		  (push-mark region-commencement t t)
 		  (goto-char region-termination)
 		  (if (not do-mouse-drag-region-post-process)
 		      ;; Skip all post-event handling, return immediately.
 		      (delete-overlay mouse-drag-overlay)
-		    ;; Don't let copy-region-as-kill set deactivate-mark.
-		    (when mouse-drag-copy-region
-		      (let (deactivate-mark)
-			(copy-region-as-kill (point) (mark t))))
 		    (let ((buffer (current-buffer)))
 		      (mouse-show-mark)
 		      ;; mouse-show-mark can call read-event,
@@ -1356,10 +1365,16 @@ Also move point to one end of the text thus inserted (normally the end),
 and set mark at the beginning.
 Prefix arguments are interpreted as with \\[yank].
 If `mouse-yank-at-point' is non-nil, insert at point
-regardless of where you click."
+regardless of where you click.
+If `select-active-regions' is non-nil, the mark is deactivated
+before inserting the text."
   (interactive "e\nP")
   ;; Give temporary modes such as isearch a chance to turn off.
   (run-hooks 'mouse-leave-buffer-hook)
+  (when select-active-regions
+    ;; Without this, confusing things happen upon e.g. inserting into
+    ;; the middle of an active region.
+    (deactivate-mark))
   (or mouse-yank-at-point (mouse-set-point click))
   (setq this-command 'yank)
   (setq mouse-selection-click-count 0)
@@ -1373,6 +1388,10 @@ regardless of where you click."
   (interactive "e")
   ;; Give temporary modes such as isearch a chance to turn off.
   (run-hooks 'mouse-leave-buffer-hook)
+  (when select-active-regions
+    ;; Without this, confusing things happen upon e.g. inserting into
+    ;; the middle of an active region.
+    (deactivate-mark))
   (or mouse-yank-at-point (mouse-set-point click))
   (let ((primary (x-get-selection 'PRIMARY)))
     (if primary
@@ -1697,9 +1716,7 @@ is to prevent accidents."
     (with-current-buffer (overlay-buffer mouse-secondary-overlay)
       (kill-region (overlay-start mouse-secondary-overlay)
 		   (overlay-end mouse-secondary-overlay))))
-  (delete-overlay mouse-secondary-overlay)
-;;;  (x-set-selection 'SECONDARY nil)
-  )
+  (delete-overlay mouse-secondary-overlay))
 
 (defun mouse-secondary-save-then-kill (click)
   "Save text to point in kill ring; the second time, kill the text.
@@ -1833,6 +1850,7 @@ a large number if you prefer a mixed multitude.  The default is 4."
   :version "20.3")
 
 (defvar mouse-buffer-menu-mode-groups
+  (mapcar (lambda (arg) (cons  (purecopy (car arg)) (purecopy (cdr arg))))
   '(("Info\\|Help\\|Apropos\\|Man" . "Help")
     ("\\bVM\\b\\|\\bMH\\b\\|Message\\|Mail\\|Group\\|Score\\|Summary\\|Article"
      . "Mail/News")
@@ -1842,7 +1860,7 @@ a large number if you prefer a mixed multitude.  The default is 4."
     ("Outline" . "Text")
     ("\\(HT\\|SG\\|X\\|XHT\\)ML" . "SGML")
     ("log\\|diff\\|vc\\|cvs\\|Annotate" . "Version Control") ; "Change Management"?
-    ("Lisp" . "Lisp"))
+    ("Lisp" . "Lisp")))
   "How to group various major modes together in \\[mouse-buffer-menu].
 Each element has the form (REGEXP . GROUPNAME).
 If the major mode's name string matches REGEXP, use GROUPNAME instead.")
@@ -1957,12 +1975,10 @@ and selects that window."
 		     (format "%%-%ds  %%s%%s  %%s" maxlen)
 		     (buffer-name elt)
 		     (if (buffer-modified-p elt) "*" " ")
-		     (save-excursion
-		       (set-buffer elt)
+		     (with-current-buffer elt
 		       (if buffer-read-only "%" " "))
 		     (or (buffer-file-name elt)
-			 (save-excursion
-			   (set-buffer elt)
+			 (with-current-buffer elt
 			   (if list-buffers-directory
 			       (expand-file-name
 				list-buffers-directory)))
@@ -2320,43 +2336,9 @@ and selects that window."
 ;;!! 		(- (car relative-coordinate) (current-column)) " "))
 ;;!! 	      ((= (current-column) (car relative-coordinate)) (ding))))))
 
-;; Choose a completion with the mouse.
+(define-obsolete-function-alias
+  'mouse-choose-completion 'choose-completion "23.2")
 
-(defun mouse-choose-completion (event)
-  "Click on an alternative in the `*Completions*' buffer to choose it."
-  (interactive "e")
-  ;; Give temporary modes such as isearch a chance to turn off.
-  (run-hooks 'mouse-leave-buffer-hook)
-  (let ((buffer (window-buffer))
-        choice
-	base-size)
-    (save-excursion
-      (set-buffer (window-buffer (posn-window (event-start event))))
-      (if completion-reference-buffer
-	  (setq buffer completion-reference-buffer))
-      (setq base-size completion-base-size)
-      (save-excursion
-	(goto-char (posn-point (event-start event)))
-	(let (beg end)
-	  (if (and (not (eobp)) (get-text-property (point) 'mouse-face))
-	      (setq end (point) beg (1+ (point))))
-	  (if (null beg)
-	      (error "No completion here"))
-	  (setq beg (previous-single-property-change beg 'mouse-face))
-	  (setq end (or (next-single-property-change end 'mouse-face)
-			(point-max)))
-	  (setq choice (buffer-substring-no-properties beg end)))))
-    (let ((owindow (selected-window)))
-      (select-window (posn-window (event-start event)))
-      (if (and (one-window-p t 'selected-frame)
-	       (window-dedicated-p (selected-window)))
-	  ;; This is a special buffer's frame
-	  (iconify-frame (selected-frame))
-	(or (window-dedicated-p (selected-window))
-	    (bury-buffer)))
-      (select-window owindow))
-    (choose-completion-string choice buffer base-size)))
-
 ;; Font selection.
 
 (defun font-menu-add-default ()
@@ -2370,10 +2352,14 @@ and selects that window."
 		  (cdr elt)))))
 
 (defvar x-fixed-font-alist
-  '("Font Menu"
-    ("Misc"
+  (list
+   (purecopy "Font Menu")
+   (cons
+    (purecopy "Misc")
+    (mapcar
+     (lambda (arg) (cons  (purecopy (car arg)) (purecopy (cdr arg))))
      ;; For these, we specify the pixel height and width.
-     ("fixed" "fixed")
+    '(("fixed" "fixed")
      ("6x10" "-misc-fixed-medium-r-normal--10-*-*-*-c-60-iso8859-1" "6x10")
      ("6x12"
       "-misc-fixed-medium-r-semicondensed--12-*-*-*-c-60-iso8859-1" "6x12")
@@ -2410,10 +2396,14 @@ and selects that window."
       "-b&h-lucidatypewriter-bold-r-normal-sans-*-240-*-*-*-*-iso8859-1")
      ;; ("lucidatypewriter-bold-r-24" "-b&h-lucidatypewriter-bold-r-normal-sans-24-240-75-75-m-140-iso8859-1")
      ;; ("fixed-medium-20" "-misc-fixed-medium-*-*-*-20-*-*-*-*-*-*-*")
-     )
-    ("Courier"
+     )))
+
+   (cons
+    (purecopy "Courier")
+    (mapcar
+     (lambda (arg) (cons  (purecopy (car arg)) (purecopy (cdr arg))))
      ;; For these, we specify the point height.
-     ("8" "-adobe-courier-medium-r-normal--*-80-*-*-m-*-iso8859-1")
+     '(("8" "-adobe-courier-medium-r-normal--*-80-*-*-m-*-iso8859-1")
      ("10" "-adobe-courier-medium-r-normal--*-100-*-*-m-*-iso8859-1")
      ("12" "-adobe-courier-medium-r-normal--*-120-*-*-m-*-iso8859-1")
      ("14" "-adobe-courier-medium-r-normal--*-140-*-*-m-*-iso8859-1")
@@ -2436,8 +2426,8 @@ and selects that window."
      ("12 bold slant" "-adobe-courier-bold-o-normal--*-120-*-*-m-*-iso8859-1")
      ("14 bold slant" "-adobe-courier-bold-o-normal--*-140-*-*-m-*-iso8859-1")
      ("18 bold slant" "-adobe-courier-bold-o-normal--*-180-*-*-m-*-iso8859-1")
-     ("24 bold slant" "-adobe-courier-bold-o-normal--*-240-*-*-m-*-iso8859-1"))
-    )
+     ("24 bold slant" "-adobe-courier-bold-o-normal--*-240-*-*-m-*-iso8859-1")
+    ))))
   "X fonts suitable for use in Emacs.")
 
 (declare-function generate-fontset-menu "fontset" ())
@@ -2548,7 +2538,8 @@ choose a font."
 					 (if (eq choice 'x-select-font)
 					     (x-select-font)
 					   (symbol-name choice)))
-					t (interactive-p))))))))
+					t
+					(called-interactively-p 'interactive))))))))
 
 
 ;;; Bindings for mouse commands.
@@ -2580,7 +2571,7 @@ choose a font."
     (global-set-key [S-down-mouse-1] 'mouse-appearance-menu))
 ;; C-down-mouse-2 is bound in facemenu.el.
 (global-set-key [C-down-mouse-3]
-  '(menu-item "Menu Bar" ignore
+  `(menu-item ,(purecopy "Menu Bar") ignore
     :filter (lambda (_)
               (if (zerop (or (frame-parameter nil 'menu-bar-lines) 0))
                   (mouse-menu-bar-map)

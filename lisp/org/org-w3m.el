@@ -1,11 +1,11 @@
 ;;; org-w3m.el --- Support from copy and paste from w3m to Org-mode
 
-;; Copyright (C) 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Andy Stewart <lazycat dot manatee at gmail dot com>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.21b
+;; Version: 6.33x
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -26,7 +26,7 @@
 ;;; Commentary:
 
 ;; This file implements copying HTML content from a w3m buffer and
-;; transfomring the text on the fly so that it can be pasted into
+;; transforming the text on the fly so that it can be pasted into
 ;; an org-mode buffer with hot links.  It will also work for regions
 ;; in gnus buffers that have ben washed with w3m.
 
@@ -93,7 +93,7 @@ so that it can be yanked into an Org-mode buffer with links working correctly."
           (setq return-content
                 (concat return-content
                         (buffer-substring (point) transform-end))))
-      (kill-new return-content)
+      (org-kill-new return-content)
       (message "Transforming links...done, use C-y to insert text into Org-mode file")
       (message "Copy with link transformation complete."))))
 
@@ -121,7 +121,7 @@ so that it can be yanked into an Org-mode buffer with links working correctly."
   (point))
 
 (defun org-w3m-get-prev-link-start ()
-  "Move cursor to the start of prevoius link.  Return point."
+  "Move cursor to the start of previous link.  Return point."
   (catch 'reach
     (while (previous-single-property-change (point) 'w3m-anchor-sequence)
       ;; jump to previous anchor

@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/functions
 @node Functions, Macros, Variables, Top
@@ -887,9 +887,9 @@ bool-vector, or a string.
 
   In Lisp, a function is a list that starts with @code{lambda}, a
 byte-code function compiled from such a list, or alternatively a
-primitive subr-object; names are ``extra.''  Although usually functions
-are defined with @code{defun} and given names at the same time, it is
-occasionally more concise to use an explicit lambda expression---an
+primitive subr-object; names are ``extra.''  Although functions are
+usually defined with @code{defun} and given names at the same time, it
+is occasionally more concise to use an explicit lambda expression---an
 anonymous function.  Such a list is valid wherever a function name is.
 
   Any method of creating such a list makes a valid function.  Even this:
@@ -916,17 +916,21 @@ makes it the value (@emph{not} the function definition!) of
 @end example
 
 @noindent
-(It does @emph{not} work to write @code{(silly 1)}, because this function
-is not the @emph{function definition} of @code{silly}.  We have not given
-@code{silly} any function definition, just a value as a variable.)
+It does @emph{not} work to write @code{(silly 1)}, because this
+function is not the @emph{function definition} of @code{silly}.  We
+have not given @code{silly} any function definition, just a value as a
+variable.
 
   Most of the time, anonymous functions are constants that appear in
-your program.  For example, you might want to pass one as an argument to
-the function @code{mapcar}, which applies any given function to each
-element of a list.
+your program.  For instance, you might want to pass one as an argument
+to the function @code{mapcar}, which applies any given function to
+each element of a list (@pxref{Mapping Functions}).
+@xref{describe-symbols example}, for a realistic example of this.
 
-  Here we define a function @code{change-property} which
-uses a function as its third argument:
+  In the following example, we define a @code{change-property}
+function that takes a function as its third argument, followed by a
+@code{double-property} function that makes use of
+@code{change-property} by passing it an anonymous function:
 
 @example
 @group
@@ -934,11 +938,23 @@ uses a function as its third argument:
   (let ((value (get symbol prop)))
     (put symbol prop (funcall function value))))
 @end group
+
+@group
+(defun double-property (symbol prop)
+  (change-property symbol prop (lambda (x) (* 2 x))))
+@end group
 @end example
 
 @noindent
-Here we define a function that uses @code{change-property},
-passing it a function to double a number:
+In the @code{double-property} function, we did not quote the
+@code{lambda} form.  This is permissible, because a @code{lambda} form
+is @dfn{self-quoting}: evaluating the form yields the form itself.
+
+Whether or not you quote a @code{lambda} form makes a difference if
+you compile the code (@pxref{Byte Compilation}).  If the @code{lambda}
+form is unquoted, as in the above example, the anonymous function is
+also compiled.  Suppose, however, that we quoted the @code{lambda}
+form:
 
 @example
 @group
@@ -948,69 +964,22 @@ passing it a function to double a number:
 @end example
 
 @noindent
-In such cases, we usually use the special form @code{function} instead
-of simple quotation to quote the anonymous function, like this:
-
-@example
-@group
-(defun double-property (symbol prop)
-  (change-property symbol prop
-                   (function (lambda (x) (* 2 x)))))
-@end group
-@end example
-
-Using @code{function} instead of @code{quote} makes a difference if you
-compile the function @code{double-property}.  For example, if you
-compile the second definition of @code{double-property}, the anonymous
-function is compiled as well.  By contrast, if you compile the first
-definition which uses ordinary @code{quote}, the argument passed to
-@code{change-property} is the precise list shown:
+If you compile this, the argument passed to @code{change-property} is
+the precise list shown:
 
 @example
 (lambda (x) (* x 2))
 @end example
 
 @noindent
-The Lisp compiler cannot assume this list is a function, even though it
-looks like one, since it does not know what @code{change-property} will
-do with the list.  Perhaps it will check whether the @sc{car} of the third
-element is the symbol @code{*}!  Using @code{function} tells the
-compiler it is safe to go ahead and compile the constant function.
+The Lisp compiler cannot assume this list is a function, even though
+it looks like one, since it does not know what @code{change-property}
+will do with the list.  Perhaps it will check whether the @sc{car} of
+the third element is the symbol @code{*}!
 
-  Nowadays it is possible to omit @code{function} entirely, like this:
-
-@example
-@group
-(defun double-property (symbol prop)
-  (change-property symbol prop (lambda (x) (* 2 x))))
-@end group
-@end example
-
-@noindent
-This is because @code{lambda} itself implies @code{function}.
-
-  We sometimes write @code{function} instead of @code{quote} when
-quoting the name of a function, but this usage is just a sort of
-comment:
-
-@example
-(function @var{symbol}) @equiv{} (quote @var{symbol}) @equiv{} '@var{symbol}
-@end example
-
-@cindex @samp{#'} syntax
-  The read syntax @code{#'} is a short-hand for using @code{function}.
-For example,
-
-@example
-#'(lambda (x) (* x x))
-@end example
-
-@noindent
-is equivalent to
-
-@example
-(function (lambda (x) (* x x)))
-@end example
+@findex function
+The @code{function} special form explicitly tells the byte-compiler
+that its argument is a function:
 
 @defspec function function-object
 @cindex function quoting
@@ -1021,8 +990,26 @@ to be used only as a function, and therefore can safely be compiled.
 Contrast this with @code{quote}, in @ref{Quoting}.
 @end defspec
 
-  @xref{describe-symbols example}, for a realistic example using
-@code{function} and an anonymous function.
+@cindex @samp{#'} syntax
+The read syntax @code{#'} is a short-hand for using @code{function}.
+Generally, it is not necessary to use either @code{#'} or
+@code{function}; just use an unquoted @code{lambda} form instead.
+(Actually, @code{lambda} is a macro defined using @code{function}.)
+The following forms are all equivalent:
+
+@example
+#'(lambda (x) (* x x))
+(function (lambda (x) (* x x)))
+(lambda (x) (* x x))
+@end example
+
+  We sometimes write @code{function} instead of @code{quote} when
+quoting the name of a function, but this usage is just a sort of
+comment:
+
+@example
+(function @var{symbol}) @equiv{} (quote @var{symbol}) @equiv{} '@var{symbol}
+@end example
 
 @node Function Cells
 @section Accessing Function Cell Contents
@@ -1210,7 +1197,7 @@ was first made obsolete---for example, a date or a release number.
 @end defun
 
 You can define a function as an alias and declare it obsolete at the
-same time using the macro @code{define-obsolete-function-alias}.
+same time using the macro @code{define-obsolete-function-alias}:
 
 @defmac define-obsolete-function-alias obsolete-name current-name &optional when docstring
 This macro marks the function @var{obsolete-name} obsolete and also
@@ -1222,6 +1209,33 @@ equivalent to the following:
 (make-obsolete @var{obsolete-name} @var{current-name} @var{when})
 @end example
 @end defmac
+
+In addition, you can mark a certain a particular calling convention
+for a function as obsolete:
+
+@defun set-advertised-calling-convention function signature
+This function specifies the argument list @var{signature} as the
+correct way to call @var{function}.  This causes the Emacs byte
+compiler to issue a warning whenever it comes across an Emacs Lisp
+program that calls @var{function} any other way (however, it will
+still allow the code to be byte compiled).
+
+For instance, in old versions of Emacs the @code{sit-for} function
+accepted three arguments, like this
+
+@smallexample
+  (sit-for seconds milliseconds nodisp)
+@end smallexample
+
+However, calling @code{sit-for} this way is considered obsolete
+(@pxref{Waiting}).  The old calling convention is deprecated like
+this:
+
+@smallexample
+(set-advertised-calling-convention
+  'sit-for '(seconds &optional nodisp))
+@end smallexample
+@end defun
 
 @node Inline Functions
 @section Inline Functions
@@ -1325,11 +1339,11 @@ definition using @code{locate-library}; if that finds no file, they
 expand the definition file name relative to the directory of the file
 that contains the @code{declare-function} call.
 
-  You can also say that a function is defined by C code by specifying
-a file name ending in @samp{.c}.  @code{check-declare-file} looks for
-these files in the C source code directory.  This is useful only when
-you call a function that is defined only on certain systems.  Most
-of the primitive functions of Emacs are always defined so they will
+  You can also say that a function is defined by C code by specifying a
+file name ending in @samp{.c} or @samp{.m}.  @code{check-declare-file}
+looks for these files in the C source code directory.  This is useful
+only when you call a function that is defined only on certain systems.
+Most of the primitive functions of Emacs are always defined so they will
 never give you a warning.
 
   Sometimes a file will optionally use functions from an external package.

@@ -1,9 +1,9 @@
 /* Basic character support.
    Copyright (C) 1995, 1997, 1998, 2001 Electrotechnical Laboratory, JAPAN.
      Licensed to the Free Software Foundation.
-   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
      Free Software Foundation, Inc.
-   Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
+   Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H13PRO009
 
@@ -34,6 +34,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #ifdef emacs
 
 #include <sys/types.h>
+#include <setjmp.h>
 #include "lisp.h"
 #include "character.h"
 #include "buffer.h"
@@ -86,14 +87,6 @@ Lisp_Object Vscript_representative_chars;
 static Lisp_Object Qchar_script_table;
 
 Lisp_Object Vunicode_category_table;
-
-/* Mapping table from unibyte chars to multibyte chars.  */
-int unibyte_to_multibyte_table[256];
-
-/* Decoding table for 8-bit byte codes of the charset charset_unibyte.
-   Nth element is for the code (N-0x80).  */
-int charset_unibyte_decoder[128];
-
 
 
 /* If character code C has modifier masks, reflect them to the
@@ -134,11 +127,13 @@ char_resolve_modifier_mask (c)
       else if ((c & 0177) >= 0100 && (c & 0177) <= 0137)
 	c &= (037 | (~0177 & ~CHAR_CTL));
     }
+#if 0	/* This is outside the scope of this function.  (bug#4751)  */
   if (c & CHAR_META)
     {
       /* Move the meta bit to the right place for a string.  */
       c = (c & ~CHAR_META) | 0x80;
     }
+#endif
 
   return c;
 }
@@ -324,14 +319,12 @@ DEFUN ("unibyte-char-to-multibyte", Funibyte_char_to_multibyte,
      Lisp_Object ch;
 {
   int c;
-  struct charset *charset;
 
   CHECK_CHARACTER (ch);
   c = XFASTINT (ch);
-  if (c >= 0400)
-    error ("Invalid unibyte character: %d", c);
-  if (c >= 0x80)
-    c = BYTE8_TO_CHAR (c);
+  if (c >= 0x100)
+    error ("Not a unibyte character: %d", c);
+  MAKE_CHAR_MULTIBYTE (c);
   return make_number (c);
 }
 
@@ -412,7 +405,7 @@ c_string_width (const unsigned char *str, int len, int precision, int *nchars, i
     {
       int bytes, thiswidth;
       Lisp_Object val;
-      int c = STRING_CHAR_AND_LENGTH (str + i_byte, len - i_byte, bytes);
+      int c = STRING_CHAR_AND_LENGTH (str + i_byte, bytes);
 
       if (dp)
 	{
@@ -502,7 +495,7 @@ lisp_string_width (string, precision, nchars, nbytes)
 	  int c;
 
 	  if (multibyte)
-	    c = STRING_CHAR_AND_LENGTH (str + i_byte, len - i_byte, bytes);
+	    c = STRING_CHAR_AND_LENGTH (str + i_byte, bytes);
 	  else
 	    c = str[i_byte], bytes = 1;
 	  chars = 1;
@@ -637,7 +630,8 @@ parse_str_as_multibyte (str, len, nchars, nbytes)
       const unsigned char *adjusted_endp = endp - MAX_MULTIBYTE_LENGTH;
       while (str < adjusted_endp)
 	{
-	  if ((n = MULTIBYTE_LENGTH_NO_CHECK (str)) > 0)
+	  if (! CHAR_BYTE8_HEAD_P (*str)
+	      && (n = MULTIBYTE_LENGTH_NO_CHECK (str)) > 0)
 	    str += n, bytes += n;
 	  else
 	    str++, bytes += 2;
@@ -646,7 +640,8 @@ parse_str_as_multibyte (str, len, nchars, nbytes)
     }
   while (str < endp)
     {
-      if ((n = MULTIBYTE_LENGTH (str, endp)) > 0)
+      if (! CHAR_BYTE8_HEAD_P (*str)
+	  && (n = MULTIBYTE_LENGTH (str, endp)) > 0)
 	str += n, bytes += n;
       else
 	str++, bytes += 2;
@@ -680,10 +675,13 @@ str_as_multibyte (str, len, nbytes, nchars)
     {
       unsigned char *adjusted_endp = endp - MAX_MULTIBYTE_LENGTH;
       while (p < adjusted_endp
+	     && ! CHAR_BYTE8_HEAD_P (*p)
 	     && (n = MULTIBYTE_LENGTH_NO_CHECK (p)) > 0)
 	p += n, chars++;
     }
-  while ((n = MULTIBYTE_LENGTH (p, endp)) > 0)
+  while (p < endp
+	 && ! CHAR_BYTE8_HEAD_P (*p)
+	 && (n = MULTIBYTE_LENGTH (p, endp)) > 0)
     p += n, chars++;
   if (nchars)
     *nchars = chars;
@@ -701,7 +699,8 @@ str_as_multibyte (str, len, nbytes, nchars)
       unsigned char *adjusted_endp = endp - MAX_MULTIBYTE_LENGTH;
       while (p < adjusted_endp)
 	{
-	  if ((n = MULTIBYTE_LENGTH_NO_CHECK (p)) > 0)
+	  if (! CHAR_BYTE8_HEAD_P (*p)
+	      && (n = MULTIBYTE_LENGTH_NO_CHECK (p)) > 0)
 	    {
 	      while (n--)
 		*to++ = *p++;
@@ -717,7 +716,8 @@ str_as_multibyte (str, len, nbytes, nchars)
     }
   while (p < endp)
     {
-      if ((n = MULTIBYTE_LENGTH (p, endp)) > 0)
+      if (! CHAR_BYTE8_HEAD_P (*p)
+	  && (n = MULTIBYTE_LENGTH (p, endp)) > 0)
 	{
 	  while (n--)
 	    *to++ = *p++;
@@ -1068,7 +1068,7 @@ character is not ASCII nor 8-bit character, an error is signalled.  */)
       if (! STRING_MULTIBYTE (string))
 	return make_number (*p);
     }
-  c = STRING_CHAR (p, 0);
+  c = STRING_CHAR (p);
   if (CHAR_BYTE8_P (c))
     c = CHAR_TO_BYTE8 (c);
   else if (! ASCII_CHAR_P (c))
@@ -1149,7 +1149,7 @@ It has one extra slot whose value is a list of script symbols.  */);
   /* Intern this now in case it isn't already done.
      Setting this variable twice is harmless.
      But don't staticpro it here--that is done in alloc.c.  */
-  Qchar_table_extra_slots = intern ("char-table-extra-slots");
+  Qchar_table_extra_slots = intern_c_string ("char-table-extra-slots");
   DEFSYM (Qchar_script_table, "char-script-table");
   Fput (Qchar_script_table, Qchar_table_extra_slots, make_number (1));
   Vchar_script_table = Fmake_char_table (Qchar_script_table, Qnil);

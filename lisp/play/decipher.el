@@ -1,7 +1,7 @@
 ;;; decipher.el --- cryptanalyze monoalphabetic substitution ciphers
 ;;
-;; Copyright (C) 1995, 1996, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1995, 1996, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 ;;
 ;; Author: Christopher J. Madsen <chris_madsen@geocities.com>
 ;; Keywords: games
@@ -98,7 +98,7 @@
   :group 'games)
 
 (defcustom decipher-force-uppercase t
-  "*Non-nil means to convert ciphertext to uppercase.
+  "Non-nil means to convert ciphertext to uppercase.
 nil means the case of the ciphertext is preserved.
 This variable must be set before typing `\\[decipher]'."
   :type 'boolean
@@ -106,7 +106,7 @@ This variable must be set before typing `\\[decipher]'."
 
 
 (defcustom decipher-ignore-spaces nil
-  "*Non-nil means to ignore spaces and punctuation when counting digrams.
+  "Non-nil means to ignore spaces and punctuation when counting digrams.
 You should set this to nil if the cipher message is divided into words,
 or t if it is not.
 This variable is buffer-local."
@@ -274,7 +274,8 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ   -*-decipher-*-\n)\n\n")
             (insert ">\n")))))          ;Mark plaintext line
     (delete-blank-lines)                ;Remove any blank lines
     (delete-blank-lines))               ; at end of buffer
-  (goto-line 4)
+  (goto-char (point-min))
+  (forward-line 3)
   (decipher-mode))
 
 ;;;###autoload
@@ -680,8 +681,7 @@ ciphertext."
   (interactive (list (upcase (following-char))))
   (decipher-analyze)
   (let (start end)
-    (save-excursion
-      (set-buffer (decipher-stats-buffer))
+    (with-current-buffer (decipher-stats-buffer)
       (goto-char (point-min))
       (or (re-search-forward (format "^%c: " cipher-char) nil t)
           (error "Character `%c' is not used in ciphertext" cipher-char))
@@ -729,8 +729,7 @@ START-REGEXP matches the first line to display.
 END-REGEXP matches the line after that which ends the display.
 The ending line is included in the display unless it is blank."
   (let (start end)
-    (save-excursion
-      (set-buffer (decipher-stats-buffer))
+    (with-current-buffer (decipher-stats-buffer)
       (goto-char (point-min))
       (re-search-forward start-regexp)
       (beginning-of-line)
@@ -925,9 +924,8 @@ Creates the statistics buffer if it doesn't exist."
                                                   (aref decipher--after  i)))
                     freq-list)
               total-chars (+ total-chars (aref decipher--freqs i)))))
-    (save-excursion
-      ;; Switch to statistics buffer, creating it if necessary:
-      (set-buffer (decipher-stats-buffer t))
+    ;; Switch to statistics buffer, creating it if necessary:
+    (with-current-buffer (decipher-stats-buffer t)
       ;; This can't happen, but it never hurts to double-check:
       (or (eq major-mode 'decipher-stats-mode)
           (error "Buffer %s is not in Decipher-Stats mode" (buffer-name)))
@@ -1023,8 +1021,7 @@ if it can't, it signals an error."
    ;; See if decipher-stats-buffer exists:
    ((and (bufferp decipher-stats-buffer)
          (buffer-name decipher-stats-buffer))
-    (or (save-excursion
-          (set-buffer decipher-stats-buffer)
+    (or (with-current-buffer decipher-stats-buffer
           (eq major-mode 'decipher-stats-mode))
         (error "Buffer %s is not in Decipher-Stats mode"
                (buffer-name decipher-stats-buffer)))
@@ -1040,8 +1037,7 @@ if it can't, it signals an error."
                 ;; We just lost track of the statistics buffer:
                 (get-buffer stats-name)
               (generate-new-buffer stats-name))))
-    (save-excursion
-      (set-buffer decipher-stats-buffer)
+    (with-current-buffer decipher-stats-buffer
       (decipher-stats-mode))
     decipher-stats-buffer)
    ;; Give up:
@@ -1051,22 +1047,21 @@ if it can't, it signals an error."
 
 (provide 'decipher)
 
-;;;(defun decipher-show-undo-list ()
-;;;  "Display the undo list (for debugging purposes)."
-;;;  (interactive)
-;;;  (with-output-to-temp-buffer "*Decipher Undo*"
-;;;    (let ((undo-list decipher-undo-list)
-;;;          undo-rec undo-map)
-;;;      (save-excursion
-;;;        (set-buffer "*Decipher Undo*")
-;;;        (while (setq undo-rec (pop undo-list))
-;;;          (or (consp (car undo-rec))
-;;;              (setq undo-rec (list undo-rec)))
-;;;          (insert ?\()
-;;;          (while (setq undo-map (pop undo-rec))
-;;;            (insert (cdr undo-map) (car undo-map) ?\ ))
-;;;          (delete-backward-char 1)
-;;;          (insert ")\n"))))))
+;;(defun decipher-show-undo-list ()
+;;  "Display the undo list (for debugging purposes)."
+;;  (interactive)
+;;  (with-output-to-temp-buffer "*Decipher Undo*"
+;;    (let ((undo-list decipher-undo-list)
+;;          undo-rec undo-map)
+;;      (with-current-buffer "*Decipher Undo*"
+;;        (while (setq undo-rec (pop undo-list))
+;;          (or (consp (car undo-rec))
+;;              (setq undo-rec (list undo-rec)))
+;;          (insert ?\()
+;;          (while (setq undo-map (pop undo-rec))
+;;            (insert (cdr undo-map) (car undo-map) ?\ ))
+;;          (delete-backward-char 1)
+;;          (insert ")\n"))))))
 
 ;; arch-tag: 8f094d88-ffe1-4f99-afe3-a5e81dd939d9
 ;;; decipher.el ends here

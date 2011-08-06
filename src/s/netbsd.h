@@ -1,7 +1,7 @@
 /* s/ file for netbsd system.
 
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-                 2008, 2009  Free Software Foundation, Inc.
+                 2008, 2009, 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -33,8 +33,6 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #undef LDAV_SYMBOL
 #define HAVE_GETLOADAVG 1
 
-#define SIGNALS_VIA_CHARACTERS
-
 #define PENDING_OUTPUT_COUNT(FILE) ((FILE)->_p - (FILE)->_bf._base)
 
 /* netbsd uses OXTABS instead of the expected TAB3.  */
@@ -54,16 +52,6 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Netbsd has POSIX-style pgrp behavior.  */
 #undef BSD_PGRPS
-
-#if !defined (NO_SHARED_LIBS) && ! defined (__ELF__)
-/* These definitions should work for either dynamic or static linking,
-   whichever is the default for `cc -nostdlib'.  */
-#define HAVE_TEXT_START		/* No need to define `start_of_text'.  */
-#define START_FILES pre-crt0.o /usr/lib/crt0.o
-#define UNEXEC unexsunos4.o
-#define RUN_TIME_REMAP
-
-#endif /* not NO_SHARED_LIBS and not ELF */
 
 #if !defined (NO_SHARED_LIBS) && defined (__ELF__)
 #define START_FILES pre-crt0.o /usr/lib/crt0.o START_FILES_1 /usr/lib/crtbegin.o

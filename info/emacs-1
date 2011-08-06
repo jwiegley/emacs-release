@@ -2,11 +2,11 @@ This is ../../info/emacs, produced by makeinfo version 4.11 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.1.
+updated for Emacs version 23.2.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -35,7 +35,7 @@ The Emacs Editor
 Emacs is the extensible, customizable, self-documenting real-time
 display editor.  This Info file describes how to edit with Emacs and
 some of how to customize it; it corresponds to GNU Emacs version
-23.1.
+23.2.
 
    To learn more about the Info documentation system, type `h', to
 visit a programmed instruction sequence for the Info commands.
@@ -43,11 +43,11 @@ visit a programmed instruction sequence for the Info commands.
    For information on extending Emacs, see *note Emacs Lisp: (elisp)Top.
 
    This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.1.
+updated for Emacs version 23.2.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -246,6 +246,7 @@ Killing and Moving Text
 * Killing by Lines::	How to kill entire lines of text at one time.
 * Other Kill Commands:: Commands to kill large regions of text and
 			  syntactic units such as words and sentences.
+* Kill Options::        Options that affect killing.
 
 Yanking
 
@@ -423,6 +424,7 @@ Frames and Graphical Displays
 * Mode Line Mouse::     Mouse clicks on the mode line.
 * Creating Frames::     Creating additional Emacs frames with various contents.
 * Frame Commands::      Iconifying, deleting, and switching frames.
+* Fonts::               Changing the frame font.
 * Speedbar::            How to make and use a speedbar frame.
 * Multiple Displays::   How one Emacs job can talk to several displays.
 * Special Buffer Frames::  You can make certain buffers have their own frames.
@@ -494,7 +496,7 @@ Commands for Human Languages
 * Text Mode::	        The major modes for editing text files.
 * Outline Mode::        Editing outlines.
 * TeX Mode::	        Editing input to the formatter TeX.
-* HTML Mode::           Editing HTML, SGML, and XML files.
+* HTML Mode::           Editing HTML and SGML files.
 * Nroff Mode::	        Editing input to the formatter nroff.
 * Formatted Text::      Editing formatted text directly in WYSIWYG fashion.
 * Text Based Tables::   Editing text-based tables in WYSIWYG fashion.
@@ -565,6 +567,7 @@ Editing Programs
 * Hideshow::            Displaying blocks selectively.
 * Symbol Completion::   Completion on symbol names of your program or language.
 * Glasses::             Making identifiersLikeThis more readable.
+* Semantic::            Suite of editing tools based on source code parsing.
 * Misc for Programs::   Other Emacs features useful for editing programs.
 * C Modes::             Special commands of C, C++, Objective-C,
                           Java, and Pike modes.
@@ -677,6 +680,7 @@ Maintaining Large Programs
 * Change Log::	        Maintaining a change history for your program.
 * Tags::	        Go directly to any function in your program in one
 			  command.  Tags remembers which file it is in.
+* EDE::                 An integrated development environment for Emacs.
 * Emerge::              A convenient way of merging two versions of a program.
 
 Version Control
@@ -710,7 +714,7 @@ Basic Editing under Version Control
 The Secondary Commands of VC
 
 * Registering::         Putting a file under version control.
-* VC Status::           Viewing the VC status of files.
+* VC Change Log::       Viewing the VC Change Log.
 * VC Undo::             Canceling changes before or after check-in.
 
 VC Directory Mode
@@ -801,16 +805,17 @@ Sending Mail
 * Mail Format:: 	Format of the mail being composed.
 * Mail Headers::        Details of some standard mail header fields.
 * Mail Aliases::        Abbreviating and grouping mail addresses.
-* Mail Mode::   	Special commands for editing mail being composed.
+* Mail Commands::   	Special commands for editing mail being composed.
+* Mail Signature::      Adding a signature to every message.
 * Mail Amusements::     Distracting the NSA; adding fortune messages.
 * Mail Methods::        Using alternative mail-composition methods.
 
-Mail Mode
+Mail Commands
 
 * Mail Sending::        Commands to send the message.
 * Header Editing::      Commands to move to header fields and edit them.
-* Citing Mail::         Copying all or part of a message you are replying to.
-* Mail Mode Misc::      Spell checking, signatures, etc.
+* Citing Mail::         Quoting a message you are replying to.
+* Mail Misc::           Attachments, spell checking, etc.
 
 Reading Mail with Rmail
 
@@ -913,9 +918,9 @@ Customizing the Calendar and Diary
 * Time Display Format::    Changing the format.
 * Diary Customizing::      Defaults you can set.
 * Non-Gregorian Diary::    Diary entries based on other calendars.
-* Fancy Diary Display::    Enhancing the diary display, sorting entries,
-                             using included diary files.
-* Sexp Diary Entries::     Fancy things you can do.
+* Diary Display::          A choice of ways to display the diary.
+* Fancy Diary Display::    Sorting diary entries, using included diary files.
+* Sexp Diary Entries::     More flexible diary entries.
 
 Document Viewing
 
@@ -1766,9 +1771,8 @@ File: emacs,  Node: Exiting,  Next: Basic,  Prev: Entering Emacs,  Up: Top
      Kill Emacs (`save-buffers-kill-terminal').
 
 `C-z'
-     On a text terminal, suspend Emacs (`suspend-emacs'); on a
-     graphical display, iconify (or "minimize") the selected frame
-     (`iconify-or-deiconify-frame').
+     On a text terminal, suspend Emacs; on a graphical display,
+     "minimize" the selected frame (`suspend-emacs').
 
    "Killing" Emacs means terminating the Emacs program.  To do this,
 type `C-x C-c' (`save-buffers-kill-terminal').  A two-character key is
@@ -1799,18 +1803,17 @@ to use as the value of `confirm-kill-emacs' is the function
 kill-emacs'.
 
    You can "exit" Emacs in two other ways.  On a graphical display, you
-can "iconify" (or "minimize") an Emacs frame; depending on the window
+can "minimize" (or "iconify") an Emacs frame; depending on the window
 system, this either replaces the Emacs frame with a tiny "icon" or
 conceals the frame entirely (*note Frames::).  On a text-only terminal,
 you can "suspend" Emacs; this means stopping the Emacs program
 temporarily, returning control to its parent process (usually a shell).
 
-   On a graphical display, `C-z' runs the command
-`iconify-or-deiconify-frame', which iconifies the selected Emacs frame.
-On a text terminal, `C-z' runs the command `suspend-emacs', which
-suspends Emacs.
+   `C-z' runs the command `suspend-frame'.  On a graphical display,
+this "minimizes" (or "iconifies") the selected Emacs frame.  On a text
+terminal, this suspends the Emacs process.
 
-   After iconifying or suspending Emacs, you can return to it and
+   After minimizing or suspending Emacs, you can return to it and
 continue editing wherever you left off.  The way to do this depends on
 the window system or shell.  In most common shells, you can resume
 Emacs after suspending it with the shell command `%emacs'.
@@ -1926,7 +1929,8 @@ a character based on its Unicode name or code-point.  This commands
 prompts for a character to insert, using the minibuffer; you can
 specify the character using either (i) the character's name in the
 Unicode standard, or (ii) the character's code-point in the Unicode
-standard.
+standard.  If you specify the character's name, the command provides
+completion.
 
 
 File: emacs,  Node: Moving Point,  Next: Erasing,  Prev: Inserting Text,  Up: Basic
@@ -1982,12 +1986,16 @@ keyboard commands that move point in more sophisticated ways.
      position within the line, like `C-n'.
 
 `M-r'
-     Move point to left margin, vertically centered in the window
-     (`move-to-window-line').  Text does not move on the screen.  A
-     numeric argument says which screen line to place point on, counting
-     downward from the top of the window (zero means the top line).  A
-     negative argument counts lines up from the bottom (-1 means the
-     bottom line).
+     Without moving the text on the screen, reposition point on the left
+     margin of the center-most text line of the window; on subsequent
+     consecutive invocations, move point to the left margin of the
+     top-most line, the bottom-most line, and so forth, in cyclic order
+     (`move-to-window-line-top-bottom').
+
+     A numeric argument says which screen line to place point on,
+     counting downward from the top of the window (zero means the top
+     line).  A negative argument counts lines up from the bottom (-1
+     means the bottom line).
 
 `M-<'
      Move to the top of the buffer (`beginning-of-buffer').  With
@@ -2880,13 +2888,13 @@ completing buffer names, Emacs ignores case differences if
    You can customize the matching rules for completion alternatives
 using the variable `completion-styles'.  Its value should be a list of
 symbols, each representing a "completion style"; valid style symbols
-are `basic', `partial-completion', `emacs22', and `emacs21'.  When
-completing, Emacs attempts to use the first completion style in the
-list; if this does not return any completion alternatives, it tries the
-next completion style in the list, and so on.  The completion rules
-described in *note Completion Commands:: correspond to the default
-value of `completion-styles', which is `(basic partial-completion
-emacs22)'.
+are `basic', `partial-completion', `emacs22', `emacs21', and
+`initials'.  When completing, Emacs attempts to use the first
+completion style in the list; if this does not return any completion
+alternatives, it tries the next completion style in the list, and so
+on.  The completion rules described in *note Completion Commands::
+correspond to the default value of `completion-styles', which is
+`(basic partial-completion emacs22)'.
 
    Icomplete mode presents a constantly-updated display that tells you
 what completions are available for the text you've entered so far.  The
@@ -3008,7 +3016,7 @@ probably be obvious which command is displayed for repetition.  If you
 type just <RET>, that repeats the command unchanged.  You can also
 change the command by editing the Lisp expression before you execute
 it.  The repeated command is added to the front of the command history
-unless it is identical to the most recently item.
+unless it is identical to the most recent item.
 
    Once inside the minibuffer for `C-x <ESC> <ESC>', you can use the
 minibuffer history commands (`M-p', `M-n', `M-r', `M-s'; *note
@@ -3248,7 +3256,9 @@ information.
      Display news of recent Emacs changes (`view-emacs-news').
 
 `C-h p'
-     Find packages by topic keyword (`finder-by-keyword').
+     Find packages by topic keyword (`finder-by-keyword').  For an
+     alternative interface to the same information, try the
+     `info-finder' command.
 
 `C-h r'
      Display the Emacs manual in Info (`info-emacs-manual').
@@ -3861,7 +3871,7 @@ certain non-motion commands.
    (1) There is no `C-<SPC>' character in ASCII; usually, typing
 `C-<SPC>' on a text terminal gives the character `C-@'.  This key is
 also bound to `set-mark-command', so unless you are unlucky enough to
-have an text terminal that behaves differently, you might as well think
+have a text terminal that behaves differently, you might as well think
 of `C-@' as `C-<SPC>'.
 
 
@@ -4105,10 +4115,9 @@ with the mouse (*note Setting Mark::), or with shift-selection (*note
 Shift Selection::).
 
    To turn off Transient Mark mode, type `M-x transient-mark-mode'.
-This command toggles the mode; you can use the same command to turn
-Transient Mark mode on again.  You can also turn off Transient Mark
-mode using the menu bar: in the `Options' menu, toggle the `Active
-Region Highlighting' menu item.
+This command toggles the mode; you can use the same command to turn it
+on again.  You can also toggle Transient Mark mode using the `Active
+Region Highlighting' menu item in the `Options' menu.
 
    Here are the details of how Emacs behaves when Transient Mark mode
 is off:
@@ -4129,13 +4138,12 @@ is off:
    * Many commands that move point long distances, like `M-<' and
      `C-s', first set the mark where point was.
 
-   * Some commands, which ordinarily operate on the region when the
-     mark is active, instead act on the entire buffer.  For instance,
-     `C-x u' normally reverses changes within the region if the mark is
-     active; when Transient Mark mode is off, it acts on the entire
-     buffer.  However, you can type `C-u C-x u' to make it operate on
-     the region.  *Note Undo::.  Other commands that act this way are
-     identified in their own documentation.
+   * Some commands, which ordinarily act on the region when the mark is
+     active, no longer do so.  For example, normally `M-%'
+     (`query-replace') performs replacements within the region, if the
+     mark is active.  When Transient Mark mode is off, it always
+     operates from point to the end of the buffer.  Commands that act
+     this way are identified in their own documentation.
 
    While Transient Mark mode is off, you can activate it temporarily
 using `C-<SPC> C-<SPC>' or `C-u C-x C-x'.
@@ -4147,9 +4155,9 @@ using `C-<SPC> C-<SPC>' or `C-u C-x C-x'.
      twice.)
 
 `C-u C-x C-x'
-     Activate the mark without changing it; enable Transient Mark mode
-     just once, until the mark is deactivated.  (This is the `C-x C-x'
-     command, `exchange-point-and-mark', with a prefix argument.)
+     Activate the mark and enable Transient Mark mode temporarily, until
+     the mark is next deactivated.  (This is the `C-x C-x' command,
+     `exchange-point-and-mark', with a prefix argument.)
 
    These commands set or activate the mark, and enable Transient Mark
 mode only until the mark is deactivated.  One reason you may want to
@@ -4196,16 +4204,6 @@ kill operation instead.  The commands' names and individual
 descriptions use the words `kill' and `delete' to say which kind of
 operation they perform.
 
-   Some specialized buffers contain "read-only text", which cannot be
-modified and therefore cannot be killed.  But some users like to use
-the kill commands to copy read-only text into the kill ring, without
-actually changing it.  Therefore, the kill commands work specially in a
-read-only buffer: they move over text, and copy it to the kill ring,
-without actually deleting it from the buffer.  Normally, kill commands
-beep and display an error message when this happens.  But if you set
-the variable `kill-read-only-ok' to a non-`nil' value, they just print
-a message in the echo area to explain why the text has not been erased.
-
    You can also use the mouse to kill and yank.  *Note Cut and Paste::.
 
 * Menu:
@@ -4215,6 +4213,7 @@ a message in the echo area to explain why the text has not been erased.
 * Killing by Lines::    How to kill entire lines of text at one time.
 * Other Kill Commands:: Commands to kill large regions of text and
                           syntactic units such as words and sentences.
+* Kill Options::        Options that affect killing.
 
 
 File: emacs,  Node: Deletion,  Next: Killing by Lines,  Up: Killing
@@ -4315,7 +4314,7 @@ sequence `C-S-backspace'.
 *Note Continuation Lines::.
 
 
-File: emacs,  Node: Other Kill Commands,  Prev: Killing by Lines,  Up: Killing
+File: emacs,  Node: Other Kill Commands,  Next: Kill Options,  Prev: Killing by Lines,  Up: Killing
 
 12.3 Other Kill Commands
 ========================
@@ -4368,6 +4367,26 @@ it reads a character and kills from point up to (and including) the
 next occurrence of that character in the buffer.  A numeric argument
 acts as a repeat count; a negative argument means to search backward
 and kill text before point.
+
+
+File: emacs,  Node: Kill Options,  Prev: Other Kill Commands,  Up: Killing
+
+12.4 Options for Killing
+========================
+
+Some specialized buffers contain "read-only text", which cannot be
+modified and therefore cannot be killed.  But some users like to use
+the kill commands to copy read-only text into the kill ring, without
+actually changing it.  Therefore, the kill commands work specially in a
+read-only buffer: they move over text, and copy it to the kill ring,
+without actually deleting it from the buffer.  Normally, kill commands
+beep and display an error message when this happens.  But if you set
+the variable `kill-read-only-ok' to a non-`nil' value, they just print
+a message in the echo area to explain why the text has not been erased.
+
+   If you change the variable `kill-do-not-save-duplicates' to a
+non-`nil' value, identical subsequent kills yield a single kill-ring
+entry, without duplication.
 
 
 File: emacs,  Node: Yanking,  Next: Accumulating Text,  Prev: Killing,  Up: Top
@@ -5111,8 +5130,11 @@ the top.
 top of the window.  You can also scroll explicitly with these commands:
 
 `C-l'
-     Scroll the selected window to center point vertically within it and
-     redisplay the screen (`recenter-top-bottom').
+     Scroll the selected window so that the current line is the
+     center-most text line; on subsequent consecutive invocations, make
+     the current line the top-most line, the bottom-most line, and so
+     forth in cyclic order; also, maybe redisplay the screen
+     (`recenter-top-bottom').
 
 `C-v'
 `<next>'
@@ -5128,20 +5150,26 @@ top of the window.  You can also scroll explicitly with these commands:
      Scroll heuristically to bring useful information onto the screen
      (`reposition-window').
 
-   The most basic scrolling command is `C-l' (`recenter-top-bottom').
-This "recenters" the selected window, scrolling it so that the current
+   `C-l' (`recenter-top-bottom') is a basic scrolling command.  It
+"recenters" the selected window, scrolling it so that the current
 screen line is exactly in the center of the window, or as close to the
-center as possible.  It also clears the screen and redisplays all
-windows; this is useful in case the screen becomes garbled for any
-reason (*note Screen Garbled::).
+center as possible.
 
    Typing `C-l' twice in a row (`C-l C-l') scrolls the window so that
 point is on the topmost screen line.  Typing a third `C-l' scrolls the
 window so that point is on the bottom-most screen line.  Each
-successive `C-l' cycles through these three screen positions.  (If you
-change the variable `scroll-margin' to a non-zero value N, Emacs leaves
-N screen lines between point and the top or bottom of the window.
-*Note Auto Scrolling::.)
+successive `C-l' cycles through these three screen positions.
+
+   You can change the cycling order by customizing the list variable
+`recenter-positions'.  Each list element should be the symbol `top',
+`middle', or `bottom', or a number; an integer number means to move the
+line to the specified screen line, while a floating-point number
+between 0.0 and 1.0 specifies a percentage of the screen space from the
+top.  The default, `(middle top bottom)', is the cycling order
+described above.  Furthermore, if you change the variable
+`scroll-margin' to a non-zero value N, Emacs always leaves N screen
+lines between point and the top or bottom of the window (*note Auto
+Scrolling::).
 
    You can also supply `C-l' with a prefix argument.  With a plain
 prefix argument, `C-u C-l', Emacs simply recenters point.  With a
@@ -5153,7 +5181,17 @@ window.  For example, `C-u - 1 C-l' puts point on the bottom line, and
 argument, `C-l' does not clear the screen or cycle through different
 screen positions.
 
-   To read the buffer a windowful at a time, use `C-v' (`scroll-up').
+   The more primitive command `recenter' behaves like
+`recenter-top-bottom', but does not cycle among screen positions.
+Prior to Emacs 23, `C-l' was bound to `recenter'.
+
+   If the variable `recenter-redisplay' has a non-`nil' value, Emacs
+clears and redisplays the screen each time `C-l' recenters the window;
+the special value `tty' (the default) says to do this on text-terminal
+frames only.  Redisplaying is useful in case the screen becomes garbled
+for any reason (*note Screen Garbled::).
+
+   To read the buffer a windowful at a time, type `C-v' (`scroll-up').
 This scrolls forward by nearly the whole window height.  The effect is
 to take the two lines at the bottom of the window and put them at the
 top, followed by lines that were not previously visible.  If point was
@@ -5243,12 +5281,15 @@ truncated rather than continued (*note Line Truncation::).  If a window
 shows truncated lines, Emacs performs automatic horizontal scrolling
 whenever point moves off the left or right edge of the screen.  To
 disable automatic horizontal scrolling, set the variable
-`auto-hscroll-mode' to `nil'.
+`auto-hscroll-mode' to `nil'.  Note that when the automatic horizontal
+scrolling is turned off, if point moves off the edge of the screen, the
+cursor disappears to indicate that.  (On text-mode terminals, the
+cursor is left at the edge instead.)
 
    The variable `hscroll-margin' controls how close point can get to
 the window's edges before automatic scrolling occurs.  It is measured
-in columns.  If the value is 5, then moving point within 5 columns of
-an edge causes horizontal scrolling away from that edge.
+in columns.  For example, if the value is 5, then moving point within 5
+columns of an edge causes horizontal scrolling away from that edge.
 
    The variable `hscroll-step' determines how many columns to scroll
 the window when point gets too close to the edge.  Zero, the default
@@ -5266,10 +5307,17 @@ following commands:
 `C-x >'
      Scroll to the right (`scroll-right').
 
-   `C-x <' (`scroll-left') scrolls the selected window to the left by
-the full width of the window, less two columns.  (In other words, the
-text in the window moves left relative to the window.)  With a numeric
-argument N, it scrolls by N columns.
+   `C-x <' (`scroll-left') scrolls text in the selected window to the
+left by the full width of the window, less two columns.  (In other
+words, the text in the window moves left relative to the window.)  With
+a numeric argument N, it scrolls by N columns.
+
+   If the text is scrolled to the left, and point moves off the left
+edge of the window, the cursor will freeze at the left edge of the
+window, until point moves back to the displayed portion of the text.
+This is independent of the current setting of `auto-hscroll-mode',
+which, for text scrolled to the left, only affects the behavior at the
+right edge of the window.
 
    `C-x >' (`scroll-right') scrolls similarly to the right.  The window
 cannot be scrolled any farther to the right once it is displayed
@@ -5546,6 +5594,10 @@ increase or decrease the height of the default face, just like `C-x
 C-+' and `C-x C--' respectively.  You may find it convenient to bind to
 these commands, rather than `text-scale-adjust'.
 
+   The command `text-scale-set' sets the height of the default face in
+the current buffer to an absolute level specified by its prefix
+argument.
+
    The above commands automatically enable or disable the minor mode
 `text-scale-mode', depending on whether the current font scaling is
 other than 1 or not.
@@ -5691,8 +5743,8 @@ control them with these commands:
      the word "whim" using the default face (a yellow background) `C-x
      w h whim <RET> <RET>'.  Any face can be used for highlighting, Hi
      Lock provides several of its own and these are pre-loaded into a
-     history list.  While being prompted for a face use `M-p' and `M-n'
-     to cycle through them.
+     list of default values.  While being prompted for a face use `M-n'
+     and `M-p' to cycle through them.
 
      You can use this command multiple times, specifying various regular
      expressions to highlight in different ways.
@@ -5736,13 +5788,12 @@ control them with these commands:
      The variable `hi-lock-file-patterns-policy' controls whether Hi
      Lock mode should automatically extract and highlight patterns
      found in a file when it is visited.  Its value can be `nil' (never
-     highlight), `t' (highlight the patterns), `ask' (query the user),
-     or a function.  If it is a function, `hi-lock-find-patterns' calls
-     it with the patterns as argument; if the function returns
-     non-`nil', the patterns are used.  The default is `nil'.  Note
-     that patterns are always highlighted if you call
-     `hi-lock-find-patterns' directly, regardless of the value of this
-     variable.
+     highlight), `ask' (query the user), or a function.  If it is a
+     function, `hi-lock-find-patterns' calls it with the patterns as
+     argument; if the function returns non-`nil', the patterns are
+     used.  The default is `ask'.  Note that patterns are always
+     highlighted if you call `hi-lock-find-patterns' directly,
+     regardless of the value of this variable.
 
      Also, `hi-lock-find-patterns' does nothing if the current major
      mode's symbol is a member of the list `hi-lock-exclude-modes'.
@@ -5805,10 +5856,6 @@ both arrow bitmaps in right fringe.  To show just the angle bitmaps in
 the left fringe, but no arrow bitmaps, use `((top .  left) (bottom .
 left))'.
 
-   The value of the variable `default-indicate-buffer-boundaries' is
-the default value for `indicate-buffer-boundaries' in buffers that do
-not override it.
-
 
 File: emacs,  Node: Useless Whitespace,  Next: Selective Display,  Prev: Displaying Boundaries,  Up: Display
 
@@ -5842,11 +5889,10 @@ lines at the end of the buffer then stand out because they do not have
 this image in the fringe.
 
    To enable this feature, set the buffer-local variable
-`indicate-empty-lines' to a non-`nil' value.  The default value of this
-variable is controlled by the variable `default-indicate-empty-lines';
-by setting that variable, you can enable or disable this feature for
-all new buffers.  (This feature currently doesn't work on text-only
-terminals.)
+`indicate-empty-lines' to a non-`nil' value.  You can enable or disable
+this feature for all new buffers by setting the default value of this
+variable, e.g. `(setq-default indicate-empty-lines t)';.  (This feature
+currently doesn't work on text-only terminals.)
 
 
 File: emacs,  Node: Selective Display,  Next: Optional Mode Line,  Prev: Useless Whitespace,  Up: Display
@@ -6001,11 +6047,9 @@ newline character (octal code 012) is displayed by starting a new line.
 The tab character (octal code 011) is displayed by moving to the next
 tab stop column (normally every 8 columns).  The number of spaces per
 tab is controlled by the variable `tab-width', which must have an
-integer value between 1 and 1000, inclusive, and is made local by
-changing it.  Note that how the tab character in the buffer is
+integer value between 1 and 1000, inclusive, and is made buffer-local
+by changing it.  Note that how the tab character in the buffer is
 displayed has nothing to do with the definition of <TAB> as a command.
-The variable `default-tab-width' controls the default value of this
-variable for buffers where you have not set it locally.
 
    Other ASCII control characters are normally displayed as a caret
 (`^') followed by the non-control version of the character; thus,
@@ -6168,9 +6212,6 @@ File: emacs,  Node: Display Custom,  Prev: Visual Line Mode,  Up: Display
 This section describes variables (*note Variables::) that you can
 change to customize how Emacs displays.  Beginning users can skip it.
 
-   If the variable `inverse-video' is non-`nil', Emacs attempts to
-invert all the lines of the display from what they normally are.
-
    If the variable `visible-bell' is non-`nil', Emacs attempts to make
 the whole screen blink when it would normally make an audible bell
 sound.  This variable has no effect if your terminal does not have a way
@@ -6182,32 +6223,42 @@ required to cause echoing to start, or zero, meaning don't echo at all.
 The value takes effect when there is someting to echo.  *Note Echo
 Area::.
 
-   The variable `baud-rate' holds the output speed of the terminal, as
-far as Emacs knows.  Setting this variable does not change the speed of
-actual data transmission, but the value is used for calculations.  On
-text-only terminals, it affects padding, and decisions about whether to
-scroll part of the screen or redraw it instead.  It also affects the
-behavior of incremental search.
+   The variable `baud-rate' holds the output speed of the terminal.
+Setting this variable does not change the speed of actual data
+transmission, but the value is used for calculations.  On text-only
+terminals, it affects padding, and decisions about whether to scroll
+part of the screen or redraw it instead.  It also affects the behavior
+of incremental search.  On graphical displays, `baud-rate' is only used
+to determine how frequently to look for pending input during display
+updating.  A higher value of `baud-rate' means that check for pending
+input will be done less frequently.
 
-   On graphical displays, `baud-rate' is only used to determine how
-frequently to look for pending input during display updating.  A higher
-value of `baud-rate' means that check for pending input will be done
-less frequently.
+   On graphical displays, Emacs displays the mouse pointer as an
+hourglass if Emacs is busy.  To disable this feature, set the variable
+`display-hourglass' to `nil'.  The variable `hourglass-delay'
+determines the number of seconds of "busy time" before the hourglass is
+shown; the default is 1.
 
-   On graphical displays, Emacs can optionally display the mouse pointer
-in a special shape to say that Emacs is busy.  To turn this feature on
-or off, customize the group `cursor'.  You can also control the amount
-of time Emacs must remain busy before the busy indicator is displayed,
-by setting the variable `hourglass-delay'.
+   If the mouse pointer lies inside an Emacs frame, Emacs makes it
+invisible each time you type a character to insert text, to prevent it
+from obscuring the text.  (To be precise, the hiding occurs when you
+type a "self-inserting" character.  *Note Inserting Text::.)  Moving
+the mouse pointer makes it visible again.  To disable this feature, set
+the variable `make-pointer-invisible' to `nil'.
 
-   On graphical displays, the variable `overline-margin' specifies the
-vertical position of an overline above the text, including the height
-of the overline itself, in pixels.  The default value is 2.
+   On graphical displays, the variable `underline-minimum-offset'
+determines the minimum distance between the baseline and underline, in
+pixels, for underlined text.  By default, the value is 1; increasing it
+may improve the legibility of underlined text for certain fonts.
+(However, Emacs will never draw the underline below the current line
+area.)  The variable `x-underline-at-descent-line' determines how to
+draw underlined text.  The default is `nil', which means to draw it at
+the baseline level of the font; if you change it to `nil', Emacs draws
+the underline at the same height as the font's descent line.
 
-   On graphical displays, Emacs normally draws an underline at the
-baseline level of the font.  If `x-underline-at-descent-line' is
-non-`nil', Emacs draws the underline at the same height as the font's
-descent line.
+   The variable `overline-margin' specifies the vertical position of an
+overline above the text, including the height of the overline itself,
+in pixels; the default is 2.
 
    On some text-only terminals, bold face and inverse video together
 result in text that is hard to read.  Call the function
@@ -6624,49 +6675,4 @@ for a reverse incremental search.
    Forward and backward nonincremental searches are implemented by the
 commands `search-forward' and `search-backward'.  These commands may be
 bound to other keys in the usual manner.
-
-
-File: emacs,  Node: Word Search,  Next: Regexp Search,  Prev: Nonincremental Search,  Up: Search
-
-19.3 Word Search
-================
-
-A "word search" finds a sequence of words without regard to the type of
-punctuation between them.  For instance, if you enter a search string
-that consists of two words separated by a single space, the search
-matches any sequence of those two words separated by one or more
-spaces, newlines, or other punctuation characters.  This is
-particularly useful for searching text documents, because you don't
-have to worry whether the words you are looking for are separated by
-newlines or spaces.
-
-`M-s w'
-     If incremental search is active, toggle word search mode
-     (`isearch-toggle-word'); otherwise, begin an incremental forward
-     word search (`isearch-forward-word').
-
-`M-s w <RET> WORDS <RET>'
-     Search for WORDS, using a forward nonincremental word search.
-
-`M-s w C-r <RET> WORDS <RET>'
-     Search backward for WORDS, using a nonincremental word search.
-
-   To begin a forward incremental word search, type `M-s w'.  If
-incremental search is not already active, this runs the command
-`isearch-forward-word'.  If incremental search is already active
-(whether a forward or backward search), `M-s w' switches to a word
-search while keeping the direction of the search and the current search
-string unchanged.  You can toggle word search back off by typing `M-s
-w' again.
-
-   To begin a nonincremental word search, type `M-s w <RET>' for a
-forward search, or `M-s w C-r <RET>' for a backward search.  These run
-the commands `word-search-forward' and `word-search-backward'
-respectively.
-
-   A nonincremental word search differs slightly from the incremental
-version in the way it finds a match: the last word in the search string
-must be an exact match for a whole word.  In an incremental word
-search, the last word in the search string can match part of a word;
-this allows the matching to proceed incrementally as you type.
 

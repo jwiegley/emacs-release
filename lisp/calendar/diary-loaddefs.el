@@ -4,8 +4,8 @@
 
 
 ;;;### (autoloads (diary-bahai-date diary-bahai-mark-entries calendar-bahai-mark-date-pattern
-;;;;;;  diary-bahai-list-entries) "cal-bahai" "cal-bahai.el" (19005
-;;;;;;  47388))
+;;;;;;  diary-bahai-list-entries) "cal-bahai" "cal-bahai.el" (19383
+;;;;;;  49278))
 ;;; Generated autoloads from cal-bahai.el
 
 (autoload 'diary-bahai-list-entries "cal-bahai" "\
@@ -43,7 +43,7 @@ Bahá'í calendar equivalent of date diary entry.
 ;;;***
 
 ;;;### (autoloads (diary-chinese-date) "cal-china" "cal-china.el"
-;;;;;;  (19005 47388))
+;;;;;;  (19383 49278))
 ;;; Generated autoloads from cal-china.el
 
 (autoload 'diary-chinese-date "cal-china" "\
@@ -54,7 +54,7 @@ Chinese calendar equivalent of date diary entry.
 ;;;***
 
 ;;;### (autoloads (diary-ethiopic-date diary-coptic-date) "cal-coptic"
-;;;;;;  "cal-coptic.el" (19005 47388))
+;;;;;;  "cal-coptic.el" (19383 49278))
 ;;; Generated autoloads from cal-coptic.el
 
 (autoload 'diary-coptic-date "cal-coptic" "\
@@ -70,7 +70,7 @@ Ethiopic calendar equivalent of date diary entry.
 ;;;***
 
 ;;;### (autoloads (diary-french-date) "cal-french" "cal-french.el"
-;;;;;;  (19005 47388))
+;;;;;;  (19383 49278))
 ;;; Generated autoloads from cal-french.el
 
 (autoload 'diary-french-date "cal-french" "\
@@ -83,8 +83,8 @@ French calendar equivalent of date diary entry.
 ;;;### (autoloads (diary-hebrew-sabbath-candles diary-hebrew-parasha
 ;;;;;;  diary-hebrew-rosh-hodesh diary-hebrew-yahrzeit diary-hebrew-omer
 ;;;;;;  diary-hebrew-date diary-hebrew-mark-entries calendar-hebrew-mark-date-pattern
-;;;;;;  diary-hebrew-list-entries) "cal-hebrew" "cal-hebrew.el" (19005
-;;;;;;  47388))
+;;;;;;  diary-hebrew-list-entries) "cal-hebrew" "cal-hebrew.el" (19383
+;;;;;;  49284))
 ;;; Generated autoloads from cal-hebrew.el
 
 (autoload 'diary-hebrew-list-entries "cal-hebrew" "\
@@ -195,7 +195,7 @@ use when highlighting the day in the calendar.
 
 ;;;### (autoloads (diary-islamic-date diary-islamic-mark-entries
 ;;;;;;  calendar-islamic-mark-date-pattern diary-islamic-list-entries)
-;;;;;;  "cal-islam" "cal-islam.el" (19005 47388))
+;;;;;;  "cal-islam" "cal-islam.el" (19383 49278))
 ;;; Generated autoloads from cal-islam.el
 
 (autoload 'diary-islamic-list-entries "cal-islam" "\
@@ -233,8 +233,8 @@ Islamic calendar equivalent of date diary entry.
 
 ;;;***
 
-;;;### (autoloads (diary-iso-date) "cal-iso" "cal-iso.el" (19005
-;;;;;;  47388))
+;;;### (autoloads (diary-iso-date) "cal-iso" "cal-iso.el" (19383
+;;;;;;  49278))
 ;;; Generated autoloads from cal-iso.el
 
 (autoload 'diary-iso-date "cal-iso" "\
@@ -245,7 +245,7 @@ ISO calendar equivalent of date diary entry.
 ;;;***
 
 ;;;### (autoloads (diary-astro-day-number diary-julian-date) "cal-julian"
-;;;;;;  "cal-julian.el" (19005 47388))
+;;;;;;  "cal-julian.el" (19383 49278))
 ;;; Generated autoloads from cal-julian.el
 
 (autoload 'diary-julian-date "cal-julian" "\
@@ -260,8 +260,8 @@ Astronomical (Julian) day number diary entry.
 
 ;;;***
 
-;;;### (autoloads (diary-mayan-date) "cal-mayan" "cal-mayan.el" (19005
-;;;;;;  47388))
+;;;### (autoloads (diary-mayan-date) "cal-mayan" "cal-mayan.el" (19383
+;;;;;;  49278))
 ;;; Generated autoloads from cal-mayan.el
 
 (autoload 'diary-mayan-date "cal-mayan" "\
@@ -272,7 +272,7 @@ Show the Mayan long count, haab, and tzolkin dates as a diary entry.
 ;;;***
 
 ;;;### (autoloads (diary-persian-date) "cal-persia" "cal-persia.el"
-;;;;;;  (19005 47388))
+;;;;;;  (19383 49278))
 ;;; Generated autoloads from cal-persia.el
 
 (autoload 'diary-persian-date "cal-persia" "\
@@ -283,7 +283,7 @@ Persian calendar equivalent of date diary entry.
 ;;;***
 
 ;;;### (autoloads (calendar-check-holidays calendar-holiday-list)
-;;;;;;  "holidays" "holidays.el" (19005 47389))
+;;;;;;  "holidays" "holidays.el" (19383 49279))
 ;;; Generated autoloads from holidays.el
 
 (autoload 'calendar-holiday-list "holidays" "\
@@ -301,8 +301,8 @@ The holidays are those in the list `calendar-holidays'.
 
 ;;;***
 
-;;;### (autoloads (diary-lunar-phases) "lunar" "lunar.el" (19005
-;;;;;;  47389))
+;;;### (autoloads (diary-lunar-phases) "lunar" "lunar.el" (19383
+;;;;;;  49279))
 ;;; Generated autoloads from lunar.el
 
 (autoload 'diary-lunar-phases "lunar" "\
@@ -316,8 +316,8 @@ use when highlighting the day in the calendar.
 
 ;;;***
 
-;;;### (autoloads (diary-sunrise-sunset) "solar" "solar.el" (19005
-;;;;;;  47389))
+;;;### (autoloads (diary-sunrise-sunset) "solar" "solar.el" (19383
+;;;;;;  49282))
 ;;; Generated autoloads from solar.el
 
 (autoload 'diary-sunrise-sunset "solar" "\
@@ -331,7 +331,7 @@ Accurate to a few seconds.
 ;;;### (autoloads nil nil ("appt.el" "cal-dst.el" "cal-html.el" "cal-loaddefs.el"
 ;;;;;;  "cal-menu.el" "cal-move.el" "cal-tex.el" "cal-x.el" "calendar.el"
 ;;;;;;  "diary-lib.el" "icalendar.el" "parse-time.el" "time-date.el"
-;;;;;;  "timeclock.el" "todo-mode.el") (19056 26495 586674))
+;;;;;;  "timeclock.el" "todo-mode.el") (19428 55159 756944))
 
 ;;;***
 

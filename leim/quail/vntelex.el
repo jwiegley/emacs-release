@@ -1,6 +1,6 @@
 ;;; vntelex.el --- Quail package for Vietnamese by Telex method
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author:   Werner Lemberg <wl@gnu.org>
@@ -285,7 +285,7 @@ and postfix: Eee -> Ee, ajj -> aj, etc.
  ("Dd" ?,2p(B)
 ;("$$" ?$,1tK(B)	; U+20AB DONG SIGN (#### check)
 
- ("aff" ["aff"])
+ ("aff" ["af"])
  ("AFF" ["AF"])
  ("Aff" ["Af"])
  ("ass" ["as"])

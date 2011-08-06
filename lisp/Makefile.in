@@ -1,6 +1,6 @@
 # Maintenance productions for the Lisp directory
-# Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-#   2008, 2009  Free Software Foundation, Inc.
+# Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+#   2009, 2010  Free Software Foundation, Inc.
 
 # This file is part of GNU Emacs.
 
@@ -41,6 +41,8 @@ BYTE_COMPILE_EXTRA_FLAGS =
 
 lisptagsfiles1 = $(lisp)/*.el
 lisptagsfiles2 = $(lisp)/*/*.el
+lisptagsfiles3 = $(lisp)/*/*/*.el
+lisptagsfiles4 = $(lisp)/*/*/*/*.el
 ETAGS = ../lib-src/etags
 
 # Automatically generated autoload files, apart from lisp/loaddefs.el.
@@ -59,7 +61,10 @@ AUTOGENEL = loaddefs.el \
 	finder-inf.el \
 	subdirs.el \
 	calc/calc-loaddefs.el \
-	eshell/esh-groups.el
+	eshell/esh-groups.el \
+	cedet/semantic/loaddefs.el \
+	cedet/ede/loaddefs.el \
+	cedet/srecode/loaddefs.el
 
 # Files to compile before others during a bootstrap.  This is done to
 # speed up the bootstrap process.
@@ -87,6 +92,15 @@ setwins=subdirs=`(cd $$wd; find . -type d -print)`; \
 setwins_almost=subdirs=`(cd $$wd; find . -type d -print)`; \
 	for file in $$subdirs; do \
 	   case $$file in */Old | */RCS | */CVS | */CVS/* | */.* | */.*/* | */=* | */obsolete | */term ) ;; \
+		*) wins="$$wins $$wd/$$file" ;; \
+	   esac; \
+        done
+
+# Find all subdirectories in which we might want to create subdirs.el
+
+setwins_for_subdirs=subdirs=`(cd $$wd; find . -type d -print)`; \
+	for file in $$subdirs; do \
+	   case $$file in */Old | */RCS | */CVS | */CVS/* | */.* | */.*/* | */=* | */cedet* ) ;; \
 		*) wins="$$wins $$wd/$$file" ;; \
 	   esac; \
         done
@@ -133,7 +147,8 @@ finder-data: doit
 # are identified by being the value of `generated-autoload-file'.
 autoloads: $(LOADDEFS) doit
 	chmod +w $(lisp)/ps-print.el $(lisp)/emulation/tpu-edt.el \
-	  $(lisp)/emacs-lisp/cl-loaddefs.el
+	  $(lisp)/emacs-lisp/cl-loaddefs.el $(lisp)/mail/rmail.el \
+	  $(lisp)/dired.el $(lisp)/ibuffer.el
 	wd=$(lisp); $(setwins_almost); \
 	echo Directories: $$wins; \
 	$(emacs) -l autoload --eval '(setq generated-autoload-file "$(lisp)/loaddefs.el")' -f batch-update-autoloads $$wins
@@ -143,23 +158,26 @@ autoloads: $(LOADDEFS) doit
 $(lisp)/subdirs.el:
 	$(MAKE) $(MFLAGS) update-subdirs
 update-subdirs: doit
-	wd=$(lisp); $(setwins); \
+	wd=$(lisp); $(setwins_for_subdirs); \
 	for file in $$wins; do \
 	   $(srcdir)/update-subdirs $$file; \
 	done;
 
 updates: update-subdirs autoloads finder-data custom-deps
 
-# This is useful after "cvs up".
-cvs-update: recompile autoloads finder-data custom-deps
+# This is useful after "bzr up".
+bzr-update: recompile autoloads finder-data custom-deps
+
+# For backwards compatibility:
+cvs-update: bzr-update
 
 # Update the AUTHORS file.
 
 update-authors:
 	$(emacs) -l authors -f batch-update-authors $(srcdir)/etc/AUTHORS $(srcdir)
 
-TAGS TAGS-LISP: $(lisptagsfiles1) $(lisptagsfiles2)
-	els=`echo $(lisptagsfiles1) $(lisptagsfiles2) | sed -e "s,$(lisp)/[^ ]*loaddefs[^ ]*,," -e "s,$(lisp)/ldefs-boot[^ ]*,,"`; \
+TAGS TAGS-LISP: $(lisptagsfiles1) $(lisptagsfiles2) $(lisptagsfiles3) $(lisptagsfiles4)
+	els=`echo $(lisptagsfiles1) $(lisptagsfiles2) $(lisptagsfiles3) $(lisptagsfiles4) | sed -e "s,$(lisp)/[^ ]*loaddefs[^ ]*,," -e "s,$(lisp)/ldefs-boot[^ ]*,,"`; \
 	${ETAGS} -o $@ $$els
 
 .PHONY: update-elclist
@@ -174,7 +192,7 @@ TAGS TAGS-LISP: $(lisptagsfiles1) $(lisptagsfiles2)
 update-elclist:
 	echo "/^ELCFILES/,/^$$/c\\" > temp.sed
 	echo "ELCFILES =" | sed -e 's/$$/ \\\\\\/' >> temp.sed
-	LC_COLLATE=C ls $(lisp)/*.elc $(lisp)/*/*.elc | sed -e "s|^$(lisp)|	\$$(lisp)|" -e 's/$$/ \\\\\\/' -e '$$ s/ \\\\//' >> temp.sed
+	LC_COLLATE=C ls $(lisp)/*.elc $(lisp)/*/*.elc $(lisp)/*/*/*.elc $(lisp)/*/*/*/*.elc | sed -e "s|^$(lisp)|	\$$(lisp)|" -e 's/$$/ \\\\\\/' -e '$$ s/ \\\\//' >> temp.sed
 	echo "" >> temp.sed
 	-sed -f temp.sed $(lisp)/Makefile.in > temp-elcfiles || rm temp-elcfiles
 	rm temp.sed
@@ -183,6 +201,12 @@ update-elclist:
 	  chmod +w $(lisp)/Makefile.in; \
 	  mv -f temp-elcfiles $(lisp)/Makefile.in; \
 	fi
+	-(LC_COLLATE=C ls $(lisp)/*.elc $(lisp)/*/*.elc $(lisp)/*/*/*.elc $(lisp)/*/*/*/*.elc | sed 's/elc$$/el/';  \
+	  LC_COLLATE=C ls $(lisp)/*.el $(lisp)/*/*.el $(lisp)/*/*/*.el $(lisp)/*/*/*/*.el; \
+	  LC_COLLATE=C ls $(lisp)/*.el $(lisp)/*/*.el $(lisp)/*/*/*.el $(lisp)/*/*/*/*.el) |	   \
+	     sort | uniq -u | while read extra; do 			   \
+	         echo "Found left over byte-compiled file: $${extra}c !!" ;\
+	     done
 
 ## Explicitly list the .elc files, for the sake of parallel builds.
 ## http://lists.gnu.org/archive/html/bug-gnu-emacs/2008-05/msg00016.html
@@ -280,6 +304,150 @@ ELCFILES = \
 	$(lisp)/calendar/todo-mode.elc \
 	$(lisp)/case-table.elc \
 	$(lisp)/cdl.elc \
+	$(lisp)/cedet/cedet-cscope.elc \
+	$(lisp)/cedet/cedet-files.elc \
+	$(lisp)/cedet/cedet-global.elc \
+	$(lisp)/cedet/cedet-idutils.elc \
+	$(lisp)/cedet/cedet.elc \
+	$(lisp)/cedet/data-debug.elc \
+	$(lisp)/cedet/ede.elc \
+	$(lisp)/cedet/ede/autoconf-edit.elc \
+	$(lisp)/cedet/ede/cpp-root.elc \
+	$(lisp)/cedet/ede/dired.elc \
+	$(lisp)/cedet/ede/emacs.elc \
+	$(lisp)/cedet/ede/files.elc \
+	$(lisp)/cedet/ede/linux.elc \
+	$(lisp)/cedet/ede/locate.elc \
+	$(lisp)/cedet/ede/make.elc \
+	$(lisp)/cedet/ede/makefile-edit.elc \
+	$(lisp)/cedet/ede/pconf.elc \
+	$(lisp)/cedet/ede/pmake.elc \
+	$(lisp)/cedet/ede/proj-archive.elc \
+	$(lisp)/cedet/ede/proj-aux.elc \
+	$(lisp)/cedet/ede/proj-comp.elc \
+	$(lisp)/cedet/ede/proj-elisp.elc \
+	$(lisp)/cedet/ede/proj-info.elc \
+	$(lisp)/cedet/ede/proj-misc.elc \
+	$(lisp)/cedet/ede/proj-obj.elc \
+	$(lisp)/cedet/ede/proj-prog.elc \
+	$(lisp)/cedet/ede/proj-scheme.elc \
+	$(lisp)/cedet/ede/proj-shared.elc \
+	$(lisp)/cedet/ede/proj.elc \
+	$(lisp)/cedet/ede/project-am.elc \
+	$(lisp)/cedet/ede/shell.elc \
+	$(lisp)/cedet/ede/simple.elc \
+	$(lisp)/cedet/ede/source.elc \
+	$(lisp)/cedet/ede/speedbar.elc \
+	$(lisp)/cedet/ede/srecode.elc \
+	$(lisp)/cedet/ede/system.elc \
+	$(lisp)/cedet/ede/util.elc \
+	$(lisp)/cedet/inversion.elc \
+	$(lisp)/cedet/mode-local.elc \
+	$(lisp)/cedet/pulse.elc \
+	$(lisp)/cedet/semantic.elc \
+	$(lisp)/cedet/semantic/analyze.elc \
+	$(lisp)/cedet/semantic/analyze/complete.elc \
+	$(lisp)/cedet/semantic/analyze/debug.elc \
+	$(lisp)/cedet/semantic/analyze/fcn.elc \
+	$(lisp)/cedet/semantic/analyze/refs.elc \
+	$(lisp)/cedet/semantic/bovine.elc \
+	$(lisp)/cedet/semantic/bovine/c-by.elc \
+	$(lisp)/cedet/semantic/bovine/c.elc \
+	$(lisp)/cedet/semantic/bovine/debug.elc \
+	$(lisp)/cedet/semantic/bovine/el.elc \
+	$(lisp)/cedet/semantic/bovine/gcc.elc \
+	$(lisp)/cedet/semantic/bovine/make-by.elc \
+	$(lisp)/cedet/semantic/bovine/make.elc \
+	$(lisp)/cedet/semantic/bovine/scm-by.elc \
+	$(lisp)/cedet/semantic/bovine/scm.elc \
+	$(lisp)/cedet/semantic/chart.elc \
+	$(lisp)/cedet/semantic/complete.elc \
+	$(lisp)/cedet/semantic/ctxt.elc \
+	$(lisp)/cedet/semantic/db-debug.elc \
+	$(lisp)/cedet/semantic/db-ebrowse.elc \
+	$(lisp)/cedet/semantic/db-el.elc \
+	$(lisp)/cedet/semantic/db-file.elc \
+	$(lisp)/cedet/semantic/db-find.elc \
+	$(lisp)/cedet/semantic/db-global.elc \
+	$(lisp)/cedet/semantic/db-javascript.elc \
+	$(lisp)/cedet/semantic/db-mode.elc \
+	$(lisp)/cedet/semantic/db-ref.elc \
+	$(lisp)/cedet/semantic/db-typecache.elc \
+	$(lisp)/cedet/semantic/db.elc \
+	$(lisp)/cedet/semantic/debug.elc \
+	$(lisp)/cedet/semantic/decorate.elc \
+	$(lisp)/cedet/semantic/decorate/include.elc \
+	$(lisp)/cedet/semantic/decorate/mode.elc \
+	$(lisp)/cedet/semantic/dep.elc \
+	$(lisp)/cedet/semantic/doc.elc \
+	$(lisp)/cedet/semantic/ede-grammar.elc \
+	$(lisp)/cedet/semantic/edit.elc \
+	$(lisp)/cedet/semantic/find.elc \
+	$(lisp)/cedet/semantic/format.elc \
+	$(lisp)/cedet/semantic/fw.elc \
+	$(lisp)/cedet/semantic/grammar-wy.elc \
+	$(lisp)/cedet/semantic/grammar.elc \
+	$(lisp)/cedet/semantic/html.elc \
+	$(lisp)/cedet/semantic/ia-sb.elc \
+	$(lisp)/cedet/semantic/ia.elc \
+	$(lisp)/cedet/semantic/idle.elc \
+	$(lisp)/cedet/semantic/imenu.elc \
+	$(lisp)/cedet/semantic/java.elc \
+	$(lisp)/cedet/semantic/lex-spp.elc \
+	$(lisp)/cedet/semantic/lex.elc \
+	$(lisp)/cedet/semantic/mru-bookmark.elc \
+	$(lisp)/cedet/semantic/sb.elc \
+	$(lisp)/cedet/semantic/scope.elc \
+	$(lisp)/cedet/semantic/senator.elc \
+	$(lisp)/cedet/semantic/sort.elc \
+	$(lisp)/cedet/semantic/symref.elc \
+	$(lisp)/cedet/semantic/symref/cscope.elc \
+	$(lisp)/cedet/semantic/symref/filter.elc \
+	$(lisp)/cedet/semantic/symref/global.elc \
+	$(lisp)/cedet/semantic/symref/grep.elc \
+	$(lisp)/cedet/semantic/symref/idutils.elc \
+	$(lisp)/cedet/semantic/symref/list.elc \
+	$(lisp)/cedet/semantic/tag-file.elc \
+	$(lisp)/cedet/semantic/tag-ls.elc \
+	$(lisp)/cedet/semantic/tag-write.elc \
+	$(lisp)/cedet/semantic/tag.elc \
+	$(lisp)/cedet/semantic/texi.elc \
+	$(lisp)/cedet/semantic/util-modes.elc \
+	$(lisp)/cedet/semantic/util.elc \
+	$(lisp)/cedet/semantic/wisent.elc \
+	$(lisp)/cedet/semantic/wisent/comp.elc \
+	$(lisp)/cedet/semantic/wisent/java-tags.elc \
+	$(lisp)/cedet/semantic/wisent/javascript.elc \
+	$(lisp)/cedet/semantic/wisent/javat-wy.elc \
+	$(lisp)/cedet/semantic/wisent/js-wy.elc \
+	$(lisp)/cedet/semantic/wisent/python-wy.elc \
+	$(lisp)/cedet/semantic/wisent/python.elc \
+	$(lisp)/cedet/semantic/wisent/wisent.elc \
+	$(lisp)/cedet/srecode.elc \
+	$(lisp)/cedet/srecode/args.elc \
+	$(lisp)/cedet/srecode/compile.elc \
+	$(lisp)/cedet/srecode/cpp.elc \
+	$(lisp)/cedet/srecode/ctxt.elc \
+	$(lisp)/cedet/srecode/dictionary.elc \
+	$(lisp)/cedet/srecode/document.elc \
+	$(lisp)/cedet/srecode/el.elc \
+	$(lisp)/cedet/srecode/expandproto.elc \
+	$(lisp)/cedet/srecode/extract.elc \
+	$(lisp)/cedet/srecode/fields.elc \
+	$(lisp)/cedet/srecode/filters.elc \
+	$(lisp)/cedet/srecode/find.elc \
+	$(lisp)/cedet/srecode/getset.elc \
+	$(lisp)/cedet/srecode/insert.elc \
+	$(lisp)/cedet/srecode/java.elc \
+	$(lisp)/cedet/srecode/map.elc \
+	$(lisp)/cedet/srecode/mode.elc \
+	$(lisp)/cedet/srecode/semantic.elc \
+	$(lisp)/cedet/srecode/srt-mode.elc \
+	$(lisp)/cedet/srecode/srt-wy.elc \
+	$(lisp)/cedet/srecode/srt.elc \
+	$(lisp)/cedet/srecode/table.elc \
+	$(lisp)/cedet/srecode/template.elc \
+	$(lisp)/cedet/srecode/texi.elc \
 	$(lisp)/chistory.elc \
 	$(lisp)/cmuscheme.elc \
 	$(lisp)/comint.elc \
@@ -341,6 +509,7 @@ ELCFILES = \
 	$(lisp)/emacs-lisp/byte-opt.elc \
 	$(lisp)/emacs-lisp/byte-run.elc \
 	$(lisp)/emacs-lisp/bytecomp.elc \
+	$(lisp)/emacs-lisp/chart.elc \
 	$(lisp)/emacs-lisp/check-declare.elc \
 	$(lisp)/emacs-lisp/checkdoc.elc \
 	$(lisp)/emacs-lisp/cl-compat.elc \
@@ -358,6 +527,13 @@ ELCFILES = \
 	$(lisp)/emacs-lisp/easy-mmode.elc \
 	$(lisp)/emacs-lisp/easymenu.elc \
 	$(lisp)/emacs-lisp/edebug.elc \
+	$(lisp)/emacs-lisp/eieio-base.elc \
+	$(lisp)/emacs-lisp/eieio-comp.elc \
+	$(lisp)/emacs-lisp/eieio-custom.elc \
+	$(lisp)/emacs-lisp/eieio-datadebug.elc \
+	$(lisp)/emacs-lisp/eieio-opt.elc \
+	$(lisp)/emacs-lisp/eieio-speedbar.elc \
+	$(lisp)/emacs-lisp/eieio.elc \
 	$(lisp)/emacs-lisp/eldoc.elc \
 	$(lisp)/emacs-lisp/elint.elc \
 	$(lisp)/emacs-lisp/elp.elc \
@@ -368,12 +544,10 @@ ELCFILES = \
 	$(lisp)/emacs-lisp/generic.elc \
 	$(lisp)/emacs-lisp/gulp.elc \
 	$(lisp)/emacs-lisp/helper.elc \
-	$(lisp)/emacs-lisp/levents.elc \
 	$(lisp)/emacs-lisp/lisp-mnt.elc \
 	$(lisp)/emacs-lisp/lisp-mode.elc \
 	$(lisp)/emacs-lisp/lisp.elc \
 	$(lisp)/emacs-lisp/lmenu.elc \
-	$(lisp)/emacs-lisp/lucid.elc \
 	$(lisp)/emacs-lisp/macroexp.elc \
 	$(lisp)/emacs-lisp/map-ynp.elc \
 	$(lisp)/emacs-lisp/pp.elc \
@@ -499,6 +673,7 @@ ELCFILES = \
 	$(lisp)/faces.elc \
 	$(lisp)/ffap.elc \
 	$(lisp)/filecache.elc \
+	$(lisp)/files-x.elc \
 	$(lisp)/files.elc \
 	$(lisp)/filesets.elc \
 	$(lisp)/find-cmd.elc \
@@ -511,6 +686,7 @@ ELCFILES = \
 	$(lisp)/follow.elc \
 	$(lisp)/font-core.elc \
 	$(lisp)/font-lock.elc \
+	$(lisp)/font-setting.elc \
 	$(lisp)/format-spec.elc \
 	$(lisp)/format.elc \
 	$(lisp)/forms.elc \
@@ -657,10 +833,12 @@ ELCFILES = \
 	$(lisp)/help.elc \
 	$(lisp)/hex-util.elc \
 	$(lisp)/hexl.elc \
+	$(lisp)/hfy-cmap.elc \
 	$(lisp)/hi-lock.elc \
 	$(lisp)/hilit-chg.elc \
 	$(lisp)/hippie-exp.elc \
 	$(lisp)/hl-line.elc \
+	$(lisp)/htmlfontify.elc \
 	$(lisp)/ibuf-ext.elc \
 	$(lisp)/ibuf-macs.elc \
 	$(lisp)/ibuffer.elc \
@@ -680,7 +858,6 @@ ELCFILES = \
 	$(lisp)/informat.elc \
 	$(lisp)/international/ccl.elc \
 	$(lisp)/international/characters.elc \
-	$(lisp)/international/encoded-kb.elc \
 	$(lisp)/international/fontset.elc \
 	$(lisp)/international/isearch-x.elc \
 	$(lisp)/international/iso-ascii.elc \
@@ -693,6 +870,7 @@ ELCFILES = \
 	$(lisp)/international/latexenc.elc \
 	$(lisp)/international/latin1-disp.elc \
 	$(lisp)/international/mule-cmds.elc \
+	$(lisp)/international/mule-conf.elc \
 	$(lisp)/international/mule-diag.elc \
 	$(lisp)/international/mule-util.elc \
 	$(lisp)/international/mule.elc \
@@ -700,6 +878,7 @@ ELCFILES = \
 	$(lisp)/international/quail.elc \
 	$(lisp)/international/robin.elc \
 	$(lisp)/international/titdic-cnv.elc \
+	$(lisp)/international/ucs-normalize.elc \
 	$(lisp)/international/utf-7.elc \
 	$(lisp)/isearch.elc \
 	$(lisp)/isearchb.elc \
@@ -811,6 +990,7 @@ ELCFILES = \
 	$(lisp)/mouse-drag.elc \
 	$(lisp)/mouse-sel.elc \
 	$(lisp)/mouse.elc \
+	$(lisp)/mpc.elc \
 	$(lisp)/msb.elc \
 	$(lisp)/mwheel.elc \
 	$(lisp)/net/ange-ftp.elc \
@@ -830,6 +1010,7 @@ ELCFILES = \
 	$(lisp)/net/goto-addr.elc \
 	$(lisp)/net/hmac-def.elc \
 	$(lisp)/net/hmac-md5.elc \
+	$(lisp)/net/imap-hash.elc \
 	$(lisp)/net/imap.elc \
 	$(lisp)/net/ldap.elc \
 	$(lisp)/net/mairix.elc \
@@ -859,7 +1040,9 @@ ELCFILES = \
 	$(lisp)/net/tramp-compat.elc \
 	$(lisp)/net/tramp-fish.elc \
 	$(lisp)/net/tramp-ftp.elc \
+	$(lisp)/net/tramp-gvfs.elc \
 	$(lisp)/net/tramp-gw.elc \
+	$(lisp)/net/tramp-imap.elc \
 	$(lisp)/net/tramp-smb.elc \
 	$(lisp)/net/tramp-uu.elc \
 	$(lisp)/net/tramp.elc \
@@ -899,6 +1082,8 @@ ELCFILES = \
 	$(lisp)/obsolete/iso-insert.elc \
 	$(lisp)/obsolete/iso-swed.elc \
 	$(lisp)/obsolete/lazy-lock.elc \
+	$(lisp)/obsolete/levents.elc \
+	$(lisp)/obsolete/lucid.elc \
 	$(lisp)/obsolete/old-whitespace.elc \
 	$(lisp)/obsolete/options.elc \
 	$(lisp)/obsolete/resume.elc \
@@ -907,41 +1092,58 @@ ELCFILES = \
 	$(lisp)/obsolete/sc.elc \
 	$(lisp)/obsolete/scribe.elc \
 	$(lisp)/obsolete/swedish.elc \
+	$(lisp)/obsolete/sym-comp.elc \
 	$(lisp)/obsolete/vc-mcvs.elc \
 	$(lisp)/obsolete/x-menu.elc \
 	$(lisp)/org/org-agenda.elc \
 	$(lisp)/org/org-archive.elc \
+	$(lisp)/org/org-ascii.elc \
 	$(lisp)/org/org-attach.elc \
 	$(lisp)/org/org-bbdb.elc \
 	$(lisp)/org/org-bibtex.elc \
 	$(lisp)/org/org-clock.elc \
 	$(lisp)/org/org-colview.elc \
 	$(lisp)/org/org-compat.elc \
+	$(lisp)/org/org-crypt.elc \
+	$(lisp)/org/org-datetree.elc \
+	$(lisp)/org/org-docbook.elc \
+	$(lisp)/org/org-exp-blocks.elc \
 	$(lisp)/org/org-exp.elc \
-	$(lisp)/org/org-export-latex.elc \
 	$(lisp)/org/org-faces.elc \
+	$(lisp)/org/org-feed.elc \
 	$(lisp)/org/org-footnote.elc \
+	$(lisp)/org/org-freemind.elc \
 	$(lisp)/org/org-gnus.elc \
+	$(lisp)/org/org-habit.elc \
+	$(lisp)/org/org-html.elc \
+	$(lisp)/org/org-icalendar.elc \
 	$(lisp)/org/org-id.elc \
+	$(lisp)/org/org-indent.elc \
 	$(lisp)/org/org-info.elc \
+	$(lisp)/org/org-inlinetask.elc \
 	$(lisp)/org/org-install.elc \
 	$(lisp)/org/org-irc.elc \
 	$(lisp)/org/org-jsinfo.elc \
+	$(lisp)/org/org-latex.elc \
 	$(lisp)/org/org-list.elc \
 	$(lisp)/org/org-mac-message.elc \
 	$(lisp)/org/org-macs.elc \
 	$(lisp)/org/org-mew.elc \
 	$(lisp)/org/org-mhe.elc \
+	$(lisp)/org/org-mobile.elc \
 	$(lisp)/org/org-mouse.elc \
 	$(lisp)/org/org-plot.elc \
+	$(lisp)/org/org-protocol.elc \
 	$(lisp)/org/org-publish.elc \
 	$(lisp)/org/org-remember.elc \
 	$(lisp)/org/org-rmail.elc \
+	$(lisp)/org/org-src.elc \
 	$(lisp)/org/org-table.elc \
 	$(lisp)/org/org-timer.elc \
 	$(lisp)/org/org-vm.elc \
 	$(lisp)/org/org-w3m.elc \
 	$(lisp)/org/org-wl.elc \
+	$(lisp)/org/org-xoxo.elc \
 	$(lisp)/org/org.elc \
 	$(lisp)/outline.elc \
 	$(lisp)/paren.elc \
@@ -1014,7 +1216,6 @@ ELCFILES = \
 	$(lisp)/progmodes/cc-menus.elc \
 	$(lisp)/progmodes/cc-mode.elc \
 	$(lisp)/progmodes/cc-styles.elc \
-	$(lisp)/progmodes/cc-subword.elc \
 	$(lisp)/progmodes/cc-vars.elc \
 	$(lisp)/progmodes/cfengine.elc \
 	$(lisp)/progmodes/cmacexp.elc \
@@ -1051,6 +1252,7 @@ ELCFILES = \
 	$(lisp)/progmodes/idlw-toolbar.elc \
 	$(lisp)/progmodes/idlwave.elc \
 	$(lisp)/progmodes/inf-lisp.elc \
+	$(lisp)/progmodes/js.elc \
 	$(lisp)/progmodes/ld-script.elc \
 	$(lisp)/progmodes/m4-mode.elc \
 	$(lisp)/progmodes/make-mode.elc \
@@ -1070,7 +1272,7 @@ ELCFILES = \
 	$(lisp)/progmodes/sh-script.elc \
 	$(lisp)/progmodes/simula.elc \
 	$(lisp)/progmodes/sql.elc \
-	$(lisp)/progmodes/sym-comp.elc \
+	$(lisp)/progmodes/subword.elc \
 	$(lisp)/progmodes/tcl.elc \
 	$(lisp)/progmodes/vera-mode.elc \
 	$(lisp)/progmodes/verilog-mode.elc \
@@ -1265,9 +1467,13 @@ ELCFILES = \
 # (e.g. src/Makefile.in may have a dependency for ../lisp/foo.elc where we
 # only know of $(lisp)/foo.elc).  So instead we provide a direct way for
 # src/Makefile.in to rebuild a particular Lisp file, no questions asked.
+# Use byte-compile-refresh-preloaded to try and work around some of
+# the most common problems of not bootstrapping from a clean state.
 compile-onefile:
 	@echo Compiling $(THEFILE)
-	@$(emacs) $(BYTE_COMPILE_EXTRA_FLAGS) -f batch-byte-compile $(THEFILE)
+	@# Use byte-compile-refresh-preloaded to try and work around some of
+	@# the most common bootstrapping problems.
+	@$(emacs) -l bytecomp -f byte-compile-refresh-preloaded $(BYTE_COMPILE_EXTRA_FLAGS) -f batch-byte-compile $(THEFILE)
 
 # Files MUST be compiled one by one. If we compile several files in a
 # row (i.e., in the same instance of Emacs) we can't make sure that
@@ -1309,19 +1515,17 @@ compile: $(LOADDEFS) autoloads compile-first
 # unconditionally.  Some files don't actually get compiled because they
 # set the local variable no-byte-compile.
 compile-always: doit
-	cd $(lisp); rm -f *.elc */*.elc
+	cd $(lisp); rm -f *.elc */*.elc */*/*.elc */*/*/*.elc
 	$(MAKE) $(MFLAGS) compile EMACS=$(EMACS)
 
 ## In case any files are missing from ELCFILES.
-## Why is the UnicodeData check needed, when these files are no-byte-compile?
 compile-last:
 	@wd=$(lisp); $(setwins); \
 	els=`echo "$$wins " | sed -e 's|/\./|/|g' -e 's|/\. | |g' -e 's| |/*.el |g'`; \
 	for el in $$els; do \
 	  test -f $$el || continue; \
 	  test -f $${el}c && continue; \
-	  grep 'no-byte-compile: t' $$el > /dev/null && continue; \
-	  head -n 1 $$el | grep '^;; Automatically generated from UnicodeData.txt.' > /dev/null && continue; \
+	  GREP_OPTIONS= grep 'no-byte-compile: t' $$el > /dev/null && continue; \
 	  sel=`echo $$el | sed "s|^$(lisp)|\\$$(lisp)|"`; \
 	  echo "Maintainer warning: $$sel missing from \$$ELCFILES?"; \
 	  echo "Compiling $$el"; \
@@ -1339,7 +1543,7 @@ compile-calc:
 
 backup-compiled-files:
 	-mv $(lisp)/elc.tar.gz $(lisp)/elc.tar.gz~
-	-tar czf $(lisp)/elc.tar.gz $(lisp)/*.elc $(lisp)/*/*.elc
+	-tar czf $(lisp)/elc.tar.gz $(lisp)/*.elc $(lisp)/*/*.elc $(lisp)/*/*/*.elc $(lisp)/*/*/*/*.elc
 
 # Compile Lisp files, but save old compiled files first.
 
@@ -1437,7 +1641,7 @@ $(CAL_DIR)/hol-loaddefs.el: $(CAL_SRC)
 # file, we don't want to store it in the source repository).
 
 bootstrap-clean:
-	cd $(lisp); rm -f *.elc */*.elc $(AUTOGENEL)
+	cd $(lisp); rm -f *.elc */*.elc */*/*.elc */*/*/*.elc $(AUTOGENEL)
 
 distclean:
 	-rm -f ./Makefile
@@ -1460,7 +1664,7 @@ $(lisp)/progmodes/cc-align.elc $(lisp)/progmodes/cc-awk.elc\
  $(lisp)/progmodes/cc-engine.elc $(lisp)/progmodes/cc-fonts.elc\
  $(lisp)/progmodes/cc-langs.elc $(lisp)/progmodes/cc-menus.elc\
  $(lisp)/progmodes/cc-mode.elc $(lisp)/progmodes/cc-styles.elc\
- $(lisp)/progmodes/cc-subword.elc $(lisp)/progmodes/cc-vars.elc: \
+ $(lisp)/progmodes/cc-vars.elc: \
    $(lisp)/progmodes/cc-bytecomp.elc $(lisp)/progmodes/cc-defs.elc
 
 $(lisp)/progmodes/cc-align.elc: \
@@ -1493,8 +1697,6 @@ $(lisp)/progmodes/cc-mode.elc: $(lisp)/progmodes/cc-langs.elc \
 
 $(lisp)/progmodes/cc-styles.elc: $(lisp)/progmodes/cc-vars.elc \
    $(lisp)/progmodes/cc-align.elc
-
-$(lisp)/progmodes/cc-subword.elc: $(lisp)/progmodes/cc-cmds.elc
 
 $(lisp)/progmodes/cc-vars.elc: $(lisp)/custom.elc $(lisp)/widget.elc
 

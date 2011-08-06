@@ -30,14 +30,14 @@
 @tex
 @ifset smallbook
 @fonttextsize 10
-\global\let\urlcolor=\Black % don't print links in grayscale
-\global\let\linkcolor=\Black
+
 @end ifset
 \global\hbadness=6666 % don't worry about not-too-underfull boxes
 @end tex
 
-@set edition-number 3.08
-@set update-date 4 October 2008
+@set edition-number 3.10
+@set update-date 28 October 2009
+
 @ignore
  ## Summary of shell commands to create various output formats:
 
@@ -229,7 +229,8 @@ people who are not programmers.
 Edition @value{edition-number}, @value{update-date}
 @sp 1
 Copyright @copyright{} 1990, 1991, 1992, 1993, 1994, 1995, 1997, 2001,
-   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+   Free Software Foundation, Inc.
 @sp 1
 
 @iftex
@@ -4732,16 +4733,16 @@ definition.
 @end ignore
 
 More generally, if you want to see a function in its original source
-file, you can use the @code{find-tags} function to jump to it.
-@code{find-tags} works with a wide variety of languages, not just
+file, you can use the @code{find-tag} function to jump to it.
+@code{find-tag} works with a wide variety of languages, not just
 Lisp, and C, and it works with non-programming text as well.  For
-example, @code{find-tags} will jump to the various nodes in the
+example, @code{find-tag} will jump to the various nodes in the
 Texinfo source file of this document.
-The @code{find-tags} function depends on `tags tables' that record
+The @code{find-tag} function depends on `tags tables' that record
 the locations of the functions, variables, and other items to which
-@code{find-tags} jumps.
+@code{find-tag} jumps.
 
-To use the @code{find-tags} command, type @kbd{M-.}  (i.e., press the
+To use the @code{find-tag} command, type @kbd{M-.}  (i.e., press the
 period key while holding down the @key{META} key, or else type the
 @key{ESC} key and then type the period key), and then, at the prompt,
 type in the name of the function whose source code you want to see,
@@ -4753,7 +4754,7 @@ screen.  To switch back to your current buffer, type @kbd{C-x b
 
 @c !!! 22.1.1 tags table location in this paragraph
 @cindex TAGS table, specifying
-@findex find-tags
+@findex find-tag
 Depending on how the initial default values of your copy of Emacs are
 set, you may also need to specify the location of your `tags table',
 which is a file called @file{TAGS}.  For example, if you are
@@ -4763,7 +4764,7 @@ the @file{/usr/local/share/emacs/} directory; thus you would use the
 @code{M-x visit-tags-table} command and specify a pathname such as
 @file{/usr/local/share/emacs/22.1.1/lisp/TAGS}.  If the tags table
 has not already been created, you will have to create it yourself.  It
-will in a file such as @file{/usr/local/src/emacs/src/TAGS}.
+will be in a file such as @file{/usr/local/src/emacs/src/TAGS}.
 
 @need 1250
 To create a @file{TAGS} file in a specific directory, switch to that
@@ -4778,7 +4779,7 @@ M-x compile RET etags *.el RET
 For more information, see @ref{etags, , Create Your Own @file{TAGS} File}.
 
 After you become more familiar with Emacs Lisp, you will find that you will
-frequently use @code{find-tags} to navigate your way around source code;
+frequently use @code{find-tag} to navigate your way around source code;
 and you will create your own @file{TAGS} tables.
 
 @cindex Library, as term for `file'
@@ -17346,10 +17347,10 @@ Auto Fill mode.
 @smallexample
 @group
 ;;; Text mode and Auto Fill mode
-; The next two lines put Emacs into Text mode
-; and Auto Fill mode, and are for writers who
-; want to start writing prose rather than code.
-(setq default-major-mode 'text-mode)
+;; The next two lines put Emacs into Text mode
+;; and Auto Fill mode, and are for writers who
+;; want to start writing prose rather than code.
+(setq-default major-mode 'text-mode)
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
 @end group
 @end smallexample
@@ -17393,21 +17394,21 @@ Here is the line again; how does it work?
 
 @cindex Text Mode turned on
 @smallexample
-(setq default-major-mode 'text-mode)
+(setq major-mode 'text-mode)
 @end smallexample
 
 @noindent
 This line is a short, but complete Emacs Lisp expression.
 
 We are already familiar with @code{setq}.  It sets the following variable,
-@code{default-major-mode}, to the subsequent value, which is
-@code{text-mode}.  The single quote mark before @code{text-mode} tells
-Emacs to deal directly with the @code{text-mode} variable, not with
-whatever it might stand for.  @xref{set & setq, , Setting the Value of
-a Variable}, for a reminder of how @code{setq} works.  The main point
-is that there is no difference between the procedure you use to set
-a value in your @file{.emacs} file and the procedure you use anywhere
-else in Emacs.
+@code{major-mode}, to the subsequent value, which is @code{text-mode}.
+The single quote mark before @code{text-mode} tells Emacs to deal directly
+with the @code{text-mode} symbol, not with whatever it might stand for.
+@xref{set & setq, , Setting the Value of a Variable},
+for a reminder of how @code{setq} works.
+The main point is that there is no difference between the procedure you
+use to set a value in your @file{.emacs} file and the procedure you use
+anywhere else in Emacs.
 
 @need 800
 Here is the next line:
@@ -17929,10 +17930,10 @@ the following conditional:
 @group
 (cond
  ((= 22 emacs-major-version)
-  ;; evaluate version 21 code
+  ;; evaluate version 22 code
   ( @dots{} ))
  ((= 23 emacs-major-version)
-  ;; evaluate version 22 code
+  ;; evaluate version 23 code
   ( @dots{} )))
 @end group
 @end smallexample
@@ -17981,7 +17982,7 @@ emacs -Q - D
   (tooltip-mode nil)
   ;; If tooltips turned on, make tips appear promptly
   (setq tooltip-delay 0.1)  ; default is 0.7 second
-  )
+   )
 @end group
 @end smallexample
 
@@ -18257,7 +18258,7 @@ xmodmap -e "keysym Alt_L = Meta_L Alt_L"
 @need 1700
 @node Mode Line,  , Miscellaneous, Emacs Initialization
 @section A Modified Mode Line
-@vindex default-mode-line-format
+@vindex mode-line-format
 @cindex Mode line format
 
 Finally, a feature I really like: a modified mode line.
@@ -18282,7 +18283,7 @@ My @file{.emacs} file has a section that looks like this:
 @group
 ;; Set a Mode Line that tells me which machine, which directory,
 ;; and which line I am on, plus the other customary information.
-(setq default-mode-line-format
+(setq-default mode-line-format
  (quote
   (#("-" 0 1
      (help-echo
@@ -18961,7 +18962,7 @@ introduction, it comes as a Texinfo source file, so you can read it
 on-line and as a typeset, printed book.)
 
 Go to the other on-line help that is part of GNU Emacs: the on-line
-documentation for all functions and variables, and @code{find-tags},
+documentation for all functions and variables, and @code{find-tag},
 the program that takes you to sources.
 
 Here is an example of how I explore the sources.  Because of its name,
@@ -22109,16 +22110,11 @@ so that we cannot use it.
 Given that writing good English is a rare skill among programmers, we
 can ill afford to lose manuals this way.
 
-@c (texinfo)uref
-(The Free Software Foundation
-@uref{http://www.gnu.org/doc/doc.html#DescriptionsOfGNUDocumentation, ,
-sells printed copies} of free @uref{http://www.gnu.org/doc/doc.html,
-GNU manuals}, too.)
-
 Free documentation, like free software, is a matter of freedom, not
 price.  The problem with these manuals was not that O'Reilly Associates
-charged a price for printed copies---that in itself is fine.  (The Free
-Software Foundation sells printed copies of free GNU manuals, too.)
+charged a price for printed copies---that in itself is fine.  The Free
+Software Foundation @uref{http://shop.fsf.org, sells printed copies} of
+free @uref{http://www.gnu.org/doc/doc.html, GNU manuals}, too.
 But GNU manuals are available in source code form, while these manuals
 are available only on paper.  GNU manuals come with permission to copy
 and modify; the Perl manuals do not.  These restrictions are the

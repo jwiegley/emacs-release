@@ -1,7 +1,7 @@
 ;;; tool-bar.el --- setting up the tool bar
 ;;
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 ;;
 ;; Author: Dave Love <fx@gnu.org>
 ;; Keywords: mouse frames
@@ -90,7 +90,7 @@ See `tool-bar-mode' for more information."
 Define this locally to override the global tool bar.")
 
 (global-set-key [tool-bar]
-		'(menu-item "tool bar" ignore
+		`(menu-item ,(purecopy "tool bar") ignore
 			    :filter tool-bar-make-keymap))
 
 (declare-function image-mask-p "image.c" (spec &optional frame))

@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001, 2002,
-@c   2003, 2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+@c   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/control
 @node Control Structures, Variables, Evaluation, Top
@@ -1023,6 +1023,20 @@ error description.
 
 If @var{var} is @code{nil}, that means no variable is bound.  Then the
 error symbol and associated data are not available to the handler.
+
+@cindex rethrow a signal
+Sometimes it is necessary to re-throw a signal caught by
+@code{condition-case}, for some outer-level handler to catch.  Here's
+how to do that:
+
+@smallexample
+  (signal (car err) (cdr err))
+@end smallexample
+
+@noindent
+where @code{err} is the error description variable, the first argument
+to @code{condition-case} whose error condition you want to re-throw.
+@xref{Definition of signal}.
 @end defspec
 
 @defun error-message-string error-description
@@ -1108,6 +1122,7 @@ Here's the example at the beginning of this subsection rewritten using
 @end group
 @end smallexample
 @end defmac
+
 
 @node Error Symbols
 @subsubsection Error Symbols and Condition Names
@@ -1255,9 +1270,8 @@ make sure to kill it before finishing:
 
 @smallexample
 @group
-(save-excursion
-  (let ((buffer (get-buffer-create " *temp*")))
-    (set-buffer buffer)
+(let ((buffer (get-buffer-create " *temp*")))
+  (with-current-buffer buffer
     (unwind-protect
         @var{body-form}
       (kill-buffer buffer))))
@@ -1269,7 +1283,7 @@ You might think that we could just as well write @code{(kill-buffer
 (current-buffer))} and dispense with the variable @code{buffer}.
 However, the way shown above is safer, if @var{body-form} happens to
 get an error after switching to a different buffer!  (Alternatively,
-you could write another @code{save-excursion} around @var{body-form},
+you could write a @code{save-current-buffer} around @var{body-form},
 to ensure that the temporary buffer becomes current again in time to
 kill it.)
 

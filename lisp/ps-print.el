@@ -1,7 +1,7 @@
 ;;; ps-print.el --- print text from the buffer as PostScript
 
 ;; Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Jim Thompson (was <thompson@wg2.waii.com>)
@@ -11,11 +11,11 @@
 ;; Maintainer: Kenichi Handa <handa@m17n.org> (multi-byte characters)
 ;;	Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Keywords: wp, print, PostScript
-;; Version: 7.3.4
+;; Version: 7.3.5
 ;; X-URL: http://www.emacswiki.org/cgi-bin/wiki/ViniciusJoseLatorre
 
-(defconst ps-print-version "7.3.4"
-  "ps-print.el, v 7.3.4 <2009/01/24 vinicius>
+(defconst ps-print-version "7.3.5"
+  "ps-print.el, v 7.3.5 <2009/12/23 vinicius>
 
 Vinicius's last change version -- this file may have been edited as part of
 Emacs without changes to the version number.  When reporting bugs, please also
@@ -1478,7 +1478,7 @@ Please send all bug fixes and enhancements to
 
 
 (defconst ps-windows-system
-  (memq system-type '(emx win32 w32 mswindows ms-dos windows-nt)))
+  (memq system-type '(ms-dos windows-nt)))
 (defconst ps-lp-system
   (memq system-type '(usg-unix-v hpux irix)))
 
@@ -1494,7 +1494,7 @@ Please send all bug fixes and enhancements to
 ;;; Interface to the command system
 
 (defgroup postscript nil
-  "PostScript Group."
+  "Support for printing and PostScript."
   :tag "PostScript"
   :version "20"
   :group 'emacs)
@@ -1832,6 +1832,7 @@ If it's nil, automatic feeding takes place."
 
 ;;;###autoload
 (defcustom ps-page-dimensions-database
+ (purecopy
   (list (list 'a4    (/ (* 72 21.0) 2.54)  (/ (* 72 29.7) 2.54) "A4")
 	(list 'a3    (/ (* 72 29.7) 2.54)  (/ (* 72 42.0) 2.54) "A3")
 	(list 'letter       (* 72  8.5)    (* 72 11.0)          "Letter")
@@ -1868,7 +1869,7 @@ If it's nil, automatic feeding takes place."
 	'(topcoatedpaper     396.0     136.0 "TopcoatedPaper150")
 	'(vhsface            205.0     127.0 "VHSFace")
 	'(vhsspine           400.0      50.0 "VHSSpine")
-	'(zipdisk            156.0     136.0 "ZipDisk"))
+	'(zipdisk            156.0     136.0 "ZipDisk")))
   "List associating a symbolic paper type to its width, height and doc media.
 See `ps-paper-type'."
   :type '(repeat (list :tag "Paper Type"
@@ -4733,8 +4734,7 @@ page-height == ((floor print-height ((th + ls) * zh)) * ((th + ls) * zh)) - th
   (ps-output 'prologue (if (stringp args) (list args) args)))
 
 (defun ps-flush-output ()
-  (save-excursion
-    (set-buffer ps-spool-buffer)
+  (with-current-buffer ps-spool-buffer
     (goto-char (point-max))
     (while ps-output-head
       (let ((it (car ps-output-head)))
@@ -4755,8 +4755,7 @@ page-height == ((floor print-height ((th + ls) * zh)) * ((th + ls) * zh)) - th
 
 (defun ps-insert-file (fname)
   (ps-flush-output)
-  (save-excursion
-    (set-buffer ps-spool-buffer)
+  (with-current-buffer ps-spool-buffer
     (goto-char (point-max))
     (insert-file-contents fname)))
 
@@ -4839,8 +4838,7 @@ page-height == ((floor print-height ((th + ls) * zh)) * ((th + ls) * zh)) - th
 
 
 (defun ps-get-boundingbox ()
-  (save-excursion
-    (set-buffer ps-spool-buffer)
+  (with-current-buffer ps-spool-buffer
     (save-excursion
       (if (re-search-forward ps-boundingbox-re nil t)
 	  (vector (string-to-number	; lower x
@@ -4908,8 +4906,7 @@ page-height == ((floor print-height ((th + ls) * zh)) * ((th + ls) * zh)) - th
 	   ;; coordinate adjustment to center image
 	   ;; around x and y position
 	   (let ((box (ps-get-boundingbox)))
-	     (save-excursion
-	       (set-buffer ps-spool-buffer)
+	     (with-current-buffer ps-spool-buffer
 	       (save-excursion
 		 (if (re-search-backward "^--back--" nil t)
 		     (replace-match
@@ -5794,8 +5791,7 @@ XSTART YSTART are the relative position for the first page in a sheet.")
 					     ps-line-number-step
 					   ps-zebra-stripe-height))))
   ;; spooling buffer
-  (save-excursion
-    (set-buffer ps-spool-buffer)
+  (with-current-buffer ps-spool-buffer
     (goto-char (point-max))
     (and (re-search-backward "^%%Trailer$" nil t)
 	 (delete-region (match-beginning 0) (point-max))))
@@ -5881,7 +5877,7 @@ XSTART YSTART are the relative position for the first page in a sheet.")
   (ps-get-page-dimensions)
   ;; final check
   (unless (listp ps-lpr-switches)
-    (error "`ps-lpr-switches' value should be a list."))
+    (error "`ps-lpr-switches' value should be a list"))
   (and ps-color-p
        (equal ps-default-background ps-default-foreground)
        (error
@@ -6253,6 +6249,7 @@ If FACE is not in `ps-print-face-extension-alist' or in
 return the attribute vector.
 
 If FACE is not a valid face name, use default face."
+  (and (stringp face) (facep face) (setq face (intern face)))
   (cond
    (ps-black-white-faces-alist
     (or (and (symbolp face)
@@ -6410,17 +6407,15 @@ If FACE is not a valid face name, use default face."
 		(ps-face-background-name face))))
 
 
-;; to avoid compilation gripes
-(defalias 'ps-jitify 'jit-lock-fontify-now)
-(defalias 'ps-lazify 'lazy-lock-fontify-region)
-
+(declare-function jit-lock-fontify-now "jit-lock" (&optional start end))
+(declare-function lazy-lock-fontify-region "lazy-lock" (beg end))
 
 ;; to avoid compilation gripes
 (defun ps-print-ensure-fontified (start end)
   (cond ((and (boundp 'jit-lock-mode) (symbol-value 'jit-lock-mode))
-	 (ps-jitify start end))
+	 (jit-lock-fontify-now start end))
 	((and (boundp 'lazy-lock-mode) (symbol-value 'lazy-lock-mode))
-	 (ps-lazify start end))))
+	 (lazy-lock-fontify-region start end))))
 
 
 (defun ps-generate-postscript-with-faces (from to)
@@ -6574,8 +6569,7 @@ If FACE is not a valid face name, use default face."
 	  (and ps-razzle-dazzle (message "Wrote %s" filename)))
       ;; Else, spool to the printer
       (and ps-razzle-dazzle (message "Printing..."))
-      (save-excursion
-	(set-buffer ps-spool-buffer)
+      (with-current-buffer ps-spool-buffer
 	(let* ((coding-system-for-write 'raw-text-unix)
 	       (ps-printer-name (or ps-printer-name
 				    (and (boundp 'printer-name)
@@ -6662,7 +6656,7 @@ If FACE is not a valid face name, use default face."
 ;; But autoload them here to make the separation invisible.
 
 ;;;### (autoloads (ps-mule-end-job ps-mule-begin-job ps-mule-initialize
-;;;;;;  ps-multibyte-buffer) "ps-mule" "ps-mule.el" "fba1322a48e0d8f2109629ea0c4dd734")
+;;;;;;  ps-multibyte-buffer) "ps-mule" "ps-mule.el" "9187df3473401876e0df4937c311fbaf")
 ;;; Generated autoloads from ps-mule.el
 
 (defvar ps-multibyte-buffer nil "\

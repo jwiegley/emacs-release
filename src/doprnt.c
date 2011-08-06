@@ -2,7 +2,7 @@
    Also takes args differently: pass one pointer to an array of strings
    in addition to the format string which is separate.
    Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -23,6 +23,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <config.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <setjmp.h>
 
 #ifdef STDC_HEADERS
 #include <float.h>
@@ -61,34 +62,6 @@ static int doprnt1 ();
 
 int
 doprnt (buffer, bufsize, format, format_end, nargs, args)
-     char *buffer;
-     register int bufsize;
-     char *format;
-     char *format_end;
-     int nargs;
-     char **args;
-{
-  return doprnt1 (0, buffer, bufsize, format, format_end, nargs, args);
-}
-
-/* Like doprnt except that strings in ARGS are passed
-   as Lisp_Object.  */
-
-int
-doprnt_lisp (buffer, bufsize, format, format_end, nargs, args)
-     char *buffer;
-     register int bufsize;
-     char *format;
-     char *format_end;
-     int nargs;
-     char **args;
-{
-  return doprnt1 (1, buffer, bufsize, format, format_end, nargs, args);
-}
-
-static int
-doprnt1 (lispstrings, buffer, bufsize, format, format_end, nargs, args)
-     int lispstrings;
      char *buffer;
      register int bufsize;
      char *format;
@@ -153,9 +126,9 @@ doprnt1 (lispstrings, buffer, bufsize, format, format_end, nargs, args)
 		  unsigned n = *fmt - '0';
 		  while ('0' <= fmt[1] && fmt[1] <= '9')
 		    {
-		      if (n * 10 / 10 != n
-			  || (n = n * 10 + (fmt[1] - '0')) < n)
+		      if (n * 10 + fmt[1] - '0' < n)
 			error ("Format width or precision too large");
+		      n = n * 10 + fmt[1] - '0';
 		      *string++ = *++fmt;
 		    }
 
@@ -235,17 +208,8 @@ doprnt1 (lispstrings, buffer, bufsize, format, format_end, nargs, args)
 		error ("Not enough arguments for format string");
 	      if (fmtcpy[1] != 's')
 		minlen = atoi (&fmtcpy[1]);
-	      if (lispstrings)
-		{
-		  string = ((struct Lisp_String *) args[cnt])->data;
-		  tem = STRING_BYTES ((struct Lisp_String *) args[cnt]);
-		  cnt++;
-		}
-	      else
-		{
-		  string = (unsigned char *) args[cnt++];
-		  tem = strlen (string);
-		}
+	      string = (unsigned char *) args[cnt++];
+	      tem = strlen (string);
 	      width = strwidth (string, tem);
 	      goto doit1;
 

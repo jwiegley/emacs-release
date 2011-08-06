@@ -1,7 +1,7 @@
 ;;; iso-acc.el --- minor mode providing electric accent keys
 
 ;; Copyright (C) 1993, 1994, 1996, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Johan Vromans
 ;; Maintainer: FSF
@@ -482,8 +482,7 @@ Noninteractively, this operates on text from START to END."
 ;; if it was in use in the previous buffer.
 (defun iso-acc-minibuf-setup ()
   (setq iso-accents-mode
-	(save-excursion
-	  (set-buffer (window-buffer minibuffer-scroll-window))
+	(with-current-buffer (window-buffer minibuffer-scroll-window)
 	  iso-accents-mode)))
 
 (add-hook 'minibuffer-setup-hook 'iso-acc-minibuf-setup)

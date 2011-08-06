@@ -1,7 +1,7 @@
 ;;; artist.el --- draw ascii graphics with your mouse
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author:       Tomas Abrahamsson <tab@lysator.liu.se>
 ;; Maintainer:   Tomas Abrahamsson <tab@lysator.liu.se>
@@ -859,24 +859,24 @@ ARROW-PRED is a function that is called to find out if the shape
   can have arrows.  The function is called with no arguments and
   must return nil or t.
 ARROW-SET-FN is a function that is called to set arrow end-points.
-  Arguments and return values for this funcion are described below.
+  Arguments and return values for this function are described below.
 INIT-FN is, if non-nil, a function that is called when the first
   point of the shape is set.  Arguments and return values for
-  this funcion are described below.
+  this function are described below.
 PREP-FILL-FN is, if non-nil, a function that is called after
   the last point is set, but before the filling is done.
-  Arguments and return values for this funcion are described below.
+  Arguments and return values for this function are described below.
 EXIT-FN is, if non-nil, a function that is called after filling
-  is done.  Arguments and return values for this funcion are
+  is done.  Arguments and return values for this function are
   described below.
 DRAW-HOW defines the kind of shape.  The kinds of shapes are:
-  `artist-do-continously'  -- Do drawing operation continously,
+  `artist-do-continously'  -- Do drawing operation continuously,
                               as long as the mouse button is held down.
   `artist-do-poly'         -- Do drawing operation many times.
   1                        -- Do drawing operation only once.
   2                        -- The drawing operation requires two points.
 DRAW-FN is the function to call for drawing.  Arguments and
-  return values for this funcion are described below.
+  return values for this function are described below.
 EXTRA-DRAW-INFO the layout of this depends on the value of DRAW-HOW:
   If DRAW-HOW is `artist-do-continously':
 
@@ -894,20 +894,20 @@ EXTRA-DRAW-INFO the layout of this depends on the value of DRAW-HOW:
     (UNDRAW-FN FILL-PRED FILL-FN)
 
     UNDRAW-FN is a function to call for undrawing the shape.
-      Arguments and return values for this funcion are
+      Arguments and return values for this function are
       described below.
     FILL-PRED is a function that is called to find out if the shape
       can have arrows.  The function must take no arguments and
       return nil or t.
     FILL-FN  is a function to call for filling the shape.
-      Arguments and return values for this funcion are
+      Arguments and return values for this function are
       described below.
 
   If DRAW-HOW is 1:
 
     ()
 
-Note! All symbols and keywords (both in the `funcion-call' INFO-PART
+Note! All symbols and keywords (both in the `function-call' INFO-PART
       as well as in the `graphics-operation' INFO-PART) must be unique.
 
 The following table describe function arguments and return value
@@ -1319,7 +1319,7 @@ Selecting operation
 
 Variables
 
- This is a brief overview of the different varaibles. For more info,
+ This is a brief overview of the different variables.  For more info,
  see the documentation for the variables (type \\[describe-variable] <variable> RET).
 
  artist-rubber-banding		Interactively do rubber-banding or not
@@ -1477,7 +1477,7 @@ Keymap summary
 ;
 
 (defun artist-compute-popup-menu-table (menu-table)
-  "Create a menu from from MENU-TABLE data.
+  "Create a menu from MENU-TABLE data.
 The returned value is suitable for the `x-popup-menu' function."
   (cons "Artist menu"
 	(artist-compute-popup-menu-table-sub menu-table)))
@@ -1801,8 +1801,7 @@ info-variant-part."
 
 (defun artist-clear-buffer (buf)
   "Clear contents of buffer BUF."
-  (save-excursion
-    (set-buffer buf)
+  (with-current-buffer buf
     (goto-char (point-min))
     (delete-char (- (point-max) (point-min)) nil)))
 
@@ -1848,10 +1847,8 @@ Return a list (RETURN-CODE STDOUT STDERR)."
 
 	    ;; the return value
 	    (list res
-		  (save-excursion
-		    (set-buffer tmp-stdout-buffer)
-		    (copy-sequence (buffer-substring (point-min)
-						     (point-max))))
+		  (with-current-buffer tmp-stdout-buffer
+                    (buffer-substring (point-min) (point-max)))
 		  (artist-file-to-string tmp-stderr-file-name)))
 
 	;; Unwind: remove temporary files and buffers
@@ -3882,8 +3879,8 @@ The 2-point shape SHAPE is drawn from X1, Y1 to X2, Y2."
 ;;
 
 (defun artist-key-undraw-continously (x y)
-  "Undraw current continous shape with point at X, Y."
-  ;; No undraw-info for continous shapes
+  "Undraw current continuous shape with point at X, Y."
+  ;; No undraw-info for continuous shapes
   nil)
 
 (defun artist-key-undraw-poly (x y)
@@ -3940,7 +3937,7 @@ The 2-point shape SHAPE is drawn from X1, Y1 to X2, Y2."
 ;; user has released the button, so the timer will always be cancelled
 ;; at that point.
 (defun artist-key-draw-continously (x y)
-  "Draw current continous shape at X,Y."
+  "Draw current continuous shape at X,Y."
   (let ((draw-fn   (artist-go-get-draw-fn-from-symbol artist-curr-go)))
     (setq artist-key-shape (artist-funcall draw-fn x y))))
 
@@ -4021,7 +4018,7 @@ Trimming here means removing white space at end of a line."
 ;;
 
 (defun artist-key-do-continously-continously (x y)
-  "Update current continous shape at X,Y."
+  "Update current continuous shape at X,Y."
   (let ((draw-fn   (artist-go-get-draw-fn-from-symbol artist-curr-go)))
     (artist-funcall draw-fn x y)))
 
@@ -4048,7 +4045,7 @@ Trimming here means removing white space at end of a line."
 
 (defun artist-key-do-continously-1point (x y)
   "Update current 1-point shape at X,Y."
-  ;; Nothing to do continously for operations
+  ;; Nothing to do continuously for operations
   ;; where we have only one input point
   nil)
 
@@ -4097,8 +4094,8 @@ Trimming here means removing white space at end of a line."
 
 
 (defun artist-key-set-point-continously (x y)
-  "Set point for current continous shape at X,Y."
-  ;; Maybe set arrow-points for continous shapes
+  "Set point for current continuous shape at X,Y."
+  ;; Maybe set arrow-points for continuous shapes
   (let ((arrow-pred   (artist-go-get-arrow-pred-from-symbol artist-curr-go))
 	(arrow-set-fn (artist-go-get-arrow-set-fn-from-symbol artist-curr-go))
 	(init-fn      (artist-go-get-init-fn-from-symbol artist-curr-go))
@@ -4753,6 +4750,15 @@ If optional argument STATE is positive, turn borders on."
   "Function that does nothing."
   (interactive))
 
+(defun artist-compute-up-event-key (ev)
+  "Compute the corresponding up key sequence for event EV."
+ (let* ((basic (event-basic-type ev))
+	(unshifted basic)
+	(shifted (make-symbol (concat "S-" (symbol-name basic)))))
+   (if (artist-event-is-shifted ev)
+       (make-vector 1 shifted)
+     (make-vector 1 unshifted))))
+
 (defun artist-down-mouse-1 (ev)
   "Perform drawing action for event EV."
   (interactive "@e")
@@ -4764,15 +4770,10 @@ If optional argument STATE is positive, turn borders on."
 	 (orig-draw-region-min-y artist-draw-region-min-y)
 	 (orig-draw-region-max-y artist-draw-region-max-y)
 	 (orig-pointer-shape (if (eq window-system 'x) x-pointer-shape nil))
-	 (echo-keystrokes 10000)	; a lot of seconds
+	 (echoq-keystrokes 10000)	; a lot of seconds
 	 ;; Remember original binding for the button-up event to this
 	 ;; button-down event.
-	 (key (let* ((basic (event-basic-type ev))
-		     (unshifted basic)
-		     (shifted (make-symbol (concat "S-" (symbol-name basic)))))
-		(if (artist-event-is-shifted ev)
-		    (make-vector 1 shifted)
-		  (make-vector 1 unshifted))))
+	 (key (artist-compute-up-event-key ev))
 	 (orig-button-up-binding (lookup-key (current-global-map) key)))
 
     (unwind-protect
@@ -4838,7 +4839,21 @@ If optional argument STATE is positive, turn borders on."
    (progn
      (select-window (posn-window (event-start last-input-event)))
      (list last-input-event
-           (x-popup-menu last-nonmenu-event artist-popup-menu-table))))
+	   (if (display-popup-menus-p)
+	       (x-popup-menu last-nonmenu-event artist-popup-menu-table)
+	     'no-popup-menus))))
+
+  (if (eq op 'no-popup-menus)
+      ;; No popup menus. Call `tmm-prompt' instead, but with the
+      ;; up-mouse-button, if any, temporarily disabled, otherwise
+      ;; it'll interfere.
+      (let* ((key (artist-compute-up-event-key ev))
+	     (orig-button-up-binding (lookup-key (current-global-map) key)))
+	(unwind-protect
+	    (define-key (current-global-map) key 'artist-do-nothing)
+	    (setq op (tmm-prompt artist-popup-menu-table))
+	  (if orig-button-up-binding
+	      (define-key (current-global-map) key orig-button-up-binding)))))
 
   (let ((draw-fn (artist-go-get-draw-fn-from-symbol (car op)))
 	(set-fn (artist-fc-get-fn-from-symbol (car op))))
@@ -4899,7 +4914,7 @@ If optional argument STATE is positive, turn borders on."
 
 (defun artist-mouse-draw-continously (ev)
   "Generic function for shapes that require 1 point as input.
-Operation is done continously while the mouse button is hold down.
+Operation is done continuously while the mouse button is hold down.
 The event, EV, is the mouse event."
   (let* ((unshifted    (artist-go-get-symbol-shift artist-curr-go nil))
 	 (shifted      (artist-go-get-symbol-shift artist-curr-go t))
@@ -5380,8 +5395,8 @@ The event, EV, is the mouse event."
 ;; 1.   If your new drawing mode falls into one of the following
 ;;      categories, goto point 2, otherwise goto point 3.
 ;;
-;;         - Modes where the shapes are drawn continously, as long as
-;;           the mouse button is held down (continous modes).
+;;         - Modes where the shapes are drawn continuously, as long as
+;;           the mouse button is held down (continuous modes).
 ;;           Example: the erase-char mode, the pen and pen-line modes.
 ;;
 ;;         - Modes where the shape is made up of from 2 points to an
@@ -5393,7 +5408,7 @@ The event, EV, is the mouse event."
 ;;           Example: lines, rectangles
 ;;
 ;;         - Modes where the shape is made up of 1 point (1-point
-;;           modes). This mode differs from the continous modes in
+;;           modes). This mode differs from the continuous modes in
 ;;           that the shape is drawn only once when the mouse button
 ;;           is pressed.
 ;;           Examples: paste, a flood-fill, vaporize modes
@@ -5411,7 +5426,7 @@ The event, EV, is the mouse event."
 ;;    For each of the cases below, the arguments given to the init-fn,
 ;;    prep-fill-fn, arrow-set-fn and exit-fn are stated.
 ;;
-;;    If your mode matches the continous mode or the 1-point mode:
+;;    If your mode matches the continuous mode or the 1-point mode:
 ;;
 ;;      a. Create a draw-function that draws your shape. Your function
 ;;         must take x and y as arguments. The return value is not
@@ -5513,7 +5528,7 @@ The event, EV, is the mouse event."
 ;;         See `artist-draw-rect' for an example.
 ;;
 ;;         You must call the init-fn, the prep-fill-fn, arrow-set-fn
-;;         and the exit-fn at the apropriate points.
+;;         and the exit-fn at the appropriate points.
 ;;
 ;;         When artist-mouse-draw-xxx ends, the shape for your mode
 ;;         must be completely drawn.
@@ -5523,8 +5538,8 @@ The event, EV, is the mouse event."
 ;;         - artist-key-set-point-xxx for setting a point in the
 ;;           mode, to be called from `artist-key-set-point-common'.
 ;;
-;;         - artist-key-do-continously-xxx to be called from
-;;           `artist-key-do-continously-common' whenever the user
+;;         - artist-key-do-continuously-xxx to be called from
+;;           `artist-key-do-continuously-common' whenever the user
 ;;           moves around.
 ;;
 ;;         As for the artist-mouse-draw-xxx, these two functions must
@@ -5546,7 +5561,7 @@ The event, EV, is the mouse event."
 ;;         work.
 ;;
 ;;         You must call the init-fn, the prep-fill-fn, arrow-set-fn
-;;         and the exit-fn at the apropriate points.
+;;         and the exit-fn at the appropriate points.
 ;;
 ;;      e. Add your new mode to the master table, `artist-mt'.
 ;;

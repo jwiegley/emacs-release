@@ -1,7 +1,7 @@
 Known Problems with GNU Emacs
 
 Copyright (C) 1987, 1988, 1989, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-  2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+  2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
   Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
@@ -167,6 +167,17 @@ https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=239344
 
 * Crash bugs
 
+** Emacs crashes when running in a terminal, if compiled with GCC 4.5.0
+This version of GCC is buggy: see
+
+  http://debbugs.gnu.org/cgi/bugreport.cgi?bug=6031
+  http://gcc.gnu.org/bugzilla/show_bug.cgi?id=43904
+
+You can work around this error in gcc-4.5 by omitting sibling call
+optimization.  To do this, configure Emacs with
+
+ CFLAGS="-g -O2 -fno-optimize-sibling-calls" ./configure
+
 ** Emacs crashes in x-popup-dialog.
 
 This can happen if the dialog widget cannot find the font it wants to
@@ -243,17 +254,6 @@ crashes or exits unexpectedly and an attempt is made to create a new
 frame on another X display, then a Gtk+ error happens in the emacs
 server that results in an endless loop.  This is not fixed in any known
 Gtk+ version (2.14.4 being current).
-
-** Emacs compiled with Gtk+ crashes on startup on Cygwin.
-
-A typical error message is
-  ***MEMORY-ERROR***: emacs[5172]: GSlice: failed to allocate 504 bytes
-  (alignment: 512): Function not implemented
-
-Emacs supplies its own malloc, but glib (part of Gtk+) calls memalign and on
-Cygwin, that becomes the Cygwin supplied memalign.  As malloc is not the
-Cygwin malloc, the Cygwin memalign always returns ENOSYS.  A fix for this
-problem would be welcome.
 
 * General runtime problems
 
@@ -904,26 +904,6 @@ the following variables: tex-font-script-display (how much to
 lower/raise); tex-suscript-height-ratio (how much smaller than
 normal); tex-suscript-height-minimum (minimum height).
 
-** Some characters are displayed by single width glyphs.
-
-In Emacs 23.1, even in a CJK environment, several characters
-(e.g. U+00D7, MULTIPLICATION SIGN) are displayed by a single width
-glyph even if they belong to one of CJK charsets.  This is a known
-problem and will be fixed in the next version.  The workaround at the
-moment is to put something like this in your .emacs.
-
-(if (display-graphic-p)
-    (let ((fontset (face-attribute 'default :fontset)))
-      (set-fontset-font fontset '(#x80 . #xFF)
-			(font-spec :registry "iso8859-1" :script 'latin))
-      (set-fontset-font fontset 'greek  '(nil . "iso8859-7"))
-      (set-fontset-font fontset 'cyrillic  '(nil . "iso8859-5"))
-      (set-fontset-font fontset '(#x80 . #xFFFF) '(nil . "jisx0208.1983-0") 
-			nil 'append)))
-
-You may change "jisx0208.1983-0" to "gb2312.1980-0" if you are in
-Chinese language environment.
-
 * Internationalization problems
 
 ** M-{ does not work on a Spanish PC keyboard.
@@ -931,7 +911,9 @@ Chinese language environment.
 Many Spanish keyboards seem to ignore that combination.  Emacs can't
 do anything about it.
 
-** Characters from the mule-unicode charsets aren't displayed under X.
+** International characters aren't displayed under X.
+
+*** Missing X fonts
 
 XFree86 4 contains many fonts in iso10646-1 encoding which have
 minimal character repertoires (whereas the encoding part of the font
@@ -946,6 +928,12 @@ include in the fontset spec:
 mule-unicode-2500-33ff:-gnu-unifont-*-iso10646-1,\
 mule-unicode-e000-ffff:-gnu-unifont-*-iso10646-1,\
 mule-unicode-0100-24ff:-gnu-unifont-*-iso10646-1
+
+*** Athena/Lucid toolkit limitations
+
+The Athena/Lucid toolkit cannot display UTF-8 strings in the menu, so
+if you have UTF-8 buffer names, the buffer menu won't display the
+names properly.  The GTK+ toolkit works properly.
 
 ** The UTF-8/16/7 coding systems don't encode CJK (Far Eastern) characters.
 
@@ -967,79 +955,6 @@ correctly as UTF-8, assuming you don't break the composed sequences.
 If you read such characters from UTF-16 or UTF-7 data, they are
 substituted with the Unicode `replacement character', and you lose
 information.
-
-** Mule-UCS loads very slowly.
-
-Changes to Emacs internals interact badly with Mule-UCS's `un-define'
-library, which is the usual interface to Mule-UCS.  Apply the
-following patch to Mule-UCS 0.84 and rebuild it.  That will help,
-though loading will still be slower than in Emacs 20.  (Some
-distributions, such as Debian, may already have applied such a patch.)
-
---- lisp/un-define.el	6 Mar 2001 22:41:38 -0000	1.30
-+++ lisp/un-define.el	19 Apr 2002 18:34:26 -0000
-@@ -610,13 +624,21 @@ by calling post-read-conversion and pre-
-
-  (mapcar
-   (lambda (x)
--    (mapcar
--     (lambda (y)
--       (mucs-define-coding-system
--	(nth 0 y) (nth 1 y) (nth 2 y)
--	(nth 3 y) (nth 4 y) (nth 5 y) (nth 6 y))
--       (coding-system-put (car y) 'alias-coding-systems (list (car x))))
--     (cdr x)))
-+    (if (fboundp 'register-char-codings)
-+	;; Mule 5, where we don't need the eol-type specified and
-+	;; register-char-codings may be very slow for these coding
-+	;; system definitions.
-+	(let ((y (cadr x)))
-+         (mucs-define-coding-system
-+          (car x) (nth 1 y) (nth 2 y)
-+          (nth 3 y) (nth 4 y) (nth 5 y)))
-+      (mapcar
-+       (lambda (y)
-+        (mucs-define-coding-system
-+         (nth 0 y) (nth 1 y) (nth 2 y)
-+         (nth 3 y) (nth 4 y) (nth 5 y) (nth 6 y))
-+        (coding-system-put (car y) 'alias-coding-systems (list (car x)))))
-+      (cdr x)))
-   `((utf-8
-      (utf-8-unix
-       ?u "UTF-8 coding system"
-
-Note that Emacs has native support for Unicode, roughly equivalent to
-Mule-UCS's, so you may not need it.
-
-** Mule-UCS compilation problem.
-
-Emacs of old versions and XEmacs byte-compile the form `(progn progn
-...)' the same way as `(progn ...)', but Emacs of version 21.3 and the
-later process that form just as interpreter does, that is, as `progn'
-variable reference.  Apply the following patch to Mule-UCS 0.84 to
-make it compiled by the latest Emacs.
-
---- mucs-ccl.el	2 Sep 2005 00:42:23 -0000	1.1.1.1
-+++ mucs-ccl.el	2 Sep 2005 01:31:51 -0000	1.3
-@@ -639,10 +639,14 @@
-       (mucs-notify-embedment 'mucs-ccl-required name)
-       (setq ccl-pgm-list (cdr ccl-pgm-list)))
- ;   (message "MCCLREGFIN:%S" result)
--    `(progn
--       (setq mucs-ccl-facility-alist
--            (quote ,mucs-ccl-facility-alist))
--       ,@result)))
-+    ;; The only way the function is used in this package is included
-+    ;; in `mucs-package-definition-end-hook' value, where it must
-+    ;; return (possibly empty) *list* of forms.  Do this.  Do not rely
-+    ;; on byte compiler to remove extra `progn's in `(progn ...)'
-+    ;; form.
-+    `((setq mucs-ccl-facility-alist
-+           (quote ,mucs-ccl-facility-alist))
-+      ,@result)))
-
- ;;; Add hook for embedding translation informations to a package.
- (add-hook 'mucs-package-definition-end-hook
 
 ** Accented ISO-8859-1 characters are displayed as | or _.
 
@@ -1183,6 +1098,15 @@ Note that if you have Alt keys but no Meta keys, Emacs translates Alt
 into Meta.  This is because of the great importance of Meta in Emacs.
 
 ** Window-manager and toolkit-related problems
+
+*** Metacity: Resizing Emacs or ALT-Tab causes X to be unresponsive.
+
+This happens sometimes when using Metacity.  Resizing Emacs or ALT-Tab:bing
+makes the system unresponsive to the mouse or the keyboard.  Killing Emacs
+or shifting out from X11 and back again usually cures it (i.e. Ctrl-Alt-F1 
+and then Alt-F7).  A bug for it is here:
+https://bugs.launchpad.net/ubuntu/+source/metacity/+bug/231034.
+Note that a permanent fix seems to be to disable "assistive technologies".
 
 *** Gnome: Emacs receives input directly from the keyboard, bypassing XIM.
 
@@ -1504,6 +1428,21 @@ single copies.  You do not need any other drivers or options.
     EndSection
 
 * Runtime problems on character terminals
+
+** The meta key does not work on xterm.
+Typing M-x rings the terminal bell, and inserts a string like ";120~".
+For recent xterm versions (>= 216), Emacs uses xterm's modifyOtherKeys
+feature to generate strings for key combinations that are not
+otherwise usable.  One circumstance in which this can cause problems
+is if you have specified the X resource
+
+  xterm*VT100.Translations
+
+to contain translations that use the meta key.  Then xterm will not
+use meta in modified function-keys, which confuses Emacs.  To fix
+this, you can remove the X resource or put this in your init file:
+
+  (xterm-remove-modify-other-keys)
 
 ** Emacs spontaneously displays "I-search: " at the bottom of the screen.
 
@@ -2292,34 +2231,6 @@ and Language Options" applet needed to find the key combination that
 changes the keyboard layout depends on your Windows version; for XP,
 in the Languages tab, click "Details" and then "Key Settings".)
 
-** Cygwin build of Emacs hangs after rebasing Cygwin DLLs
-
-Usually, on Cygwin, one needs to rebase the DLLs if an application
-aborts with a message like this:
-
-  C:\cygwin\bin\python.exe: *** unable to remap C:\cygwin\bin\cygssl.dll to
-  same address as parent(0xDF0000) != 0xE00000
-
-However, since Cygwin DLL 1.5.17 was released, after such rebasing,
-Emacs hangs.
-
-This was reported to happen for Emacs 21.2 and also for the pretest of
-Emacs 22.1 on Cygwin.
-
-To work around this, build Emacs like this:
-
-  LDFLAGS='-Wl,--enable-auto-import -Wl,--enable-auto-image-base' ./configure
-  make LD='$(CC)'
-  make LD='$(CC)' install
-
-This produces an Emacs binary that is independent of rebasing.
-
-Note that you _must_ use LD='$(CC)' in the last two commands above, to
-prevent GCC from passing the "--image-base 0x20000000" option to the
-linker, which is what it does by default.  That option produces an
-Emacs binary with the base address 0x20000000, which will cause Emacs
-to hang after Cygwin DLLs are rebased.
-
 ** Interrupting Cygwin port of Bash from Emacs doesn't work.
 
 Cygwin 1.x builds of the ported Bash cannot be interrupted from the
@@ -2577,6 +2488,26 @@ reportedly build a working Cygwin binary of Emacs, so we recommend
 these GCC versions.  Note that these versions of GCC, 4.0.3, 4.0.4,
 4.1.1, and 4.1.2, are currently the _only_ versions known to succeed
 in building Emacs (as of v22.1).
+
+*** Building the native MS-Windows port fails due to unresolved externals
+
+The linker error messages look like this:
+
+ oo-spd/i386/ctags.o:ctags.c:(.text+0x156e): undefined reference to `_imp__re_set_syntax'
+ collect2: ld returned 1 exit status
+
+This happens because GCC finds an incompatible header regex.h
+somewhere on the include path, before the version of regex.h supplied
+with Emacs.  One such incompatible version of regex.h is part of the
+GnuWin32 Regex package.
+
+The solution is to remove the incompatible regex.h from the include
+path, when compiling Emacs.  Alternatively, re-run the configure.bat
+script with the "-isystem C:/GnuWin32/include" switch (adapt for your
+system's place where you keep the GnuWin32 include files) -- this will
+cause the compiler to search headers in the directories specified by
+the Emacs Makefile _before_ it looks in the GnuWin32 include
+directories.
 
 *** Building the native MS-Windows port with Cygwin GCC can fail.
 

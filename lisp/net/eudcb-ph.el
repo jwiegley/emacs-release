@@ -1,7 +1,7 @@
 ;;; eudcb-ph.el --- Emacs Unified Directory Client - CCSO PH/QI Backend
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Oscar Figueiredo <oscar@cpe.fr>
 ;; Maintainer: Pavel Janík <Pavel@Janik.cz>
@@ -149,8 +149,7 @@ Wait for response and return the buffer containing it."
 	  (message "Contacting server...")
 	  (setq process (eudc-ph-open-session))
 	  (if process
-	      (save-excursion
-		(set-buffer (setq buffer (process-buffer process)))
+	      (with-current-buffer (setq buffer (process-buffer process))
 		(eudc-ph-send-command process request)
 		(message "Request sent, waiting for reply...")
 		(eudc-ph-read-response process))))
@@ -173,8 +172,7 @@ SERVER is either a string naming the server or a list (NAME PORT)."
       (setq port (or (match-string 3 server)
 		     eudc-ph-default-server-port))
       (setq eudc-ph-process-buffer (get-buffer-create (format " *PH-%s*" host)))
-      (save-excursion
-	(set-buffer eudc-ph-process-buffer)
+      (with-current-buffer eudc-ph-process-buffer
 	(erase-buffer)
 	(setq eudc-ph-read-point (point))
 	(and (featurep 'xemacs) (featurep 'mule)
@@ -186,8 +184,7 @@ SERVER is either a string naming the server or a list (NAME PORT)."
       process)))
 
 (defun eudc-ph-close-session (process)
-  (save-excursion
-    (set-buffer (process-buffer process))
+  (with-current-buffer (process-buffer process)
     (eudc-ph-send-command process "quit")
     (eudc-ph-read-response process)
     (run-at-time 2 nil 'delete-process process)))

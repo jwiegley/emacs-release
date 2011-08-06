@@ -1,7 +1,7 @@
 ;;; printing.el --- printing utilities
 
-;; Copyright (C) 2000, 2001, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2000, 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   Free Software Foundation, Inc.
 
 ;; Author: Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Maintainer: Vinicius Jose Latorre <viniciusjl@ig.com.br>
@@ -3953,8 +3953,7 @@ If BUFFER is nil, the current buffer is used for printing.
 
 For more information, type \\[pr-interface-help]."
   (interactive)
-  (save-excursion
-    (set-buffer (or buffer (current-buffer)))
+  (with-current-buffer (or buffer (current-buffer))
     (pr-create-interface)))
 
 
@@ -4457,8 +4456,7 @@ image in a file with that name."
 	 (if (string= pr-ps-command "")
 	     ;; default action
 	     (let ((ps-spool-buffer (get-buffer-create ps-spool-buffer-name)))
-	       (save-excursion
-		 (set-buffer ps-spool-buffer)
+	       (with-current-buffer ps-spool-buffer
 		 (erase-buffer)
 		 (insert-file-contents-literally file))
 	       (pr-despool-print))
@@ -4956,11 +4954,10 @@ Or choose the menu option Printing/Show Settings/lpr."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; mh-e (adapted from mh-e-init.el -- Tom Vogels <tov@ece.cmu.edu>)
 
-
-(defalias 'pr-mh-get-msg-num 'mh-get-msg-num)
-(defalias 'pr-mh-show 'mh-show)
-(defalias 'pr-mh-start-of-uncleaned-message 'mh-start-of-uncleaned-message)
-(defvar mh-show-buffer nil)
+(declare-function mh-get-msg-num "mh-utils" (error-if-no-message))
+(declare-function mh-show "mh-show" (&optional message redisplay-flag))
+(declare-function mh-start-of-uncleaned-message "mh-show" ())
+(defvar mh-show-buffer)
 
 
 (defun pr-article-date ()
@@ -4976,11 +4973,11 @@ Return only the dayname, if present, weekday, month, and year."
 
 (defun pr-mh-current-message ()
   "Go to mh-inbox current message."
-  (let ((msg (or (pr-mh-get-msg-num nil) 0)))
-    (pr-mh-show)
+  (let ((msg (or (mh-get-msg-num nil) 0)))
+    (mh-show)
     (set-buffer mh-show-buffer)
     (goto-char (point-min))
-    (pr-mh-start-of-uncleaned-message)
+    (mh-start-of-uncleaned-message)
     (message "Printing message %d" msg)))
 
 
@@ -5029,8 +5026,7 @@ Return only the dayname, if present, weekday, month, and year."
 		      (symbol-value summary-buffer))
 		 (symbol-value summary-default))))
     (and (get-buffer buf)
-	 (save-excursion
-	   (set-buffer buf)
+	 (with-current-buffer buf
 	   (pr-mode-print n-up filename header-list)))))
 
 
@@ -5040,8 +5036,7 @@ Return only the dayname, if present, weekday, month, and year."
 		      (symbol-value summary-buffer))
 		 (symbol-value summary-default))))
     (and (get-buffer buf)
-	 (save-excursion
-	   (set-buffer buf)
+	 (with-current-buffer buf
 	   (pr-mode-lpr header-list)))))
 
 
@@ -5507,7 +5502,7 @@ If menu binding was not done, calls `pr-menu-bind'."
 (defun pr-show-setup (settings buffer-name)
   (with-output-to-temp-buffer buffer-name
     (princ settings)
-    (print-help-return-message)))
+    (help-print-return-message)))
 
 
 (defun pr-complete-alist (prompt alist default)
@@ -5634,8 +5629,7 @@ If menu binding was not done, calls `pr-menu-bind'."
 	status)
     (setq args (pr-remove-nil-from-list args))
     ;; *Printing Command Output* == show command & args
-    (save-excursion
-      (set-buffer buffer)
+    (with-current-buffer buffer
       (goto-char (point-max))
       (insert (format "%s %S\n" cmd args)))
     ;; *Printing Command Output* == show any return message from command
@@ -5646,8 +5640,7 @@ If menu binding was not done, calls `pr-menu-bind'."
 	     ((quit error)
 	      (error-message-string data)))))
     ;; *Printing Command Output* == show exit status
-    (save-excursion
-      (set-buffer buffer)
+    (with-current-buffer buffer
       (goto-char (point-max))
       (insert (format "Exit status: %s\n\n" status)))
     ;; message if error status
@@ -5840,8 +5833,7 @@ If menu binding was not done, calls `pr-menu-bind'."
 	  (blist (buffer-list))
 	  found)
       (while (and (not found) blist)
-	(save-excursion
-	  (set-buffer (car blist))
+	(with-current-buffer (car blist)
 	  (and (eq major-mode 'dired-mode)
 	       (save-excursion
 		 (goto-char (point-min))
@@ -5865,9 +5857,8 @@ If menu binding was not done, calls `pr-menu-bind'."
 			 pop-up-frames)
 		     (and (or buffer
 			      (file-readable-p file))
-			  (save-excursion
-			    (set-buffer (or buffer
-					    (find-file-noselect file)))
+			  (with-current-buffer (or buffer
+                                                   (find-file-noselect file))
 			    (funcall fun)
 			    (or buffer
 				(kill-buffer (current-buffer))))))))
@@ -6048,8 +6039,7 @@ COMMAND.exe, COMMAND.bat and COMMAND.com in this order."
 
 
 (defmacro pr-interface-save (&rest body)
-  `(save-excursion
-     (set-buffer pr-i-buffer)
+  `(with-current-buffer pr-i-buffer
      ,@body))
 
 

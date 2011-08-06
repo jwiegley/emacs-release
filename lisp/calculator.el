@@ -1,7 +1,7 @@
 ;;; calculator.el --- a [not so] simple calculator for Emacs
 
 ;; Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004,  2005, 2006, 2007,
-;;   2008, 2009 Free Software Foundation, Inc.
+;;   2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Eli Barzilay <eli@barzilay.org>
 ;; Keywords: tools, convenience
@@ -724,8 +724,7 @@ See the documentation for `calculator-mode' for more information."
     (progn
       (cond
         ((not (get-buffer-window calculator-buffer))
-         (let ((split-window-keep-point nil)
-               (window-min-height 2))
+         (let ((window-min-height 2))
            ;; maybe leave two lines for our window because of the normal
            ;; `raised' modeline in Emacs 21
            (select-window

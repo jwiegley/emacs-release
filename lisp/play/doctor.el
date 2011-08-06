@@ -1,7 +1,7 @@
 ;;; doctor.el --- psychological help for frustrated users
 
 ;; Copyright (C) 1985, 1987, 1994, 1996, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: games
@@ -26,21 +26,6 @@
 ;; The single entry point `doctor', simulates a Rogerian analyst using
 ;; phrase-production techniques similar to the classic ELIZA demonstration
 ;; of pseudo-AI.
-
-;; This file was for a while censored by the Communications Decency Act.
-;; Some of its features were removed.  The law was promoted as a ban
-;; on pornography, but it bans far more than that.  The doctor program
-;; did not contain pornography, but part of it was prohibited
-;; nonetheless.
-
-;; The Supreme Court overturned the Communications Decency Act, but
-;; Congress is sure to look for some other way to try to end free speech.
-;; For information on US government censorship of the Internet, and
-;; what you can do to protect freedom of the press, see the web
-;; site http://www.vtw.org/
-;; See also the file etc/CENSORSHIP in the Emacs distribution
-;; for a discussion of why and how this file was censored, and the
-;; political implications of the issue.
 
 ;;; Code:
 
@@ -67,11 +52,11 @@
 (defvar sent)           (defvar sexlst)       (defvar shortbeclst)
 (defvar shortlst)       (defvar something)    (defvar sportslst)
 (defvar stallmanlst)    (defvar states)       (defvar subj)
-(defvar suicide-flag)   (defvar sure)         (defvar things)
-(defvar thlst)          (defvar toklst)       (defvar typos)
-(defvar verb)           (defvar want)         (defvar whatwhen)
-(defvar whereoutp)      (defvar whysay)       (defvar whywant)
-(defvar zippy-flag)     (defvar zippylst)
+(defvar suicide-flag)   (defvar sure)         (defvar thing)
+(defvar things)         (defvar thlst)        (defvar toklst)
+(defvar typos)          (defvar verb)         (defvar want)
+(defvar whatwhen)       (defvar whereoutp)    (defvar whysay)
+(defvar whywant)        (defvar zippy-flag)   (defvar zippylst)
 
 (defun doc// (x) x)
 
@@ -300,24 +285,19 @@ reads the sentence before point, and prints the Doctor's answer."
 	'((something)
 	  (more)
 	  (how you feel)))
+  (make-local-variable 'thing)
+  (setq thing
+	'((your life)
+	  (your sex life)))
   (make-local-variable 'things)
   (setq things
-	'(;(your interests in computers)   ;; let's make this less computer oriented
-	  ;(the machines you use)
-	  (your plans)
-	  ;(your use of computers)
-	  (your life)
-	  ;(other machines you use)
+	'((your plans)
 	  (the people you hang around with)
-	  ;(computers you like)
 	  (problems at school)
 	  (any hobbies you have)
-	  ;(other computers you use)
-	  (your sex life)
 	  (hangups you have)
 	  (your inhibitions)
 	  (some problems in your childhood)
-	  ;(knowledge of computers)
 	  (some problems at home)))
   (make-local-variable 'describe)
   (setq describe
@@ -407,6 +387,7 @@ reads the sentence before point, and prints the Doctor's answer."
 		      ((doc$ please) go into more detail \.)))
   (make-local-variable 'thlst)
   (setq thlst '(
+		((doc$ maybe)(doc$ thing)(doc$ isrelated) this \.)
 		((doc$ maybe)(doc$ things)(doc$ arerelated) this \.)
 		(is it because of (doc$ things) that you are going through all this \?)
 		(how do you reconcile (doc$ things) \? )
@@ -1209,7 +1190,8 @@ the subject noun, and return the portion of the sentence following it."
 (defun doctor-adverbp (xx)
   (let ((xxstr (doctor-make-string xx)))
     (and (>= (length xxstr) 2)
-	 (string-equal (substring (doctor-make-string xx) -2) "ly"))))
+	 (string-equal (substring (doctor-make-string xx) -2) "ly")
+	 (not (memq xx '(family fly jelly rally))))))
 
 (defun doctor-articlep (x)
   (memq x '(the a an)))

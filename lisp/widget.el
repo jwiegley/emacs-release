@@ -1,7 +1,7 @@
 ;;; widget.el --- a library of user interface components
 ;;
 ;; Copyright (C) 1996, 1997, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Keywords: help, extensions, faces, hypermedia
@@ -85,7 +85,7 @@ create identical widgets:
 
 The third argument DOC is a documentation string for the widget."
   (put name 'widget-type (cons class args))
-  (put name 'widget-documentation doc)
+  (put name 'widget-documentation (purecopy doc))
   name)
 
 ;; This is used by external widget code (in W3, at least).

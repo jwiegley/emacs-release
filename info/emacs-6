@@ -2,11 +2,11 @@ This is ../../info/emacs, produced by makeinfo version 4.11 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.1.
+updated for Emacs version 23.2.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,6 +25,356 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Emacs: (emacs).	The extensible self-documenting text editor.
 END-INFO-DIR-ENTRY
+
+
+File: emacs,  Node: Init Syntax,  Next: Init Examples,  Up: Init File
+
+57.6.1 Init File Syntax
+-----------------------
+
+The init file contains one or more Lisp expressions.  Each of these
+consists of a function name followed by arguments, all surrounded by
+parentheses.  For example, `(setq fill-column 60)' calls the function
+`setq' to set the variable `fill-column' (*note Filling::) to 60.
+
+   You can set any Lisp variable with `setq', but with certain
+variables `setq' won't do what you probably want in the `.emacs' file.
+Some variables automatically become buffer-local when set with `setq';
+what you want in `.emacs' is to set the default value, using
+`setq-default'.  Some customizable minor mode variables do special
+things to enable the mode when you set them with Customize, but
+ordinary `setq' won't do that; to enable the mode in your `.emacs'
+file, call the minor mode command.  The following section has examples
+of both of these methods.
+
+   The second argument to `setq' is an expression for the new value of
+the variable.  This can be a constant, a variable, or a function call
+expression.  In `.emacs', constants are used most of the time.  They
+can be:
+
+Numbers:
+     Numbers are written in decimal, with an optional initial minus
+     sign.
+
+Strings:
+     Lisp string syntax is the same as C string syntax with a few extra
+     features.  Use a double-quote character to begin and end a string
+     constant.
+
+     In a string, you can include newlines and special characters
+     literally.  But often it is cleaner to use backslash sequences for
+     them: `\n' for newline, `\b' for backspace, `\r' for carriage
+     return, `\t' for tab, `\f' for formfeed (control-L), `\e' for
+     escape, `\\' for a backslash, `\"' for a double-quote, or `\OOO'
+     for the character whose octal code is OOO.  Backslash and
+     double-quote are the only characters for which backslash sequences
+     are mandatory.
+
+     `\C-' can be used as a prefix for a control character, as in
+     `\C-s' for ASCII control-S, and `\M-' can be used as a prefix for
+     a Meta character, as in `\M-a' for `Meta-A' or `\M-\C-a' for
+     `Control-Meta-A'.
+
+     *Note Init Non-ASCII::, for information about including non-ASCII
+     in your init file.
+
+Characters:
+     Lisp character constant syntax consists of a `?' followed by
+     either a character or an escape sequence starting with `\'.
+     Examples: `?x', `?\n', `?\"', `?\)'.  Note that strings and
+     characters are not interchangeable in Lisp; some contexts require
+     one and some contexts require the other.
+
+     *Note Init Non-ASCII::, for information about binding commands to
+     keys which send non-ASCII characters.
+
+True:
+     `t' stands for `true'.
+
+False:
+     `nil' stands for `false'.
+
+Other Lisp objects:
+     Write a single-quote (`'') followed by the Lisp object you want.
+
+
+File: emacs,  Node: Init Examples,  Next: Terminal Init,  Prev: Init Syntax,  Up: Init File
+
+57.6.2 Init File Examples
+-------------------------
+
+Here are some examples of doing certain commonly desired things with
+Lisp expressions:
+
+   * Add a directory to the variable `load-path'.  You can then put
+     Lisp libraries that are not included with Emacs in this directory,
+     and load them with `M-x load-library'.  *Note Lisp Libraries::.
+
+          (add-to-list 'load-path "/path/to/lisp/libraries")
+
+   * Make <TAB> in C mode just insert a tab if point is in the middle
+     of a line.
+
+          (setq c-tab-always-indent nil)
+
+     Here we have a variable whose value is normally `t' for `true' and
+     the alternative is `nil' for `false'.
+
+   * Make searches case sensitive by default (in all buffers that do not
+     override this).
+
+          (setq-default case-fold-search nil)
+
+     This sets the default value, which is effective in all buffers
+     that do not have local values for the variable (*note Locals::).
+     Setting `case-fold-search' with `setq' affects only the current
+     buffer's local value, which is probably not what you want to do in
+     an init file.
+
+   * Specify your own email address, if Emacs can't figure it out
+     correctly.
+
+          (setq user-mail-address "cheney@torture.gov")
+
+     Various Emacs packages, such as Message mode, consult
+     `user-mail-address' when they need to know your email address.
+     *Note Mail Headers::.
+
+   * Make Text mode the default mode for new buffers.
+
+          (setq-default major-mode 'text-mode)
+
+     Note that `text-mode' is used because it is the command for
+     entering Text mode.  The single-quote before it makes the symbol a
+     constant; otherwise, `text-mode' would be treated as a variable
+     name.
+
+   * Set up defaults for the Latin-1 character set which supports most
+     of the languages of Western Europe.
+
+          (set-language-environment "Latin-1")
+
+   * Turn off Line Number mode, a global minor mode.
+
+          (line-number-mode 0)
+
+   * Turn on Auto Fill mode automatically in Text mode and related
+     modes.
+
+          (add-hook 'text-mode-hook
+            '(lambda () (auto-fill-mode 1)))
+
+     This shows how to add a hook function to a normal hook variable
+     (*note Hooks::).  The function we supply is a list starting with
+     `lambda', with a single-quote in front of it to make it a list
+     constant rather than an expression.
+
+     It's beyond the scope of this manual to explain Lisp functions,
+     but for this example it is enough to know that the effect is to
+     execute `(auto-fill-mode 1)' when Text mode is entered.  You can
+     replace that with any other expression that you like, or with
+     several expressions in a row.
+
+     Emacs comes with a function named `turn-on-auto-fill' whose
+     definition is `(lambda () (auto-fill-mode 1))'.  Thus, a simpler
+     way to write the above example is as follows:
+
+          (add-hook 'text-mode-hook 'turn-on-auto-fill)
+
+   * Load the installed Lisp library named `foo' (actually a file
+     `foo.elc' or `foo.el' in a standard Emacs directory).
+
+          (load "foo")
+
+     When the argument to `load' is a relative file name, not starting
+     with `/' or `~', `load' searches the directories in `load-path'
+     (*note Lisp Libraries::).
+
+   * Load the compiled Lisp file `foo.elc' from your home directory.
+
+          (load "~/foo.elc")
+
+     Here an absolute file name is used, so no searching is done.
+
+   * Tell Emacs to find the definition for the function `myfunction' by
+     loading a Lisp library named `mypackage' (i.e. a file
+     `mypackage.elc' or `mypackage.el'):
+
+          (autoload 'myfunction "mypackage" "Do what I say." t)
+
+     Here the string `"Do what I say."' is the function's documentation
+     string.  You specify it in the `autoload' definition so it will be
+     available for help commands even when the package is not loaded.
+     The last argument, `t', indicates that this function is
+     interactive; that is, it can be invoked interactively by typing
+     `M-x myfunction <RET>' or by binding it to a key.  If the function
+     is not interactive, omit the `t' or use `nil'.
+
+   * Rebind the key `C-x l' to run the function `make-symbolic-link'
+     (*note Init Rebinding::).
+
+          (global-set-key "\C-xl" 'make-symbolic-link)
+
+     or
+
+          (define-key global-map "\C-xl" 'make-symbolic-link)
+
+     Note once again the single-quote used to refer to the symbol
+     `make-symbolic-link' instead of its value as a variable.
+
+   * Do the same thing for Lisp mode only.
+
+          (define-key lisp-mode-map "\C-xl" 'make-symbolic-link)
+
+   * Redefine all keys which now run `next-line' in Fundamental mode so
+     that they run `forward-line' instead.
+
+          (substitute-key-definition 'next-line 'forward-line
+                                     global-map)
+
+   * Make `C-x C-v' undefined.
+
+          (global-unset-key "\C-x\C-v")
+
+     One reason to undefine a key is so that you can make it a prefix.
+     Simply defining `C-x C-v ANYTHING' will make `C-x C-v' a prefix,
+     but `C-x C-v' must first be freed of its usual non-prefix
+     definition.
+
+   * Make `$' have the syntax of punctuation in Text mode.  Note the
+     use of a character constant for `$'.
+
+          (modify-syntax-entry ?\$ "." text-mode-syntax-table)
+
+   * Enable the use of the command `narrow-to-region' without
+     confirmation.
+
+          (put 'narrow-to-region 'disabled nil)
+
+   * Adjusting the configuration to various platforms and Emacs
+     versions.
+
+     Users typically want Emacs to behave the same on all systems, so
+     the same init file is right for all platforms.  However, sometimes
+     it happens that a function you use for customizing Emacs is not
+     available on some platforms or in older Emacs versions.  To deal
+     with that situation, put the customization inside a conditional
+     that tests whether the function or facility is available, like
+     this:
+
+          (if (fboundp 'blink-cursor-mode)
+              (blink-cursor-mode 0))
+
+          (if (boundp 'coding-category-utf-8)
+              (set-coding-priority '(coding-category-utf-8)))
+
+     You can also simply disregard the errors that occur if the
+     function is not defined.
+
+          (condition case ()
+              (set-face-background 'region "grey75")
+            (error nil))
+
+     A `setq' on a variable which does not exist is generally harmless,
+     so those do not need a conditional.
+
+
+File: emacs,  Node: Terminal Init,  Next: Find Init,  Prev: Init Examples,  Up: Init File
+
+57.6.3 Terminal-specific Initialization
+---------------------------------------
+
+Each terminal type can have a Lisp library to be loaded into Emacs when
+it is run on that type of terminal.  For a terminal type named
+TERMTYPE, the library is called `term/TERMTYPE' and it is found by
+searching the directories `load-path' as usual and trying the suffixes
+`.elc' and `.el'.  Normally it appears in the subdirectory `term' of
+the directory where most Emacs libraries are kept.
+
+   The usual purpose of the terminal-specific library is to map the
+escape sequences used by the terminal's function keys onto more
+meaningful names, using `input-decode-map' (or `function-key-map'
+before it).  See the file `term/lk201.el' for an example of how this is
+done.  Many function keys are mapped automatically according to the
+information in the Termcap data base; the terminal-specific library
+needs to map only the function keys that Termcap does not specify.
+
+   When the terminal type contains a hyphen, only the part of the name
+before the first hyphen is significant in choosing the library name.
+Thus, terminal types `aaa-48' and `aaa-30-rv' both use the library
+`term/aaa'.  The code in the library can use `(getenv "TERM")' to find
+the full terminal type name.
+
+   The library's name is constructed by concatenating the value of the
+variable `term-file-prefix' and the terminal type.  Your `.emacs' file
+can prevent the loading of the terminal-specific library by setting
+`term-file-prefix' to `nil'.
+
+   Emacs runs the hook `term-setup-hook' at the end of initialization,
+after both your `.emacs' file and any terminal-specific library have
+been read in.  Add hook functions to this hook if you wish to override
+part of any of the terminal-specific libraries and to define
+initializations for terminals that do not have a library.  *Note
+Hooks::.
+
+
+File: emacs,  Node: Find Init,  Next: Init Non-ASCII,  Prev: Terminal Init,  Up: Init File
+
+57.6.4 How Emacs Finds Your Init File
+-------------------------------------
+
+Normally Emacs uses the environment variable `HOME' (*note HOME:
+General Variables.) to find `.emacs'; that's what `~' means in a file
+name.  If `.emacs' is not found inside `~/' (nor `.emacs.el'), Emacs
+looks for `~/.emacs.d/init.el' (which, like `~/.emacs.el', can be
+byte-compiled).
+
+   However, if you run Emacs from a shell started by `su', Emacs tries
+to find your own `.emacs', not that of the user you are currently
+pretending to be.  The idea is that you should get your own editor
+customizations even if you are running as the super user.
+
+   More precisely, Emacs first determines which user's init file to use.
+It gets your user name from the environment variables `LOGNAME' and
+`USER'; if neither of those exists, it uses effective user-ID.  If that
+user name matches the real user-ID, then Emacs uses `HOME'; otherwise,
+it looks up the home directory corresponding to that user name in the
+system's data base of users.
+
+
+File: emacs,  Node: Init Non-ASCII,  Prev: Find Init,  Up: Init File
+
+57.6.5 Non-ASCII Characters in Init Files
+-----------------------------------------
+
+Language and coding systems may cause problems if your init file
+contains non-ASCII characters, such as accented letters, in strings or
+key bindings.
+
+   If you want to use non-ASCII characters in your init file, you
+should put a `-*-coding: CODING-SYSTEM-*-' tag on the first line of the
+init file, and specify a coding system that supports the character(s)
+in question.  *Note Recognize Coding::.  This is because the defaults
+for decoding non-ASCII text might not yet be set up by the time Emacs
+reads those parts of your init file which use such strings, possibly
+leading Emacs to decode those strings incorrectly.  You should then
+avoid adding Emacs Lisp code that modifies the coding system in other
+ways, such as calls to `set-language-environment'.
+
+   To bind non-ASCII keys, you must use a vector (*note Init
+Rebinding::).  The string syntax cannot be used, since the non-ASCII
+characters will be interpreted as meta keys.  For instance:
+
+     (global-set-key [?CHAR] 'some-function)
+
+Type `C-q', followed by the key you want to bind, to insert CHAR.
+
+   *Warning:* if you change the keyboard encoding, or change between
+multibyte and unibyte mode, or anything that would alter which code
+`C-q' would insert for that character, this key binding may stop
+working.  It is therefore advisable to use one and only one coding
+system, for your init file as well as the files you edit.  For example,
+don't mix the `latin-1' and `latin-9' coding systems.
 
 
 File: emacs,  Node: Quitting,  Next: Lossage,  Prev: Customization,  Up: Top
@@ -172,8 +522,8 @@ happened--Emacs ought to be treating the <Backspace> key as <DEL>, but
 it isn't.
 
    Some keyboards also have a <Delete> key, which is ordinarily used to
-forwards.  If this key deletes backward in Emacs, that too suggests
-Emacs got the wrong information--but in the opposite sense.
+delete forwards.  If this key deletes backward in Emacs, that too
+suggests Emacs got the wrong information--but in the opposite sense.
 
    On a text-only terminal, if you find the usual erasure key prompts
 for a Help command, like `Control-h', instead of deleting a character,
@@ -416,7 +766,7 @@ order to do so effectively, you must know when and how to do it.
 
    Before reporting a bug, it is a good idea to see if it is already
 known.  You can find the list of known problems in the file
-`etc/PROBLEMS' in the Emacs distribution; type `C-h C-e' to read it.
+`etc/PROBLEMS' in the Emacs distribution; type `C-h C-p' to read it.
 Some additional user-level problems can be found in *note Bugs and
 problems: (efaq)Bugs and problems.  Looking up your problem in these
 two documents might provide you with a solution or a work-around, or
@@ -540,10 +890,8 @@ File: emacs,  Node: Checklist,  Next: Sending Patches,  Prev: Understanding Bug 
 ==============================
 
 The best way to send a bug report is to mail it electronically to the
-Emacs maintainers at <bug-gnu-emacs@gnu.org>, or to
-<emacs-pretest-bug@gnu.org> if you are pretesting an Emacs beta
-release.  (If you want to suggest a change as an improvement, use the
-same address.)
+Emacs maintainers at <bug-gnu-emacs@gnu.org>.  (If you want to suggest
+a change as an improvement, use the same address.)
 
    If you'd like to read the bug reports, you can find them on the
 newsgroup `gnu.emacs.bug'; keep in mind, however, that as a spectator
@@ -986,10 +1334,13 @@ If you have not yet started work, it is useful to contact
 <emacs-devel@gnu.org> before you start; it might be possible to suggest
 ways to make your extension fit in better with the rest of Emacs.
 
-   The development version of Emacs can be downloaded from the CVS
+   The development version of Emacs can be downloaded from the
 repository where it is actively maintained by a group of developers.
 See the Emacs project page `http://savannah.gnu.org/projects/emacs/'
 for details.
+
+   For more information on how to contribute, see the `etc/CONTRIBUTE'
+file in the Emacs distribution.
 
 
 File: emacs,  Node: Service,  Next: Copying,  Prev: Contributing,  Up: Top
@@ -2456,8 +2807,10 @@ them.
 
 `-Q'
 `--quick'
-     Start emacs with minimum customizations.  This is like using `-q',
-     `--no-site-file', and `--no-splash' together.
+     Start emacs with minimum customizations, similar to using `-q',
+     `--no-site-file', and `--no-splash' together.  This also stops
+     Emacs from processing X resources by setting `inhibit-x-resources'
+     to `t' (*note Resources::).
 
 `-daemon'
 `--daemon'
@@ -2481,21 +2834,6 @@ them.
 `--debug-init'
      Enable the Emacs Lisp debugger for errors in the init file.  *Note
      Entering the Debugger on an Error: (elisp)Error Debugging.
-
-`--unibyte'
-`--no-multibyte'
-     Do almost everything with single-byte buffers and strings.  All
-     buffers and strings are unibyte unless you (or a Lisp program)
-     explicitly ask for a multibyte buffer or string.  (Note that Emacs
-     always loads Lisp files in multibyte mode, even if `--unibyte' is
-     specified; see *note Enabling Multibyte::.)  Setting the
-     environment variable `EMACS_UNIBYTE' has the same effect (*note
-     General Variables::).
-
-`--multibyte'
-`--no-unibyte'
-     Inhibit the effect of `EMACS_UNIBYTE', so that Emacs uses
-     multibyte characters by default, as usual.
 
    ---------- Footnotes ----------
 
@@ -2619,12 +2957,6 @@ be set, but it uses their values if they are set.
 `CDPATH'
      Used by the `cd' command to search for the directory you specify,
      when you specify a relative directory name.
-
-`EMACS_UNIBYTE'
-     Defining this environment variable with a nonempty value directs
-     Emacs to do almost everything with single-byte buffers and
-     strings.  It is equivalent to using the `--unibyte' command-line
-     option on each invocation.  *Note Initial Options::.
 
 `EMACSDATA'
      Directory for the architecture-independent files that come with
@@ -2950,9 +3282,8 @@ File: emacs,  Node: Font X,  Next: Colors,  Prev: Display X,  Up: Emacs Invocati
 C.7 Font Specification Options
 ==============================
 
-By default, Emacs displays text in X using a twelve point monospace
-font.  You can specify a different font using the command line option
-`-fn FONT' (or `--font', which is an alias for `-fn').
+You can use the command line option `-fn FONT' (or `--font', which is
+an alias for `-fn') to specify a default font:
 
 `-fn FONT'
 `--font=FONT'
@@ -2960,212 +3291,13 @@ font.  You can specify a different font using the command line option
 
    When passing a font specification to Emacs on the command line, you
 may need to "quote" it, by enclosing it in quotation marks, if it
-contains characters that the shell treats specially (e.g. spaces).
-Here is an example:
+contains characters that the shell treats specially (e.g. spaces).  For
+example:
 
      emacs -fn "DejaVu Sans Mono-12"
 
-   You can also specify the font using your X resources file (usually a
-file named `.Xdefaults' or `.Xresources' in your home directory), by
-adding a line like this:
-
-     emacs.font: FONT
-
-You must restart X, or use the `xrdb' command, for the X resources file
-to take effect.  *Note Resources::.  When specifying a font in your X
-resources file, you should not quote it.
-
-   Emacs recognizes two types of fonts: "client-side" fonts, which are
-provided by the Xft and Fontconfig libraries, and "server-side" fonts,
-which are provided by the X server itself.  Most client-side fonts
-support advanced font features such as antialiasing and subpixel
-hinting, while server-side fonts do not.
-
-   There are four different ways to express a "font name".  The first
-format consists of "Fontconfig patterns".  Fontconfig patterns match
-only client-side fonts provided by Xft and Fontconfig, and have the
-following form:
-
-     FONTNAME[-FONTSIZE][:NAME1=VALUES1][:NAME2=VALUES2]...
-
-Within this format, any of the elements in braces may be omitted.
-Here, FONTNAME is the "family name" of the font, such as `Monospace' or
-`DejaVu Serif'; FONTSIZE is the "point size" of the font (one
-"printer's point" is about 1/72 of an inch); and the `NAME=VALUES'
-entries specify settings such as the slant and weight of the font.
-Each VALUES may be a single value, or a list of values separated by
-commas.  In addition, some property values are valid with only one kind
-of property name, in which case the `NAME=' part may be omitted.
-
-   Here is a list of common font properties:
-
-`slant'
-     One of `italic', `oblique' or `roman'.
-
-`weight'
-     One of `light', `medium', `demibold', `bold' or `black'.
-
-`style'
-     Some fonts define special styles which are a combination of slant
-     and weight.  For instance, the font `Dejavu Sans' defines the style
-     `book'.  This property, if specified, overrides the slant and
-     weight properties.
-
-`width'
-     One of `condensed', `normal', or `expanded'.
-
-`spacing'
-     One of `monospace', `proportional', `dual-width', or `charcell'.
-
-Here are some examples of Fontconfig patterns:
-
-     Monospace
-     Monospace-12
-     Monospace-12:bold
-     DejaVu Sans Mono:bold:italic
-     Monospace-12:weight=bold:slant=italic
-
-   See the Fontconfig manual for a more detailed description of
-Fontconfig patterns.  This manual is located in the file
-`fontconfig-user.html', which is distributed with Fontconfig.  It is
-also available online at `http://fontconfig.org/fontconfig-user.html'.
-In particular, the manual describes additional font properties that
-influence how the font is hinted, antialiased, or scaled.
-
-   The second way to specify a font is to use a "GTK font description".
-Like Fontconfig patterns, GTK font descriptions match only client-side
-fonts provided by Xft and Fontconfig.  They have the syntax
-
-     FONTNAME [PROPERTIES] [FONTSIZE]
-
-where FONTNAME is the family name, PROPERTIES is a list of property
-values separated by spaces, and FONTSIZE is the point size.  The
-properties that you may specify are as follows:
-
-`style'
-     One of `roman', `italic' or `oblique'.  If omitted, the `roman'
-     style is used.
-
-`weight'
-     One of `medium', `ultra-light', `light', `semi-bold', or `bold'.
-     If omitted, `medium' weight is used.
-
-Here are some examples of GTK font descriptions:
-
-     Monospace 12
-     Monospace Bold Italic 12
-
-   The third way to specify a font is to use an "XLFD" ("X Logical Font
-Description"), which is the traditional method for specifying fonts
-under X.  Each XLFD consists of fourteen words or numbers, separated by
-dashes, like this:
-
-     -misc-fixed-medium-r-semicondensed--13-*-*-*-c-60-iso8859-1
-
-A wildcard character (`*') in an XLFD matches any sequence of
-characters (including none), and `?' matches any single character.
-However, matching is implementation-dependent, and can be inaccurate
-when wildcards match dashes in a long name.  For reliable results,
-supply all 14 dashes and use wildcards only within a field.  Case is
-insignificant in an XLFD.  The syntax for an XLFD is as follows:
-
-     -MAKER-FAMILY-WEIGHT-SLANT-WIDTHTYPE-STYLE...
-     ...-PIXELS-HEIGHT-HORIZ-VERT-SPACING-WIDTH-REGISTRY-ENCODING
-
-The entries have the following meanings:
-
-MAKER
-     The name of the font manufacturer.
-
-FAMILY
-     The name of the font family (e.g. `courier').
-
-WEIGHT
-     The font weight--normally either `bold', `medium' or `light'.
-     Some font names support other values.
-
-SLANT
-     The font slant--normally `r' (roman), `i' (italic), `o' (oblique),
-     `ri' (reverse italic), or `ot' (other).  Some font names support
-     other values.
-
-WIDTHTYPE
-     The font width--normally `condensed', `extended', `semicondensed'
-     or `normal' (some font names support other values).
-
-STYLE
-     An optional additional style name.  Usually it is empty--most long
-     font names have two hyphens in a row at this point.
-
-PIXELS
-     The font height, in pixels.
-
-HEIGHT
-     The font height on the screen, measured in tenths of a printer's
-     point.  This is the point size of the font, times ten.  For a given
-     vertical resolution, HEIGHT and PIXELS are proportional;
-     therefore, it is common to specify just one of them and use `*'
-     for the other.
-
-HORIZ
-     The horizontal resolution, in pixels per inch, of the screen for
-     which the font is intended.
-
-VERT
-     The vertical resolution, in pixels per inch, of the screen for
-     which the font is intended.  Normally the resolution of the fonts
-     on your system is the right value for your screen; therefore, you
-     normally specify `*' for this and HORIZ.
-
-SPACING
-     This is `m' (monospace), `p' (proportional) or `c' (character
-     cell).
-
-WIDTH
-     The average character width, in pixels, multiplied by ten.
-
-REGISTRY
-ENCODING
-     The X font character set that the font depicts.  (X font character
-     sets are not the same as Emacs character sets, but they are
-     similar.)  You can use the `xfontsel' program to check which
-     choices you have.  Normally you should use `iso8859' for REGISTRY
-     and `1' for ENCODING.
-
-   Some fonts have shorter nicknames, which you can use instead of a
-normal font specification.  For instance,
-
-     -misc-fixed-medium-r-semicondensed--13-*-*-*-c-60-iso8859-1
-
-is equivalent to `6x13'.  This is the fourth and final method of
-specifying a font.
-
-   You will probably want to use a fixed-width default font--that is, a
-font in which all characters have the same width.  Here's how to use
-the `fc-list' command to list all fixed-width Xft and Fontconfig fonts
-available on your system:
-
-     fc-list :spacing=mono
-     fc-list :spacing=charcell
-
-   For server-side X fonts, any font with `m' or `c' in the SPACING
-field of the XLFD is a fixed-width font.  Here's how to use the
-`xlsfonts' program to list all the fixed-width fonts available on your
-system:
-
-     xlsfonts -fn '*x*' | egrep "^[0-9]+x[0-9]+"
-     xlsfonts -fn '*-*-*-*-*-*-*-*-*-*-*-m*'
-     xlsfonts -fn '*-*-*-*-*-*-*-*-*-*-*-c*'
-
-To see what a particular font looks like, use the `xfd' command.  For
-example:
-
-     xfd -fn 6x13
-
-displays the entire font `6x13'.
-
-   While running Emacs, you can set the font of a specific kind of text
-(*note Faces::), or of a particular frame (*note Frame Parameters::).
+   *Note Fonts::, for other ways to specify the default font and font
+name formats.
 
 
 File: emacs,  Node: Colors,  Next: Window Size X,  Prev: Font X,  Up: Emacs Invocation
@@ -3283,6 +3415,12 @@ position of the initial Emacs frame:
 `-fs'
 `--fullscreen'
      Specify that width and height shall be the size of the screen.
+     Normally no window manager decorations are shown.
+
+`-mm'
+`--maximized'
+     Specify that the Emacs frame shall be maximized.  This normally
+     means that the frame has window manager decorations.
 
 `-fh'
 `--fullheight'
@@ -3347,10 +3485,10 @@ with no tool bar, use an X resource to specify "no tool bar" (*note
 Table of Resources::); then Emacs will already know there's no tool bar
 when it processes the specified geometry.
 
-   When using one of `--fullscreen', `--fullwidth' or `--fullheight'
-there may be some space around the frame anyway.  That is because Emacs
-rounds the sizes so they are an even number of character heights and
-widths.
+   When using one of `--fullscreen', `--maximized', `--fullwidth' or
+`--fullheight' there may be some space around the frame anyway.  That
+is because Emacs rounds the sizes so they are an even number of
+character heights and widths.
 
    Some window managers have options that can make them ignore both
 program-specified and user-specified positions.  If these are set,
@@ -3547,10 +3685,17 @@ all borders, but overrides this value with 4 for the external border:
      emacs.borderWidth: 4
 
    The order in which the lines appear in the file does not matter.
-Also, command-line options always override the X resources file.
+One way to experiment with the effect of different resource settings is
+to use the `editres' program.  See the `editres' man page for more
+details.
 
-   The following X command-line options affect how X resources are
-processed:
+   Emacs does not process X resources at all if you set the variable
+`inhibit-x-resources' to a non-`nil' value, or if you specify the `-Q'
+(or `--quick') command-line argument (*note Initial Options::).  (The
+`-Q' argument automatically sets `inhibit-x-resources' to `t'.)
+
+   In addition, you can use the following command-line options to
+override the X resources file:
 
 `-name NAME'
 `--name=NAME'
@@ -3580,10 +3725,6 @@ processed:
      "FILENAME"' to include a file full of resource specifications.
      Resource values specified with `-xrm' take precedence over all
      other resource specifications.
-
-   One way to experiment with the effect of different resource settings
-is to use the `editres' program.  See the `editres' man page for more
-details.
 
 
 File: emacs,  Node: Table of Resources,  Next: Face Resources,  Prev: Resources,  Up: X Resources
@@ -3616,7 +3757,7 @@ class that it belongs to:
      Use `off' or `false' to turn cursor blinking off.
 
 `font' (class `Font')
-     Font name for the `default' font.  *Note Font X::.  You can also
+     Font name for the `default' font.  *Note Fonts::.  You can also
      specify a fontset name (*note Fontsets::).
 
 `fontBackend' (class `FontBackend')
@@ -3643,8 +3784,9 @@ class that it belongs to:
 
 `fullscreen' (class `Fullscreen')
      The desired fullscreen size.  The value can be one of `fullboth',
-     `fullwidth' or `fullheight', which correspond to the command-line
-     options `-fs', `-fw', and `-fh' (*note Window Size X::).
+     `maximized', `fullwidth' or `fullheight', which correspond to the
+     command-line options `-fs', `-mm', `-fw', and `-fh' (*note Window
+     Size X::).
 
      Note that this applies to the initial frame only.
 
@@ -3707,13 +3849,14 @@ class that it belongs to:
 
 `toolBar' (class `ToolBar')
      Number of lines to reserve for the tool bar.  A zero value
-     suppresses the tool bar.  If the value is non-zero and
-     `auto-resize-tool-bars' is non-`nil', the tool bar's size will be
-     changed automatically so that all tool bar items are visible.
-     If the value of `auto-resize-tool-bars' is `grow-only', the tool
-     bar expands automatically, but does not contract automatically.
-     To contract the tool bar, you must redraw the frame by entering
-     `C-l'.
+     suppresses the tool bar.  For the Emacs tool bar (i.e. not Gtk+),
+     if the value is non-zero and `auto-resize-tool-bars' is non-`nil',
+     the tool bar's size will be changed automatically so that all tool
+     bar items are visible.    If the value of `auto-resize-tool-bars'
+     is `grow-only', the tool bar expands automatically, but does not
+     contract automatically.  To contract the tool bar, you must redraw
+     the frame by entering `C-l'.  For the Gtk+ tool bar, any non-zero
+     value means on and `auto-resize-tool-bars' has no effect.
 
 `useXIM' (class `UseXIM')
      Turn off use of X input methods (XIM) if `false' or `off'.  This
@@ -4356,7 +4499,7 @@ Appendix E Emacs 22 Antinews
 
 For those users who live backwards in time, here is information about
 downgrading to Emacs version 22.3.  We hope you will enjoy the greater
-simplicity that results from the absence of many Emacs 23.1 features.
+simplicity that results from the absence of many Emacs 23.2 features.
 
    * We have switched to a character representation specially designed
      for Emacs.  Rather than forcing all the widely used scripts into
@@ -4475,17 +4618,15 @@ Cocoa interface.  This section only applies to the Cocoa build.  Emacs
 23 does not support Mac OS Classic.
 
    Emacs, when built on Mac OS X, uses the Cocoa application interface.
-For historical and technical reasons, Emacs uses the term `Nextstep'
-internally, instead of "Cocoa" or "Mac OS X"; for instance, most of the
-commands and variables described in the following sections begin with
-`ns-', which is short for `Nextstep'.  NeXTstep was an application
-interface released by NeXT Inc during the 1980s, of which Cocoa is a
-direct descendant.  Apart from Cocoa, there is one other NeXTstep-style
-system: GNUstep, which is free software.  At the moment, Emacs has only
-incomplete support for GNUstep (*note GNUstep Support::).
-
-   As of the 23.1 release, Emacs is not as stable on Cocoa as on other
-platforms.  We hope to improve this in future releases.
+For various historical and technical reasons, Emacs uses the term
+`Nextstep' internally, instead of "Cocoa" or "Mac OS X"; for instance,
+most of the commands and variables described in the following sections
+begin with `ns-', which is short for `Nextstep'.  NeXTstep was an
+application interface released by NeXT Inc during the 1980s, of which
+Cocoa is a direct descendant.  Apart from Cocoa, there is another
+NeXTstep-style system: GNUstep, which is free software.  As of this
+writing, the GNUstep support is alpha status (*note GNUstep Support::),
+but we hope to improve it in the future.
 
 * Menu:
 

@@ -1,9 +1,9 @@
 ;;; tai-viet.el --- support for Tai Viet -*- coding: utf-8; no-byte-compile: t -*-
 
-;; Copyright (C) 2007, 2008, 2009
+;; Copyright (C) 2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H13PRO009
-;; Copyright (C) 2007, 2008, 2009  Free Software Foundation, Inc.
+;; Copyright (C) 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Keywords: multilingual, Tai Viet, i18n
 
@@ -37,8 +37,7 @@
 	      (coding-system utf-8)
 	      (coding-priority utf-8)
 	      (input-method . "tai-sonla")
-	      (sample-text
-	       "TaiViet (ꪁꪫꪱꪣ ꪽꪕ)\t\tꪅꪰꪙ꫃ ꪨꪮ꫃ ꪁꪫꪱ / ꪅꪾ ꪨ� ꪁꪫꪱ")
+	      (sample-text . "TaiViet (ꪁꪫꪱꪣ ꪽꪕ)\t\tꪅꪰꪙ꫃ ꪨꪮ꫃ ꪁꪫꪱ / ꪅꪾ ꪨ� ꪁꪫꪱ")
 	      (documentation . "\
 TaiViet refers to the Tai language used by Tai people in
 Vietnam, and also refers to the script used for this language.

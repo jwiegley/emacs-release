@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2000,
-@c   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+@c   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 @c   Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/variables
@@ -133,6 +133,12 @@ function returns @code{t} if @var{object} is a symbol whose name
 starts with @samp{:}, interned in the standard obarray, and returns
 @code{nil} otherwise.
 @end defun
+
+These constants are fundamentally different from the ``constants''
+defined using the @code{defconst} special form (@pxref{Defining
+Variables}).  A @code{defconst} form serves to inform human readers
+that you do not intend to change the value of a variable, but Emacs
+does not raise an error if you actually change it.
 
 @node Local Variables
 @section Local Variables
@@ -523,6 +529,7 @@ The @code{defvar} form returns @var{symbol}, but it is normally used
 at top level in a file where its value does not matter.
 @end defspec
 
+@cindex constant variables
 @defspec defconst symbol value [doc-string]
 This special form defines @var{symbol} as a value and initializes it.
 It informs a person reading your code that @var{symbol} has a standard
@@ -1233,8 +1240,7 @@ foo
 
 @group
 ;; @r{In buffer @samp{b2}, the value hasn't changed.}
-(save-excursion
-  (set-buffer "b2")
+(with-current-buffer "b2"
   foo)
      @result{} 5
 @end group

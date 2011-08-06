@@ -2,10 +2,10 @@ This is ../../info/elisp, produced by makeinfo version 4.11 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.1.
+corresponding to Emacs version 23.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -25,6 +25,163 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Modification Time,  Next: Read Only Buffers,  Prev: Buffer Modification,  Up: Buffers
+
+27.6 Buffer Modification Time
+=============================
+
+Suppose that you visit a file and make changes in its buffer, and
+meanwhile the file itself is changed on disk.  At this point, saving the
+buffer would overwrite the changes in the file.  Occasionally this may
+be what you want, but usually it would lose valuable information.  Emacs
+therefore checks the file's modification time using the functions
+described below before saving the file.  (*Note File Attributes::, for
+how to examine a file's modification time.)
+
+ -- Function: verify-visited-file-modtime buffer
+     This function compares what BUFFER has recorded for the
+     modification time of its visited file against the actual
+     modification time of the file as recorded by the operating system.
+     The two should be the same unless some other process has written
+     the file since Emacs visited or saved it.
+
+     The function returns `t' if the last actual modification time and
+     Emacs's recorded modification time are the same, `nil' otherwise.
+     It also returns `t' if the buffer has no recorded last
+     modification time, that is if `visited-file-modtime' would return
+     zero.
+
+     It always returns `t' for buffers that are not visiting a file,
+     even if `visited-file-modtime' returns a non-zero value.  For
+     instance, it always returns `t' for dired buffers.  It returns `t'
+     for buffers that are visiting a file that does not exist and never
+     existed, but `nil' for file-visiting buffers whose file has been
+     deleted.
+
+ -- Function: clear-visited-file-modtime
+     This function clears out the record of the last modification time
+     of the file being visited by the current buffer.  As a result, the
+     next attempt to save this buffer will not complain of a
+     discrepancy in file modification times.
+
+     This function is called in `set-visited-file-name' and other
+     exceptional places where the usual test to avoid overwriting a
+     changed file should not be done.
+
+ -- Function: visited-file-modtime
+     This function returns the current buffer's recorded last file
+     modification time, as a list of the form `(HIGH LOW)'.  (This is
+     the same format that `file-attributes' uses to return time values;
+     see *note File Attributes::.)
+
+     If the buffer has no recorded last modification time, this function
+     returns zero.  This case occurs, for instance, if the buffer is not
+     visiting a file or if the time has been explicitly cleared by
+     `clear-visited-file-modtime'.  Note, however, that
+     `visited-file-modtime' returns a list for some non-file buffers
+     too.  For instance, in a Dired buffer listing a directory, it
+     returns the last modification time of that directory, as recorded
+     by Dired.
+
+     For a new buffer visiting a not yet existing file, HIGH is -1 and
+     LOW is 65535, that is, 2**16 - 1.
+
+ -- Function: set-visited-file-modtime &optional time
+     This function updates the buffer's record of the last modification
+     time of the visited file, to the value specified by TIME if TIME
+     is not `nil', and otherwise to the last modification time of the
+     visited file.
+
+     If TIME is neither `nil' nor zero, it should have the form `(HIGH
+     . LOW)' or `(HIGH LOW)', in either case containing two integers,
+     each of which holds 16 bits of the time.
+
+     This function is useful if the buffer was not read from the file
+     normally, or if the file itself has been changed for some known
+     benign reason.
+
+ -- Function: ask-user-about-supersession-threat filename
+     This function is used to ask a user how to proceed after an
+     attempt to modify an buffer visiting file FILENAME when the file
+     is newer than the buffer text.  Emacs detects this because the
+     modification time of the file on disk is newer than the last
+     save-time of the buffer.  This means some other program has
+     probably altered the file.
+
+     Depending on the user's answer, the function may return normally,
+     in which case the modification of the buffer proceeds, or it may
+     signal a `file-supersession' error with data `(FILENAME)', in which
+     case the proposed buffer modification is not allowed.
+
+     This function is called automatically by Emacs on the proper
+     occasions.  It exists so you can customize Emacs by redefining it.
+     See the file `userlock.el' for the standard definition.
+
+     See also the file locking mechanism in *note File Locks::.
+
+
+File: elisp,  Node: Read Only Buffers,  Next: The Buffer List,  Prev: Modification Time,  Up: Buffers
+
+27.7 Read-Only Buffers
+======================
+
+If a buffer is "read-only", then you cannot change its contents,
+although you may change your view of the contents by scrolling and
+narrowing.
+
+   Read-only buffers are used in two kinds of situations:
+
+   * A buffer visiting a write-protected file is normally read-only.
+
+     Here, the purpose is to inform the user that editing the buffer
+     with the aim of saving it in the file may be futile or
+     undesirable.  The user who wants to change the buffer text despite
+     this can do so after clearing the read-only flag with `C-x C-q'.
+
+   * Modes such as Dired and Rmail make buffers read-only when altering
+     the contents with the usual editing commands would probably be a
+     mistake.
+
+     The special commands of these modes bind `buffer-read-only' to
+     `nil' (with `let') or bind `inhibit-read-only' to `t' around the
+     places where they themselves change the text.
+
+ -- Variable: buffer-read-only
+     This buffer-local variable specifies whether the buffer is
+     read-only.  The buffer is read-only if this variable is non-`nil'.
+
+ -- Variable: inhibit-read-only
+     If this variable is non-`nil', then read-only buffers and,
+     depending on the actual value, some or all read-only characters
+     may be modified.  Read-only characters in a buffer are those that
+     have non-`nil' `read-only' properties (either text properties or
+     overlay properties).  *Note Special Properties::, for more
+     information about text properties.  *Note Overlays::, for more
+     information about overlays and their properties.
+
+     If `inhibit-read-only' is `t', all `read-only' character
+     properties have no effect.  If `inhibit-read-only' is a list, then
+     `read-only' character properties have no effect if they are members
+     of the list (comparison is done with `eq').
+
+ -- Command: toggle-read-only &optional arg
+     This command toggles whether the current buffer is read-only.  It
+     is intended for interactive use; do not use it in programs.  At
+     any given point in a program, you should know whether you want the
+     read-only flag on or off; so you can set `buffer-read-only'
+     explicitly to the proper value, `t' or `nil'.
+
+     If ARG is non-`nil', it should be a raw prefix argument.
+     `toggle-read-only' sets `buffer-read-only' to `t' if the numeric
+     value of that prefix argument is positive and to `nil' otherwise.
+     *Note Prefix Command Arguments::.
+
+ -- Function: barf-if-buffer-read-only
+     This function signals a `buffer-read-only' error if the current
+     buffer is read-only.  *Note Using Interactive::, for another way to
+     signal an error if the current buffer is read-only.
 
 
 File: elisp,  Node: The Buffer List,  Next: Creating Buffers,  Prev: Read Only Buffers,  Up: Buffers
@@ -190,10 +347,10 @@ can also create a buffer (*note Processes::).
                => #<buffer foo>
 
      The major mode for a newly created buffer is set to Fundamental
-     mode.  (The variable `default-major-mode' is handled at a higher
-     level; see *note Auto Major Mode::.)  If the name begins with a
-     space, the buffer initially disables undo information recording
-     (*note Undo::).
+     mode.  (The default value of the variable `major-mode' is handled
+     at a higher level; see *note Auto Major Mode::.)  If the name
+     begins with a space, the buffer initially disables undo
+     information recording (*note Undo::).
 
  -- Function: generate-new-buffer name
      This function returns a newly created, empty buffer, but does not
@@ -213,8 +370,8 @@ can also create a buffer (*note Processes::).
                => #<buffer bar<3>>
 
      The major mode for the new buffer is set to Fundamental mode.  The
-     variable `default-major-mode' is handled at a higher level.  *Note
-     Auto Major Mode::.
+     default value of the variable `major-mode' is handled at a higher
+     level.  *Note Auto Major Mode::.
 
      See the related function `generate-new-buffer-name' in *note
      Buffer Names::.
@@ -368,7 +525,8 @@ ever again be the current buffer.
      the initial state is copied from the actual base buffer, not from
      BASE-BUFFER.
 
- -- clone-indirect-buffer: newname display-flag &optional norecord
+ -- Command: clone-indirect-buffer newname display-flag &optional
+          norecord
      This function creates and returns a new indirect buffer that shares
      the current buffer's base buffer and copies the rest of the current
      buffer's attributes.  (If the current buffer is not indirect, it is
@@ -411,7 +569,7 @@ buffers are actually a single virtual buffer that holds the contents of
 all the individual buffers together.
 
  -- Function: buffer-swap-text buffer
-     This function swaps text between the current buffer and its
+     This function swaps the text of the current buffer and that of its
      argument BUFFER.  It signals an error if one of the two buffers is
      an indirect buffer (*note Indirect Buffers::) or is a base buffer
      of an indirect buffer.
@@ -421,6 +579,13 @@ all the individual buffers together.
      the overlays, the text properties, the undo list, the value of the
      `enable-multibyte-characters' flag (*note
      enable-multibyte-characters: Text Representations.), etc.
+
+   If you use `buffer-swap-text' on a file-visiting buffer, you should
+set up a hook to save the buffer's original text rather than what it
+was swapped with.  `write-region-annotate-functions' works for this
+purpose.  You should probably set `buffer-saved-size' to -2 in the
+buffer, so that changes in the text it is swapped with will not
+interfere with auto-saving.
 
 
 File: elisp,  Node: Buffer Gap,  Prev: Swapping Text,  Up: Buffers
@@ -904,7 +1069,7 @@ horizontal, the ordering is top to bottom in the left part, and so on.
 In general, within each set of siblings at any level in the window tree
 (*note Window Tree::), the order is left to right, or top to bottom.
 
- -- next-window: &optional window minibuf all-frames
+ -- Function: next-window &optional window minibuf all-frames
      This function returns the window following WINDOW in the cyclic
      ordering of windows.  This is the window `C-x o' selects if typed
      when WINDOW is selected.  The default for WINDOW is the selected
@@ -958,7 +1123,7 @@ In general, within each set of siblings at any level in the window tree
           (next-window (next-window (selected-window)))
                => #<window 56 on windows.texi>
 
- -- previous-window: &optional window minibuf all-frames
+ -- Function: previous-window &optional window minibuf all-frames
      This function returns the window preceding WINDOW in the cyclic
      ordering of windows.  The other arguments specify which windows to
      include in the cycle, as in `next-window'.
@@ -1128,7 +1293,7 @@ the display of buffers in windows.
      using `other-buffer'.  If BUFFER-OR-NAME is a string that does not
      identify an existing buffer, then a new buffer by that name is
      created.  The major mode for the new buffer is set according to
-     the variable `default-major-mode'; see *note Auto Major Mode::.
+     the variable `major-mode'; see *note Auto Major Mode::.
 
      When the selected window is the minibuffer window or is strongly
      dedicated to its buffer (*note Dedicated Windows::), this function
@@ -1162,7 +1327,8 @@ the described features.
      This function updates the buffer list just like `switch-to-buffer'
      unless NORECORD is non-`nil'.
 
- -- pop-to-buffer: buffer-or-name &optional other-window norecord
+ -- Command: pop-to-buffer buffer-or-name &optional other-window
+          norecord
      This command makes BUFFER-OR-NAME the current buffer and switches
      to it in some window, preferably not the window previously
      selected.  The "popped-to" window becomes the selected window.
@@ -1174,8 +1340,7 @@ the described features.
      buffer, but you don't specify which.  If BUFFER-OR-NAME is a
      string that does not name an existing buffer, a buffer by that
      name is created.  The major mode for the new buffer is set
-     according to the variable `default-major-mode'.  *Note Auto Major
-     Mode::.
+     according to the variable `major-mode'.  *Note Auto Major Mode::.
 
      If either of the variables `display-buffer-reuse-frames' or
      `pop-up-frames' is non-`nil', `pop-to-buffer' looks for a window
@@ -1926,9 +2091,9 @@ Scrolling::).
 
  -- User Option: scroll-step
      This variable is an older variant of `scroll-conservatively'.  The
-     difference is that it if its value is N, that permits scrolling
-     only by precisely N lines, not a smaller number.  This feature
-     does not work with `scroll-margin'.  The default value is zero.
+     difference is that if its value is N, that permits scrolling only
+     by precisely N lines, not a smaller number.  This feature does not
+     work with `scroll-margin'.  The default value is zero.
 
  -- User Option: scroll-preserve-screen-position
      If this option is `t', scrolling which would move the current
@@ -2170,11 +2335,14 @@ that separates side-by-side windows.
    The following three functions return size information about a window:
 
  -- Function: window-height &optional window
-     This function returns the number of lines in WINDOW, including its
-     mode line and header line, if any.  If WINDOW fills its entire
-     frame except for the echo area, this is typically one less than the
-     value of `frame-height' on that frame.  The default for WINDOW is
-     the selected window.
+     This function returns the number of lines in WINDOW (by default
+     the selected window), including any mode line and header line.
+     The result is almost always less than the value of `frame-height'
+     for the associated frame, because the latter also includes any echo
+     area.  Depending on the toolkit in use, the frame height can also
+     include the menu bar and tool bar (*note Size and Position::).
+     Therefore in general it is not straightforward to compare window
+     and frame heights (see `window-full-height-p' below).
 
           (window-height)
                => 23
@@ -2186,6 +2354,10 @@ that separates side-by-side windows.
  -- Function: window-body-height &optional window
      Like `window-height' but the value does not include the mode line
      (if any) or the header line (if any).
+
+ -- Function: window-full-height-p &optional window
+     This function returns non-`nil' if WINDOW is as tall as the frame
+     that contains it.  The default for WINDOW is the selected window.
 
  -- Function: window-width &optional window
      This function returns the number of columns in WINDOW.  The
@@ -3326,12 +3498,15 @@ text-only terminals they count characters or lines instead.
      parameters `top' and `left'.
 
 `fullscreen'
-     Specify that width, height or both shall be set to the size of the
-     screen.  The value `fullwidth' specifies that width shall be the
-     size of the screen.  The value `fullheight' specifies that height
-     shall be the size of the screen.  The value `fullboth' specifies
-     that both the width and the height shall be set to the size of the
-     screen.
+     Specify that width, height or both shall be maximized.  The value
+     `fullwidth' specifies that width shall be as wide as possible.
+     The value `fullheight' specifies that height shall be as tall as
+     possible.  The value `fullboth' specifies that both the width and
+     the height shall be set to the size of the screen.  The value
+     `maximized' specifies that the frame shall be maximized.  The
+     difference between `maximized' and `fullboth' is that the former
+     still has window manager decorations while the latter really
+     covers the whole screen.
 
 
 File: elisp,  Node: Layout Parameters,  Next: Buffer Parameters,  Prev: Size Parameters,  Up: Window Frame Parameters
@@ -3467,6 +3642,10 @@ interact with the window manager.
      Fvwm2 and KDE, fail to confirm, so Xt hangs.  Set this to `nil' to
      prevent hanging with those window managers.
 
+`sticky'
+     If non-`nil', the frame is visible on all virtual desktops on
+     systems with virtual desktops.
+
 
 
 File: elisp,  Node: Cursor Parameters,  Next: Font and Color Parameters,  Prev: Management Parameters,  Up: Window Frame Parameters
@@ -3521,7 +3700,7 @@ cursor specified for the frame.
      This variable controls how the cursor looks in a window that is not
      selected.  It supports the same values as the `cursor-type' frame
      parameter; also, `nil' means don't display a cursor in nonselected
-     windows, and `t' (the default) means use a standard modificatoin
+     windows, and `t' (the default) means use a standard modification
      of the usual cursor type (solid box becomes hollow box, and bar
      becomes a narrower bar).
 
@@ -3672,12 +3851,18 @@ see *note Input Focus::.)
  -- Function: frame-pixel-width &optional frame
      These functions return the height and width of the main display
      area of FRAME, measured in pixels.  If you don't supply FRAME,
-     they use the selected frame.
+     they use the selected frame.  For a text-only terminal, the
+     results are in characters rather than pixels.
 
-     These values include the internal borders, and windows' scroll bars
-     and fringes (which belong to individual windows, not to the frame
-     itself), but do not include menu bars or tool bars (except when
-     using X without an X toolkit).
+     These values include the internal borders, and windows' scroll
+     bars and fringes (which belong to individual windows, not to the
+     frame itself).  The exact value of the heights depends on the
+     window-system and toolkit in use.  With Gtk+, the height does not
+     include any tool bar or menu bar.  With the Motif or Lucid
+     toolkits, it includes the tool bar but not the menu bar.  In a
+     graphical version with no toolkit, it includes both the tool bar
+     and menu bar.  For a text-only terminal, the result includes the
+     menu bar.
 
  -- Function: frame-char-height &optional frame
  -- Function: frame-char-width &optional frame
@@ -4754,6 +4939,11 @@ File: elisp,  Node: Resources,  Next: Display Feature Testing,  Prev: Text Termi
 29.23 X Resources
 =================
 
+This section describes some of the functions and variables for querying
+and using X resources, or their equivalent on your operating system.
+*Note X Resources: (emacs)X Resources, for more information about X
+resources.
+
  -- Function: x-get-resource attribute class &optional component
           subclass
      The function `x-get-resource' retrieves a resource value from the X
@@ -4794,7 +4984,9 @@ in your X resources file (whose name is usually `~/.Xdefaults' or
        (x-get-resource "background" "VT100" "vt100" "Background"))
           => "yellow"
 
-   *Note X Resources: (emacs)X Resources.
+ -- Variable: inhibit-x-resources
+     If this variable is non-`nil', Emacs does not look up X resources,
+     and X resources do not have any effect when creating new frames.
 
 
 File: elisp,  Node: Display Feature Testing,  Prev: Resources,  Up: Frames
@@ -5222,32 +5414,6 @@ The division of the buffer into text lines is not affected by the width
 of the window, by line continuation in display, or by how tabs and
 control characters are displayed.
 
- -- Command: goto-line line &optional buffer
-     This function moves point to the front of the LINEth line,
-     counting from line 1 at beginning of the buffer, and leaves mark
-     at the previous position.  If LINE is less than 1, it moves point
-     to the beginning of the buffer.  If LINE is greater than the
-     number of lines in the buffer, it moves point to the end of the
-     buffer--that is, the _end of the last line_ of the buffer.
-
-     If narrowing is in effect, then LINE still counts from the
-     beginning of the buffer, but point cannot go outside the accessible
-     portion.  So `goto-line' moves point to the beginning or end of the
-     accessible portion, if the line number specifies an inaccessible
-     position.
-
-     The return value of `goto-line' is the difference between LINE and
-     the line number of the line to which point actually was able to
-     move (in the full buffer, before taking account of narrowing).
-     Thus, the value is positive if the scan encounters the real end of
-     the buffer before finding the specified line.  The value is zero
-     if scan encounters the end of the accessible portion, but not the
-     real end of the buffer.
-
-     If you provide the optional argument BUFFER, `goto-line' uses
-     BUFFER instead of the current buffer and displays it in another
-     window, if it was not already visible.
-
  -- Command: beginning-of-line &optional count
      This function moves point to the beginning of the current line.
      With an argument COUNT not `nil' or 1, it moves forward COUNT-1
@@ -5645,7 +5811,9 @@ the completion of the excursion.
 
    The forms for saving and restoring the configuration of windows are
 described elsewhere (see *note Window Configurations::, and *note Frame
-Configurations::).
+Configurations::).  When only the identity of the current buffer needs
+to be saved and restored, it is preferable to use `save-current-buffer'
+instead.
 
  -- Special Form: save-excursion body...
      The `save-excursion' special form saves the identity of the current
@@ -5654,10 +5822,10 @@ Configurations::).
      the mark.  All three saved values are restored even in case of an
      abnormal exit via `throw' or error (*note Nonlocal Exits::).
 
-     The `save-excursion' special form is the standard way to switch
-     buffers or move point within one part of a program and avoid
-     affecting the rest of the program.  It is used more than 4000
-     times in the Lisp sources of Emacs.
+     The `save-excursion' special form is the standard way to move
+     point within one part of a program and avoid affecting the rest of
+     the program.  It is used more than 4000 times in the Lisp sources
+     of Emacs.
 
      `save-excursion' does not save the values of point and the mark for
      other buffers, so changes in other buffers remain in effect after
@@ -6278,9 +6446,10 @@ programming.  So we do not describe it here.
           (let (deactivate-mark)
             (insert " "))
 
- -- Function: deactivate-mark
-     This function deactivates the mark, if Transient Mark mode is
-     enabled.  Otherwise it does nothing.
+ -- Function: deactivate-mark &optional force
+     If Transient Mark mode is enabled or FORCE is non-`nil', this
+     function deactivates the mark and runs the normal hook
+     `deactivate-mark-hook'.  Otherwise, it does nothing.
 
  -- Variable: mark-active
      The mark is active when this variable is non-`nil'.  This variable
@@ -6504,170 +6673,4 @@ refers to the beginning or end of the accessible portion.
      This function returns `t' if point is at the end of a line.  The
      end of the buffer (or of its accessible portion) is always
      considered the end of a line.
-
-
-File: elisp,  Node: Buffer Contents,  Next: Comparing Text,  Prev: Near Point,  Up: Text
-
-32.2 Examining Buffer Contents
-==============================
-
-This section describes functions that allow a Lisp program to convert
-any portion of the text in the buffer into a string.
-
- -- Function: buffer-substring start end
-     This function returns a string containing a copy of the text of the
-     region defined by positions START and END in the current buffer.
-     If the arguments are not positions in the accessible portion of
-     the buffer, `buffer-substring' signals an `args-out-of-range'
-     error.
-
-     It is not necessary for START to be less than END; the arguments
-     can be given in either order.  But most often the smaller argument
-     is written first.
-
-     Here's an example which assumes Font-Lock mode is not enabled:
-
-          ---------- Buffer: foo ----------
-          This is the contents of buffer foo
-
-          ---------- Buffer: foo ----------
-
-          (buffer-substring 1 10)
-               => "This is t"
-          (buffer-substring (point-max) 10)
-               => "he contents of buffer foo\n"
-
-     If the text being copied has any text properties, these are copied
-     into the string along with the characters they belong to.  *Note
-     Text Properties::.  However, overlays (*note Overlays::) in the
-     buffer and their properties are ignored, not copied.
-
-     For example, if Font-Lock mode is enabled, you might get results
-     like these:
-
-          (buffer-substring 1 10)
-               => #("This is t" 0 1 (fontified t) 1 9 (fontified t))
-
- -- Function: buffer-substring-no-properties start end
-     This is like `buffer-substring', except that it does not copy text
-     properties, just the characters themselves.  *Note Text
-     Properties::.
-
- -- Function: filter-buffer-substring start end &optional delete noprops
-     This function passes the buffer text between START and END through
-     the filter functions specified by the variable
-     `buffer-substring-filters', and returns the value from the last
-     filter function.  If `buffer-substring-filters' is `nil', the
-     value is the unaltered text from the buffer, what
-     `buffer-substring' would return.
-
-     If DELETE is non-`nil', this function deletes the text between
-     START and END after copying it, like `delete-and-extract-region'.
-
-     If NOPROPS is non-`nil', the final string returned does not
-     include text properties, while the string passed through the
-     filters still includes text properties from the buffer text.
-
-     Lisp code should use this function instead of `buffer-substring',
-     `buffer-substring-no-properties', or `delete-and-extract-region'
-     when copying into user-accessible data structures such as the
-     kill-ring, X clipboard, and registers.  Major and minor modes can
-     add functions to `buffer-substring-filters' to alter such text as
-     it is copied out of the buffer.
-
- -- Variable: buffer-substring-filters
-     This variable should be a list of functions that accept a single
-     argument, a string, and return a string.
-     `filter-buffer-substring' passes the buffer substring to the first
-     function in this list, and the return value of each function is
-     passed to the next function.  The return value of the last
-     function is used as the return value of `filter-buffer-substring'.
-
-     As a special convention, point is set to the start of the buffer
-     text being operated on (i.e., the START argument for
-     `filter-buffer-substring') before these functions are called.
-
-     If this variable is `nil', no filtering is performed.
-
- -- Function: buffer-string
-     This function returns the contents of the entire accessible
-     portion of the current buffer as a string.  It is equivalent to
-
-          (buffer-substring (point-min) (point-max))
-
-          ---------- Buffer: foo ----------
-          This is the contents of buffer foo
-
-          ---------- Buffer: foo ----------
-
-          (buffer-string)
-               => "This is the contents of buffer foo\n"
-
- -- Function: current-word &optional strict really-word
-     This function returns the symbol (or word) at or near point, as a
-     string.  The return value includes no text properties.
-
-     If the optional argument REALLY-WORD is non-`nil', it finds a
-     word; otherwise, it finds a symbol (which includes both word
-     characters and symbol constituent characters).
-
-     If the optional argument STRICT is non-`nil', then point must be
-     in or next to the symbol or word--if no symbol or word is there,
-     the function returns `nil'.  Otherwise, a nearby symbol or word on
-     the same line is acceptable.
-
- -- Function: thing-at-point thing
-     Return the THING around or next to point, as a string.
-
-     The argument THING is a symbol which specifies a kind of syntactic
-     entity.  Possibilities include `symbol', `list', `sexp', `defun',
-     `filename', `url', `word', `sentence', `whitespace', `line',
-     `page', and others.
-
-          ---------- Buffer: foo ----------
-          Gentlemen may cry ``Pea-!-ce! Peace!,''
-          but there is no peace.
-          ---------- Buffer: foo ----------
-
-          (thing-at-point 'word)
-               => "Peace"
-          (thing-at-point 'line)
-               => "Gentlemen may cry ``Peace! Peace!,''\n"
-          (thing-at-point 'whitespace)
-               => nil
-
-
-File: elisp,  Node: Comparing Text,  Next: Insertion,  Prev: Buffer Contents,  Up: Text
-
-32.3 Comparing Text
-===================
-
-This function lets you compare portions of the text in a buffer, without
-copying them into strings first.
-
- -- Function: compare-buffer-substrings buffer1 start1 end1 buffer2
-          start2 end2
-     This function lets you compare two substrings of the same buffer
-     or two different buffers.  The first three arguments specify one
-     substring, giving a buffer (or a buffer name) and two positions
-     within the buffer.  The last three arguments specify the other
-     substring in the same way.  You can use `nil' for BUFFER1,
-     BUFFER2, or both to stand for the current buffer.
-
-     The value is negative if the first substring is less, positive if
-     the first is greater, and zero if they are equal.  The absolute
-     value of the result is one plus the index of the first differing
-     characters within the substrings.
-
-     This function ignores case when comparing characters if
-     `case-fold-search' is non-`nil'.  It always ignores text
-     properties.
-
-     Suppose the current buffer contains the text `foobarbar
-     haha!rara!'; then in this example the two substrings are `rbar '
-     and `rara!'.  The value is 2 because the first substring is greater
-     at the second character.
-
-          (compare-buffer-substrings nil 6 11 nil 16 21)
-               => 2
 

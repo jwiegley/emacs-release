@@ -1,6 +1,6 @@
 /* Generic frame functions.
    Copyright (C) 1993, 1994, 1995, 1997, 1999, 2000, 2001, 2002, 2003,
-     2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+     2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -21,6 +21,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <stdio.h>
 #include <ctype.h>
+#include <setjmp.h>
 #include "lisp.h"
 #include "character.h"
 #ifdef HAVE_X_WINDOWS
@@ -42,8 +43,8 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "termhooks.h"
 #include "dispextern.h"
 #include "window.h"
-#ifdef HAVE_WINDOW_SYSTEM
 #include "font.h"
+#ifdef HAVE_WINDOW_SYSTEM
 #include "fontset.h"
 #endif
 #ifdef MSDOS
@@ -51,6 +52,9 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "dosfns.h"
 #endif
 
+
+/* If we shall make pointer invisible when typing or not.  */
+Lisp_Object Vmake_pointer_invisible;
 
 #ifdef HAVE_WINDOW_SYSTEM
 
@@ -120,7 +124,8 @@ Lisp_Object Qbuffer_predicate, Qbuffer_list, Qburied_buffer_list;
 Lisp_Object Qtty_color_mode;
 Lisp_Object Qtty, Qtty_type;
 
-Lisp_Object Qfullscreen, Qfullwidth, Qfullheight, Qfullboth;
+Lisp_Object Qfullscreen, Qfullwidth, Qfullheight, Qfullboth, Qmaximized;
+Lisp_Object Qsticky;
 Lisp_Object Qfont_backend;
 Lisp_Object Qalpha;
 
@@ -200,6 +205,8 @@ extern Lisp_Object get_minibuffer ();
 extern Lisp_Object Fhandle_switch_frame ();
 extern Lisp_Object Fredirect_frame_focus ();
 extern Lisp_Object x_get_focus_frame ();
+extern Lisp_Object QCname, Qfont_param;
+
 
 DEFUN ("framep", Fframep, Sframep, 1, 1, 0,
        doc: /* Return non-nil if OBJECT is a frame.
@@ -538,7 +545,7 @@ make_initial_frame (void)
   Vframe_list = Fcons (frame, Vframe_list);
 
   tty_frame_count = 1;
-  f->name = build_string ("F1");
+  f->name = make_pure_c_string ("F1");
 
   f->visible = 1;
   f->async_visible = 1;
@@ -887,9 +894,9 @@ The selection of FRAME lasts until the next time the user does
 something to select a different frame, or until the next time
 this function is called.  If you are using a window system, the
 previously selected frame may be restored as the selected frame
-after return to the command loop, because it still may have the
-window system's input focus.  On a text-only terminal, the next
-redisplay will display FRAME.
+when returning to the command loop, because it still may have
+the window system's input focus.  On a text-only terminal, the
+next redisplay will display FRAME.
 
 This function returns FRAME, or nil if FRAME has been deleted.  */)
      (frame, norecord)
@@ -1875,10 +1882,17 @@ make_frame_visible_1 (window)
 
 DEFUN ("make-frame-invisible", Fmake_frame_invisible, Smake_frame_invisible,
        0, 2, "",
-       doc: /* Make the frame FRAME invisible (assuming it is an X window).
+       doc: /* Make the frame FRAME invisible.
 If omitted, FRAME defaults to the currently selected frame.
+On graphical displays, invisible frames are not updated and are
+usually not displayed at all, even in a window system's \"taskbar\".
+
 Normally you may not make FRAME invisible if all other frames are invisible,
-but if the second optional argument FORCE is non-nil, you may do so.  */)
+but if the second optional argument FORCE is non-nil, you may do so.
+
+This function has no effect on text-only terminal frames.  Such frames
+are always considered visible, whether or not they are currently being
+displayed in the terminal.  */)
   (frame, force)
      Lisp_Object frame, force;
 {
@@ -1958,14 +1972,15 @@ If omitted, FRAME defaults to the currently selected frame.  */)
 
 DEFUN ("frame-visible-p", Fframe_visible_p, Sframe_visible_p,
        1, 1, 0,
-       doc: /* Return t if FRAME is now \"visible\" (actually in use for display).
-A frame that is not \"visible\" is not updated and, if it works through
-a window system, it may not show at all.
-Return the symbol `icon' if frame is visible only as an icon.
+       doc: /* Return t if FRAME is \"visible\" (actually in use for display).
+Return the symbol `icon' if FRAME is iconified or \"minimized\".
+Return nil if FRAME was made invisible, via `make-frame-invisible'.
+On graphical displays, invisible frames are not updated and are
+usually not displayed at all, even in a window system's \"taskbar\".
 
-On a text-only terminal, all frames are considered visible, whether
-they are currently being displayed or not, and this function returns t
-for all frames.  */)
+If FRAME is a text-only terminal frame, this always returns t.
+Such frames are always considered visible, whether or not they are
+currently being displayed on the terminal.  */)
      (frame)
      Lisp_Object frame;
 {
@@ -2639,10 +2654,22 @@ For a terminal screen, the value is always 1.  */)
 DEFUN ("frame-pixel-height", Fframe_pixel_height,
        Sframe_pixel_height, 0, 1, 0,
        doc: /* Return a FRAME's height in pixels.
-This counts only the height available for text lines,
-not menu bars on window-system Emacs frames.
-For a terminal frame, the result really gives the height in characters.
-If FRAME is omitted, the selected frame is used.  */)
+If FRAME is omitted, the selected frame is used.  The exact value
+of the result depends on the window-system and toolkit in use:
+
+In the Gtk+ version of Emacs, it includes only any window (including
+the minibuffer or eacho area), mode line, and header line.  It does not
+include the tool bar or menu bar.
+
+With the Motif or Lucid toolkits, it also includes the tool bar (but
+not the menu bar).
+
+In a graphical version with no toolkit, it includes both the tool bar
+and menu bar.
+
+For a text-only terminal, it includes the menu bar.  In this case, the
+result is really in characters rather than pixels (i.e., is identical
+to `frame-height'). */)
      (frame)
      Lisp_Object frame;
 {
@@ -2844,7 +2871,8 @@ static struct frame_parm_table frame_parms[] =
   {"wait-for-wm",		&Qwait_for_wm},
   {"fullscreen",                &Qfullscreen},
   {"font-backend",		&Qfont_backend},
-  {"alpha",			&Qalpha}
+  {"alpha",			&Qalpha},
+  {"sticky",			&Qsticky},
 };
 
 #ifdef HAVE_WINDOW_SYSTEM
@@ -2930,11 +2958,7 @@ x_set_frame_parameters (f, alist)
   int i, p;
   int left_no_change = 0, top_no_change = 0;
   int icon_left_no_change = 0, icon_top_no_change = 0;
-  int fullscreen_is_being_set = 0;
-  int height_for_full_width = 0;
-  int width_for_full_height = 0;
-  enum fullscreen_type fullscreen_wanted = FULLSCREEN_NONE;
-
+  int size_changed = 0;
   struct gcpro gcpro1, gcpro2;
 
   i = 0;
@@ -2976,7 +3000,6 @@ x_set_frame_parameters (f, alist)
      They are independent of other properties, but other properties (e.g.,
      cursor_color) are dependent upon them.  */
   /* Process default font as well, since fringe widths depends on it.  */
-  /* Also, process fullscreen, width and height depend upon that.  */
   for (p = 0; p < i; p++)
     {
       Lisp_Object prop, val;
@@ -2985,26 +3008,11 @@ x_set_frame_parameters (f, alist)
       val = values[p];
       if (EQ (prop, Qforeground_color)
 	  || EQ (prop, Qbackground_color)
-	  || EQ (prop, Qfont)
-          || EQ (prop, Qfullscreen))
+	  || EQ (prop, Qfont))
 	{
 	  register Lisp_Object param_index, old_value;
 
-	  if (EQ (prop, Qfullscreen))
-	    {
-	      /* The parameter handler can reset f->want_fullscreen to
-	         FULLSCREEN_NONE.  But we need the requested value later
-	         to decide whether a height or width parameter shall be
-	         applied.  Therefore, we remember the requested value in
-	         fullscreen_wanted for the following two cases.  */ 
-	      if (EQ (val, Qfullheight))
-		fullscreen_wanted = FULLSCREEN_HEIGHT;
-	      else if (EQ (val, Qfullwidth))
-		fullscreen_wanted = FULLSCREEN_WIDTH;
-	    }
-
 	  old_value = get_frame_param (f, prop);
- 	  fullscreen_is_being_set |= EQ (prop, Qfullscreen);
 	  if (NILP (Fequal (val, old_value)))
 	    {
 	      store_frame_param (f, prop, val);
@@ -3028,9 +3036,15 @@ x_set_frame_parameters (f, alist)
       val = values[i];
 
       if (EQ (prop, Qwidth) && NATNUMP (val))
-	width_for_full_height = width = XFASTINT (val);
+        {
+          size_changed = 1;
+          width = XFASTINT (val);
+        }
       else if (EQ (prop, Qheight) && NATNUMP (val))
-	height_for_full_width = height = XFASTINT (val);
+        {
+          size_changed = 1;
+          height = XFASTINT (val);
+        }
       else if (EQ (prop, Qtop))
 	top = val;
       else if (EQ (prop, Qleft))
@@ -3041,8 +3055,7 @@ x_set_frame_parameters (f, alist)
 	icon_left = val;
       else if (EQ (prop, Qforeground_color)
 	       || EQ (prop, Qbackground_color)
-	       || EQ (prop, Qfont)
-               || EQ (prop, Qfullscreen))
+	       || EQ (prop, Qfont))
 	/* Processed above.  */
 	continue;
       else
@@ -3096,31 +3109,6 @@ x_set_frame_parameters (f, alist)
 	XSETINT (icon_top, 0);
     }
 
-  if (FRAME_VISIBLE_P (f) && fullscreen_is_being_set)
-    {
-      /* If the frame is visible already and the fullscreen parameter is
-         being set, it is too late to set WM manager hints to specify
-         size and position.
-         Here we first get the width, height and position that applies to
-         fullscreen.  We then move the frame to the appropriate
-         position.  Resize of the frame is taken care of in the code after
-         this if-statement. */
-      int new_left, new_top;
-
-      x_fullscreen_adjust (f, &width, &height, &new_top, &new_left);
-      if (new_top != f->top_pos || new_left != f->left_pos)
-        x_set_offset (f, new_left, new_top, 1);
-
-      /* When both height and fullwidth were requested, make sure the
-	 requested value for height gets applied.  */
-      if (height_for_full_width && fullscreen_wanted == FULLSCREEN_WIDTH)
-	height = height_for_full_width;
-      /* When both width and fullheight were requested, make sure the
-	 requested value for width gets applied.  */
-      if (width_for_full_height && fullscreen_wanted == FULLSCREEN_HEIGHT)
-	width = width_for_full_height;
-    }
-
   /* Don't set these parameters unless they've been explicitly
      specified.  The window might be mapped or resized while we're in
      this function, and we don't want to override that unless the lisp
@@ -3136,10 +3124,11 @@ x_set_frame_parameters (f, alist)
 
     XSETFRAME (frame, f);
 
-    if (width != FRAME_COLS (f)
-	|| height != FRAME_LINES (f)
-	|| f->new_text_lines || f->new_text_cols)
-      Fset_frame_size (frame, make_number (width), make_number (height));
+    if (size_changed
+        && (width != FRAME_COLS (f)
+            || height != FRAME_LINES (f)
+            || f->new_text_lines || f->new_text_cols))
+        Fset_frame_size (frame, make_number (width), make_number (height));
 
     if ((!NILP (left) || !NILP (top))
 	&& ! (left_no_change && top_no_change)
@@ -3299,12 +3288,14 @@ x_set_fullscreen (f, new_value, old_value)
 {
   if (NILP (new_value))
     f->want_fullscreen = FULLSCREEN_NONE;
-  else if (EQ (new_value, Qfullboth))
+  else if (EQ (new_value, Qfullboth) || EQ (new_value, Qfullscreen))
     f->want_fullscreen = FULLSCREEN_BOTH;
   else if (EQ (new_value, Qfullwidth))
     f->want_fullscreen = FULLSCREEN_WIDTH;
   else if (EQ (new_value, Qfullheight))
     f->want_fullscreen = FULLSCREEN_HEIGHT;
+  else if (EQ (new_value, Qmaximized))
+    f->want_fullscreen = FULLSCREEN_MAXIMIZED;
 
   if (FRAME_TERMINAL (f)->fullscreen_hook != NULL)
     FRAME_TERMINAL (f)->fullscreen_hook (f);
@@ -3370,7 +3361,7 @@ x_set_font (f, arg, oldval)
      struct frame *f;
      Lisp_Object arg, oldval;
 {
-  Lisp_Object frame, font_object, lval;
+  Lisp_Object frame, font_object, font_param = Qnil;
   int fontset = -1;
 
   /* Set the frame parameter back to the old value because we may
@@ -3382,6 +3373,7 @@ x_set_font (f, arg, oldval)
      never fail.  */
   if (STRINGP (arg))
     {
+      font_param = arg;
       fontset = fs_query_fontset (arg, 0);
       if (fontset < 0)
 	{
@@ -3412,12 +3404,14 @@ x_set_font (f, arg, oldval)
 	error ("Unknown fontset: %s", SDATA (XCAR (arg)));
       font_object = XCDR (arg);
       arg = AREF (font_object, FONT_NAME_INDEX);
+      font_param = Ffont_get (font_object, QCname);
     }
   else if (FONT_OBJECT_P (arg))
     {
       font_object = arg;
+      font_param = Ffont_get (font_object, QCname);
       /* This is to store the XLFD font name in the frame parameter for
-	 backward compatiblity.  We should store the font-object
+	 backward compatibility.  We should store the font-object
 	 itself in the future.  */
       arg = AREF (font_object, FONT_NAME_INDEX);
       fontset = FRAME_FONTSET (f);
@@ -3438,25 +3432,11 @@ x_set_font (f, arg, oldval)
   if (! NILP (Fequal (font_object, oldval)))
     return;
 
-  
-  lval = Fassq (Qfullscreen, f->param_alist);
-  if (CONSP (lval)) lval = CDR (lval);
-
   x_new_font (f, font_object, fontset);
-  /* If the fullscreen property is non-nil, adjust lines and columns so we
-     keep the same pixel height and width.  */
-  if (! NILP (lval))
-    {
-      int height = FRAME_LINES (f), width = FRAME_COLS (f);
-      if (EQ (lval, Qfullboth) || EQ (lval, Qfullwidth))
-        width = FRAME_PIXEL_WIDTH_TO_TEXT_COLS (f, FRAME_PIXEL_WIDTH (f));
-      if (EQ (lval, Qfullboth) || EQ (lval, Qfullheight))
-        height = FRAME_PIXEL_HEIGHT_TO_TEXT_LINES (f, FRAME_PIXEL_HEIGHT (f));
-      
-      change_frame_size (f, height, width, 0, 0, 1);
-    }
-
   store_frame_param (f, Qfont, arg);
+#ifdef HAVE_X_WINDOWS
+  store_frame_param (f, Qfont_param, font_param);
+#endif
   /* Recalculate toolbar height.  */
   f->n_tool_bar_rows = 0;
   /* Ensure we redraw it.  */
@@ -3902,7 +3882,7 @@ xrdb_get_resource (rdb, attribute, class, component, subclass)
 
   value = x_get_string_resource (rdb, name_key, class_key);
 
-  if (value != (char *) 0)
+  if (value != (char *) 0 && *value)
     return build_string (value);
   else
     return Qnil;
@@ -3941,8 +3921,9 @@ display_x_get_resource (dpyinfo, attribute, class, component, subclass)
 			    attribute, class, component, subclass);
 }
 
+#if defined HAVE_X_WINDOWS && !defined USE_X_TOOLKIT
 /* Used when C code wants a resource value.  */
-
+/* Called from oldXMenu/Create.c.  */
 char *
 x_get_resource_string (attribute, class)
      char *attribute, *class;
@@ -3964,7 +3945,7 @@ x_get_resource_string (attribute, class)
   return x_get_string_resource (FRAME_X_DISPLAY_INFO (sf)->xrdb,
 				name_key, class_key);
 }
-
+#endif
 
 /* Return the value of parameter PARAM.
 
@@ -4023,6 +4004,13 @@ x_get_arg (dpyinfo, alist, param, attribute, class, type)
 	    {
 	    case RES_TYPE_NUMBER:
 	      return make_number (atoi (SDATA (tem)));
+
+	    case RES_TYPE_BOOLEAN_NUMBER:
+	      if (!strcmp (SDATA (tem), "on")
+		  || !strcmp (SDATA (tem), "true"))
+		return make_number (1);
+	      return make_number (atoi (SDATA (tem)));
+              break;
 
 	    case RES_TYPE_FLOAT:
 	      return make_float (atof (SDATA (tem)));
@@ -4134,35 +4122,28 @@ x_default_parameter (f, alist, prop, deflt, xprop, xclass, type)
 
 
 
-#ifdef HAVE_NS
+/* NS used to define x-parse-geometry in ns-win.el, but that confused
+   make-docfile: the documentation string in ns-win.el was used for
+   x-parse-geometry even in non-NS builds.
 
-/* We used to define x-parse-geometry directly in ns-win.el, but that
-   confused make-docfile: the documentation string in ns-win.el was
-   used for x-parse-geometry even in non-NS builds..  */
-
+   With two definitions of x-parse-geometry in this file, various
+   things still get confused (eg M-x apropos documentation), so that
+   it is best if the two definitions just share the same doc-string.
+*/
 DEFUN ("x-parse-geometry", Fx_parse_geometry, Sx_parse_geometry, 1, 1, 0,
-       doc: /* Parse a Nextstep-style geometry string STRING.
+       doc: /* Parse a display geometry string STRING.
 Returns an alist of the form ((top . TOP), (left . LEFT) ... ).
 The properties returned may include `top', `left', `height', and `width'.
-This works by calling `ns-parse-geometry'.  */)
-     (string)
-     Lisp_Object string;
-{
-  call1 (Qns_parse_geometry, string);
-}
-
-#else /* !HAVE_NS */
-
-DEFUN ("x-parse-geometry", Fx_parse_geometry, Sx_parse_geometry, 1, 1, 0,
-       doc: /* Parse an X-style geometry string STRING.
-Returns an alist of the form ((top . TOP), (left . LEFT) ... ).
-The properties returned may include `top', `left', `height', and `width'.
-The value of `left' or `top' may be an integer,
+For X, the value of `left' or `top' may be an integer,
 or a list (+ N) meaning N pixels relative to top/left corner,
-or a list (- N) meaning -N pixels relative to bottom/right corner.  */)
+or a list (- N) meaning -N pixels relative to bottom/right corner.
+On Nextstep, this just calls `ns-parse-geometry'.  */)
      (string)
      Lisp_Object string;
 {
+#ifdef HAVE_NS
+  call1 (Qns_parse_geometry, string);
+#else
   int geometry, x, y;
   unsigned int width, height;
   Lisp_Object result;
@@ -4204,8 +4185,8 @@ or a list (- N) meaning -N pixels relative to bottom/right corner.  */)
     result = Fcons (Fcons (Qheight, make_number (height)), result);
 
   return result;
-}
 #endif /* HAVE_NS */
+}
 
 
 /* Calculate the desired size and position of frame F.
@@ -4217,7 +4198,7 @@ or a list (- N) meaning -N pixels relative to bottom/right corner.  */)
 
    This function does not make the coordinates positive.  */
 
-#define DEFAULT_ROWS 40
+#define DEFAULT_ROWS 35
 #define DEFAULT_COLS 80
 
 int
@@ -4374,22 +4355,6 @@ x_figure_window_size (f, parms, toolbar_p)
 	window_prompting |= PPosition;
     }
 
-  if (f->want_fullscreen != FULLSCREEN_NONE)
-    {
-      int left, top;
-      int width, height;
-
-      /* It takes both for some WM:s to place it where we want */
-      window_prompting |= USPosition | PPosition;
-      x_fullscreen_adjust (f, &width, &height, &top, &left);
-      FRAME_COLS (f) = width;
-      FRAME_LINES (f) = height;
-      FRAME_PIXEL_WIDTH (f) = FRAME_TEXT_COLS_TO_PIXEL_WIDTH (f, width);
-      FRAME_PIXEL_HEIGHT (f) = FRAME_TEXT_LINES_TO_PIXEL_HEIGHT (f, height);
-      f->left_pos = left;
-      f->top_pos = top;
-    }
-
   if (window_prompting & XNegative)
     {
       if (window_prompting & YNegative)
@@ -4414,6 +4379,45 @@ x_figure_window_size (f, parms, toolbar_p)
 
 #endif /* HAVE_WINDOW_SYSTEM */
 
+void
+frame_make_pointer_invisible ()
+{
+  if (! NILP (Vmake_pointer_invisible))
+    {
+      struct frame *f;
+      if (!FRAMEP (selected_frame) || !FRAME_LIVE_P (XFRAME (selected_frame)))
+        return;
+
+      f = SELECTED_FRAME ();
+      if (f && !f->pointer_invisible
+          && FRAME_TERMINAL (f)->toggle_invisible_pointer_hook)
+        {
+          f->mouse_moved = 0;
+          FRAME_TERMINAL (f)->toggle_invisible_pointer_hook (f, 1);
+          f->pointer_invisible = 1;
+        }
+    }
+}
+
+void
+frame_make_pointer_visible ()
+{
+  /* We don't check Vmake_pointer_invisible here in case the
+     pointer was invisible when Vmake_pointer_invisible was set to nil.  */
+  struct frame *f;
+
+  if (!FRAMEP (selected_frame) || !FRAME_LIVE_P (XFRAME (selected_frame)))
+    return;
+
+  f = SELECTED_FRAME ();
+  if (f && f->pointer_invisible && f->mouse_moved
+      && FRAME_TERMINAL (f)->toggle_invisible_pointer_hook)
+    {
+      FRAME_TERMINAL (f)->toggle_invisible_pointer_hook (f, 0);
+      f->pointer_invisible = 0;
+    }
+}
+
 
 
 /***********************************************************************
@@ -4423,99 +4427,101 @@ x_figure_window_size (f, parms, toolbar_p)
 void
 syms_of_frame ()
 {
-  Qframep = intern ("framep");
+  Qframep = intern_c_string ("framep");
   staticpro (&Qframep);
-  Qframe_live_p = intern ("frame-live-p");
+  Qframe_live_p = intern_c_string ("frame-live-p");
   staticpro (&Qframe_live_p);
-  Qexplicit_name = intern ("explicit-name");
+  Qexplicit_name = intern_c_string ("explicit-name");
   staticpro (&Qexplicit_name);
-  Qheight = intern ("height");
+  Qheight = intern_c_string ("height");
   staticpro (&Qheight);
-  Qicon = intern ("icon");
+  Qicon = intern_c_string ("icon");
   staticpro (&Qicon);
-  Qminibuffer = intern ("minibuffer");
+  Qminibuffer = intern_c_string ("minibuffer");
   staticpro (&Qminibuffer);
-  Qmodeline = intern ("modeline");
+  Qmodeline = intern_c_string ("modeline");
   staticpro (&Qmodeline);
-  Qonly = intern ("only");
+  Qonly = intern_c_string ("only");
   staticpro (&Qonly);
-  Qwidth = intern ("width");
+  Qwidth = intern_c_string ("width");
   staticpro (&Qwidth);
-  Qgeometry = intern ("geometry");
+  Qgeometry = intern_c_string ("geometry");
   staticpro (&Qgeometry);
-  Qicon_left = intern ("icon-left");
+  Qicon_left = intern_c_string ("icon-left");
   staticpro (&Qicon_left);
-  Qicon_top = intern ("icon-top");
+  Qicon_top = intern_c_string ("icon-top");
   staticpro (&Qicon_top);
-  Qleft = intern ("left");
+  Qleft = intern_c_string ("left");
   staticpro (&Qleft);
-  Qright = intern ("right");
+  Qright = intern_c_string ("right");
   staticpro (&Qright);
-  Quser_position = intern ("user-position");
+  Quser_position = intern_c_string ("user-position");
   staticpro (&Quser_position);
-  Quser_size = intern ("user-size");
+  Quser_size = intern_c_string ("user-size");
   staticpro (&Quser_size);
-  Qwindow_id = intern ("window-id");
+  Qwindow_id = intern_c_string ("window-id");
   staticpro (&Qwindow_id);
 #ifdef HAVE_X_WINDOWS
-  Qouter_window_id = intern ("outer-window-id");
+  Qouter_window_id = intern_c_string ("outer-window-id");
   staticpro (&Qouter_window_id);
 #endif
-  Qparent_id = intern ("parent-id");
+  Qparent_id = intern_c_string ("parent-id");
   staticpro (&Qparent_id);
-  Qx = intern ("x");
+  Qx = intern_c_string ("x");
   staticpro (&Qx);
-  Qw32 = intern ("w32");
+  Qw32 = intern_c_string ("w32");
   staticpro (&Qw32);
-  Qpc = intern ("pc");
+  Qpc = intern_c_string ("pc");
   staticpro (&Qpc);
-  Qmac = intern ("mac");
+  Qmac = intern_c_string ("mac");
   staticpro (&Qmac);
-  Qns = intern ("ns");
+  Qns = intern_c_string ("ns");
   staticpro (&Qns);
-  Qvisible = intern ("visible");
+  Qvisible = intern_c_string ("visible");
   staticpro (&Qvisible);
-  Qbuffer_predicate = intern ("buffer-predicate");
+  Qbuffer_predicate = intern_c_string ("buffer-predicate");
   staticpro (&Qbuffer_predicate);
-  Qbuffer_list = intern ("buffer-list");
+  Qbuffer_list = intern_c_string ("buffer-list");
   staticpro (&Qbuffer_list);
-  Qburied_buffer_list = intern ("buried-buffer-list");
+  Qburied_buffer_list = intern_c_string ("buried-buffer-list");
   staticpro (&Qburied_buffer_list);
-  Qdisplay_type = intern ("display-type");
+  Qdisplay_type = intern_c_string ("display-type");
   staticpro (&Qdisplay_type);
-  Qbackground_mode = intern ("background-mode");
+  Qbackground_mode = intern_c_string ("background-mode");
   staticpro (&Qbackground_mode);
-  Qnoelisp = intern ("noelisp");
+  Qnoelisp = intern_c_string ("noelisp");
   staticpro (&Qnoelisp);
-  Qtty_color_mode = intern ("tty-color-mode");
+  Qtty_color_mode = intern_c_string ("tty-color-mode");
   staticpro (&Qtty_color_mode);
-  Qtty = intern ("tty");
+  Qtty = intern_c_string ("tty");
   staticpro (&Qtty);
-  Qtty_type = intern ("tty-type");
+  Qtty_type = intern_c_string ("tty-type");
   staticpro (&Qtty_type);
 
-  Qface_set_after_frame_default = intern ("face-set-after-frame-default");
+  Qface_set_after_frame_default = intern_c_string ("face-set-after-frame-default");
   staticpro (&Qface_set_after_frame_default);
 
-  Qfullwidth = intern ("fullwidth");
+  Qfullwidth = intern_c_string ("fullwidth");
   staticpro (&Qfullwidth);
-  Qfullheight = intern ("fullheight");
+  Qfullheight = intern_c_string ("fullheight");
   staticpro (&Qfullheight);
-  Qfullboth = intern ("fullboth");
+  Qfullboth = intern_c_string ("fullboth");
   staticpro (&Qfullboth);
-  Qx_resource_name = intern ("x-resource-name");
+  Qmaximized = intern_c_string ("maximized");
+  staticpro (&Qmaximized);
+  Qx_resource_name = intern_c_string ("x-resource-name");
   staticpro (&Qx_resource_name);
 
-  Qx_frame_parameter = intern ("x-frame-parameter");
+  Qx_frame_parameter = intern_c_string ("x-frame-parameter");
   staticpro (&Qx_frame_parameter);
 
-  Qterminal = intern ("terminal");
+  Qterminal = intern_c_string ("terminal");
   staticpro (&Qterminal);
-  Qterminal_live_p = intern ("terminal-live-p");
+  Qterminal_live_p = intern_c_string ("terminal-live-p");
   staticpro (&Qterminal_live_p);
 
 #ifdef HAVE_NS
-  Qns_parse_geometry = intern ("ns-parse-geometry");
+  Qns_parse_geometry = intern_c_string ("ns-parse-geometry");
   staticpro (&Qns_parse_geometry);
 #endif
 
@@ -4524,7 +4530,7 @@ syms_of_frame ()
 
     for (i = 0; i < sizeof (frame_parms) / sizeof (frame_parms[0]); i++)
       {
-	Lisp_Object v = intern (frame_parms[i].name);
+	Lisp_Object v = intern_c_string (frame_parms[i].name);
 	if (frame_parms[i].variable)
 	  {
 	    *frame_parms[i].variable = v;
@@ -4614,6 +4620,11 @@ is over the clickable text.  However, the mouse shape still indicates
 when the mouse is over clickable text.  */);
   Vmouse_highlight = Qt;
 
+  DEFVAR_LISP ("make-pointer-invisible", &Vmake_pointer_invisible,
+               doc: /* If non-nil, make pointer invisible while typing.
+The pointer becomes visible again when the mouse is moved.  */);
+  Vmake_pointer_invisible = Qt;
+
   DEFVAR_LISP ("delete-frame-functions", &Vdelete_frame_functions,
 	       doc: /* Functions to be run before deleting a frame.
 The functions are run with one arg, the frame to be deleted.
@@ -4624,7 +4635,7 @@ actually deleted, or some time later (or even both when an earlier function
 in `delete-frame-functions' (indirectly) calls `delete-frame'
 recursively).  */);
   Vdelete_frame_functions = Qnil;
-  Qdelete_frame_functions = intern ("delete-frame-functions");
+  Qdelete_frame_functions = intern_c_string ("delete-frame-functions");
   staticpro (&Qdelete_frame_functions);
 
   DEFVAR_KBOARD ("default-minibuffer-frame", Vdefault_minibuffer_frame,
@@ -4646,7 +4657,7 @@ This variable is local to the current terminal and cannot be buffer-local.  */);
 	       doc: /* Non-nil if window system changes focus when you move the mouse.
 You should set this variable to tell Emacs how your window manager
 handles focus, since there is no way in general for Emacs to find out
-automatically.  */);
+automatically.  See also `mouse-autoselect-window'.  */);
 #ifdef HAVE_WINDOW_SYSTEM
 #if defined(HAVE_NTGUI) || defined(HAVE_NS)
   focus_follows_mouse = 0;

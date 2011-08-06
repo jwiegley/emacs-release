@@ -1,7 +1,7 @@
 ;;; authors.el --- utility for maintaining Emacs' AUTHORS file -*-coding: utf-8;-*-
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009  Free Software Foundation, Inc.
+;;   2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Gerd Moellmann <gerd@gnu.org>
 ;; Maintainer: Kim F. Storm <storm@cua.dk>
@@ -243,6 +243,7 @@ listed.")
     "texi/Makefile.in"
     "Imakefile" "icons/sink.ico" "aixcc.lex"
     "nxml/char-name/unicode"
+    "js2-mode.el"      ; only installed very briefly, replaced by js.el
     ;; Autogen:
     "cus-load.el" "finder-inf.el" "ldefs-boot.el"
     ;; Never had any meaningful changes logged, now deleted:
@@ -344,7 +345,6 @@ Changes to files in this list are not listed.")
     ("Sam Kendall" :changed "etags.c" "etags.el")
     ;; ack.texi: "We're not using his backquote.el any more."
     ("Richard King" :wrote "userlock.el" "filelock.c")
-    ("Larry Kolodney" :wrote "cvtmail.c")
     ("Sebastian Kremer" :changed "add-log.el")
     ("Mark Lambert" :changed "process.c" "process.h")
     ("Aaron Larson" :changed "bibtex.el")
@@ -504,7 +504,9 @@ found) in the repository.")
     ;; index and pick merged into search.
     ("mh-index.el" . "mh-search.el")
     ("mh-pick.el" . "mh-search.el")
-    ("INSTALL-CVS" . "INSTALL.CVS")
+    ;; INSTALL-CVS -> .CVS -> .BZR
+    ("INSTALL-CVS" . "INSTALL.BZR")
+    ("INSTALL.CVS" . "INSTALL.BZR")
     ("refcards/fr-drdref.pdf" . "refcards/fr-dired-ref.pdf")
     ("gnus-logo.eps" . "refcards/gnus-logo.eps")
     ("build-install" . "build-ins.in")
@@ -706,8 +708,7 @@ with the file and the number of each action:
 	 (existing-buffer (get-file-buffer log-file))
 	 (buffer (find-file-noselect log-file))
 	 authors file pos)
-    (save-excursion
-      (set-buffer buffer)
+    (with-current-buffer buffer
       (save-restriction
 	(widen)
 	(goto-char (point-min))
@@ -758,8 +759,7 @@ TABLE is a hash table to add author information to."
 	 (enable-local-eval nil)
 	 (buffer (find-file-noselect file)))
     (setq file (file-name-nondirectory file))
-    (save-excursion
-      (set-buffer buffer)
+    (with-current-buffer buffer
       (save-restriction
 	(widen)
 	(goto-char (point-min))
@@ -867,7 +867,7 @@ buffer *Authors Errors* containing references to unknown files."
     (unless (file-exists-p (expand-file-name "src/emacs.c" root))
       (unless (y-or-n-p
 	       (format "Not the root directory of Emacs: %s, continue? " root))
-	(error "Not the root directory.")))
+	(error "Not the root directory")))
     (dolist (log logs)
       (when (string-match "ChangeLog\\(.[0-9]+\\)?$" log)
 	(message "Scanning %s..." log)

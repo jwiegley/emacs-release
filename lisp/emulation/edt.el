@@ -1,7 +1,7 @@
 ;;; edt.el --- enhanced EDT keypad mode emulation for GNU Emacs 19
 
 ;; Copyright (C) 1986, 1992, 1993, 1994, 1995, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Kevin Gallagher <Kevin.Gallagher@boeing.com>
 ;; Maintainer: Kevin Gallagher <Kevin.Gallagher@boeing.com>
@@ -53,12 +53,13 @@
 ;;
 ;;    (add-hook term-setup-hook 'edt-emulation-on)
 
-;; IMPORTANT: Be sure to read the file, edt-user.doc, located in the
-;; Emacs "etc" directory.  It contains very helpful user information.
+;; IMPORTANT: Be sure to read the Info node `edt' for more details.
+;; It contains very helpful user information.
 
 ;; The EDT emulation consists of the following files:
 ;;
-;; edt-user.doc     - User Instructions and Sample Customization File
+;; edt.texi         - User manual
+;; edt-user.el      - Sample Customization File
 ;; edt.el           - EDT Emulation Functions and Default Configuration
 ;; edt-lk201.el     - Built-in support for DEC LK-201 Keyboards
 ;; edt-vt100.el     - Built-in support for DEC VT-100 (and above) terminals
@@ -102,8 +103,8 @@
 ;;      the Emacs function `query-replace'.  The binding of
 ;;      `query-replace' has been moved to GOLD-/.  If you prefer to
 ;;      restore `query-replace' to GOLD-Enter, then use an EDT user
-;;      customization file, edt-user.el, to do this.  See edt-user.doc
-;;      for details.
+;;      customization file, edt-user.el, to do this.
+;;      See Info node `edt' for more details.
 
 ;;  3.  EDT Emulation now also works in XEmacs, including the
 ;;      highlighting of selected text.
@@ -1272,7 +1273,7 @@ Argument BOTTOM is the bottom margin in number of lines or percent of window."
 	      (/ (1- (+ (* (string-to-number bottom) 100) (window-height)))
 		 (window-height)))))
   ;; report scroll margin settings if running interactively
-  (and (interactive-p)
+  (and (called-interactively-p 'interactive)
        (message "Scroll margins set.  Top = %s%%, Bottom = %s%%"
 		edt-top-scroll-margin edt-bottom-scroll-margin)))
 
@@ -2106,7 +2107,7 @@ created."
       (setq edt-term "pc")
     (if (or (not edt-window-system) (eq edt-window-system 'tty))
 	(setq edt-term (getenv "TERM"))))
-  ;; Look for for terminal configuration file for this terminal type.
+  ;; Look for a terminal configuration file for this terminal type.
   ;; Otherwise, load the user's custom configuration file.
   (if (or (not edt-window-system) (memq edt-window-system '(pc tty)))
       (progn
@@ -2235,7 +2236,7 @@ Optional argument USER-SETUP non-nil means  called from function
   (define-prefix-command 'edt-user-gold-map)
   (fset 'edt-user-gold-map (copy-keymap 'edt-default-gold-map))
   ;; This is a function that the user can define for custom bindings.
-  ;; See etc/edt-user.doc.
+  ;; See Info node `edt' for more details, and sample edt-user.el file.
   (if (fboundp 'edt-setup-user-bindings)
       (edt-setup-user-bindings))
   (edt-select-user-global-map))
@@ -2648,7 +2649,7 @@ G-C-\\: Split Window                     |  FNDNXT  |   Yank   |   CUT    |
 (defun edt-electric-helpify (fun)
   (let ((name "*Help*"))
     (if (save-window-excursion
-          (let* ((p (symbol-function 'print-help-return-message))
+          (let* ((p (symbol-function 'help-print-return-message))
                  (b (get-buffer name))
                  (m (buffer-modified-p b)))
             (and b (not (get-buffer-window b))
@@ -2657,20 +2658,18 @@ G-C-\\: Split Window                     |  FNDNXT  |   Yank   |   CUT    |
                 (progn
                   (message "%s..." (capitalize (symbol-name fun)))
                   (and b
-                       (save-excursion
-                         (set-buffer b)
+                       (with-current-buffer b
                          (set-buffer-modified-p t)))
-                  (fset 'print-help-return-message 'ignore)
+                  (fset 'help-print-return-message 'ignore)
                   (call-interactively fun)
                   (and (get-buffer name)
                        (get-buffer-window (get-buffer name))
                        (or (not b)
                            (not (eq b (get-buffer name)))
                            (not (buffer-modified-p b)))))
-              (fset 'print-help-return-message p)
+              (fset 'help-print-return-message p)
               (and b (buffer-name b)
-                   (save-excursion
-                     (set-buffer b)
+                   (with-current-buffer b
                      (set-buffer-modified-p m))))))
         (with-electric-help 'delete-other-windows name t))))
 

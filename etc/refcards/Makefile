@@ -1,7 +1,7 @@
 ### Makefile for Emacs refcards
 
 ## Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-##   2008, 2009  Free Software Foundation, Inc.
+##   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ## This file is part of GNU Emacs.
 #
@@ -55,31 +55,35 @@ viper-cards_ps: ${VIPER-CARDS_PDF:.pdf=.ps}
 
 cs-refcard.pdf cs-dired-ref.pdf cs-survival.pdf sk-refcard.pdf \
 sk-dired-ref.pdf sk-survival.pdf: %.pdf:	%.tex
-	csplain "\pdfoutput=1\input $<"
+	if pdfcsplain --version > /dev/null 2> /dev/null; then \
+	  pdfcsplain $<; \
+	else \
+	  csplain "\pdfoutput=1\input $<"; \
+	fi
 
+## Some versions of pdfmex seem to create dvi by default, hence output-format.
 pl-refcard.pdf: %.pdf: %.tex
-	if ! kpsewhich -format=fmt mex > /dev/null; then \
+	if ! kpsewhich -format=fmt mex > /dev/null && \
+	  ! pdfmex --version > /dev/null 2> /dev/null; then \
 	  echo "No mex format found."; false; \
 	fi
-	pdftex $<
+	pdftex -output-format=pdf $<
 
 ru-refcard.pdf: %.pdf: %.tex
 	pdflatex $<
 
-gnus-logo.pdf: %.pdf: %.eps
-	ps2pdf $<
+#gnus-logo.pdf: %.pdf: %.eps
+#	ps2pdf $<
 
 gnus-refcard.pdf: %.pdf: %.tex gnus-logo.pdf 
 	pdflatex $<
 
 gnus-booklet.pdf: gnus-refcard.tex gnus-logo.pdf
-	pdflatex '\def\booklettrue{}\def\letterpapertrue{}\input{gnus-refcard}'
-	mv gnus-refcard.pdf $@
+	pdflatex -jobname=gnus-booklet '\def\booklettrue{}\def\letterpapertrue{}\input{gnus-refcard}'
 
 ## Everything not explicitly listed above.
 %.pdf: %.tex
 	pdftex $<
-
 
 
 ## dvi files.
@@ -136,6 +140,6 @@ viperCard.ps: %.ps: %.dvi
 .PHONY: clean
 
 clean:
-	-rm -f *.dvi *.log
+	-rm -f *.dvi *.log *.aux
 
 ### Makefile ends here

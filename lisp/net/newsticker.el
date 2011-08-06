@@ -1,6 +1,6 @@
 ;;; newsticker.el --- A Newsticker for Emacs.
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author:      Ulf Jasper <ulf.jasper@web.de>
@@ -8,7 +8,7 @@
 ;; URL:         http://www.nongnu.org/newsticker
 ;; Created:     17. June 2003
 ;; Keywords:    News, RSS, Atom
-;; Time-stamp:  "13. Juni 2008, 17:46:44 (ulf)"
+;; Time-stamp:  "6. Dezember 2009, 19:15:18 (ulf)"
 
 ;; ======================================================================
 
@@ -400,11 +400,11 @@
 ;; ======================================================================
 ;;; Code:
 
-(require 'newsticker-backend "newst-backend.el")
-(require 'newsticker-ticker "newst-ticker.el")
-(require 'newsticker-reader "newst-reader.el")
-(require 'newsticker-plainview "newst-plainview.el")
-(require 'newsticker-treeview "newst-treeview.el")
+(require 'newst-backend)
+(require 'newst-ticker)
+(require 'newst-reader)
+(require 'newst-plainview)
+(require 'newst-treeview)
 
 (provide 'newsticker)
 

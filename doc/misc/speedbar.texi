@@ -5,7 +5,7 @@
 
 @copying
 Copyright @copyright{} 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009  Free Software Foundation, Inc.
+2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -164,7 +164,7 @@ Move to the next or previous item in a restricted fashion.  If a list is
 open, the cursor will skip over it.  If the cursor is in an open list,
 it will not leave it.
 @item C-M-n
-@itemx C-M-n
+@itemx C-M-p
 Move forwards and backwards across extended groups.  This lets you
 quickly skip over all files, directories, or other common sub-items at
 the same current depth.

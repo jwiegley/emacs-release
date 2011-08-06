@@ -1,7 +1,7 @@
 ;;; reftex-ref.el --- code to create labels and references with RefTeX
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <dominik@science.uva.nl>
 ;; Maintainer: auctex-devel@gnu.org
@@ -78,8 +78,7 @@ If optional BOUND is an integer, limit backward searches to that point."
                file (not (eq t reftex-keep-temporary-buffers)))))
     (if (not buf)
         (list label typekey "" file comment "LOST LABEL.  RESCAN TO FIX.")
-      (save-excursion
-        (set-buffer buf)
+      (with-current-buffer buf
         (save-restriction
           (widen)
           (goto-char 1)
@@ -536,14 +535,12 @@ When called with 2 C-u prefix args, disable magic word recognition."
               (delete-other-windows)
               (setq reftex-call-back-to-this-buffer buf
                     reftex-latex-syntax-table (syntax-table))
-              (let ((default-major-mode 'reftex-select-label-mode))
-                (if reftex-use-multiple-selection-buffers
-                    (switch-to-buffer-other-window
-                     (save-excursion
-                       (set-buffer buf)
-                       (reftex-make-selection-buffer-name typekey)))
-                  (switch-to-buffer-other-window "*RefTeX Select*")
-                  (reftex-erase-buffer)))
+              (if reftex-use-multiple-selection-buffers
+                  (switch-to-buffer-other-window
+                   (with-current-buffer buf
+                     (reftex-make-selection-buffer-name typekey)))
+                (switch-to-buffer-other-window "*RefTeX Select*")
+                (reftex-erase-buffer))
               (unless (eq major-mode 'reftex-select-label-mode)
                 (reftex-select-label-mode))
               (add-to-list 'selection-buffers (current-buffer))

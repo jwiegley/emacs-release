@@ -1,6 +1,6 @@
 ;;; icalendar.el --- iCalendar implementation -*-coding: utf-8 -*-
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author:         Ulf Jasper <ulf.jasper@web.de>
@@ -454,7 +454,7 @@ The strings are suitable for assembling into a TZ variable."
 	    (cons
 	     (concat
 	      ;; Fake a name.
-	      (if dst-p "(DST?)" "(STD?)")
+	      (if dst-p "DST" "STD")
 	      ;; For TZ, OFFSET is added to the local time.  So,
 	      ;; invert the values.
 	      (if (eq (aref offset 0) ?-) "+" "-")
@@ -466,6 +466,10 @@ The strings are suitable for assembling into a TZ variable."
 		    (week (if (eq day -1)
 			      byday
 			    (substring byday 0 -2))))
+               ;; "Translate" the icalendar way to specify the last
+               ;; (sun|mon|...)day in month to the tzset way.
+               (if (string= week "-1")  ; last day as icalendar calls it
+                   (setq week "5"))     ; last day as tzset calls it
 	       (concat "M" bymonth "." week "." (if (eq day -1) "0"
 						  (int-to-string day))
 		       ;; Start time.
@@ -896,7 +900,7 @@ Finto iCalendar file: ")
     (icalendar-export-region (point-min) (point-max) ical-filename)))
 
 (defalias 'icalendar-convert-diary-to-ical 'icalendar-export-file)
-(make-obsolete 'icalendar-convert-diary-to-ical 'icalendar-export-file)
+(make-obsolete 'icalendar-convert-diary-to-ical 'icalendar-export-file "22.1")
 
 (defvar icalendar--uid-count 0
   "Auxiliary counter for creating unique ids.")
@@ -1171,9 +1175,9 @@ entries.  ENTRY-MAIN is the first line of the diary entry."
   (if (string-match
        (concat nonmarker
                "\\([^ /]+[ /]+[^ /]+[ /]+[^ ]+\\)\\s-*" ; date
-               "\\(0?\\([1-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?" ; start time
+               "\\(\\([0-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?" ; start time
                "\\("
-               "-0?\\([1-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?\\)?" ; end time
+               "-\\([0-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?\\)?" ; end time
                "\\)?"
                "\\s-*\\(.*?\\) ?$")
        entry-main)
@@ -1267,10 +1271,10 @@ NONMARKER is a regular expression matching the start of non-marking
 entries.  ENTRY-MAIN is the first line of the diary entry."
   (if (and (string-match (concat nonmarker
                                  "\\([a-z]+\\)\\s-+"
-                                 "\\(0?\\([1-9][0-9]?:[0-9][0-9]\\)"
+                                 "\\(\\([0-9][0-9]?:[0-9][0-9]\\)"
                                  "\\([ap]m\\)?"
-                                 "\\(-0?"
-                                 "\\([1-9][0-9]?:[0-9][0-9]\\)"
+                                 "\\(-"
+                                 "\\([0-9][0-9]?:[0-9][0-9]\\)"
                                  "\\([ap]m\\)?\\)?"
                                  "\\)?"
                                  "\\s-*\\(.*?\\) ?$")
@@ -1349,12 +1353,12 @@ NONMARKER is a regular expression matching the start of non-marking
 entries.  ENTRY-MAIN is the first line of the diary entry."
   (if (string-match (concat nonmarker
                             (if (eq (icalendar--date-style) 'european)
-                                "0?\\([1-9]+[0-9]?\\)\\s-+\\([a-z]+\\)\\s-+"
-                              "\\([a-z]+\\)\\s-+0?\\([1-9]+[0-9]?\\)\\s-+")
+                                "\\([0-9]+[0-9]?\\)\\s-+\\([a-z]+\\)\\s-+"
+                              "\\([a-z]+\\)\\s-+\\([0-9]+[0-9]?\\)\\s-+")
                             "\\*?\\s-*"
-                            "\\(0?\\([1-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?"
+                            "\\(\\([0-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?"
                             "\\("
-                            "-0?\\([1-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?\\)?"
+                            "-\\([0-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?\\)?"
                             "\\)?"
                             "\\s-*\\([^0-9]+.*?\\) ?$" ; must not match years
                             )
@@ -1457,9 +1461,9 @@ entries.  ENTRY-MAIN is the first line of the diary entry."
   (if (string-match (concat nonmarker
                             "%%(diary-block \\([^ /]+[ /]+[^ /]+[ /]+[^ ]+\\)"
                             " +\\([^ /]+[ /]+[^ /]+[ /]+[^ ]+\\))\\s-*"
-                            "\\(0?\\([1-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?"
+                            "\\(\\([0-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?"
                             "\\("
-                            "-0?\\([1-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?\\)?"
+                            "-\\([0-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?\\)?"
                             "\\)?"
                             "\\s-*\\(.*?\\) ?$")
                     entry-main)
@@ -1565,9 +1569,9 @@ entries.  ENTRY-MAIN is the first line of the diary entry."
   (if (string-match (concat nonmarker
                             "%%(diary-cyclic \\([^ ]+\\) +"
                             "\\([^ /]+[ /]+[^ /]+[ /]+[^ ]+\\))\\s-*"
-                            "\\(0?\\([1-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?"
+                            "\\(\\([0-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?"
                             "\\("
-                            "-0?\\([1-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?\\)?"
+                            "-\\([0-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?\\)?"
                             "\\)?"
                             "\\s-*\\(.*?\\) ?$")
                     entry-main)
@@ -1638,9 +1642,9 @@ NONMARKER is a regular expression matching the start of non-marking
 entries.  ENTRY-MAIN is the first line of the diary entry."
   (if (string-match (concat nonmarker
                             "%%(diary-anniversary \\([^)]+\\))\\s-*"
-                            "\\(0?\\([1-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?"
+                            "\\(\\([0-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?"
                             "\\("
-                            "-0?\\([1-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?\\)?"
+                            "-\\([0-9][0-9]?:[0-9][0-9]\\)\\([ap]m\\)?\\)?"
                             "\\)?"
                             "\\s-*\\(.*?\\) ?$")
                     entry-main)
@@ -1781,7 +1785,7 @@ buffer `*icalendar-errors*'."
       nil)))
 
 (defalias 'icalendar-extract-ical-from-buffer 'icalendar-import-buffer)
-(make-obsolete 'icalendar-extract-ical-from-buffer 'icalendar-import-buffer)
+(make-obsolete 'icalendar-extract-ical-from-buffer 'icalendar-import-buffer "22.1")
 
 (defun icalendar--format-ical-event (event)
   "Create a string representation of an iCalendar EVENT."
@@ -2241,6 +2245,11 @@ the entry."
                    'diary-make-entry
                  'make-diary-entry)
                string non-marking diary-file)))
+  ;; Würgaround to remove the trailing blank char
+  (with-current-buffer (find-file diary-file)
+    (goto-char (point-max))
+    (if (= (char-before) ? )
+        (delete-char -1)))
   ;; return diary-file in case it has been changed interactively
   diary-file)
 

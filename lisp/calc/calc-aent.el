@@ -1,7 +1,7 @@
 ;;; calc-aent.el --- algebraic entry functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Dave Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -129,6 +129,7 @@
 	      (calc-matrix-mode nil)
 	      (calc-angle-mode 'deg)
 	      (calc-number-radix 10)
+              (calc-twos-complement-mode nil)
 	      (calc-leading-zeros nil)
 	      (calc-group-digits nil)
 	      (calc-point-char ".")
@@ -414,8 +415,7 @@ The value t means abort and give an error message.")
   (interactive)
   (let* ((str (minibuffer-contents))
 	 (exp (and (> (length str) 0)
-		   (save-excursion
-		     (set-buffer calc-buffer)
+		   (with-current-buffer calc-buffer
 		     (math-read-exprs str)))))
     (if (eq (car-safe exp) 'error)
 	(progn
@@ -749,7 +749,7 @@ in Calc algebraic input.")
 				   (1- math-exp-pos))))))
 	     (or (and (memq calc-language calc-lang-c-type-hex)
 		      (string-match "0[xX][0-9a-fA-F]+" math-exp-str math-exp-pos))
-		 (string-match "_?\\([0-9]+.?0*@ *\\)?\\([0-9]+.?0*' *\\)?\\(0*\\([2-9]\\|1[0-4]\\)\\(#\\|\\^\\^\\)[0-9a-dA-D.]+[eE][-+_]?[0-9]+\\|0*\\([2-9]\\|[0-2][0-9]\\|3[0-6]\\)\\(#\\|\\^\\^\\)[0-9a-zA-Z:.]+\\|[0-9]+:[0-9:]+\\|[0-9.]+\\([eE][-+_]?[0-9]+\\)?\"?\\)?"
+		 (string-match "_?\\([0-9]+.?0*@ *\\)?\\([0-9]+.?0*' *\\)?\\(0*\\([2-9]\\|1[0-4]\\)\\(#[#]?\\|\\^\\^\\)[0-9a-dA-D.]+[eE][-+_]?[0-9]+\\|0*\\([2-9]\\|[0-2][0-9]\\|3[0-6]\\)\\(#[#]?\\|\\^\\^\\)[0-9a-zA-Z:.]+\\|[0-9]+:[0-9:]+\\|[0-9.]+\\([eE][-+_]?[0-9]+\\)?\"?\\)?"
                                math-exp-str math-exp-pos))
 	     (setq math-exp-token 'number
 		   math-expr-data (math-match-substring math-exp-str 0)

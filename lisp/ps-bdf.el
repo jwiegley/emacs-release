@@ -1,10 +1,10 @@
 ;;; ps-bdf.el --- BDF font file handler for ps-print
 
 ;; Copyright (C) 1998, 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009
+;;   2009, 2010
 ;;   Free Software Foundation, Inc.
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009
+;;   2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -95,8 +95,7 @@ If BDFNAME doesn't exist, return nil."
   (and (file-readable-p bdfname)
        (let ((buf (generate-new-buffer " *bdf-work*"))
 	     (coding-system-for-read 'no-conversion))
-	 (save-excursion
-	   (set-buffer buf)
+	 (with-current-buffer buf
 	   (insert-file-contents bdfname)
 	   buf))))
 
@@ -225,8 +224,7 @@ CODE, where N and CODE are in the following relation:
 	(message "Reading %s..." bdfname)
       (error "BDF file %s doesn't exist" bdfname))
     (unwind-protect
-	(save-excursion
-	  (set-buffer buf)
+	(with-current-buffer buf
 	  (goto-char (point-min))
 	  (search-forward "\nFONTBOUNDINGBOX")
 	  (setq font-bounding-box

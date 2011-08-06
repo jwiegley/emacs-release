@@ -10,10 +10,10 @@ END-INFO-DIR-ENTRY
    This is an `Introduction to Programming in Emacs Lisp', for people
 who are not programmers.
 
-   Edition 3.08, 4 October 2008
+   Edition 3.10, 28 October 2009
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1997, 2001,
-2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software
+2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010    Free Software
 Foundation, Inc.
 
    Published by the:
@@ -6272,10 +6272,10 @@ File: eintr,  Node: Text and Auto-fill,  Next: Mail Aliases,  Prev: Beginning a 
 Now we come to the part that `turns on' Text mode and Auto Fill mode.
 
      ;;; Text mode and Auto Fill mode
-     ; The next two lines put Emacs into Text mode
-     ; and Auto Fill mode, and are for writers who
-     ; want to start writing prose rather than code.
-     (setq default-major-mode 'text-mode)
+     ;; The next two lines put Emacs into Text mode
+     ;; and Auto Fill mode, and are for writers who
+     ;; want to start writing prose rather than code.
+     (setq-default major-mode 'text-mode)
      (add-hook 'text-mode-hook 'turn-on-auto-fill)
 
    Here is the first part of this `.emacs' file that does something
@@ -6302,18 +6302,18 @@ list", if any.
 
    Here is the line again; how does it work?
 
-     (setq default-major-mode 'text-mode)
+     (setq major-mode 'text-mode)
 
 This line is a short, but complete Emacs Lisp expression.
 
    We are already familiar with `setq'.  It sets the following variable,
-`default-major-mode', to the subsequent value, which is `text-mode'.
-The single quote mark before `text-mode' tells Emacs to deal directly
-with the `text-mode' variable, not with whatever it might stand for.
-*Note Setting the Value of a Variable: set & setq, for a reminder of
-how `setq' works.  The main point is that there is no difference
-between the procedure you use to set a value in your `.emacs' file and
-the procedure you use anywhere else in Emacs.
+`major-mode', to the subsequent value, which is `text-mode'.  The
+single quote mark before `text-mode' tells Emacs to deal directly with
+the `text-mode' symbol, not with whatever it might stand for.  *Note
+Setting the Value of a Variable: set & setq, for a reminder of how
+`setq' works.  The main point is that there is no difference between
+the procedure you use to set a value in your `.emacs' file and the
+procedure you use anywhere else in Emacs.
 
    Here is the next line:
 
@@ -6719,10 +6719,10 @@ following conditional:
 
      (cond
       ((= 22 emacs-major-version)
-       ;; evaluate version 21 code
+       ;; evaluate version 22 code
        ( ... ))
       ((= 23 emacs-major-version)
-       ;; evaluate version 22 code
+       ;; evaluate version 23 code
        ( ... )))
 
    For example, in contrast to version 20, more recent versions blink
@@ -6748,7 +6748,7 @@ features, so I placed the following in my `.emacs' file(1):
        (tooltip-mode nil)
        ;; If tooltips turned on, make tips appear promptly
        (setq tooltip-delay 0.1)  ; default is 0.7 second
-       )
+        )
 
    ---------- Footnotes ----------
 
@@ -6969,7 +6969,7 @@ the top of the buffer.
 
      ;; Set a Mode Line that tells me which machine, which directory,
      ;; and which line I am on, plus the other customary information.
-     (setq default-mode-line-format
+     (setq-default mode-line-format
       (quote
        (#("-" 0 1
           (help-echo

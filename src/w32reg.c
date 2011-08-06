@@ -1,6 +1,6 @@
 /* Emulate the X Resource Manager through the registry.
    Copyright (C) 1990, 1993, 1994, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -20,6 +20,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* Written by Kevin Gallo */
 
 #include <config.h>
+#include <setjmp.h>
 #include "lisp.h"
 #include "w32term.h"
 #include "blockinput.h"
@@ -76,7 +77,7 @@ w32_get_rdb_resource (rdb, resource)
   return NULL;
 }
 
-LPBYTE
+static LPBYTE
 w32_get_string_resource (name, class, dwexptype)
      char *name, *class;
      DWORD dwexptype;
@@ -159,6 +160,10 @@ x_get_string_resource (rdb, name, class)
       if (resource = w32_get_rdb_resource (rdb, class))
         return resource;
     }
+
+  if (inhibit_x_resources)
+    /* --quick was passed, so this is a no-op.  */
+    return NULL;
 
   return (w32_get_string_resource (name, class, REG_SZ));
 }

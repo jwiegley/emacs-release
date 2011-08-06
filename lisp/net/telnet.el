@@ -1,7 +1,7 @@
 ;;; telnet.el --- run a telnet session from within an Emacs buffer
 
 ;; Copyright (C) 1985, 1988, 1992, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: William F. Schelter
 ;; Maintainer: FSF
@@ -192,7 +192,7 @@ rejecting one login and prompting again for a username and password.")
       (delete-region comint-last-input-start
 		     comint-last-input-end)))
 
-;;;###autoload (add-hook 'same-window-regexps "\\*telnet-.*\\*\\(\\|<[0-9]+>\\)")
+;;;###autoload (add-hook 'same-window-regexps (purecopy "\\*telnet-.*\\*\\(\\|<[0-9]+>\\)"))
 
 ;;;###autoload
 (defun telnet (host &optional port)
@@ -248,7 +248,7 @@ Data is sent to the remote host when RET is typed."
   (set (make-local-variable 'comint-prompt-regexp) telnet-prompt-pattern)
   (set (make-local-variable 'comint-use-prompt-regexp) t))
 
-;;;###autoload (add-hook 'same-window-regexps "\\*rsh-[^-]*\\*\\(\\|<[0-9]*>\\)")
+;;;###autoload (add-hook 'same-window-regexps (purecopy "\\*rsh-[^-]*\\*\\(\\|<[0-9]*>\\)"))
 
 ;;;###autoload
 (defun rsh (host)

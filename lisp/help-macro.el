@@ -1,7 +1,7 @@
 ;;; help-macro.el --- makes command line help such as help-for-help
 
 ;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Lynn Slater <lrs@indetech.com>
 ;; Maintainer: FSF
@@ -90,7 +90,7 @@ When FNAME finally does get a command, it executes that command
 and then returns."
   (let ((doc-fn (intern (concat (symbol-name fname) "-doc"))))
     `(progn
-       (defun ,doc-fn () ,help-text)
+       (defun ,doc-fn () ,help-text nil)
        (defun ,fname ()
 	 "Help command."
 	 (interactive)

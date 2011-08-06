@@ -5,7 +5,8 @@ This file describes how to use Info, the on-line, menu-driven GNU
 documentation system.
 
    Copyright (C) 1989, 1992, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -58,7 +59,8 @@ chapter.
 documentation system.
 
    Copyright (C) 1989, 1992, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -889,6 +891,11 @@ their names when `i' prompts you for a topic.  For example, if you want
 to read the description of what the `C-l' key does, type `iC-l<RET>'
 literally.
 
+   Emacs provides the command `Info-virtual-index', bound to the `I'
+key.  This behaves like `i', but constructs a virtual info node
+displaying the results of an index search, making it easier to select
+the one you want.
+
    If you aren't sure which manual documents the topic you are looking
 for, try the `M-x info-apropos' command in Emacs, or the `M-x
 index-apropos' command in the stand-alone reader.  It prompts for a
@@ -1344,14 +1351,15 @@ topics discussed in this document.
 * going forward in Info history:         Help-Int.            (line  41)
 * header of Info node:                   Help.                (line  17)
 * history list of visited nodes:         Help-Int.            (line  45)
+* I (Info mode):                         Search Index.        (line  37)
 * i (Info mode):                         Search Index.        (line   6)
-* index-apropos:                         Search Index.        (line  37)
+* index-apropos:                         Search Index.        (line  42)
 * Info document as a reference:          Search Text.         (line   6)
 * Info documents as tutorials:           Help-^L.             (line  37)
 * Info menus:                            Help-M.              (line   6)
 * Info-additional-directory-list:        Emacs Info Variables.
                                                               (line  24)
-* info-apropos:                          Search Index.        (line  37)
+* info-apropos:                          Search Index.        (line  42)
 * Info-directory:                        Help-Int.            (line  49)
 * Info-directory-list:                   Emacs Info Variables.
                                                               (line  13)
@@ -1390,6 +1398,7 @@ topics discussed in this document.
 * Info-use-header-line:                  Emacs Info Variables.
                                                               (line  46)
 * Info-validate:                         Checking.            (line  17)
+* Info-virtual-index:                    Search Index.        (line  37)
 * invisible text in Emacs:               Help-Inv.            (line  10)
 * isearch:                               Search Text.         (line  28)
 * L (Info mode):                         Help-Int.            (line  45)
@@ -1431,35 +1440,35 @@ topics discussed in this document.
 
 
 Tag Table:
-Node: Top1435
-Node: Getting Started3758
-Node: Help-Small-Screen4611
-Node: Help6565
-Node: Help-P8213
-Node: Help-^L9416
-Ref: Help-^L-Footnote-113947
-Node: Help-Inv14320
-Node: Help-]15999
-Node: Help-M17559
-Node: Help-FOO26112
-Node: Help-Xref27072
-Node: Help-Int30644
-Node: Help-Q33649
-Node: Advanced34802
-Node: Search Text36010
-Node: Search Index37800
-Node: Go to node40014
-Node: Choose menu subtopic41036
-Node: Create Info buffer42218
-Node: Emacs Info Variables43300
-Node: Expert Info47082
-Node: Add48431
-Ref: Add-Footnote-151428
-Node: Menus51681
-Node: Cross-refs54568
-Node: Help-Cross55339
-Node: Tags56003
-Node: Checking57514
-Node: Index58436
+Node: Top1441
+Node: Getting Started3770
+Node: Help-Small-Screen4623
+Node: Help6577
+Node: Help-P8225
+Node: Help-^L9428
+Ref: Help-^L-Footnote-113959
+Node: Help-Inv14332
+Node: Help-]16011
+Node: Help-M17571
+Node: Help-FOO26124
+Node: Help-Xref27084
+Node: Help-Int30656
+Node: Help-Q33661
+Node: Advanced34814
+Node: Search Text36022
+Node: Search Index37812
+Node: Go to node40248
+Node: Choose menu subtopic41270
+Node: Create Info buffer42452
+Node: Emacs Info Variables43534
+Node: Expert Info47316
+Node: Add48665
+Ref: Add-Footnote-151662
+Node: Menus51915
+Node: Cross-refs54802
+Node: Help-Cross55573
+Node: Tags56237
+Node: Checking57748
+Node: Index58670
 
 End Tag Table

@@ -1,9 +1,9 @@
 ;;; tibetan.el --- support for Tibetan language -*- coding: iso-2022-7bit; -*-
 
 ;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009  Free Software Foundation, Inc.
+;;   2009, 2010  Free Software Foundation, Inc.
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009
+;;   2006, 2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 ;; Copyright (C) 2003
@@ -102,7 +102,7 @@
 	     (input-method . "tibetan-wylie")
 	     (features tibet-util)
 	     (documentation . t)
-	     (sample-text "Tibetan ($(7"7"]"2!;"G#!"Q"2!;(B) $(7!4!5!5!>"7"!#C"Q!;"E"S"G!;"7"2"[!;"D"["#"G!>"I"]"_!;"9"Q!;"/"S!;"5"Q"2#9"[!;"H"A"U"c!>(B")))
+	     (sample-text . "Tibetan ($(7"7"]"2!;"G#!"Q"2!;(B) $(7!4!5!5!>"7"!#C"Q!;"E"S"G!;"7"2"[!;"D"["#"G!>"I"]"_!;"9"Q!;"/"S!;"5"Q"2#9"[!;"H"A"U"c!>(B")))
 
 ;; `$(7"A(B' is included in the pattern for subjoined consonants because we
 ;; treat it specially in tibetan-add-components.
@@ -568,6 +568,7 @@ The result of matching is to be used for indexing alists at conversion
 from a roman transcription to the corresponding Tibetan character.")
 
 (defvar tibetan-precomposed-regexp
+  (purecopy
   (let ((l tibetan-precomposed-transcription-alist)
 	temp)
     (setq temp "^\\(")
@@ -578,12 +579,13 @@ from a roman transcription to the corresponding Tibetan character.")
       (setq temp
 	    (concat temp "\\|" (car (car l))))
       (setq l (cdr l)))
-    (concat temp "\\)"))
+    (concat temp "\\)")))
   "Regexp string to match a romanized Tibetan complex consonant.
 The result of matching is to be used for indexing alists when the input key
 from an input method is converted to the corresponding precomposed glyph.")
 
 (defvar tibetan-precomposition-rule-regexp
+  (purecopy
   (let ((l tibetan-precomposition-rule-alist)
 	temp)
     (setq temp "\\(")
@@ -592,7 +594,7 @@ from an input method is converted to the corresponding precomposed glyph.")
     (while l
       (setq temp (concat temp "\\|" (car (car l))))
       (setq l (cdr l)))
-    (concat temp "\\)"))
+    (concat temp "\\)")))
   "Regexp string to match a sequence of Tibetan consonantic components, i.e.,
 one base consonant and one or more subjoined consonants.
 The result of matching is to be used for indexing alist when the component

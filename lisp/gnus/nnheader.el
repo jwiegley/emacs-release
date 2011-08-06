@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1987, 1988, 1989, 1990, 1993, 1994,
 ;;   1995, 1996, 1997, 1998, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Masanobu UMEDA <umerin@flab.flab.fujitsu.junet>
 ;;	Lars Magne Ingebrigtsen <larsi@gnus.org>
@@ -992,18 +992,18 @@ find-file-hooks, etc.
 (defun nnheader-find-file-noselect (&rest args)
   "Open a file with some variables bound.
 See `find-file-noselect' for the arguments."
-  (let* ((format-alist nil)
-	 (auto-mode-alist (mm-auto-mode-alist))
-	 (default-major-mode 'fundamental-mode)
-	 (enable-local-variables nil)
-	 (after-insert-file-functions nil)
-	 (enable-local-eval nil)
-	 (coding-system-for-read nnheader-file-coding-system)
-	 (version-control 'never)
-	 (ffh (if (boundp 'find-file-hook)
-		  'find-file-hook
-		'find-file-hooks))
-	 (val (symbol-value ffh)))
+  (letf* ((format-alist nil)
+          (auto-mode-alist (mm-auto-mode-alist))
+          ((default-value 'major-mode) 'fundamental-mode)
+          (enable-local-variables nil)
+          (after-insert-file-functions nil)
+          (enable-local-eval nil)
+          (coding-system-for-read nnheader-file-coding-system)
+          (version-control 'never)
+          (ffh (if (boundp 'find-file-hook)
+                   'find-file-hook
+                 'find-file-hooks))
+          (val (symbol-value ffh)))
     (set ffh nil)
     (unwind-protect
 	(apply 'find-file-noselect args)

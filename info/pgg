@@ -3,8 +3,8 @@ This is ../../info/pgg, produced by makeinfo version 4.11 from pgg.texi.
 This file describes PGG 0.1, an Emacs interface to various PGP
 implementations.
 
-   Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+   Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -36,8 +36,8 @@ decrypt, sign, and verify MIME messages.
    This file describes PGG 0.1, an Emacs interface to various PGP
 implementations.
 
-   Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+   Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1033,22 +1033,22 @@ Variable Index
 
 
 Tag Table:
-Node: Top1032
-Node: Overview2447
-Node: Prerequisites2932
-Node: How to use3924
-Node: User Commands5127
-Node: Selecting an implementation8338
-Node: Caching passphrase9344
-Ref: Caching passphrase-Footnote-112630
-Node: Default user identity12795
-Node: Architecture13835
-Node: Initializing14485
-Node: Back end methods15212
-Node: Getting output17653
-Node: Parsing OpenPGP packets18288
-Node: GNU Free Documentation License19003
-Node: Function Index44187
-Node: Variable Index45721
+Node: Top1038
+Node: Overview2459
+Node: Prerequisites2944
+Node: How to use3936
+Node: User Commands5139
+Node: Selecting an implementation8350
+Node: Caching passphrase9356
+Ref: Caching passphrase-Footnote-112642
+Node: Default user identity12807
+Node: Architecture13847
+Node: Initializing14497
+Node: Back end methods15224
+Node: Getting output17665
+Node: Parsing OpenPGP packets18300
+Node: GNU Free Documentation License19015
+Node: Function Index44199
+Node: Variable Index45733
 
 End Tag Table

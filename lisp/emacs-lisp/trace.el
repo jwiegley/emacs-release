@@ -1,7 +1,7 @@
 ;;; trace.el --- tracing facility for Emacs Lisp functions
 
 ;; Copyright (C) 1993, 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Hans Chalupsky <hans@cs.buffalo.edu>
 ;; Maintainer: FSF
@@ -160,8 +160,8 @@
   :group 'lisp)
 
 ;;;###autoload
-(defcustom trace-buffer "*trace-output*"
-  "*Trace output will by default go to that buffer."
+(defcustom trace-buffer (purecopy "*trace-output*")
+  "Trace output will by default go to that buffer."
   :type 'string
   :group 'trace)
 
@@ -253,7 +253,7 @@
 For every call of FUNCTION Lisp-style trace messages that display argument
 and return values will be inserted into BUFFER.  This function generates the
 trace advice for FUNCTION and activates it together with any other advice
-there might be!! The trace BUFFER will popup whenever FUNCTION is called.
+there might be!!  The trace BUFFER will popup whenever FUNCTION is called.
 Do not use this to trace functions that switch buffers or do any other
 display oriented stuff, use `trace-function-background' instead."
   (interactive

@@ -1,5 +1,5 @@
 /* Copyright (C) 1985, 1986, 1987, 1988, 1992, 1993, 1994, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -204,6 +204,7 @@ static int pagemask;
 
 #ifdef emacs
 
+#include <setjmp.h>
 #include "lisp.h"
 
 static
@@ -498,7 +499,7 @@ write_segment (new, ptr, end)
 	  )
 	{
 	  /* Write only a page of zeros at once,
-	     so that we we don't overshoot the start
+	     so that we don't overshoot the start
 	     of the valid memory in the old data segment.  */
 	  if (nwrite > pagesize)
 	    nwrite = pagesize;

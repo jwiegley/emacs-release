@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1987, 1988, 1989, 1990, 1992, 1993,
 ;;   1994, 1995, 1996, 1997, 1998, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -1816,13 +1816,13 @@ via telnet.")
 (defun nntp-service-to-port (svc)
   (cond
    ((integerp svc) (number-to-string svc))
-   ((string-match "\\`[[:digit:]]\\'" svc) svc)
+   ((string-match "\\`[0-9]+\\'" svc) svc)
    (t
     (with-temp-buffer
       (ignore-errors (insert-file-contents "/etc/services"))
       (goto-char (point-min))
       (if (re-search-forward (concat "^" (regexp-quote svc)
-                                     "[ \t]+\\([[:digit:]]+\\)/tcp"))
+                                     "[ \t]+\\([0-9]+\\)/tcp"))
           (match-string 1)
         svc)))))
 

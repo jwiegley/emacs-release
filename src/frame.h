@@ -1,6 +1,6 @@
 /* Define frame-object for GNU Emacs.
    Copyright (C) 1993, 1994, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -75,12 +75,12 @@ enum text_cursor_kinds
 
 enum fullscreen_type
 {
-  /* Values used as a bit mask, BOTH == WIDTH | HEIGHT.  */
-  FULLSCREEN_NONE       = 0,
-  FULLSCREEN_WIDTH      = 1,
-  FULLSCREEN_HEIGHT     = 2,
-  FULLSCREEN_BOTH       = 3,
-  FULLSCREEN_WAIT       = 4
+  FULLSCREEN_NONE,
+  FULLSCREEN_WIDTH     = 0x001,
+  FULLSCREEN_HEIGHT    = 0x002,
+  FULLSCREEN_BOTH      = 0x003,
+  FULLSCREEN_MAXIMIZED = 0x013,
+  FULLSCREEN_WAIT      = 0x100
 };
 
 
@@ -440,6 +440,9 @@ struct frame
      since the last time we checked.  */
   unsigned char mouse_moved :1;
 
+  /* Nonzero means that the pointer is invisible. */
+  unsigned char pointer_invisible :1;
+
   /* If can_have_scroll_bars is non-zero, this is non-zero if we should
      actually display them on this frame.  */
   enum vertical_scroll_bar_type vertical_scroll_bar_type;
@@ -586,6 +589,11 @@ typedef struct frame *FRAME_PTR;
 
 #define FRAME_TOP_MARGIN(F) \
      (FRAME_MENU_BAR_LINES (F) + FRAME_TOOL_BAR_LINES (F))
+
+/* Pixel height of the top margin above.  */
+
+#define FRAME_TOP_MARGIN_HEIGHT(f) \
+  (FRAME_TOP_MARGIN (f) * FRAME_LINE_HEIGHT (f))
 
 /* Nonzero if this frame should display a menu bar
    in a way that does not use any text lines.  */
@@ -830,6 +838,9 @@ extern struct frame *make_frame_without_minibuffer P_ ((Lisp_Object,
 							Lisp_Object));
 #endif /* HAVE_WINDOW_SYSTEM */
 extern int other_visible_frames P_ ((struct frame *));
+extern void frame_make_pointer_invisible P_ ((void));
+extern void frame_make_pointer_visible P_ ((void));
+extern Lisp_Object delete_frame P_ ((Lisp_Object, Lisp_Object));
 
 extern Lisp_Object Vframe_list;
 extern Lisp_Object Vdefault_frame_alist;
@@ -969,7 +980,7 @@ extern Lisp_Object selected_frame;
    at ROW/COL.  */
 
 #define FRAME_LINE_TO_PIXEL_Y(f, row) \
-  (FRAME_INTERNAL_BORDER_WIDTH (f)  \
+  (((row) < FRAME_TOP_MARGIN (f) ? 0 : FRAME_INTERNAL_BORDER_WIDTH (f))	\
    + (row) * FRAME_LINE_HEIGHT (f))
 
 #define FRAME_COL_TO_PIXEL_X(f, col) \
@@ -986,15 +997,21 @@ extern Lisp_Object selected_frame;
    + FRAME_INTERNAL_BORDER_WIDTH (f))
 
 #define FRAME_TEXT_LINES_TO_PIXEL_HEIGHT(f, lines) \
-  (FRAME_LINE_TO_PIXEL_Y (f, lines) \
-   + FRAME_INTERNAL_BORDER_WIDTH (f))
+  ((lines) * FRAME_LINE_HEIGHT (f) \
+   + 2 * FRAME_INTERNAL_BORDER_WIDTH (f))
 
 
 /* Return the row/column (zero-based) of the character cell containing
    the pixel on FRAME at Y/X.  */
 
 #define FRAME_PIXEL_Y_TO_LINE(f, y) \
-  (((y) - FRAME_INTERNAL_BORDER_WIDTH (f))	\
+  (((y) < FRAME_TOP_MARGIN_HEIGHT (f)	\
+    ? (y)	\
+    : ((y) < FRAME_TOP_MARGIN_HEIGHT (f) + FRAME_INTERNAL_BORDER_WIDTH (f) \
+       ? (y) - (FRAME_TOP_MARGIN_HEIGHT (f) + FRAME_INTERNAL_BORDER_WIDTH (f) \
+		/* Arrange for the division to round down.  */	\
+		+ FRAME_LINE_HEIGHT (f) - 1)	\
+       : (y) - FRAME_INTERNAL_BORDER_WIDTH (f)))	\
    / FRAME_LINE_HEIGHT (f))
 
 #define FRAME_PIXEL_X_TO_COL(f, x) \
@@ -1038,6 +1055,8 @@ extern Lisp_Object Qscreen_gamma;
 extern Lisp_Object Qline_spacing;
 extern Lisp_Object Qwait_for_wm;
 extern Lisp_Object Qfullscreen;
+extern Lisp_Object Qfullwidth, Qfullheight, Qfullboth, Qmaximized;
+extern Lisp_Object Qsticky;
 extern Lisp_Object Qfont_backend;
 extern Lisp_Object Qalpha;
 
@@ -1108,14 +1127,12 @@ extern Lisp_Object Vframe_alpha_lower_limit;
 extern void x_set_alpha P_ ((struct frame *, Lisp_Object, Lisp_Object));
 
 extern void validate_x_resource_name P_ ((void));
-
+                                           
 extern Lisp_Object display_x_get_resource (Display_Info *,
 					   Lisp_Object attribute,
 					   Lisp_Object class,
 					   Lisp_Object component,
 					   Lisp_Object subclass);
-
-extern Lisp_Object delete_frame P_ ((Lisp_Object, Lisp_Object));
 
 #endif /* HAVE_WINDOW_SYSTEM */
 

@@ -1,6 +1,6 @@
 /* m- file for Mips machines.
    Copyright (C) 1987, 1992, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-                 2007, 2008, 2009  Free Software Foundation, Inc.
+                 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -23,7 +23,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
    USUAL-OPSYS="note"
 
 NOTE-START
-This is only used on GNU/Linux.
+This is used on GNU/Linux and netbsd.
 NOTE-END  */
 
 /* Define WORDS_BIG_ENDIAN if lowest-numbered byte in a word
@@ -49,10 +49,6 @@ NOTE-END  */
 /* Describe layout of the address space in an executing process.  */
 
 #define TEXT_START      0x00400000
-
-#ifndef GNU_LINUX
-#define DATA_START      0x10000000
-#endif
 
 
 #if 0 /* These definitions were advantageous when not using

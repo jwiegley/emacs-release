@@ -1,6 +1,6 @@
 ;;; nxml-outln.el --- outline support for nXML mode
 
-;; Copyright (C) 2004, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: James Clark
 ;; Keywords: XML
@@ -795,7 +795,7 @@ Do not move past the end of the line."
   (let ((pos (condition-case err
 		 (and (nxml-scan-element-forward (point) t)
 		      xmltok-start)
-	       nil)))
+	       (nxml-scan-error nil))))
     (end-of-line)
     (skip-chars-backward " \t")
     (cond ((not pos)

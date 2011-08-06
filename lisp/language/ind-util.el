@@ -1,6 +1,6 @@
 ;;; ind-util.el --- Transliteration and Misc. Tools for Indian Languages -*- coding: iso-2022-7bit; -*-
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Maintainer:  KAWABATA, Taichi <kawabata@m17n.org>
@@ -382,21 +382,12 @@
     (;; misc
      nil   ".m"  ".h"  "'"   nil   "." nil)))
 
-(defun mapthread (function seq1 &rest seqrest)
-  "Apply FUNCTION to each element of SEQ1 and return result list.
-If there are several SEQRESTs, FUNCTION is called with that many
-arguments, with all possible combinations of these multiple SEQUENCES.
-Thus, if SEQ1 contains 3 elements and SEQ2 contains 5 elements, then
-FUNCTION will be called 15 times."
-  (if seqrest
-      (mapcar
-       (lambda (x)
-         (apply
-          'mapthread
-          `(lambda (&rest y) (apply ',function x y))
-          seqrest))
-       seq1)
-  (mapcar function seq1)))
+(defun combinatorial (head &rest tail)
+  (if tail
+      (apply 'append
+	     (mapcar (lambda (y) (mapcar (lambda (x) (cons x y)) head))
+		     (apply 'combinatorial tail)))
+    (mapcar 'list head)))
 
 (defun indian--puthash-char (char trans-char hashtbls)
   (let ((encode-hash (car hashtbls))  ;; char -> trans
@@ -446,8 +437,8 @@ FUNCTION will be called 15 times."
 	  (if (stringp trans-v) (setq trans-v (list trans-v)))
 	  (indian--puthash-char
 	   (concat c v)
-	   (apply 'append
-		  (mapthread 'concat trans-c trans-v))
+	   (mapcar (lambda (x) (apply 'concat x))
+		  (combinatorial trans-c trans-v))
 	   hashtbls)))
       v trans-v))
    c trans-c))

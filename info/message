@@ -4,7 +4,7 @@ message.texi.
 This file documents Message, the Emacs message composition mode.
 
    Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -32,7 +32,7 @@ Message
 This file documents Message, the Emacs message composition mode.
 
    Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -566,7 +566,7 @@ exist, it will be inserted.
 `C-c M-n'
      Insert a request for a disposition notification.
      (`message-insert-disposition-notification-to').  This means that
-     if the recipient support RFC 2298 she might send you a
+     if the recipient supports RFC 2298 she might send you a
      notification that she received the message.
 
 `M-x message-insert-importance-high'
@@ -2005,9 +2005,9 @@ by default.
 
 "wide reply"
      A "wide reply" is a mail response that includes _all_ entities
-     mentioned in the message you are responded to.  All mailboxes from
-     the following headers will be concatenated to form the outgoing
-     `To'/`Cc' headers:
+     mentioned in the message you are responding to.  All mailboxes
+     from the following headers will be concatenated to form the
+     outgoing `To'/`Cc' headers:
 
     `From'
           (unless there's a `Reply-To', in which case that is used
@@ -2915,51 +2915,51 @@ File: message,  Node: Key Index,  Prev: Index,  Up: Top
 
 
 Tag Table:
-Node: Top1073
-Node: Interface2668
-Node: New Mail Message3858
-Node: New News Message4220
-Node: Reply4613
-Node: Wide Reply5983
-Node: Followup6938
-Node: Canceling News7713
-Node: Superseding8893
-Node: Forwarding9547
-Node: Resending11095
-Node: Bouncing11450
-Node: Mailing Lists12021
-Node: Commands17218
-Node: Buffer Entry17956
-Node: Header Commands18627
-Node: Movement23493
-Node: Insertion24057
-Node: MIME25378
-Node: IDNA26581
-Node: Security27776
-Node: Signing and encryption28328
-Node: Using S/MIME31141
-Node: Using PGP/MIME34360
-Node: PGP Compatibility36197
-Node: Various Commands37852
-Node: Sending39472
-Node: Mail Aliases39882
-Node: Spelling41187
-Node: Variables42493
-Node: Message Headers43212
-Node: Mail Headers49317
-Node: Mail Variables50269
-Node: News Headers53321
-Node: News Variables60317
-Node: Insertion Variables60722
-Node: Various Message Variables65265
-Node: Sending Variables70835
-Node: Message Buffers72142
-Node: Message Actions74297
-Node: Compatibility75769
-Node: Appendices76212
-Node: Responses76430
-Node: GNU Free Documentation License77782
-Node: Index102930
-Node: Key Index125124
+Node: Top1079
+Node: Interface2680
+Node: New Mail Message3870
+Node: New News Message4232
+Node: Reply4625
+Node: Wide Reply5995
+Node: Followup6950
+Node: Canceling News7725
+Node: Superseding8905
+Node: Forwarding9559
+Node: Resending11107
+Node: Bouncing11462
+Node: Mailing Lists12033
+Node: Commands17230
+Node: Buffer Entry17968
+Node: Header Commands18639
+Node: Movement23506
+Node: Insertion24070
+Node: MIME25391
+Node: IDNA26594
+Node: Security27789
+Node: Signing and encryption28341
+Node: Using S/MIME31154
+Node: Using PGP/MIME34373
+Node: PGP Compatibility36210
+Node: Various Commands37865
+Node: Sending39485
+Node: Mail Aliases39895
+Node: Spelling41200
+Node: Variables42506
+Node: Message Headers43225
+Node: Mail Headers49330
+Node: Mail Variables50282
+Node: News Headers53334
+Node: News Variables60330
+Node: Insertion Variables60735
+Node: Various Message Variables65278
+Node: Sending Variables70848
+Node: Message Buffers72155
+Node: Message Actions74310
+Node: Compatibility75782
+Node: Appendices76225
+Node: Responses76443
+Node: GNU Free Documentation License77796
+Node: Index102944
+Node: Key Index125138
 
 End Tag Table

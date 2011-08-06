@@ -1,7 +1,7 @@
 ;;; calc-vec.el --- vector functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -1338,6 +1338,7 @@
   (if w (setq a (math-clip a w)))
   (if (math-messy-integerp a) (setq a (math-trunc a)))
   (let* ((calc-number-radix 2)
+         (calc-twos-complement-mode nil)
 	 (neg (math-negp a))
 	 (aa (if neg (math-sub -1 a) a))
 	 (str (if (eq aa 0)

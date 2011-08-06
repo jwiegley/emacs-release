@@ -1,7 +1,7 @@
 ;;; tramp-ftp.el --- Tramp convenience functions for Ange-FTP
 
 ;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009 Free Software Foundation, Inc.
+;;   2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Michael Albinus <michael.albinus@gmx.de>
 ;; Keywords: comm, processes
@@ -134,7 +134,7 @@ First arg specifies the OPERATION, second arg is a list of arguments to
 pass to the OPERATION."
   (save-match-data
     (or (boundp 'ange-ftp-name-format)
-	(require 'ange-ftp))
+	(let (file-name-handler-alist) (require 'ange-ftp)))
     (let ((ange-ftp-name-format
 	   (list (nth 0 tramp-file-name-structure)
 		 (nth 3 tramp-file-name-structure)

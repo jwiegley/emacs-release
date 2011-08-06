@@ -1,10 +1,10 @@
 ;;; log-view.el --- Major mode for browsing RCS/CVS/SCCS log output
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
-;; Keywords: rcs sccs cvs log version-control
+;; Keywords: rcs sccs cvs log version-control tools
 
 ;; This file is part of GNU Emacs.
 
@@ -113,7 +113,7 @@
 (eval-when-compile (require 'cl))
 (require 'pcvs-util)
 (autoload 'vc-find-revision "vc")
-(autoload 'vc-version-diff "vc")
+(autoload 'vc-diff-internal "vc")
 
 (defvar cvs-minor-wrap-function)
 
@@ -122,12 +122,16 @@
   :group 'pcl-cvs
   :prefix "log-view-")
 
+;; Needed because log-view-mode-map inherits from widget-keymap.  (Bug#5311)
+(require 'wid-edit)
+
 (easy-mmode-defmap log-view-mode-map
-  '(("q" . quit-window)
-    ("z" . kill-this-buffer)
+  '(("z" . kill-this-buffer)
+    ("q" . quit-window)
     ("m" . log-view-toggle-mark-entry)
     ("e" . log-view-modify-change-comment)
     ("d" . log-view-diff)
+    ("=" . log-view-diff)
     ("D" . log-view-diff-changeset)
     ("a" . log-view-annotate-version)
     ("f" . log-view-find-revision)
@@ -140,10 +144,8 @@
     ("\M-n" . log-view-file-next)
     ("\M-p" . log-view-file-prev))
   "Log-View's keymap."
-  :group 'log-view
-  ;; Here I really need either buffer-local keymap-inheritance
-  ;; or a minor-mode-map with lower precedence than the local map.
-  :inherit (if (boundp 'cvs-mode-map) cvs-mode-map))
+  :inherit widget-keymap
+  :group 'log-view)
 
 (easy-menu-define log-view-mode-menu log-view-mode-map
   "Log-View Display Menu"
@@ -182,8 +184,7 @@
     (t (:weight bold)))
   "Face for the file header line in `log-view-mode'."
   :group 'log-view)
-;; backward-compatibility alias
-(put 'log-view-file-face 'face-alias 'log-view-file)
+(define-obsolete-face-alias 'log-view-file-face 'log-view-file "22.1")
 (defvar log-view-file-face 'log-view-file)
 
 (defface log-view-message
@@ -193,7 +194,7 @@
   "Face for the message header line in `log-view-mode'."
   :group 'log-view)
 ;; backward-compatibility alias
-(put 'log-view-message-face 'face-alias 'log-view-message)
+(define-obsolete-face-alias 'log-view-message-face 'log-view-message "22.1")
 (defvar log-view-message-face 'log-view-message)
 
 (defvar log-view-file-re
@@ -246,7 +247,7 @@ The match group number 1 should match the revision number itself.")
 ;;;;
 
 ;;;###autoload
-(define-derived-mode log-view-mode fundamental-mode "Log-View"
+(define-derived-mode log-view-mode special-mode "Log-View"
   "Major mode for browsing CVS log output."
   (setq buffer-read-only t)
   (set (make-local-variable 'font-lock-defaults) log-view-font-lock-defaults)
@@ -488,7 +489,9 @@ log entries."
 If the mark is not active or the mark is on the revision at point,
 get the diff between the revision at point and its previous revision.
 Otherwise, get the diff between the revisions where the region starts
-and ends."
+and ends.
+Contrary to `log-view-diff-changeset', it will only show the part of the
+changeset that affected the currently considered file(s)."
   (interactive
    (list (if mark-active (region-beginning) (point))
          (if mark-active (region-end) (point))))
@@ -499,11 +502,12 @@ and ends."
         (goto-char end)
         (log-view-msg-next)
         (setq to (log-view-current-tag))))
-    (vc-version-diff
-     (if log-view-per-file-logs
-	 (list (log-view-current-file))
-       log-view-vc-fileset)
-       to fr)))
+    (vc-diff-internal
+     t (list log-view-vc-backend
+	     (if log-view-per-file-logs
+		 (list (log-view-current-file))
+	       log-view-vc-fileset))
+     to fr)))
 
 (declare-function vc-diff-internal "vc"
 		  (async vc-fileset rev1 rev2 &optional verbose))
@@ -513,7 +517,9 @@ and ends."
 If the mark is not active or the mark is on the revision at point,
 get the diff between the revision at point and its previous revision.
 Otherwise, get the diff between the revisions where the region starts
-and ends."
+and ends.
+Contrary to `log-view-diff', it will show the whole changeset including
+the changes that affected other files than the currently considered file(s)."
   (interactive
    (list (if mark-active (region-beginning) (point))
          (if mark-active (region-end) (point))))

@@ -1,6 +1,6 @@
 ;;; vc-mcvs.el --- VC backend for the Meta-CVS version-control system
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author:      FSF (see vc.el for full credits)
@@ -200,7 +200,7 @@ COMMENT can be used to provide an initial description of FILE.
 Passes either `vc-mcvs-register-switches' or `vc-register-switches'
 to the Meta-CVS command."
   ;; FIXME: multiple-file case should be made to work.
-  (if (> (length files) 1) (error "Registering filesets is not yet supported."))
+  (if (> (length files) 1) (error "Registering filesets is not yet supported"))
   (let* ((file (car files))
 	 (filename (file-name-nondirectory file))
 	 (extpos (string-match "\\." filename))

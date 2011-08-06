@@ -1,5 +1,5 @@
 /* Font backend for the Microsoft W32 API.
-   Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -21,6 +21,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <math.h>
 #include <ctype.h>
 #include <commdlg.h>
+#include <setjmp.h>
 
 #include "lisp.h"
 #include "w32term.h"
@@ -201,7 +202,7 @@ w32font_list (frame, font_spec)
      Lisp_Object frame, font_spec;
 {
   Lisp_Object fonts = w32font_list_internal (frame, font_spec, 0);
-  font_add_log ("w32font-list", font_spec, fonts);
+  FONT_ADD_LOG ("w32font-list", font_spec, fonts);
   return fonts;
 }
 
@@ -214,7 +215,7 @@ w32font_match (frame, font_spec)
      Lisp_Object frame, font_spec;
 {
   Lisp_Object entity = w32font_match_internal (frame, font_spec, 0);
-  font_add_log ("w32font-match", font_spec, entity);
+  FONT_ADD_LOG ("w32font-match", font_spec, entity);
   return entity;
 }
 
@@ -289,8 +290,7 @@ w32font_close (f, font)
     {
       for (i = 0; i < w32_font->n_cache_blocks; i++)
         {
-          if (w32_font->cached_metrics[i])
-            xfree (w32_font->cached_metrics[i]);
+          xfree (w32_font->cached_metrics[i]);
         }
       xfree (w32_font->cached_metrics);
       w32_font->cached_metrics = NULL;
@@ -2472,7 +2472,10 @@ struct font_driver w32font_driver =
     NULL, /* otf_drive */
     NULL, /* start_for_frame */
     NULL, /* end_for_frame */
-    NULL  /* shape */
+    NULL, /* shape */
+    NULL, /* check */
+    NULL, /* get_variation_glyphs */
+    NULL, /* filter_properties */
   };
 
 

@@ -1,8 +1,8 @@
 ;;; fortran.el --- Fortran mode for GNU Emacs
 
 ;; Copyright (C) 1986, 1993, 1994, 1995, 1997, 1998, 1999, 2000, 2001,
-;;               2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
-;;               Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   Free Software Foundation, Inc.
 
 ;; Author: Michael D. Prange <prange@erl.mit.edu>
 ;; Maintainer: Glenn Morris <rgm@gnu.org>
@@ -83,8 +83,8 @@ A non-nil value specifies tab-digit style of continuation control.
 A value of nil specifies that continuation lines are marked
 with a character in column 6."
   :type  'boolean
+  :safe  'booleanp
   :group 'fortran-indent)
-(put 'fortran-tab-mode-default 'safe-local-variable 'booleanp)
 
 ;; TODO add more detail of what tab mode is to doc string.
 (defcustom fortran-tab-mode-string
@@ -99,32 +99,32 @@ with a character in column 6."
   "String to appear in mode line in TAB format buffers.
 See Info node `(emacs)ForIndent Cont'."
   :type  'string
+  :risky t
   :group 'fortran-indent)
-(put 'fortran-tab-mode-string 'risky-local-variable t)
 
 (defcustom fortran-do-indent 3
   "Extra indentation applied to DO blocks."
   :type  'integer
+  :safe  'integerp
   :group 'fortran-indent)
-(put 'fortran-do-indent 'safe-local-variable 'integerp)
 
 (defcustom fortran-if-indent 3
   "Extra indentation applied to IF, SELECT CASE and WHERE blocks."
   :type  'integer
+  :safe  'integerp
   :group 'fortran-indent)
-(put 'fortran-if-indent 'safe-local-variable 'integerp)
 
 (defcustom fortran-structure-indent 3
   "Extra indentation applied to STRUCTURE, UNION, MAP and INTERFACE blocks."
   :type  'integer
+  :safe  'integerp
   :group 'fortran-indent)
-(put 'fortran-structure-indent 'safe-local-variable 'integerp)
 
 (defcustom fortran-continuation-indent 5
   "Extra indentation applied to continuation lines."
   :type  'integer
+  :safe  'integerp
   :group 'fortran-indent)
-(put 'fortran-continuation-indent 'safe-local-variable 'integerp)
 
 (defcustom fortran-comment-indent-style 'fixed
   "How to indent comments.
@@ -135,16 +135,15 @@ nil forces comment lines not to be touched;
 `relative' indents to current Fortran indentation plus
   `fortran-comment-line-extra-indent'."
   :type  '(radio (const :tag "Untouched" nil) (const fixed) (const relative))
+  :safe  (lambda (value) (memq value '(nil fixed relative)))
   :group 'fortran-indent)
-(put 'fortran-comment-indent 'safe-local-variable
-     (lambda (value) (memq value '(nil fixed relative))))
 
 (defcustom fortran-comment-line-extra-indent 0
   "Amount of extra indentation for text within full-line comments."
   :type  'integer
+  :safe  'integerp
   :group 'fortran-indent
   :group 'fortran-comment)
-(put 'fortran-comment-line-extra-indent 'safe-local-variable 'integerp)
 
 (defcustom fortran-comment-line-start "C"
   "Delimiter inserted to start new full-line comment.
@@ -152,8 +151,8 @@ You might want to change this to \"*\", for instance; or \"!\" to
 allow trailing comments on a line."
   :version "21.1"
   :type    'string
+  :safe    'stringp
   :group   'fortran-comment)
-(put 'fortran-comment-line-start 'safe-local-variable 'stringp)
 
 ;; This used to match preprocessor lines too, but that messes up
 ;; filling and doesn't seem to be necessary.
@@ -162,8 +161,8 @@ allow trailing comments on a line."
   "Regexp to match the start of a full-line comment."
   :version "21.1"
   :type    'regexp
+  :safe    'stringp
   :group   'fortran-comment)
-(put 'fortran-comment-line-start-skip 'safe-local-variable 'stringp)
 
 (defcustom fortran-directive-re
   "^[ \t]*#.*"
@@ -172,20 +171,20 @@ The matching text will be fontified with `font-lock-keyword-face'.
 The matching line will be given zero indentation."
   :version "22.1"
   :type    'regexp
+  :safe    'stringp
   :group   'fortran-indent)
-(put 'fortran-directive-re 'safe-local-variable 'stringp)
 
 (defcustom fortran-minimum-statement-indent-fixed 6
   "Minimum statement indentation for fixed format continuation style."
   :type  'integer
+  :safe  'integerp
   :group 'fortran-indent)
-(put 'fortran-minimum-statement-indent-fixed 'safe-local-variable 'integerp)
 
 (defcustom fortran-minimum-statement-indent-tab (max tab-width 6)
   "Minimum statement indentation for TAB format continuation style."
   :type  'integer
+  :safe  'integerp
   :group 'fortran-indent)
-(put 'fortran-minimum-statement-indent-tab 'safe-local-variable 'integerp)
 
 ;; Note that this is documented in the v18 manuals as being a string
 ;; of length one rather than a single character.
@@ -194,31 +193,29 @@ The matching line will be given zero indentation."
   "Single-character string inserted for Fortran comment indentation.
 Normally a space."
   :type  'string
+  :safe  (lambda (value) (or (characterp value)
+                             (and (stringp value) (= (length value) 1))))
   :group 'fortran-comment)
-(put 'fortran-comment-indent-char 'safe-local-variable
-     (lambda (value) (or (characterp value)
-                         (and (stringp value)
-                              (= (length value) 1)))))
 
 (defcustom fortran-line-number-indent 1
   "Maximum indentation for Fortran line numbers.
 5 means right-justify them within their five-column field."
   :type  'integer
+  :safe  'integerp
   :group 'fortran-indent)
-(put 'fortran-line-number-indent 'safe-local-variable 'integerp)
 
 (defcustom fortran-check-all-num-for-matching-do nil
   "Non-nil causes all numbered lines to be treated as possible DO loop ends."
   :type  'boolean
+  :safe  'booleanp
   :group 'fortran)
-(put 'fortran-check-all-num-for-matching-do 'safe-local-variable 'booleanp)
 
 (defcustom fortran-blink-matching-if nil
   "Non-nil causes \\[fortran-indent-line] on ENDIF to blink on matching IF.
 Also, from an ENDDO statement blink on matching DO [WHILE] statement."
   :type  'boolean
+  :safe  'booleanp
   :group 'fortran)
-(put 'fortran-blink-matching-if 'safe-local-variable 'booleanp)
 
 (defcustom fortran-continuation-string "$"
   "Single-character string used for Fortran continuation lines.
@@ -228,23 +225,21 @@ Also, if \\[fortran-indent-line] finds this at the beginning of a
 line, it will convert the line into a continuation line of the
 appropriate style.  Normally \"$\"."
   :type  'string
+  :safe  (lambda (value) (and (stringp value) (= (length value) 1)))
   :group 'fortran)
-(put 'fortran-continuation-string 'safe-local-variable
-     (lambda (value) (and (stringp value)
-                          (= (length value) 1))))
 
 (defcustom fortran-comment-region "c$$$"
   "String inserted by \\[fortran-comment-region] at start of each \
 line in region."
   :type  'string
+  :safe  'stringp
   :group 'fortran-comment)
-(put 'fortran-comment-region 'safe-local-variable 'stringp)
 
 (defcustom fortran-electric-line-number t
   "Non-nil causes line numbers to be moved to the correct column as typed."
   :type  'boolean
+  :safe  'booleanp
   :group 'fortran)
-(put 'fortran-electric-line-number 'safe-local-variable 'booleanp)
 
 ;; TODO use fortran-line-length, somehow.
 (defcustom fortran-column-ruler-fixed
@@ -256,8 +251,8 @@ line in region."
 This variable is used in fixed format mode.
 See the variable `fortran-column-ruler-tab' for TAB format mode."
   :type  'string
+  :safe  'stringp
   :group 'fortran)
-(put 'fortran-column-ruler-fixed 'safe-local-variable 'stringp)
 
 ;; TODO use fortran-line-length, somehow.
 (defcustom fortran-column-ruler-tab
@@ -269,21 +264,21 @@ See the variable `fortran-column-ruler-tab' for TAB format mode."
 This variable is used in TAB format mode.
 See the variable `fortran-column-ruler-fixed' for fixed format mode."
   :type  'string
+  :safe  'stringp
   :group 'fortran)
-(put 'fortran-column-ruler-tab 'safe-local-variable 'stringp)
 
 (defcustom fortran-analyze-depth 100
   "Number of lines to scan to identify fixed or TAB format style."
   :type  'integer
+  :safe  'integerp
   :group 'fortran)
-(put 'fortran-analyze-depth 'safe-local-variable 'integerp)
 
 (defcustom fortran-break-before-delimiters t
   "Non-nil causes filling to break lines before delimiters.
 Delimiters are characters matching the regexp `fortran-break-delimiters-re'."
   :type  'boolean
+  :safe  'booleanp
   :group 'fortran)
-(put 'fortran-break-before-delimiters 'safe-local-variable 'booleanp)
 
 ;; TODO 0 as no-limit, as per g77.
 (defcustom fortran-line-length 72
@@ -296,6 +291,7 @@ buffers and the default) or the function
 buffer).  This corresponds to the g77 compiler option
 `-ffixed-line-length-N'."
   :type 'integer
+  :safe 'integerp
   :initialize 'custom-initialize-default
   :set (lambda (symbol value)
          ;; Do all fortran buffers, and the default.
@@ -303,7 +299,6 @@ buffer).  This corresponds to the g77 compiler option
   :version "23.1"
   :group 'fortran)
 
-(put 'fortran-line-length 'safe-local-variable 'integerp)
 (make-variable-buffer-local 'fortran-line-length)
 
 (defcustom fortran-mode-hook nil
@@ -329,6 +324,13 @@ characters long.")
 
 (defconst fortran-if-start-re "\\(\\(\\sw\\|\\s_\\)+:[ \t]*\\)?if[ \t]*("
   "Regexp matching the start of an IF statement.")
+
+;; Note fortran-current-defun uses the subgroups.
+(defconst fortran-start-prog-re
+  "^[ \t]*\\(program\\|subroutine\\|function\
+\\|[ \ta-z0-9*()]*[ \t]+function\\|\
+\\(block[ \t]*data\\)\\)"
+  "Regexp matching the start of a subprogram, from the line start.")
 
 (defconst fortran-end-prog-re1
   "end\
@@ -401,6 +403,28 @@ program\\|subroutine\\)\\>[ \t]*\\(\\sw+\\)?"
            '("^ *\\([0-9]+\\)" . font-lock-constant-face)))
   "Medium level highlighting for Fortran mode.")
 
+;; See bug#1385. Never really looked into _why_ this matters...
+(defun fortran-match-and-skip-declaration (limit)
+  "Like `font-lock-match-c-style-declaration-item-and-skip-to-next'.
+The only difference is, it returns t in a case when the default returns nil."
+  (when (looking-at "[ \n\t*]*\\(\\sw+\\)[ \t\n]*\\(((?\\)?")
+    (when (and (match-end 2) (> (- (match-end 2) (match-beginning 2)) 1))
+      (let ((pos (point)))
+	(skip-chars-backward " \t\n")
+	(skip-syntax-backward "w")
+	(unless (looking-at "\\(\\sw+\\)[ \t\n]*\\sw+[ \t\n]*\\(((?\\)?")
+	  (goto-char pos)
+	  (looking-at "[ \n\t*]*\\(\\sw+\\)[ \t\n]*\\(((?\\)?"))))
+    (save-match-data
+      (condition-case nil
+	  (save-restriction
+	    (narrow-to-region (point-min) limit)
+	    (goto-char (match-end 1))
+	    (while (not (looking-at "[ \t\n]*\\(\\(,\\)\\|;\\|\\'\\)"))
+	      (goto-char (or (scan-sexps (point) 1) (point-max))))
+            (goto-char (match-end 2)))
+	(error t)))))
+
 (defvar fortran-font-lock-keywords-3
   (append
    fortran-font-lock-keywords-1
@@ -410,7 +434,7 @@ program\\|subroutine\\)\\>[ \t]*\\(\\sw+\\)?"
           ;; Type specifier.
           '(1 font-lock-type-face)
           ;; Declaration item (or just /.../ block name).
-          `(font-lock-match-c-style-declaration-item-and-skip-to-next
+          `(fortran-match-and-skip-declaration
             ;; Start after any *(...) expression.
             (condition-case nil
                 (and (match-beginning ,(1+ (regexp-opt-depth
@@ -1182,37 +1206,47 @@ Auto-indent does not happen if a numeric ARG is used."
                                          (+ fortran-line-length
                                             (line-beginning-position)))))))
 
-;; Note that you can't just check backwards for `subroutine' &c in
-;; case of un-marked main programs not at the start of the file.
+;; This is more complex than first expected because the beginning of a
+;; main program may be implicit (ie not marked by a PROGRAM statement).
+;; This would be fine (we could just go to bob in the absence of a match),
+;; except it need not even be the first subprogram in the file (eg it
+;; could follow a subroutine).  Hence we have to search for END
+;; statements instead.
+;; cf fortran-beginning-of-block, f90-beginning-of-subprogram
+;; Note that unlike the latter, we don't have to worry about nested
+;; subprograms (?).
+;; FIXME push-mark?
 (defun fortran-beginning-of-subprogram ()
   "Move point to the beginning of the current Fortran subprogram."
   (interactive)
-  (save-match-data
-    (let ((case-fold-search t))
-      (beginning-of-line -1)
-      (if (catch 'ok
-            (while (re-search-backward fortran-end-prog-re nil 'move)
-              (if (fortran-check-end-prog-re)
-                  (throw 'ok t))))
-          (forward-line)))))
+  (let ((case-fold-search t))
+    ;; If called already at the start of subprogram, go to the previous.
+    (beginning-of-line (if (bolp) 0 1))
+    (save-match-data
+      (or (looking-at fortran-start-prog-re)
+          ;; This leaves us at bob if before the first subprogram.
+          (eq (fortran-previous-statement) 'first-statement)
+          (if (or (catch 'ok
+                    (while (re-search-backward fortran-end-prog-re nil 'move)
+                      (if (fortran-check-end-prog-re) (throw 'ok t))))
+                  ;; If the search failed, must be at bob.
+                  ;; First code line is the start of the subprogram.
+                  ;; FIXME use a more rigorous test, cf fortran-next-statement?
+                  ;; Though that needs to handle continuations too.
+                  (not (looking-at "^\\([ \t]*[0-9]\\|[ \t]+[^!#]\\)")))
+              (fortran-next-statement))))))
 
+;; This is simpler than f-beginning-of-s because the end of a
+;; subprogram is never implicit.
 (defun fortran-end-of-subprogram ()
   "Move point to the end of the current Fortran subprogram."
   (interactive)
-  (save-match-data
-    (let ((case-fold-search t))
-      (if (save-excursion               ; on END
-            (beginning-of-line)
-            (and (looking-at fortran-end-prog-re)
-                 (fortran-check-end-prog-re)))
-          (forward-line)
-        (beginning-of-line 2)
-        (when (catch 'ok
-                (while (re-search-forward fortran-end-prog-re nil 'move)
-                  (if (fortran-check-end-prog-re)
-                      (throw 'ok t))))
-          (goto-char (match-beginning 0))
-          (forward-line))))))
+  (let ((case-fold-search t))
+    (beginning-of-line)
+    (save-match-data
+      (while (and (re-search-forward fortran-end-prog-re nil 'move)
+                  (not (fortran-check-end-prog-re))))
+      (forward-line))))
 
 (defun fortran-previous-statement ()
   "Move point to beginning of the previous Fortran statement.
@@ -1283,7 +1317,7 @@ If NUM is negative, go backward to the start of a block.  Does
 not check for consistency of block types.  Interactively, pushes
 mark before moving point."
   (interactive "p")
-  (if (interactive-p) (push-mark (point) t))
+  (if (called-interactively-p 'any) (push-mark (point) t))
   (and num (< num 0) (fortran-beginning-of-block (- num)))
   (let ((case-fold-search t)
         (count (or num 1)))
@@ -1316,7 +1350,7 @@ blocks.  If NUM is negative, go forward to the end of a block.
 Does not check for consistency of block types.  Interactively,
 pushes mark before moving point."
   (interactive "p")
-  (if (interactive-p) (push-mark (point) t))
+  (if (called-interactively-p 'any) (push-mark (point) t))
   (and num (< num 0) (fortran-end-of-block (- num)))
   (let ((case-fold-search t)
         (count (or num 1)))
@@ -2137,19 +2171,16 @@ arg DO-SPACE prevents stripping the whitespace."
       (replace-match "" nil nil nil 1)
       (unless do-space (delete-horizontal-space)))))
 
-;; This code used to live in add-log.el, but this is a better place
-;; for it.
+;; This code used to live in add-log.el, but this is a better place for it.
 (defun fortran-current-defun ()
   "Function to use for `add-log-current-defun-function' in Fortran mode."
   (save-excursion
     ;; We must be inside function body for this to work.
     (fortran-beginning-of-subprogram)
-    (let ((case-fold-search t))         ; case-insensitive
+    (let ((case-fold-search t))
       ;; Search for fortran subprogram start.
       (if (re-search-forward
-           (concat "^[ \t]*\\(program\\|subroutine\\|function"
-                   "\\|[ \ta-z0-9*()]*[ \t]+function\\|"
-                   "\\(block[ \t]*data\\)\\)")
+           fortran-start-prog-re
            (save-excursion (fortran-end-of-subprogram)
                            (point))
            t)

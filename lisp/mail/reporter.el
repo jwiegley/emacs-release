@@ -1,7 +1,7 @@
 ;;; reporter.el --- customizable bug reporting of lisp programs
 
 ;; Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author:          1993-1998 Barry A. Warsaw
 ;; Maintainer:      FSF
@@ -174,8 +174,7 @@ composed.")
 MAILBUF is the mail buffer being composed."
   (reporter-update-status)
   (condition-case nil
-      (let ((val (save-excursion
-		   (set-buffer reporter-eval-buffer)
+      (let ((val (with-current-buffer reporter-eval-buffer
 		   (symbol-value varsym)))
 	    (sym (symbol-name varsym))
 	    (print-escape-newlines t)
@@ -201,8 +200,7 @@ MAILBUF is the mail buffer being composed."
 		(reporter-beautify-list maxwidth compact-p))))
 	(insert "\n"))
     (void-variable
-     (save-excursion
-       (set-buffer mailbuf)
+     (with-current-buffer mailbuf
        (mail-position-on-field "X-Reporter-Void-Vars-Found")
        (end-of-line)
        (insert (symbol-name varsym) " ")))
@@ -247,8 +245,7 @@ dumped."
       (condition-case fault
 	  (let ((mailbuf (current-buffer))
 		(elbuf (get-buffer-create " *tmp-reporter-buffer*")))
-	    (save-excursion
-	      (set-buffer elbuf)
+	    (with-current-buffer elbuf
 	      (emacs-lisp-mode)
 	      (erase-buffer)
 	      (insert "(setq\n")

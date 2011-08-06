@@ -1,7 +1,7 @@
 ;;; edebug.el --- a source-level debugger for Emacs Lisp
 
 ;; Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1997, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Daniel LaLiberte <liberte@holonexus.org>
@@ -352,8 +352,7 @@ Return the result of the last expression in BODY."
 	 (edebug:s-r-end (point-max-marker)))
      (unwind-protect
 	 (progn ,@body)
-       (save-excursion
-	 (set-buffer (marker-buffer edebug:s-r-beg))
+       (with-current-buffer (marker-buffer edebug:s-r-beg)
 	 (narrow-to-region edebug:s-r-beg edebug:s-r-end)))))
 
 ;;; Display
@@ -2579,15 +2578,16 @@ MSG is printed after `::::} '."
 	(edebug-outside-o-a-p overlay-arrow-position)
 	(edebug-outside-o-a-s overlay-arrow-string)
 	(edebug-outside-c-i-e-a cursor-in-echo-area)
-	(edebug-outside-d-c-i-n-s-w default-cursor-in-non-selected-windows))
+	(edebug-outside-d-c-i-n-s-w
+         (default-value 'cursor-in-non-selected-windows)))
     (unwind-protect
 	(let ((overlay-arrow-position overlay-arrow-position)
 	      (overlay-arrow-string overlay-arrow-string)
 	      (cursor-in-echo-area nil)
-	      (default-cursor-in-non-selected-windows t)
 	      (unread-command-events unread-command-events)
 	      ;; any others??
 	      )
+          (setq-default cursor-in-non-selected-windows t)
 	  (if (not (buffer-name edebug-buffer))
 	      (let ((debug-on-error nil))
 		(error "Buffer defining %s not found" edebug-function)))
@@ -2782,10 +2782,8 @@ MSG is printed after `::::} '."
 	  ;; Restore edebug-buffer's outside point.
 	  ;;    (edebug-trace "restore edebug-buffer point: %s"
 	  ;;		  edebug-buffer-outside-point)
-	  (let ((current-buffer (current-buffer)))
-	    (set-buffer edebug-buffer)
-	    (goto-char edebug-buffer-outside-point)
-	    (set-buffer current-buffer))
+	  (with-current-buffer edebug-buffer
+	    (goto-char edebug-buffer-outside-point))
 	  ;; ... nothing more.
 	  )
       (with-timeout-unsuspend edebug-with-timeout-suspend)
@@ -2794,8 +2792,8 @@ MSG is printed after `::::} '."
        unread-command-events edebug-outside-unread-command-events
        overlay-arrow-position edebug-outside-o-a-p
        overlay-arrow-string edebug-outside-o-a-s
-       cursor-in-echo-area edebug-outside-c-i-e-a
-       default-cursor-in-non-selected-windows edebug-outside-d-c-i-n-s-w)
+       cursor-in-echo-area edebug-outside-c-i-e-a)
+      (setq-default cursor-in-non-selected-windows edebug-outside-d-c-i-n-s-w)
       )))
 
 
@@ -2824,7 +2822,7 @@ MSG is printed after `::::} '."
 ;; Each defvar makes a difference
 ;; in versions where the variable is *not* built-in.
 
-;; Emacs 18
+;; Emacs 18  FIXME
 (defvar edebug-outside-unread-command-char)
 
 ;; Emacs 19.
@@ -2839,7 +2837,7 @@ MSG is printed after `::::} '."
 ;; (maybe works with byte-compile-version 2.22 at least)
 (defvar edebug-unread-command-char-warning)
 (defvar edebug-unread-command-event-warning)
-(eval-when-compile
+(eval-when-compile			; FIXME
   (setq edebug-unread-command-char-warning
 	(get 'unread-command-char 'byte-obsolete-variable))
   (put 'unread-command-char 'byte-obsolete-variable nil))
@@ -2851,8 +2849,7 @@ MSG is printed after `::::} '."
   (let ((edebug-buffer-read-only buffer-read-only)
 	;; match-data must be done in the outside buffer
 	(edebug-outside-match-data
-	 (save-excursion  ; might be unnecessary now??
-	   (set-buffer edebug-outside-buffer)  ; in case match buffer different
+	 (with-current-buffer edebug-outside-buffer ; in case match buffer different
 	   (match-data)))
 
 	;;(edebug-number-of-recursions (1+ edebug-number-of-recursions))
@@ -2873,7 +2870,7 @@ MSG is printed after `::::} '."
 	(edebug-outside-last-command last-command)
 	(edebug-outside-this-command this-command)
 
-	(edebug-outside-unread-command-char unread-command-char)
+	(edebug-outside-unread-command-char unread-command-char) ; FIXME
 	(edebug-outside-current-prefix-arg current-prefix-arg)
 
 	(edebug-outside-last-input-event last-input-event)
@@ -3605,11 +3602,10 @@ Return the result of the last expression."
 	   (overlay-arrow-position edebug-outside-o-a-p)
 	   (overlay-arrow-string edebug-outside-o-a-s)
 	   (cursor-in-echo-area edebug-outside-c-i-e-a)
-	   (default-cursor-in-non-selected-windows edebug-outside-d-c-i-n-s-w)
 	   )
+       (setq-default cursor-in-non-selected-windows edebug-outside-d-c-i-n-s-w)
        (unwind-protect
-	   (save-excursion		; of edebug-buffer
-	     (set-buffer edebug-outside-buffer)
+	   (with-current-buffer edebug-outside-buffer ; of edebug-buffer
 	     (goto-char edebug-outside-point)
 	     (if (marker-buffer (edebug-mark-marker))
 		 (set-marker (edebug-mark-marker) edebug-outside-mark))
@@ -3642,22 +3638,24 @@ Return the result of the last expression."
 	  edebug-outside-o-a-p overlay-arrow-position
 	  edebug-outside-o-a-s overlay-arrow-string
 	  edebug-outside-c-i-e-a cursor-in-echo-area
-	  edebug-outside-d-c-i-n-s-w default-cursor-in-non-selected-windows
-	  )
+	  edebug-outside-d-c-i-n-s-w (default-value
+                                       'cursor-in-non-selected-windows)
+          )
 
 	 ;; Restore the outside saved values; don't alter
 	 ;; the outside binding loci.
 	 (setcdr edebug-outside-pre-command-hook pre-command-hook)
 	 (setcdr edebug-outside-post-command-hook post-command-hook)
 
+         (setq-default cursor-in-non-selected-windows t)
 	 ))				; let
      ))
 
-(defvar cl-debug-env nil) ;; defined in cl; non-nil when lexical env used.
+(defvar cl-debug-env)  ; defined in cl; non-nil when lexical env used.
 
 (defun edebug-eval (edebug-expr)
   ;; Are there cl lexical variables active?
-  (if cl-debug-env
+  (if (bound-and-true-p cl-debug-env)
       (eval (cl-macroexpand-all edebug-expr cl-debug-env))
     (eval edebug-expr)))
 
@@ -3685,10 +3683,7 @@ Return the result of the last expression."
 				  (prin1-to-string edebug-arg)))
 		      (cdr edebug-value) ", ")))
 
-;; Define here in case they are not already defined.
-(defvar print-level nil)
-(defvar print-circle nil)
-(defvar print-readably) ;; defined by lemacs
+(defvar print-readably) ; defined by lemacs
 ;; Alternatively, we could change the definition of
 ;; edebug-safe-prin1-to-string to only use these if defined.
 
@@ -3697,7 +3692,7 @@ Return the result of the last expression."
 	(print-length (or edebug-print-length print-length))
 	(print-level (or edebug-print-level print-level))
 	(print-circle (or edebug-print-circle print-circle))
-	(print-readably nil)) ;; lemacs uses this.
+	(print-readably nil)) ; lemacs uses this.
     (condition-case nil
 	(edebug-prin1-to-string value)
       (error "#Apparently circular structure#"))))
@@ -3760,6 +3755,7 @@ This prints the value into current buffer."
 
 ;;; Edebug Minor Mode
 
+;; FIXME eh?
 (defvar gud-inhibit-global-bindings
   "*Non-nil means don't do global rebindings of C-x C-a subcommands.")
 
@@ -4180,6 +4176,7 @@ You must include newlines in FMT to break lines, but one newline is appended."
 
 ;;; Frequency count and coverage
 
+;; FIXME should this use overlays instead?
 (defun edebug-display-freq-count ()
   "Display the frequency count data for each line of the current definition.
 The frequency counts are inserted as comment lines after each line,

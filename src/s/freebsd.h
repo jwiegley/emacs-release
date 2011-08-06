@@ -2,7 +2,7 @@
    This file describes the parameters that system description files
    should define or not.
    Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 Author: Shawn M. Carey
@@ -84,19 +84,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #else /* not __ELF__ */
 
-#ifndef NO_SHARED_LIBS
-#define LD_SWITCH_SYSTEM -e start -dc -L/usr/local/lib
-#define HAVE_TEXT_START		/* No need to define `start_of_text'. */
-#if __FreeBSD_version >= 300002
-#define START_FILES pre-crt0.o /usr/lib/aout/crt0.o
-#else /* __FreeBSD_version < 300002 */
-#define START_FILES pre-crt0.o /usr/lib/crt0.o
-#endif /* __FreeBSD_version < 300002 */
-#define UNEXEC unexsunos4.o
-#define RUN_TIME_REMAP
-#define LIB_GCC -lgcc
-
-#else /* NO_SHARED_LIBS */
+#ifdef NO_SHARED_LIBS
 #ifdef __FreeBSD__  /* shared libs are available, but the user prefers
                      not to use them.  */
 #define LD_SWITCH_SYSTEM -Bstatic -L/usr/local/lib

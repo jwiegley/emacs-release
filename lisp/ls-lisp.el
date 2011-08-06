@@ -1,7 +1,7 @@
 ;;; ls-lisp.el --- emulate insert-directory completely in Emacs Lisp
 
 ;; Copyright (C) 1992, 1994, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Sebastian Kremer <sk@thp.uni-koeln.de>
 ;; Modified by: Francis J. Wright <F.J.Wright@maths.qmw.ac.uk>
@@ -70,10 +70,9 @@
   :group 'dired)
 
 (defcustom ls-lisp-emulation
-  (cond ((eq system-type 'macos) 'MacOS)
-	;; ((eq system-type 'windows-nt) 'MS-Windows)
+  (cond ;; ((eq system-type 'windows-nt) 'MS-Windows)
 	((memq system-type
-	       '(hpux usg-unix-v unisoft-unix irix berkeley-unix))
+	       '(hpux usg-unix-v irix berkeley-unix))
 	 'UNIX))			; very similar to GNU
   ;; Anything else defaults to nil, meaning GNU.
   "Platform to emulate: GNU (default), MacOS, MS-Windows, UNIX.
@@ -129,7 +128,7 @@ if emulation is GNU then default is `(links uid gid)'."
   :group 'ls-lisp)
 
 (defcustom ls-lisp-use-insert-directory-program
-  (not (memq system-type '(macos ms-dos windows-nt)))
+  (not (memq system-type '(ms-dos windows-nt)))
   "Non-nil causes ls-lisp to revert back to using `insert-directory-program'.
 This is useful on platforms where ls-lisp is dumped into Emacs, such as
 Microsoft Windows, but you would still like to use a program to list
@@ -401,6 +400,7 @@ not contain `d', so that a full listing is expected."
     ;; If not full-directory-p, FILE *must not* end in /, as
     ;; file-attributes will not recognize a symlink to a directory,
     ;; so must make it a relative filename as ls does:
+    (if (file-name-absolute-p file) (setq file (expand-file-name file)))
     (if (eq (aref file (1- (length file))) ?/)
 	(setq file (substring file 0 -1)))
     (let ((fattr (file-attributes file 'string)))

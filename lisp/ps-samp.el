@@ -1,6 +1,6 @@
 ;;; ps-samp.el --- ps-print sample setup code
 
-;; Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Jim Thompson (was <thompson@wg2.waii.com>)
 ;;	Jacques Duthen (was <duthen@cegelec-red.fr>)
@@ -72,8 +72,7 @@
 			 (symbol-value summary-buffer))
 		    summary-default)))
     (and (get-buffer ps-buf)
-	 (save-excursion
-	   (set-buffer ps-buf)
+	 (with-current-buffer ps-buf
 	   (ps-spool-buffer-with-faces)))))
 
 ;; Look in an article or mail message for the Subject: line.  To be

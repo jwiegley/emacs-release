@@ -1,14 +1,223 @@
-2009-07-29  Chong Yidong  <cyd@stupidchicken.com>
+2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
 
-	* Version 23.1 released.
+	* Version 23.2 released.
+
+2010-05-03  Štěpán Němec  <stepnem@gmail.com>  (tiny change)
+
+	* INSTALL: Fix typos.
+
+2010-05-03  Chong Yidong  <cyd@stupidchicken.com>
+
+	* configure.in: Add check for buggy version of GCC (Bug#6031).
+
+2010-01-31  Juri Linkov  <juri@jurta.org>
+
+	* .bzrignore: Add TAGS-LISP.
+
+2010-01-23  Giorgos Keramidas  <keramida@ceid.upatras.gr>  (tiny change)
+
+	* configure.in: Check for utmp.h availability (FreeBSD 9.x lacks
+	this header file).
+
+2010-01-12  Juanma Barranquero  <lekktu@gmail.com>
+
+	* .bzrignore: Ignore all .exe, instead of individual files.
+
+2010-01-12  Chong Yidong  <cyd@stupidchicken.com>
+
+	* configure.in: Explicitly check for and link to -lXrender.
+
+2010-01-12  Glenn Morris  <rgm@gnu.org>
+
+	* INSTALL.BZR, README: Use bug-gnu-emacs rather than emacs-pretest-bug
+	for bug reports for development versions.
+
+2010-01-02  Eli Zaretskii  <eliz@gnu.org>
+
+	* .bzrignore: Add more ignored patterns, including for the MS-DOS
+	build.
+
+2009-12-27  Karl Fogel  <kfogel@red-bean>
+
+	* INSTALL.BZR: Rename from INSTALL.CVS; edit to talk about Bazaar.
+	* INSTALL, autogen.sh, configure.in, configure: Adjust accordingly.
+
+2009-12-17  Glenn Morris  <rgm@gnu.org>
+
+	* .dir-locals.el (bug-reference-url-format): Change to debbugs.gnu.org.
+
+2009-12-15  Glenn Morris  <rgm@gnu.org>
+
+	* info/dir: Add EDT entry.
+	* Makefile.in (INFO_FILES): Add edt.
+
+2009-12-10  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: Check for RSVG if GNUStep is used.
+
+2009-12-09  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: Don't check for RSVG or GConf unless X11 is used.
+
+2009-12-09  Ken Brown  <kbrown@cornell.edu>  (tiny change)
+
+	* configure.in: Allow compiling Emacs with GTK on Cygwin.
+
+2009-12-01  Glenn Morris  <rgm@gnu.org>
+
+	* make-dist: Add etc/images/mpc directory.
+
+2009-11-21  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: Don't check for GConf unless X is used.
+
+2009-11-20  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in: Use -Wdeclaration-after-statement if available.
+
+2009-11-17  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: New option: --with(out)-gconf.
+	Set HAVE_GCONF if we find gconf.
+
+2009-11-17  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (INFO_FILES): Add semantic.
+
+2009-11-16  Chong Yidong  <cyd@stupidchicken.com>
+
+	* info/dir: Add Semantic.
+
+2009-11-16  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (install-arch-indep): Use a more restrictive Makefile
+	pattern, so as not to exclude makefile*.el.  (Bug#4912)
+
+2009-11-14  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: --enable-autodepend is new.  Check for GNU Make
+	and that gcc supports -MMD -MF.  Define AUTO_DEPEND if we can use
+	gcc and GNU make to generate dependencies.
+
+2009-10-27  Glenn Morris  <rgm@gnu.org>
+
+	* make-dist: Make links to doc/lispintro/*.pdf.
+
+2009-10-23  Jim Meyering  <meyering@redhat.com>
+
+	* configure.in: Invoke $CPP with -P when creating Makefile and
+	src/Makefile.  Without this, gcc 4.4.2 converts each
+	backslash-newline pair in the input to a bare newline, yielding
+	invalid Makefiles.
+
+	* configure: Regenerate.
+
+2009-10-19  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in (vax-dec-vms): Remove, not supported anymore.
+
+2009-10-15  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* configure.in (NS_HAVE_NSINTEGER): Back out previous change.
+	(*-apple-darwin*): Add x86_64 architecture.
+
+2009-10-14  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* config.guess, config.sub: Updated from master source.
+
+2009-10-11  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* configure.in (NS_HAVE_NSINTEGER): Remove this test and define.
+
+2009-10-07  Edward Trumbo  <etrumbo@comcast.net>  (tiny change)
+
+	* Makefile.in (INFO_FILES): Add EDE and EIEIO.
+
+2009-09-29  Glenn Morris  <rgm@gnu.org>
+
+	* make-dist (check): Update for two new levels of subdirectory in lisp/.
+
+2009-09-17  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* config.guess, config.sub: Updated from master source.
+
+	* configure.in (OTHER_FILES): Define using autoconf not cpp.
+
+2009-09-14  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* .dir-locals.el (change-log-mode): Restore bug-reference-mode.
+
+2009-09-13  Chong Yidong  <cyd@stupidchicken.com>
+
+	* INSTALL: Update URL for GNU FreeFont.
+
+2009-09-09  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (install-arch-indep): Don't recursively change perms of
+	site-lisp and infodir.  There may be non-Emacs files in here, and the
+	files supplied by Emacs are all handled explicitly already.  (Bug#3800)
+	(mkdir): Set umask to world-readable before creating directories.
+	mkinstalldirs already checks if dirs exist, don't duplicate this test.
+
+2009-08-29  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (info-real): Don't ignore errors from doc Makefiles.
+	(info): Don't give an error in the absence of makeinfo - let the doc
+	Makefiles do that, if the info files need rebuilding.  (Bug#3982)
+
+2009-08-23  Ken Raeburn  <raeburn@raeburn.org>
+
+	* Makefile.in (install-arch-indep): If the versioned DOC-####
+	generated during loadup+dump isn't found, install the plain DOC
+	file that always gets generated, in case CANNOT_DUMP is set.
+
+	* configure.in: Warn if package version specified here doesn't
+	match the version in version.el.
+	* configure: Regenerate.
+
+2009-08-22  Michael Albinus  <michael.albinus@gmx.de>
+
+	* configure.in: AC_CHECK_FUNCS dbus_watch_get_unix_fd.
+
+	* configure: Regenerate.
+
+2009-08-19  Glenn Morris  <rgm@gnu.org>
+
+	* INSTALL: Remove reference to cvtmail.
+
+2009-08-15  CHENG Gao  <chenggao@gmail.com>
+
+	* Makefile.in (install-arch-indep): Remove .DS_Store files (MacOSX).
+
+2009-08-02  Kevin Ryde  <user42@zip.com.au>
+
+	* INSTALL: Fix free fonts URL.
+
+2009-07-22  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (AC_PREREQ): Require autoconf 2.62.
+
+2009-07-04  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* configure.in (--enable-checking, --enable-profiling):
+	Use AS_HELP_STRING.
+
+2009-07-03  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in (--enable-profiling): New option.
+	(mips-*-netbsd*, mipsel-*-netbsd*, mipseb-*-netbsd*): Use machine=mips.
 
 2009-06-27  Glenn Morris  <rgm@gnu.org>
 
 	* configure.in: Restore netbsd on mips, mipsel, mipseb.
 
+2009-06-26  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in (--enable-checking): New option.
+
 2009-06-24  Glenn Morris  <rgm@gnu.org>
 
-	* make-dist
+	* make-dist: Warn if subdir does not exist in source.
 	(nextstep/Cocoa/Emacs.base/Contents/Resources/preferences.nib)
 	(nextstep/GNUstep/Emacs.base/Resources/preferences.gorm):
 	No longer make links.
@@ -17,6 +226,10 @@
 
 	* make-dist (tempdir): Don't create directories preferences.gorm
 	and preferences.nib, they are no longer required.
+
+2009-06-21  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Branch for 23.1.
 
 2009-06-12  Chong Yidong  <cyd@stupidchicken.com>
 
@@ -3361,8 +3574,8 @@
 
 1999-10-09  Stefan Monnier  <monnier@cs.yale.edu>
 
-	* make-dist (dontcompile): look for the DONTCOMPILE variable rather
-	  than the obsolete dontcompilefiles pseudo-rule in lisp/Makefile.
+	* make-dist (dontcompile): Look for the DONTCOMPILE variable rather
+	than the obsolete dontcompilefiles pseudo-rule in lisp/Makefile.
 
 1999-10-09  Richard M. Stallman  <rms@gnu.org>
 
@@ -3371,7 +3584,7 @@
 
 1999-10-08  Stefan Monnier  <monnier@cs.yale.edu>
 
-	* update-subdirs: also ignore CVS subdirs.
+	* update-subdirs: Also ignore CVS subdirs.
 
 1999-10-07  Gerd Moellmann  <gerd@gnu.org>
 
@@ -5931,8 +6144,8 @@
 	src/Makefile.in is built from src/Makefile.
 
 	* Makefile.in (src/Makefile, lib-src/Makefile, oldXMenu/Makefile):
-	  If these files are out of date, simply have config.status
-	  rebuild them; don't rebuild them explicitly.
+	If these files are out of date, simply have config.status
+	rebuild them; don't rebuild them explicitly.
 
 1993-09-25  Brian J. Fox  (bfox@ai.mit.edu)
 
@@ -6127,7 +6340,7 @@
 
 1993-07-12  Frederic Pierresteguy  (F.Pierresteguy@frcl.bull.fr)
 
-	* configure.in (m68k-bull-sysv3): new config.
+	* configure.in (m68k-bull-sysv3): New config.
 
 1993-07-10  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
@@ -6350,7 +6563,7 @@
 
 	* make-dist: Rebuild configure if configure.in is newer.
 
-	* Makefile.in (src:, lib-src:, FRC:): force the src and lib-src
+	* Makefile.in (src:, lib-src:, FRC:): Force the src and lib-src
 	targets to be executed even if make remembers that it has already
 	satisfied FRC.
 
@@ -6850,7 +7063,7 @@
 	* make-dist: Don't distribute etc/Old files.
 
 	* GETTING.GNU.SOFTWARE, PROBLEMS: Registered into RCS with their
-	  backups.
+	backups.
 
 1993-03-20  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
@@ -6880,7 +7093,7 @@
 1993-03-17  Eric S. Raymond  (eric@mole.gnu.ai.mit.edu)
 
 	* Makefile.in: Add commented-out variable settings for developer's
-	  configuration.
+	configuration.
 
 1993-03-14  Jim Blandy  (jimb@wookumz.gnu.ai.mit.edu)
 
@@ -7495,7 +7708,7 @@
 	the script.
 	* INSTALL: Doc fix.
 
-	* Makefile: brought the Makefile up to the GNU coding
+	* Makefile: Brought the Makefile up to the GNU coding
 	standards, as described in standards.text:
 	(TAGS): New name for the target which rebuilds the tags table.
 	(check): New target; doesn't do anything yet.
@@ -7651,7 +7864,7 @@
 ;; End:
 
     Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2001, 2002,
-	2003, 2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+	2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

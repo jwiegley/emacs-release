@@ -1,7 +1,7 @@
 ;;; calc-forms.el --- data format conversion functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -81,7 +81,7 @@
 (defun calc-date-notation (fmt arg)
   (interactive "sDate format (e.g., M/D/YY h:mm:ss): \nP")
   (calc-wrapper
-   (if (equal fmt "")
+   (if (string-match-p "\\`\\s-*\\'" fmt)
        (setq fmt "1"))
    (if (string-match "\\` *[0-9] *\\'" fmt)
        (setq fmt (nth (string-to-number fmt) calc-standard-date-formats)))
@@ -537,6 +537,7 @@
 	       (calc-group-digits nil)
 	       (calc-leading-zeros nil)
 	       (calc-number-radix 10)
+               (calc-twos-complement-mode nil)
 	       math-fd-year math-fd-month math-fd-day math-fd-weekday
                math-fd-hour math-fd-minute math-fd-second
 	       (math-fd-bc-flag nil)

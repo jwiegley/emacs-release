@@ -1,7 +1,7 @@
 ;;; em-ls.el --- implementation of ls in Lisp
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -113,56 +113,52 @@ faster and conserves more memory."
     (t (:weight bold)))
   "*The face used for highlight directories."
   :group 'eshell-ls)
-;; backward-compatibility alias
-(put 'eshell-ls-directory-face 'face-alias 'eshell-ls-directory)
+(define-obsolete-face-alias 'eshell-ls-directory-face
+  'eshell-ls-directory "22.1")
 
 (defface eshell-ls-symlink
   '((((class color) (background light)) (:foreground "Dark Cyan" :weight bold))
     (((class color) (background dark)) (:foreground "Cyan" :weight bold)))
   "*The face used for highlight symbolic links."
   :group 'eshell-ls)
-;; backward-compatibility alias
-(put 'eshell-ls-symlink-face 'face-alias 'eshell-ls-symlink)
+(define-obsolete-face-alias 'eshell-ls-symlink-face 'eshell-ls-symlink "22.1")
 
 (defface eshell-ls-executable
   '((((class color) (background light)) (:foreground "ForestGreen" :weight bold))
     (((class color) (background dark)) (:foreground "Green" :weight bold)))
   "*The face used for highlighting executables (not directories, though)."
   :group 'eshell-ls)
-;; backward-compatibility alias
-(put 'eshell-ls-executable-face 'face-alias 'eshell-ls-executable)
+(define-obsolete-face-alias 'eshell-ls-executable-face
+  'eshell-ls-executable "22.1")
 
 (defface eshell-ls-readonly
   '((((class color) (background light)) (:foreground "Brown"))
     (((class color) (background dark)) (:foreground "Pink")))
   "*The face used for highlighting read-only files."
   :group 'eshell-ls)
-;; backward-compatibility alias
-(put 'eshell-ls-readonly-face 'face-alias 'eshell-ls-readonly)
+(define-obsolete-face-alias 'eshell-ls-readonly-face 'eshell-ls-readonly "22.1")
 
 (defface eshell-ls-unreadable
   '((((class color) (background light)) (:foreground "Grey30"))
     (((class color) (background dark)) (:foreground "DarkGrey")))
   "*The face used for highlighting unreadable files."
   :group 'eshell-ls)
-;; backward-compatibility alias
-(put 'eshell-ls-unreadable-face 'face-alias 'eshell-ls-unreadable)
+(define-obsolete-face-alias 'eshell-ls-unreadable-face
+  'eshell-ls-unreadable "22.1")
 
 (defface eshell-ls-special
   '((((class color) (background light)) (:foreground "Magenta" :weight bold))
     (((class color) (background dark)) (:foreground "Magenta" :weight bold)))
   "*The face used for highlighting non-regular files."
   :group 'eshell-ls)
-;; backward-compatibility alias
-(put 'eshell-ls-special-face 'face-alias 'eshell-ls-special)
+(define-obsolete-face-alias 'eshell-ls-special-face 'eshell-ls-special "22.1")
 
 (defface eshell-ls-missing
   '((((class color) (background light)) (:foreground "Red" :weight bold))
     (((class color) (background dark)) (:foreground "Red" :weight bold)))
   "*The face used for highlighting non-existent file names."
   :group 'eshell-ls)
-;; backward-compatibility alias
-(put 'eshell-ls-missing-face 'face-alias 'eshell-ls-missing)
+(define-obsolete-face-alias 'eshell-ls-missing-face 'eshell-ls-missing "22.1")
 
 (defcustom eshell-ls-archive-regexp
   (concat "\\.\\(t\\(a[rz]\\|gz\\)\\|arj\\|lzh\\|"
@@ -178,8 +174,7 @@ files."
     (((class color) (background dark)) (:foreground "Orchid" :weight bold)))
   "*The face used for highlighting archived and compressed file names."
   :group 'eshell-ls)
-;; backward-compatibility alias
-(put 'eshell-ls-archive-face 'face-alias 'eshell-ls-archive)
+(define-obsolete-face-alias 'eshell-ls-archive-face 'eshell-ls-archive "22.1")
 
 (defcustom eshell-ls-backup-regexp
   "\\(\\`\\.?#\\|\\(\\.bak\\|~\\)\\'\\)"
@@ -192,8 +187,7 @@ files."
     (((class color) (background dark)) (:foreground "LightSalmon")))
   "*The face used for highlighting backup file names."
   :group 'eshell-ls)
-;; backward-compatibility alias
-(put 'eshell-ls-backup-face 'face-alias 'eshell-ls-backup)
+(define-obsolete-face-alias 'eshell-ls-backup-face 'eshell-ls-backup "22.1")
 
 (defcustom eshell-ls-product-regexp
   "\\.\\(elc\\|o\\(bj\\)?\\|a\\|lib\\|res\\)\\'"
@@ -208,8 +202,7 @@ ought to be recreatable if they are deleted."
     (((class color) (background dark)) (:foreground "LightSalmon")))
   "*The face used for highlighting files that are build products."
   :group 'eshell-ls)
-;; backward-compatibility alias
-(put 'eshell-ls-product-face 'face-alias 'eshell-ls-product)
+(define-obsolete-face-alias 'eshell-ls-product-face 'eshell-ls-product "22.1")
 
 (defcustom eshell-ls-clutter-regexp
   "\\(^texput\\.log\\|^core\\)\\'"
@@ -224,8 +217,7 @@ really need to stick around for very long."
     (((class color) (background dark)) (:foreground "OrangeRed" :weight bold)))
   "*The face used for highlighting junk file names."
   :group 'eshell-ls)
-;; backward-compatibility alias
-(put 'eshell-ls-clutter-face 'face-alias 'eshell-ls-clutter)
+(define-obsolete-face-alias 'eshell-ls-clutter-face 'eshell-ls-clutter "22.1")
 
 (defsubst eshell-ls-filetype-p (attrs type)
   "Test whether ATTRS specifies a directory."
@@ -233,18 +225,28 @@ really need to stick around for very long."
       (eq (aref (nth 8 attrs) 0) type)))
 
 (defmacro eshell-ls-applicable (attrs index func file)
-  "Test whether, for ATTRS, the user UID can do what corresponds to INDEX.
-This is really just for efficiency, to avoid having to stat the file
-yet again."
-  `(if (numberp (nth 2 ,attrs))
-       (if (= (user-uid) (nth 2 ,attrs))
-	   (not (eq (aref (nth 8 ,attrs) ,index) ?-))
-	 (,(eval func) ,file))
-     (not (eq (aref (nth 8 ,attrs)
-		    (+ ,index (if (member (nth 2 ,attrs)
-					  (eshell-current-ange-uids))
-				  0 6)))
-	      ?-))))
+  "Test whether, for ATTRS, the user can do what corresponds to INDEX.
+ATTRS is a string of file modes.  See `file-attributes'.
+If we cannot determine the answer using ATTRS (e.g., if we need
+to know what group the user is in), compute the return value by
+calling FUNC with FILE as an argument."
+  `(let ((owner (nth 2 ,attrs))
+	 (modes (nth 8 ,attrs)))
+     (cond ((cond ((numberp owner)
+		   (= owner (user-uid)))
+		  ((stringp owner)
+		   (or (string-equal owner (user-login-name))
+		       (member owner (eshell-current-ange-uids)))))
+	    ;; The user owns this file.
+	    (not (eq (aref modes ,index) ?-)))
+	   ((eq (aref modes (+ ,index 3))
+		(aref modes (+ ,index 6)))
+	    ;; If the "group" and "other" fields give identical
+	    ;; results, use that.
+	    (not (eq (aref modes (+ ,index 3)) ?-)))
+	   (t
+	    ;; Otherwise call FUNC.
+	    (,(eval func) ,file)))))
 
 (defcustom eshell-ls-highlight-alist nil
   "*This alist correlates test functions to color.
@@ -401,13 +403,13 @@ Sort entries alphabetically across.")
 	       (eshell-glob-regexp ignore-pattern))))
      ;; list the files!
      (eshell-ls-entries
-      (mapcar (function
-	       (lambda (arg)
-		 (cons (if (and (eshell-under-windows-p)
-				(file-name-absolute-p arg))
-			   (expand-file-name arg)
-			 arg)
-		       (eshell-file-attributes arg))))
+      (mapcar (lambda (arg)
+		(cons (if (and (eshell-under-windows-p)
+			       (file-name-absolute-p arg))
+			  (expand-file-name arg)
+			arg)
+		      (eshell-file-attributes
+		       arg (if numeric-uid-gid 'integer 'string))))
 	      args)
       t (expand-file-name default-directory)))
    (funcall flush-func)))
@@ -718,7 +720,7 @@ Each member of FILES is either a string or a cons cell of the form
 	    (funcall insert-func need-return "\n"))))))
 
 (defun eshell-ls-entries (entries &optional separate root-dir)
-  "Output PATH's directory ENTRIES, formatted according to OPTIONS.
+  "Output PATH's directory ENTRIES.
 Each member of ENTRIES may either be a string or a cons cell, the car
 of which is the file name, and the cdr of which is the list of
 attributes.

@@ -1,7 +1,7 @@
 ;;; appt.el --- appointment notification functions
 
 ;; Copyright (C) 1989, 1990, 1994, 1998, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Neil Mager <neilm@juliet.ll.mit.edu>
 ;; Maintainer: Glenn Morris <rgm@gnu.org>
@@ -331,8 +331,7 @@ displayed in a window:
                              (cons 'appt-make-list diary-hook))))
                       (diary))
                   (let* ((diary-display-function 'appt-make-list)
-                         (d-buff (find-buffer-visiting
-                                  (substitute-in-file-name diary-file)))
+                         (d-buff (find-buffer-visiting diary-file))
                          (selective
                           (if d-buff    ; diary buffer exists
                               (with-current-buffer d-buff
@@ -343,8 +342,7 @@ displayed in a window:
                     (if d-buff
                         ;; Displays the diary buffer.
                         (or selective (diary-show-all-entries))
-                      (and (setq d-buff (find-buffer-visiting
-                                         (substitute-in-file-name diary-file)))
+                      (and (setq d-buff (find-buffer-visiting diary-file))
                            (kill-buffer d-buff)))))
               (error nil)))
         (setq appt-prev-comp-time cur-comp-time
@@ -568,7 +566,7 @@ appointment package (if it is not already active)."
                                  (match-end 0)))
                            ;; Get the whole string for this appointment.
                            (appt-time-string
-                            (substring time-string beg (if end (1- end))))
+                            (substring time-string beg end))
                            (appt-time (list (appt-convert-time only-time)))
                            (time-msg (list appt-time appt-time-string)))
                       ;; Add this appointment to appt-time-msg-list.

@@ -1,7 +1,7 @@
 ;;; page.el --- page motion commands for Emacs
 
 ;; Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: wp convenience
@@ -149,11 +149,12 @@ thus showing a page other than the one point was originally in."
   (save-restriction
     (widen)
     (save-excursion
-      (beginning-of-line)
       (let ((count 1)
 	    (opoint (point)))
-	(goto-char 1)
+	(goto-char (point-min))
 	(while (re-search-forward page-delimiter opoint t)
+          (if (= (match-beginning 0) (match-end 0))
+              (forward-char 1))
 	  (setq count (1+ count)))
 	(message "Page %d, line %d"
 		 count

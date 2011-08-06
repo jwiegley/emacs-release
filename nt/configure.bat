@@ -2,7 +2,7 @@
 rem   ----------------------------------------------------------------------
 rem   Configuration script for MS Windows 95/98/Me and NT/2000/XP
 rem   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-rem      2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+rem      2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 rem   This file is part of GNU Emacs.
 
@@ -546,6 +546,7 @@ echo. >>config.tmp
 echo /* Start of settings from configure.bat.  */ >>config.tmp
 if (%docflags%) == (Y) echo #define USER_CFLAGS " %usercflags%">>config.tmp
 if (%doldflags%) == (Y) echo #define USER_LDFLAGS " %userldflags%">>config.tmp
+if (%profile%) == (Y) echo #define PROFILING 1 >>config.tmp
 if not "(%HAVE_PNG%)" == "()" echo #define HAVE_PNG 1 >>config.tmp
 if not "(%HAVE_JPEG%)" == "()" echo #define HAVE_JPEG 1 >>config.tmp
 if not "(%HAVE_GIF%)" == "()" echo #define HAVE_GIF 1 >>config.tmp

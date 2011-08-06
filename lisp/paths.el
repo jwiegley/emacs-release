@@ -1,7 +1,7 @@
 ;;; paths.el --- define pathnames for use by various Emacs commands -*- no-byte-compile: t -*-
 
 ;; Copyright (C) 1986, 1988, 1994, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -32,11 +32,12 @@
 ;;; Code:
 
 ;; Docstrings in this file should, where reasonable, follow the
-;; conventions described in bindings.el, so that they get put in the
+;; conventions described in make-docfile, so that they get put in the
 ;; DOC file rather than in memory.
 
 (defun prune-directory-list (dirs &optional keep reject)
-  "Return a copy of DIRS with all non-existent directories removed.
+  "\
+Return a copy of DIRS with all non-existent directories removed.
 The optional argument KEEP is a list of directories to retain even if
 they don't exist, and REJECT is a list of directories to remove from
 DIRS, even if they exist; REJECT takes precedence over KEEP.
@@ -57,7 +58,7 @@ comparison."
 	  (list config-dir))
 	 (unpruned-prefixes
 	  ;; Directory trees that may not exist at installation time, and
-	  ;; so shouldn't be pruned based on existance.
+	  ;; so shouldn't be pruned based on existence.
 	  '("/usr/local/"))
 	 (prefixes
 	  ;; Directory trees in which to look for info subdirectories
@@ -101,28 +102,29 @@ for initializing `Info-directory-list' when Info is started, unless
 the environment variable INFOPATH is set.")
 
 (defvar news-directory
-  (if (file-exists-p "/usr/spool/news/")
+  (purecopy (if (file-exists-p "/usr/spool/news/")
       "/usr/spool/news/"
-    "/var/spool/news/")
+    "/var/spool/news/"))
   "The root directory below which all news files are stored.")
 (defvaralias 'news-path 'news-directory)
 
 (defvar news-inews-program
+  (purecopy
   (cond ((file-exists-p "/usr/bin/inews") "/usr/bin/inews")
 	((file-exists-p "/usr/local/inews") "/usr/local/inews")
 	((file-exists-p "/usr/local/bin/inews") "/usr/local/bin/inews")
 	((file-exists-p "/usr/contrib/lib/news/inews") "/usr/contrib/lib/news/inews")
 	((file-exists-p "/usr/lib/news/inews") "/usr/lib/news/inews")
-	(t "inews"))
+	(t "inews")))
   "Program to post news.")
 
 ;; set this to your local server
-(defvar gnus-default-nntp-server "" "\
+(defvar gnus-default-nntp-server (purecopy "") "\
 The name of the host running an NNTP server.
 The null string means use the local host as the server site.")
 
-(defvar gnus-nntp-service "nntp"
-  "NNTP service name, usually \"nntp\" or 119.
+(defvar gnus-nntp-service (purecopy "nntp") "\
+NNTP service name, usually \"nntp\" or 119.
 Go to a local news spool if its value is nil, in which case `gnus-nntp-server'
 should be set to `(system-name)'.")
 
@@ -130,13 +132,14 @@ should be set to `(system-name)'.")
 *The name of your organization, as a string.
 The `ORGANIZATION' environment variable is used instead if defined.")
 
-(defcustom rmail-file-name "~/RMAIL"
-  "Name of user's primary mail file."
+(defcustom rmail-file-name (purecopy "~/RMAIL") "\
+Name of user's primary mail file."
   :type 'string
   :group 'rmail
   :version "21.1")
 
 (defvar rmail-spool-directory
+  (purecopy
   (cond ((file-exists-p "/var/mail")
 	 ;; SVR4 and recent BSD are said to use this.
 	 ;; Rather than trying to know precisely which systems use it,
@@ -147,11 +150,12 @@ The `ORGANIZATION' environment variable is used instead if defined.")
 	 "/var/spool/mail/")
 	((memq system-type '(hpux usg-unix-v irix))
 	 "/usr/mail/")
-	(t "/usr/spool/mail/"))
+	(t "/usr/spool/mail/")))
   "Name of directory used by system mailer for delivering new mail.
 Its name should end with a slash.")
 
 (defcustom remote-shell-program
+  (purecopy
   (cond
    ;; Some systems use rsh for the remote shell; others use that name for the
    ;; restricted shell and use remsh for the remote shell.  Let's try to guess
@@ -171,19 +175,15 @@ Its name should end with a slash.")
    ((file-exists-p "/bin/rcmd") "/bin/rcmd")
    ((file-exists-p "/bin/rsh") "/bin/rsh")
    ((file-exists-p "/usr/bin/rsh") "/usr/bin/rsh")
-   (t "rsh"))
+   (t "rsh")))
   "File name for remote-shell program (often rsh or remsh)."
   :group 'environment
   :type 'file)
 
-(defvar term-file-prefix "term/" "\
+(defvar term-file-prefix (purecopy "term/") "\
 If non-nil, Emacs startup does (load (concat term-file-prefix (getenv \"TERM\")))
 You may set this variable to nil in your `.emacs' file if you do not wish
 the terminal-initialization file to be loaded.")
-
-(defvar abbrev-file-name
-  (convert-standard-filename "~/.abbrev_defs")
-  "*Default name of file to read abbrevs from.")
 
 ;; arch-tag: bae27ffb-9944-4c87-b569-30d4635a99e1
 ;;; paths.el ends here

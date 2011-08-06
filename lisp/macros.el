@@ -1,7 +1,7 @@
 ;;; macros.el --- non-primitive commands for keyboard macros
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1994, 1995, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: abbrev
@@ -138,7 +138,8 @@ use this command, and then save the file."
 	(prin1 definition (current-buffer))))
     (insert ")\n")
     (if keys
-	(let ((keys (where-is-internal macroname '(keymap))))
+	(let ((keys (where-is-internal (symbol-function macroname)
+				       '(keymap))))
 	  (while keys
 	    (insert "(global-set-key ")
 	    (prin1 (car keys) (current-buffer))
@@ -209,8 +210,7 @@ Possibilities: \\<query-replace-map>
 \\[exit]	Stop the macro entirely right now.
 \\[recenter]	Redisplay the screen, then ask again.
 \\[edit]	Enter recursive edit; ask again when you exit from that."))
-		     (save-excursion
-		       (set-buffer standard-output)
+		     (with-current-buffer standard-output
 		       (help-mode)))))))))))
 
 ;;;###autoload
@@ -274,7 +274,7 @@ and then select the region of un-tablified names and use
 	  (set-marker next-line-marker (point)))
 	(save-excursion
 	  (let ((mark-active nil))
-	    (execute-kbd-macro (or macro last-kbd-macro)))))
+	    (execute-kbd-macro macro))))
       (set-marker end-marker nil)
       (set-marker next-line-marker nil))))
 

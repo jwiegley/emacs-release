@@ -1,8 +1,8 @@
 /* CCL (Code Conversion Language) interpreter.
    Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-     2005, 2006, 2007, 2008, 2009
+     2005, 2006, 2007, 2008, 2009, 2010
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
    Copyright (C) 2003
@@ -27,6 +27,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <config.h>
 
 #include <stdio.h>
+#include <setjmp.h>
 
 #include "lisp.h"
 #include "character.h"
@@ -42,7 +43,7 @@ Lisp_Object Vcode_conversion_map_vector;
 /* Alist of fontname patterns vs corresponding CCL program.  */
 Lisp_Object Vfont_ccl_encoder_alist;
 
-/* This symbol is a property which assocates with ccl program vector.
+/* This symbol is a property which associates with ccl program vector.
    Ex: (get 'ccl-big5-encoder 'ccl-program) returns ccl program vector.  */
 Lisp_Object Qccl_program;
 
@@ -881,9 +882,6 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
   struct charset *charset;
   int eof_ic = ccl->eof_ic;
   int eof_hit = 0;
-
-  if (ic >= eof_ic)
-    ic = CCL_HEADER_MAIN;
 
   if (ccl->buf_magnification == 0) /* We can't read/produce any bytes.  */
     dst = NULL;
@@ -2322,22 +2320,22 @@ syms_of_ccl ()
   staticpro (&Vccl_program_table);
   Vccl_program_table = Fmake_vector (make_number (32), Qnil);
 
-  Qccl = intern ("ccl");
+  Qccl = intern_c_string ("ccl");
   staticpro (&Qccl);
 
-  Qcclp = intern ("cclp");
+  Qcclp = intern_c_string ("cclp");
   staticpro (&Qcclp);
 
-  Qccl_program = intern ("ccl-program");
+  Qccl_program = intern_c_string ("ccl-program");
   staticpro (&Qccl_program);
 
-  Qccl_program_idx = intern ("ccl-program-idx");
+  Qccl_program_idx = intern_c_string ("ccl-program-idx");
   staticpro (&Qccl_program_idx);
 
-  Qcode_conversion_map = intern ("code-conversion-map");
+  Qcode_conversion_map = intern_c_string ("code-conversion-map");
   staticpro (&Qcode_conversion_map);
 
-  Qcode_conversion_map_id = intern ("code-conversion-map-id");
+  Qcode_conversion_map_id = intern_c_string ("code-conversion-map-id");
   staticpro (&Qcode_conversion_map_id);
 
   DEFVAR_LISP ("code-conversion-map-vector", &Vcode_conversion_map_vector,

@@ -1,6 +1,6 @@
 /* Client process that communicates with GNU Emacs acting as server.
    Copyright (C) 1986, 1987, 1994, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -340,7 +340,7 @@ w32_get_resource (predefined, key, type)
 /*
   getenv wrapper for Windows
 
-  This is needed to duplicate Emacs's behavior, which is to look for enviroment
+  This is needed to duplicate Emacs's behavior, which is to look for environment
   variables in the registry if they don't appear in the environment.
 */
 char *
@@ -390,6 +390,33 @@ w32_getenv (envvar)
   /* Not the right type, or not correctly expanded.  */
   free (value);
   return NULL;
+}
+
+void
+w32_set_user_model_id ()
+{
+  HMODULE shell;
+  HRESULT (WINAPI * set_user_model) (wchar_t * id);
+
+  /* On Windows 7 and later, we need to set the user model ID
+     to associate emacsclient launched files with Emacs frames
+     in the UI.  */
+  shell = LoadLibrary("shell32.dll");
+  if (shell)
+    {
+      set_user_model
+	= (void *) GetProcAddress (shell,
+				   "SetCurrentProcessExplicitAppUserModelID");
+      /* If the function is defined, then we are running on Windows 7
+	 or newer, and the UI uses this to group related windows
+	 together.  Since emacs, runemacs, emacsclient are related, we
+	 want them grouped even though the executables are different,
+	 so we need to set a consistent ID between them.  */
+      if (set_user_model)
+	set_user_model (L"GNU.Emacs");
+
+      FreeLibrary (shell);
+    }
 }
 
 int
@@ -643,7 +670,7 @@ The following OPTIONS are accepted:\n\
 			mode and try connecting again\n"
 #endif /* not WINDOWSNT */
 "\n\
-Report bugs to bug-gnu-emacs@gnu.org.\n", progname);
+Report bugs with M-x report-emacs-bug.\n", progname);
   exit (EXIT_SUCCESS);
 }
 
@@ -1415,22 +1442,23 @@ w32_find_emacs_process (hWnd, lParam)
 void
 w32_give_focus ()
 {
-  HMODULE hUser32;
+  HANDLE user32;
 
   /* It shouldn't happen when dealing with TCP sockets.  */
   if (!emacs_pid) return;
 
-  if (!(hUser32 = LoadLibrary ("user32.dll"))) return;
+  user32 = GetModuleHandle ("user32.dll");
+
+  if (!user32)
+    return;
 
   /* Modern Windows restrict which processes can set the foreground window.
      emacsclient can allow Emacs to grab the focus by calling the function
      AllowSetForegroundWindow.  Unfortunately, older Windows (W95, W98 and
      NT) lack this function, so we have to check its availability.  */
-  if ((set_fg = GetProcAddress (hUser32, "AllowSetForegroundWindow"))
-      && (get_wc = GetProcAddress (hUser32, "RealGetWindowClassA")))
+  if ((set_fg = GetProcAddress (user32, "AllowSetForegroundWindow"))
+      && (get_wc = GetProcAddress (user32, "RealGetWindowClassA")))
     EnumWindows (w32_find_emacs_process, (LPARAM) 0);
-
-  FreeLibrary (hUser32);
 }
 #endif
 
@@ -1500,6 +1528,12 @@ main (argc, argv)
 
   main_argv = argv;
   progname = argv[0];
+
+#ifdef WINDOWSNT
+  /* On Windows 7 and later, we need to explicitly associate emacsclient
+     with emacs so the UI behaves sensibly.  */
+  w32_set_user_model_id ();
+#endif
 
   /* Process options.  */
   decode_options (argc, argv);

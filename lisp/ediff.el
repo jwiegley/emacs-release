@@ -1,7 +1,7 @@
 ;;; ediff.el --- a comprehensive visual interface to diff & patch
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 ;; Created: February 2, 1994
@@ -12,8 +12,8 @@
 ;; filed in the Emacs bug reporting system against this file, a copy
 ;; of the bug report be sent to the maintainer's email address.
 
-(defconst ediff-version "2.81.2" "The current version of Ediff")
-(defconst ediff-date "November 22, 2008" "Date of last update")
+(defconst ediff-version "2.81.4" "The current version of Ediff")
+(defconst ediff-date "December 7, 2009" "Date of last update")
 
 
 ;; This file is part of GNU Emacs.
@@ -361,6 +361,43 @@ deleted."
 (defalias 'ediff 'ediff-files)
 
 ;;;###autoload
+(defun ediff-current-file ()
+  "Start ediff between current buffer and its file on disk.
+This command can be used instead of `revert-buffer'.  If there is
+nothing to revert then this command fails."
+  (interactive)
+  (unless (or revert-buffer-function
+              revert-buffer-insert-file-contents-function
+              (and buffer-file-number
+                   (or (buffer-modified-p)
+                       (not (verify-visited-file-modtime
+                             (current-buffer))))))
+    (error "Nothing to revert"))
+  (let* ((auto-save-p (and (recent-auto-save-p)
+                           buffer-auto-save-file-name
+                           (file-readable-p buffer-auto-save-file-name)
+                           (y-or-n-p
+                            "Buffer has been auto-saved recently.  Compare with auto-save file? ")))
+         (file-name (if auto-save-p
+                        buffer-auto-save-file-name
+                      buffer-file-name))
+         (revert-buf-name (concat "FILE=" file-name))
+         (revert-buf (get-buffer revert-buf-name))
+         (current-major major-mode))
+    (unless file-name
+      (error "Buffer does not seem to be associated with any file"))
+    (when revert-buf
+      (kill-buffer revert-buf)
+      (setq revert-buf nil))
+    (setq revert-buf (get-buffer-create revert-buf-name))
+    (with-current-buffer revert-buf
+      (insert-file-contents file-name)
+      ;; Assume same modes:
+      (funcall current-major))
+    (ediff-buffers revert-buf (current-buffer))))
+
+
+;;;###autoload
 (defun ediff-backup (file)
   "Run Ediff on FILE and its backup file.
 Uses the latest backup, if there are several numerical backups.
@@ -438,37 +475,45 @@ If this file is a backup, `ediff' it with its original."
 	 (buf-C-file-name (if buf-C-is-alive
 			      (buffer-file-name (get-buffer buf-B))))
 	 file-A file-B file-C)
-    (if (not (ediff-buffer-live-p buf-A))
-	(error "Buffer %S doesn't exist" buf-A))
-    (if (not (ediff-buffer-live-p buf-B))
-	(error "Buffer %S doesn't exist" buf-B))
-    (let ((ediff-job-name job-name))
-      (if (and ediff-3way-comparison-job
-	       (not buf-C-is-alive))
-	  (error "Buffer %S doesn't exist" buf-C)))
-    (if (stringp buf-A-file-name)
-	(setq buf-A-file-name (file-name-nondirectory buf-A-file-name)))
-    (if (stringp buf-B-file-name)
-	(setq buf-B-file-name (file-name-nondirectory buf-B-file-name)))
-    (if (stringp buf-C-file-name)
-	(setq buf-C-file-name (file-name-nondirectory buf-C-file-name)))
-
-    (setq file-A (ediff-make-temp-file buf-A buf-A-file-name)
-	  file-B (ediff-make-temp-file buf-B buf-B-file-name))
-    (if buf-C-is-alive
-	(setq file-C (ediff-make-temp-file buf-C buf-C-file-name)))
-
-    (ediff-setup (get-buffer buf-A) file-A
-		 (get-buffer buf-B) file-B
-		 (if buf-C-is-alive (get-buffer buf-C))
-		 file-C
-		 (cons `(lambda ()
-			  (delete-file ,file-A)
-			  (delete-file ,file-B)
-			  (if (stringp ,file-C) (delete-file ,file-C)))
-		       startup-hooks)
-		 (list (cons 'ediff-job-name job-name))
-		 merge-buffer-file)))
+    (unwind-protect
+	(progn
+	  (if (not (ediff-buffer-live-p buf-A))
+	      (error "Buffer %S doesn't exist" buf-A))
+	  (if (not (ediff-buffer-live-p buf-B))
+	      (error "Buffer %S doesn't exist" buf-B))
+	  (let ((ediff-job-name job-name))
+	    (if (and ediff-3way-comparison-job
+		     (not buf-C-is-alive))
+		(error "Buffer %S doesn't exist" buf-C)))
+	  (if (stringp buf-A-file-name)
+	      (setq buf-A-file-name (file-name-nondirectory buf-A-file-name)))
+	  (if (stringp buf-B-file-name)
+	      (setq buf-B-file-name (file-name-nondirectory buf-B-file-name)))
+	  (if (stringp buf-C-file-name)
+	      (setq buf-C-file-name (file-name-nondirectory buf-C-file-name)))
+	  
+	  (setq file-A (ediff-make-temp-file buf-A buf-A-file-name)
+		file-B (ediff-make-temp-file buf-B buf-B-file-name))
+	  (if buf-C-is-alive
+	      (setq file-C (ediff-make-temp-file buf-C buf-C-file-name)))
+	  
+	  (ediff-setup (get-buffer buf-A) file-A
+		       (get-buffer buf-B) file-B
+		       (if buf-C-is-alive (get-buffer buf-C))
+		       file-C
+		       (cons `(lambda ()
+				(delete-file ,file-A)
+				(delete-file ,file-B)
+				(if (stringp ,file-C) (delete-file ,file-C)))
+			     startup-hooks)
+		       (list (cons 'ediff-job-name job-name))
+		       merge-buffer-file))
+      (if (and (stringp file-A) (file-exists-p file-A))
+	  (delete-file file-A))
+      (if (and (stringp file-B) (file-exists-p file-B))
+	  (delete-file file-B))
+      (if (and (stringp file-C) (file-exists-p file-C))
+	  (delete-file file-C)))))
 
 
 ;;; Directory and file group operations
@@ -940,8 +985,7 @@ lines.  For large regions, use `ediff-regions-linewise'."
 	(buffer-B
          (ediff-clone-buffer-for-region-comparison buffer-B "-Region.B-"))
         reg-A-beg reg-A-end reg-B-beg reg-B-end)
-    (save-excursion
-      (set-buffer buffer-A)
+    (with-current-buffer buffer-A
       (setq reg-A-beg (region-beginning)
 	    reg-A-end (region-end))
       (set-buffer buffer-B)
@@ -981,8 +1025,7 @@ lines.  For small regions, use `ediff-regions-wordwise'."
 	(buffer-B
          (ediff-clone-buffer-for-region-comparison buffer-B "-Region.B-"))
         reg-A-beg reg-A-end reg-B-beg reg-B-end)
-    (save-excursion
-      (set-buffer buffer-A)
+    (with-current-buffer buffer-A
       (setq reg-A-beg (region-beginning)
 	    reg-A-end (region-end))
       ;; enlarge the region to hold full lines
@@ -1020,41 +1063,46 @@ lines.  For small regions, use `ediff-regions-wordwise'."
   (let ((tmp-buffer (get-buffer-create ediff-tmp-buffer))
 	overl-A overl-B
 	file-A file-B)
+    (unwind-protect
+	(progn
+	  ;; in case beg/end-A/B aren't markers--make them into markers
+	  (ediff-with-current-buffer buffer-A
+	    (setq beg-A (move-marker (make-marker) beg-A)
+		  end-A (move-marker (make-marker) end-A)))
+	  (ediff-with-current-buffer buffer-B
+	    (setq beg-B (move-marker (make-marker) beg-B)
+		  end-B (move-marker (make-marker) end-B)))
+	  
+	  ;; make file-A
+	  (if word-mode
+	      (ediff-wordify beg-A end-A buffer-A tmp-buffer)
+	    (ediff-copy-to-buffer beg-A end-A buffer-A tmp-buffer))
+	  (setq file-A (ediff-make-temp-file tmp-buffer "regA"))
 
-    ;; in case beg/end-A/B aren't markers--make them into markers
-    (ediff-with-current-buffer buffer-A
-      (setq beg-A (move-marker (make-marker) beg-A)
-	    end-A (move-marker (make-marker) end-A)))
-    (ediff-with-current-buffer buffer-B
-      (setq beg-B (move-marker (make-marker) beg-B)
-	    end-B (move-marker (make-marker) end-B)))
-
-    ;; make file-A
-    (if word-mode
-	(ediff-wordify beg-A end-A buffer-A tmp-buffer)
-      (ediff-copy-to-buffer beg-A end-A buffer-A tmp-buffer))
-    (setq file-A (ediff-make-temp-file tmp-buffer "regA"))
-
-    ;; make file-B
-    (if word-mode
-	(ediff-wordify beg-B end-B buffer-B tmp-buffer)
-      (ediff-copy-to-buffer beg-B end-B buffer-B tmp-buffer))
-    (setq file-B (ediff-make-temp-file tmp-buffer "regB"))
-
-    (setq overl-A (ediff-make-bullet-proof-overlay beg-A end-A buffer-A))
-    (setq overl-B (ediff-make-bullet-proof-overlay beg-B end-B buffer-B))
-    (ediff-setup buffer-A file-A
-		 buffer-B file-B
-		 nil nil	    ; buffer & file C
-		 (cons `(lambda ()
-			    (delete-file ,file-A)
-			    (delete-file ,file-B))
-		       startup-hooks)
-		 (append
-		  (list (cons 'ediff-word-mode  word-mode)
-			(cons 'ediff-narrow-bounds (list overl-A overl-B))
-			(cons 'ediff-job-name job-name))
-		  setup-parameters))
+	  ;; make file-B
+	  (if word-mode
+	      (ediff-wordify beg-B end-B buffer-B tmp-buffer)
+	    (ediff-copy-to-buffer beg-B end-B buffer-B tmp-buffer))
+	  (setq file-B (ediff-make-temp-file tmp-buffer "regB"))
+	  
+	  (setq overl-A (ediff-make-bullet-proof-overlay beg-A end-A buffer-A))
+	  (setq overl-B (ediff-make-bullet-proof-overlay beg-B end-B buffer-B))
+	  (ediff-setup buffer-A file-A
+		       buffer-B file-B
+		       nil nil	    ; buffer & file C
+		       (cons `(lambda ()
+				(delete-file ,file-A)
+				(delete-file ,file-B))
+			     startup-hooks)
+		       (append
+			(list (cons 'ediff-word-mode  word-mode)
+			      (cons 'ediff-narrow-bounds (list overl-A overl-B))
+			      (cons 'ediff-job-name job-name))
+			setup-parameters)))
+      (if (and (stringp file-A) (file-exists-p file-A))
+	  (delete-file file-A))
+      (if (and (stringp file-B) (file-exists-p file-B))
+	  (delete-file file-B)))
     ))
 
 
@@ -1416,6 +1464,8 @@ Uses `vc.el' or `rcs.el' depending on `ediff-version-control-package'."
   "Return string describing the version of Ediff.
 When called interactively, displays the version."
   (interactive)
+  ;; called-interactively-p - not in XEmacs
+  ;; (if (called-interactively-p 'interactive)
   (if (interactive-p)
       (message "%s" (ediff-version))
     (format "Ediff %s of %s" ediff-version ediff-date)))

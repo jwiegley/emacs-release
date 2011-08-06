@@ -1,9 +1,10 @@
 ;;; mule.el --- basic commands for multilingual environment
 
-;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
+;;   2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009
+;;   2005, 2006, 2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 ;; Copyright (C) 2003
@@ -263,7 +264,7 @@ attribute."
 	  (aset emacs-mule-charset-table emacs-mule-id name)))
 
     (dolist (slot attrs)
-      (setcdr slot (plist-get props (car slot))))
+      (setcdr slot (purecopy (plist-get props (car slot)))))
 
     ;; Make sure that the value of :code-space is a vector of 8
     ;; elements.
@@ -276,7 +277,7 @@ attribute."
 
     ;; Add :name and :docstring properties to PROPS.
     (setq props
-	  (cons :name (cons name (cons :docstring (cons docstring props)))))
+	  (cons :name (cons name (cons :docstring (cons (purecopy docstring) props)))))
     (or (plist-get props :short-name)
 	(plist-put props :short-name (symbol-name name)))
     (or (plist-get props :long-name)
@@ -306,12 +307,9 @@ Return t if file exists."
 	   (signal 'file-error (list "Cannot open load file" file)))
     ;; Read file with code conversion, and then eval.
     (let* ((buffer
-	    ;; To avoid any autoloading, set default-major-mode to
-	    ;; fundamental-mode.
-	    (let ((default-major-mode 'fundamental-mode))
-	      ;; We can't use `generate-new-buffer' because files.el
-	      ;; is not yet loaded.
-	      (get-buffer-create (generate-new-buffer-name " *load*"))))
+            ;; We can't use `generate-new-buffer' because files.el
+            ;; is not yet loaded.
+            (get-buffer-create (generate-new-buffer-name " *load*")))
 	   (load-in-progress t)
 	   (source (save-match-data (string-match "\\.el\\'" fullname))))
       (unless nomessage
@@ -319,7 +317,7 @@ Return t if file exists."
 	    (message "Loading %s (source)..." file)
 	  (message "Loading %s..." file)))
       (when purify-flag
-	(push file preloaded-file-list))
+	(push (purecopy file) preloaded-file-list))
       (unwind-protect
 	  (let ((load-file-name fullname)
 		(set-auto-coding-for-load t)
@@ -350,13 +348,12 @@ Return t if file exists."
 			 ;; If this Emacs is running with --unibyte,
 			 ;; convert multibyte strings to unibyte
 			 ;; after reading them.
-;;			 (not default-enable-multibyte-characters)
+;;			 (not (default-value 'enable-multibyte-characters))
 			 nil t
 			 ))
 	(let (kill-buffer-hook kill-buffer-query-functions)
 	  (kill-buffer buffer)))
-      (unless purify-flag
- 	(do-after-load-evaluation fullname))
+      (do-after-load-evaluation fullname)
 
       (unless (or nomessage noninteractive)
 	(if source
@@ -436,7 +433,10 @@ This is the last value stored with
   "Set CHARSETS's PROPNAME property to value VALUE.
 It can be retrieved with `(get-charset-property CHARSET PROPNAME)'."
   (set-charset-plist charset
-		     (plist-put (charset-plist charset) propname value)))
+		     (plist-put (charset-plist charset) propname
+				(if (stringp value)
+				    (purecopy value)
+				  value))))
 
 (defun charset-description (charset)
   "Return description string of CHARSET."
@@ -860,7 +860,7 @@ For compatibility with Emacs 20/21, this accepts old-style symbols
 like `mime-charset' as well as the current style like `:mime-charset'."
   (or (plist-get (coding-system-plist coding-system) prop)
       (if (not (keywordp prop))
-	  ;; For backward compatiblity.
+	  ;; For backward compatibility.
 	  (if (eq prop 'ascii-incompatible)
 	      (not (plist-get (coding-system-plist coding-system)
 			      :ascii-compatible-p))
@@ -1025,7 +1025,7 @@ Value is a list of transformed arguments."
 					 eol-type)
   "Define a new coding system CODING-SYSTEM (symbol).
 This function is provided for backward compatibility."
-  ;; For compatiblity with XEmacs, we check the type of TYPE.  If it
+  ;; For compatibility with XEmacs, we check the type of TYPE.  If it
   ;; is a symbol, perhaps, this function is called with XEmacs-style
   ;; arguments.  Here, try to transform that kind of arguments to
   ;; Emacs style.
@@ -1268,36 +1268,60 @@ See also the command `set-keyboard-coding-system'.")
 
 (defun set-keyboard-coding-system (coding-system &optional terminal)
   "Set coding system for keyboard input on TERMINAL to CODING-SYSTEM.
-In addition, this command calls `encoded-kbd-setup-display' to set up the
-translation of keyboard input events to the specified coding system.
 
 For a list of possible values of CODING-SYSTEM, use \\[list-coding-systems].
 The default is determined by the selected language environment
 or by the previous use of this command.
 
+If CODING-SYSTEM is nil or the coding-type of CODING-SYSTEM is
+`raw-text', the decoding of keyboard input is disabled.
+
 TERMINAL may be a terminal object, a frame, or nil for the
 selected frame's terminal.  The setting has no effect on
 graphical terminals."
   (interactive
-   (list (let ((default (if (and (not (keyboard-coding-system))
-				 default-keyboard-coding-system)
-			    default-keyboard-coding-system)))
+   (list (let* ((coding (keyboard-coding-system nil))
+		(default (if (eq (coding-system-type coding) 'raw-text)
+			     default-keyboard-coding-system)))
 	   (read-coding-system
 	    (format "Coding system for keyboard input (default %s): "
 		    default)
 	    default))))
-  (if (and (not coding-system)
-	   (not (keyboard-coding-system)))
-      (setq coding-system default-keyboard-coding-system))
-  (if coding-system
-      (setq default-keyboard-coding-system coding-system))
-  (if (and coding-system
-	   (not (coding-system-get coding-system :ascii-compatible-p))
-	   (not (coding-system-get coding-system :suitable-for-keyboard)))
-      (error "%s is not suitable for keyboard" coding-system))
+  (let ((coding-type (coding-system-type coding-system))
+	(saved-meta-mode
+	 (terminal-parameter terminal 'keyboard-coding-saved-meta-mode)))
+    (if (not (eq coding-type 'raw-text))
+	(let (accept-8-bit)
+	  (if (not (or (coding-system-get coding-system :suitable-for-keyboard)
+		       (coding-system-get coding-system :ascii-compatible-p)))
+	      (error "Unsuitable coding system for keyboard: %s" coding-system))
+	  (cond ((memq coding-type '(charset utf-8 shift-jis big5 ccl))
+		 (setq accept-8-bit t))
+		((eq coding-type 'iso-2022)
+		 (let ((flags (coding-system-get coding-system :flags)))
+		   (or (memq '7-bit flags)
+		       (setq accept-8-bit t))))
+		(t
+		 (error "Unsupported coding system for keyboard: %s"
+			coding-system)))
+	  (when accept-8-bit
+	    (or saved-meta-mode
+		(set-terminal-parameter terminal
+					'keyboard-coding-saved-meta-mode
+					(cons (nth 2 (current-input-mode))
+					      nil)))
+	    (set-input-meta-mode 8))
+	  ;; Avoid end-of-line conversion.
+	  (setq coding-system
+		(coding-system-change-eol-conversion coding-system 'unix)))
+
+      (when saved-meta-mode
+	(set-input-meta-mode (car saved-meta-mode))
+	(set-terminal-parameter terminal
+				'keyboard-coding-saved-meta-mode
+				nil))))
   (set-keyboard-coding-system-internal coding-system terminal)
-  (setq keyboard-coding-system coding-system)
-  (encoded-kbd-setup-display terminal))
+  (setq keyboard-coding-system coding-system))
 
 (defcustom keyboard-coding-system nil
   "Specify coding system for keyboard input.
@@ -1380,10 +1404,11 @@ This function is provided for backward compatibility."
 ;;; X selections
 
 (defvar ctext-non-standard-encodings-alist
+  (mapcar 'purecopy
   '(("big5-0" big5 2 big5)
     ("ISO8859-14" iso-8859-14 1 latin-iso8859-14)
     ("ISO8859-15" iso-8859-15 1 latin-iso8859-15)
-    ("gbk-0" gbk 2 chinese-gbk))
+    ("gbk-0" gbk 2 chinese-gbk)))
   "Alist of non-standard encoding names vs the corresponding usages in CTEXT.
 
 It controls how extended segments of a compound text are handled
@@ -1416,13 +1441,14 @@ Each element must be one of the names listed in the variable
 `ctext-non-standard-encodings-alist' (which see).")
 
 (defvar ctext-non-standard-encodings-regexp
+  (purecopy
   (string-to-multibyte
    (concat
     ;; For non-standard encodings.
     "\\(\e%/[0-4][\200-\377][\200-\377]\\([^\002]+\\)\002\\)"
     "\\|"
     ;; For UTF-8 encoding.
-    "\\(\e%G[^\e]*\e%@\\)")))
+    "\\(\e%G[^\e]*\e%@\\)"))))
 
 ;; Functions to support "Non-Standard Character Set Encodings" defined
 ;; by the COMPOUND-TEXT spec.  They also support "The UTF-8 encoding"
@@ -1599,7 +1625,8 @@ and convert it in the temporary buffer.  Otherwise, convert in-place."
 (defcustom auto-coding-alist
   ;; .exe and .EXE are added to support archive-mode looking at DOS
   ;; self-extracting exe archives.
-  '(("\\.\\(\
+  (mapcar (lambda (arg) (cons (purecopy (car arg)) (cdr arg)))
+	  '(("\\.\\(\
 arc\\|zip\\|lzh\\|lha\\|zoo\\|[jew]ar\\|xpi\\|rar\\|\
 ARC\\|ZIP\\|LZH\\|LHA\\|ZOO\\|[JEW]AR\\|XPI\\|RAR\\)\\'"
      . no-conversion-multibyte)
@@ -1608,7 +1635,7 @@ ARC\\|ZIP\\|LZH\\|LHA\\|ZOO\\|[JEW]AR\\|XPI\\|RAR\\)\\'"
     ("\\.\\(gz\\|Z\\|bz\\|bz2\\|gpg\\)\\'" . no-conversion)
     ("\\.\\(jpe?g\\|png\\|gif\\|tiff?\\|p[bpgn]m\\)\\'" . no-conversion)
     ("\\.pdf\\'" . no-conversion)
-    ("/#[^/]+#\\'" . emacs-mule))
+    ("/#[^/]+#\\'" . emacs-mule)))
   "Alist of filename patterns vs corresponding coding systems.
 Each element looks like (REGEXP . CODING-SYSTEM).
 A file whose name matches REGEXP is decoded by CODING-SYSTEM on reading.
@@ -1622,11 +1649,12 @@ and the contents of `file-coding-system-alist'."
 		       (symbol :tag "Coding system"))))
 
 (defcustom auto-coding-regexp-alist
-  '(("^BABYL OPTIONS:[ \t]*-\\*-[ \t]*rmail[ \t]*-\\*-" . no-conversion)
+  (mapcar (lambda (arg) (cons (purecopy (car arg)) (cdr arg)))
+  '(("\\`BABYL OPTIONS:[ \t]*-\\*-[ \t]*rmail[ \t]*-\\*-" . no-conversion)
     ("\\`\xFE\xFF" . utf-16be-with-signature)
     ("\\`\xFF\xFE" . utf-16le-with-signature)
     ("\\`\xEF\xBB\xBF" . utf-8-with-signature)
-    ("\\`;ELC\024\0\0\0" . emacs-mule))	; Emacs 20-compiled
+    ("\\`;ELC\024\0\0\0" . emacs-mule)))	; Emacs 20-compiled
   "Alist of patterns vs corresponding coding systems.
 Each element looks like (REGEXP . CODING-SYSTEM).
 A file whose first bytes match REGEXP is decoded by CODING-SYSTEM on reading.

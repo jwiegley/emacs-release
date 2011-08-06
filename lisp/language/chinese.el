@@ -1,9 +1,9 @@
 ;;; chinese.el --- support for Chinese -*- coding: iso-2022-7bit; -*-
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009
+;;   2005, 2006, 2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 ;; Copyright (C) 2003
@@ -107,6 +107,9 @@
 (set-language-info-alist
  "Chinese-GB" '((charset chinese-gb2312 chinese-sisheng)
 		(iso639-language . zh)
+		(setup-function . (lambda ()
+				    (use-cjk-char-width-table 'zh_CN)))
+		(exit-function . use-default-char-width-table)
 		(coding-system chinese-iso-8bit iso-2022-cn chinese-hz)
 		(coding-priority chinese-iso-8bit chinese-big5 iso-2022-cn)
 		(input-method . "chinese-py-punct")
@@ -134,6 +137,9 @@
 (set-language-info-alist
  "Chinese-BIG5" '((charset chinese-big5-1 chinese-big5-2)
 		  (iso639-language . zh)
+		  (setup-function . (lambda ()
+				      (use-cjk-char-width-table 'zh_HK)))
+		  (exit-function . use-default-char-width-table)
 		  (coding-system chinese-big5 chinese-iso-7bit)
 		  (coding-priority chinese-big5 iso-2022-cn chinese-iso-8bit)
 		  (input-method . "chinese-py-punct-b5")
@@ -186,6 +192,9 @@
 			  chinese-cns11643-5 chinese-cns11643-6
 			  chinese-cns11643-7)
 		 (iso639-language . zh)
+		 (setup-function . (lambda () 
+				     (use-cjk-char-width-table 'zh_TW)))
+		 (exit-function . use-default-char-width-table)
 		 (coding-system iso-2022-cn euc-tw)
 		 (coding-priority iso-2022-cn euc-tw chinese-big5
 				  chinese-iso-8bit)
@@ -203,6 +212,9 @@ accepts Big5 for input also (which is then converted to CNS)."))
 			     chinese-cns11643-5 chinese-cns11643-6
 			     chinese-cns11643-7 chinese-big5-1 chinese-big5-2)
 		    (iso639-language . zh)
+		    (setup-function . (lambda () 
+					(use-cjk-char-width-table 'zh_TW)))
+		    (exit-function . use-default-char-width-table)
 		    (coding-system euc-tw iso-2022-cn)
 		    (coding-priority euc-tw chinese-big5 iso-2022-cn
 				     chinese-iso-8bit)
@@ -230,6 +242,9 @@ converted to CNS)."))
 (set-language-info-alist
  "Chinese-GBK" '((charset chinese-gbk)
 		 (iso639-language . zh)
+		 (setup-function . (lambda () 
+				     (use-cjk-char-width-table 'zh_CN)))
+		 (exit-function . use-default-char-width-table)
 		 (coding-system chinese-gbk)
 		 (coding-priority gbk iso-2022-cn chinese-big5
 				  chinese-iso-8bit) ; fixme?

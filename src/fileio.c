@@ -1,7 +1,7 @@
 /* File IO for GNU Emacs.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995, 1996,
                  1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -28,6 +28,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <setjmp.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -206,13 +207,19 @@ int write_region_inhibit_fsync;
 #endif
 
 /* Non-zero means call move-file-to-trash in Fdelete_file or
-   Fdelete_directory.  */
+   Fdelete_directory_internal.  */
 int delete_by_moving_to_trash;
 
 Lisp_Object Qdelete_by_moving_to_trash;
 
 /* Lisp function for moving files to trash.  */
 Lisp_Object Qmove_file_to_trash;
+
+/* Lisp function for recursively copying directories.  */
+Lisp_Object Qcopy_directory;
+
+/* Lisp function for recursively deleting directories.  */
+Lisp_Object Qdelete_directory;
 
 extern Lisp_Object Vuser_login_name;
 
@@ -276,7 +283,7 @@ report_file_error (string, data)
 	    int c;
 
 	    str = (char *) SDATA (errstring);
-	    c = STRING_CHAR (str, 0);
+	    c = STRING_CHAR (str);
 	    Faset (errstring, make_number (0), make_number (DOWNCASE (c)));
 	  }
 
@@ -295,7 +302,7 @@ close_file_unwind (fd)
 
 /* Restore point, having saved it as a marker.  */
 
-static Lisp_Object
+Lisp_Object
 restore_point_unwind (location)
      Lisp_Object location;
 {
@@ -315,7 +322,7 @@ Lisp_Object Qfile_name_as_directory;
 Lisp_Object Qcopy_file;
 Lisp_Object Qmake_directory_internal;
 Lisp_Object Qmake_directory;
-Lisp_Object Qdelete_directory;
+Lisp_Object Qdelete_directory_internal;
 Lisp_Object Qdelete_file;
 Lisp_Object Qrename_file;
 Lisp_Object Qadd_name_to_file;
@@ -656,7 +663,7 @@ In Unix-syntax, this function just removes the final slash.  */)
 				STRING_MULTIBYTE (directory));
 }
 
-static char make_temp_name_tbl[64] =
+static const char make_temp_name_tbl[64] =
 {
   'A','B','C','D','E','F','G','H',
   'I','J','K','L','M','N','O','P',
@@ -1401,8 +1408,9 @@ filesystem tree, not (expand-file-name ".."  dirname).  */)
    bugs _are_ found, it might be of interest to look at the old code and
    see what did it do in the relevant situation.
 
-   Don't remove this code: it's true that it will be accessible via CVS,
-   but a few years from deletion, people will forget it is there.  */
+   Don't remove this code: it's true that it will be accessible
+   from the repository, but a few years from deletion, people will
+   forget it is there.  */
 
 /* Changed this DEFUN to a DEAFUN, so as not to confuse `make-docfile'.  */
 DEAFUN ("expand-file-name", Fexpand_file_name, Sexpand_file_name, 1, 2, 0,
@@ -2134,7 +2142,8 @@ DEFUN ("make-directory-internal", Fmake_directory_internal,
   return Qnil;
 }
 
-DEFUN ("delete-directory", Fdelete_directory, Sdelete_directory, 1, 1, "FDelete directory: ",
+DEFUN ("delete-directory-internal", Fdelete_directory_internal,
+       Sdelete_directory_internal, 1, 1, 0,
        doc: /* Delete the directory named DIRECTORY.  Does not follow symlinks.  */)
      (directory)
      Lisp_Object directory;
@@ -2145,10 +2154,6 @@ DEFUN ("delete-directory", Fdelete_directory, Sdelete_directory, 1, 1, "FDelete 
 
   CHECK_STRING (directory);
   directory = Fdirectory_file_name (Fexpand_file_name (directory, Qnil));
-
-  handler = Ffind_file_name_handler (directory, Qdelete_directory);
-  if (!NILP (handler))
-    return call2 (handler, Qdelete_directory, directory);
 
   if (delete_by_moving_to_trash)
     return call1 (Qmove_file_to_trash, directory);
@@ -2243,7 +2248,11 @@ This is what happens in interactive use with M-x.  */)
       && (NILP (Fstring_equal (Fdowncase (file), Fdowncase (newname))))
 #endif
       )
-    newname = Fexpand_file_name (Ffile_name_nondirectory (file), newname);
+    {
+      Lisp_Object fname = NILP (Ffile_directory_p (file))
+	? file : Fdirectory_file_name (file);
+      newname = Fexpand_file_name (Ffile_name_nondirectory (fname), newname);
+    }
   else
     newname = Fexpand_file_name (newname, Qnil);
 
@@ -2281,15 +2290,26 @@ This is what happens in interactive use with M-x.  */)
                                  NILP (ok_if_already_exists) ? Qnil : Qt);
           else
 #endif
+	  if (!NILP (Ffile_directory_p (file)))
+	    call4 (Qcopy_directory, file, newname, Qt, Qnil);
+	  else
+	    /* We have already prompted if it was an integer, so don't
+	       have copy-file prompt again.  */
 	    Fcopy_file (file, newname,
-			/* We have already prompted if it was an integer,
-			   so don't have copy-file prompt again.  */
 			NILP (ok_if_already_exists) ? Qnil : Qt,
 			Qt, Qt);
 
 	  count = SPECPDL_INDEX ();
 	  specbind (Qdelete_by_moving_to_trash, Qnil);
-	  Fdelete_file (file);
+
+	  if (!NILP (Ffile_directory_p (file))
+#ifdef S_IFLNK
+	      && NILP (symlink_target)
+#endif
+	      )
+	    call2 (Qdelete_directory, file, Qt);
+	  else
+	    Fdelete_file (file);
 	  unbind_to (count, Qnil);
 	}
       else
@@ -3715,6 +3735,7 @@ variable `last-coding-system-used' to the coding system actually used.  */)
 	}
 
       coding_system = CODING_ID_NAME (coding.id);
+      set_coding_system = 1;
       decoded = BUF_BEG_ADDR (XBUFFER (conversion_buffer));
       inserted = (BUF_Z_BYTE (XBUFFER (conversion_buffer))
 		  - BUF_BEG_BYTE (XBUFFER (conversion_buffer)));
@@ -4098,7 +4119,7 @@ variable `last-coding-system-used' to the coding system actually used.  */)
 	}
 
       SAVE_MODIFF = MODIFF;
-      current_buffer->auto_save_modified = MODIFF;
+      BUF_AUTOSAVE_MODIFF (current_buffer) = MODIFF;
       XSETFASTINT (current_buffer->save_length, Z - BEG);
 #ifdef CLASH_DETECTION
       if (NILP (handler))
@@ -5308,7 +5329,7 @@ A non-nil CURRENT-ONLY argument means save only current buffer.  */)
 	   and file changed since last real save.  */
 	if (STRINGP (b->auto_save_file_name)
 	    && BUF_SAVE_MODIFF (b) < BUF_MODIFF (b)
-	    && b->auto_save_modified < BUF_MODIFF (b)
+	    && BUF_AUTOSAVE_MODIFF (b) < BUF_MODIFF (b)
 	    /* -1 means we've turned off autosaving for a while--see below.  */
 	    && XINT (b->save_length) >= 0
 	    && (do_handled_files
@@ -5350,7 +5371,7 @@ A non-nil CURRENT-ONLY argument means save only current buffer.  */)
 	      message1 ("Auto-saving...");
 	    internal_condition_case (auto_save_1, Qt, auto_save_error);
 	    auto_saved++;
-	    b->auto_save_modified = BUF_MODIFF (b);
+	    BUF_AUTOSAVE_MODIFF (b) = BUF_MODIFF (b);
 	    XSETFASTINT (current_buffer->save_length, Z - BEG);
 	    set_buffer_internal (old);
 
@@ -5395,7 +5416,9 @@ DEFUN ("set-buffer-auto-saved", Fset_buffer_auto_saved,
 No auto-save file will be written until the buffer changes again.  */)
      ()
 {
-  current_buffer->auto_save_modified = MODIFF;
+  /* FIXME: This should not be called in indirect buffers, since
+     they're not autosaved.  */
+  BUF_AUTOSAVE_MODIFF (current_buffer) = MODIFF;
   XSETFASTINT (current_buffer->save_length, Z - BEG);
   current_buffer->auto_save_failure_time = -1;
   return Qnil;
@@ -5418,7 +5441,9 @@ in the visited file.  If the buffer has no visited file,
 then any auto-save counts as "recent".  */)
      ()
 {
-  return (SAVE_MODIFF < current_buffer->auto_save_modified) ? Qt : Qnil;
+  /* FIXME: maybe we should return nil for indirect buffers since
+     they're never autosaved.  */
+  return (SAVE_MODIFF < BUF_AUTOSAVE_MODIFF (current_buffer) ? Qt : Qnil);
 }
 
 /* Reading and completing file names */
@@ -5460,50 +5485,42 @@ Fread_file_name (prompt, dir, default_filename, mustmatch, initial, predicate)
 
 
 void
-init_fileio_once ()
-{
-  /* Must be set before any path manipulation is performed.  */
-  XSETFASTINT (Vdirectory_sep_char, '/');
-}
-
-
-void
 syms_of_fileio ()
 {
-  Qoperations = intern ("operations");
-  Qexpand_file_name = intern ("expand-file-name");
-  Qsubstitute_in_file_name = intern ("substitute-in-file-name");
-  Qdirectory_file_name = intern ("directory-file-name");
-  Qfile_name_directory = intern ("file-name-directory");
-  Qfile_name_nondirectory = intern ("file-name-nondirectory");
-  Qunhandled_file_name_directory = intern ("unhandled-file-name-directory");
-  Qfile_name_as_directory = intern ("file-name-as-directory");
-  Qcopy_file = intern ("copy-file");
-  Qmake_directory_internal = intern ("make-directory-internal");
-  Qmake_directory = intern ("make-directory");
-  Qdelete_directory = intern ("delete-directory");
-  Qdelete_file = intern ("delete-file");
-  Qrename_file = intern ("rename-file");
-  Qadd_name_to_file = intern ("add-name-to-file");
-  Qmake_symbolic_link = intern ("make-symbolic-link");
-  Qfile_exists_p = intern ("file-exists-p");
-  Qfile_executable_p = intern ("file-executable-p");
-  Qfile_readable_p = intern ("file-readable-p");
-  Qfile_writable_p = intern ("file-writable-p");
-  Qfile_symlink_p = intern ("file-symlink-p");
-  Qaccess_file = intern ("access-file");
-  Qfile_directory_p = intern ("file-directory-p");
-  Qfile_regular_p = intern ("file-regular-p");
-  Qfile_accessible_directory_p = intern ("file-accessible-directory-p");
-  Qfile_modes = intern ("file-modes");
-  Qset_file_modes = intern ("set-file-modes");
-  Qset_file_times = intern ("set-file-times");
-  Qfile_newer_than_file_p = intern ("file-newer-than-file-p");
-  Qinsert_file_contents = intern ("insert-file-contents");
-  Qwrite_region = intern ("write-region");
-  Qverify_visited_file_modtime = intern ("verify-visited-file-modtime");
-  Qset_visited_file_modtime = intern ("set-visited-file-modtime");
-  Qauto_save_coding = intern ("auto-save-coding");
+  Qoperations = intern_c_string ("operations");
+  Qexpand_file_name = intern_c_string ("expand-file-name");
+  Qsubstitute_in_file_name = intern_c_string ("substitute-in-file-name");
+  Qdirectory_file_name = intern_c_string ("directory-file-name");
+  Qfile_name_directory = intern_c_string ("file-name-directory");
+  Qfile_name_nondirectory = intern_c_string ("file-name-nondirectory");
+  Qunhandled_file_name_directory = intern_c_string ("unhandled-file-name-directory");
+  Qfile_name_as_directory = intern_c_string ("file-name-as-directory");
+  Qcopy_file = intern_c_string ("copy-file");
+  Qmake_directory_internal = intern_c_string ("make-directory-internal");
+  Qmake_directory = intern_c_string ("make-directory");
+  Qdelete_directory_internal = intern_c_string ("delete-directory-internal");
+  Qdelete_file = intern_c_string ("delete-file");
+  Qrename_file = intern_c_string ("rename-file");
+  Qadd_name_to_file = intern_c_string ("add-name-to-file");
+  Qmake_symbolic_link = intern_c_string ("make-symbolic-link");
+  Qfile_exists_p = intern_c_string ("file-exists-p");
+  Qfile_executable_p = intern_c_string ("file-executable-p");
+  Qfile_readable_p = intern_c_string ("file-readable-p");
+  Qfile_writable_p = intern_c_string ("file-writable-p");
+  Qfile_symlink_p = intern_c_string ("file-symlink-p");
+  Qaccess_file = intern_c_string ("access-file");
+  Qfile_directory_p = intern_c_string ("file-directory-p");
+  Qfile_regular_p = intern_c_string ("file-regular-p");
+  Qfile_accessible_directory_p = intern_c_string ("file-accessible-directory-p");
+  Qfile_modes = intern_c_string ("file-modes");
+  Qset_file_modes = intern_c_string ("set-file-modes");
+  Qset_file_times = intern_c_string ("set-file-times");
+  Qfile_newer_than_file_p = intern_c_string ("file-newer-than-file-p");
+  Qinsert_file_contents = intern_c_string ("insert-file-contents");
+  Qwrite_region = intern_c_string ("write-region");
+  Qverify_visited_file_modtime = intern_c_string ("verify-visited-file-modtime");
+  Qset_visited_file_modtime = intern_c_string ("set-visited-file-modtime");
+  Qauto_save_coding = intern_c_string ("auto-save-coding");
 
   staticpro (&Qoperations);
   staticpro (&Qexpand_file_name);
@@ -5516,7 +5533,7 @@ syms_of_fileio ()
   staticpro (&Qcopy_file);
   staticpro (&Qmake_directory_internal);
   staticpro (&Qmake_directory);
-  staticpro (&Qdelete_directory);
+  staticpro (&Qdelete_directory_internal);
   staticpro (&Qdelete_file);
   staticpro (&Qrename_file);
   staticpro (&Qadd_name_to_file);
@@ -5540,21 +5557,21 @@ syms_of_fileio ()
   staticpro (&Qset_visited_file_modtime);
   staticpro (&Qauto_save_coding);
 
-  Qfile_name_history = intern ("file-name-history");
+  Qfile_name_history = intern_c_string ("file-name-history");
   Fset (Qfile_name_history, Qnil);
   staticpro (&Qfile_name_history);
 
-  Qfile_error = intern ("file-error");
+  Qfile_error = intern_c_string ("file-error");
   staticpro (&Qfile_error);
-  Qfile_already_exists = intern ("file-already-exists");
+  Qfile_already_exists = intern_c_string ("file-already-exists");
   staticpro (&Qfile_already_exists);
-  Qfile_date_error = intern ("file-date-error");
+  Qfile_date_error = intern_c_string ("file-date-error");
   staticpro (&Qfile_date_error);
-  Qexcl = intern ("excl");
+  Qexcl = intern_c_string ("excl");
   staticpro (&Qexcl);
 
 #ifdef DOS_NT
-  Qfind_buffer_file_type = intern ("find-buffer-file-type");
+  Qfind_buffer_file_type = intern_c_string ("find-buffer-file-type");
   staticpro (&Qfind_buffer_file_type);
 #endif /* DOS_NT */
 
@@ -5574,34 +5591,35 @@ instead use `file-name-coding-system' to get a constant encoding
 of file names regardless of the current language environment.  */);
   Vdefault_file_name_coding_system = Qnil;
 
-  Qformat_decode = intern ("format-decode");
+  Qformat_decode = intern_c_string ("format-decode");
   staticpro (&Qformat_decode);
-  Qformat_annotate_function = intern ("format-annotate-function");
+  Qformat_annotate_function = intern_c_string ("format-annotate-function");
   staticpro (&Qformat_annotate_function);
-  Qafter_insert_file_set_coding = intern ("after-insert-file-set-coding");
+  Qafter_insert_file_set_coding = intern_c_string ("after-insert-file-set-coding");
   staticpro (&Qafter_insert_file_set_coding);
 
-  Qcar_less_than_car = intern ("car-less-than-car");
+  Qcar_less_than_car = intern_c_string ("car-less-than-car");
   staticpro (&Qcar_less_than_car);
 
   Fput (Qfile_error, Qerror_conditions,
-	list2 (Qfile_error, Qerror));
+	Fpurecopy (list2 (Qfile_error, Qerror)));
   Fput (Qfile_error, Qerror_message,
-	build_string ("File error"));
+	make_pure_c_string ("File error"));
 
   Fput (Qfile_already_exists, Qerror_conditions,
-	list3 (Qfile_already_exists, Qfile_error, Qerror));
+	Fpurecopy (list3 (Qfile_already_exists, Qfile_error, Qerror)));
   Fput (Qfile_already_exists, Qerror_message,
-	build_string ("File already exists"));
+	make_pure_c_string ("File already exists"));
 
   Fput (Qfile_date_error, Qerror_conditions,
-	list3 (Qfile_date_error, Qfile_error, Qerror));
+	Fpurecopy (list3 (Qfile_date_error, Qfile_error, Qerror)));
   Fput (Qfile_date_error, Qerror_message,
-	build_string ("Cannot set file date"));
+	make_pure_c_string ("Cannot set file date"));
 
   DEFVAR_LISP ("directory-sep-char", &Vdirectory_sep_char,
 	       doc: /* Directory separator character for built-in functions that return file names.
 The value is always ?/.  Don't use this variable, just use `/'.  */);
+  XSETFASTINT (Vdirectory_sep_char, '/');
 
   DEFVAR_LISP ("file-name-handler-alist", &Vfile_name_handler_alist,
 	       doc: /* *Alist of elements (REGEXP . HANDLER) for file names handled specially.
@@ -5667,7 +5685,7 @@ buffer current.  */);
   Vwrite_region_annotate_functions = Qnil;
   staticpro (&Qwrite_region_annotate_functions);
   Qwrite_region_annotate_functions
-    = intern ("write-region-annotate-functions");
+    = intern_c_string ("write-region-annotate-functions");
 
   DEFVAR_LISP ("write-region-post-annotation-function",
 	       &Vwrite_region_post_annotation_function,
@@ -5728,9 +5746,13 @@ A non-nil value may result in data loss!  */);
 When non-nil, the function `move-file-to-trash' will be used by
 `delete-file' and `delete-directory'.  */);
   delete_by_moving_to_trash = 0;
-  Qdelete_by_moving_to_trash = intern ("delete-by-moving-to-trash");
-  Qmove_file_to_trash = intern ("move-file-to-trash");
+  Qdelete_by_moving_to_trash = intern_c_string ("delete-by-moving-to-trash");
+  Qmove_file_to_trash = intern_c_string ("move-file-to-trash");
   staticpro (&Qmove_file_to_trash);
+  Qcopy_directory = intern_c_string ("copy-directory");
+  staticpro (&Qcopy_directory);
+  Qdelete_directory = intern_c_string ("delete-directory");
+  staticpro (&Qdelete_directory);
 
   defsubr (&Sfind_file_name_handler);
   defsubr (&Sfile_name_directory);
@@ -5743,7 +5765,7 @@ When non-nil, the function `move-file-to-trash' will be used by
   defsubr (&Ssubstitute_in_file_name);
   defsubr (&Scopy_file);
   defsubr (&Smake_directory_internal);
-  defsubr (&Sdelete_directory);
+  defsubr (&Sdelete_directory_internal);
   defsubr (&Sdelete_file);
   defsubr (&Srename_file);
   defsubr (&Sadd_name_to_file);

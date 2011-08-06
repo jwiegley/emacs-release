@@ -1,7 +1,7 @@
 ;;; mm-uu.el --- Return uu stuff as mm handles
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Shenghuo Zhu <zsh@cs.rochester.edu>
 ;; Keywords: postscript uudecode binhex shar forward gnatsweb pgp
@@ -486,9 +486,11 @@ apply the face `mm-uu-extract'."
       (if (mm-uu-pgp-signed-test)
 	  (progn
 	    (mml2015-clean-buffer)
-	    (let ((coding-system-for-write (or gnus-newsgroup-charset
+	    (let ((coding-system-for-write (or buffer-file-coding-system
+					       gnus-newsgroup-charset
 					       'iso-8859-1))
-		  (coding-system-for-read (or gnus-newsgroup-charset
+		  (coding-system-for-read (or buffer-file-coding-system
+					      gnus-newsgroup-charset
 					      'iso-8859-1)))
 	      (funcall (mml2015-clear-verify-function))))
 	(when (and mml2015-use (null (mml2015-clear-verify-function)))

@@ -1,7 +1,7 @@
 ;;; em-dirs.el --- directory navigation commands
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -138,7 +138,7 @@ This is effective only if directory tracking is enabled."
   :group 'eshell-dirs)
 
 (defcustom eshell-last-dir-ring-file-name
-  (concat eshell-directory-name "lastdir")
+  (expand-file-name "lastdir" eshell-directory-name)
   "*If non-nil, name of the file to read/write the last-dir-ring.
 See also `eshell-read-last-dir-ring' and `eshell-write-last-dir-ring'.
 If it is nil, the last-dir-ring will not be written to disk."
@@ -178,7 +178,7 @@ thing again."
 Thus, this does not include the current directory.")
 
 (defvar eshell-last-dir-ring nil
-  "The last directory that eshell was in.")
+  "The last directory that Eshell was in.")
 
 ;;; Functions:
 
@@ -267,7 +267,7 @@ Thus, this does not include the current directory.")
     (char-to-string (char-before))))
 
 (defun eshell-parse-drive-letter ()
-  "An argument beginning X:[^/] is a drive letter reference."
+  "An argument beginning with X:[^/] is a drive letter reference."
   (when (and (not eshell-current-argument)
 	     (looking-at "\\([A-Za-z]:\\)\\([^/\\\\]\\|\\'\\)"))
     (goto-char (match-end 1))
@@ -275,6 +275,11 @@ Thus, this does not include the current directory.")
 	   (regexp (concat "\\`" letter))
 	   (path (eshell-find-previous-directory regexp)))
       (concat (or path letter) "/"))))
+
+(defvar pcomplete-stub)
+(defvar pcomplete-last-completion-raw)
+(declare-function pcomplete-actual-arg "pcomplete")
+(declare-function pcomplete-uniqify-list "pcomplete")
 
 (defun eshell-complete-user-reference ()
   "If there is a user reference, complete it."
@@ -396,8 +401,8 @@ in the minibuffer:
 	       (eshell-printn result)))
 	(run-hooks 'eshell-directory-change-hook)
 	(if eshell-list-files-after-cd
-	    (throw 'eshell-replace-command
-		   (eshell-parse-command "ls" (cdr args))))
+	    ;; Let-bind eshell-last-command around this?
+	    (eshell-plain-command "ls" (cdr args)))
 	nil))))
 
 (put 'eshell/cd 'eshell-no-numeric-conversions t)
@@ -512,7 +517,7 @@ in the minibuffer:
       msg)))
 
 (defun eshell-read-last-dir-ring ()
-  "Sets the buffer's `eshell-last-dir-ring' from a history file."
+  "Set the buffer's `eshell-last-dir-ring' from a history file."
   (let ((file eshell-last-dir-ring-file-name))
     (cond
      ((or (null file)
@@ -540,7 +545,7 @@ in the minibuffer:
 	(setq eshell-last-dir-ring ring))))))
 
 (defun eshell-write-last-dir-ring ()
-  "Writes the buffer's `eshell-last-dir-ring' to a history file."
+  "Write the buffer's `eshell-last-dir-ring' to a history file."
   (let ((file eshell-last-dir-ring-file-name))
     (cond
      ((or (null file)

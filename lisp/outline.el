@@ -1,7 +1,7 @@
 ;;; outline.el --- outline mode commands for Emacs
 
 ;; Copyright (C) 1986, 1993, 1994, 1995, 1997, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: outlines
@@ -380,6 +380,7 @@ See the command `outline-mode' for more information on this mode."
   "*Function of no args to compute a header's nesting level in an outline.
 It can assume point is at the beginning of a header line and that the match
 data reflects the `outline-regexp'.")
+;;;###autoload(put 'outline-level 'risky-local-variable t)
 
 (defvar outline-heading-alist ()
   "Alist associating a heading for every possible level.
@@ -594,7 +595,7 @@ If there are no such entries, return nil.
 ALIST defaults to `outline-heading-alist'.
 Similar to (car (rassoc LEVEL ALIST)).
 If there are several different entries with same new level, choose
-the one with the smallest distance to the assocation of HEAD in the alist.
+the one with the smallest distance to the association of HEAD in the alist.
 This makes it possible for promotion to work in modes with several
 independent sets of headings (numbered, unnumbered, appendix...)"
   (unless alist (setq alist outline-heading-alist))

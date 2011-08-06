@@ -1,7 +1,7 @@
 ;;; dirtrack.el --- Directory Tracking by watching the prompt
 
 ;; Copyright (C) 1996, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Peter Breton <pbreton@cs.umb.edu>
 ;; Created: Sun Nov 17 1996
@@ -270,7 +270,7 @@ function `dirtrack-debug-mode' to turn on debugging output."
                        (run-hooks 'dirtrack-directory-change-hook)
                        (dirtrack-debug-message
                         (format "Changing directory to %s" prompt-path)))
-                (error "Directory %s does not exist" prompt-path)))
+                (warn "Directory %s does not exist" prompt-path)))
             )))))
   input)
 

@@ -2,7 +2,7 @@ This is ../../info/widget, produced by makeinfo version 4.11 from
 widget.texi.
 
 Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009  Free Software Foundation, Inc.
+2009, 2010  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -29,7 +29,7 @@ The Emacs Widget Library
 ************************
 
 Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009  Free Software Foundation, Inc.
+2009, 2010  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -2304,39 +2304,39 @@ variables, and widgets described in this manual.
 
 
 Tag Table:
-Node: Top1018
-Node: Introduction2197
-Node: User Interface5268
-Node: Programming Example10989
-Node: Setting Up the Buffer14335
-Node: Basic Types16054
-Node: link22678
-Node: url-link23186
-Node: info-link23490
-Node: push-button23772
-Node: editable-field24339
-Node: text25727
-Node: menu-choice26016
-Node: radio-button-choice26864
-Node: item28446
-Node: choice-item28826
-Node: toggle29316
-Node: checkbox30063
-Node: checklist30362
-Node: editable-list31797
-Node: group32971
-Node: Sexp Types33251
-Node: constants33595
-Node: generic34663
-Node: atoms35213
-Node: composite37134
-Node: Widget Properties40114
-Node: Defining New Widgets43167
-Node: Widget Browser49195
-Node: Widget Minor Mode50048
-Node: Utilities50597
-Node: Widget Wishlist51080
-Node: GNU Free Documentation License52337
-Node: Index77507
+Node: Top1024
+Node: Introduction2209
+Node: User Interface5280
+Node: Programming Example11001
+Node: Setting Up the Buffer14347
+Node: Basic Types16066
+Node: link22690
+Node: url-link23198
+Node: info-link23502
+Node: push-button23784
+Node: editable-field24351
+Node: text25739
+Node: menu-choice26028
+Node: radio-button-choice26876
+Node: item28458
+Node: choice-item28838
+Node: toggle29328
+Node: checkbox30075
+Node: checklist30374
+Node: editable-list31809
+Node: group32983
+Node: Sexp Types33263
+Node: constants33607
+Node: generic34675
+Node: atoms35225
+Node: composite37146
+Node: Widget Properties40126
+Node: Defining New Widgets43179
+Node: Widget Browser49207
+Node: Widget Minor Mode50060
+Node: Utilities50609
+Node: Widget Wishlist51092
+Node: GNU Free Documentation License52349
+Node: Index77519
 
 End Tag Table

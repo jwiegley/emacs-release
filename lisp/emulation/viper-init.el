@@ -1,7 +1,7 @@
 ;;; viper-init.el --- some common definitions for Viper
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
@@ -35,7 +35,6 @@
 (defvar default-input-method)
 (defvar describe-current-input-method-function)
 (defvar bar-cursor)
-(defvar default-cursor-type)
 (defvar cursor-type)
 ;; end pacifier
 
@@ -971,7 +970,7 @@ Should be set in `~/.viper' file."
   (condition-case nil
       (if (featurep 'xemacs)
 	  (set (make-local-variable 'bar-cursor) nil)
-	(setq cursor-type default-cursor-type))
+	(setq cursor-type (default-value 'cursor-type)))
     (error nil)))
 
 (defun viper-set-insert-cursor-type ()

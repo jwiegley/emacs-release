@@ -1,6 +1,6 @@
 ;;; erc-lang.el --- provide the LANG command to ERC
 
-;; Copyright (C) 2002, 2004, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2004, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Alex Schroeder <alex@gnu.org>
 ;; Maintainer: Alex Schroeder <alex@gnu.org>
@@ -196,6 +196,8 @@ Normungsinstitut (ON), Postfach 130, A-1021 Vienna, Austria.")
   (interactive (list (completing-read "ISO language code: "
 				      iso-638-languages)))
   (message "%s" (cdr (assoc code iso-638-languages))))
+
+(defvar line)            ; dynamically bound in erc-process-input-line
 
 (defun erc-cmd-LANG (language)
   "Display the language name for the language code given by LANGUAGE."

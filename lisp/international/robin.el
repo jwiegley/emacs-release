@@ -1,11 +1,11 @@
 ;;; robin.el --- yet another input method (smaller than quail)
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number: H15PRO110
 
 ;; Author: TAKAHASHI Naoto <ntakahas@m17n.org>
-;; Keywords: mule, multilingual, input method
+;; Keywords: mule, multilingual, input method, i18n
 
 ;; This file is part of GNU Emacs.
 

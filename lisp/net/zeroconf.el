@@ -1,6 +1,6 @@
 ;;; zeroconf.el --- Service browser using Avahi.
 
-;; Copyright (C) 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Michael Albinus <michael.albinus@gmx.de>
 ;; Keywords: comm, hardware
@@ -334,7 +334,7 @@ The attributes of SERVICE can be retrieved via the functions
     (let ((l-hook (gethash type zeroconf-service-removed-hooks-hash nil)))
       (add-hook 'l-hook function)
       (puthash type l-hook zeroconf-service-removed-hooks-hash)))
-   (t (error "EVENT must be either `:new' or `:removed'."))))
+   (t (error "EVENT must be either `:new' or `:removed'"))))
 
 (defun zeroconf-get-host ()
   "Returns the local host name as string."
@@ -482,7 +482,7 @@ DOMAIN is nil, the local domain is used."
 	     (dbus-ping :system zeroconf-service-avahi)
 	     (dbus-call-method
 	      :system zeroconf-service-avahi zeroconf-path-avahi
-	      zeroconf-interface-avahi-server "IsNSSSupportAvailable"))
+	      zeroconf-interface-avahi-server "GetVersionString"))
 
     ;; Reset all stored values.
     (setq zeroconf-path-avahi-service-type-browser nil

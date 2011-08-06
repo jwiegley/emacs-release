@@ -1,7 +1,7 @@
 ;;; smiley.el --- displaying smiley faces
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Dave Love <fx@gnu.org>
 ;; Keywords: news mail multimedia
@@ -196,8 +196,8 @@ A list of images is returned."
 
 ;;;###autoload
 (defun smiley-buffer (&optional buffer)
-  "Run `smiley-region' at the buffer, specified in the argument or
-interactively. If there's no argument, do it at the current buffer"
+  "Run `smiley-region' at the BUFFER, specified in the argument or
+interactively.  If there's no argument, do it at the current buffer."
   (interactive "bBuffer to run smiley-region: ")
   (save-excursion
     (if buffer

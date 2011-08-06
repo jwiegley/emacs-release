@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 1999, 2000,
-@c   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+@c   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Files, Buffers, Keyboard Macros, Top
 @chapter File Handling
@@ -207,7 +207,7 @@ to reread it.
 about 10 megabytes), Emacs asks you for confirmation first.  You can
 answer @kbd{y} to proceed with visiting the file.  Note, however, that
 Emacs cannot visit files that are larger than the maximum Emacs buffer
-size, which is around 256 megabytes on 32-bit machines
+size, which is around 512 megabytes on 32-bit machines
 (@pxref{Buffers}).  If you try, Emacs will display an error message
 saying that the maximum buffer size has been exceeded.
 
@@ -962,6 +962,7 @@ the buffer, and it will stay there as the file contents change.
 However, if you are sure that the file will only change by growing at
 the end, use Auto-Revert Tail mode instead
 (@code{auto-revert-tail-mode}).  It is more efficient for this.
+Auto-Revert Tail mode works also for remote files.
 
   @xref{VC Mode Line}, for Auto Revert peculiarities in buffers that
 visit files under version control.
@@ -1198,8 +1199,8 @@ Display a verbose directory listing.
 @item M-x make-directory @key{RET} @var{dirname} @key{RET}
 Create a new directory named @var{dirname}.
 @item M-x delete-directory @key{RET} @var{dirname} @key{RET}
-Delete the directory named @var{dirname}.  It must be empty,
-or you get an error.
+Delete the directory named @var{dirname}.  If it isn't empty,
+you will be asked whether you want to delete it recursively.
 @end table
 
 @findex list-directory
@@ -1246,12 +1247,12 @@ this, it runs the program specified by
 
   The command @kbd{M-x delete-directory} prompts for a directory name
 using the minibuffer, and deletes the directory if it is empty.  If
-the directory is not empty, this signals an error.  On systems that
-have a ``Trash'' or ``Recycle Bin'' feature, you can make this command
-move the specified directory to the Trash or Recycle Bin, instead of
-deleting it outright, by changing the variable
-@code{delete-by-moving-to-trash} to @code{t}.  @xref{Misc File Ops},
-for more information about using the Trash.
+the directory is not empty, you will be asked whether you want to
+delete it recursively.  On systems that have a ``Trash'' or ``Recycle
+Bin'' feature, you can make this command move the specified directory
+to the Trash or Recycle Bin, instead of deleting it outright, by
+changing the variable @code{delete-by-moving-to-trash} to @code{t}.
+@xref{Misc File Ops}, for more information about using the Trash.
 
 @node Comparing Files
 @section Comparing Files
@@ -1566,9 +1567,12 @@ On MS-Windows, this command works only if the file resides in an NTFS
 file system.  On MS-DOS, it works by copying the file.
 
 @findex copy-file
+@findex copy-directory
 @cindex copying files
   @kbd{M-x copy-file} reads the file @var{old} and writes a new file
-named @var{new} with the same contents.
+named @var{new} with the same contents.  @kbd{M-x copy-directory} does
+the same for directories, by recursive copying all files and
+subdirectories.
 
 @findex make-symbolic-link
 @cindex symbolic links (creation)

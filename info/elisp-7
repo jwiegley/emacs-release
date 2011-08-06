@@ -2,10 +2,10 @@ This is ../../info/elisp, produced by makeinfo version 4.11 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.1.
+corresponding to Emacs version 23.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -25,6 +25,172 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Buffer Contents,  Next: Comparing Text,  Prev: Near Point,  Up: Text
+
+32.2 Examining Buffer Contents
+==============================
+
+This section describes functions that allow a Lisp program to convert
+any portion of the text in the buffer into a string.
+
+ -- Function: buffer-substring start end
+     This function returns a string containing a copy of the text of the
+     region defined by positions START and END in the current buffer.
+     If the arguments are not positions in the accessible portion of
+     the buffer, `buffer-substring' signals an `args-out-of-range'
+     error.
+
+     It is not necessary for START to be less than END; the arguments
+     can be given in either order.  But most often the smaller argument
+     is written first.
+
+     Here's an example which assumes Font-Lock mode is not enabled:
+
+          ---------- Buffer: foo ----------
+          This is the contents of buffer foo
+
+          ---------- Buffer: foo ----------
+
+          (buffer-substring 1 10)
+               => "This is t"
+          (buffer-substring (point-max) 10)
+               => "he contents of buffer foo\n"
+
+     If the text being copied has any text properties, these are copied
+     into the string along with the characters they belong to.  *Note
+     Text Properties::.  However, overlays (*note Overlays::) in the
+     buffer and their properties are ignored, not copied.
+
+     For example, if Font-Lock mode is enabled, you might get results
+     like these:
+
+          (buffer-substring 1 10)
+               => #("This is t" 0 1 (fontified t) 1 9 (fontified t))
+
+ -- Function: buffer-substring-no-properties start end
+     This is like `buffer-substring', except that it does not copy text
+     properties, just the characters themselves.  *Note Text
+     Properties::.
+
+ -- Function: filter-buffer-substring start end &optional delete noprops
+     This function passes the buffer text between START and END through
+     the filter functions specified by the variable
+     `buffer-substring-filters', and returns the value from the last
+     filter function.  If `buffer-substring-filters' is `nil', the
+     value is the unaltered text from the buffer, what
+     `buffer-substring' would return.
+
+     If DELETE is non-`nil', this function deletes the text between
+     START and END after copying it, like `delete-and-extract-region'.
+
+     If NOPROPS is non-`nil', the final string returned does not
+     include text properties, while the string passed through the
+     filters still includes text properties from the buffer text.
+
+     Lisp code should use this function instead of `buffer-substring',
+     `buffer-substring-no-properties', or `delete-and-extract-region'
+     when copying into user-accessible data structures such as the
+     kill-ring, X clipboard, and registers.  Major and minor modes can
+     add functions to `buffer-substring-filters' to alter such text as
+     it is copied out of the buffer.
+
+ -- Variable: buffer-substring-filters
+     This variable should be a list of functions that accept a single
+     argument, a string, and return a string.
+     `filter-buffer-substring' passes the buffer substring to the first
+     function in this list, and the return value of each function is
+     passed to the next function.  The return value of the last
+     function is used as the return value of `filter-buffer-substring'.
+
+     As a special convention, point is set to the start of the buffer
+     text being operated on (i.e., the START argument for
+     `filter-buffer-substring') before these functions are called.
+
+     If this variable is `nil', no filtering is performed.
+
+ -- Function: buffer-string
+     This function returns the contents of the entire accessible
+     portion of the current buffer as a string.  It is equivalent to
+
+          (buffer-substring (point-min) (point-max))
+
+          ---------- Buffer: foo ----------
+          This is the contents of buffer foo
+
+          ---------- Buffer: foo ----------
+
+          (buffer-string)
+               => "This is the contents of buffer foo\n"
+
+ -- Function: current-word &optional strict really-word
+     This function returns the symbol (or word) at or near point, as a
+     string.  The return value includes no text properties.
+
+     If the optional argument REALLY-WORD is non-`nil', it finds a
+     word; otherwise, it finds a symbol (which includes both word
+     characters and symbol constituent characters).
+
+     If the optional argument STRICT is non-`nil', then point must be
+     in or next to the symbol or word--if no symbol or word is there,
+     the function returns `nil'.  Otherwise, a nearby symbol or word on
+     the same line is acceptable.
+
+ -- Function: thing-at-point thing
+     Return the THING around or next to point, as a string.
+
+     The argument THING is a symbol which specifies a kind of syntactic
+     entity.  Possibilities include `symbol', `list', `sexp', `defun',
+     `filename', `url', `word', `sentence', `whitespace', `line',
+     `page', and others.
+
+          ---------- Buffer: foo ----------
+          Gentlemen may cry ``Pea-!-ce! Peace!,''
+          but there is no peace.
+          ---------- Buffer: foo ----------
+
+          (thing-at-point 'word)
+               => "Peace"
+          (thing-at-point 'line)
+               => "Gentlemen may cry ``Peace! Peace!,''\n"
+          (thing-at-point 'whitespace)
+               => nil
+
+
+File: elisp,  Node: Comparing Text,  Next: Insertion,  Prev: Buffer Contents,  Up: Text
+
+32.3 Comparing Text
+===================
+
+This function lets you compare portions of the text in a buffer, without
+copying them into strings first.
+
+ -- Function: compare-buffer-substrings buffer1 start1 end1 buffer2
+          start2 end2
+     This function lets you compare two substrings of the same buffer
+     or two different buffers.  The first three arguments specify one
+     substring, giving a buffer (or a buffer name) and two positions
+     within the buffer.  The last three arguments specify the other
+     substring in the same way.  You can use `nil' for BUFFER1,
+     BUFFER2, or both to stand for the current buffer.
+
+     The value is negative if the first substring is less, positive if
+     the first is greater, and zero if they are equal.  The absolute
+     value of the result is one plus the index of the first differing
+     characters within the substrings.
+
+     This function ignores case when comparing characters if
+     `case-fold-search' is non-`nil'.  It always ignores text
+     properties.
+
+     Suppose the current buffer contains the text `foobarbar
+     haha!rara!'; then in this example the two substrings are `rbar '
+     and `rara!'.  The value is 2 because the first substring is greater
+     at the second character.
+
+          (compare-buffer-substrings nil 6 11 nil 16 21)
+               => 2
 
 
 File: elisp,  Node: Insertion,  Next: Commands for Insertion,  Prev: Comparing Text,  Up: Text
@@ -1219,12 +1385,7 @@ File: elisp,  Node: Margins,  Next: Adaptive Fill,  Prev: Filling,  Up: Text
      the line will be too long for people to read comfortably, and this
      can make the text seem clumsy.
 
- -- Variable: default-fill-column
-     The value of this variable is the default value for `fill-column'
-     in buffers that do not override it.  This is the same as
-     `(default-value 'fill-column)'.
-
-     The default value for `default-fill-column' is 70.
+     The default value for `fill-column' is 70.
 
  -- Command: set-left-margin from to margin
      This sets the `left-margin' property on the text from FROM to TO
@@ -2626,9 +2787,19 @@ each Emacs command.  *Note Adjusting Point::.
 
 `cursor'
      Normally, the cursor is displayed at the end of any overlay and
-     text property strings present at the current window position.  You
+     text property strings present at the current buffer position.  You
      can place the cursor on any desired character of these strings by
-     giving that character a non-`nil' CURSOR text property.
+     giving that character a non-`nil' `cursor' text property.  In
+     addition, if the value of the `cursor' property of an overlay
+     string is an integer number, it specifies the number of buffer's
+     character positions associated with the overlay string; this way,
+     Emacs will display the cursor on the character with that property
+     regardless of whether the current buffer position is actually
+     covered by the overlay.  Specifically, if the value of the `cursor'
+     property of a character is the number N, the cursor will be
+     displayed on this character for any buffer position in the range
+     `[OVPOS..OVPOS+N]', where OVPOS is the starting buffer position
+     covered by the overlay (*note Managing Overlays::).
 
 `pointer'
      This specifies a specific pointer shape when the mouse pointer is
@@ -2950,13 +3121,12 @@ Dired's major mode keymap binds `Mouse-2' to the following command:
      (defun dired-mouse-find-file-other-window (event)
        "In Dired, visit the file or directory name you click on."
        (interactive "e")
-       (let (window pos file)
-         (save-excursion
-           (setq window (posn-window (event-end event))
-                 pos (posn-point (event-end event)))
-           (if (not (windowp window))
-               (error "No file chosen"))
-           (set-buffer (window-buffer window))
+       (let ((window (posn-window (event-end event)))
+             (pos (posn-point (event-end event)))
+             file)
+         (if (not (windowp window))
+             (error "No file chosen"))
+         (with-current-buffer (window-buffer window)
            (goto-char pos)
            (setq file (dired-get-file-for-visit)))
          (if (file-directory-p file)
@@ -3689,19 +3859,18 @@ File: elisp,  Node: Text Representations,  Next: Converting Representations,  Up
 =========================
 
 Emacs buffers and strings support a large repertoire of characters from
-many different scripts, allowing users to type and display text in most
-any known written language.
+many different scripts, allowing users to type and display text in
+almost any known written language.
 
    To support this multitude of characters and scripts, Emacs closely
 follows the "Unicode Standard".  The Unicode Standard assigns a unique
 number, called a "codepoint", to each and every character.  The range
 of codepoints defined by Unicode, or the Unicode "codespace", is
-`0..10FFFF' (in hex), inclusive.  Emacs extends this range with
-codepoints in the range `110000..3FFFFF', which it uses for
-representing characters that are not unified with Unicode and raw 8-bit
-bytes that cannot be interpreted as characters (the latter occupy the
-range `3FFF80..3FFFFF').  Thus, a character codepoint in Emacs is a
-22-bit integer number.
+`0..#x10FFFF' (in hexadecimal notation), inclusive.  Emacs extends this
+range with codepoints in the range `#x110000..#x3FFFFF', which it uses
+for representing characters that are not unified with Unicode and "raw
+8-bit bytes" that cannot be interpreted as characters.  Thus, a
+character codepoint in Emacs is a 22-bit integer number.
 
    To conserve memory, Emacs does not hold fixed-length 22-bit numbers
 that are codepoints of text characters within buffers and strings.
@@ -3736,21 +3905,13 @@ manipulating encoded text or binary non-text data.
 representation for a string is determined and recorded in the string
 when the string is constructed.
 
- -- User Option: enable-multibyte-characters
+ -- Variable: enable-multibyte-characters
      This variable specifies the current buffer's text representation.
      If it is non-`nil', the buffer contains multibyte text; otherwise,
      it contains unibyte encoded text or binary non-text data.
 
      You cannot set this variable directly; instead, use the function
      `set-buffer-multibyte' to change a buffer's representation.
-
- -- Variable: default-enable-multibyte-characters
-     This variable's value is entirely equivalent to `(default-value
-     'enable-multibyte-characters)', and setting this variable changes
-     that default value.  Setting the local binding of
-     `enable-multibyte-characters' in a specific buffer is not allowed,
-     but changing the default value is supported, and it is a reasonable
-     thing to do, because it has no effect on existing buffers.
 
      The `--unibyte' command line option does its job by setting the
      default value to `nil' early in startup.
@@ -3840,8 +4001,8 @@ created string with no text properties.
      it is returned unchanged.  The function assumes that STRING
      includes only ASCII characters and raw 8-bit bytes; the latter are
      converted to their multibyte representation corresponding to the
-     codepoints in the `3FFF80..3FFFFF' area (*note codepoints: Text
-     Representations.).
+     codepoints `#x3FFF80' through `#x3FFFFF', inclusive (*note
+     codepoints: Text Representations.).
 
  -- Function: string-to-unibyte string
      This function returns a unibyte string containing the same
@@ -3919,15 +4080,18 @@ File: elisp,  Node: Character Codes,  Next: Character Properties,  Prev: Selecti
 
 The unibyte and multibyte text representations use different character
 codes.  The valid character codes for unibyte representation range from
-0 to 255--the values that can fit in one byte.  The valid character
-codes for multibyte representation range from 0 to 4194303 (#x3FFFFF).
-In this code space, values 0 through 127 are for ASCII charcters, and
-values 129 through 4194175 (#x3FFF7F) are for non-ASCII characters.
-Values 0 through 1114111 (#10FFFF) correspond to Unicode characters of
-the same codepoint; values 1114112 (#110000) through 4194175 (#x3FFF7F)
-represent characters that are not unified with Unicode; and values
-4194176 (#x3FFF80) through 4194303 (#x3FFFFF) represent eight-bit raw
-bytes.
+0 to `#xFF' (255)--the values that can fit in one byte.  The valid
+character codes for multibyte representation range from 0 to
+`#x3FFFFF'.  In this code space, values 0 through `#x7F' (127) are for
+ASCII characters, and values `#x80' (128) through `#x3FFF7F' (4194175)
+are for non-ASCII characters.
+
+   Emacs character codes are a superset of the Unicode standard.
+Values 0 through `#x10FFFF' (1114111) correspond to Unicode characters
+of the same codepoint; values `#x110000' (1114112) through `#x3FFF7F'
+(4194175) represent characters that are not unified with Unicode; and
+values `#x3FFF80' (4194176) through `#x3FFFFF' (4194303) represent
+eight-bit raw bytes.
 
  -- Function: characterp charcode
      This returns `t' if CHARCODE is a valid character, and `nil'
@@ -4141,7 +4305,7 @@ point used in Emacs buffers and strings.
 
    Emacs defines several special character sets.  The character set
 `unicode' includes all the characters whose Emacs code points are in
-the range `0..10FFFF'.  The character set `emacs' includes all ASCII
+the range `0..#x10FFFF'.  The character set `emacs' includes all ASCII
 and non-ASCII characters.  Finally, the `eight-bit' charset includes
 the 8-bit raw bytes; Emacs uses it to represent raw bytes encountered
 in text.
@@ -4212,11 +4376,12 @@ functions support these conversions.
    The following function comes in handy for applying a certain
 function to all or part of the characters in a charset:
 
- -- Function: map-charset-chars function charset &optional arg from to
+ -- Function: map-charset-chars function charset &optional arg
+          from-code to-code
      Call FUNCTION for characters in CHARSET.  FUNCTION is called with
      two arguments.  The first one is a cons cell `(FROM .  TO)', where
      FROM and TO indicate a range of characters contained in charset.
-     The second argument is the optional argument ARG.
+     The second argument passed to FUNCTION is ARG.
 
      By default, the range of codepoints passed to FUNCTION includes
      all the characters in CHARSET, but optional arguments FROM-CODE
@@ -4325,7 +4490,7 @@ translation table to use for translating the result.
 
  -- Function: make-translation-table-from-vector vec
      This function returns a translation table made from VEC that is an
-     array of 256 elements to map byte values 0 through 255 to
+     array of 256 elements to map bytes (values 0 through #xFF) to
      characters.  Elements may be `nil' for untranslated bytes.  The
      returned table has a translation table for reverse mapping in the
      first extra slot, and the value `1' in the second extra slot.
@@ -4590,7 +4755,7 @@ Here are the Lisp facilities for working with coding systems:
      and the eol conversion is set to match it (e.g., DOS-style CRLF
      format will imply `dos' eol conversion).  For encoding, the eol
      conversion is taken from the appropriate default coding system
-     (e.g., `default-buffer-file-coding-system' for
+     (e.g., default value of `buffer-file-coding-system' for
      `buffer-file-coding-system'), or from the default eol conversion
      appropriate for the underlying platform.
 
@@ -4730,9 +4895,9 @@ File: elisp,  Node: User-Chosen Coding Systems,  Next: Default Coding Systems,  
      also be a list of coding systems; then the function tries each of
      them one by one.  After trying all of them, it next tries the
      current buffer's value of `buffer-file-coding-system' (if it is not
-     `undecided'), then the value of
-     `default-buffer-file-coding-system' and finally the user's most
-     preferred coding system, which the user can set using the command
+     `undecided'), then the default value of
+     `buffer-file-coding-system' and finally the user's most preferred
+     coding system, which the user can set using the command
      `prefer-coding-system' (*note Recognizing Coding Systems:
      (emacs)Recognize Coding.).
 
@@ -4757,7 +4922,9 @@ File: elisp,  Node: User-Chosen Coding Systems,  Next: Default Coding Systems,  
      possible candidates.
 
      If the variable `select-safe-coding-system-accept-default-p' is
-     non-`nil', its value overrides the value of ACCEPT-DEFAULT-P.
+     non-`nil', it should be a function taking a single argument.  It
+     is used in place of ACCEPT-DEFAULT-P, overriding any value
+     supplied for this argument.
 
      As a final step, before returning the chosen coding system,
      `select-safe-coding-system' checks whether that coding system is
@@ -5054,11 +5221,11 @@ section.
    The result of encoding, and the input to decoding, are not ordinary
 text.  They logically consist of a series of byte values; that is, a
 series of ASCII and eight-bit characters.  In unibyte buffers and
-strings, these characters have codes in the range 0 through 255.  In a
-multibyte buffer or string, eight-bit characters have character codes
-higher than 255 (*note Text Representations::), but Emacs transparently
-converts them to their single-byte values when you encode or decode
-such text.
+strings, these characters have codes in the range 0 through #xFF (255).
+In a multibyte buffer or string, eight-bit characters have character
+codes higher than #xFF (*note Text Representations::), but Emacs
+transparently converts them to their single-byte values when you encode
+or decode such text.
 
    The usual way to read a file into a buffer as a sequence of bytes, so
 you can decode the contents explicitly, is with
@@ -5230,6 +5397,13 @@ end-of-line conversion.
      Normally this variable is set by visiting a file; it is set to
      `nil' if the file was visited without any actual conversion.
 
+     Its default value is used to decide how to handle files for which
+     `file-name-buffer-file-type-alist' says nothing about the type: If
+     the default value is non-`nil', then these files are treated as
+     binary: the coding system `no-conversion' is used.  Otherwise,
+     nothing special is done for them--the coding system is deduced
+     solely from the file contents, in the usual Emacs fashion.
+
  -- User Option: file-name-buffer-file-type-alist
      This variable holds an alist for recognizing text and binary files.
      Each element has the form (REGEXP . TYPE), where REGEXP is matched
@@ -5243,17 +5417,8 @@ end-of-line conversion.
      file, `undecided-dos' is used.  For a binary file, `no-conversion'
      is used.
 
-     If no element in this alist matches a given file name, then
-     `default-buffer-file-type' says how to treat the file.
-
- -- User Option: default-buffer-file-type
-     This variable says how to handle files for which
-     `file-name-buffer-file-type-alist' says nothing about the type.
-
-     If this variable is non-`nil', then these files are treated as
-     binary: the coding system `no-conversion' is used.  Otherwise,
-     nothing special is done for them--the coding system is deduced
-     solely from the file contents, in the usual Emacs fashion.
+     If no element in this alist matches a given file name, then the
+     default value of `buffer-file-type' says how to treat the file.
 
 
 File: elisp,  Node: Input Methods,  Next: Locales,  Prev: Coding Systems,  Up: Non-ASCII Characters
@@ -5547,8 +5712,7 @@ too; thus, `[aB]' would match `a' or `A' or `b' or `B'.
 to `nil'.  Then all letters must match exactly, including case.  This
 is a buffer-local variable; altering the variable affects only the
 current buffer.  (*Note Intro to Buffer-Local::.)  Alternatively, you
-may change the value of `default-case-fold-search', which is the
-default value of `case-fold-search' for buffers that do not override it.
+may change the default value of `case-fold-search'.
 
    Note that the user-level incremental search feature handles case
 distinctions differently.  When the search string contains only lower
@@ -5561,11 +5725,6 @@ functions used in Lisp code.
      This buffer-local variable determines whether searches should
      ignore case.  If the variable is `nil' they do not ignore case;
      otherwise they do ignore case.
-
- -- Variable: default-case-fold-search
-     The value of this variable is the default value for
-     `case-fold-search' in buffers that do not override it.  This is the
-     same as `(default-value 'case-fold-search)'.
 
  -- User Option: case-replace
      This variable determines whether the higher level replacement
@@ -5897,7 +6056,8 @@ and what they mean:
 
 `[:lower:]'
      This matches any lower-case letter, as determined by the current
-     case table (*note Case Tables::).
+     case table (*note Case Tables::).  If `case-fold-search' is
+     non-`nil', this also matches any upper-case letter.
 
 `[:multibyte:]'
      This matches any multibyte character (*note Text
@@ -5923,7 +6083,8 @@ and what they mean:
 
 `[:upper:]'
      This matches any upper-case letter, as determined by the current
-     case table (*note Case Tables::).
+     case table (*note Case Tables::).  If `case-fold-search' is
+     non-`nil', this also matches any lower-case letter.
 
 `[:word:]'
      This matches any character that has word syntax (*note Syntax
@@ -6433,145 +6594,4 @@ if the buffer is unibyte.  *Note Text Representations::.
      Since this variable affects all regular expression search and match
      constructs, you should bind it temporarily for as small as possible
      a part of the code.
-
-
-File: elisp,  Node: POSIX Regexps,  Next: Match Data,  Prev: Regexp Search,  Up: Searching and Matching
-
-34.5 POSIX Regular Expression Searching
-=======================================
-
-The usual regular expression functions do backtracking when necessary
-to handle the `\|' and repetition constructs, but they continue this
-only until they find _some_ match.  Then they succeed and report the
-first match found.
-
-   This section describes alternative search functions which perform the
-full backtracking specified by the POSIX standard for regular expression
-matching.  They continue backtracking until they have tried all
-possibilities and found all matches, so they can report the longest
-match, as required by POSIX.  This is much slower, so use these
-functions only when you really need the longest match.
-
-   The POSIX search and match functions do not properly support the
-non-greedy repetition operators (*note non-greedy: Regexp Special.).
-This is because POSIX backtracking conflicts with the semantics of
-non-greedy repetition.
-
- -- Command: posix-search-forward regexp &optional limit noerror repeat
-     This is like `re-search-forward' except that it performs the full
-     backtracking specified by the POSIX standard for regular expression
-     matching.
-
- -- Command: posix-search-backward regexp &optional limit noerror repeat
-     This is like `re-search-backward' except that it performs the full
-     backtracking specified by the POSIX standard for regular expression
-     matching.
-
- -- Function: posix-looking-at regexp
-     This is like `looking-at' except that it performs the full
-     backtracking specified by the POSIX standard for regular expression
-     matching.
-
- -- Function: posix-string-match regexp string &optional start
-     This is like `string-match' except that it performs the full
-     backtracking specified by the POSIX standard for regular expression
-     matching.
-
-
-File: elisp,  Node: Match Data,  Next: Search and Replace,  Prev: POSIX Regexps,  Up: Searching and Matching
-
-34.6 The Match Data
-===================
-
-Emacs keeps track of the start and end positions of the segments of
-text found during a search; this is called the "match data".  Thanks to
-the match data, you can search for a complex pattern, such as a date in
-a mail message, and then extract parts of the match under control of
-the pattern.
-
-   Because the match data normally describe the most recent search only,
-you must be careful not to do another search inadvertently between the
-search you wish to refer back to and the use of the match data.  If you
-can't avoid another intervening search, you must save and restore the
-match data around it, to prevent it from being overwritten.
-
-* Menu:
-
-* Replacing Match::	  Replacing a substring that was matched.
-* Simple Match Data::     Accessing single items of match data,
-			    such as where a particular subexpression started.
-* Entire Match Data::     Accessing the entire match data at once, as a list.
-* Saving Match Data::     Saving and restoring the match data.
-
-
-File: elisp,  Node: Replacing Match,  Next: Simple Match Data,  Up: Match Data
-
-34.6.1 Replacing the Text that Matched
---------------------------------------
-
-This function replaces all or part of the text matched by the last
-search.  It works by means of the match data.
-
- -- Function: replace-match replacement &optional fixedcase literal
-          string subexp
-     This function replaces the text in the buffer (or in STRING) that
-     was matched by the last search.  It replaces that text with
-     REPLACEMENT.
-
-     If you did the last search in a buffer, you should specify `nil'
-     for STRING and make sure that the current buffer when you call
-     `replace-match' is the one in which you did the searching or
-     matching.  Then `replace-match' does the replacement by editing
-     the buffer; it leaves point at the end of the replacement text, and
-     returns `t'.
-
-     If you did the search in a string, pass the same string as STRING.
-     Then `replace-match' does the replacement by constructing and
-     returning a new string.
-
-     If FIXEDCASE is non-`nil', then `replace-match' uses the
-     replacement text without case conversion; otherwise, it converts
-     the replacement text depending upon the capitalization of the text
-     to be replaced.  If the original text is all upper case, this
-     converts the replacement text to upper case.  If all words of the
-     original text are capitalized, this capitalizes all the words of
-     the replacement text.  If all the words are one-letter and they
-     are all upper case, they are treated as capitalized words rather
-     than all-upper-case words.
-
-     If LITERAL is non-`nil', then REPLACEMENT is inserted exactly as
-     it is, the only alterations being case changes as needed.  If it
-     is `nil' (the default), then the character `\' is treated
-     specially.  If a `\' appears in REPLACEMENT, then it must be part
-     of one of the following sequences:
-
-    `\&'
-          `\&' stands for the entire text being replaced.
-
-    `\N'
-          `\N', where N is a digit, stands for the text that matched
-          the Nth subexpression in the original regexp.  Subexpressions
-          are those expressions grouped inside `\(...\)'.  If the Nth
-          subexpression never matched, an empty string is substituted.
-
-    `\\'
-          `\\' stands for a single `\' in the replacement text.
-
-     These substitutions occur after case conversion, if any, so the
-     strings they substitute are never case-converted.
-
-     If SUBEXP is non-`nil', that says to replace just subexpression
-     number SUBEXP of the regexp that was matched, not the entire
-     match.  For example, after matching `foo \(ba*r\)', calling
-     `replace-match' with 1 as SUBEXP means to replace just the text
-     that matched `\(ba*r\)'.
-
- -- Function: match-substitute-replacement replacement &optional
-          fixedcase literal string subexp
-     This function returns the text that would be inserted into the
-     buffer by `replace-match', but without modifying the buffer.  It is
-     useful if you want to present the user with actual replacement
-     result, with constructs like `\N' or `\&' substituted with matched
-     groups.  Arguments REPLACEMENT and optional FIXEDCASE, LITERAL,
-     STRING and SUBEXP have the same meaning as for `replace-match'.
 

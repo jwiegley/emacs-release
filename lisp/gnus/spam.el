@@ -1,6 +1,6 @@
 ;;; spam.el --- Identifying spam
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
@@ -371,6 +371,7 @@ Only meaningful if you enable `spam-use-blackholes'."
   :group 'spam)
 ;; backward-compatibility alias
 (put 'spam-face 'face-alias 'spam)
+(put 'spam-face 'obsolete-face "22.1")
 
 (defcustom spam-face 'spam
   "Face for spam-marked articles."
@@ -413,16 +414,16 @@ Only meaningful if you enable `spam-use-regex-body'."
   "Spam ifile configuration."
   :group 'spam)
 
-(make-obsolete-variable 'spam-ifile-path 'spam-ifile-program)
-;; "22.1" ;; Gnus 5.10.9
+(make-obsolete-variable 'spam-ifile-path 'spam-ifile-program
+                        "Gnus 5.10.9 (Emacs 22.1)")
 (defcustom spam-ifile-program (executable-find "ifile")
   "Name of the ifile program."
   :type '(choice (file :tag "Location of ifile")
 		 (const :tag "ifile is not installed"))
   :group 'spam-ifile)
 
-(make-obsolete-variable 'spam-ifile-database-path 'spam-ifile-database)
-;; "22.1" ;; Gnus 5.10.9
+(make-obsolete-variable 'spam-ifile-database-path 'spam-ifile-database
+                        "Gnus 5.10.9 (Emacs 22.1)")
 (defcustom spam-ifile-database nil
   "File name of the ifile database."
   :type '(choice (file :tag "Location of the ifile database")
@@ -452,8 +453,8 @@ your main source of newsgroup names."
   "Spam bogofilter configuration."
   :group 'spam)
 
-(make-obsolete-variable 'spam-bogofilter-path 'spam-bogofilter-program)
-;; "22.1" ;; Gnus 5.10.9
+(make-obsolete-variable 'spam-bogofilter-path 'spam-bogofilter-program
+                        "Gnus 5.10.9 (Emacs 22.1)")
 (defcustom spam-bogofilter-program (executable-find "bogofilter")
   "Name of the Bogofilter program."
   :type '(choice (file :tag "Location of bogofilter")
@@ -504,8 +505,8 @@ When nil, use the default location."
   "Spam bsfilter configuration."
   :group 'spam)
 
-(make-obsolete-variable 'spam-bsfilter-path 'spam-bsfilter-program)
-;; "22.1" ;; Gnus 5.10.9
+(make-obsolete-variable 'spam-bsfilter-path 'spam-bsfilter-program
+                        "Gnus 5.10.9 (Emacs 22.1)")
 (defcustom spam-bsfilter-program (executable-find "bsfilter")
   "Name of the Bsfilter program."
   :type '(choice (file :tag "Location of bsfilter")
@@ -571,7 +572,7 @@ When nil, use the default spamoracle database."
   :group 'spam)
 
 (make-obsolete-variable 'spam-spamassassin-path
-  'spam-spamassassin-program) ;; "22.1" ;; Gnus 5.10.9
+  'spam-spamassassin-program "Gnus 5.10.9 (Emacs 22.1)")
 (defcustom spam-assassin-program (executable-find "spamassassin")
   "Name of the spamassassin program.
 Hint: set this to \"spamc\" if you have spamd running.  See the spamc and
@@ -602,8 +603,8 @@ identification"
   :type 'string
   :group 'spam-spamassassin)
 
-(make-obsolete-variable 'spam-sa-learn-path 'spam-sa-learn-program)
-;; "22.1" ;; Gnus 5.10.9
+(make-obsolete-variable 'spam-sa-learn-path 'spam-sa-learn-program
+                        "Gnus 5.10.9 (Emacs 22.1)")
 (defcustom spam-sa-learn-program (executable-find "sa-learn")
   "Name of the sa-learn program."
   :type '(choice (file :tag "Location of spamassassin")
@@ -659,12 +660,12 @@ order for SpamAssassin to recognize the new registered spam."
   :type 'string
   :group 'spam-crm114)
 
-(defcustom spam-crm114-spam-strong-switch "--UNKNOWN"
+(defcustom spam-crm114-spam-strong-switch "--unlearn"
   "The switch that CRM114 Mailfilter uses to unregister ham messages."
   :type 'string
   :group 'spam-crm114)
 
-(defcustom spam-crm114-ham-strong-switch "--UNKNOWN"
+(defcustom spam-crm114-ham-strong-switch "--unlearn"
   "The switch that CRM114 Mailfilter uses to unregister spam messages."
   :type 'string
   :group 'spam-crm114)
@@ -1151,10 +1152,8 @@ backends)."
 				  'spam-check-crm114
 				  'spam-crm114-register-ham-routine
 				  'spam-crm114-register-spam-routine
-				  ;; does CRM114 Mailfilter support unregistration?
-				  nil
-				  nil)
-
+				  'spam-crm114-unregister-ham-routine
+				  'spam-crm114-unregister-spam-routine)
 ;;}}}
 
 ;;{{{ scoring and summary formatting

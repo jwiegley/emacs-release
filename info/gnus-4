@@ -2,7 +2,7 @@ This is ../../info/gnus, produced by makeinfo version 4.11 from
 gnus.texi.
 
 Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -20,6 +20,45 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
 END-INFO-DIR-ENTRY
+
+
+File: gnus,  Node: History,  Next: On Writing Manuals,  Prev: XEmacs,  Up: Appendices
+
+10.2 History
+============
+
+GNUS was written by Masanobu UMEDA.  When autumn crept up in '94, Lars
+Magne Ingebrigtsen grew bored and decided to rewrite Gnus.
+
+   If you want to investigate the person responsible for this outrage,
+you can point your (feh!) web browser to `http://quimby.gnus.org/'.
+This is also the primary distribution point for the new and spiffy
+versions of Gnus, and is known as The Site That Destroys Newsrcs And
+Drives People Mad.
+
+   During the first extended alpha period of development, the new Gnus
+was called "(ding) Gnus".  "(ding)" is, of course, short for "ding is
+not Gnus", which is a total and utter lie, but who cares?  (Besides,
+the "Gnus" in this abbreviation should probably be pronounced "news" as
+UMEDA intended, which makes it a more appropriate name, don't you
+think?)
+
+   In any case, after spending all that energy on coming up with a new
+and spunky name, we decided that the name was _too_ spunky, so we
+renamed it back again to "Gnus".  But in mixed case.  "Gnus" vs.
+"GNUS".  New vs. old.
+
+* Menu:
+
+* Gnus Versions::               What Gnus versions have been released.
+* Other Gnus Versions::         Other Gnus versions that also have been released.
+* Why?::                        What's the point of Gnus?
+* Compatibility::               Just how compatible is Gnus with GNUS?
+* Conformity::                  Gnus tries to conform to all standards.
+* Emacsen::                     Gnus can be run on a few modern Emacsen.
+* Gnus Development::            How Gnus is developed.
+* Contributors::                Oodles of people.
+* New Features::                Pointers to some of the new stuff in Gnus.
 
 
 File: gnus,  Node: Gnus Versions,  Next: Other Gnus Versions,  Up: History
@@ -49,6 +88,10 @@ as "Gnus 5.8" (after 99 releases and a CVS repository) on December 3rd
 Gnus 5.10 on May 1st 2003 (24 releases).
 
    On the January 4th 2004, No Gnus was begun.
+
+   On April 19, 2010 Gnus development was moved to Git.  See
+http://git.gnus.org for details (http://www.gnus.org will be updated
+with the information when possible).
 
    If you happen upon a version of Gnus that has a prefixed name -
 "(ding) Gnus", "September Gnus", "Red Gnus", "Quassia Gnus",
@@ -1814,6 +1857,16 @@ New features in No Gnus:
 
         * The `all.SCORE' file can be edited from the group buffer
           using `W e'.
+
+        * You can set `gnus-mark-copied-or-moved-articles-as-expirable'
+          to a non-`nil' value so that articles that have been read may
+          be marked as expirable automatically when copying or moving
+          them to a group that has auto-expire turned on.  The default
+          is `nil' and copying and moving of articles behave as before;
+          i.e., the expirable marks will be unchanged except that the
+          marks will be removed when copying or moving articles to a
+          group that has not turned auto-expire on.  *Note Expiring
+          Mail::.
 
 
 

@@ -5,7 +5,7 @@ This file documents Ediff, a comprehensive visual interface to Unix diff
 and patch utilities.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -31,7 +31,7 @@ File: ediff,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 diff and patch utilities.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -134,6 +134,10 @@ Tools menu: Compare, Merge, and Apply Patch.
      Compare a file with its backup. If there are several numerical
      backups, use the latest. If the file is itself a backup, then
      compare it with its original.
+
+`ediff-current-file'
+     Compare the buffer with its file on disk. This function can be
+     used as a safe version of `revert-buffer'.
 
 `ediff-buffers'
      Compare two buffers.
@@ -2239,104 +2243,105 @@ customization package.
 advice.  Without them, Ediff would not be nearly as useful as it is
 today.  Here is a hopefully full list of contributors:
 
-     Adrian Aichner (aichner@ecf.teradyne.com),
-     Drew Adams (drew.adams@oracle.com),
-     Steve Baur (steve@xemacs.org),
-     Neal Becker (neal@ctd.comsat.com),
-     E. Jay Berkenbilt (ejb@ql.org),
-     Alastair Burt (burt@dfki.uni-kl.de),
-     Paul Bibilo (peb@delcam.co.uk),
-     Kevin Broadey (KevinB@bartley.demon.co.uk),
-     Harald Boegeholz (hwb@machnix.mathematik.uni-stuttgart.de),
-     Bradley A. Bosch (brad@lachman.com),
-     Michael D. Carney (carney@ltx-tr.com),
-     Jin S. Choi (jin@atype.com),
-     Scott Cummings (cummings@adc.com),
-     Albert Dvornik (bert@mit.edu),
-     Eric Eide (eeide@asylum.cs.utah.edu),
-     Paul Eggert (eggert@twinsun.com),
-     Urban Engberg (ue@cci.dk),
-     Kevin Esler (esler@ch.hp.com),
-     Robert Estes (estes@ece.ucdavis.edu),
-     Jay Finger (jayf@microsoft.com),
-     Xavier Fornari (xavier@europe.cma.fr),
-     Eric Freudenthal (freudent@jan.ultra.nyu.edu),
-     Job Ganzevoort (Job.Ganzevoort@cwi.nl),
-     Felix Heinrich Gatzemeier (felix.g@tzemeier.info),
-     Boris Goldowsky (boris@cs.rochester.edu),
-     Allan Gottlieb (gottlieb@allan.ultra.nyu.edu),
-     Aaron Gross (aaron@bfr.co.il),
-     Thorbjoern Hansen (thorbjoern.hansen@mchp.siemens.de),
-     Marcus Harnisch (marcus_harnisch@mint-tech.com),
-     Steven E. Harris (seh@panix.com),
-     Aaron S. Hawley (Aaron.Hawley@uvm.edu),
-     Xiaoli Huang (hxl@epic.com),
-     Andreas Jaeger (aj@suse.de),
-     Lars Magne Ingebrigtsen (larsi@ifi.uio.no),
-     Larry Gouge (larry@itginc.com),
-     Karl Heuer (kwzh@gnu.org),
-     (irvine@lks.csi.com),
-     (jaffe@chipmunk.cita.utoronto.ca),
-     David Karr (dkarr@nmo.gtegsc.com),
-     Norbert Kiesel (norbert@i3.informatik.rwth-aachen.de),
-     Steffen Kilb (skilb@gmx.net),
-     Leigh L Klotz (klotz@adoc.xerox.com),
-     Fritz Knabe (Fritz.Knabe@ecrc.de),
-     Heinz Knutzen (hk@informatik.uni-kiel.d400.de),
-     Andrew Koenig (ark@research.att.com),
-     Hannu Koivisto (azure@iki.fi),
-     Ken Laprade (laprade@dw3f.ess.harris.com),
-     Will C Lauer (wcl@cadre.com),
-     Richard Levitte (levitte@e.kth.se),
-     Mike Long (mike.long@analog.com),
-     Dave Love (d.love@dl.ac.uk),
-     Martin Maechler (maechler@stat.math.ethz.ch),
-     Simon Marshall (simon@gnu.org),
-     Paul C. Meuse (pmeuse@delcomsys.com),
-     Richard Mlynarik (mly@adoc.xerox.com),
-     Stefan Monnier (monnier@cs.yale.edu),
-     Chris Murphy (murphycm@sun.aston.ac.uk),
-     Erik Naggum (erik@naggum.no),
-     Eyvind Ness (Eyvind.Ness@hrp.no),
-     Ray Nickson (nickson@cs.uq.oz.au),
-     Dan Nicolaescu (dann@ics.uci.edu),
-     David Petchey (petchey_david@jpmorgan.com),
-     Benjamin Pierce (benjamin.pierce@cl.cam.ac.uk),
-     Francois Pinard (pinard@iro.umontreal.ca),
-     Tibor Polgar (tlp00@spg.amdahl.com),
-     David Prince (dave0d@fegs.co.uk),
-     Paul Raines (raines@slac.stanford.edu),
-     Stefan Reicher (xsteve@riic.at),
-     Charles Rich (rich@merl.com),
-     Bill Richter (richter@math.nwu.edu),
-     C.S. Roberson (roberson@aur.alcatel.com),
-     Kevin Rodgers (kevin.rodgers@ihs.com),
-     Sandy Rutherford (sandy@ibm550.sissa.it),
-     Heribert Schuetz (schuetz@ecrc.de),
-     Andy Scott (ascott@pcocd2.intel.com),
-     Axel Seibert (axel@tumbolia.ppp.informatik.uni-muenchen.de),
-     Vin Shelton (acs@xemacs.org),
-     Scott O. Sherman (Scott.Sherman@mci.com),
-     Nikolaj Schumacher (n_schumacher@web.de),
-     Richard Stallman (rms@gnu.org),
-     Richard Stanton (stanton@haas.berkeley.edu),
-     Sam Steingold (sds@goems.com),
-     Ake Stenhoff (etxaksf@aom.ericsson.se),
-     Stig (stig@hackvan.com),
-     Peter Stout (Peter_Stout@cs.cmu.edu),
-     Chuck Thompson (cthomp@cs.uiuc.edu),
-     Ray Tomlinson (tomlinso@bbn.com),
-     Raymond Toy (toy@rtp.ericsson.se),
-     Stephen J. Turnbull  (stephen@xemacs.org),
-     Jan Vroonhof (vroonhof@math.ethz.ch),
-     Colin Walters (walters@cis.ohio-state.edu),
-     Philippe Waroquiers (philippe.waroquiers@eurocontrol.be),
-     Klaus Weber (gizmo@zork.north.de),
-     Ben Wing (ben@xemacs.org),
-     Tom Wurgler (twurgler@goodyear.com),
-     Steve Youngs (youngs@xemacs.org),
-     Ilya Zakharevich (ilya@math.ohio-state.edu),
-     Eli Zaretskii (eliz@is.elta.co.il)
+     Adrian Aichner (aichner at ecf.teradyne.com),
+     Drew Adams (drew.adams at oracle.com),
+     Steve Baur (steve at xemacs.org),
+     Neal Becker (neal at ctd.comsat.com),
+     E. Jay Berkenbilt (ejb at ql.org),
+     Lennart Borgman (ennart.borgman at gmail.com)
+     Alastair Burt (burt at dfki.uni-kl.de),
+     Paul Bibilo (peb at delcam.co.uk),
+     Kevin Broadey (KevinB at bartley.demon.co.uk),
+     Harald Boegeholz (hwb at machnix.mathematik.uni-stuttgart.de),
+     Bradley A. Bosch (brad at lachman.com),
+     Michael D. Carney (carney at ltx-tr.com),
+     Jin S. Choi (jin at atype.com),
+     Scott Cummings (cummings at adc.com),
+     Albert Dvornik (bert at mit.edu),
+     Eric Eide (eeide at asylum.cs.utah.edu),
+     Paul Eggert (eggert at twinsun.com),
+     Urban Engberg (ue at cci.dk),
+     Kevin Esler (esler at ch.hp.com),
+     Robert Estes (estes at ece.ucdavis.edu),
+     Jay Finger (jayf at microsoft.com),
+     Xavier Fornari (xavier at europe.cma.fr),
+     Eric Freudenthal (freudent at jan.ultra.nyu.edu),
+     Job Ganzevoort (Job.Ganzevoort at cwi.nl),
+     Felix Heinrich Gatzemeier (felix.g at tzemeier.info),
+     Boris Goldowsky (boris at cs.rochester.edu),
+     Allan Gottlieb (gottlieb at allan.ultra.nyu.edu),
+     Aaron Gross (aaron at bfr.co.il),
+     Thorbjoern Hansen (thorbjoern.hansen at mchp.siemens.de),
+     Marcus Harnisch (marcus_harnisch at mint-tech.com),
+     Steven E. Harris (seh at panix.com),
+     Aaron S. Hawley (Aaron.Hawley at uvm.edu),
+     Xiaoli Huang (hxl at epic.com),
+     Andreas Jaeger (aj at suse.de),
+     Lars Magne Ingebrigtsen (larsi at ifi.uio.no),
+     Larry Gouge (larry at itginc.com),
+     Karl Heuer (kwzh at gnu.org),
+     (irvine at lks.csi.com),
+     (jaffe at chipmunk.cita.utoronto.ca),
+     David Karr (dkarr at nmo.gtegsc.com),
+     Norbert Kiesel (norbert at i3.informatik.rwth-aachen.de),
+     Steffen Kilb (skilb at gmx.net),
+     Leigh L Klotz (klotz at adoc.xerox.com),
+     Fritz Knabe (Fritz.Knabe at ecrc.de),
+     Heinz Knutzen (hk at informatik.uni-kiel.d400.de),
+     Andrew Koenig (ark at research.att.com),
+     Hannu Koivisto (azure at iki.fi),
+     Ken Laprade (laprade at dw3f.ess.harris.com),
+     Will C Lauer (wcl at cadre.com),
+     Richard Levitte (levitte at e.kth.se),
+     Mike Long (mike.long at analog.com),
+     Dave Love (d.love at dl.ac.uk),
+     Martin Maechler (maechler at stat.math.ethz.ch),
+     Simon Marshall (simon at gnu.org),
+     Paul C. Meuse (pmeuse at delcomsys.com),
+     Richard Mlynarik (mly at adoc.xerox.com),
+     Stefan Monnier (monnier at cs.yale.edu),
+     Chris Murphy (murphycm at sun.aston.ac.uk),
+     Erik Naggum (erik at naggum.no),
+     Eyvind Ness (Eyvind.Ness at hrp.no),
+     Ray Nickson (nickson at cs.uq.oz.au),
+     Dan Nicolaescu (dann at ics.uci.edu),
+     David Petchey (petchey_david at jpmorgan.com),
+     Benjamin Pierce (benjamin.pierce at cl.cam.ac.uk),
+     Francois Pinard (pinard at iro.umontreal.ca),
+     Tibor Polgar (tlp00 at spg.amdahl.com),
+     David Prince (dave0d at fegs.co.uk),
+     Paul Raines (raines at slac.stanford.edu),
+     Stefan Reicher (xsteve at riic.at),
+     Charles Rich (rich at merl.com),
+     Bill Richter (richter at math.nwu.edu),
+     C.S. Roberson (roberson at aur.alcatel.com),
+     Kevin Rodgers (kevin.rodgers at ihs.com),
+     Sandy Rutherford (sandy at ibm550.sissa.it),
+     Heribert Schuetz (schuetz at ecrc.de),
+     Andy Scott (ascott at pcocd2.intel.com),
+     Axel Seibert (axel at tumbolia.ppp.informatik.uni-muenchen.de),
+     Vin Shelton (acs at xemacs.org),
+     Scott O. Sherman (Scott.Sherman at mci.com),
+     Nikolaj Schumacher (n_schumacher at web.de),
+     Richard Stallman (rms at gnu.org),
+     Richard Stanton (stanton at haas.berkeley.edu),
+     Sam Steingold (sds at goems.com),
+     Ake Stenhoff (etxaksf at aom.ericsson.se),
+     Stig (stig at hackvan.com),
+     Peter Stout (Peter_Stout at cs.cmu.edu),
+     Chuck Thompson (cthomp at cs.uiuc.edu),
+     Ray Tomlinson (tomlinso at bbn.com),
+     Raymond Toy (toy at rtp.ericsson.se),
+     Stephen J. Turnbull  (stephen at xemacs.org),
+     Jan Vroonhof (vroonhof at math.ethz.ch),
+     Colin Walters (walters at cis.ohio-state.edu),
+     Philippe Waroquiers (philippe.waroquiers at eurocontrol.be),
+     Klaus Weber (gizmo at zork.north.de),
+     Ben Wing (ben at xemacs.org),
+     Tom Wurgler (twurgler at goodyear.com),
+     Steve Youngs (youngs at xemacs.org),
+     Ilya Zakharevich (ilya at math.ohio-state.edu),
+     Eli Zaretskii (eliz at is.elta.co.il)
 
 
 File: ediff,  Node: GNU Free Documentation License,  Next: Index,  Prev: Credits,  Up: Top
@@ -2893,8 +2898,8 @@ Index
 * ediff-before-setup-windows-hook:       Hooks.               (line  24)
 * ediff-brief-help-message-function:     Notes on Heavy-duty Customization.
                                                               (line  27)
-* ediff-buffers:                         Major Entry Points.  (line  31)
-* ediff-buffers3:                        Major Entry Points.  (line  38)
+* ediff-buffers:                         Major Entry Points.  (line  35)
+* ediff-buffers3:                        Major Entry Points.  (line  42)
 * ediff-cleanup-hook:                    Hooks.               (line  49)
 * ediff-coding-system-for-read:          Patch and Diff Programs.
                                                               (line  25)
@@ -2913,6 +2918,7 @@ Index
                                                               (line  22)
 * ediff-current-diff-face-C:             Highlighting Difference Regions.
                                                               (line  22)
+* ediff-current-file:                    Major Entry Points.  (line  31)
 * ediff-custom-diff-options:             Patch and Diff Programs.
                                                               (line  78)
 * ediff-custom-diff-program:             Patch and Diff Programs.
@@ -2928,11 +2934,11 @@ Index
                                                               (line  17)
 * ediff-diff3-program:                   Patch and Diff Programs.
                                                               (line  12)
-* ediff-directories:                     Major Entry Points.  (line  42)
-* ediff-directories3:                    Major Entry Points.  (line  46)
-* ediff-directory-revisions:             Major Entry Points.  (line  50)
+* ediff-directories:                     Major Entry Points.  (line  46)
+* ediff-directories3:                    Major Entry Points.  (line  50)
+* ediff-directory-revisions:             Major Entry Points.  (line  54)
 * ediff-display-help-hook:               Hooks.               (line  93)
-* ediff-documentation:                   Major Entry Points.  (line 165)
+* ediff-documentation:                   Major Entry Points.  (line 169)
 * ediff-even-diff-face-A:                Highlighting Difference Regions.
                                                               (line  40)
 * ediff-even-diff-face-B:                Highlighting Difference Regions.
@@ -2940,7 +2946,7 @@ Index
 * ediff-even-diff-face-C:                Highlighting Difference Regions.
                                                               (line  40)
 * ediff-files:                           Major Entry Points.  (line  23)
-* ediff-files3:                          Major Entry Points.  (line  35)
+* ediff-files3:                          Major Entry Points.  (line  39)
 * ediff-fine-diff-face-A:                Highlighting Difference Regions.
                                                               (line  31)
 * ediff-fine-diff-face-B:                Highlighting Difference Regions.
@@ -2980,22 +2986,22 @@ Index
 * ediff-make-wide-display-function:      Miscellaneous.       (line  32)
 * ediff-maybe-save-and-delete-merge <1>: Merging and diff3.   (line 166)
 * ediff-maybe-save-and-delete-merge:     Hooks.               (line  62)
-* ediff-merge:                           Major Entry Points.  (line 136)
-* ediff-merge-buffers:                   Major Entry Points.  (line 143)
-* ediff-merge-buffers-with-ancestor:     Major Entry Points.  (line 146)
-* ediff-merge-directories:               Major Entry Points.  (line 150)
-* ediff-merge-directories-with-ancestor: Major Entry Points.  (line 154)
-* ediff-merge-directory-revisions:       Major Entry Points.  (line  55)
+* ediff-merge:                           Major Entry Points.  (line 140)
+* ediff-merge-buffers:                   Major Entry Points.  (line 147)
+* ediff-merge-buffers-with-ancestor:     Major Entry Points.  (line 150)
+* ediff-merge-directories:               Major Entry Points.  (line 154)
+* ediff-merge-directories-with-ancestor: Major Entry Points.  (line 158)
+* ediff-merge-directory-revisions:       Major Entry Points.  (line  59)
 * ediff-merge-directory-revisions-with-ancestor: Major Entry Points.
-                                                              (line  60)
+                                                              (line  64)
 * ediff-merge-filename-prefix:           Merging and diff3.   (line 183)
-* ediff-merge-files:                     Major Entry Points.  (line 136)
-* ediff-merge-files-with-ancestor:       Major Entry Points.  (line 140)
-* ediff-merge-revisions:                 Major Entry Points.  (line 159)
-* ediff-merge-revisions-with-ancestor:   Major Entry Points.  (line 162)
+* ediff-merge-files:                     Major Entry Points.  (line 140)
+* ediff-merge-files-with-ancestor:       Major Entry Points.  (line 144)
+* ediff-merge-revisions:                 Major Entry Points.  (line 163)
+* ediff-merge-revisions-with-ancestor:   Major Entry Points.  (line 166)
 * ediff-merge-split-window-function:     Miscellaneous.       (line  26)
 * ediff-merge-window-share:              Merging and diff3.   (line 135)
-* ediff-merge-with-ancestor:             Major Entry Points.  (line 140)
+* ediff-merge-with-ancestor:             Major Entry Points.  (line 144)
 * ediff-meta-buffer-keymap-setup-hook:   Hooks.               (line 119)
 * ediff-meta-buffer-map:                 Hooks.               (line 119)
 * ediff-mode-hook:                       Hooks.               (line  98)
@@ -3009,10 +3015,10 @@ Index
                                                               (line  40)
 * ediff-odd-diff-face-C:                 Highlighting Difference Regions.
                                                               (line  40)
-* ediff-patch-buffer:                    Major Entry Points.  (line 119)
+* ediff-patch-buffer:                    Major Entry Points.  (line 123)
 * ediff-patch-default-directory:         Patch and Diff Programs.
                                                               (line  97)
-* ediff-patch-file:                      Major Entry Points.  (line  88)
+* ediff-patch-file:                      Major Entry Points.  (line  92)
 * ediff-patch-options:                   Patch and Diff Programs.
                                                               (line  17)
 * ediff-patch-program:                   Patch and Diff Programs.
@@ -3029,12 +3035,12 @@ Index
 * ediff-quit-merge-hook:                 Hooks.               (line  62)
 * ediff-quit-session-group-hook:         Hooks.               (line 116)
 * ediff-quit-widened:                    Narrowing.           (line  27)
-* ediff-regions-linewise:                Major Entry Points.  (line  79)
-* ediff-regions-wordwise:                Major Entry Points.  (line  71)
+* ediff-regions-linewise:                Major Entry Points.  (line  83)
+* ediff-regions-wordwise:                Major Entry Points.  (line  75)
 * ediff-registry-setup-hook:             Hooks.               (line 103)
 * ediff-revert-buffers-then-recompute-diffs: Other Session Commands.
                                                               (line  46)
-* ediff-revision:                        Major Entry Points.  (line  83)
+* ediff-revision:                        Major Entry Points.  (line  87)
 * ediff-save-buffer:                     Patch and Diff Programs.
                                                               (line  78)
 * ediff-select-hook:                     Hooks.               (line  82)
@@ -3066,7 +3072,7 @@ Index
                                                               (line  33)
 * ediff-unselect-hook:                   Hooks.               (line  85)
 * ediff-use-last-dir <1>:                Miscellaneous.       (line  45)
-* ediff-use-last-dir:                    Major Entry Points.  (line 188)
+* ediff-use-last-dir:                    Major Entry Points.  (line 192)
 * ediff-use-long-help-message:           Quick Help Customization.
                                                               (line   6)
 * ediff-use-toolbar-p:                   Other Session Commands.
@@ -3077,8 +3083,8 @@ Index
                                                               (line  65)
 * ediff-window-setup-function:           Window and Frame Configuration.
                                                               (line  96)
-* ediff-windows-linewise:                Major Entry Points.  (line  68)
-* ediff-windows-wordwise:                Major Entry Points.  (line  65)
+* ediff-windows-linewise:                Major Entry Points.  (line  72)
+* ediff-windows-wordwise:                Major Entry Points.  (line  69)
 * ediff-word-1:                          Refinement of Difference Regions.
                                                               (line  54)
 * ediff-word-2:                          Refinement of Difference Regions.
@@ -3089,16 +3095,16 @@ Index
                                                               (line  54)
 * ediff-word-mode:                       Notes on Heavy-duty Customization.
                                                               (line  27)
-* ediff3:                                Major Entry Points.  (line  35)
-* edir-merge-revisions:                  Major Entry Points.  (line  55)
-* edir-merge-revisions-with-ancestor:    Major Entry Points.  (line  60)
-* edir-revisions:                        Major Entry Points.  (line  50)
-* edirs:                                 Major Entry Points.  (line  42)
-* edirs-merge:                           Major Entry Points.  (line 150)
-* edirs-merge-with-ancestor:             Major Entry Points.  (line 154)
-* edirs3:                                Major Entry Points.  (line  46)
-* epatch:                                Major Entry Points.  (line  88)
-* epatch-buffer:                         Major Entry Points.  (line 119)
+* ediff3:                                Major Entry Points.  (line  39)
+* edir-merge-revisions:                  Major Entry Points.  (line  59)
+* edir-merge-revisions-with-ancestor:    Major Entry Points.  (line  64)
+* edir-revisions:                        Major Entry Points.  (line  54)
+* edirs:                                 Major Entry Points.  (line  46)
+* edirs-merge:                           Major Entry Points.  (line 154)
+* edirs-merge-with-ancestor:             Major Entry Points.  (line 158)
+* edirs3:                                Major Entry Points.  (line  50)
+* epatch:                                Major Entry Points.  (line  92)
+* epatch-buffer:                         Major Entry Points.  (line 123)
 * eregistry:                             Other Session Commands.
                                                               (line  11)
 * Finding differences:                   Introduction.        (line   6)
@@ -3149,31 +3155,31 @@ Index
 
 
 Tag Table:
-Node: Top1107
-Node: Introduction2666
-Node: Major Entry Points5056
-Node: Session Commands14965
-Node: Quick Help Commands16484
-Node: Other Session Commands34934
-Node: Registry of Ediff Sessions37734
-Node: Session Groups39290
-Node: Remote and Compressed Files45455
-Node: Customization46682
-Node: Hooks48635
-Node: Quick Help Customization53934
-Node: Window and Frame Configuration54945
-Node: Selective Browsing60910
-Node: Highlighting Difference Regions66006
-Node: Narrowing70748
-Node: Refinement of Difference Regions72026
-Node: Patch and Diff Programs74961
-Node: Merging and diff379528
-Node: Support for Version Control89331
-Node: Customizing the Mode Line90956
-Node: Miscellaneous91810
-Node: Notes on Heavy-duty Customization97058
-Node: Credits99643
-Node: GNU Free Documentation License104701
-Node: Index129862
+Node: Top1113
+Node: Introduction2678
+Node: Major Entry Points5068
+Node: Session Commands15115
+Node: Quick Help Commands16634
+Node: Other Session Commands35084
+Node: Registry of Ediff Sessions37884
+Node: Session Groups39440
+Node: Remote and Compressed Files45605
+Node: Customization46832
+Node: Hooks48785
+Node: Quick Help Customization54084
+Node: Window and Frame Configuration55095
+Node: Selective Browsing61060
+Node: Highlighting Difference Regions66156
+Node: Narrowing70898
+Node: Refinement of Difference Regions72176
+Node: Patch and Diff Programs75111
+Node: Merging and diff379678
+Node: Support for Version Control89481
+Node: Customizing the Mode Line91106
+Node: Miscellaneous91960
+Node: Notes on Heavy-duty Customization97208
+Node: Credits99793
+Node: GNU Free Documentation License105196
+Node: Index130357
 
 End Tag Table

@@ -1,7 +1,7 @@
 ;;; vc-sccs.el --- support for SCCS version-control
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author:     FSF (see vc.el for full credits)
@@ -23,6 +23,10 @@
 ;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+
+;; Proper function of the SCCS diff commands requires the shellscript vcdiff
+;; to be installed somewhere on Emacs's path for executables.
+;;
 
 ;;; Code:
 
@@ -73,7 +77,7 @@ If nil, use the value of `vc-diff-switches'.  If t, use no switches."
 
 ;;;###autoload
 (defcustom vc-sccs-master-templates
-  '("%sSCCS/s.%s" "%ss.%s" vc-sccs-search-project-dir)
+  (purecopy '("%sSCCS/s.%s" "%ss.%s" vc-sccs-search-project-dir))
   "Where to look for SCCS master files.
 For a description of possible values, see `vc-check-master-templates'."
   :type '(choice (const :tag "Use standard SCCS file names"
@@ -288,7 +292,7 @@ locked.  REV is the revision to check out."
 are expanded to all version-controlled subfiles."
   (setq files (vc-expand-dirs files))
   (if (not files)
-      (error "SCCS backend doesn't support directory-level rollback."))
+      (error "SCCS backend doesn't support directory-level rollback"))
   (dolist (file files)
 	  (let ((discard (vc-working-revision file)))
 	    (if (null (yes-or-no-p (format "Remove version %s from %s history? "
@@ -331,10 +335,11 @@ revert all subfiles."
 ;;; History functions
 ;;;
 
-(defun vc-sccs-print-log (files &optional buffer)
+(defun vc-sccs-print-log (files buffer &optional shortlog start-revision-ignored limit)
   "Get change log associated with FILES."
   (setq files (vc-expand-dirs files))
-  (vc-sccs-do-command buffer 0 "prs" (mapcar 'vc-name files)))
+  (vc-sccs-do-command buffer 0 "prs" (mapcar 'vc-name files))
+  (when limit 'limit-unsupported))
 
 (defun vc-sccs-diff (files &optional oldvers newvers buffer)
   "Get a difference report using SCCS between two filesets."
@@ -370,6 +375,12 @@ revert all subfiles."
 ;;; Miscellaneous
 ;;;
 
+(defun vc-sccs-previous-revision (file rev)
+  (vc-call-backend 'RCS 'previous-revision file rev))
+
+(defun vc-sccs-next-revision (file rev)
+  (vc-call-backend 'RCS 'next-revision file rev))
+
 (defun vc-sccs-check-headers ()
   "Check if the current file has any headers in it."
   (save-excursion
@@ -390,6 +401,13 @@ revert all subfiles."
       (replace-match (concat ":" new) nil nil))
     (basic-save-buffer)
     (kill-buffer (current-buffer))))
+
+(defun vc-sccs-find-file-hook ()
+  ;; If the file is locked by some other user, make
+  ;; the buffer read-only.  Like this, even root
+  ;; cannot modify a file that someone else has locked.
+  (and (stringp (vc-state buffer-file-name 'SCCS))
+       (setq buffer-read-only t)))
 
 
 ;;;

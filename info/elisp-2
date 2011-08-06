@@ -2,10 +2,10 @@ This is ../../info/elisp, produced by makeinfo version 4.11 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.1.
+corresponding to Emacs version 23.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -477,15 +477,13 @@ values.  It differs from an alist in these ways:
      way two alists can share a common tail.
 
    Emacs Lisp provides a general-purpose hash table data type, along
-with a series of functions for operating on them.  Hash tables have no
-read syntax, and print in hash notation, like this:
-
-     (make-hash-table)
-          => #<hash-table 'eql nil 0/65 0x83af980>
-
-(The term "hash notation" refers to the initial `#' character--*note
-Printed Representation::--and has nothing to do with the term "hash
-table.")
+with a series of functions for operating on them.  Hash tables have a
+special printed representation, which consists of `#s' followed by a
+list specifying the hash table properties and contents.  *Note Creating
+Hash::.  (Note that the term "hash notation", which refers to the
+initial `#' character used in the printed representations of objects
+with no read representation, has nothing to do with the term "hash
+table".  *Note Printed Representation::.)
 
    Obarrays are also a kind of hash table, but they are a different type
 of object and are used only for recording interned symbols (*note
@@ -607,6 +605,30 @@ The principal function for creating a hash table is `make-hash-table'.
      lookup.
 
      This function is obsolete. Use `make-hash-table' instead.
+
+   You can also create a new hash table using the printed representation
+for hash tables.  The Lisp reader can read this printed representation,
+provided each element in the specified hash table has a valid read
+syntax (*note Printed Representation::).  For instance, the following
+specifies a new hash table containing the keys `key1' and `key2' (both
+symbols) associated with `val1' (a symbol) and `300' (a number)
+respectively.
+
+     #s(hash-table size 30 data (key1 val1 key2 300))
+
+The printed representation for a hash table consists of `#s' followed
+by a list beginning with `hash-table'.  The rest of the list should
+consist of zero or more property-value pairs specifying the hash
+table's properties and initial contents.  The properties and values are
+read literally.  Valid property names are `size', `test', `weakness',
+`rehash-size', `rehash-threshold', and `data'.  The `data' property
+should be a list of key-value pairs for the initial contents; the other
+properties have the same meanings as the matching `make-hash-table'
+keywords (`:size', `:test', etc.), described above.
+
+   Note that you cannot specify a hash table whose initial contents
+include objects that have no read syntax, such as buffers and frames.
+Such objects may be added to the hash table after it is created.
 
 
 File: elisp,  Node: Hash Access,  Next: Defining Hash,  Prev: Creating Hash,  Up: Hash Tables
@@ -2783,6 +2805,16 @@ is no suitable `catch' signals an error that can be handled).
      If VAR is `nil', that means no variable is bound.  Then the error
      symbol and associated data are not available to the handler.
 
+     Sometimes it is necessary to re-throw a signal caught by
+     `condition-case', for some outer-level handler to catch.  Here's
+     how to do that:
+
+            (signal (car err) (cdr err))
+
+     where `err' is the error description variable, the first argument
+     to `condition-case' whose error condition you want to re-throw.
+     *Note Definition of signal::.
+
  -- Function: error-message-string error-description
      This function returns the error message string for a given error
      descriptor.  It is useful if you want to handle an error by
@@ -2970,9 +3002,8 @@ contents is the atomic change group; *note Atomic Changes::.)
    For example, here we make an invisible buffer for temporary use, and
 make sure to kill it before finishing:
 
-     (save-excursion
-       (let ((buffer (get-buffer-create " *temp*")))
-         (set-buffer buffer)
+     (let ((buffer (get-buffer-create " *temp*")))
+       (with-current-buffer buffer
          (unwind-protect
              BODY-FORM
            (kill-buffer buffer))))
@@ -2981,7 +3012,7 @@ You might think that we could just as well write `(kill-buffer
 (current-buffer))' and dispense with the variable `buffer'.  However,
 the way shown above is safer, if BODY-FORM happens to get an error
 after switching to a different buffer!  (Alternatively, you could write
-another `save-excursion' around BODY-FORM, to ensure that the temporary
+a `save-current-buffer' around BODY-FORM, to ensure that the temporary
 buffer becomes current again in time to kill it.)
 
    Emacs includes a standard macro called `with-temp-buffer' which
@@ -3115,6 +3146,12 @@ obarray, except that setting such a symbol to itself is not an error.
  -- Function: keywordp object
      function returns `t' if OBJECT is a symbol whose name starts with
      `:', interned in the standard obarray, and returns `nil' otherwise.
+
+   These constants are fundamentally different from the "constants"
+defined using the `defconst' special form (*note Defining Variables::).
+A `defconst' form serves to inform human readers that you do not intend
+to change the value of a variable, but Emacs does not raise an error if
+you actually change it.
 
 
 File: elisp,  Node: Local Variables,  Next: Void Variables,  Prev: Constant Variables,  Up: Variables
@@ -4040,8 +4077,7 @@ File: elisp,  Node: Creating Buffer-Local,  Next: Default Value,  Prev: Intro to
                => 6
 
           ;; In buffer `b2', the value hasn't changed.
-          (save-excursion
-            (set-buffer "b2")
+          (with-current-buffer "b2"
             foo)
                => 5
 
@@ -5397,7 +5433,7 @@ File: elisp,  Node: Anonymous Functions,  Next: Function Cells,  Prev: Mapping F
 
 In Lisp, a function is a list that starts with `lambda', a byte-code
 function compiled from such a list, or alternatively a primitive
-subr-object; names are "extra."  Although usually functions are defined
+subr-object; names are "extra."  Although functions are usually defined
 with `defun' and given names at the same time, it is occasionally more
 concise to use an explicit lambda expression--an anonymous function.
 Such a list is valid wherever a function name is.
@@ -5416,70 +5452,52 @@ it the value (_not_ the function definition!) of `silly'.
      (funcall silly 1)
      => 13
 
-(It does _not_ work to write `(silly 1)', because this function is not
+It does _not_ work to write `(silly 1)', because this function is not
 the _function definition_ of `silly'.  We have not given `silly' any
-function definition, just a value as a variable.)
+function definition, just a value as a variable.
 
    Most of the time, anonymous functions are constants that appear in
-your program.  For example, you might want to pass one as an argument to
-the function `mapcar', which applies any given function to each element
-of a list.
+your program.  For instance, you might want to pass one as an argument
+to the function `mapcar', which applies any given function to each
+element of a list (*note Mapping Functions::).  *Note describe-symbols
+example::, for a realistic example of this.
 
-   Here we define a function `change-property' which uses a function as
-its third argument:
+   In the following example, we define a `change-property' function
+that takes a function as its third argument, followed by a
+`double-property' function that makes use of `change-property' by
+passing it an anonymous function:
 
      (defun change-property (symbol prop function)
        (let ((value (get symbol prop)))
          (put symbol prop (funcall function value))))
 
-Here we define a function that uses `change-property', passing it a
-function to double a number:
+     (defun double-property (symbol prop)
+       (change-property symbol prop (lambda (x) (* 2 x))))
+
+In the `double-property' function, we did not quote the `lambda' form.
+This is permissible, because a `lambda' form is "self-quoting":
+evaluating the form yields the form itself.
+
+   Whether or not you quote a `lambda' form makes a difference if you
+compile the code (*note Byte Compilation::).  If the `lambda' form is
+unquoted, as in the above example, the anonymous function is also
+compiled.  Suppose, however, that we quoted the `lambda' form:
 
      (defun double-property (symbol prop)
        (change-property symbol prop '(lambda (x) (* 2 x))))
 
-In such cases, we usually use the special form `function' instead of
-simple quotation to quote the anonymous function, like this:
-
-     (defun double-property (symbol prop)
-       (change-property symbol prop
-                        (function (lambda (x) (* 2 x)))))
-
-   Using `function' instead of `quote' makes a difference if you
-compile the function `double-property'.  For example, if you compile
-the second definition of `double-property', the anonymous function is
-compiled as well.  By contrast, if you compile the first definition
-which uses ordinary `quote', the argument passed to `change-property'
-is the precise list shown:
+If you compile this, the argument passed to `change-property' is the
+precise list shown:
 
      (lambda (x) (* x 2))
 
 The Lisp compiler cannot assume this list is a function, even though it
 looks like one, since it does not know what `change-property' will do
 with the list.  Perhaps it will check whether the CAR of the third
-element is the symbol `*'!  Using `function' tells the compiler it is
-safe to go ahead and compile the constant function.
+element is the symbol `*'!
 
-   Nowadays it is possible to omit `function' entirely, like this:
-
-     (defun double-property (symbol prop)
-       (change-property symbol prop (lambda (x) (* 2 x))))
-
-This is because `lambda' itself implies `function'.
-
-   We sometimes write `function' instead of `quote' when quoting the
-name of a function, but this usage is just a sort of comment:
-
-     (function SYMBOL) == (quote SYMBOL) == 'SYMBOL
-
-   The read syntax `#'' is a short-hand for using `function'.  For
-example,
-
-     #'(lambda (x) (* x x))
-
-is equivalent to
-
-     (function (lambda (x) (* x x)))
+   The `function' special form explicitly tells the byte-compiler that
+its argument is a function:
 
  -- Special Form: function function-object
      This special form returns FUNCTION-OBJECT without evaluating it.
@@ -5488,8 +5506,19 @@ is equivalent to
      to be used only as a function, and therefore can safely be
      compiled.  Contrast this with `quote', in *note Quoting::.
 
-   *Note describe-symbols example::, for a realistic example using
-`function' and an anonymous function.
+   The read syntax `#'' is a short-hand for using `function'.
+Generally, it is not necessary to use either `#'' or `function'; just
+use an unquoted `lambda' form instead.  (Actually, `lambda' is a macro
+defined using `function'.)  The following forms are all equivalent:
+
+     #'(lambda (x) (* x x))
+     (function (lambda (x) (* x x)))
+     (lambda (x) (* x x))
+
+   We sometimes write `function' instead of `quote' when quoting the
+name of a function, but this usage is just a sort of comment:
+
+     (function SYMBOL) == (quote SYMBOL) == 'SYMBOL
 
 
 File: elisp,  Node: Function Cells,  Next: Obsolete Functions,  Prev: Anonymous Functions,  Up: Functions
@@ -5635,7 +5664,7 @@ indicates that the function may be removed at some stage in the future.
      was first made obsolete--for example, a date or a release number.
 
    You can define a function as an alias and declare it obsolete at the
-same time using the macro `define-obsolete-function-alias'.
+same time using the macro `define-obsolete-function-alias':
 
  -- Macro: define-obsolete-function-alias obsolete-name current-name
           &optional when docstring
@@ -5645,6 +5674,27 @@ same time using the macro `define-obsolete-function-alias'.
 
           (defalias OBSOLETE-NAME CURRENT-NAME DOCSTRING)
           (make-obsolete OBSOLETE-NAME CURRENT-NAME WHEN)
+
+   In addition, you can mark a certain a particular calling convention
+for a function as obsolete:
+
+ -- Function: set-advertised-calling-convention function signature
+     This function specifies the argument list SIGNATURE as the correct
+     way to call FUNCTION.  This causes the Emacs byte compiler to
+     issue a warning whenever it comes across an Emacs Lisp program
+     that calls FUNCTION any other way (however, it will still allow
+     the code to be byte compiled).
+
+     For instance, in old versions of Emacs the `sit-for' function
+     accepted three arguments, like this
+
+            (sit-for seconds milliseconds nodisp)
+
+     However, calling `sit-for' this way is considered obsolete (*note
+     Waiting::).  The old calling convention is deprecated like this:
+
+          (set-advertised-calling-convention
+            'sit-for '(seconds &optional nodisp))
 
 
 File: elisp,  Node: Inline Functions,  Next: Declaring Functions,  Prev: Obsolete Functions,  Up: Functions
@@ -5743,10 +5793,10 @@ definition using `locate-library'; if that finds no file, they expand
 the definition file name relative to the directory of the file that
 contains the `declare-function' call.
 
-   You can also say that a function is defined by C code by specifying
-a file name ending in `.c'.  `check-declare-file' looks for these files
-in the C source code directory.  This is useful only when you call a
-function that is defined only on certain systems.  Most of the
+   You can also say that a function is defined by C code by specifying a
+file name ending in `.c' or `.m'.  `check-declare-file' looks for these
+files in the C source code directory.  This is useful only when you
+call a function that is defined only on certain systems.  Most of the
 primitive functions of Emacs are always defined so they will never give
 you a warning.
 
@@ -6433,8 +6483,7 @@ File: elisp,  Node: Indenting Macros,  Prev: Problems with Macros,  Up: Macros
 =====================
 
 You can use the `declare' form in the macro definition to specify how
-to <TAB> should indent indent calls to the macro.  You write it like
-this:
+to <TAB> should indent calls to the macro.  You write it like this:
 
      (declare (indent INDENT-SPEC))
 
@@ -6590,8 +6639,8 @@ one name.
 
 `:load FILE'
      Load file FILE (a string) before displaying this customization
-     item.  Loading is done with `load-library', and only if the file is
-     not already loaded.
+     item (*note Loading::).  Loading is done with `load', and only if
+     the file is not already loaded.
 
 `:require FEATURE'
      Execute `(require 'FEATURE)' when your saved customizations set
@@ -6966,196 +7015,4 @@ Introduction: (widget)Top, for details.
 * Splicing into Lists::     Splice elements into list with `:inline'.
 * Type Keywords::           Keyword-argument pairs in a customization type.
 * Defining New Types::      Give your type a name.
-
-
-File: elisp,  Node: Simple Types,  Next: Composite Types,  Up: Customization Types
-
-14.4.1 Simple Types
--------------------
-
-This section describes all the simple customization types.
-
-`sexp'
-     The value may be any Lisp object that can be printed and read
-     back.  You can use `sexp' as a fall-back for any option, if you
-     don't want to take the time to work out a more specific type to
-     use.
-
-`integer'
-     The value must be an integer, and is represented textually in the
-     customization buffer.
-
-`number'
-     The value must be a number (floating point or integer), and is
-     represented textually in the customization buffer.
-
-`float'
-     The value must be a floating point number, and is represented
-     textually in the customization buffer.
-
-`string'
-     The value must be a string, and the customization buffer shows
-     just the contents, with no delimiting `"' characters and no
-     quoting with `\'.
-
-`regexp'
-     Like `string' except that the string must be a valid regular
-     expression.
-
-`character'
-     The value must be a character code.  A character code is actually
-     an integer, but this type shows the value by inserting the
-     character in the buffer, rather than by showing the number.
-
-`file'
-     The value must be a file name, and you can do completion with
-     `M-<TAB>'.
-
-`(file :must-match t)'
-     The value must be a file name for an existing file, and you can do
-     completion with `M-<TAB>'.
-
-`directory'
-     The value must be a directory name, and you can do completion with
-     `M-<TAB>'.
-
-`hook'
-     The value must be a list of functions (or a single function, but
-     that is obsolete usage).  This customization type is used for hook
-     variables.  You can use the `:options' keyword in a hook variable's
-     `defcustom' to specify a list of functions recommended for use in
-     the hook; see *note Variable Definitions::.
-
-`alist'
-     The value must be a list of cons-cells, the CAR of each cell
-     representing a key, and the CDR of the same cell representing an
-     associated value.  The user can add and delete key/value pairs, and
-     edit both the key and the value of each pair.
-
-     You can specify the key and value types like this:
-
-          (alist :key-type KEY-TYPE :value-type VALUE-TYPE)
-
-     where KEY-TYPE and VALUE-TYPE are customization type
-     specifications.  The default key type is `sexp', and the default
-     value type is `sexp'.
-
-     The user can add any key matching the specified key type, but you
-     can give some keys a preferential treatment by specifying them
-     with the `:options' (see *note Variable Definitions::).  The
-     specified keys will always be shown in the customize buffer
-     (together with a suitable value), with a checkbox to include or
-     exclude or disable the key/value pair from the alist.  The user
-     will not be able to edit the keys specified by the `:options'
-     keyword argument.
-
-     The argument to the `:options' keywords should be a list of
-     specifications for reasonable keys in the alist.  Ordinarily, they
-     are simply atoms, which stand for themselves as.  For example:
-
-          :options '("foo" "bar" "baz")
-
-     specifies that there are three "known" keys, namely `"foo"',
-     `"bar"' and `"baz"', which will always be shown first.
-
-     You may want to restrict the value type for specific keys, for
-     example, the value associated with the `"bar"' key can only be an
-     integer.  You can specify this by using a list instead of an atom
-     in the list.  The first element will specify the key, like before,
-     while the second element will specify the value type.  For example:
-
-          :options '("foo" ("bar" integer) "baz")
-
-     Finally, you may want to change how the key is presented.  By
-     default, the key is simply shown as a `const', since the user
-     cannot change the special keys specified with the `:options'
-     keyword.  However, you may want to use a more specialized type for
-     presenting the key, like `function-item' if you know it is a
-     symbol with a function binding.  This is done by using a
-     customization type specification instead of a symbol for the key.
-
-          :options '("foo" ((function-item some-function) integer)
-                     "baz")
-
-     Many alists use lists with two elements, instead of cons cells.
-     For example,
-
-          (defcustom list-alist '(("foo" 1) ("bar" 2) ("baz" 3))
-            "Each element is a list of the form (KEY VALUE).")
-
-     instead of
-
-          (defcustom cons-alist '(("foo" . 1) ("bar" . 2) ("baz" . 3))
-            "Each element is a cons-cell (KEY . VALUE).")
-
-     Because of the way lists are implemented on top of cons cells, you
-     can treat `list-alist' in the example above as a cons cell alist,
-     where the value type is a list with a single element containing
-     the real value.
-
-          (defcustom list-alist '(("foo" 1) ("bar" 2) ("baz" 3))
-            "Each element is a list of the form (KEY VALUE)."
-            :type '(alist :value-type (group integer)))
-
-     The `group' widget is used here instead of `list' only because the
-     formatting is better suited for the purpose.
-
-     Similarly, you can have alists with more values associated with
-     each key, using variations of this trick:
-
-          (defcustom person-data '(("brian"  50 t)
-                                   ("dorith" 55 nil)
-                                   ("ken"    52 t))
-            "Alist of basic info about people.
-          Each element has the form (NAME AGE MALE-FLAG)."
-            :type '(alist :value-type (group integer boolean)))
-
-          (defcustom pets '(("brian")
-                            ("dorith" "dog" "guppy")
-                            ("ken" "cat"))
-            "Alist of people's pets.
-          In an element (KEY . VALUE), KEY is the person's name,
-          and the VALUE is a list of that person's pets."
-            :type '(alist :value-type (repeat string)))
-
-`plist'
-     The `plist' custom type is similar to the `alist' (see above),
-     except that the information is stored as a property list, i.e. a
-     list of this form:
-
-          (KEY VALUE KEY VALUE KEY VALUE ...)
-
-     The default `:key-type' for `plist' is `symbol', rather than
-     `sexp'.
-
-`symbol'
-     The value must be a symbol.  It appears in the customization
-     buffer as the name of the symbol.
-
-`function'
-     The value must be either a lambda expression or a function name.
-     When it is a function name, you can do completion with `M-<TAB>'.
-
-`variable'
-     The value must be a variable name, and you can do completion with
-     `M-<TAB>'.
-
-`face'
-     The value must be a symbol which is a face name, and you can do
-     completion with `M-<TAB>'.
-
-`boolean'
-     The value is boolean--either `nil' or `t'.  Note that by using
-     `choice' and `const' together (see the next section), you can
-     specify that the value must be `nil' or `t', but also specify the
-     text to describe each value in a way that fits the specific
-     meaning of the alternative.
-
-`coding-system'
-     The value must be a coding-system name, and you can do completion
-     with `M-<TAB>'.
-
-`color'
-     The value must be a valid color name, and you can do completion
-     with `M-<TAB>'.  A sample is provided.
 

@@ -4,8 +4,8 @@ sieve.texi.
 This file documents the Emacs Sieve package, for server-side mail
 filtering.
 
-   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
-Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
+2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -40,8 +40,8 @@ the language, so keep RFC 3028 around.
    This file documents the Emacs Sieve package, for server-side mail
 filtering.
 
-   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
-Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
+2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -816,14 +816,14 @@ Index
 
 
 Tag Table:
-Node: Top1040
-Node: Installation2820
-Node: Sieve Mode3293
-Node: Managing Sieve4261
-Node: Examples5761
-Node: Manage Sieve API7062
-Node: Standards8522
-Node: GNU Free Documentation License9009
-Node: Index34172
+Node: Top1046
+Node: Installation2832
+Node: Sieve Mode3305
+Node: Managing Sieve4273
+Node: Examples5773
+Node: Manage Sieve API7074
+Node: Standards8534
+Node: GNU Free Documentation License9021
+Node: Index34184
 
 End Tag Table

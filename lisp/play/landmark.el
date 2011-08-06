@@ -1,11 +1,11 @@
 ;;; landmark.el --- neural-network robot that learns landmarks
 
-;; Copyright (C) 1996, 1997, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1996, 1997, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
+;;   2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Terrence Brannon (was: <brannon@rana.usc.edu>)
 ;; Created: December 16, 1996 - first release to usenet
-;; Keywords: gomoku, neural network, adaptive search, chemotaxis
+;; Keywords: games, gomoku, neural network, adaptive search, chemotaxis
 
 ;;;_* Usage
 ;;; Just type
@@ -211,13 +211,13 @@
 
 (defface lm-font-lock-face-O '((((class color)) :foreground "red")
 			       (t :weight bold))
-  "*Face to use for Emacs' O."
+  "Face to use for Emacs' O."
   :version "22.1"
   :group 'lm)
 
 (defface lm-font-lock-face-X '((((class color)) :foreground "green")
 			       (t :weight bold))
-  "*Face to use for your X."
+  "Face to use for your X."
   :version "22.1"
   :group 'lm)
 
@@ -827,6 +827,7 @@ If the game is finished, this command requests for another game."
 	       "Your move?"))
   ;; This may seem silly, but if one omits the following line (or a similar
   ;; one), the cursor may very well go to some place where POINT is not.
+  ;; FIXME: this can't be right!!  --Stef
   (save-excursion (set-buffer (other-buffer))))
 
 (defun lm-prompt-for-other-game ()
@@ -876,7 +877,8 @@ If the game is finished, this command requests for another game."
 (defun lm-goto-xy (x y)
   "Move point to square at X, Y coords."
   (let ((inhibit-point-motion-hooks t))
-    (goto-line (+ 1 lm-y-offset (* lm-square-height (1- y)))))
+    (goto-char (point-min))
+    (forward-line (+ lm-y-offset (* lm-square-height (1- y)))))
   (move-to-column (+ lm-x-offset (* lm-square-width (1- x)))))
 
 (defun lm-plot-square (square value)
@@ -1177,15 +1179,13 @@ because it is overwritten by \"One moment please\"."
 
 (defun lm-print-wts ()
   (interactive)
-  (save-excursion
-    (set-buffer "*lm-wts*")
+  (with-current-buffer "*lm-wts*"
     (insert "==============================\n")
     (mapc 'lm-print-wts-int lm-directions)))
 
 (defun lm-print-moves (moves)
   (interactive)
-  (save-excursion
-    (set-buffer "*lm-moves*")
+  (with-current-buffer "*lm-moves*"
     (insert (format "%S\n" moves))))
 
 
@@ -1199,8 +1199,7 @@ because it is overwritten by \"One moment please\"."
 
 (defun lm-print-y,s,noise ()
   (interactive)
-  (save-excursion
-    (set-buffer "*lm-y,s,noise*")
+  (with-current-buffer "*lm-y,s,noise*"
     (insert "==============================\n")
     (mapc 'lm-print-y,s,noise-int lm-directions)))
 
@@ -1211,8 +1210,7 @@ because it is overwritten by \"One moment please\"."
 
 (defun lm-print-smell ()
   (interactive)
-  (save-excursion
-    (set-buffer "*lm-smell*")
+  (with-current-buffer "*lm-smell*"
     (insert "==============================\n")
     (insert (format "tree: %S \n" (get 'z 't)))
     (mapc 'lm-print-smell-int lm-directions)))
@@ -1224,14 +1222,12 @@ because it is overwritten by \"One moment please\"."
 
 (defun lm-print-w0 ()
   (interactive)
-  (save-excursion
-    (set-buffer "*lm-w0*")
+  (with-current-buffer "*lm-w0*"
     (insert "==============================\n")
     (mapc 'lm-print-w0-int lm-directions)))
 
 (defun lm-blackbox ()
-  (save-excursion
-    (set-buffer "*lm-blackbox*")
+  (with-current-buffer "*lm-blackbox*"
     (insert "==============================\n")
     (insert "I smell: ")
     (mapc (lambda (direction)
@@ -1555,35 +1551,32 @@ If the game is finished, this command requests for another game."
   (lm-plot-landmarks)
 
   (if lm-debug
-      (progn
-	(save-excursion
-	  (set-buffer (get-buffer-create "*lm-w0*"))
-    (erase-buffer)
-    (set-buffer (get-buffer-create "*lm-moves*"))
-    (set-buffer (get-buffer-create "*lm-wts*"))
-    (erase-buffer)
-    (set-buffer (get-buffer-create "*lm-y,s,noise*"))
-    (erase-buffer)
-    (set-buffer (get-buffer-create "*lm-smell*"))
-    (erase-buffer)
-    (set-buffer (get-buffer-create "*lm-blackbox*"))
-    (erase-buffer)
-    (set-buffer (get-buffer-create "*lm-distance*"))
-    (erase-buffer))))
+      (save-current-buffer
+        (set-buffer (get-buffer-create "*lm-w0*"))
+        (erase-buffer)
+        (set-buffer (get-buffer-create "*lm-moves*"))
+        (set-buffer (get-buffer-create "*lm-wts*"))
+        (erase-buffer)
+        (set-buffer (get-buffer-create "*lm-y,s,noise*"))
+        (erase-buffer)
+        (set-buffer (get-buffer-create "*lm-smell*"))
+        (erase-buffer)
+        (set-buffer (get-buffer-create "*lm-blackbox*"))
+        (erase-buffer)
+        (set-buffer (get-buffer-create "*lm-distance*"))
+        (erase-buffer)))
 
 
   (lm-set-landmark-signal-strengths)
 
-  (mapc (lambda (direction)
-	     (put direction 'y_t 0.0))
-	  lm-directions)
+  (dolist (direction lm-directions)
+    (put direction 'y_t 0.0))
 
   (if (not save-weights)
       (progn
 	(mapc 'lm-fix-weights-for lm-directions)
-	(mapc (lambda (direction)
-		   (put direction 'w0 lm-initial-w0))
-	lm-directions))
+	(dolist (direction lm-directions)
+          (put direction 'w0 lm-initial-w0)))
     (message "Weights preserved for this run."))
 
   (if auto-start

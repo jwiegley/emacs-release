@@ -9,7 +9,7 @@
 ;;;;;;  math-read-preprocess-string calcDigit-edit calcDigit-algebraic
 ;;;;;;  calc-alg-digit-entry calc-do-alg-entry calc-alg-entry calc-algebraic-entry
 ;;;;;;  calc-auto-algebraic-entry calc-do-calc-eval calc-do-quick-calc)
-;;;;;;  "calc-aent" "calc-aent.el" "32b0d7e09562afd01c5a63709a995abe")
+;;;;;;  "calc-aent" "calc-aent.el" "fb0f4776cfb7ea4ec58d40fe149138cc")
 ;;; Generated autoloads from calc-aent.el
 
 (autoload 'calc-do-quick-calc "calc-aent" "\
@@ -110,7 +110,7 @@ Not documented
 ;;;***
 
 ;;;### (autoloads (calc-do-embedded-activate) "calc-embed" "calc-embed.el"
-;;;;;;  "a02b103c228120c995fffa623f80f39a")
+;;;;;;  "9c66a87f37a0f55953a085a7fe833556")
 ;;; Generated autoloads from calc-embed.el
 
 (autoload 'calc-do-embedded-activate "calc-embed" "\
@@ -126,13 +126,13 @@ Not documented
 ;;;;;;  math-evenp math-posp math-looks-negp math-negp math-zerop
 ;;;;;;  math-concat calc-temp-minibuffer-message calcDigit-letter
 ;;;;;;  calc-shift-Y-prefix-help calc-missing-key calc-num-prefix-name
-;;;;;;  calc-roll-up calc-roll-down calc-pop-above calc-over calc-percent
-;;;;;;  calc-inv calc-mod calc-power calc-last-args-stub calc-record-list
-;;;;;;  calc-do-refresh calc-roll-up-stack calc-roll-down-stack math-constp
-;;;;;;  calc-record-why calc-do-handle-whys calc-help calc-info-summary
-;;;;;;  calc-tutorial calc-info-goto-node calc-info another-calc
-;;;;;;  calc-other-window calc-big-or-small calc-dispatch-help) "calc-misc"
-;;;;;;  "calc-misc.el" "aefb11b3f1eb49af2ed5ef4a845cccc7")
+;;;;;;  calc-transpose-lines calc-roll-up calc-roll-down calc-pop-above
+;;;;;;  calc-over calc-percent calc-inv calc-mod calc-power calc-last-args-stub
+;;;;;;  calc-record-list calc-do-refresh calc-roll-up-stack calc-roll-down-stack
+;;;;;;  math-constp calc-record-why calc-do-handle-whys calc-help
+;;;;;;  calc-info-summary calc-tutorial calc-info-goto-node calc-info
+;;;;;;  another-calc calc-other-window calc-big-or-small calc-dispatch-help)
+;;;;;;  "calc-misc" "calc-misc.el" "054000fb424cdcea1f935453d29fe9ee")
 ;;; Generated autoloads from calc-misc.el
 
 (autoload 'calc-dispatch-help "calc-misc" "\
@@ -301,6 +301,13 @@ Not documented
 
 \(fn N)" t nil)
 
+(autoload 'calc-transpose-lines "calc-misc" "\
+Transpose previous line and current line.
+With argument ARG, move previous line past ARG lines.
+With argument 0, switch line point is in with line mark is in.
+
+\(fn &optional ARG)" t nil)
+
 (autoload 'calc-num-prefix-name "calc-misc" "\
 Not documented
 
@@ -436,7 +443,7 @@ Prompts for bug subject.  Leaves you in a mail buffer.
 
 ;;;***
 
-;;;### (autoloads (calc-yank) "calc-yank" "calc-yank.el" "8d9958bb921165366d4a7bf97b8ff9f9")
+;;;### (autoloads (calc-yank) "calc-yank" "calc-yank.el" "7e3d1b98556086e7a08231afd44f4c12")
 ;;; Generated autoloads from calc-yank.el
 
 (autoload 'calc-yank "calc-yank" "\

@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 2000, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 @c   Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @iftex
@@ -84,11 +84,20 @@ When in DocView mode, you can scroll the current page using the usual
 Emacs movement keys: @kbd{C-p}, @kbd{C-n}, @kbd{C-b}, @kbd{C-f}, and
 the arrow keys.
 
+@vindex doc-view-continuous
+  By default, the line-motion keys @kbd{C-p} and @kbd{C-n} stop
+scrolling at the beginning and end of the current page, respectively.
+However, if you change the variable @code{doc-view-continuous} to a
+non-@code{nil} value, then @kbd{C-p} displays the previous page if you
+are already at the beginning of the current page, and @kbd{C-n}
+displays the next page if you are at the end of the current page.
+
 @findex doc-view-next-page
 @findex doc-view-previous-page
-  To display the next page, type @kbd{n}, @key{next} or @kbd{C-x ]}
-(@code{doc-view-next-page}).  To display the previous page, type
-@kbd{p}, @key{prior} or @kbd{C-x [} (@code{doc-view-previous-page}).
+  You can also display the next page by typing @kbd{n}, @key{next} or
+@kbd{C-x ]} (@code{doc-view-next-page}).  To display the previous
+page, type @kbd{p}, @key{prior} or @kbd{C-x [}
+(@code{doc-view-previous-page}).
 
 @findex doc-view-scroll-up-or-next-page
 @findex doc-view-scroll-down-or-previous-page
@@ -194,7 +203,7 @@ Here we introduce Gnus and describe several basic features.
 For full details, see @ref{Top, Gnus,, gnus, The Gnus Manual}.
 @end ifnottex
 @iftex
-For full details on Gnus, type @kbd{M-x info} and then select the Gnus
+For full details on Gnus, type @kbd{C-h i} and then select the Gnus
 manual.
 @end iftex
 
@@ -485,6 +494,9 @@ Run the shell command line @var{cmd} and display the output
 Run the shell command line @var{cmd} with region contents as input;
 optionally replace the region with the output
 (@code{shell-command-on-region}).
+@item M-& @var{cmd} @key{RET}
+Run the shell command line @var{cmd} asynchronously, and display the
+output (@code{async-shell-command}).
 @item M-x shell
 Run a subshell with input and output through an Emacs buffer.
 You can then give commands interactively.
@@ -541,6 +553,11 @@ For a synchronous shell command, @code{shell-command} returns the
 command's exit status (0 means success), when it is called from a Lisp
 program.  You do not get any status information for an asynchronous
 command, since it hasn't finished yet when @code{shell-command} returns.
+
+  You can also type @kbd{M-&} (@code{async-shell-command}) to execute
+a shell command asynchronously.  This behaves exactly like calling
+@code{shell-command} with @samp{&}, except that you do not need to add
+the @samp{&} to the shell command line.
 
 @kindex M-|
 @findex shell-command-on-region
@@ -949,12 +966,9 @@ Fetch the next earlier old shell command.
 Fetch the next later old shell command.
 
 @kindex M-r @r{(Shell mode)}
-@kindex M-s @r{(Shell mode)}
-@findex comint-previous-matching-input
-@findex comint-next-matching-input
-@item M-r @var{regexp} @key{RET}
-@itemx M-s @var{regexp} @key{RET}
-Search backwards or forwards for old shell commands that match @var{regexp}.
+@findex comint-history-isearch-backward-regexp
+@item M-r
+Begin an incremental regexp search of old shell commands.
 
 @item C-c C-x
 @kindex C-c C-x @r{(Shell mode)}
@@ -987,15 +1001,15 @@ successively more recent shell commands from the buffer.
 @kbd{C-@key{UP}} works like @kbd{M-p}, and @kbd{C-@key{DOWN}} like
 @kbd{M-n}.
 
-  The history search commands @kbd{M-r} and @kbd{M-s} read a regular
-expression and search through the history for a matching command.  Aside
-from the choice of which command to fetch, they work just like @kbd{M-p}
-and @kbd{M-n}.  If you enter an empty regexp, these commands reuse the
-same regexp used last time.
-
-  When you find the previous input you want, you can resubmit it by
-typing @key{RET}, or you can edit it first and then resubmit it if you
-wish.  Any partial input you were composing before navigating the
+  The history search command @kbd{M-r} begins an incremental regular
+expression search of previous shell commands.  After typing @kbd{M-r},
+start typing the desired string or regular expression; the last
+matching shell command will be displayed in the current line.
+Incremental search commands have their usual effects---for instance,
+@kbd{C-s} and @kbd{C-r} search forward and backward for the next match
+(@pxref{Incremental Search}).  When you find the desired input, type
+@key{RET} to terminate the search.  This puts the input in the command
+line.  Any partial input you were composing before navigating the
 history list is restored when you go to the beginning or end of the
 history ring.
 
@@ -1202,13 +1216,6 @@ argument (@code{shell-pushd-dextract}), and only add directories to the
 directory stack if they are not already on it
 (@code{shell-pushd-dunique}).  The values you choose should match the
 underlying shell, of course.
-
-  If you want Shell mode to handle color output from shell commands,
-you can enable ANSI Color mode.  Here is how to do this:
-
-@example
-(add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
-@end example
 
 @node Terminal emulator
 @subsection Emacs Terminal Emulator
@@ -1499,19 +1506,21 @@ can then select that frame to begin editing.
 with an error message.  If the Emacs process has no existing
 frame---which can happen if it was started as a daemon (@pxref{Emacs
 Server})---then Emacs opens a frame on the terminal in which you
-called @command{emacsclient}, as though you had used the @samp{-t}
-option (@pxref{emacsclient Options}).
+called @command{emacsclient}.
 
-  On a graphical display, switching to the Emacs server is
-straightforward---just select its (system-level) window.  If you are
-using a text-only terminal, there are two ways to switch between
-@command{emacsclient}'s shell and the Emacs server: (i) run the Emacs
-server and @command{emacsclient} on different virtual terminals, and
-switch to the Emacs server's virtual terminal after calling
-@command{emacsclient}; or (ii) call @command{emacsclient} from within
-the Emacs server itself, using Shell mode (@pxref{Interactive Shell})
-or Term mode (@pxref{Term Mode}); @code{emacsclient} blocks only the
-subshell under Emacs, and you can still use Emacs to edit the file.
+  You can also force @command{emacsclient} to open a new frame on a
+graphical display, or on a text-only terminal, using the @samp{-c} and
+@samp{-t} options.  @xref{emacsclient Options}.
+
+  If you are running on a single text-only terminal, you can switch
+between @command{emacsclient}'s shell and the Emacs server using one
+of two methods: (i) run the Emacs server and @command{emacsclient} on
+different virtual terminals, and switch to the Emacs server's virtual
+terminal after calling @command{emacsclient}; or (ii) call
+@command{emacsclient} from within the Emacs server itself, using Shell
+mode (@pxref{Interactive Shell}) or Term mode (@pxref{Term Mode});
+@code{emacsclient} blocks only the subshell under Emacs, and you can
+still use Emacs to edit the file.
 
 @kindex C-x #
 @findex server-edit
@@ -1519,7 +1528,7 @@ subshell under Emacs, and you can still use Emacs to edit the file.
 @kbd{C-x #} (@code{server-edit}) in its buffer.  This saves the file
 and sends a message back to the @command{emacsclient} program, telling
 it to exit.  Programs that use @env{EDITOR} usually wait for the
-``editor''---in the case @command{emacsclient}---to exit before doing
+``editor''---in this case @command{emacsclient}---to exit before doing
 something else.
 
   You can also call @command{emacsclient} with multiple file name
@@ -1548,9 +1557,9 @@ with @kbd{C-x #}.  But @kbd{C-x #} is the way to tell
 @command{emacsclient} that you are finished.
 
 @vindex server-window
-  If you set the variable @code{server-window} to a window or a frame,
-@kbd{C-x #} always displays the next server buffer in that window or
-in that frame.
+  If you set the value of the variable @code{server-window} to a
+window or a frame, @kbd{C-x #} always displays the next server buffer
+in that window or in that frame.
 
 @node emacsclient Options
 @subsection @code{emacsclient} Options
@@ -1692,8 +1701,14 @@ process, type @kbd{M-x kill-emacs}.
   Emacs provides commands for printing hard copies of either an entire
 buffer or just part of one, with or without page headers.  You can
 invoke the printing commands directly, as detailed in the following
-section, or using the @samp{File} menu on the menu bar.  See also the
-hardcopy commands of Dired (@pxref{Misc File Ops}) and the diary
+section, or using the @samp{File} menu on the menu bar.
+
+@findex htmlfontify-buffer
+  Aside from the commands described in this section, you can also
+``print'' an Emacs buffer to HTML with @kbd{M-x htmlfontify-buffer}.
+This command converts the current buffer to a HTML file, replacing
+Emacs faces with CSS-based markup.  In addition, see the hardcopy
+commands of Dired (@pxref{Misc File Ops}) and the diary
 (@pxref{Displaying the Diary}).
 
 @table @kbd

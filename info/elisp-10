@@ -2,10 +2,10 @@ This is ../../info/elisp, produced by makeinfo version 4.11 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.1.
+corresponding to Emacs version 23.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -25,6 +25,207 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Coding Conventions,  Next: Key Binding Conventions,  Up: Tips
+
+D.1 Emacs Lisp Coding Conventions
+=================================
+
+Here are conventions that you should follow when writing Emacs Lisp
+code intended for widespread use:
+
+   * Simply loading a package should not change Emacs's editing
+     behavior.  Include a command or commands to enable and disable the
+     feature, or to invoke it.
+
+     This convention is mandatory for any file that includes custom
+     definitions.  If fixing such a file to follow this convention
+     requires an incompatible change, go ahead and make the
+     incompatible change; don't postpone it.
+
+   * You should choose a short word to distinguish your program from
+     other Lisp programs.  The names of all global variables,
+     constants, and functions in your program should begin with that
+     chosen prefix.  Separate the prefix from the rest of the name with
+     a hyphen, `-'.  This practice helps avoid name conflicts, since
+     all global variables in Emacs Lisp share the same name space, and
+     all functions share another name space(1)
+
+     Occasionally, for a command name intended for users to use, it is
+     more convenient if some words come before the package's name
+     prefix.  And constructs that define functions, variables, etc.,
+     work better if they start with `defun' or `defvar', so put the
+     name prefix later on in the name.
+
+     This recommendation applies even to names for traditional Lisp
+     primitives that are not primitives in Emacs Lisp--such as
+     `copy-list'.  Believe it or not, there is more than one plausible
+     way to define `copy-list'.  Play it safe; append your name prefix
+     to produce a name like `foo-copy-list' or `mylib-copy-list'
+     instead.
+
+     If you write a function that you think ought to be added to Emacs
+     under a certain name, such as `twiddle-files', don't call it by
+     that name in your program.  Call it `mylib-twiddle-files' in your
+     program, and send mail to `bug-gnu-emacs@gnu.org' suggesting we add
+     it to Emacs.  If and when we do, we can change the name easily
+     enough.
+
+     If one prefix is insufficient, your package can use two or three
+     alternative common prefixes, so long as they make sense.
+
+   * Put a call to `provide' at the end of each separate Lisp file.
+     *Note Named Features::.
+
+   * If a file requires certain other Lisp programs to be loaded
+     beforehand, then the comments at the beginning of the file should
+     say so.  Also, use `require' to make sure they are loaded.  *Note
+     Named Features::.
+
+   * If a file FOO uses a macro defined in another file BAR, but does
+     not use any functions or variables defined in BAR, then FOO should
+     contain the following expression:
+
+          (eval-when-compile (require 'BAR))
+
+     This tells Emacs to load BAR just before byte-compiling FOO, so
+     that the macro definition is available during compilation.  Using
+     `eval-when-compile' avoids loading BAR when the compiled version
+     of FOO is _used_.  It should be called before the first use of the
+     macro in the file.  *Note Compiling Macros::.
+
+   * Please don't require the `cl' package of Common Lisp extensions at
+     run time.  Use of this package is optional, and it is not part of
+     the standard Emacs namespace.  If your package loads `cl' at run
+     time, that could cause name clashes for users who don't use that
+     package.
+
+     However, there is no problem with using the `cl' package at
+     compile time, with `(eval-when-compile (require 'cl))'.  That's
+     sufficient for using the macros in the `cl' package, because the
+     compiler expands them before generating the byte-code.
+
+   * When defining a major mode, please follow the major mode
+     conventions.  *Note Major Mode Conventions::.
+
+   * When defining a minor mode, please follow the minor mode
+     conventions.  *Note Minor Mode Conventions::.
+
+   * If the purpose of a function is to tell you whether a certain
+     condition is true or false, give the function a name that ends in
+     `p' (which stands for "predicate").  If the name is one word, add
+     just `p'; if the name is multiple words, add `-p'.  Examples are
+     `framep' and `frame-live-p'.
+
+   * If the purpose of a variable is to store a single function, give
+     it a name that ends in `-function'.  If the purpose of a variable
+     is to store a list of functions (i.e., the variable is a hook),
+     please follow the naming conventions for hooks.  *Note Hooks::.
+
+   * If loading the file adds functions to hooks, define a function
+     `FEATURE-unload-hook', where FEATURE is the name of the feature
+     the package provides, and make it undo any such changes.  Using
+     `unload-feature' to unload the file will run this function.  *Note
+     Unloading::.
+
+   * It is a bad idea to define aliases for the Emacs primitives.
+     Normally you should use the standard names instead.  The case
+     where an alias may be useful is where it facilitates backwards
+     compatibility or portability.
+
+   * If a package needs to define an alias or a new function for
+     compatibility with some other version of Emacs, name it with the
+     package prefix, not with the raw name with which it occurs in the
+     other version.  Here is an example from Gnus, which provides many
+     examples of such compatibility issues.
+
+          (defalias 'gnus-point-at-bol
+            (if (fboundp 'point-at-bol)
+                'point-at-bol
+              'line-beginning-position))
+
+   * Redefining or advising an Emacs primitive is a bad idea.  It may do
+     the right thing for a particular program, but there is no telling
+     what other programs might break as a result.
+
+   * It is likewise a bad idea for one Lisp package to advise a
+     function in another Lisp package (*note Advising Functions::).
+
+   * Avoid using `eval-after-load' in libraries and packages (*note
+     Hooks for Loading::).  This feature is meant for personal
+     customizations; using it in a Lisp program is unclean, because it
+     modifies the behavior of another Lisp file in a way that's not
+     visible in that file.  This is an obstacle for debugging, much
+     like advising a function in the other package.
+
+   * If a file does replace any of the standard functions or library
+     programs of Emacs, prominent comments at the beginning of the file
+     should say which functions are replaced, and how the behavior of
+     the replacements differs from that of the originals.
+
+   * Constructs that define a function or variable should be macros,
+     not functions, and their names should start with `def'.
+
+   * A macro that defines a function or variable should have a name that
+     starts with `define-'.  The macro should receive the name to be
+     defined as the first argument.  That will help various tools find
+     the definition automatically.  Avoid constructing the names in the
+     macro itself, since that would confuse these tools.
+
+   * Please keep the names of your Emacs Lisp source files to 13
+     characters or less.  This way, if the files are compiled, the
+     compiled files' names will be 14 characters or less, which is
+     short enough to fit on all kinds of Unix systems.
+
+   * In some other systems there is a convention of choosing variable
+     names that begin and end with `*'.  We don't use that convention
+     in Emacs Lisp, so please don't use it in your programs.  (Emacs
+     uses such names only for special-purpose buffers.)  The users will
+     find Emacs more coherent if all libraries use the same conventions.
+
+   * If your program contains non-ASCII characters in string or
+     character constants, you should make sure Emacs always decodes
+     these characters the same way, regardless of the user's settings.
+     The easiest way to do this is to use the coding system
+     `utf-8-emacs' (*note Coding System Basics::), and specify that
+     coding in the `-*-' line or the local variables list.  *Note Local
+     Variables in Files: (emacs)File variables.
+
+          ;; XXX.el  -*- coding: utf-8-emacs; -*-
+
+   * Indent each function with `C-M-q' (`indent-sexp') using the
+     default indentation parameters.
+
+   * Don't make a habit of putting close-parentheses on lines by
+     themselves; Lisp programmers find this disconcerting.
+
+   * Please put a copyright notice and copying permission notice on the
+     file if you distribute copies.  Use a notice like this one:
+
+          ;; Copyright (C) YEAR NAME
+
+          ;; This program is free software: you can redistribute it and/or
+          ;; modify it under the terms of the GNU General Public License as
+          ;; published by the Free Software Foundation, either version 3 of
+          ;; the License, or (at your option) any later version.
+
+          ;; This program is distributed in the hope that it will be useful,
+          ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+          ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+          ;; GNU General Public License for more details.
+
+          ;; You should have received a copy of the GNU General Public License
+          ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+     If you have signed papers to assign the copyright to the
+     Foundation, then use `Free Software Foundation, Inc.' as NAME.
+     Otherwise, use your name.  *Note Library Headers::.
+
+   ---------- Footnotes ----------
+
+   (1) The benefits of a Common Lisp-style package system are
+considered not to outweigh the costs.
 
 
 File: elisp,  Node: Key Binding Conventions,  Next: Programming Tips,  Prev: Coding Conventions,  Up: Tips
@@ -771,7 +972,8 @@ The purpose of `-batch' here is to prevent `temacs' from trying to
 initialize any of its data on the terminal; this ensures that the
 tables of terminal information are empty in the dumped Emacs.  The
 argument `dump' tells `loadup.el' to dump a new executable named
-`emacs'.
+`emacs'.  The variable `preloaded-file-list' stores a list of the Lisp
+files that were dumped with the `emacs' executable.
 
    Some operating systems don't support dumping.  On those systems, you
 must start Emacs with the `temacs -l loadup' command each time you use
@@ -2288,6 +2490,9 @@ variables will not be listed here.
 `case-fold-search'
      *Note Searching and Case::.
 
+`comment-column'
+     *Note Comments: (emacs)Comments.
+
 `ctl-arrow'
      *Note Usual Display::.
 
@@ -2296,9 +2501,6 @@ variables will not be listed here.
 
 `cursor-type'
      *Note Cursor Parameters::.
-
-`comment-column'
-     *Note Comments: (emacs)Comments.
 
 `default-directory'
      *Note File Name Expansion::.
@@ -2556,7 +2758,7 @@ the global keymap.
 
 `key-translation-map'
      A keymap for translating keys.  This one overrides ordinary key
-     bindings, unlike `local- function-key-map'.  *Note Translation
+     bindings, unlike `local-function-key-map'.  *Note Translation
      Keymaps::.
 
 `kmacro-map'
@@ -2707,7 +2909,16 @@ not exactly a hook, but does a similar job.
 `buffer-access-fontify-functions'
      *Note Lazy Properties::.
 
+`calendar-initial-window-hook'
+     *Note Calendar Customizing: (emacs)Calendar Customizing.
+
 `calendar-load-hook'
+     *Note Calendar Customizing: (emacs)Calendar Customizing.
+
+`calendar-today-invisible-hook'
+     *Note Calendar Customizing: (emacs)Calendar Customizing.
+
+`calendar-today-visible-hook'
      *Note Calendar Customizing: (emacs)Calendar Customizing.
 
 `change-major-mode-hook'
@@ -2751,12 +2962,24 @@ not exactly a hook, but does a similar job.
      This is useful for truncating history lists, for example.  *Note
      Saving Emacs Sessions: (emacs)Saving Emacs Sessions.
 
-`diary-display-hook'
-     *Note Fancy Diary Display: (emacs)Fancy Diary Display.
-
 `diary-hook'
      List of functions called after the display of the diary.  Can be
      used for appointment notification.
+
+`diary-list-entries-hook'
+     *Note Fancy Diary Display: (emacs)Fancy Diary Display.
+
+`diary-mark-entries-hook'
+     *Note Fancy Diary Display: (emacs)Fancy Diary Display.
+
+`diary-nongregorian-listing-hook'
+     *Note Non-Gregorian Diary: (emacs)Non-Gregorian Diary.
+
+`diary-nongregorian-marking-hook'
+     *Note Non-Gregorian Diary: (emacs)Non-Gregorian Diary.
+
+`diary-print-entries-hook'
+     *Note Diary Display: (emacs)Diary Display.
 
 `disabled-command-function'
      *Note Disabling Commands::.
@@ -2800,9 +3023,6 @@ not exactly a hook, but does a similar job.
 `font-lock-unfontify-region-function'
      *Note Other Font Lock Variables::.
 
-`initial-calendar-window-hook'
-     *Note Calendar Customizing: (emacs)Calendar Customizing.
-
 `kbd-macro-termination-hook'
      *Note Keyboard Macros::.
 
@@ -2820,14 +3040,8 @@ not exactly a hook, but does a similar job.
 
 `lisp-indent-function'
 
-`list-diary-entries-hook'
-     *Note Fancy Diary Display: (emacs)Fancy Diary Display.
-
 `mail-setup-hook'
      *Note Mail Mode Miscellany: (emacs)Mail Mode Misc.
-
-`mark-diary-entries-hook'
-     *Note Fancy Diary Display: (emacs)Fancy Diary Display.
 
 `menu-bar-update-hook'
      *Note Menu Bar::.
@@ -2841,12 +3055,6 @@ not exactly a hook, but does a similar job.
 `mouse-position-function'
      *Note Mouse Position::.
 
-`nongregorian-diary-listing-hook'
-     *Note Non-Gregorian Diary: (emacs)Non-Gregorian Diary.
-
-`nongregorian-diary-marking-hook'
-     *Note Non-Gregorian Diary: (emacs)Non-Gregorian Diary.
-
 `occur-hook'
 
 `post-command-hook'
@@ -2854,9 +3062,6 @@ not exactly a hook, but does a similar job.
 
 `pre-command-hook'
      *Note Command Overview::.
-
-`print-diary-entries-hook'
-     *Note Diary Customizing: (emacs)Diary Customizing.
 
 `resume-tty-functions'
      *Note Suspending Emacs::.
@@ -2883,12 +3088,6 @@ not exactly a hook, but does a similar job.
 
 `term-setup-hook'
      *Note Terminal-Specific::.
-
-`today-visible-calendar-hook'
-     *Note Calendar Customizing: (emacs)Calendar Customizing.
-
-`today-invisible-calendar-hook'
-     *Note Calendar Customizing: (emacs)Calendar Customizing.
 
 `window-configuration-change-hook'
      *Note Window Hooks::.

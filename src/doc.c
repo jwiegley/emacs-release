@@ -1,6 +1,6 @@
 /* Record indices of function doc strings stored in a file.
    Copyright (C) 1985, 1986, 1993, 1994, 1995, 1997, 1998, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -24,6 +24,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <sys/types.h>
 #include <sys/file.h>	/* Must be after sys/types.h for USG*/
 #include <ctype.h>
+#include <setjmp.h>
 
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
@@ -42,6 +43,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "keyboard.h"
 #include "character.h"
 #include "keymap.h"
+#include "buildobj.h"
 
 #ifdef HAVE_INDEX
 extern char *index P_ ((const char *, int));
@@ -552,6 +554,7 @@ store_function_docstring (fun, offset)
     }
 }
 
+static const char buildobj[] = BUILDOBJ;
 
 DEFUN ("Snarf-documentation", Fsnarf_documentation, Ssnarf_documentation,
        1, 1, 0,
@@ -598,32 +601,9 @@ the same file name is found in the `doc-directory'.  */)
   /* Vbuild_files is nil when temacs is run, and non-nil after that.  */
   if (NILP (Vbuild_files))
   {
-    size_t cp_size = 0;
-    size_t to_read;
-    int nr_read;
-    char *cp = NULL;
-    char *beg, *end;
+    const char *beg, *end;
 
-    fd = emacs_open ("buildobj.lst", O_RDONLY, 0);
-    if (fd < 0)
-      report_file_error ("Opening file buildobj.lst", Qnil);
-
-    filled = 0;
-    for (;;)
-      {
-        cp_size += 1024;
-        to_read = cp_size - 1 - filled;
-        cp = xrealloc (cp, cp_size);
-        nr_read = emacs_read (fd, &cp[filled], to_read);
-        filled += nr_read;
-        if (nr_read < to_read)
-          break;
-      }
-
-    emacs_close (fd);
-    cp[filled] = 0;
-
-    for (beg = cp; *beg; beg = end)
+    for (beg = buildobj; *beg; beg = end)
       {
         int len;
 
@@ -639,8 +619,7 @@ the same file name is found in the `doc-directory'.  */)
         if (len > 0)
           Vbuild_files = Fcons (make_string (beg, len), Vbuild_files);
       }
-
-    xfree (cp);
+    Vbuild_files = Fpurecopy (Vbuild_files);
   }
 
   fd = emacs_open (name, O_RDONLY, 0);
@@ -788,9 +767,8 @@ a new string, without any text properties, is returned.  */)
 	  if (multibyte)
 	    {
 	      int len;
-	      int maxlen = SDATA (string) + SBYTES (string) - strp;
 
-	      STRING_CHAR_AND_LENGTH (strp, maxlen, len);
+	      STRING_CHAR_AND_LENGTH (strp, len);
 	      if (len == 1)
 		*bufp = *strp;
 	      else
@@ -825,10 +803,7 @@ a new string, without any text properties, is returned.  */)
 	  name = Fintern (make_string (start, length_byte), Qnil);
 
 	do_remap:
-	  /* Ignore remappings unless there are no ordinary bindings. */
- 	  tem = Fwhere_is_internal (name, keymap, Qt, Qnil, Qt);
- 	  if (NILP (tem))
-	    tem = Fwhere_is_internal (name, keymap, Qt, Qnil, Qnil);
+	  tem = Fwhere_is_internal (name, keymap, Qt, Qnil, Qnil);
 
 	  if (VECTORP (tem) && XVECTOR (tem)->size > 1
 	      && EQ (AREF (tem, 0), Qremap) && SYMBOLP (AREF (tem, 1))
@@ -955,9 +930,8 @@ a new string, without any text properties, is returned.  */)
       else
 	{
 	  int len;
-	  int maxlen = SDATA (string) + SBYTES (string) - strp;
 
-	  STRING_CHAR_AND_LENGTH (strp, maxlen, len);
+	  STRING_CHAR_AND_LENGTH (strp, len);
 	  if (len == 1)
 	    *bufp = *strp;
 	  else
@@ -979,7 +953,7 @@ a new string, without any text properties, is returned.  */)
 void
 syms_of_doc ()
 {
-  Qfunction_documentation = intern ("function-documentation");
+  Qfunction_documentation = intern_c_string ("function-documentation");
   staticpro (&Qfunction_documentation);
 
   DEFVAR_LISP ("internal-doc-file-name", &Vdoc_file_name,

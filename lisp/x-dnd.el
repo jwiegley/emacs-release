@@ -1,6 +1,7 @@
 ;;; x-dnd.el --- drag and drop support for X.
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   Free Software Foundation, Inc.
 
 ;; Author: Jan Dj,Ad(Brv <jan.h.d@swipnet.se>
 ;; Maintainer: FSF
@@ -51,19 +52,19 @@ The default value for this variable is `x-dnd-default-test-function'."
 
 
 (defcustom x-dnd-types-alist
-  '(
-    ("text/uri-list" . x-dnd-handle-uri-list)
-    ("text/x-moz-url" . x-dnd-handle-moz-url)
-    ("_NETSCAPE_URL" . x-dnd-handle-uri-list)
-    ("FILE_NAME" . x-dnd-handle-file-name)
-    ("UTF8_STRING" . x-dnd-insert-utf8-text)
-    ("text/plain;charset=UTF-8" . x-dnd-insert-utf8-text)
-    ("text/plain;charset=utf-8" . x-dnd-insert-utf8-text)
-    ("text/unicode" . x-dnd-insert-utf16-text)
-    ("text/plain" . dnd-insert-text)
-    ("COMPOUND_TEXT" . x-dnd-insert-ctext)
-    ("STRING" . dnd-insert-text)
-    ("TEXT"   . dnd-insert-text)
+  `(
+    (,(purecopy "text/uri-list") . x-dnd-handle-uri-list)
+    (,(purecopy "text/x-moz-url") . x-dnd-handle-moz-url)
+    (,(purecopy "_NETSCAPE_URL") . x-dnd-handle-uri-list)
+    (,(purecopy "FILE_NAME") . x-dnd-handle-file-name)
+    (,(purecopy "UTF8_STRING") . x-dnd-insert-utf8-text)
+    (,(purecopy "text/plain;charset=UTF-8") . x-dnd-insert-utf8-text)
+    (,(purecopy "text/plain;charset=utf-8") . x-dnd-insert-utf8-text)
+    (,(purecopy "text/unicode") . x-dnd-insert-utf16-text)
+    (,(purecopy "text/plain") . dnd-insert-text)
+    (,(purecopy "COMPOUND_TEXT") . x-dnd-insert-ctext)
+    (,(purecopy "STRING") . dnd-insert-text)
+    (,(purecopy "TEXT")   . dnd-insert-text)
     )
   "Which function to call to handle a drop of that type.
 If the type for the drop is not present, or the function is nil,
@@ -78,6 +79,7 @@ if drop is successful, nil if not."
   :group 'x)
 
 (defcustom x-dnd-known-types
+  (mapcar 'purecopy
   '("text/uri-list"
     "text/x-moz-url"
     "_NETSCAPE_URL"
@@ -90,7 +92,7 @@ if drop is successful, nil if not."
     "COMPOUND_TEXT"
     "STRING"
     "TEXT"
-    )
+    ))
   "The types accepted by default for dropped data.
 The types are chosen in the order they appear in the list."
   :version "22.1"
@@ -173,10 +175,10 @@ action and type we got from `x-dnd-test-function'."
   (let ((buffer (when (window-live-p window)
 		  (window-buffer window)))
 	(current-state (x-dnd-get-state-for-frame window)))
-    (when (or (not (equal buffer (aref current-state 0)))
-	      (not (equal window (aref current-state 1)))
-	      (not (equal action (aref current-state 3))))
-      (save-excursion
+    (unless (and (equal buffer (aref current-state 0))
+                 (equal window (aref current-state 1))
+                 (equal action (aref current-state 3)))
+      (save-current-buffer
 	(when buffer (set-buffer buffer))
 	(let* ((action-type (funcall x-dnd-test-function
 				     window
@@ -263,7 +265,7 @@ STRING is the uri-list as a string.  The URIs are separated by \\r\\n."
 WINDOW is the window where the drop happened.
 STRING is the file names as a string, separated by nulls."
   (let ((uri-list (split-string string "[\0\r\n]" t))
-	(coding (and default-enable-multibyte-characters
+	(coding (and (default-value 'enable-multibyte-characters)
 		     (or file-name-coding-system
 			 default-file-name-coding-system)))
 	retval)
@@ -371,7 +373,7 @@ Currently XDND, Motif and old KDE 1.x protocols are recognized."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;  XDND protocol.
 
-(defvar x-dnd-xdnd-to-action
+(defconst x-dnd-xdnd-to-action
   '(("XdndActionPrivate" . private)
     ("XdndActionCopy" . copy)
     ("XdndActionMove" . move)

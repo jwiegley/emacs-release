@@ -1,6 +1,6 @@
 /* Generate doc-string file for GNU Emacs from source files.
    Copyright (C) 1985, 1986, 1992, 1993, 1994, 1997, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -240,10 +240,10 @@ struct rcsoc_state
   /* A keyword we look for at the beginning of lines.  If found, it is
      not copied, and SAW_KEYWORD is set to true.  */
   char *keyword;
-  /* The current point we've reached in an occurance of KEYWORD in
+  /* The current point we've reached in an occurrence of KEYWORD in
      the input stream.  */
   char *cur_keyword_ptr;
-  /* Set to true if we saw an occurance of KEYWORD.  */
+  /* Set to true if we saw an occurrence of KEYWORD.  */
   int saw_keyword;
 };
 
@@ -354,7 +354,7 @@ scan_keyword_or_put_char (ch, state)
    PRINTFLAG is positive, output string contents to outfile.  If it is
    negative, store contents in buf.  Convert escape sequences \n and
    \t to newline and tab; discard \ followed by newline.
-   If SAW_USAGE is non-zero, then any occurances of the string `usage:'
+   If SAW_USAGE is non-zero, then any occurrences of the string `usage:'
    at the beginning of a line will be removed, and *SAW_USAGE set to
    true if any were encountered.  */
 
@@ -907,8 +907,7 @@ scan_lisp_file (filename, mode)
 	      length--;
 
 	      /* Read in the contents.  */
-	      if (saved_string != 0)
-		free (saved_string);
+	      free (saved_string);
 	      saved_string = (char *) xmalloc (length);
 	      for (i = 0; i < length; i++)
 		saved_string[i] = getc (infile);
@@ -1008,7 +1007,9 @@ scan_lisp_file (filename, mode)
 	    }
 	}
 
-      else if (! strcmp (buffer, "custom-declare-variable"))
+      else if (! strcmp (buffer, "custom-declare-variable")
+	       || ! strcmp (buffer, "defvaralias")
+	       )
 	{
 	  char c1 = 0, c2 = 0;
 	  type = 'V';

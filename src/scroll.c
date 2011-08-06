@@ -1,6 +1,6 @@
 /* Calculate what line insertion or deletion to do, and do it,
    Copyright (C) 1985, 1986, 1990, 1993, 1994, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -21,6 +21,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <config.h>
 #include <stdio.h>
 #include <string.h>
+#include <setjmp.h>
 #include "lisp.h"
 #include "termchar.h"
 #include "dispextern.h"

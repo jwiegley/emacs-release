@@ -1,6 +1,6 @@
 ;;; filesets.el --- handle group of files
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Thomas Link <sanobast-emacs@yahoo.de>
@@ -1552,8 +1552,7 @@ First, save the buffer's contents using SAVE-FUNCTION.  Then, kill buffer
 if `buffer-modified-p' returns nil.
 
 SAVE-FUNCTION takes no argument, but works on the current buffer."
-  (save-excursion
-    (set-buffer buffer)
+  (with-current-buffer buffer
     (if (buffer-modified-p)
 	(funcall save-function))
     (if (not (buffer-modified-p))
@@ -1641,7 +1640,7 @@ Replace <file-name> or <<file-name>> with filename."
 		    (let ((buffer (filesets-find-file this)))
 		      (when buffer
 			(goto-char (point-min))
-			(let ()
+			(progn
 			  (cond
 			   ((stringp fn)
 			    (let* ((args

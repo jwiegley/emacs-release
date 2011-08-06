@@ -1,7 +1,7 @@
 /* Fully extensible Emacs, running on Unix, intended for GNU.
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 1998, 1999,
-                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
-                 Free Software Foundation, Inc.
+                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
+                 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -26,6 +26,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <sys/types.h>
 #include <sys/file.h>
+#include <setjmp.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -156,7 +157,7 @@ void *malloc_state_ptr;
 extern void *malloc_get_state ();
 /* From glibc, a routine that overwrites the malloc internal state.  */
 extern int malloc_set_state ();
-/* Non-zero if the MALLOC_CHECK_ enviroment variable was set while
+/* Non-zero if the MALLOC_CHECK_ environment variable was set while
    dumping.  Used to work around a bug in glibc's malloc.  */
 int malloc_using_checking;
 #endif
@@ -202,10 +203,6 @@ extern int inherited_pgroup;
 int display_arg;
 #endif
 
-#ifdef HAVE_NS
-extern char ns_no_defaults;
-#endif
-
 /* An address near the bottom of the stack.
    Tells GC how to save a copy of the stack.  */
 char *stack_bottom;
@@ -239,6 +236,9 @@ int noninteractive;
 
 int noninteractive1;
 
+/* Nonzero means Emacs was run in --quick mode.  */
+int inhibit_x_resources;
+
 /* Name for the server started by the daemon.*/
 static char *daemon_name;
 
@@ -271,7 +271,6 @@ Initialization options:\n\
 --daemon                    start a server in the background\n\
 --debug-init                enable Emacs Lisp debugger for init file\n\
 --display, -d DISPLAY       use X server DISPLAY\n\
---multibyte, --no-unibyte   inhibit the effect of EMACS_UNIBYTE\n\
 --no-desktop                do not load a saved desktop\n\
 --no-init-file, -q          load neither ~/.emacs nor default.el\n\
 --no-shared-memory, -nl     do not use shared memory\n\
@@ -281,7 +280,6 @@ Initialization options:\n\
 --quick, -Q                 equivalent to -q --no-site-file --no-splash\n\
 --script FILE               run FILE as an Emacs Lisp script\n\
 --terminal, -t DEVICE       use DEVICE for terminal I/O\n\
---unibyte, --no-multibyte   run Emacs in unibyte mode\n\
 --user, -u USER             load ~USER/.emacs instead of your own\n\
 \n%s"
 
@@ -321,6 +319,7 @@ Display options:\n\
 --fullheight, -fh               make the first frame high as the screen\n\
 --fullscreen, -fs               make first frame fullscreen\n\
 --fullwidth, -fw                make the first frame wide as the screen\n\
+--maximized, -mm                make the first frame maximized\n\
 --geometry, -g GEOMETRY         window geometry\n\
 --no-bitmap-icon, -nbi          do not use picture of gnu for Emacs icon\n\
 --iconic                        start Emacs in iconified state\n\
@@ -748,7 +747,7 @@ void (*__malloc_initialize_hook) () = malloc_initialize_hook;
 
 
 #define REPORT_EMACS_BUG_ADDRESS "bug-gnu-emacs@gnu.org"
-#define REPORT_EMACS_BUG_PRETEST_ADDRESS "emacs-pretest-bug@gnu.org"
+#define REPORT_EMACS_BUG_PRETEST_ADDRESS "bug-gnu-emacs@gnu.org"
 
 /* This function is used to determine an address to which bug report should
    be sent.  */
@@ -810,6 +809,11 @@ main (int argc, char **argv)
   stack_base = &dummy;
 #endif
 
+#if defined (USE_GTK) && defined (G_SLICE_ALWAYS_MALLOC)
+  /* This is used by the Cygwin build.  */
+  setenv ("G_SLICE", "always-malloc", 1);
+#endif
+
   if (!initialized)
     {
       extern char my_endbss[];
@@ -847,8 +851,8 @@ main (int argc, char **argv)
       && initialized)
     {
       Lisp_Object tem, tem2;
-      tem = Fsymbol_value (intern ("emacs-version"));
-      tem2 = Fsymbol_value (intern ("emacs-copyright"));
+      tem = Fsymbol_value (intern_c_string ("emacs-version"));
+      tem2 = Fsymbol_value (intern_c_string ("emacs-copyright"));
       if (!STRINGP (tem))
 	{
 	  fprintf (stderr, "Invalid value of `emacs-version'\n");
@@ -1182,7 +1186,7 @@ main (int argc, char **argv)
             argv[skip_args] = fdStr;
 
             execv (argv[0], argv);
-            fprintf (stderr, "emacs daemon: exec failed: %d\t%d\n", errno);
+            fprintf (stderr, "emacs daemon: exec failed: %d\n", errno);
             exit (1);
           }
 
@@ -1385,7 +1389,6 @@ main (int argc, char **argv)
       syms_of_coding ();	/* This should be after syms_of_fileio.  */
 
       init_window_once ();	/* Init the window system.  */
-      init_fileio_once ();	/* Must precede any path manipulation.  */
 #ifdef HAVE_WINDOW_SYSTEM
       init_fringe_once ();	/* Swap bitmaps if necessary. */
 #endif /* HAVE_WINDOW_SYSTEM */
@@ -1438,8 +1441,8 @@ main (int argc, char **argv)
 	  Lisp_Object old_log_max;
 	  Lisp_Object symbol, tail;
 
-	  symbol = intern ("default-enable-multibyte-characters");
-	  Fset (symbol, Qnil);
+	  symbol = intern_c_string ("enable-multibyte-characters");
+	  Fset_default (symbol, Qnil);
 
 	  if (initialized)
 	    {
@@ -1466,6 +1469,7 @@ main (int argc, char **argv)
 		  set_buffer_temp (current);
 		}
 	    }
+	  message ("Warning: unibyte sessions are obsolete and will disappear");
 	}
     }
 
@@ -1476,18 +1480,6 @@ main (int argc, char **argv)
   ns_alloc_autorelease_pool();
   if (!noninteractive)
     {
-      char *tmp;
-      display_arg = 4;
-      if (argmatch (argv, argc, "-q", "--no-init-file", 6, NULL, &skip_args))
-        {
-          ns_no_defaults = 1;
-          skip_args--;
-        }
-      if (argmatch (argv, argc, "-Q", "--quick", 5, NULL, &skip_args))
-        {
-          ns_no_defaults = 1;
-          skip_args--;
-        }
 #ifdef NS_IMPL_COCOA
       if (skip_args < argc)
         {
@@ -1502,16 +1494,7 @@ main (int argc, char **argv)
               chdir (getenv ("HOME"));
             }
         }
-#endif
-      /* This used for remote operation.. not fully implemented yet. */
-      if (argmatch (argv, argc, "-_NSMachLaunch", 0, 3, &tmp, &skip_args))
-          display_arg = 4;
-      else if (argmatch (argv, argc, "-MachLaunch", 0, 3, &tmp, &skip_args))
-          display_arg = 4;
-      else if (argmatch (argv, argc, "-macosx", 0, 2, NULL, &skip_args))
-          display_arg = 4;
-      else if (argmatch (argv, argc, "-NSHost", 0, 3, &tmp, &skip_args))
-          display_arg = 4;
+#endif  /* COCOA */
     }
 #endif /* HAVE_NS */
 
@@ -1629,10 +1612,8 @@ main (int argc, char **argv)
 
   if (!initialized)
     {
-      /* The basic levels of Lisp must come first.  */
-      /* And data must come first of all
-	 for the sake of symbols like error-message.  */
-      syms_of_data ();
+      /* The basic levels of Lisp must come first.  Note that
+	 syms_of_data and some others have already been called.  */
       syms_of_chartab ();
       syms_of_lread ();
       syms_of_print ();
@@ -1693,6 +1674,7 @@ main (int argc, char **argv)
       syms_of_xfns ();
       syms_of_xmenu ();
       syms_of_fontset ();
+      syms_of_xsettings ();
 #ifdef HAVE_X_SM
       syms_of_xsmfns ();
 #endif
@@ -1772,17 +1754,18 @@ main (int argc, char **argv)
   init_sound ();
 #endif
   init_window ();
-
+  init_font ();
+  
   if (!initialized)
     {
       char *file;
       /* Handle -l loadup, args passed by Makefile.  */
       if (argmatch (argv, argc, "-l", "--load", 3, &file, &skip_args))
-	Vtop_level = Fcons (intern ("load"),
+	Vtop_level = Fcons (intern_c_string ("load"),
 			    Fcons (build_string (file), Qnil));
       /* Unless next switch is -nl, load "loadup.el" first thing.  */
       if (! no_loadup)
-	Vtop_level = Fcons (intern ("load"),
+	Vtop_level = Fcons (intern_c_string ("load"),
 			    Fcons (build_string ("loadup.el"), Qnil));
     }
 
@@ -1809,9 +1792,7 @@ main (int argc, char **argv)
   /* Set up for profiling.  This is known to work on FreeBSD,
      GNU/Linux and MinGW.  It might work on some other systems too.
      Give it a try and tell us if it works on your system.  To compile
-     for profiling, add -pg to the switches your platform uses in
-     CFLAGS and LDFLAGS.  For example:
-       `make CFLAGS="-pg -g -O -DPROFILING=1" LDFLAGS="-pg -g"'.  */
+     for profiling, use the configure option --enable-profiling.  */
 #if defined (__FreeBSD__) || defined (GNU_LINUX) || defined(__MINGW32__)
 #ifdef PROFILING
   if (initialized)
@@ -1861,13 +1842,13 @@ main (int argc, char **argv)
 
 struct standard_args
 {
-  char *name;
-  char *longname;
+  const char *name;
+  const char *longname;
   int priority;
   int nargs;
 };
 
-struct standard_args standard_args[] =
+const struct standard_args standard_args[] =
 {
   { "-version", "--version", 150, 0 },
 #ifdef HAVE_SHM
@@ -1888,7 +1869,7 @@ struct standard_args standard_args[] =
   /* -d must come last before the options handled in startup.el.  */
   { "-d", "--display", 60, 1 },
   { "-display", 0, 60, 1 },
-  /* Now for the options handled in startup.el.  */
+  /* Now for the options handled in `command-line' (startup.el).  */
   { "-Q", "--quick", 55, 0 },
   { "-quick", 0, 55, 0 },
   { "-q", "--no-init-file", 50, 0 },
@@ -1897,10 +1878,12 @@ struct standard_args standard_args[] =
   { "-u", "--user", 30, 1 },
   { "-user", 0, 30, 1 },
   { "-debug-init", "--debug-init", 20, 0 },
-  { "-nbi", "--no-bitmap-icon", 15, 0 },
   { "-iconic", "--iconic", 15, 0 },
   { "-D", "--basic-display", 12, 0},
   { "-basic-display", 0, 12, 0},
+  { "-nbc", "--no-blinking-cursor", 12, 0 },
+  /* Now for the options handled in `command-line-1' (startup.el).  */
+  { "-nbi", "--no-bitmap-icon", 10, 0 },
   { "-bg", "--background-color", 10, 1 },
   { "-background", 0, 10, 1 },
   { "-fg", "--foreground-color", 10, 1 },
@@ -1910,12 +1893,12 @@ struct standard_args standard_args[] =
   { "-ib", "--internal-border", 10, 1 },
   { "-ms", "--mouse-color", 10, 1 },
   { "-cr", "--cursor-color", 10, 1 },
-  { "-nbc", "--no-blinking-cursor", 10, 0 },
   { "-fn", "--font", 10, 1 },
   { "-font", 0, 10, 1 },
   { "-fs", "--fullscreen", 10, 0 },
   { "-fw", "--fullwidth", 10, 0 },
   { "-fh", "--fullheight", 10, 0 },
+  { "-mm", "--maximized", 10, 0 },
   { "-g", "--geometry", 10, 1 },
   { "-geometry", 0, 10, 1 },
   { "-T", "--title", 10, 1 },
@@ -2565,7 +2548,7 @@ from the parent process and its tty file descriptors.  */)
 void
 syms_of_emacs ()
 {
-  Qfile_name_handler_alist = intern ("file-name-handler-alist");
+  Qfile_name_handler_alist = intern_c_string ("file-name-handler-alist");
   staticpro (&Qfile_name_handler_alist);
 
 #ifndef CANNOT_DUMP
@@ -2588,16 +2571,18 @@ syms_of_emacs ()
 Many arguments are deleted from the list as they are processed.  */);
 
   DEFVAR_LISP ("system-type", &Vsystem_type,
-	       doc: /* Value is symbol indicating type of operating system you are using.
+	       doc: /* The value is a symbol indicating the type of operating system you are using.
 Special values:
-  `gnu'         compiled for a GNU Hurd system.
-  `gnu/linux'   compiled for a GNU/Linux system.
-  `darwin'      compiled for Darwin (GNU-Darwin, Mac OS X, ...).
-  `ms-dos'      compiled as an MS-DOS application.
-  `windows-nt'  compiled as a native W32 application.
-  `cygwin'      compiled using the Cygwin library.
-Anything else indicates some sort of Unix system.  */);
-  Vsystem_type = intern (SYSTEM_TYPE);
+  `gnu'          compiled for a GNU Hurd system.
+  `gnu/linux'    compiled for a GNU/Linux system.
+  `gnu/kfreebsd' compiled for a GNU system with a FreeBSD kernel.
+  `darwin'       compiled for Darwin (GNU-Darwin, Mac OS X, ...).
+  `ms-dos'       compiled as an MS-DOS application.
+  `windows-nt'   compiled as a native W32 application.
+  `cygwin'       compiled using the Cygwin library.
+Anything else (in Emacs 23.1, the possibilities are: aix, berkeley-unix,
+hpux, irix, lynxos 3.0.1, usg-unix-v) indicates some sort of Unix system.  */);
+  Vsystem_type = intern_c_string (SYSTEM_TYPE);
 
   DEFVAR_LISP ("system-configuration", &Vsystem_configuration,
 	       doc: /* Value is string indicating configuration Emacs was built for.
@@ -2679,6 +2664,10 @@ was found.  */);
 	       doc: /* Value of `current-time' after loading the init files.
 This is nil during initialization.  */);
   Vafter_init_time = Qnil;
+
+  DEFVAR_BOOL ("inhibit-x-resources", &inhibit_x_resources,
+	       doc: /* If non-nil, X resources, Windows Registry settings, and NS defaults are not used.  */);
+  inhibit_x_resources = 0;
 
   /* Make sure IS_DAEMON starts up as false.  */
   daemon_pipe[1] = 0;

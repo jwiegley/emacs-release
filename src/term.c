@@ -1,6 +1,6 @@
 /* Terminal control module for terminals described by TERMCAP
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1998, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -37,6 +37,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <signal.h>
 #include <stdarg.h>
+#include <setjmp.h>
 
 #include "lisp.h"
 #include "termchar.h"
@@ -1567,8 +1568,9 @@ append_glyph (it)
    and where in the glyph matrix we currently are (glyph row and hpos).
    produce_glyphs fills in output fields of *IT with information such as the
    pixel width and height of a character, and maybe output actual glyphs at
-   the same time if IT->glyph_row is non-null.  See the explanation of
-   struct display_iterator in dispextern.h for an overview.
+   the same time if IT->glyph_row is non-null.  For an overview, see
+   the explanation in dispextern.h, before the definition of the
+   display_element_type enumeration.
 
    produce_glyphs also stores the result of glyph width, ascent
    etc. computations in *IT.
@@ -1650,7 +1652,7 @@ produce_glyphs (it)
       if (unibyte_display_via_language_environment
 	  && (it->c >= 0240))
 	{
-	  it->char_to_display = unibyte_char_to_multibyte (it->c);
+	  it->char_to_display = BYTE8_TO_CHAR (it->c);
 	  it->pixel_width = CHAR_WIDTH (it->char_to_display);
 	  it->nglyphs = it->pixel_width;
 	  if (it->glyph_row)
@@ -1808,8 +1810,8 @@ append_composite_glyph (it)
 
 /* Produce a composite glyph for iterator IT.  IT->cmp_id is the ID of
    the composition.  We simply produces components of the composition
-   assuming that that the terminal has a capability to layout/render
-   it correctly.  */
+   assuming that the terminal has a capability to layout/render it
+   correctly.  */
 
 static void
 produce_composite_glyph (it)
@@ -1969,14 +1971,11 @@ turn_on_face (f, face_id)
 	}
     }
 
-  if (face->tty_bold_p)
-    {
-      if (MAY_USE_WITH_COLORS_P (tty, NC_BOLD))
-	OUTPUT1_IF (tty, tty->TS_enter_bold_mode);
-    }
-  else if (face->tty_dim_p)
-    if (MAY_USE_WITH_COLORS_P (tty, NC_DIM))
-      OUTPUT1_IF (tty, tty->TS_enter_dim_mode);
+  if (face->tty_bold_p && MAY_USE_WITH_COLORS_P (tty, NC_BOLD))
+    OUTPUT1_IF (tty, tty->TS_enter_bold_mode);
+
+  if (face->tty_dim_p && MAY_USE_WITH_COLORS_P (tty, NC_DIM))
+    OUTPUT1_IF (tty, tty->TS_enter_dim_mode);
 
   /* Alternate charset and blinking not yet used.  */
   if (face->tty_alt_charset_p
@@ -3467,9 +3466,7 @@ init_tty (char *name, char *terminal_type, int must_succeed)
 
   tty->type = xstrdup (terminal_type);
 
-#ifdef subprocesses
   add_keyboard_wait_descriptor (fileno (tty->input));
-#endif
 
 #endif	/* !DOS_NT */
 
@@ -3737,10 +3734,6 @@ to do `unset TERMCAP' (C-shell: `unsetenv TERMCAP') as well.",
                  "Screen size %dx%d is too small",
                  FrameCols (tty), FrameRows (tty));
 
-#if 0  /* This is not used anywhere. */
-  tty->terminal->min_padding_speed = tgetnum ("pb");
-#endif
-
   TabWidth (tty) = tgetnum ("tw");
 
   if (!tty->TS_bell)
@@ -3946,6 +3939,8 @@ fatal (const char *str, ...)
   va_start (ap, str);
   fprintf (stderr, "emacs: ");
   vfprintf (stderr, str, ap);
+  if (!(strlen (str) > 0 && str[strlen (str) - 1] == '\n'))
+    fprintf (stderr, "\n");
   va_end (ap);
   fflush (stderr);
   exit (1);
@@ -3959,8 +3954,6 @@ static void
 delete_tty (struct terminal *terminal)
 {
   struct tty_display_info *tty;
-  Lisp_Object tail, frame;
-  int last_terminal;
 
   /* Protect against recursive calls.  delete_frame in
      delete_terminal calls us back when it deletes our last frame.  */
@@ -3971,19 +3964,6 @@ delete_tty (struct terminal *terminal)
     abort ();
 
   tty = terminal->display_info.tty;
-
-  last_terminal = 1;
-  FOR_EACH_FRAME (tail, frame)
-    {
-      struct frame *f = XFRAME (frame);
-      if (FRAME_LIVE_P (f) && (!FRAME_TERMCAP_P (f) || FRAME_TTY (f) != tty))
-        {
-          last_terminal = 0;
-          break;
-        }
-    }
-  if (last_terminal)
-      error ("Attempt to delete the sole terminal device with live frames");
 
   if (tty == tty_list)
     tty_list = tty->next;
@@ -4025,10 +4005,8 @@ delete_tty (struct terminal *terminal)
 
   xfree (tty->old_tty);
   xfree (tty->Wcm);
-  if (tty->termcap_strings_buffer)
-    xfree (tty->termcap_strings_buffer);
-  if (tty->termcap_term_buffer)
-    xfree (tty->termcap_term_buffer);
+  xfree (tty->termcap_strings_buffer);
+  xfree (tty->termcap_term_buffer);
 
   bzero (tty, sizeof (struct tty_display_info));
   xfree (tty);

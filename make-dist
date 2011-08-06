@@ -7,7 +7,7 @@
 #### you should make sure that this script will include it.
 
 # Copyright (C) 1995, 1997, 1998, 2000, 2001, 2002, 2003, 2004, 2005,
-#   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+#   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 # This file is part of GNU Emacs.
 #
@@ -197,8 +197,12 @@ if [ $check = yes ];
 then
   ### Check for .elc files with no corresponding .el file.
   ls -1 lisp/[a-zA-Z]*.el lisp/[a-z]*/[a-zA-Z0-9]*.el \
+	lisp/[a-z]*/[a-z]*/[a-zA-Z0-9]*.el \
+	lisp/[a-z]*/[a-z]*/[a-z]*/[a-zA-Z0-9]*.el \
 	leim/[a-z]*/[a-z]*.el | sed 's/\.el$/.elc/' > /tmp/el
   ls -1 lisp/[a-zA-Z]*.elc lisp/[a-z]*/[a-zA-Z0-9]*.elc \
+	lisp/[a-z]*/[a-z]*/[a-zA-Z0-9]*.elc \
+	lisp/[a-z]*/[a-z]*/[a-z]*/[a-zA-Z0-9]*.elc \
 	leim/[a-z]*/[a-z]*.elc > /tmp/elc
   bogosities="`comm -13 /tmp/el /tmp/elc`"
   if [ "${bogosities}" != "" ]; then
@@ -209,8 +213,12 @@ then
 
   ### Check for .el files with no corresponding .elc file.
   ls -1 lisp/[a-zA-Z]*.el lisp/[a-z]*/[a-zA-Z0-9]*.el \
+	lisp/[a-z]*/[a-z]*/[a-zA-Z0-9]*.el \
+	lisp/[a-z]*/[a-z]*/[a-z]*/[a-zA-Z0-9]*.el \
 	leim/[a-z]*/[a-z]*.el > /tmp/el
   ls -1 lisp/[a-zA-Z]*.elc lisp/[a-z]*/[a-zA-Z0-9]*.elc \
+	lisp/[a-z]*/[a-z]*/[a-zA-Z0-9]*.el \
+	lisp/[a-z]*/[a-z]*/[a-z]*/[a-zA-Z0-9]*.el \
 	leim/[a-z]*/[a-z]*.elc | sed 's/\.elc$/.el/' > /tmp/elc
   losers="`comm -23 /tmp/el /tmp/elc`"
   bogosities=
@@ -332,7 +340,7 @@ for subdir in lisp site-lisp \
 	      etc/images/gud etc/images/icons etc/images/icons/hicolor \
 	      etc/images/icons/hicolor/*x* etc/images/icons/hicolor/scalable \
 	      etc/images/icons/hicolor/*/apps etc/images/icons/hicolor/*/mimetypes \
-	      etc/images/low-color etc/images/mail \
+	      etc/images/low-color etc/images/mail etc/images/mpc \
 	      etc/images/smilies etc/images/smilies/grayscale \
 	      etc/images/smilies/medium etc/images/tree-widget \
 	      etc/images/tree-widget/default etc/images/tree-widget/folder \
@@ -347,6 +355,9 @@ for subdir in lisp site-lisp \
 	      nextstep/GNUstep/Emacs.base \
 	      nextstep/GNUstep/Emacs.base/Resources
 do
+  ## site-lisp for in-place installs (?).
+  [ "$subdir" = "site-lisp" ] || [ -d "$subdir" ] || \
+      echo "WARNING: $subdir not found, making anyway"
   echo "  ${tempdir}/${subdir}"
   mkdir ${tempdir}/${subdir}
 done
@@ -615,7 +626,7 @@ echo "Making links to \`etc/images'"
 
 for dir in etc/images/custom etc/images/ezimage etc/images/gnus \
     etc/images/gud etc/images/icons etc/images/low-color etc/images/mail \
-    etc/images/smilies ; do
+    etc/images/mpc etc/images/smilies ; do
     echo "Making links to \`${dir}'"
     (cd ${dir}
      for f in *; do
@@ -695,7 +706,7 @@ echo "Making links to \`doc/lispref'"
 
 echo "Making links to \`doc/lispintro'"
 (cd doc/lispintro
- ln *.texi *.aux *.fns *.kys *.vrs *.eps ../../${tempdir}/doc/lispintro
+ ln *.texi *.aux *.fns *.kys *.vrs *.eps *.pdf ../../${tempdir}/doc/lispintro
  ln makefile.w32-in ../../${tempdir}/doc/lispintro
  test -f README && ln README ../../${tempdir}/doc/lispintro
  test -f Makefile.in && ln Makefile.in ../../${tempdir}/doc/lispintro

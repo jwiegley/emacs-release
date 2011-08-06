@@ -10,10 +10,10 @@ END-INFO-DIR-ENTRY
    This is an `Introduction to Programming in Emacs Lisp', for people
 who are not programmers.
 
-   Edition 3.08, 4 October 2008
+   Edition 3.10, 28 October 2009
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1997, 2001,
-2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software
+2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010    Free Software
 Foundation, Inc.
 
    Published by the:
@@ -48,10 +48,10 @@ An Introduction to Programming in Emacs Lisp
 This is an `Introduction to Programming in Emacs Lisp', for people who
 are not programmers.
 
-   Edition 3.08, 4 October 2008
+   Edition 3.10, 28 October 2009
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1997, 2001,
-2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software
+2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010    Free Software
 Foundation, Inc.
 
    Published by the:
@@ -3854,15 +3854,15 @@ than `return' or `enter'.  Emacs will take you directly to the function
 definition.
 
    More generally, if you want to see a function in its original source
-file, you can use the `find-tags' function to jump to it.  `find-tags'
+file, you can use the `find-tag' function to jump to it.  `find-tag'
 works with a wide variety of languages, not just Lisp, and C, and it
-works with non-programming text as well.  For example, `find-tags' will
+works with non-programming text as well.  For example, `find-tag' will
 jump to the various nodes in the Texinfo source file of this document.
-The `find-tags' function depends on `tags tables' that record the
+The `find-tag' function depends on `tags tables' that record the
 locations of the functions, variables, and other items to which
-`find-tags' jumps.
+`find-tag' jumps.
 
-   To use the `find-tags' command, type `M-.'  (i.e., press the period
+   To use the `find-tag' command, type `M-.'  (i.e., press the period
 key while holding down the <META> key, or else type the <ESC> key and
 then type the period key), and then, at the prompt, type in the name of
 the function whose source code you want to see, such as
@@ -3879,8 +3879,8 @@ already been created for you, will be in a subdirectory of the
 `/usr/local/share/emacs/' directory; thus you would use the `M-x
 visit-tags-table' command and specify a pathname such as
 `/usr/local/share/emacs/22.1.1/lisp/TAGS'.  If the tags table has not
-already been created, you will have to create it yourself.  It will in
-a file such as `/usr/local/src/emacs/src/TAGS'.
+already been created, you will have to create it yourself.  It will be
+in a file such as `/usr/local/src/emacs/src/TAGS'.
 
    To create a `TAGS' file in a specific directory, switch to that
 directory in Emacs using `M-x cd' command, or list the directory with
@@ -3892,7 +3892,7 @@ the command to execute:
    For more information, see *note Create Your Own `TAGS' File: etags.
 
    After you become more familiar with Emacs Lisp, you will find that
-you will frequently use `find-tags' to navigate your way around source
+you will frequently use `find-tag' to navigate your way around source
 code; and you will create your own `TAGS' tables.
 
    Incidentally, the files that contain Lisp code are conventionally

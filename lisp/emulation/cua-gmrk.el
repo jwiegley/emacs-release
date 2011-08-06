@@ -1,7 +1,7 @@
 ;;; cua-gmrk.el --- CUA unified global mark support
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Kim F. Storm <storm@cua.dk>
 ;; Keywords: keyboard emulations convenience cua mark
@@ -110,8 +110,7 @@ With prefix argument, don't jump to global mark when cancelling it."
 
 (defun cua--insert-at-global-mark (str &optional msg)
   ;; Insert string at global marker and move marker
-  (save-excursion
-    (set-buffer (marker-buffer cua--global-mark-marker))
+  (with-current-buffer (marker-buffer cua--global-mark-marker)
     (goto-char (marker-position cua--global-mark-marker))
     (insert-for-yank str)
     (cua--activate-global-mark))
@@ -123,8 +122,7 @@ With prefix argument, don't jump to global mark when cancelling it."
 
 (defun cua--delete-at-global-mark (arg &optional msg)
   ;; Delete chars at global marker
-  (save-excursion
-    (set-buffer (marker-buffer cua--global-mark-marker))
+  (with-current-buffer (marker-buffer cua--global-mark-marker)
     (goto-char (marker-position cua--global-mark-marker))
     (delete-char arg))
   (if msg
@@ -190,8 +188,7 @@ With prefix argument, don't jump to global mark when cancelling it."
   (if (cua--global-mark-active)
       (let ((src-buf (current-buffer))
 	    (text (cua--extract-rectangle)))
-	(save-excursion
-	  (set-buffer (marker-buffer cua--global-mark-marker))
+	(with-current-buffer (marker-buffer cua--global-mark-marker)
 	  (goto-char (marker-position cua--global-mark-marker))
 	  (if as-text
 	      (while text
@@ -309,8 +306,7 @@ With prefix argument, don't jump to global mark when cancelling it."
   (interactive "*")
   (if (cua--global-mark-active)
       (let (col)
-	(save-excursion
-	  (set-buffer (marker-buffer cua--global-mark-marker))
+	(with-current-buffer (marker-buffer cua--global-mark-marker)
 	  (goto-char (marker-position cua--global-mark-marker))
 	  (setq col (current-column)))
 	(if cua--rectangle

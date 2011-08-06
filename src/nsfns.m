@@ -1,5 +1,5 @@
 /* Functions for the NeXT/Open/GNUstep and MacOSX window system.
-   Copyright (C) 1989, 1992, 1993, 1994, 2005, 2006, 2008, 2009
+   Copyright (C) 1989, 1992, 1993, 1994, 2005, 2006, 2008, 2009, 2010
      Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -31,6 +31,7 @@ GNUstep port and post-20 update by Adrian Robert (arobert@cogsci.ucsd.edu)
 
 #include <signal.h>
 #include <math.h>
+#include <setjmp.h>
 
 #include "lisp.h"
 #include "blockinput.h"
@@ -79,8 +80,9 @@ extern Lisp_Object Qface_set_after_frame_default;
 extern Lisp_Object Qunderline, Qundefined;
 extern Lisp_Object Qheight, Qminibuffer, Qname, Qonly, Qwidth;
 extern Lisp_Object Qunsplittable, Qmenu_bar_lines, Qbuffer_predicate, Qtitle;
+extern Lisp_Object Qnone;
+extern Lisp_Object Vframe_title_format;
 
-Lisp_Object Qnone;
 Lisp_Object Qbuffered;
 Lisp_Object Qfontsize;
 
@@ -205,30 +207,28 @@ ns_get_window (Lisp_Object maybeFrame)
 static NSScreen *
 ns_get_screen (Lisp_Object screen)
 {
-  struct terminal *terminal = get_terminal (screen, 1);
+  struct frame *f;
+  struct terminal *terminal;
+
+  if (EQ (Qt, screen)) /* not documented */
+    return [NSScreen mainScreen];
+
+  terminal = get_terminal (screen, 1);
   if (terminal->type != output_ns)
-    // Not sure if this special case for nil is needed.  It does seem to be
-    // important in xfns.c for the make-frame call in frame-initialize,
-    // so let's keep it here for now.
-    return (NILP (screen) ? [NSScreen mainScreen] : NULL);
+    return NULL;
+
+  if (NILP (screen))
+    f = SELECTED_FRAME ();
+  else if (FRAMEP (screen))
+    f = XFRAME (screen);
   else
     {
       struct ns_display_info *dpyinfo = terminal->display_info.ns;
-      struct frame *f = dpyinfo->x_focus_frame;
-      if (!f)
-	f = dpyinfo->x_highlight_frame;
-      if (!f)
-	return NULL;
-      else
-	{
-	  id window = nil;
-	  Lisp_Object frame;
-	  eassert (FRAME_NS_P (f));
-	  XSETFRAME (frame, f);
-	  window = ns_get_window (frame);
-	  return window ? [window screen] : NULL;
-	}
+      f = (dpyinfo->x_focus_frame || dpyinfo->x_highlight_frame);
     }
+
+  return ((f && FRAME_NS_P (f)) ? [[FRAME_NS_VIEW (f) window] screen]
+	  : NULL);
 }
 
 
@@ -501,8 +501,7 @@ ns_set_name_iconic (struct frame *f, Lisp_Object name, int explicit)
     name = f->icon_name;
 
   if (NILP (name))
-    name = build_string
-        ([[[NSProcessInfo processInfo] processName] UTF8String]);
+    name = build_string([ns_app_name UTF8String]);
   else
     CHECK_STRING (name);
 
@@ -521,7 +520,7 @@ ns_set_name_iconic (struct frame *f, Lisp_Object name, int explicit)
 static void
 ns_set_name (struct frame *f, Lisp_Object name, int explicit)
 {
-  NSView *view = FRAME_NS_VIEW (f);
+  NSView *view;
   NSTRACE (ns_set_name);
 
   if (ns_in_resize)
@@ -542,8 +541,7 @@ ns_set_name (struct frame *f, Lisp_Object name, int explicit)
     return;
 
   if (NILP (name))
-    name = build_string
-        ([[[NSProcessInfo processInfo] processName] UTF8String]);
+    name = build_string([ns_app_name UTF8String]);
 
   f->name = name;
 
@@ -552,6 +550,8 @@ ns_set_name (struct frame *f, Lisp_Object name, int explicit)
     name = f->title;
 
   CHECK_STRING (name);
+
+  view = FRAME_NS_VIEW (f);
 
   /* Don't change the name if it's already NAME.  */
   if ([[[view window] title]
@@ -584,6 +584,8 @@ x_implicitly_set_name (FRAME_PTR f, Lisp_Object arg, Lisp_Object oldval)
   NSTRACE (x_implicitly_set_name);
   if (FRAME_ICONIFIED_P (f))
     ns_set_name_iconic (f, arg, 0);
+  else if (FRAME_NS_P (f) && EQ (Vframe_title_format, Qt))
+    ns_set_name_as_filename (f);
   else
     ns_set_name (f, arg, 0);
 }
@@ -616,7 +618,7 @@ x_set_title (struct frame *f, Lisp_Object name, Lisp_Object old_name)
 void
 ns_set_name_as_filename (struct frame *f)
 {
-  NSView *view = FRAME_NS_VIEW (f);
+  NSView *view;
   Lisp_Object name;
   Lisp_Object buf = XWINDOW (f->selected_window)->buffer;
   const char *title;
@@ -628,17 +630,18 @@ ns_set_name_as_filename (struct frame *f)
 
   BLOCK_INPUT;
   pool = [[NSAutoreleasePool alloc] init];
-  name =XBUFFER (buf)->filename;
+  name = XBUFFER (buf)->filename;
   if (NILP (name) || FRAME_ICONIFIED_P (f)) name =XBUFFER (buf)->name;
 
   if (FRAME_ICONIFIED_P (f) && !NILP (f->icon_name))
     name = f->icon_name;
 
   if (NILP (name))
-    name = build_string
-        ([[[NSProcessInfo processInfo] processName] UTF8String]);
+    name = build_string ([ns_app_name UTF8String]);
   else
     CHECK_STRING (name);
+
+  view = FRAME_NS_VIEW (f);
 
   title = FRAME_ICONIFIED_P (f) ? [[[view window] miniwindowTitle] UTF8String]
                                 : [[[view window] title] UTF8String];
@@ -683,15 +686,18 @@ ns_set_name_as_filename (struct frame *f)
 
 
 void
-ns_set_doc_edited (struct frame *f, Lisp_Object arg, Lisp_Object oldval)
+ns_set_doc_edited (struct frame *f, Lisp_Object arg)
 {
   NSView *view = FRAME_NS_VIEW (f);
   NSAutoreleasePool *pool;
-  BLOCK_INPUT;
-  pool = [[NSAutoreleasePool alloc] init];
-  [[view window] setDocumentEdited: !NILP (arg)];
-  [pool release];
-  UNBLOCK_INPUT;
+  if (!MINI_WINDOW_P (XWINDOW (f->selected_window)))
+    {
+      BLOCK_INPUT;
+      pool = [[NSAutoreleasePool alloc] init];
+      [[view window] setDocumentEdited: !NILP (arg)];
+      [pool release];
+      UNBLOCK_INPUT;
+    }
 }
 
 
@@ -1031,7 +1037,8 @@ frame_parm_handler ns_frame_parm_handlers[] =
   0, /* x_set_wait_for_wm, will ignore */
   0,  /* x_set_fullscreen will ignore */
   x_set_font_backend, /* generic OK */
-  x_set_alpha
+  x_set_alpha,
+  0, /* x_set_sticky */  
 };
 
 
@@ -1129,8 +1136,7 @@ be shared by the new frame.  */)
      be set.  */
   if (EQ (name, Qunbound) || NILP (name) || (XTYPE (name) != Lisp_String))
     {
-      f->name
-	 = build_string ([[[NSProcessInfo processInfo] processName] UTF8String]);
+      f->name = build_string ([ns_app_name UTF8String]);
       f->explicit_name =0;
     }
   else
@@ -1364,6 +1370,7 @@ FRAME nil means use the selected frame.  */)
     {
       EmacsView *view = FRAME_NS_VIEW (f);
       BLOCK_INPUT;
+      [NSApp activateIgnoringOtherApps: YES];
       [[view window] makeKeyAndOrderFront: view];
       UNBLOCK_INPUT;
     }
@@ -1497,9 +1504,7 @@ If OWNER is nil, Emacs is assumed.  */)
 
   check_ns ();
   if (NILP (owner))
-    owner = build_string
-        ([[[NSProcessInfo processInfo] processName] UTF8String]);
-  /* CHECK_STRING (owner);  this should be just "Emacs" */
+    owner = build_string([ns_app_name UTF8String]);
   CHECK_STRING (name);
 /*fprintf (stderr, "ns-get-resource checking resource '%s'\n", SDATA (name)); */
 
@@ -1522,9 +1527,7 @@ If VALUE is nil, the default is removed.  */)
 {
   check_ns ();
   if (NILP (owner))
-    owner
-       = build_string ([[[NSProcessInfo processInfo] processName] UTF8String]);
-  CHECK_STRING (owner);
+    owner = build_string ([ns_app_name UTF8String]);
   CHECK_STRING (name);
   if (NILP (value))
     {
@@ -1770,9 +1773,6 @@ The argument DISPLAY is currently ignored.  */)
      Lisp_Object display;
 {
   check_ns ();
-#ifdef NS_IMPL_COCOA
-  PSFlush ();
-#endif
   /*ns_delete_terminal (dpyinfo->terminal); */
   [NSApp terminate: NSApp];
   return Qnil;
@@ -2138,15 +2138,12 @@ x_get_string_resource (XrmDatabase rdb, char *name, char *class)
   const char *res;
   check_ns ();
 
-  /* Support emacs-20-style face resources for backwards compatibility */
-  if (!strncmp (toCheck, "Face", 4))
-    toCheck = name + (!strncmp (name, "emacs.", 6) ? 6 : 0);
+  if (inhibit_x_resources)
+    /* --quick was passed, so this is a no-op.  */
+    return NULL;
 
-/*fprintf (stderr, "Checking '%s'\n", toCheck); */
-
-  res = ns_no_defaults ? NULL :
-    [[[NSUserDefaults standardUserDefaults] objectForKey:
-                     [NSString stringWithUTF8String: toCheck]] UTF8String];
+  res = [[[NSUserDefaults standardUserDefaults] objectForKey:
+            [NSString stringWithUTF8String: toCheck]] UTF8String];
   return !res ? NULL :
       (!strncasecmp (res, "YES", 3) ? "true" :
           (!strncasecmp (res, "NO", 2) ? "false" : res));
@@ -2231,16 +2228,12 @@ The optional argument FRAME is currently ignored.  */)
 
 
 DEFUN ("xw-color-values", Fxw_color_values, Sxw_color_values, 1, 2, 0,
-       doc: /* Return a description of the color named COLOR.
-The value is a list of integer RGBA values--(RED GREEN BLUE ALPHA).
-These values appear to range from 0 to 65280; white is (65280 65280 65280 0).
-The optional argument FRAME is currently ignored.  */)
+       doc: /* Internal function called by `color-values', which see.  */)
      (color, frame)
      Lisp_Object color, frame;
 {
   NSColor * col;
-  float red, green, blue, alpha;
-  Lisp_Object rgba[4];
+  CGFloat red, green, blue, alpha;
 
   check_ns ();
   CHECK_STRING (color);
@@ -2250,12 +2243,9 @@ The optional argument FRAME is currently ignored.  */)
 
   [[col colorUsingColorSpaceName: NSCalibratedRGBColorSpace]
         getRed: &red green: &green blue: &blue alpha: &alpha];
-  rgba[0] = make_number (lrint (red*65280));
-  rgba[1] = make_number (lrint (green*65280));
-  rgba[2] = make_number (lrint (blue*65280));
-  rgba[3] = make_number (lrint (alpha*65280));
-
-  return Flist (4, rgba);
+  return list3 (make_number (lrint (red*65280)),
+		make_number (lrint (green*65280)),
+		make_number (lrint (blue*65280)));
 }
 
 
@@ -2339,15 +2329,21 @@ that stands for the selected frame's display. */)
      Lisp_Object display;
 {
   int top;
+  NSScreen *screen;
   NSRect vScreen;
 
   check_ns ();
-  vScreen = [ns_get_screen (display) visibleFrame];
-  top = vScreen.origin.y == 0.0 ?
-    (int) [ns_get_screen (display) frame].size.height - vScreen.size.height : 0;
+  screen = ns_get_screen (display);
+  if (!screen)
+    return Qnil;
 
+  vScreen = [screen visibleFrame];
+
+  /* NS coordinate system is upside-down.
+     Transform to screen-specific coordinates. */
   return list4 (make_number ((int) vScreen.origin.x),
-                make_number (top),
+		make_number ((int) [screen frame].size.height
+			     - vScreen.size.height - vScreen.origin.y),
                 make_number ((int) vScreen.size.width),
                 make_number ((int) vScreen.size.height));
 }
@@ -2616,8 +2612,6 @@ syms_of_nsfns ()
 {
   int i;
 
-  Qnone = intern ("none");
-  staticpro (&Qnone);
   Qfontsize = intern ("fontsize");
   staticpro (&Qfontsize);
 

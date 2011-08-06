@@ -1,7 +1,7 @@
 ;;; winner.el --- Restore old window configurations
 
 ;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation. Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation. Inc.
 
 ;; Author: Ivar Rummelhoff <ivarru@math.uio.no>
 ;; Created: 27 Feb 1997
@@ -387,7 +387,8 @@ With arg, turn Winner mode on if and only if arg is positive."
       (setq winner-modified-list (frame-list))
       (winner-save-old-configurations)
       (run-hooks 'winner-mode-hook)
-      (when (interactive-p) (message "Winner mode enabled")))
+      (when (called-interactively-p 'interactive)
+	(message "Winner mode enabled")))
      ;; Turn mode off
      (winner-mode
       (setq winner-mode nil)
@@ -396,7 +397,8 @@ With arg, turn Winner mode on if and only if arg is positive."
       (remove-hook 'post-command-hook 'winner-save-conditionally)
       (remove-hook 'minibuffer-setup-hook 'winner-save-unconditionally)
       (run-hooks 'winner-mode-leave-hook)
-      (when (interactive-p) (message "Winner mode disabled"))))))
+      (when (called-interactively-p 'interactive)
+	(message "Winner mode disabled"))))))
 
 ;; Inspired by undo (simple.el)
 

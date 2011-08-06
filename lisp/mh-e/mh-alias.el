@@ -1,7 +1,7 @@
 ;;; mh-alias.el --- MH-E mail alias completion and expansion
 
 ;; Copyright (C) 1994, 1995, 1996, 1997,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Peter S. Galbraith <psg@debian.org>
@@ -135,8 +135,7 @@ COMMA-SEPARATOR is non-nil."
   "Return an alist of local users from /etc/passwd.
 Exclude all aliases already in `mh-alias-alist' from \"ali\""
   (let (passwd-alist)
-    (save-excursion
-      (set-buffer (get-buffer-create mh-temp-buffer))
+    (with-current-buffer (get-buffer-create mh-temp-buffer)
       (erase-buffer)
       (cond
        ((eq mh-alias-local-users t)
@@ -394,8 +393,7 @@ string is converted to lower case."
 
 (defun mh-alias-which-file-has-alias (alias file-list)
   "Return the name of writable file which defines ALIAS from list FILE-LIST."
-  (save-excursion
-    (set-buffer (get-buffer-create mh-temp-buffer))
+  (with-current-buffer (get-buffer-create mh-temp-buffer)
     (let ((the-list file-list)
           (found))
       (while the-list
@@ -491,8 +489,7 @@ alias. In the latter case, the alias serves as an additional
 folder name hint when filing messages."
   (if (not file)
       (setq file (mh-alias-insert-file alias)))
-  (save-excursion
-    (set-buffer (find-file-noselect file))
+  (with-current-buffer (find-file-noselect file)
     (goto-char (point-min))
     (let ((alias-search (concat alias ":"))
           (letter)

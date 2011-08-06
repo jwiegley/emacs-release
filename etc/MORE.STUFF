@@ -1,7 +1,7 @@
 More Neat Stuff for your Emacs
 
-Copyright (C) 1993, 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
-  Free Software Foundation, Inc.
+Copyright (C) 1993, 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+  2009, 2010  Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
 This file describes GNU Emacs programs and resources that are
@@ -32,7 +32,7 @@ engine) or retrievable from general Usenet archive services.
 * emacswiki.org
 
 The Emacs Wiki has an area for storing elisp files
-<URL:http://www.emacswiki.org/cgi-bin/wiki.pl/ElispArea>.
+<URL:http://www.emacswiki.org/cgi-bin/wiki/ElispArea>.
 
 * Emacs tutorials and manuals
 
@@ -62,11 +62,11 @@ You might find bug-fixes or enhancements in these places.
 
  * ERC: <URL:http://savannah.gnu.org/projects/erc/>
 
- * Etags: <URL:http://fly.cnuce.cnr.it/software/#etags>
+ * Etags: <URL:http://fly.isti.cnr.it/software/>
 
  * Gnus: <URL:http://www.gnus.org/>
 
- * Ispell: <URL:http://www.eng.utah.edu/~kstevens/ispell-page.html>
+ * Ispell: <URL:http://www.kdstevens.com/stevens/ispell-page.html>
 
  * MH-E: <URL:http://mh-e.sourceforge.net/>
 
@@ -99,7 +99,7 @@ You might find bug-fixes or enhancements in these places.
 
  * (Tex)info files for use with Info-look that don't come from GNU
    packages:
-   * Scheme: <URL:ftp://ftp-swiss.ai.mit.edu/pub/scm/r5rs.info.tar.gz>
+   * Scheme: <URL:http://groups.csail.mit.edu/mac/ftpdir/scm/r5rs.info.tar.gz>
    * LaTeX: <URL:ftp://ctan.tug.org/tex-archive/info/latex2e-help-texinfo/
        latex2e.texi> (or CTAN mirrors)
    * Perl: <URL:ftp://ftp.cpan.org/pub/CPAN/doc/manual/texinfo/>
@@ -129,10 +129,6 @@ Several are for Debian GNU/Linux in particular.
    `file-coding-system-alist' for non-ASCII characters.]
 
  * Boxquote: <URL:http://www.davep.org/emacs/>
-
- * CEDET: Collection of Emacs Development Environment Tools, including
-   EIEIO, Semantic, Speedbar, EDE, and COGRE:
-   <URL:http://cedet.sourceforge.net/>
 
  * CJK-emacs: Converting MULE-encoded text to TeX:
    <URL:ftp://ctan.tug.org/tex-archive/language/chinese/CJK/> and
@@ -219,6 +215,10 @@ Several are for Debian GNU/Linux in particular.
  * Quack: <URL:http://www.neilvandyke.org/quack/>
    Quack enhances Emacs support for Scheme.
 
+ * QWE: <URL:http://www.nongnu.org/qwe/>
+   QWE's not WEB for Emacs is a quasi-WYSIWYG literate programming system for
+   Emacs that can be used with almost every programming language.
+
  * Session: <URL:http://emacs-session.sourceforge.net/>
    Session Management for Emacs.
 
@@ -235,8 +235,11 @@ Several are for Debian GNU/Linux in particular.
 
  * Tiny Tools: <URL:http://freshmeat.net/projects/emacs-tiny-tools>
 
- * VM (View Mail): <URL:http://www.nongnu.org/viewmail/> Alternative
-   mail reader.  There is a VM newsgroup: <URL:news:gnu.emacs.vm.info>
+ * VM (View Mail): Alternative mail reader
+   <URL:http://launchpad.net/vm>
+   Previously hosted at: <URL:http://www.nongnu.org/viewmail/>
+   There are VM newsgroups: <URL:news:gnu.emacs.vm.info>, and
+   <URL:news:gnu.emacs.vm.bug>.
 
  * W3: <URL:http://savannah.gnu.org/projects/w3/>
    Web browser.  There's a W3 mail list/newsgroup

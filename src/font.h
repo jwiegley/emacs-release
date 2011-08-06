@@ -1,6 +1,6 @@
 /* font.h -- Interface definition for font handling.
-   Copyright (C) 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
-   Copyright (C) 2006, 2007, 2008, 2009
+   Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+   Copyright (C) 2006, 2007, 2008, 2009, 2010
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H13PRO009
 
@@ -687,6 +687,16 @@ struct font_driver
      the (N-1)th element of VARIATIONS.  */
   int (*get_variation_glyphs) P_ ((struct font *font,
 				   int c, unsigned variations[256]));
+
+  void (*filter_properties) P_ ((Lisp_Object font, Lisp_Object properties));
+
+  /* Optional.
+
+     Return non-zero if FONT_OBJECT can be used as a (cached) font
+     for ENTITY on frame F.  */
+  int (*cached_font_ok) P_ ((struct frame *f,
+                             Lisp_Object font_object,
+                             Lisp_Object entity));
 };
 
 
@@ -826,8 +836,21 @@ extern struct font_driver nsfont_driver;
 #define FONT_DEBUG
 #endif
 
+extern Lisp_Object Vfont_log;
 extern void font_add_log P_ ((char *, Lisp_Object, Lisp_Object));
 extern void font_deferred_log P_ ((char *, Lisp_Object, Lisp_Object));
+
+#define FONT_ADD_LOG(ACTION, ARG, RESULT)	\
+  do {						\
+    if (! EQ (Vfont_log, Qt))			\
+      font_add_log ((ACTION), (ARG), (RESULT));	\
+  } while (0)
+
+#define FONT_DEFERRED_LOG(ACTION, ARG, RESULT)		\
+  do {							\
+    if (! EQ (Vfont_log, Qt))				\
+      font_deferred_log ((ACTION), (ARG), (RESULT));	\
+  } while (0)
 
 #ifdef FONT_DEBUG
 #define font_assert(X)	do {if (!(X)) abort ();} while (0)

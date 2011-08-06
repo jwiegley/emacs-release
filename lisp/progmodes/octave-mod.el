@@ -1,6 +1,6 @@
 ;;; octave-mod.el --- editing Octave source files under Emacs
 
-;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;; Free Software Foundation, Inc.
 
 ;; Author: Kurt Hornik <Kurt.Hornik@wu-wien.ac.at>
@@ -101,11 +101,9 @@ All Octave abbrevs start with a grave accent (`)."
   '("do" "for" "function" "if" "switch" "try" "unwind_protect" "while"))
 (defvar octave-else-keywords
   '("case" "catch" "else" "elseif" "otherwise" "unwind_protect_cleanup"))
-;; FIXME: only use specific "end" tokens here to avoid confusion when "end"
-;; is used in indexing (the real fix is much more complex).
 (defvar octave-end-keywords
   '("endfor" "endfunction" "endif" "endswitch" "end_try_catch"
-    "end_unwind_protect" "endwhile" "until"))
+    "end_unwind_protect" "endwhile" "until" "end"))
 
 (defvar octave-reserved-words
   (append octave-begin-keywords
@@ -342,17 +340,15 @@ newline or semicolon after an else or end keyword."
   (concat octave-block-begin-regexp "\\|" octave-block-end-regexp))
 (defvar octave-block-else-or-end-regexp
   (concat octave-block-else-regexp "\\|" octave-block-end-regexp))
-;; FIXME: only use specific "end" tokens here to avoid confusion when "end"
-;; is used in indexing (the real fix is much more complex).
 (defvar octave-block-match-alist
   '(("do" . ("until"))
-    ("for" . ("endfor"))
+    ("for" . ("endfor" "end"))
     ("function" . ("endfunction"))
-    ("if" . ("else" "elseif" "endif"))
-    ("switch" . ("case" "otherwise" "endswitch"))
+    ("if" . ("else" "elseif" "endif" "end"))
+    ("switch" . ("case" "otherwise" "endswitch" "end"))
     ("try" . ("catch" "end_try_catch"))
     ("unwind_protect" . ("unwind_protect_cleanup" "end_unwind_protect"))
-    ("while" . ("endwhile")))
+    ("while" . ("endwhile" "end")))
   "Alist with Octave's matching block keywords.
 Has Octave's begin keywords as keys and a list of the matching else or
 end keywords as associated values.")
@@ -410,7 +406,7 @@ Non-nil means always go to the next Octave code line after sending."
 
 This mode makes it easier to write Octave code by helping with
 indentation, doing some of the typing for you (with Abbrev mode) and by
-showing keywords, comments, strings, etc.. in different faces (with
+showing keywords, comments, strings, etc. in different faces (with
 Font Lock mode on terminals that support it).
 
 Octave itself is a high-level language, primarily intended for numerical
@@ -680,7 +676,10 @@ level."
 			(if (= bot (point))
 			    (setq icol (+ icol octave-block-offset))))
 		       ((octave-looking-at-kw octave-block-end-regexp)
-			(if (not (= bot (point)))
+			(if (and (not (= bot (point)))
+				 ;; special case for `end' keyword,
+				 ;; applied to all keywords
+				 (not (octave-end-as-array-index-p)))
 			    (setq icol (- icol
 					  (octave-block-end-offset)))))))
 		  (forward-char)))
@@ -701,6 +700,15 @@ level."
        ((looking-at "\\s<\\S<")
 	(setq icol (list comment-column icol)))))
     icol))
+
+;; FIXME: this should probably also make sure we are actually looking
+;; at the "end" keyword.
+(defun octave-end-as-array-index-p ()
+  (save-excursion
+    (condition-case nil
+	;; Check if point is between parens
+	(progn (up-list 1) t)
+      (error nil))))
 
 (defun octave-block-end-offset ()
   (save-excursion
@@ -1237,43 +1245,10 @@ otherwise."
   "Perform completion on Octave symbol preceding point.
 Compare that symbol against Octave's reserved words and builtin
 variables."
-  ;; This code taken from lisp-complete-symbol
   (interactive)
   (let* ((end (point))
-	 (beg (save-excursion (backward-sexp 1) (point)))
-	 (string (buffer-substring-no-properties beg end))
-	 (completion (try-completion string octave-completion-alist)))
-    (cond ((eq completion t))		; ???
-	  ((null completion)
-	   (message "Can't find completion for \"%s\"" string)
-	   (ding))
-	  ((not (string= string completion))
-           (delete-region beg end)
-           (insert completion))
-	  (t
-	   (let ((list (all-completions string octave-completion-alist))
-		 (conf (current-window-configuration)))
-	     ;; Taken from comint.el
-	     (message "Making completion list...")
-	     (with-output-to-temp-buffer "*Completions*"
-	       (display-completion-list list string))
-	     (message "Hit space to flush")
-	     (let (key first)
-	       (if (with-current-buffer (get-buffer "*Completions*")
-		     (setq key (read-key-sequence nil)
-			   first (aref key 0))
-		     (and (consp first) (consp (event-start first))
-			  (eq (window-buffer (posn-window (event-start
-							   first)))
-			      (get-buffer "*Completions*"))
-			  (eq (key-binding key) 'mouse-choose-completion)))
-		   (progn
-		     (mouse-choose-completion first)
-		     (set-window-configuration conf))
-		 (if (eq first ?\ )
-		     (set-window-configuration conf)
-		   (setq unread-command-events
-			 (listify-key-sequence key))))))))))
+	 (beg (save-excursion (backward-sexp 1) (point))))
+    (completion-in-region beg end octave-completion-alist)))
 
 
 ;;; Electric characters && friends
@@ -1293,7 +1268,7 @@ If Abbrev mode is on, expand abbrevs first."
 (defun octave-electric-semi ()
   "Insert a semicolon in Octave mode.
 Maybe expand abbrevs and blink matching block open keywords.
-Reindent the line of `octave-auto-indent' is non-nil.
+Reindent the line if `octave-auto-indent' is non-nil.
 Insert a newline if `octave-auto-newline' is non-nil."
   (interactive)
   (if (not (octave-not-in-string-or-comment-p))
@@ -1310,7 +1285,7 @@ Insert a newline if `octave-auto-newline' is non-nil."
 (defun octave-electric-space ()
   "Insert a space in Octave mode.
 Maybe expand abbrevs and blink matching block open keywords.
-Reindent the line of `octave-auto-indent' is non-nil."
+Reindent the line if `octave-auto-indent' is non-nil."
   (interactive)
   (setq last-command-event ? )
   (if (and octave-auto-indent

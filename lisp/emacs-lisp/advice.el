@@ -1,7 +1,7 @@
 ;;; advice.el --- an overloading mechanism for Emacs Lisp functions
 
 ;; Copyright (C) 1993, 1994, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Hans Chalupsky <hans@cs.buffalo.edu>
 ;; Maintainer: FSF
@@ -218,7 +218,7 @@
 ;;  "Make `car' an interactive function."
 ;;   (interactive "xCar of list: ")
 ;;   ad-do-it
-;;   (if (interactive-p)
+;;   (if (called-interactively-p 'interactive)
 ;;       (message "%s" ad-return-value)))
 
 
@@ -1834,7 +1834,7 @@
 
 ;;;###autoload
 (defcustom ad-redefinition-action 'warn
-  "*Defines what to do with redefinitions during Advice de/activation.
+  "Defines what to do with redefinitions during Advice de/activation.
 Redefinition occurs if a previously activated function that already has an
 original definition associated with it gets redefined and then de/activated.
 In such a case we can either accept the current definition as the new
@@ -1849,7 +1849,7 @@ interpreted as `error'."
 
 ;;;###autoload
 (defcustom ad-default-compilation-action 'maybe
-  "*Defines whether to compile advised definitions during activation.
+  "Defines whether to compile advised definitions during activation.
 A value of `always' will result in unconditional compilation, `never' will
 always avoid compilation, `maybe' will compile if the byte-compiler is already
 loaded, and `like-original' will compile if the original definition of the
@@ -2191,7 +2191,7 @@ Redefining advices affect the construction of an advised definition."
 
 (defmacro ad-set-orig-definition (function definition)
   `(ad-safe-fset
-    (ad-get-advice-info-field function 'origname) ,definition))
+    (ad-get-advice-info-field ,function 'origname) ,definition))
 
 (defmacro ad-clear-orig-definition (function)
   `(fmakunbound (ad-get-advice-info-field ,function 'origname)))
@@ -2390,7 +2390,7 @@ All currently advised functions will be considered."
   (interactive
    (list (ad-read-regexp "Enable advices via regexp")))
   (let ((matched-advices (ad-enable-regexp-internal regexp 'any t)))
-    (if (interactive-p)
+    (if (called-interactively-p 'interactive)
 	(message "%d matching advices enabled" matched-advices))
     matched-advices))
 
@@ -2400,7 +2400,7 @@ All currently advised functions will be considered."
   (interactive
    (list (ad-read-regexp "Disable advices via regexp")))
   (let ((matched-advices (ad-enable-regexp-internal regexp 'any nil)))
-    (if (interactive-p)
+    (if (called-interactively-p 'interactive)
 	(message "%d matching advices disabled" matched-advices))
     matched-advices))
 
@@ -2422,16 +2422,28 @@ in that CLASS."
 ;;;###autoload
 (defun ad-add-advice (function advice class position)
   "Add a piece of ADVICE to FUNCTION's list of advices in CLASS.
-If FUNCTION already has one or more pieces of advice of the specified
-CLASS then POSITION determines where the new piece will go.  The value
-of POSITION can either be `first', `last' or a number where 0 corresponds
-to `first'.  Numbers outside the range will be mapped to the closest
-extreme position.  If there was already a piece of ADVICE with the same
-name, then the position argument will be ignored and the old advice
-will be overwritten with the new one.
-    If the FUNCTION was not advised already, then its advice info will be
-initialized.  Redefining a piece of advice whose name is part of the cache-id
-will clear the cache."
+
+ADVICE has the form (NAME PROTECTED ENABLED DEFINITION), where
+NAME is the advice name; PROTECTED is a flag specifying whether
+to protect against non-local exits; ENABLED is a flag specifying
+whether to initially enable the advice; and DEFINITION has the
+form (advice . LAMBDA), where LAMBDA is a lambda expression.
+
+If FUNCTION already has a piece of advice with the same name,
+then POSITION is ignored, and the old advice is overwritten with
+the new one.
+
+If FUNCTION already has one or more pieces of advice of the
+specified CLASS, then POSITION determines where the new piece
+goes.  POSITION can either be `first', `last' or a number (where
+0 corresponds to `first', and numbers outside the valid range are
+mapped to the closest extremal position).
+
+If FUNCTION was not advised already, its advice info will be
+initialized.  Redefining a piece of advice whose name is part of
+the cache-id will clear the cache.
+
+See Info node `(elisp)Computed Advice' for detailed documentation."
   (cond ((not (ad-is-advised function))
          (ad-initialize-advice-info function)
 	 (ad-set-advice-info-field
@@ -2673,7 +2685,9 @@ For that it has to be fbound with a non-autoload definition."
       (ad-with-auto-activation-disabled
        (require 'bytecomp)
        (let ((symbol (make-symbol "advice-compilation"))
-	     (byte-compile-warnings byte-compile-warnings))
+	     (byte-compile-warnings byte-compile-warnings)
+             ;; Don't pop up windows showing byte-compiler warnings.
+             (warning-suppress-types '((bytecomp))))
 	 (if (featurep 'cl)
 	     (byte-compile-disable-warning 'cl-functions))
 	 (fset symbol (symbol-function function))
@@ -2781,7 +2795,8 @@ to be accessed, it returns a list with the index and name."
 	   (list (- index (length reqopt-args)) rest-arg)))))
 
 (defun ad-get-argument (arglist index)
-  "Return form to access ARGLIST's actual argument at position INDEX."
+  "Return form to access ARGLIST's actual argument at position INDEX.
+INDEX counts from zero."
   (let ((argument-access (ad-access-argument arglist index)))
     (cond ((consp argument-access)
 	   (ad-element-access
@@ -2789,7 +2804,8 @@ to be accessed, it returns a list with the index and name."
 	  (argument-access))))
 
 (defun ad-set-argument (arglist index value-form)
-  "Return form to set ARGLIST's actual arg at INDEX to VALUE-FORM."
+  "Return form to set ARGLIST's actual arg at INDEX to VALUE-FORM.
+INDEX counts from zero."
   (let ((argument-access (ad-access-argument arglist index)))
     (cond ((consp argument-access)
 	   ;; should this check whether there actually is something to set?
@@ -3085,7 +3101,7 @@ in any of these classes."
 			  (not advised-interactive-form))
 		     ;; Check whether we were called interactively
 		     ;; in order to do proper prompting:
-		     `(if (called-interactively-p)
+		     `(if (called-interactively-p 'any)
 			  (call-interactively ',origname)
 			,(ad-make-mapped-call advised-arglist
 					      orig-arglist

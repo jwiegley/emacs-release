@@ -1,8 +1,8 @@
 This is ../../info/efaq, produced by makeinfo version 4.11 from
 faq.texi.
 
-Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
+2010 Free Software Foundation, Inc.
 Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000 Reuven M. Lerner
 Copyright (C) 1992, 1993 Steven Byrnes
 Copyright (C) 1990, 1991, 1992 Joseph Brian Wells
@@ -36,13 +36,13 @@ File: efaq,  Node: Top,  Next: FAQ notation,  Prev: (dir),  Up: (dir)
 The GNU Emacs FAQ
 *****************
 
-This is the GNU Emacs FAQ, last updated on 29 July 2009.
+This is the GNU Emacs FAQ, last updated on 7 May 2010.
 
    This FAQ is maintained as a part of GNU Emacs.  If you find any
 errors, or have any suggestions, please use `M-x report-emacs-bug' to
 report them.
 
-   This is the version of the FAQ distributed with Emacs 23.1, and
+   This is the version of the FAQ distributed with Emacs 23.2, and
 mainly describes that version.  Although there is some information on
 older versions, details about very old releases (now only of historical
 interest) have been removed.  If you are interested in this, consult
@@ -55,8 +55,8 @@ latest release.
    This FAQ is not updated very frequently.  When you have a question
 about Emacs, the Emacs manual is often the best starting point.
 
-   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
-Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
+2010 Free Software Foundation, Inc.
 Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000 Reuven M. Lerner
 Copyright (C) 1992, 1993 Steven Byrnes
 Copyright (C) 1990, 1991, 1992 Joseph Brian Wells
@@ -879,7 +879,7 @@ File: efaq,  Node: Latest version of Emacs,  Next: New in Emacs 23,  Prev: Origi
 4.2 What is the latest version of Emacs?
 ========================================
 
-Emacs 23.1 is the current version as of this writing.  A version number
+Emacs 23.2 is the current version as of this writing.  A version number
 with two components (e.g. `22.1') indicates a released version; three
 components indicate a development version (e.g. `23.0.50' is what will
 eventually become `23.1').
@@ -887,13 +887,15 @@ eventually become `23.1').
    Emacs is under active development, hosted at Savannah
 (http://savannah.gnu.org/projects/emacs/).  The source code can be
 retrieved anonymously following the instructions
-(http://savannah.gnu.org/cvs/?group=emacs).  The primary repository is
-CVS, but Arch and Git mirrors are also available.
+(http://savannah.gnu.org/bzr/?group=emacs).  The repository is GNU
+Bazaar.
 
    Because Emacs undergoes many changes before a release, the version
 number of a development version is not especially meaningful.  It is
 better to refer to the date on which the sources were retrieved from the
-development repository.
+development repository.  The development version is usually quite robust
+for every-day use, but if stability is more important to you than the
+latest features, you may want to stick to the releases.
 
    The following sections list some of the major new features in the
 last few Emacs releases.  For full details of the changes in any
@@ -957,8 +959,8 @@ File: efaq,  Node: New in Emacs 22,  Next: New in Emacs 21,  Prev: New in Emacs 
    * Font Lock mode, Auto Compression mode, and File Name Shadow Mode
      are enabled by default.
 
-   * The maximum size of buffers has been doubled and is 256M on 32-bit
-     machines.
+   * The maximum size of buffers is increased: on 32-bit machines, it is
+     256 MBytes for Emacs 23.1, and 512 MBytes for Emacs 23.2 and above.
 
    * Links can be followed with `mouse-1', in addition to `mouse-2'.
 
@@ -1857,10 +1859,11 @@ File: efaq,  Node: Changing the length of a Tab,  Next: Inserting text at the be
 5.32 How do I change Emacs's idea of the <TAB> character's length?
 ==================================================================
 
-Set the variable `default-tab-width'.  For example, to set <TAB> stops
-every 10 characters, insert the following in your `.emacs' file:
+Set the default value of the variable `tab-width'.  For example, to set
+<TAB> stops every 10 characters, insert the following in your `.emacs'
+file:
 
-     (setq default-tab-width 10)
+     (setq-default tab-width 10)
 
    Do not confuse variable `tab-width' with variable `tab-stop-list'.
 The former is used for the display of literal <TAB> characters.  The
@@ -2261,17 +2264,19 @@ File: efaq,  Node: Escape sequences in shell output,  Next: Fullscreen mode on M
 5.48 Why these strange escape sequences from `ls' from the Shell mode?
 ======================================================================
 
-This happens because `ls' is aliased to `ls --color' in your shell init
-file.  You have two alternatives to solve this:
+In many systems, `ls' is aliased to `ls --color', which prints using
+ANSI color escape sequences.  Emacs version 21.1 and later includes the
+`ansi-color' package, which lets Shell mode recognize these escape
+sequences.  In Emacs 23.2 and later, the package is enabled by default;
+in earlier versions you can enable it by typing `M-x
+ansi-color-for-comint-mode' in the Shell buffer, or by adding
+`(add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)' to your
+init file.
 
-   * Make the alias conditioned on the `EMACS' variable in the
-     environment.  When Emacs runs a subsidiary shell, it exports the
-     `EMACS' variable to that shell, with value equal to the absolute
-     file name of Emacs.  You can unalias `ls' when that happens, thus
-     limiting the alias to your interactive sessions.
-
-   * Install the `ansi-color' package (bundled with Emacs 21.1 and
-     later), which converts these ANSI escape sequences into colors.
+   In Emacs versions before 21.1, the `ansi-color' package is not
+included.  In that case, you need to unalias `ls' for interactive
+shells running in Emacs; this can be done by checking the `EMACS'
+variable in the environment.
 
 
 File: efaq,  Node: Fullscreen mode on MS-Windows,  Prev: Escape sequences in shell output,  Up: Common requests
@@ -2333,8 +2338,8 @@ File: efaq,  Node: Problems with very large files,  Next: ^M in the shell buffer
 Old versions (i.e., anything before 19.29) of Emacs had problems editing
 files larger than 8 megabytes.  In versions 19.29 and later, the maximum
 buffer size is at least 2^27-1, or 134,217,727 bytes, or 132 MBytes.
-And in Emacs 22, the maximum buffer size has been increased to
-268,435,455 bytes (or 256 MBytes) on 32-bit machines.
+The maximum buffer size on 32-bit machines increased to 256 MBytes in
+Emacs 22, and again to 512 MBytes in Emacs 23.2.
 
    Emacs compiled on a 64-bit machine can handle much larger buffers.
 
@@ -2973,7 +2978,7 @@ File: efaq,  Node: VM,  Next: AUCTeX,  Up: Major packages and programs
 =========================================================================
 
 Web site
-     `http://www.nongnu.org/viewmail/'
+     `http://launchpad.net/vm' (was `http://www.nongnu.org/viewmail/')
 
 Informational newsgroup
      `news:gnu.emacs.vm.info'
@@ -3945,8 +3950,6 @@ Concept Index
                                                                (line 22)
 * Arabic alphabets:                      Right-to-left alphabets.
                                                                (line  6)
-* Arch repository, Emacs:                Latest version of Emacs.
-                                                               (line  6)
 * Archived postings from gnu.emacs.help: Newsgroup archives.   (line  6)
 * Arrow keys, symbols generated by:      Working with function and arrow keys.
                                                                (line  6)
@@ -3972,6 +3975,8 @@ Concept Index
 * Backups, disabling:                    Disabling backups.    (line  6)
 * Basic editing with Emacs:              Basic editing.        (line  6)
 * Basic keys:                            Basic keys.           (line  6)
+* Bazaar repository, Emacs:              Latest version of Emacs.
+                                                               (line  6)
 * BBDB:                                  BBDB.                 (line  6)
 * Beeping, turning off:                  Turning off beeping.  (line  6)
 * Beginning editing:                     Basic editing.        (line  6)
@@ -4055,8 +4060,6 @@ Concept Index
                                                                (line  6)
 * Customizing faces:                     Using Customize.      (line  6)
 * Customizing variables:                 Using Customize.      (line  6)
-* CVS repository, Emacs:                 Latest version of Emacs.
-                                                               (line  6)
 * Daemon mode:                           New in Emacs 23.      (line 17)
 * Database:                              EDB.                  (line  6)
 * Debugging .emacs file <1>:             Errors with init files.
@@ -4066,8 +4069,6 @@ Concept Index
 * Decoration level, in font-lock-mode:   Turning on syntax highlighting.
                                                                (line 34)
 * Default features:                      New in Emacs 23.      (line  6)
-* default-tab-width:                     Changing the length of a Tab.
-                                                               (line  6)
 * DEL key does not delete:               Backspace invokes help.
                                                                (line  6)
 * delete-selection-mode:                 Replacing highlighted text.
@@ -4249,8 +4250,6 @@ Concept Index
 * Generating control characters:         Producing C-XXX with the keyboard.
                                                                (line  6)
 * Getting help:                          Getting help.         (line  6)
-* Git repository, Emacs:                 Latest version of Emacs.
-                                                               (line  6)
 * GNU mailing lists:                     Guidelines for newsgroup postings.
                                                                (line  6)
 * GNU newsgroups, appropriate messages for: Guidelines for newsgroup postings.
@@ -4775,157 +4774,157 @@ Concept Index
 
 
 Tag Table:
-Node: Top1400
-Node: FAQ notation3878
-Node: Basic keys4335
-Ref: Basic keys-Footnote-16230
-Node: Extended commands6312
-Node: Emacs manual7347
-Node: File-name conventions8330
-Node: Common acronyms9735
-Node: General questions10702
-Node: The LPF11147
-Node: Real meaning of copyleft11460
-Node: Guidelines for newsgroup postings12773
-Node: Newsgroup archives14267
-Node: Reporting bugs15219
-Node: Unsubscribing from Emacs lists17330
-Node: Contacting the FSF17856
-Node: Getting help18505
-Node: Basic editing18989
-Node: Learning how to do something20095
-Node: Getting a printed manual22745
-Node: Emacs Lisp documentation23605
-Node: Installing Texinfo documentation24362
-Node: Printing a Texinfo file28077
-Node: Viewing Info files outside of Emacs29426
-Node: Informational files for Emacs30034
-Node: Help installing Emacs31351
-Node: Obtaining the FAQ31898
-Node: Status of Emacs32434
-Node: Origin of the term Emacs32810
-Node: Latest version of Emacs34076
-Node: New in Emacs 2335368
-Node: New in Emacs 2236835
-Node: New in Emacs 2139864
-Node: New in Emacs 2040698
-Node: Common requests41459
-Node: Setting up a customization file43170
-Node: Using Customize44335
-Node: Colors on a TTY45112
-Node: Debugging a customization file46047
-Node: Displaying the current line or column46954
-Node: Displaying the current file name in the titlebar48347
-Node: Turning on abbrevs by default49511
-Node: Associating modes with files50319
-Node: Highlighting a region51268
-Node: Replacing highlighted text51694
-Node: Controlling case sensitivity52592
-Node: Working with unprintable characters53497
-Node: Searching for/replacing newlines55096
-Node: Yanking text in isearch55499
-Node: Wrapping words automatically55837
-Node: Turning on auto-fill by default56307
-Node: Changing load-path57004
-Node: Using an already running Emacs process57478
-Node: Compiler error messages59888
-Node: Indenting switch statements60240
-Node: Customizing C and C++ indentation60834
-Node: Horizontal scrolling63429
-Node: Overwrite mode64105
-Node: Turning off beeping64593
-Node: Turning the volume down65159
-Node: Automatic indentation65854
-Node: Matching parentheses67589
-Node: Hiding #ifdef lines69223
-Node: Repeating commands69698
-Node: Valid X resources70826
-Node: Evaluating Emacs Lisp code71314
-Node: Changing the length of a Tab72778
-Node: Inserting text at the beginning of each line73483
-Node: Forcing the cursor to remain in the same column74532
-Node: Forcing Emacs to iconify itself75154
-Node: Using regular expressions75529
-Node: Replacing text across multiple files76523
-Node: Documentation for etags77668
-Node: Disabling backups78062
-Node: Disabling auto-save-mode79533
-Node: Going to a line by number80425
-Node: Modifying pull-down menus81884
-Node: Deleting menus and menu options85014
-Node: Turning on syntax highlighting85728
-Node: Scrolling only one line88521
-Node: Editing MS-DOS files89210
-Node: Filling paragraphs with a single space89996
-Node: Escape sequences in shell output90408
-Node: Fullscreen mode on MS-Windows91300
-Node: Bugs and problems92126
-Node: Problems with very large files93158
-Node: ^M in the shell buffer93801
-Node: Problems with Shell Mode95592
-Node: Termcap/Terminfo entries for Emacs96267
-Node: Errors with init files97477
-Node: Emacs ignores X resources98297
-Node: Emacs ignores frame parameters100103
-Node: Editing files with $ in the name100946
-Node: Shell mode loses the current directory101385
-Node: Security risks with Emacs102315
-Node: Dired claims that no file is on this line106164
-Node: Compiling and installing Emacs107093
-Node: Installing Emacs107351
-Node: Problems building Emacs109688
-Node: Finding Emacs and related packages110365
-Node: Finding Emacs on the Internet110906
-Node: Finding a package with particular functionality111447
-Node: Packages that do not come with Emacs112617
-Node: Current GNU distributions113758
-Node: Difference between Emacs and XEmacs114228
-Node: Emacs for minimalists115915
-Node: Emacs for MS-DOS116517
-Node: Emacs for MS-Windows117567
-Node: Emacs for GNUstep117947
-Node: Emacs for Mac OS X118280
-Node: Major packages and programs118589
-Node: VM118860
-Node: AUCTeX119392
-Node: BBDB120131
-Node: Spell-checkers120434
-Node: Emacs/W3120785
-Node: EDB121044
-Node: JDEE121326
-Node: Key bindings121585
-Node: Binding keys to commands122238
-Node: Invalid prefix characters124343
-Node: Terminal setup code works after Emacs has begun125187
-Node: Working with function and arrow keys126569
-Node: X key translations for Emacs127106
-Node: Backspace invokes help127902
-Node: Swapping keys131693
-Node: Producing C-XXX with the keyboard132946
-Node: No Meta key133565
-Node: No Escape key134100
-Node: Compose Character134661
-Node: Binding combinations of modifiers and function keys135154
-Node: Meta key does not work in xterm136386
-Node: ExtendChar key does not work as Meta138559
-Node: SPC no longer completes file names139469
-Node: Alternate character sets140190
-Node: Emacs does not display 8-bit characters140485
-Node: Inputting eight-bit characters141266
-Node: Right-to-left alphabets141724
-Node: How to add fonts142278
-Node: Mail and news146742
-Node: Changing the included text prefix147288
-Node: Saving a copy of outgoing mail147967
-Node: Expanding aliases when sending mail148901
-Node: Sorting the messages in an Rmail folder150054
-Node: Rmail writes to /var/spool/mail150416
-Node: Replying to the sender of a message151207
-Node: Automatically starting a mail or news reader152291
-Node: Reading news with Emacs153025
-Node: Gnus does not work with NNTP153407
-Node: Making Gnus faster154214
-Node: Catching up in all newsgroups154865
-Node: Concept index155240
+Node: Top1406
+Node: FAQ notation3888
+Node: Basic keys4345
+Ref: Basic keys-Footnote-16240
+Node: Extended commands6322
+Node: Emacs manual7357
+Node: File-name conventions8340
+Node: Common acronyms9745
+Node: General questions10712
+Node: The LPF11157
+Node: Real meaning of copyleft11470
+Node: Guidelines for newsgroup postings12783
+Node: Newsgroup archives14277
+Node: Reporting bugs15229
+Node: Unsubscribing from Emacs lists17340
+Node: Contacting the FSF17866
+Node: Getting help18515
+Node: Basic editing18999
+Node: Learning how to do something20105
+Node: Getting a printed manual22755
+Node: Emacs Lisp documentation23615
+Node: Installing Texinfo documentation24372
+Node: Printing a Texinfo file28087
+Node: Viewing Info files outside of Emacs29436
+Node: Informational files for Emacs30044
+Node: Help installing Emacs31361
+Node: Obtaining the FAQ31908
+Node: Status of Emacs32444
+Node: Origin of the term Emacs32820
+Node: Latest version of Emacs34086
+Node: New in Emacs 2335507
+Node: New in Emacs 2236974
+Node: New in Emacs 2140062
+Node: New in Emacs 2040896
+Node: Common requests41657
+Node: Setting up a customization file43368
+Node: Using Customize44533
+Node: Colors on a TTY45310
+Node: Debugging a customization file46245
+Node: Displaying the current line or column47152
+Node: Displaying the current file name in the titlebar48545
+Node: Turning on abbrevs by default49709
+Node: Associating modes with files50517
+Node: Highlighting a region51466
+Node: Replacing highlighted text51892
+Node: Controlling case sensitivity52790
+Node: Working with unprintable characters53695
+Node: Searching for/replacing newlines55294
+Node: Yanking text in isearch55697
+Node: Wrapping words automatically56035
+Node: Turning on auto-fill by default56505
+Node: Changing load-path57202
+Node: Using an already running Emacs process57676
+Node: Compiler error messages60086
+Node: Indenting switch statements60438
+Node: Customizing C and C++ indentation61032
+Node: Horizontal scrolling63627
+Node: Overwrite mode64303
+Node: Turning off beeping64791
+Node: Turning the volume down65357
+Node: Automatic indentation66052
+Node: Matching parentheses67787
+Node: Hiding #ifdef lines69421
+Node: Repeating commands69896
+Node: Valid X resources71024
+Node: Evaluating Emacs Lisp code71512
+Node: Changing the length of a Tab72976
+Node: Inserting text at the beginning of each line73694
+Node: Forcing the cursor to remain in the same column74743
+Node: Forcing Emacs to iconify itself75365
+Node: Using regular expressions75740
+Node: Replacing text across multiple files76734
+Node: Documentation for etags77879
+Node: Disabling backups78273
+Node: Disabling auto-save-mode79744
+Node: Going to a line by number80636
+Node: Modifying pull-down menus82095
+Node: Deleting menus and menu options85225
+Node: Turning on syntax highlighting85939
+Node: Scrolling only one line88732
+Node: Editing MS-DOS files89421
+Node: Filling paragraphs with a single space90207
+Node: Escape sequences in shell output90619
+Node: Fullscreen mode on MS-Windows91628
+Node: Bugs and problems92454
+Node: Problems with very large files93486
+Node: ^M in the shell buffer94131
+Node: Problems with Shell Mode95922
+Node: Termcap/Terminfo entries for Emacs96597
+Node: Errors with init files97807
+Node: Emacs ignores X resources98627
+Node: Emacs ignores frame parameters100433
+Node: Editing files with $ in the name101276
+Node: Shell mode loses the current directory101715
+Node: Security risks with Emacs102645
+Node: Dired claims that no file is on this line106494
+Node: Compiling and installing Emacs107423
+Node: Installing Emacs107681
+Node: Problems building Emacs110018
+Node: Finding Emacs and related packages110695
+Node: Finding Emacs on the Internet111236
+Node: Finding a package with particular functionality111777
+Node: Packages that do not come with Emacs112947
+Node: Current GNU distributions114088
+Node: Difference between Emacs and XEmacs114558
+Node: Emacs for minimalists116245
+Node: Emacs for MS-DOS116847
+Node: Emacs for MS-Windows117897
+Node: Emacs for GNUstep118277
+Node: Emacs for Mac OS X118610
+Node: Major packages and programs118919
+Node: VM119190
+Node: AUCTeX119754
+Node: BBDB120493
+Node: Spell-checkers120796
+Node: Emacs/W3121147
+Node: EDB121406
+Node: JDEE121688
+Node: Key bindings121947
+Node: Binding keys to commands122600
+Node: Invalid prefix characters124705
+Node: Terminal setup code works after Emacs has begun125549
+Node: Working with function and arrow keys126931
+Node: X key translations for Emacs127468
+Node: Backspace invokes help128264
+Node: Swapping keys132055
+Node: Producing C-XXX with the keyboard133308
+Node: No Meta key133927
+Node: No Escape key134462
+Node: Compose Character135023
+Node: Binding combinations of modifiers and function keys135516
+Node: Meta key does not work in xterm136748
+Node: ExtendChar key does not work as Meta138921
+Node: SPC no longer completes file names139831
+Node: Alternate character sets140552
+Node: Emacs does not display 8-bit characters140847
+Node: Inputting eight-bit characters141628
+Node: Right-to-left alphabets142086
+Node: How to add fonts142640
+Node: Mail and news147104
+Node: Changing the included text prefix147650
+Node: Saving a copy of outgoing mail148329
+Node: Expanding aliases when sending mail149263
+Node: Sorting the messages in an Rmail folder150416
+Node: Rmail writes to /var/spool/mail150778
+Node: Replying to the sender of a message151569
+Node: Automatically starting a mail or news reader152653
+Node: Reading news with Emacs153387
+Node: Gnus does not work with NNTP153769
+Node: Making Gnus faster154576
+Node: Catching up in all newsgroups155227
+Node: Concept index155602
 
 End Tag Table

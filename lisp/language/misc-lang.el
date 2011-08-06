@@ -1,7 +1,7 @@
 ;;; misc-lang.el --- support for miscellaneous languages (characters) -*- no-byte-compile: t -*-
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009
+;;   2005, 2006, 2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -49,6 +49,14 @@ and Italian.")))
   :mnemonic ?6
   :charset-list '(iso-8859-6)
   :mime-charset 'iso-8859-6)
+
+(define-coding-system 'windows-1256
+  "windows-1256 (Arabic) encoding (MIME: WINDOWS-1256)"
+  :coding-type 'charset
+  :mnemonic ?A
+  :charset-list '(windows-1256)
+  :mime-charset 'windows-1256)
+(define-coding-system-alias 'cp1256 'windows-1256)
 
 (provide 'misc-lang)
 

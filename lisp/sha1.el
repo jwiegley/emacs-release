@@ -1,7 +1,7 @@
 ;;; sha1.el --- SHA1 Secure Hash Algorithm in Emacs-Lisp
 
 ;; Copyright (C) 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Shuhei KOBAYASHI <shuhei@aqua.ocn.ne.jp>
 ;; Keywords: SHA1, FIPS 180-1
@@ -86,7 +86,9 @@ If this variable is set to nil, use internal function only."
   :group 'sha1)
 
 (defun sha1-string-external (string &optional binary)
-  (let (prog args digest)
+  (let ((default-directory "/") ;; in case otherwise non-existent
+        (process-connection-type nil) ;; pipe
+        prog args digest)
     (if (consp sha1-program)
 	(setq prog (car sha1-program)
 	      args (cdr sha1-program))

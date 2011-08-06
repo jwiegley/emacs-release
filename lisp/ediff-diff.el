@@ -1,7 +1,7 @@
 ;;; ediff-diff.el --- diff-related utilities
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
@@ -1225,8 +1225,7 @@ delimiter regions"))
     (unwind-protect
 	(let ((directory default-directory)
 	      proc)
-	  (save-excursion
-	    (set-buffer buffer)
+	  (with-current-buffer buffer
 	    (erase-buffer)
 	    (setq default-directory directory)
 	    (if (or (memq system-type '(emx ms-dos windows-nt windows-95))
@@ -1283,8 +1282,7 @@ delimiter regions"))
   (if (and (memq (process-status process) '(exit signal))
            (buffer-name (process-buffer process)))
       (progn
-        (save-excursion
-          (set-buffer (process-buffer process))
+        (with-current-buffer (process-buffer process)
           (setq mode-line-process nil))
         (delete-process process))))
 
@@ -1354,8 +1352,7 @@ arguments to `skip-chars-forward'."
 	       ediff-forward-word-function)
 	   ediff-forward-word-function))
 	inbuf-syntax-tbl sv-point diff-string)
-    (save-excursion
-     (set-buffer in-buffer)
+    (with-current-buffer in-buffer
      (setq inbuf-syntax-tbl
 	   (if control-buf
 	       (ediff-with-current-buffer control-buf

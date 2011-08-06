@@ -1,7 +1,7 @@
 ;;; register.el --- register commands for Emacs
 
 ;; Copyright (C) 1985, 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -28,21 +28,25 @@
 ;; pieces of buffer state to named variables.  The entry points are
 ;; documented in the Emacs user's manual.
 
+(declare-function semantic-insert-foreign-tag "semantic/tag" (foreign-tag))
+(declare-function semantic-tag-buffer "semantic/tag" (tag))
+(declare-function semantic-tag-start "semantic/tag" (tag))
+
 ;;; Global key bindings
 
-;;;###autoload (define-key ctl-x-r-map "\C-@" 'point-to-register)
-;;;###autoload (define-key ctl-x-r-map [?\C-\ ] 'point-to-register)
-;;;###autoload (define-key ctl-x-r-map " " 'point-to-register)
-;;;###autoload (define-key ctl-x-r-map "j" 'jump-to-register)
-;;;###autoload (define-key ctl-x-r-map "s" 'copy-to-register)
-;;;###autoload (define-key ctl-x-r-map "x" 'copy-to-register)
-;;;###autoload (define-key ctl-x-r-map "i" 'insert-register)
-;;;###autoload (define-key ctl-x-r-map "g" 'insert-register)
-;;;###autoload (define-key ctl-x-r-map "r" 'copy-rectangle-to-register)
-;;;###autoload (define-key ctl-x-r-map "n" 'number-to-register)
-;;;###autoload (define-key ctl-x-r-map "+" 'increment-register)
-;;;###autoload (define-key ctl-x-r-map "w" 'window-configuration-to-register)
-;;;###autoload (define-key ctl-x-r-map "f" 'frame-configuration-to-register)
+(define-key ctl-x-r-map "\C-@" 'point-to-register)
+(define-key ctl-x-r-map [?\C-\ ] 'point-to-register)
+(define-key ctl-x-r-map " " 'point-to-register)
+(define-key ctl-x-r-map "j" 'jump-to-register)
+(define-key ctl-x-r-map "s" 'copy-to-register)
+(define-key ctl-x-r-map "x" 'copy-to-register)
+(define-key ctl-x-r-map "i" 'insert-register)
+(define-key ctl-x-r-map "g" 'insert-register)
+(define-key ctl-x-r-map "r" 'copy-rectangle-to-register)
+(define-key ctl-x-r-map "n" 'number-to-register)
+(define-key ctl-x-r-map "+" 'increment-register)
+(define-key ctl-x-r-map "w" 'window-configuration-to-register)
+(define-key ctl-x-r-map "f" 'frame-configuration-to-register)
 
 ;;; Code:
 
@@ -135,6 +139,11 @@ delete any existing frames that the frame configuration doesn't mention.
 	  (error "Register access aborted"))
       (find-file (nth 1 val))
       (goto-char (nth 2 val)))
+     ((and (fboundp 'semantic-foreign-tag-p)
+	   semantic-mode
+	   (semantic-foreign-tag-p val))
+      (switch-to-buffer (semantic-tag-buffer val))
+      (goto-char (semantic-tag-start val)))
      (t
       (error "Register doesn't contain a buffer position or configuration")))))
 
@@ -284,6 +293,10 @@ Interactively, second arg is non-nil if prefix arg is supplied."
       (princ val (current-buffer)))
      ((and (markerp val) (marker-position val))
       (princ (marker-position val) (current-buffer)))
+     ((and (fboundp 'semantic-foreign-tag-p)
+	   semantic-mode
+	   (semantic-foreign-tag-p val))
+      (semantic-insert-foreign-tag val))
      (t
       (error "Register does not contain text"))))
   (if (not arg) (exchange-point-and-mark)))

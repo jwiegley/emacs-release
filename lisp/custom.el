@@ -1,7 +1,7 @@
 ;;; custom.el --- tools for declaring and initializing options
 ;;
 ;; Copyright (C) 1996, 1997, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Maintainer: FSF
@@ -57,9 +57,9 @@ Otherwise, VALUE will be evaluated and used as the default binding for
 symbol."
   (unless (default-boundp symbol)
     ;; Use the saved value if it exists, otherwise the standard setting.
-    (set-default symbol (if (get symbol 'saved-value)
-			    (eval (car (get symbol 'saved-value)))
-			  (eval value)))))
+    (set-default symbol (eval (if (get symbol 'saved-value)
+                                  (car (get symbol 'saved-value))
+                                value)))))
 
 (defun custom-initialize-set (symbol value)
   "Initialize SYMBOL based on VALUE.
@@ -70,31 +70,9 @@ if any, or VALUE."
   (unless (default-boundp symbol)
     (funcall (or (get symbol 'custom-set) 'set-default)
 	     symbol
-	     (if (get symbol 'saved-value)
-		 (eval (car (get symbol 'saved-value)))
-	       (eval value)))))
-
-(defun custom-initialize-safe-set (symbol value)
-  "Like `custom-initialize-set', but catches errors.
-If an error occurs during initialization, SYMBOL is set to nil
-and no error is thrown.  This is meant for use in pre-loaded files
-where some variables or functions used to compute VALUE may not yet
-be defined.  You can then re-evaluate VALUE in startup.el, for instance
-using `custom-reevaluate-setting'."
-  (condition-case nil
-      (custom-initialize-set symbol value)
-    (error (set-default symbol nil))))
-
-(defun custom-initialize-safe-default (symbol value)
-  "Like `custom-initialize-default', but catches errors.
-If an error occurs during initialization, SYMBOL is set to nil
-and no error is thrown.  This is meant for use in pre-loaded files
-where some variables or functions used to compute VALUE may not yet
-be defined.  You can then re-evaluate VALUE in startup.el, for instance
-using `custom-reevaluate-setting'."
-  (condition-case nil
-      (custom-initialize-default symbol value)
-    (error (set-default symbol nil))))
+	     (eval (if (get symbol 'saved-value)
+                       (car (get symbol 'saved-value))
+                     value)))))
 
 (defun custom-initialize-reset (symbol value)
   "Initialize SYMBOL based on VALUE.
@@ -130,6 +108,28 @@ For the standard setting, use `set-default'."
 	(t
 	 (set-default symbol (eval value)))))
 
+(defvar custom-delayed-init-variables nil
+  "List of variables whose initialization is pending.")
+
+(defun custom-initialize-delay (symbol value)
+  "Delay initialization of SYMBOL to the next Emacs start.
+This is used in files that are preloaded (or for autoloaded
+variables), so that the initialization is done in the run-time
+context rather than the build-time context.  This also has the
+side-effect that the (delayed) initialization is performed with
+the :set function.
+
+For variables in preloaded files, you can simply use this
+function for the :initialize property.  For autoloaded variables,
+you will also need to add an autoload stanza calling this
+function, and another one setting the standard-value property.
+See `send-mail-function' in sendmail.el for an example."
+  ;; Until the var is actually initialized, it is kept unbound.
+  ;; This seemed to be at least as good as setting it to an arbitrary
+  ;; value like nil (evaluating `value' is not an option because it
+  ;; may have undesirable side-effects).
+  (push symbol custom-delayed-init-variables))
+
 (defun custom-declare-variable (symbol default doc &rest args)
   "Like `defcustom', but SYMBOL and DEFAULT are evaluated as normal arguments.
 DEFAULT should be an expression to evaluate to compute the default value,
@@ -138,7 +138,7 @@ not the default value itself.
 DEFAULT is stored as SYMBOL's standard value, in SYMBOL's property
 `standard-value'.  At the same time, SYMBOL's property `force-value' is
 set to nil, as the value is no longer rogue."
-  (put symbol 'standard-value (list default))
+  (put symbol 'standard-value (purecopy (list default)))
   ;; Maybe this option was rogue in an earlier version.  It no longer is.
   (when (get symbol 'force-value)
     (put symbol 'force-value nil))
@@ -414,14 +414,15 @@ for more information."
 	  (error "Keyword %s is missing an argument" keyword))
 	(setq args (cdr args))
 	(cond ((eq keyword :prefix)
-	       (put symbol 'custom-prefix value))
+	       (put symbol 'custom-prefix (purecopy value)))
 	      (t
 	       (custom-handle-keyword symbol keyword value
 				      'custom-group))))))
   ;; Record the group on the `current' list.
   (let ((elt (assoc load-file-name custom-current-group-alist)))
     (if elt (setcdr elt symbol)
-      (push (cons load-file-name symbol) custom-current-group-alist)))
+      (push (cons (purecopy load-file-name) symbol)
+	    custom-current-group-alist)))
   (run-hooks 'custom-define-hook)
   symbol)
 
@@ -429,7 +430,10 @@ for more information."
   "Declare SYMBOL as a customization group containing MEMBERS.
 SYMBOL does not need to be quoted.
 
-Third arg DOC is the group documentation.
+Third argument DOC is the group documentation.  This should be a short
+description of the group, beginning with a capital and ending with
+a period.  Words other than the first should not be capitalized, if they
+are not usually written so.
 
 MEMBERS should be an alist of the form ((NAME WIDGET)...) where
 NAME is a symbol and WIDGET is a widget for editing that symbol.

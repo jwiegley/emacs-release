@@ -1,7 +1,7 @@
-;;; dired-x.el --- extra Dired functionality -*-byte-compile-dynamic: t;-*-
+;;; dired-x.el --- extra Dired functionality
 
 ;; Copyright (C) 1993, 1994, 1997, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Sebastian Kremer <sk@thp.uni-koeln.de>
 ;;	Lawrence R. Dodd <dodd@roebling.poly.edu>
@@ -208,8 +208,8 @@ The value can be t, nil or something else.
 A value of t means local-variables lists are obeyed;
 nil means they are ignored; anything else means query.
 
-This temporarily overrides the value of `enable-local-variables' when listing
-a directory.  See also `dired-local-variables-file'."
+This temporarily overrides the value of `enable-local-variables' when
+listing a directory.  See also `dired-local-variables-file'."
   :type 'boolean
   :group 'dired-x)
 
@@ -553,7 +553,7 @@ need to match the entire file name.")
 
 ;; \017=^O for Omit - other packages can chose other control characters.
 (defvar dired-omit-marker-char ?\017
-  "Temporary marker used by dired-omit.
+  "Temporary marker used by Dired-Omit.
 Should never be used as marker by the user or other packages.")
 
 (defun dired-omit-startup ()
@@ -595,7 +595,7 @@ This functions works by temporarily binding `dired-marker-char' to
 `dired-omit-marker-char' and calling `dired-do-kill-lines'."
   (interactive "sOmit files (regexp): ")
   (if (and dired-omit-mode
-           (or (interactive-p)
+           (or (called-interactively-p 'interactive)
                (not dired-omit-size-limit)
                (< (buffer-size) dired-omit-size-limit)
 	       (progn
@@ -1017,6 +1017,16 @@ dired."
 	 ;; Optional decompression.
 	 "bunzip2")
 
+   ;; xz'ed archives
+   (list "\\.t\\(ar\\.\\)?xz$"
+	 "unxz -c * | tar xvf -"
+	 ;; Extract files into a separate subdirectory
+	 '(concat "mkdir " (file-name-sans-extension file)
+		  "; unxz -c * | tar -C "
+		  (file-name-sans-extension file) " -xvf -")
+	 ;; Optional decompression.
+	 "unxz")
+
    '("\\.shar\\.Z$" "zcat * | unshar")
    '("\\.shar\\.g?z$" "gunzip -qc * | unshar")
 
@@ -1098,6 +1108,7 @@ dired."
    (list "\\.g?z$" '(concat "gunzip" (if dired-guess-shell-gzip-quiet " -q")))
    (list "\\.dz$" "dictunzip")
    (list "\\.bz2$" "bunzip2")
+   (list "\\.xz$" "unxz")
    (list "\\.Z$" "uncompress"
 	 ;; Optional conversion to gzip format.
 	 '(concat "znew" (if dired-guess-shell-gzip-quiet " -q")
@@ -1209,7 +1220,7 @@ See `dired-guess-shell-alist-user'."
 ;; REDEFINE.
 ;; Redefine dired-aux.el's version:
 (defun dired-read-shell-command (prompt arg files)
-  "Read a dired shell command prompting with PROMPT (using read-shell-command).
+  "Read a dired shell command prompting with PROMPT (using `read-shell-command').
 ARG is the prefix arg and may be used to indicate in the prompt which
 FILES are affected.
 This is an extra function so that you can redefine it."
@@ -1325,7 +1336,7 @@ for more info."
 ;; * `dired-simultaneous-find-file' runs through FILE-LIST decrementing the
 ;;;   list each time.
 ;;;
-;; * If NOSELECT is non-nil then just run `find-file-noselect'  on each
+;; * If NOSELECT is non-nil then just run `find-file-noselect' on each
 ;;;   element of FILE-LIST.
 ;;;
 ;; * If NOSELECT is nil then calculate the `size' of the window for each file
@@ -1640,7 +1651,7 @@ Similarly for `dired-x-find-file-other-window' and `find-file-other-window'.
 Binding direction based on `dired-x-hands-off-my-keys'.
 This function is part of `after-init-hook'."
   (interactive)
-  (if (interactive-p)
+  (if (called-interactively-p 'interactive)
       (setq dired-x-hands-off-my-keys
             (not (y-or-n-p "Bind dired-x-find-file over find-file? "))))
   (cond ((not dired-x-hands-off-my-keys)
@@ -1682,8 +1693,8 @@ or to test if that file exists.  Use minibuffer after snatching filename."
 May create a new window, or reuse an existing one.
 See the function `display-buffer'.
 
-Identical to `find-file-other-window' except when called interactively, with a
-prefix arg \(e.g., \\[universal-argument]\), in which case it guesses filename near point.
+Identical to `find-file-other-window' except when called interactively, with
+a prefix arg \(e.g., \\[universal-argument]\), in which case it guesses filename near point.
 Useful for editing file mentioned in buffer you are viewing,
 or to test if that file exists.  Use minibuffer after snatching filename."
   (interactive (list (read-filename-at-point "Find file: ")))
@@ -1694,8 +1705,8 @@ or to test if that file exists.  Use minibuffer after snatching filename."
 ;; Fixme: This should probably use `thing-at-point'.  -- fx
 (defun dired-filename-at-point ()
   "Get the filename closest to point, but do not change position.
-Has a preference for looking backward when not directly on a symbol.  Not
-perfect - point must be in middle of or end of filename."
+Has a preference for looking backward when not directly on a symbol.
+Not perfect - point must be in middle of or end of filename."
 
   (let ((filename-chars "-.[:alnum:]_/:$+@")
         start end filename prefix)
@@ -1775,7 +1786,7 @@ If `current-prefix-arg' is non-nil, uses name at point as guess."
 
 (defun dired-x-submit-report ()
   "Submit via `reporter.el' a bug report on program.
-Send report on `dired-x-file' version `dired-x-version,' to
+Send report on `dired-x-file' version `dired-x-version', to
 `dired-x-maintainer' at address `dired-x-help-address' listing
 variables `dired-x-variable-list' in the message."
   (interactive)
@@ -1790,6 +1801,11 @@ variables `dired-x-variable-list' in the message."
 
 ;; As Barry Warsaw would say: "This might be useful..."
 (provide 'dired-x)
+
+;; Local Variables:
+;; byte-compile-dynamic: t
+;; generated-autoload-file: "dired.el"
+;; End:
 
 ;; arch-tag: 71a43ba2-7a00-4793-a028-0613dd7765ae
 ;;; dired-x.el ends here

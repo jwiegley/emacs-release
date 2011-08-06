@@ -4,7 +4,7 @@ cc-mode.texi.
 This manual is for CC Mode in Emacs.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -40,7 +40,7 @@ classes etc - there are other packages for that.
    This manual is for CC Mode in Emacs.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -687,7 +687,7 @@ CC Mode contains some useful commands for moving around in C code.
      N is negative, move in the opposite direction.
 
      Note that these two commands have been superseded by
-     `c-subword-mode', which you should use instead.  *Note Subword
+     `subword-mode', which you should use instead.  *Note Subword
      Movement::.  They might be removed from a future release of CC
      Mode.
 
@@ -838,7 +838,7 @@ mode.  If all these modes were enabled, you'd see `C/lahw'(1).
 `M-x c-toggle-auto-hungry-state'(3)
      Toggle both auto-newline and hungry delete minor modes.
 
-`C-c C-w' (`M-x c-subword-mode')
+`C-c C-w' (`M-x subword-mode')
      Toggle subword mode.
 
 `M-x c-toggle-syntactic-indentation'
@@ -1198,10 +1198,10 @@ commands.
 turn on automatically, put the following code in your `.emacs':
 
      (add-hook 'c-mode-common-hook
-               (lambda () (c-subword-mode 1)))
+               (lambda () (subword-mode 1)))
 
-   As a bonus, you can also use `c-subword-mode' in non-CC Mode buffers
-by typing `M-x c-subword-mode'.
+   As a bonus, you can also use `subword-mode' in non-CC Mode buffers
+by typing `M-x subword-mode'.
 
 
 File: ccmode,  Node: Other Commands,  Prev: Subword Movement,  Up: Commands
@@ -1597,9 +1597,10 @@ method, "Top-level commands or the customization interface".
 that takes precedence is the one that appears latest in this list:
 
     Style
+    File Style(2)
     Top-level command or "customization interface"
     Hook
-    File Style
+    File Local Variable setting
 
    Here is a summary of the different ways of writing your configuration
 settings:
@@ -1674,11 +1675,18 @@ Styles
      See *note Styles:: for fuller details on using CC Mode styles and
      how to create them.
 
+File Local Variable setting
+     A "file local variable setting" is a setting which applies to an
+     individual source file.  You put this in a "local variables list",
+     a special block at the end of the source file (*note Specifying
+     File Variables: (emacs)Specifying File Variables.).
+
 File Styles
      A "file style" is a rarely used variant of the "style" mechanism
-     described above, which applies to an individual source file.  To
-     use it, you set certain Emacs local variables in a special block
-     at the end of the source file.  *Note File Styles::.
+     described above, which applies to an individual source file.
+     *Note File Styles::.  You use this by setting certain special
+     variables in a local variables list (*note Specifying File
+     Variables: (emacs)Specifying File Variables.).
 
 Hooks with Styles
      For ultimate flexibility, you can use hooks and styles together.
@@ -1714,6 +1722,10 @@ Hooks with Styles
    ---------- Footnotes ----------
 
    (1) DON'T PANIC!!!  This isn't difficult.
+
+   (2) In earlier versions of CC Mode, a File Style setting took
+precedence over any other setting apart from a File Local Variable
+setting.
 
 
 File: ccmode,  Node: CC Hooks,  Next: Style Variables,  Prev: Config Basics,  Up: Config Basics
@@ -2099,12 +2111,10 @@ per-file basis:
    Note that file style settings (i.e. `c-file-style') are applied
 before file offset settings (i.e. `c-file-offsets')(1).
 
-   If you set any variables, including style variables, by the file
-local variables mechanism, these settings take priority over all other
-settings, even those in your mode hooks (*note CC Hooks::).  If you use
-`c-file-style' or `c-file-offsets' and also explicitly set a style
-variable in a local variable block, the explicit setting will take
-priority.
+   If you set any variable by the file local variables mechanism, that
+setting takes priority over all other settings, even those in your mode
+hooks (*note CC Hooks::).  Any individual setting of a variable will
+override one made through `c-file-style' or `c-file-offsets'.
 
    ---------- Footnotes ----------
 
@@ -6179,7 +6189,6 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * c-snug-do-while:                       Custom Braces.       (line  67)
 * c-submit-bug-report:                   Mailing Lists and Bug Reports.
                                                               (line   6)
-* c-subword-mode:                        Minor Modes.         (line  72)
 * c-toggle-auto-hungry-state:            Minor Modes.         (line  69)
 * c-toggle-auto-newline:                 Minor Modes.         (line  62)
 * c-toggle-electric-state:               Minor Modes.         (line  58)
@@ -6304,7 +6313,7 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * snug-do-while (c-):                    Custom Braces.       (line  67)
 * submit-bug-report (c-):                Mailing Lists and Bug Reports.
                                                               (line   6)
-* subword-mode (c-):                     Minor Modes.         (line  72)
+* subword-mode:                          Minor Modes.         (line  72)
 * tab-to-tab-stop:                       Indentation Commands.
                                                               (line  78)
 * toggle-auto-hungry-state (c-):         Minor Modes.         (line  69)

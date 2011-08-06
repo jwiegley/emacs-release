@@ -1,9 +1,9 @@
 ;;; mule-util.el --- utility functions for mulitilingual environment (mule)
 
 ;; Copyright (C) 1997, 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009
+;;   2005, 2006, 2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 ;; Copyright (C) 2003
@@ -323,7 +323,7 @@ operations such as `find-coding-systems-region'."
      (unwind-protect
 	 (progn ,@body)
        (apply #'set-coding-system-priority ,current)))))
-(put 'with-coding-priority 'lisp-indent-function 1)
+;;;###autoload(put 'with-coding-priority 'lisp-indent-function 1)
 (put 'with-coding-priority 'edebug-form-spec t)
 
 ;;;###autoload

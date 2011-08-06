@@ -1,7 +1,7 @@
 ;;; indent.el --- indentation commands for Emacs
 
-;; Copyright (C) 1985, 1995, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1995, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 
@@ -49,10 +49,17 @@ Don't rebind TAB unless you really need to.")
 If t, hitting TAB always just indents the current line.
 If nil, hitting TAB indents the current line if point is at the left margin
 or in the line's indentation, otherwise it inserts a \"real\" TAB character.
+If `complete', TAB first tries to indent the current line, and if the line
+was already indented, then try to complete the thing at point.
+
 Some programming language modes have their own variable to control this,
 e.g., `c-tab-always-indent', and do not respect this variable."
   :group 'indent
-  :type '(choice (const nil) (const t) (const always)))
+  :type '(choice
+	  (const :tag "Always indent" t)
+	  (const :tag "Indent if inside indentation, else TAB" nil)
+	  (const :tag "Indent, or if already indented complete" complete)))
+
 
 (defun indent-according-to-mode ()
   "Indent line in proper way for current major mode.
@@ -78,8 +85,10 @@ special; we don't actually use them here."
 (defun indent-for-tab-command (&optional arg)
   "Indent line or region in proper way for current major mode or insert a tab.
 Depending on `tab-always-indent', either insert a tab or indent.
-If initial point was within line's indentation, position after
-the indentation.  Else stay at same point in text.
+
+In most major modes, if point was in the current line's indentation,
+it is moved to the first non-whitespace character after indenting;
+otherwise it stays at the same position in the text.
 
 If a prefix argument is given, also rigidly indent the entire
 balanced expression which starts at the beginning of the current
@@ -103,26 +112,32 @@ The function actually called to indent the line is determined by the value of
 		 (eq this-command last-command))))
     (insert-tab arg))
    (t
-    (let ((end-marker
-	   (and arg
-		(save-excursion
-		  (forward-line 0) (forward-sexp) (point-marker))))
-	  (old-indent
-	   (current-indentation)))
+    (let ((old-tick (buffer-chars-modified-tick))
+          (old-point (point))
+	  (old-indent (current-indentation)))
 
       ;; Indent the line.
       (funcall indent-line-function)
 
-      ;; If a prefix argument was given, rigidly indent the following
-      ;; sexp to match the change in the current line's indentation.
-      ;;
-      (when arg
-	(let ((indentation-change (- (current-indentation) old-indent)))
-	  (unless (zerop indentation-change)
-	    (save-excursion
-	      (forward-line 1)
-	      (when (< (point) end-marker)
-		(indent-rigidly (point) end-marker indentation-change))))))))))
+      (cond
+       ;; If the text was already indented right, try completion.
+       ((and (eq tab-always-indent 'complete)
+             (eq old-point (point))
+             (eq old-tick (buffer-chars-modified-tick)))
+        (completion-at-point))
+
+       ;; If a prefix argument was given, rigidly indent the following
+       ;; sexp to match the change in the current line's indentation.
+       (arg
+        (let ((end-marker
+               (save-excursion
+                 (forward-line 0) (forward-sexp) (point-marker)))
+              (indentation-change (- (current-indentation) old-indent)))
+          (save-excursion
+            (forward-line 1)
+            (when (and (not (zerop indentation-change))
+                       (< (point) end-marker))
+              (indent-rigidly (point) end-marker indentation-change))))))))))
 
 (defun insert-tab (&optional arg)
   (let ((count (prefix-numeric-value arg)))

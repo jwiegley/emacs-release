@@ -4,7 +4,7 @@ calc.texi.
 This file documents Calc, the GNU Emacs calculator.
 
 Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009 Free Software Foundation, Inc.
+2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -3147,6 +3147,14 @@ regular expressions work.
      interpreted as `(a/b)*c'.  The default value of
      `calc-multiplication-has-precedence' is `t'.
 
+ -- Variable: calc-undo-length
+     The variable `calc-undo-length' determines the number of undo
+     steps that Calc will keep track of when `calc-quit' is called.  If
+     `calc-undo-length' is a non-negative integer, then this is the
+     number of undo steps that will be preserved; if `calc-undo-length'
+     has any other value, then all undo steps will be preserved.  The
+     default value of `calc-undo-length' is `100'.
+
 
 File: calc,  Node: Reporting Bugs,  Next: Summary,  Prev: Customizing Calc,  Up: Top
 
@@ -3174,7 +3182,7 @@ to work on these, please send a message (using `M-x report-calc-bug')
 so any efforts can be coordinated.
 
    The latest version of Calc is available from Savannah, in the Emacs
-CVS tree.  See `http://savannah.gnu.org/projects/emacs'.
+repository.  See `http://savannah.gnu.org/projects/emacs'.
 
 
 File: calc,  Node: Summary,  Next: Key Index,  Prev: Reporting Bugs,  Up: Top
@@ -4278,6 +4286,7 @@ Index of Key Sequences
 * a <:                                   Logical Operations.  (line  51)
 * a =:                                   Logical Operations.  (line  20)
 * a >:                                   Logical Operations.  (line  51)
+* a ?:                                   Help Commands.       (line   6)
 * a [:                                   Logical Operations.  (line  51)
 * a \:                                   Polynomials.         (line 119)
 * a ]:                                   Logical Operations.  (line  51)
@@ -4320,6 +4329,7 @@ Index of Key Sequences
 * b #:                                   Related Financial Functions.
                                                               (line  21)
 * b %:                                   Percentages.         (line  44)
+* b ?:                                   Help Commands.       (line   6)
 * b a:                                   Binary Functions.    (line  57)
 * b c:                                   Binary Functions.    (line  26)
 * b d:                                   Binary Functions.    (line  71)
@@ -4353,6 +4363,7 @@ Index of Key Sequences
                                                               (line  44)
 * c %:                                   Percentages.         (line  34)
 * c 0-9:                                 Conversions.         (line 101)
+* c ?:                                   Help Commands.       (line   6)
 * c c:                                   Conversions.         (line  81)
 * c d:                                   Conversions.         (line  56)
 * c F:                                   Conversions.         (line  40)
@@ -4410,8 +4421,9 @@ Index of Key Sequences
 * C-x * y:                               Yanking Into Buffers.
                                                               (line  50)
 * C-x * z:                               Invocation Macros.   (line   6)
+* C-xC-t:                                Stack Manipulation.  (line  72)
 * C-y:                                   Yanking Into Stack.  (line   6)
-* D:                                     Undo.                (line  21)
+* D:                                     Undo.                (line  23)
 * d ":                                   Strings.             (line  25)
 * d ,:                                   Grouping Digits.     (line  20)
 * d .:                                   Float Formats.       (line  50)
@@ -4424,6 +4436,7 @@ Index of Key Sequences
 * d <SPC>:                               Basic Commands.      (line  88)
 * d =:                                   Justification.       (line   6)
 * d >:                                   Justification.       (line   6)
+* d ?:                                   Help Commands.       (line   6)
 * d [:                                   Truncating the Stack.
                                                               (line  25)
 * d ]:                                   Truncating the Stack.
@@ -4478,6 +4491,7 @@ Index of Key Sequences
                                                               (line  11)
 * e:                                     Numeric Entry.       (line   6)
 * F:                                     Integer Truncation.  (line  15)
+* f ?:                                   Help Commands.       (line   6)
 * f [:                                   Basic Arithmetic.    (line 227)
 * f ]:                                   Basic Arithmetic.    (line 227)
 * f A:                                   Basic Arithmetic.    (line 175)
@@ -4517,10 +4531,11 @@ Index of Key Sequences
                                                               (line  58)
 * G:                                     Complex Number Functions.
                                                               (line  12)
+* g ?:                                   Help Commands.       (line   6)
 * g A:                                   Managing Curves.     (line  62)
 * g a:                                   Managing Curves.     (line  11)
 * g b:                                   Graphics Options.    (line  13)
-* g C:                                   Devices.             (line 109)
+* g C:                                   Devices.             (line 111)
 * g c:                                   Basic Graphics.      (line  68)
 * g C-l:                                 Graphics Options.    (line  78)
 * g C-r:                                 Graphics Options.    (line  78)
@@ -4534,26 +4549,26 @@ Index of Key Sequences
 * g h:                                   Graphics Options.    (line  45)
 * g H:                                   Managing Curves.     (line  83)
 * g j:                                   Managing Curves.     (line  88)
-* g K:                                   Devices.             (line 144)
+* g K:                                   Devices.             (line 149)
 * g k:                                   Graphics Options.    (line  17)
 * g L:                                   Graphics Options.    (line  74)
 * g l:                                   Graphics Options.    (line  74)
 * g n:                                   Graphics Options.    (line  49)
 * g N:                                   Graphics Options.    (line  22)
-* g O:                                   Devices.             (line  44)
+* g O:                                   Devices.             (line  45)
 * g P:                                   Managing Curves.     (line 126)
 * g p:                                   Managing Curves.     (line  95)
-* g q:                                   Devices.             (line 137)
+* g q:                                   Devices.             (line 142)
 * g R:                                   Graphics Options.    (line  65)
 * g r:                                   Graphics Options.    (line  65)
 * g S:                                   Graphics Options.    (line  98)
 * g s:                                   Graphics Options.    (line  89)
 * g T:                                   Graphics Options.    (line  57)
 * g t:                                   Graphics Options.    (line  57)
-* g V:                                   Devices.             (line 115)
-* g v:                                   Devices.             (line 115)
-* g X:                                   Devices.             (line  96)
-* g x:                                   Devices.             (line  91)
+* g V:                                   Devices.             (line 117)
+* g v:                                   Devices.             (line 117)
+* g X:                                   Devices.             (line  97)
+* g x:                                   Devices.             (line  92)
 * g Z:                                   Graphics Options.    (line  82)
 * g z:                                   Graphics Options.    (line  82)
 * H:                                     Inverse and Hyperbolic.
@@ -4570,6 +4585,8 @@ Index of Key Sequences
 * H a p:                                 Interpolation.       (line  35)
 * H a R:                                 Root Finding.        (line  52)
 * H a S:                                 Multiple Solutions.  (line   6)
+* H a s:                                 Simplifying Formulas.
+                                                              (line   6)
 * H a X:                                 Minimization.        (line   6)
 * h b:                                   Help Commands.       (line  77)
 * H b #:                                 Related Financial Functions.
@@ -4626,10 +4643,15 @@ Index of Key Sequences
                                                               (line  99)
 * H I u S:                               Single-Variable Statistics.
                                                               (line 143)
+* H I V h:                               Building Vectors.    (line  98)
 * H I v h:                               Building Vectors.    (line  98)
 * H I V R:                               Nesting and Fixed Points.
                                                               (line  18)
+* H I v R:                               Nesting and Fixed Points.
+                                                              (line  18)
 * H I V U:                               Nesting and Fixed Points.
+                                                              (line  22)
+* H I v U:                               Nesting and Fixed Points.
                                                               (line  22)
 * H I |:                                 Building Vectors.    (line  28)
 * H j I:                                 Rearranging with Selections.
@@ -4664,17 +4686,29 @@ Index of Key Sequences
 * H u S:                                 Single-Variable Statistics.
                                                               (line 143)
 * h v:                                   Help Commands.       (line  74)
+* H V e:                                 Manipulating Vectors.
+                                                              (line 125)
 * H v e:                                 Manipulating Vectors.
                                                               (line 125)
 * H V H:                                 Manipulating Vectors.
                                                               (line  89)
+* H v H:                                 Manipulating Vectors.
+                                                              (line  89)
+* H V h:                                 Building Vectors.    (line  98)
 * H v h:                                 Building Vectors.    (line  98)
+* H V k:                                 Building Vectors.    (line  98)
 * H v k:                                 Building Vectors.    (line  98)
+* H V l:                                 Manipulating Vectors.
+                                                              (line  11)
 * H v l:                                 Manipulating Vectors.
                                                               (line  11)
 * H V R:                                 Nesting and Fixed Points.
                                                               (line   6)
+* H v R:                                 Nesting and Fixed Points.
+                                                              (line   6)
 * H V U:                                 Nesting and Fixed Points.
+                                                              (line  13)
+* H v U:                                 Nesting and Fixed Points.
                                                               (line  13)
 * H |:                                   Building Vectors.    (line  22)
 * I:                                     Inverse and Hyperbolic.
@@ -4687,6 +4721,8 @@ Index of Key Sequences
 * I a M:                                 Algebraic Manipulation.
                                                               (line 104)
 * I a S:                                 Multiple Solutions.  (line  56)
+* I a s:                                 Simplifying Formulas.
+                                                              (line   6)
 * I B:                                   Logarithmic Functions.
                                                               (line  22)
 * I b #:                                 Related Financial Functions.
@@ -4744,12 +4780,20 @@ Index of Key Sequences
                                                               (line 130)
 * I V G:                                 Manipulating Vectors.
                                                               (line  53)
+* I v G:                                 Manipulating Vectors.
+                                                              (line  53)
+* I V h:                                 Building Vectors.    (line  87)
 * I v h:                                 Building Vectors.    (line  87)
 * I V R:                                 Reducing.            (line  15)
+* I v R:                                 Reducing.            (line  15)
 * I V S:                                 Manipulating Vectors.
                                                               (line  39)
+* I v S:                                 Manipulating Vectors.
+                                                              (line  39)
+* I V s:                                 Extracting Elements. (line  73)
 * I v s:                                 Extracting Elements. (line  73)
 * I V U:                                 Reducing.            (line  27)
+* I v U:                                 Reducing.            (line  27)
 * I |:                                   Building Vectors.    (line  28)
 * J:                                     Complex Number Functions.
                                                               (line   6)
@@ -4772,6 +4816,7 @@ Index of Key Sequences
                                                               (line  77)
 * j <RET>:                               Operating on Selections.
                                                               (line  83)
+* j ?:                                   Help Commands.       (line   6)
 * j `:                                   Operating on Selections.
                                                               (line  53)
 * j a:                                   Making Selections.   (line  66)
@@ -4813,6 +4858,7 @@ Index of Key Sequences
 * j v:                                   Rearranging with Selections.
                                                               (line 173)
 * K:                                     Keep Arguments.      (line   6)
+* k ?:                                   Help Commands.       (line   6)
 * k a:                                   Random Numbers.      (line  63)
 * k B:                                   Probability Distribution Functions.
                                                               (line  22)
@@ -4859,6 +4905,7 @@ Index of Key Sequences
 * M:                                     Recursion Depth.     (line   6)
 * m (HMS forms):                         HMS Forms.           (line  13)
 * M (modulo forms):                      Modulo Forms.        (line  12)
+* m ?:                                   Help Commands.       (line   6)
 * m A:                                   Simplification Modes.
                                                               (line  48)
 * m a:                                   Algebraic Entry.     (line  28)
@@ -4903,7 +4950,7 @@ Index of Key Sequences
                                                               (line  48)
 * M-%:                                   Percentages.         (line   6)
 * M-<DEL>:                               Stack Manipulation.  (line  33)
-* M-<RET>:                               Undo.                (line  29)
+* M-<RET>:                               Undo.                (line  31)
 * M-<TAB>:                               Stack Manipulation.  (line  49)
 * M-C-w:                                 Killing From Stack.  (line   6)
 * M-k:                                   Killing From Stack.  (line   6)
@@ -4921,6 +4968,7 @@ Index of Key Sequences
 * q:                                     Basic Commands.      (line  77)
 * R:                                     Integer Truncation.  (line  23)
 * r 0-9:                                 Recalling Variables. (line  18)
+* r ?:                                   Help Commands.       (line   6)
 * r i:                                   Inserting From Registers.
                                                               (line   6)
 * r s:                                   Saving Into Registers.
@@ -4938,6 +4986,7 @@ Index of Key Sequences
                                                               (line  90)
 * s =:                                   Evaluates-To Operator.
                                                               (line  22)
+* s ?:                                   Help Commands.       (line   6)
 * s [:                                   Storing Variables.   (line  41)
 * s ]:                                   Storing Variables.   (line  41)
 * s ^:                                   Storing Variables.   (line  41)
@@ -4994,6 +5043,7 @@ Index of Key Sequences
 * t 0-9:                                 Storing Variables.   (line  37)
 * t <:                                   Trail Commands.      (line  36)
 * t >:                                   Trail Commands.      (line  36)
+* t ?:                                   Help Commands.       (line   6)
 * t [:                                   Trail Commands.      (line  47)
 * t ]:                                   Trail Commands.      (line  47)
 * t b:                                   Trail Commands.      (line  40)
@@ -5027,6 +5077,7 @@ Index of Key Sequences
 * u +:                                   Single-Variable Statistics.
                                                               (line  42)
 * u 0-9:                                 User-Defined Units.  (line   9)
+* u ?:                                   Help Commands.       (line   6)
 * u a:                                   Basic Operations on Units.
                                                               (line 138)
 * u b:                                   Basic Operations on Units.
@@ -5061,97 +5112,199 @@ Index of Key Sequences
 * u X:                                   Single-Variable Statistics.
                                                               (line  48)
 * V #:                                   Set Operations.      (line  95)
+* v #:                                   Set Operations.      (line  95)
 * V (:                                   Vector and Matrix Formats.
                                                               (line  17)
+* v (:                                   Vector and Matrix Formats.
+                                                              (line  17)
+* v ):                                   Vector and Matrix Formats.
+                                                              (line  28)
+* V ):                                   Vector and Matrix Formats.
+                                                              (line  28)
 * V +:                                   Set Operations.      (line  34)
+* v +:                                   Set Operations.      (line  34)
 * V ,:                                   Vector and Matrix Formats.
                                                               (line  59)
+* v ,:                                   Vector and Matrix Formats.
+                                                              (line  59)
 * V -:                                   Set Operations.      (line  55)
+* v -:                                   Set Operations.      (line  55)
 * V .:                                   Vector and Matrix Formats.
+                                                              (line  71)
+* v .:                                   Vector and Matrix Formats.
                                                               (line  71)
 * V /:                                   Vector and Matrix Formats.
                                                               (line  86)
+* v /:                                   Vector and Matrix Formats.
+                                                              (line  86)
 * V ::                                   Set Operations.      (line  89)
+* v ::                                   Set Operations.      (line  89)
 * V <:                                   Vector and Matrix Formats.
+                                                              (line  12)
+* v <:                                   Vector and Matrix Formats.
                                                               (line  12)
 * V =:                                   Vector and Matrix Formats.
                                                               (line  12)
+* v =:                                   Vector and Matrix Formats.
+                                                              (line  12)
 * V >:                                   Vector and Matrix Formats.
                                                               (line  12)
+* v >:                                   Vector and Matrix Formats.
+                                                              (line  12)
+* V ?:                                   Help Commands.       (line   6)
+* v ?:                                   Help Commands.       (line   6)
 * V [:                                   Vector and Matrix Formats.
                                                               (line  17)
+* v [:                                   Vector and Matrix Formats.
+                                                              (line  17)
+* v ]:                                   Vector and Matrix Formats.
+                                                              (line  28)
 * V ]:                                   Vector and Matrix Formats.
                                                               (line  28)
 * V ^:                                   Set Operations.      (line  47)
+* v ^:                                   Set Operations.      (line  47)
 * V A:                                   Reducing and Mapping.
                                                               (line   9)
+* v A:                                   Reducing and Mapping.
+                                                              (line   9)
+* V a:                                   Manipulating Vectors.
+                                                              (line  23)
 * v a:                                   Manipulating Vectors.
                                                               (line  23)
+* V b:                                   Building Vectors.    (line  80)
 * v b:                                   Building Vectors.    (line  80)
 * V C:                                   Vector and Matrix Arithmetic.
                                                               (line  38)
+* v C:                                   Vector and Matrix Arithmetic.
+                                                              (line  38)
+* V c:                                   Extracting Elements. (line  44)
 * v c:                                   Extracting Elements. (line  44)
 * V D:                                   Vector and Matrix Arithmetic.
                                                               (line  53)
+* v D:                                   Vector and Matrix Arithmetic.
+                                                              (line  53)
+* V d:                                   Building Vectors.    (line  32)
 * v d:                                   Building Vectors.    (line  32)
 * V E:                                   Set Operations.      (line  84)
+* v E:                                   Set Operations.      (line  84)
+* V e:                                   Manipulating Vectors.
+                                                              (line 115)
 * v e:                                   Manipulating Vectors.
                                                               (line 115)
 * V F:                                   Set Operations.      (line  75)
+* v F:                                   Set Operations.      (line  75)
+* V f:                                   Manipulating Vectors.
+                                                              (line  16)
 * v f:                                   Manipulating Vectors.
                                                               (line  16)
 * V G:                                   Manipulating Vectors.
                                                               (line  53)
+* v G:                                   Manipulating Vectors.
+                                                              (line  53)
 * V H:                                   Manipulating Vectors.
                                                               (line  79)
+* v H:                                   Manipulating Vectors.
+                                                              (line  79)
+* V h:                                   Building Vectors.    (line  87)
 * v h:                                   Building Vectors.    (line  87)
 * V I:                                   Generalized Products.
                                                               (line  14)
+* v I:                                   Generalized Products.
+                                                              (line  14)
+* V i:                                   Building Vectors.    (line  45)
 * v i:                                   Building Vectors.    (line  45)
 * V J:                                   Vector and Matrix Arithmetic.
                                                               (line  16)
+* v J:                                   Vector and Matrix Arithmetic.
+                                                              (line  16)
 * V K:                                   Vector and Matrix Arithmetic.
                                                               (line  67)
+* v K:                                   Vector and Matrix Arithmetic.
+                                                              (line  67)
+* V k:                                   Building Vectors.    (line  92)
 * v k:                                   Building Vectors.    (line  92)
 * V L:                                   Vector and Matrix Arithmetic.
                                                               (line  56)
+* v L:                                   Vector and Matrix Arithmetic.
+                                                              (line  56)
+* V l:                                   Manipulating Vectors.
+                                                              (line   6)
 * v l:                                   Manipulating Vectors.
                                                               (line   6)
 * V M:                                   Mapping.             (line   6)
+* v M:                                   Mapping.             (line   6)
+* V m:                                   Manipulating Vectors.
+                                                              (line 107)
 * v m:                                   Manipulating Vectors.
                                                               (line 107)
 * V N:                                   Vector and Matrix Arithmetic.
                                                               (line  31)
+* v N:                                   Vector and Matrix Arithmetic.
+                                                              (line  31)
+* V n:                                   Vector and Matrix Arithmetic.
+                                                              (line  25)
 * v n:                                   Vector and Matrix Arithmetic.
                                                               (line  25)
 * V O:                                   Generalized Products.
                                                               (line   6)
+* v O:                                   Generalized Products.
+                                                              (line   6)
+* V p:                                   Packing and Unpacking.
+                                                              (line  11)
 * v p:                                   Packing and Unpacking.
                                                               (line  11)
+* V p (complex):                         Complex Number Functions.
+                                                              (line  33)
 * v p (complex):                         Complex Number Functions.
                                                               (line  33)
 * V R:                                   Reducing.            (line   6)
+* v R:                                   Reducing.            (line   6)
+* V r:                                   Extracting Elements. (line   6)
 * v r:                                   Extracting Elements. (line   6)
 * V S:                                   Manipulating Vectors.
                                                               (line  39)
+* v S:                                   Manipulating Vectors.
+                                                              (line  39)
+* V s:                                   Extracting Elements. (line  57)
 * v s:                                   Extracting Elements. (line  57)
 * V T:                                   Vector and Matrix Arithmetic.
                                                               (line  63)
+* v T:                                   Vector and Matrix Arithmetic.
+                                                              (line  63)
+* V t:                                   Manipulating Vectors.
+                                                              (line  96)
 * v t:                                   Manipulating Vectors.
                                                               (line  96)
 * V U:                                   Reducing.            (line  21)
+* v U:                                   Reducing.            (line  21)
+* V u:                                   Packing and Unpacking.
+                                                              (line 124)
 * v u:                                   Packing and Unpacking.
                                                               (line 124)
+* V u (complex):                         Complex Number Functions.
+                                                              (line  39)
 * v u (complex):                         Complex Number Functions.
                                                               (line  39)
 * V V:                                   Set Operations.      (line  42)
+* v V:                                   Set Operations.      (line  42)
+* V v:                                   Manipulating Vectors.
+                                                              (line 101)
 * v v:                                   Manipulating Vectors.
                                                               (line 101)
 * V X:                                   Set Operations.      (line  65)
+* v X:                                   Set Operations.      (line  65)
+* V x:                                   Building Vectors.    (line  61)
 * v x:                                   Building Vectors.    (line  61)
 * V {:                                   Vector and Matrix Formats.
                                                               (line  17)
+* v {:                                   Vector and Matrix Formats.
+                                                              (line  17)
+* v }:                                   Vector and Matrix Formats.
+                                                              (line  28)
+* V }:                                   Vector and Matrix Formats.
+                                                              (line  28)
 * V ~:                                   Set Operations.      (line  70)
+* v ~:                                   Set Operations.      (line  70)
 * w:                                     Error Messages.      (line   6)
 * X:                                     Keyboard Macros.     (line   6)
 * x:                                     Basic Commands.      (line  23)
@@ -5172,6 +5325,8 @@ Index of Key Sequences
                                                               (line  31)
 * Z <:                                   Loops in Macros.     (line   6)
 * Z >:                                   Loops in Macros.     (line   6)
+* Z ?:                                   Help Commands.       (line   6)
+* z ?:                                   Help Commands.       (line   6)
 * Z [:                                   Conditionals in Macros.
                                                               (line   6)
 * Z ]:                                   Conditionals in Macros.

@@ -1,7 +1,7 @@
 ;;; url-util.el --- Miscellaneous helper routines for URL library
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2001, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Bill Perry <wmperry@gnu.org>
 ;; Keywords: comm, data, processes
@@ -26,6 +26,7 @@
 ;;; Code:
 
 (require 'url-parse)
+(require 'url-vars)
 (eval-when-compile (require 'cl))
 (autoload 'timezone-parse-date "timezone")
 (autoload 'timezone-make-date-arpa-standard "timezone")
@@ -140,8 +141,7 @@ Also replaces the \" character, so that the result may be safely used as
     >  ==>  &gt;
     \"  ==>  &quot;"
   (if (string-match "[&<>\"]" string)
-      (save-excursion
-	(set-buffer (get-buffer-create " *entity*"))
+      (with-current-buffer (get-buffer-create " *entity*")
 	(erase-buffer)
 	(buffer-disable-undo (current-buffer))
 	(insert string)

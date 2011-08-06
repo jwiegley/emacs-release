@@ -1,6 +1,6 @@
 ;;; dnd.el --- drag and drop support.
 
-;; Copyright (C) 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Jan Dj,Ad(Brv <jan.h.d@swipnet.se>
 ;; Maintainer: FSF
@@ -35,10 +35,10 @@
 
 ;;;###autoload
 (defcustom dnd-protocol-alist
-  '(("^file:///"  . dnd-open-local-file)	; XDND format.
-    ("^file://"   . dnd-open-file)		; URL with host
-    ("^file:"     . dnd-open-local-file)	; Old KDE, Motif, Sun
-    ("^\\(https?\\|ftp\\|file\\|nfs\\)://" . dnd-open-file)
+  `((,(purecopy "^file:///")  . dnd-open-local-file)	; XDND format.
+    (,(purecopy "^file://")   . dnd-open-file)		; URL with host
+    (,(purecopy "^file:")     . dnd-open-local-file)	; Old KDE, Motif, Sun
+    (,(purecopy "^\\(https?\\|ftp\\|file\\|nfs\\)://") . dnd-open-file)
    )
 
   "The functions to call for different protocols when a drop is made.

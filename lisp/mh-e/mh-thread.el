@@ -1,6 +1,6 @@
 ;;; mh-thread.el --- MH-E threading support
 
-;; Copyright (C) 2002, 2003, 2004, 2006, 2007, 2008, 2009
+;; Copyright (C) 2002, 2003, 2004, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Satyaki Das <satyaki@theforce.stanford.edu>
@@ -647,8 +647,7 @@ Only information about messages in MSG-LIST are added to the tree."
 (defun mh-thread-set-tables (folder)
   "Use the tables of FOLDER in current buffer."
   (flet ((mh-get-table (symbol)
-                       (save-excursion
-                         (set-buffer folder)
+                       (with-current-buffer folder
                          (symbol-value symbol))))
     (setq mh-thread-id-hash (mh-get-table 'mh-thread-id-hash))
     (setq mh-thread-subject-hash (mh-get-table 'mh-thread-subject-hash))

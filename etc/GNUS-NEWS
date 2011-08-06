@@ -1,7 +1,7 @@
 GNUS NEWS -- history of user-visible changes.
 
 Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
 Please send Gnus bug reports to bugs@gnus.org.
@@ -248,6 +248,14 @@ will connect to the news host by way of the intermediate host
 `bar.example.com' from next time.
 
 ** The `all.SCORE' file can be edited from the group buffer using `W e'.
+
+** You can set `gnus-mark-copied-or-moved-articles-as-expirable' to a
+non-`nil' value so that articles that have been read may be marked as
+expirable automatically when copying or moving them to a group that has
+auto-expire turned on.  The default is `nil' and copying and moving of
+articles behave as before; i.e., the expirable marks will be unchanged
+except that the marks will be removed when copying or moving articles to
+a group that has not turned auto-expire on.  *Note Expiring Mail::.
 
 
 

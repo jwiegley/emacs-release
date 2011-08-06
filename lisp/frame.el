@@ -1,7 +1,7 @@
 ;;; frame.el --- multi-frame management independent of window systems
 
 ;; Copyright (C) 1993, 1994, 1996, 1997, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -863,7 +863,7 @@ the user during startup."
 
 (defun select-frame-set-input-focus (frame)
   "Select FRAME, raise it, and set input focus, if possible.
-If `mouse-autoselect-window' is non-nil, also move mouse cursor
+If `mouse-autoselect-window' is non-nil, also move mouse pointer
 to FRAME's selected window.  Otherwise, if `focus-follows-mouse'
 is non-nil, move mouse cursor to FRAME."
   (select-frame frame)
@@ -1027,7 +1027,16 @@ is given and non-nil, the unwanted frames are iconified instead."
 
 (defun frame-height (&optional frame)
   "Return number of lines available for display on FRAME.
-If FRAME is omitted, describe the currently selected frame."
+If FRAME is omitted, describe the currently selected frame.
+Exactly what is included in the return value depends on the
+window-system and toolkit in use - see `frame-pixel-height' for
+more details.  The lines are in units of the default font height.
+
+The result is roughly related to the frame pixel height via
+height in pixels = height in lines * `frame-char-height'.
+However, this is only approximate, and is complicated e.g. by the
+fact that individual window lines and menu bar lines can have
+differing font heights."
   (cdr (assq 'height (frame-parameters frame))))
 
 (defun frame-width (&optional frame)
@@ -1516,6 +1525,7 @@ left untouched.  FRAME nil or omitted means use the selected frame."
   "Non-nil means highlight trailing whitespace.
 This is done in the face `trailing-whitespace'."
   :type 'boolean
+  :safe 'booleanp
   :group 'whitespace-faces)
 
 
@@ -1605,7 +1615,7 @@ cursor display.  On a text-only terminal, this is not implemented."
 		       no-blinking-cursor
 		       (eq system-type 'ms-dos)
 		       (not (memq window-system '(x w32)))))
-  :initialize 'custom-initialize-safe-default
+  :initialize 'custom-initialize-delay
   :group 'cursor
   :global t
   (if blink-cursor-idle-timer (cancel-timer blink-cursor-idle-timer))

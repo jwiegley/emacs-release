@@ -1,7 +1,7 @@
 ;;; mouse-copy.el --- one-click text copy and move
 
 ;; Copyright (C) 1996, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: John Heidemann <johnh@ISI.EDU>
 ;; Keywords: mouse
@@ -200,8 +200,7 @@ by johnh@ficus.cs.ucla.edu."
 		(window-buffer (posn-window (event-start click)))
 	      (current-buffer)))
 	(error "Select or click on the buffer where the secondary selection is")))
-  (save-excursion
-    (set-buffer (overlay-buffer mouse-secondary-overlay))
+  (with-current-buffer (overlay-buffer mouse-secondary-overlay)
     (kill-region (overlay-start mouse-secondary-overlay)
 		 (overlay-end mouse-secondary-overlay)))
   ;; (delete-overlay mouse-secondary-overlay)

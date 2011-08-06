@@ -1,7 +1,7 @@
 ;;; diff.el --- run `diff' in compilation-mode
 
 ;; Copyright (C) 1992, 1994, 1996, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Frank Bresz
 ;; (according to authors.el)
@@ -36,13 +36,13 @@
   :group 'tools)
 
 ;;;###autoload
-(defcustom diff-switches "-c"
+(defcustom diff-switches (purecopy "-c")
   "A string or list of strings specifying switches to be passed to diff."
   :type '(choice string (repeat string))
   :group 'diff)
 
 ;;;###autoload
-(defcustom diff-command "diff"
+(defcustom diff-command (purecopy "diff")
   "The command to use to run diff."
   :type 'string
   :group 'diff)

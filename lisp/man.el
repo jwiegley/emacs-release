@@ -1,7 +1,7 @@
 ;;; man.el --- browse UNIX manual pages -*- coding: iso-8859-1 -*-
 
-;; Copyright (C) 1993, 1994, 1996, 1997, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1994, 1996, 1997, 2001, 2002, 2003, 2004, 2005,
+;;   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Barry A. Warsaw <bwarsaw@cen.com>
 ;; Maintainer: FSF
@@ -84,11 +84,6 @@
 ;;   only.  Is it worth doing?
 ;; - Allow a user option to mean that all the manpages should go in
 ;;   the same buffer, where they can be browsed with M-n and M-p.
-;; - Allow completion on the manpage name when calling man.  This
-;;   requires a reliable list of places where manpages can be found.  The
-;;   drawback would be that if the list is not complete, the user might
-;;   be led to believe that the manpages in the missing directories do
-;;   not exist.
 
 
 ;;; Code:
@@ -103,8 +98,8 @@
 (defgroup man nil
   "Browse UNIX manual pages."
   :prefix "Man-"
+  :group 'external
   :group 'help)
-
 
 (defvar Man-notify)
 (defcustom Man-filter-list nil
@@ -288,7 +283,8 @@ This regular expression should start with a `^' character.")
   "Regular expression for SYNOPSIS heading (or your equivalent).
 This regexp should not start with a `^' character.")
 
-(defvar Man-files-regexp "FILES"
+(defvar Man-files-regexp "FILES\\>"
+  ;; Add \> so as not to match mount(8)'s FILESYSTEM INDEPENDENT MOUNT OPTIONS.
   "Regular expression for FILES heading (or your equivalent).
 This regexp should not start with a `^' character.")
 
@@ -660,7 +656,7 @@ a new value."
 (defun Man-default-man-entry (&optional pos)
   "Guess default manual entry based on the text near position POS.
 POS defaults to `point'."
-  (let (word start pos column distance)
+  (let (word start column distance)
     (save-excursion
       (when pos (goto-char pos))
       (setq pos (point))
@@ -749,28 +745,124 @@ POS defaults to `point'."
 ;;;###autoload
 (defalias 'manual-entry 'man)
 
+(defvar Man-completion-cache nil
+  ;; On my machine, "man -k" is so fast that a cache makes no sense,
+  ;; but apparently that's not the case in all cases, so let's add a cache.
+  "Cache of completion table of the form (PREFIX . TABLE).")
+
+(defun Man-completion-table (string pred action)
+  (cond
+   ((eq action 'lambda)
+    (not (string-match "([^)]*\\'" string)))
+   (t
+    (let ((table (cdr Man-completion-cache))
+          (section nil)
+          (prefix string))
+      (when (string-match "\\`\\([[:digit:]].*?\\) " string)
+        (setq section (match-string 1 string))
+        (setq prefix (substring string (match-end 0))))
+      (unless (and Man-completion-cache
+                   (string-prefix-p (car Man-completion-cache) prefix))
+        (with-temp-buffer
+          (setq default-directory "/") ;; in case inherited doesn't exist
+          ;; Actually for my `man' the arg is a regexp.
+          ;; POSIX says it must be ERE and "man-db" seems to agree,
+          ;; whereas under MacOSX it seems to be BRE-style and doesn't
+          ;; accept backslashes at all.  Let's not bother to
+          ;; quote anything.
+          (let ((process-environment (copy-sequence process-environment)))
+            (setenv "COLUMNS" "999") ;; don't truncate long names
+            ;; manual-program might not even exist.  And since it's
+            ;; run differently in Man-getpage-in-background, an error
+            ;; here may not necessarily mean that we'll also get an
+            ;; error later.
+            (ignore-errors
+              (call-process manual-program nil '(t nil) nil
+                            "-k" (concat "^" prefix))))
+          (goto-char (point-min))
+          (while (re-search-forward "^\\([^ \t\n]+\\)\\(?: ?\\((.+?)\\)\\(?:[ \t]+- \\(.*\\)\\)?\\)?" nil t)
+            (push (propertize (concat (match-string 1) (match-string 2))
+                              'help-echo (match-string 3))
+                  table)))
+        ;; Cache the table for later reuse.
+        (setq Man-completion-cache (cons prefix table)))
+      ;; The table may contain false positives since the match is made
+      ;; by "man -k" not just on the manpage's name.
+      (if section
+          (let ((re (concat "(" (regexp-quote section) ")\\'")))
+            (dolist (comp (prog1 table (setq table nil)))
+              (if (string-match re comp)
+                  (push (substring comp 0 (match-beginning 0)) table)))
+            (completion-table-with-context (concat section " ") table
+                                           prefix pred action))
+        ;; If the current text looks like a possible section name,
+        ;; then add a completion entry that just adds a space so SPC
+        ;; can be used to insert a space.
+        (if (string-match "\\`[[:digit:]]" string)
+            (push (concat string " ") table))
+        (let ((res (complete-with-action action table string pred)))
+          ;; In case we're completing to a single name that exists in
+          ;; several sections, the longest prefix will look like "foo(".
+          (if (and (stringp res)
+                   (string-match "([^(]*\\'" res)
+                   ;; In case the paren was already in `prefix', don't
+                   ;; remove it.
+                   (> (match-beginning 0) (length prefix)))
+              (substring res 0 (match-beginning 0))
+            res)))))))
 
 ;;;###autoload
 (defun man (man-args)
   "Get a Un*x manual page and put it in a buffer.
-This command is the top-level command in the man package.  It runs a Un*x
-command to retrieve and clean a manpage in the background and places the
-results in a Man mode (manpage browsing) buffer.  See variable
-`Man-notify-method' for what happens when the buffer is ready.
-If a buffer already exists for this man page, it will display immediately.
+This command is the top-level command in the man package.  It
+runs a Un*x command to retrieve and clean a manpage in the
+background and places the results in a `Man-mode' browsing
+buffer.  See variable `Man-notify-method' for what happens when
+the buffer is ready.  If a buffer already exists for this man
+page, it will display immediately.
 
-To specify a man page from a certain section, type SUBJECT(SECTION) or
-SECTION SUBJECT when prompted for a manual entry.  To see manpages from
-all sections related to a subject, put something appropriate into the
-`Man-switches' variable, which see."
+For a manpage from a particular section, use either of the
+following.  \"cat(1)\" is how cross-references appear and is
+passed to man as \"1 cat\".
+
+    cat(1)
+    1 cat
+
+To see manpages from all sections related to a subject, use an
+\"all pages\" option (which might be \"-a\" if it's not the
+default), then step through with `Man-next-manpage' (\\<Man-mode-map>\\[Man-next-manpage]) etc.
+Add to `Man-switches' to make this option permanent.
+
+    -a chmod
+
+An explicit filename can be given too.  Use -l if it might
+otherwise look like a page name.
+
+    /my/file/name.1.gz
+    -l somefile.1
+
+An \"apropos\" query with -k gives a buffer of matching page
+names or descriptions.  The pattern argument is usually an
+\"egrep\" style regexp.
+
+    -k pattern"
+
   (interactive
    (list (let* ((default-entry (Man-default-man-entry))
-		(input (read-string
+		;; ignore case because that's friendly for bizarre
+		;; caps things like the X11 function names and because
+		;; "man" itself is case-sensitive on the command line
+		;; so you're accustomed not to bother about the case
+		;; ("man -k" is case-insensitive similarly, so the
+		;; table has everything available to complete)
+		(completion-ignore-case t)
+		(input (completing-read
 			(format "Manual entry%s"
 				(if (string= default-entry "")
 				    ": "
 				  (format " (default %s): " default-entry)))
-			nil 'Man-topic-history default-entry)))
+                        'Man-completion-table
+			nil nil nil 'Man-topic-history default-entry)))
 	   (if (string= input "")
 	       (error "No man args given")
 	     input))))
@@ -811,7 +903,7 @@ all sections related to a subject, put something appropriate into the
 	    ;; We must decode the output by a coding system that the
 	    ;; system's locale suggests in multibyte mode.
 	    (coding-system-for-read
-	     (if default-enable-multibyte-characters
+	     (if (default-value 'enable-multibyte-characters)
 		 locale-coding-system 'raw-text-unix))
 	    ;; Avoid possible error by using a directory that always exists.
 	    (default-directory
@@ -996,6 +1088,11 @@ Same for the ANSI bold and normal escape sequences."
     (while (re-search-forward "[-|]\\(\b[-|]\\)+" nil t)
       (replace-match "+")
       (put-text-property (1- (point)) (point) 'face 'bold))
+    ;; When the header is longer than the manpage name, groff tries to
+    ;; condense it to a shorter line interspered with ^H.  Remove ^H with
+    ;; their preceding chars (but don't put Man-overstrike-face).  (Bug#5566)
+    (goto-char (point-min))
+    (while (re-search-forward ".\b" nil t) (backward-delete-char 2))
     (goto-char (point-min))
     ;; Try to recognize common forms of cross references.
     (Man-highlight-references)
@@ -1083,6 +1180,11 @@ script would have done them."
 	))
   (goto-char (point-min))
   (while (re-search-forward "[-|]\\(\b[-|]\\)+" nil t) (replace-match "+"))
+  ;; When the header is longer than the manpage name, groff tries to
+  ;; condense it to a shorter line interspered with ^H.  Remove ^H with
+  ;; their preceding chars (but don't put Man-overstrike-face).  (Bug#5566)
+  (goto-char (point-min))
+  (while (re-search-forward ".\b" nil t) (backward-delete-char 2))
   (Man-softhyphen-to-minus)
   (message "%s man page cleaned up" Man-arguments))
 
@@ -1111,6 +1213,18 @@ manpage command."
 						  (progn
 						    (end-of-line) (point)))
 		       delete-buff t))
+
+		;; "-k foo", successful exit, but no output (from man-db)
+		;; ENHANCE-ME: share the check for -k with
+		;; `Man-highlight-references'.  The \\s- bits here are
+		;; meant to allow for multiple options with -k among them.
+		((and (string-match "\\(\\`\\|\\s-\\)-k\\s-" Man-arguments)
+		      (eq (process-status process) 'exit)
+		      (= (process-exit-status process) 0)
+		      (= (point-min) (point-max)))
+		 (setq err-mess (format "%s: no matches" Man-arguments)
+		       delete-buff t))
+
 		((or (stringp process)
 		     (not (and (eq (process-status process) 'exit)
 			       (= (process-exit-status process) 0))))
@@ -1402,7 +1516,9 @@ Returns t if section is found, nil otherwise."
 		  (string= chosen ""))
 	      default
 	    chosen)))
-  (Man-find-section (aheadsym Man-sections-alist)))
+  (unless (Man-find-section (aheadsym Man-sections-alist))
+    (error "Section not found")))
+
 
 (defun Man-goto-see-also-section ()
   "Move point to the \"SEE ALSO\" section.

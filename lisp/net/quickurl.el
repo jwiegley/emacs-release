@@ -1,7 +1,7 @@
 ;;; quickurl.el --- insert an URL based on text at point in buffer
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Dave Pearson <davep@davep.org>
 ;; Maintainer: Dave Pearson <davep@davep.org>
@@ -368,7 +368,7 @@ is decided."
     (quickurl-load-urls)
     (let* ((current-url (quickurl-find-url word))
            (add-it      (if current-url
-                            (if (interactive-p)
+                            (if (called-interactively-p 'interactive)
                                 (y-or-n-p (format "\"%s\" exists, replace URL? " word))
                               t)
                           t)))
@@ -382,7 +382,7 @@ is decided."
         (quickurl-save-urls)
         (when (get-buffer quickurl-list-buffer-name)
           (quickurl-list-populate-buffer))
-        (when (interactive-p)
+        (when (called-interactively-p 'interactive)
           (message "Added %s" url))))))
 
 ;;;###autoload

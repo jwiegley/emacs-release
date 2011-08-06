@@ -1,6 +1,6 @@
 /* Asynchronous timers.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -20,6 +20,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <config.h>
 #include <signal.h>
 #include <stdio.h>
+#include <setjmp.h>
 #include <lisp.h>
 #include <syssignal.h>
 #include <systime.h>
@@ -409,6 +410,10 @@ SIGTYPE
 alarm_signal_handler (signo)
      int signo;
 {
+#ifndef SYNC_INPUT
+  SIGNAL_THREAD_CHECK (signo);
+#endif
+
   pending_atimers = 1;
 #ifdef SYNC_INPUT
   pending_signals = 1;

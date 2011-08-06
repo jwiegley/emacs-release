@@ -1,7 +1,7 @@
 ;; erc-button.el --- A way of buttonizing certain things in ERC buffers
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Mario Lang <mlang@delysid.org>
 ;; Keywords: irc, button, url, regexp
@@ -216,6 +216,7 @@ PAR is a number of a regexp grouping whose text will be passed to
       (define-key map (kbd "<mouse-2>") 'erc-button-click-button))
     (define-key map (kbd "TAB") 'erc-button-next)
     (define-key map (kbd "<backtab>") 'erc-button-previous)
+    (define-key map [follow-link] 'mouse-face)
     (set-keymap-parent map erc-mode-map)
     map)
   "Local keymap for ERC buttons.")
@@ -367,16 +368,17 @@ REGEXP is the regular expression which matched for this button."
           (list 'keymap erc-button-keymap)
           (list 'rear-nonsticky t)
           (and data (list 'erc-data data))))
-  (widget-convert-button 'link from to :action 'erc-button-press-button
-                         :suppress-face t
-                         ;; Make XEmacs use our faces.
-                         :button-face (if nick-p
-                                          erc-button-nickname-face
-                                        erc-button-face)
-                         ;; Make XEmacs behave with mouse-clicks, for
-                         ;; some reason, widget stuff overrides the
-                         ;; 'keymap text-property.
-                         :mouse-down-action 'erc-button-click-button))
+  (when (featurep 'xemacs)
+    (widget-convert-button 'link from to :action 'erc-button-press-button
+                           :suppress-face t
+                           ;; Make XEmacs use our faces.
+                           :button-face (if nick-p
+                                            erc-button-nickname-face
+                                          erc-button-face)
+                           ;; Make XEmacs behave with mouse-clicks, for
+                           ;; some reason, widget stuff overrides the
+                           ;; 'keymap text-property.
+                           :mouse-down-action 'erc-button-click-button)))
 
 (defun erc-button-add-face (from to face)
   "Add FACE to the region between FROM and TO."

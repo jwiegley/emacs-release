@@ -1,7 +1,7 @@
 ;;; esh-mode.el --- user interface
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -999,10 +999,10 @@ a key."
       (beginning-of-line)
       (let ((pos (point)))
 	(if (bobp)
-	    (if (interactive-p)
+	    (if (called-interactively-p 'interactive)
 		(message "Buffer too short to truncate"))
 	  (delete-region (point-min) (point))
-	  (if (interactive-p)
+	  (if (called-interactively-p 'interactive)
 	      (message "Truncated buffer from %d to %d lines (%.1fk freed)"
 		       lines eshell-buffer-maximum-lines
 		       (/ pos 1024.0))))))))
@@ -1073,9 +1073,10 @@ This function could be in the list `eshell-output-filter-functions'."
 (custom-add-option 'eshell-output-filter-functions
 		   'eshell-handle-control-codes)
 
+(autoload 'ansi-color-apply-on-region "ansi-color")
+
 (defun eshell-handle-ansi-color ()
   "Handle ANSI color codes."
-  (eval-and-compile (require 'ansi-color))
   (ansi-color-apply-on-region eshell-last-output-start
                               eshell-last-output-end))
 

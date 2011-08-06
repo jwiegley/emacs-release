@@ -1,7 +1,7 @@
 ;;; delim-col.el --- prettify all columns in a region or rectangle
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Maintainer: Vinicius Jose Latorre <viniciusjl@ig.com.br>
@@ -126,7 +126,7 @@
   "Prettify columns."
   :link '(emacs-library-link :tag "Source Lisp File" "delim-col.el")
   :prefix "delimit-columns-"
-  :group 'internal)
+  :group 'wp)
 
 (defcustom delimit-columns-str-before ""
   "Specify a string to be inserted before all columns."

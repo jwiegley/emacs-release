@@ -1,10 +1,10 @@
 ;;; org-attach.el --- Manage file attachments to org-mode tasks
 
-;; Copyright (C) 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@newartisans.com>
 ;; Keywords: org data task
-;; Version: 6.21b
+;; Version: 6.33x
 
 ;; This file is part of GNU Emacs.
 ;;
@@ -26,7 +26,7 @@
 ;; See the Org-mode manual for information on how to use it.
 ;;
 ;; Attachments are managed in a special directory called "data", which
-;; lives in the directory given by `org-directory'.  If this data
+;; lives in the same directory as the org file itself.  If this data
 ;; directory is initialized as a Git repository, then org-attach will
 ;; automatically commit changes when it sees them.
 ;;
@@ -95,7 +95,7 @@ ln    create a hard link.  Note that this is not supported
   "Non-nil means, allow attachment directories be inherited."
   :group 'org-attach
   :type 'boolean)
-  
+
 
 (defvar org-attach-inherited nil
   "Indicates if the last access to the attachment directory was inherited.")
@@ -209,7 +209,7 @@ the directory and (if necessary) the corresponding ID will be created."
 	   attach-dir))))
 
 (defun org-attach-check-absolute-path (dir)
-  "Check if we have enough information to root the atachment directory.
+  "Check if we have enough information to root the attachment directory.
 When DIR is given, check also if it is already absolute.  Otherwise,
 assume that it will be relative, and check if `org-attach-directory' is
 absolute, or if at least the current buffer has a file name.
@@ -217,7 +217,7 @@ Throw an error if we cannot root the directory."
   (or (and dir (file-name-absolute-p dir))
       (file-name-absolute-p org-attach-directory)
       (buffer-file-name (buffer-base-buffer))
-      (error "Need absolute `org-attach-directory' to attach in buffers without filename.")))
+      (error "Need absolute `org-attach-directory' to attach in buffers without filename")))
 
 (defun org-attach-set-directory ()
   "Set the ATTACH_DIR property of the current entry.
@@ -314,7 +314,7 @@ The attachment is created as an Emacs buffer."
   (let* ((attach-dir (org-attach-dir t))
 	 (files (org-attach-file-list attach-dir))
 	 (file (or file
-		   (org-ido-completing-read
+		   (org-icompleting-read
 		    "Delete attachment: "
 		    (mapcar (lambda (f)
 			      (list (file-name-nondirectory f)))
@@ -365,11 +365,11 @@ This ignores files starting with a \".\", and files ending in \"~\"."
 	(mapcar (lambda (x) (if (string-match "^\\." x) nil x))
 		(directory-files dir nil "[^~]\\'"))))
 
-(defun org-attach-reveal ()
+(defun org-attach-reveal (&optional if-exists)
   "Show the attachment directory of the current task in dired."
-  (interactive)
-  (let ((attach-dir (org-attach-dir t)))
-    (org-open-file attach-dir)))
+  (interactive "P")
+  (let ((attach-dir (org-attach-dir (not if-exists))))
+    (and attach-dir (org-open-file attach-dir))))
 
 (defun org-attach-reveal-in-emacs ()
   "Show the attachment directory of the current task.
@@ -389,7 +389,7 @@ If IN-EMACS is non-nil, force opening in Emacs."
 	 (files (org-attach-file-list attach-dir))
 	 (file (if (= (length files) 1)
 		   (car files)
-		 (org-ido-completing-read "Open attachment: "
+		 (org-icompleting-read "Open attachment: "
 				  (mapcar 'list files) nil t))))
     (org-open-file (expand-file-name file attach-dir) in-emacs)))
 

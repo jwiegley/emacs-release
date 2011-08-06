@@ -1,7 +1,7 @@
 ;;; autorevert.el --- revert buffers when files on disk change
 
 ;; Copyright (C) 1997, 1998, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Anders Lindgren <andersl@andersl.com>
 ;; Keywords: convenience
@@ -66,6 +66,7 @@
 ;; change by growing at the end.  It only appends the new output,
 ;; instead of reverting the entire buffer.  It does so even if the
 ;; buffer contains unsaved changes.  (Because they will not be lost.)
+;; Auto Revert Tail Mode works also for remote files.
 
 ;; Usage:
 ;;
@@ -432,13 +433,18 @@ This is an internal function used by Auto-Revert Mode."
     (let* ((buffer (current-buffer)) size
 	   (revert
 	    (or (and buffer-file-name
-		     (not (file-remote-p buffer-file-name))
 		     (file-readable-p buffer-file-name)
 		     (if auto-revert-tail-mode
-			 (/= auto-revert-tail-pos
-			    (setq size
-				  (nth 7 (file-attributes buffer-file-name))))
-		       (not (verify-visited-file-modtime buffer))))
+			 ;; Tramp caches the file attributes.  Setting
+			 ;; `tramp-cache-inhibit' forces Tramp to
+			 ;; reread the values.
+			 (let ((tramp-cache-inhibit-cache t))
+			   (/= auto-revert-tail-pos
+			       (setq size
+				     (nth 7 (file-attributes
+					     buffer-file-name)))))
+		       (and (not (file-remote-p buffer-file-name))
+			    (not (verify-visited-file-modtime buffer)))))
 		(and (or auto-revert-mode
 			 global-auto-revert-non-file-buffers)
 		     revert-buffer-function
@@ -477,7 +483,7 @@ This is an internal function used by Auto-Revert Mode."
       (when (or revert auto-revert-check-vc-info)
 	(vc-find-file-hook)))))
 
-(defun auto-revert-tail-handler (size)  
+(defun auto-revert-tail-handler (size)
   (let ((modified (buffer-modified-p))
 	(inhibit-read-only t)		; Ignore.
 	(file buffer-file-name)

@@ -3,7 +3,7 @@ This is ../../info/cl, produced by makeinfo version 4.11 from cl.texi.
 This file documents the GNU Emacs Common Lisp emulation package.
 
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009  Free Software Foundation, Inc.
+2009, 2010  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -36,7 +36,7 @@ does assume a basic familiarity with Emacs Lisp.
    This file documents the GNU Emacs Common Lisp emulation package.
 
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009  Free Software Foundation, Inc.
+2009, 2010  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -319,7 +319,7 @@ you must use if you need Common Lisp argument lists.
      defined is automatically proclaimed `inline', i.e., calls to it
      may be expanded into in-line code by the byte compiler.  This is
      analogous to the `defsubst' form; `defsubst*' uses a different
-     method (compiler macros) which works in all version of Emacs, and
+     method (compiler macros) which works in all versions of Emacs, and
      also generates somewhat more efficient inline expansions.  In
      particular, `defsubst*' arranges for the processing of keyword
      arguments, default values, etc., to be done at compile-time
@@ -407,14 +407,19 @@ arguments without specifying the optional argument `b' as well, since
 `(foo 1 :c 2)' would bind `b' to the keyword `:c', then signal an error
 because `2' is not a valid keyword.
 
-   If a KEYWORD symbol is explicitly specified in the argument list as
-shown in the above diagram, then that keyword will be used instead of
-just the variable name prefixed with a colon.  You can specify a
-KEYWORD symbol which does not begin with a colon at all, but such
-symbols will not be self-quoting; you will have to quote them
-explicitly with an apostrophe in the function call.
+   You can also explicitly specify the keyword argument; it need not be
+simply the variable name prefixed with a colon.  For example,
 
-   Ordinarily it is an error to pass an unrecognized keyword to a
+     (defun* bar (&key (a 1) ((baz b) 4)))
+
+specifies a keyword `:a' that sets the variable `a' with default value
+1, as well as a keyword `baz' that sets the variable `b' with default
+value 4.  In this case, because `baz' is not self-quoting, you must
+quote it explicitly in the function call, like this:
+
+     (bar :a 10 'baz 42)
+
+   Ordinarily, it is an error to pass an unrecognized keyword to a
 function, e.g., `(foo 1 2 :c 3 :goober 4)'.  You can ask Lisp to ignore
 unrecognized keywords, either by adding the marker `&allow-other-keys'
 after the keyword section of the argument list, or by specifying an
@@ -4627,8 +4632,8 @@ Common Lisp code into Emacs.
      distinct types.
 
    * The Common Lisp Object System (CLOS) is not implemented, nor is
-     the Common Lisp Condition System.  However, the EIEIO package from
-     `ftp://ftp.ultranet.com/pub/zappo' does implement some CLOS
+     the Common Lisp Condition System.  However, the EIEIO package
+     (*note Introduction: (eieio)Top.) does implement some CLOS
      functionality.
 
    * Common Lisp features that are completely redundant with Emacs Lisp
@@ -5394,69 +5399,69 @@ Variable Index
 
 
 Tag Table:
-Node: Top1021
-Node: Overview3259
-Node: Usage6082
-Node: Organization6735
-Node: Installation8561
-Node: Naming Conventions9701
-Node: Program Structure11396
-Node: Argument Lists11813
-Node: Time of Evaluation20880
-Node: Predicates26748
-Node: Type Predicates27057
-Node: Equality Predicates32022
-Node: Control Structure33274
-Node: Assignment34059
-Node: Generalized Variables35304
-Node: Basic Setf36614
-Node: Modify Macros43800
-Node: Customizing Setf51028
-Node: Variable Bindings58329
-Node: Dynamic Bindings58913
-Node: Lexical Bindings59811
-Node: Function Bindings63913
-Node: Macro Bindings67300
-Node: Conditionals70222
-Node: Blocks and Exits72812
-Node: Iteration75826
-Node: Loop Facility81392
-Node: Loop Basics82322
-Node: Loop Examples84930
-Node: For Clauses87196
-Node: Iteration Clauses98501
-Node: Accumulation Clauses100354
-Node: Other Clauses102705
-Node: Multiple Values108781
-Node: Macros110679
-Node: Declarations113899
-Node: Symbols122259
-Node: Property Lists122558
-Node: Creating Symbols125766
-Node: Numbers127824
-Node: Predicates on Numbers128271
-Node: Numerical Functions129308
-Node: Random Numbers133006
-Node: Implementation Parameters135722
-Node: Sequences138999
-Node: Sequence Basics139673
-Node: Mapping over Sequences143232
-Node: Sequence Functions149172
-Node: Searching Sequences154694
-Node: Sorting Sequences157741
-Node: Lists160397
-Node: List Functions160814
-Node: Substitution of Expressions164113
-Node: Lists as Sets166008
-Node: Association Lists169781
-Node: Structures171236
-Node: Assertions185940
-Node: Efficiency Concerns188886
-Node: Common Lisp Compatibility193906
-Node: Old CL Compatibility196754
-Node: Porting Common Lisp201130
-Node: GNU Free Documentation License210292
-Node: Function Index235471
-Node: Variable Index250061
+Node: Top1027
+Node: Overview3271
+Node: Usage6094
+Node: Organization6747
+Node: Installation8573
+Node: Naming Conventions9713
+Node: Program Structure11408
+Node: Argument Lists11825
+Node: Time of Evaluation20975
+Node: Predicates26843
+Node: Type Predicates27152
+Node: Equality Predicates32117
+Node: Control Structure33369
+Node: Assignment34154
+Node: Generalized Variables35399
+Node: Basic Setf36709
+Node: Modify Macros43895
+Node: Customizing Setf51123
+Node: Variable Bindings58424
+Node: Dynamic Bindings59008
+Node: Lexical Bindings59906
+Node: Function Bindings64008
+Node: Macro Bindings67395
+Node: Conditionals70317
+Node: Blocks and Exits72907
+Node: Iteration75921
+Node: Loop Facility81487
+Node: Loop Basics82417
+Node: Loop Examples85025
+Node: For Clauses87291
+Node: Iteration Clauses98596
+Node: Accumulation Clauses100449
+Node: Other Clauses102800
+Node: Multiple Values108876
+Node: Macros110774
+Node: Declarations113994
+Node: Symbols122354
+Node: Property Lists122653
+Node: Creating Symbols125861
+Node: Numbers127919
+Node: Predicates on Numbers128366
+Node: Numerical Functions129403
+Node: Random Numbers133101
+Node: Implementation Parameters135817
+Node: Sequences139094
+Node: Sequence Basics139768
+Node: Mapping over Sequences143327
+Node: Sequence Functions149267
+Node: Searching Sequences154789
+Node: Sorting Sequences157836
+Node: Lists160492
+Node: List Functions160909
+Node: Substitution of Expressions164208
+Node: Lists as Sets166103
+Node: Association Lists169876
+Node: Structures171331
+Node: Assertions186035
+Node: Efficiency Concerns188981
+Node: Common Lisp Compatibility194001
+Node: Old CL Compatibility196849
+Node: Porting Common Lisp201225
+Node: GNU Free Documentation License210381
+Node: Function Index235560
+Node: Variable Index250150
 
 End Tag Table

@@ -1,7 +1,7 @@
 ;;; hexl.el --- edit a file in a hex dump format using the hexl filter
 
 ;; Copyright (C) 1989, 1994, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Keith Gabryelski <ag@wheaties.ai.mit.edu>
 ;; Maintainer: FSF
@@ -42,6 +42,7 @@
 ;;; Code:
 
 (require 'eldoc)
+(eval-when-compile (require 'cl))
 
 ;;
 ;; vars here
@@ -365,8 +366,8 @@ and edit the file in `hexl-mode'."
    (list
     (let ((completion-ignored-extensions nil))
       (read-file-name "Filename: " nil nil 'ret-must-match))))
-  ;; Ignore the user's setting of default-major-mode.
-  (let ((default-major-mode 'fundamental-mode))
+  ;; Ignore the user's setting of default major-mode.
+  (letf (((default-value 'major-mode) 'fundamental-mode))
     (find-file-literally filename))
   (if (not (eq major-mode 'hexl-mode))
       (hexl-mode)))
@@ -447,7 +448,7 @@ Ask the user for confirmation."
 	     (if (>= current-column 41)
 		 (- current-column 41)
 	       (/ (- current-column  (/ current-column 5)) 2))))
-    (when (interactive-p)
+    (when (called-interactively-p 'interactive)
       (message "Current address is %d/0x%08x" hexl-address hexl-address))
     hexl-address))
 
@@ -778,11 +779,11 @@ This discards the buffer's undo information."
 
 (defun hexl-printable-character (ch)
   "Return a displayable string for character CH."
-  (format "%c" (if hexl-iso
-		   (if (or (< ch 32) (and (>= ch 127) (< ch 160)))
+  (format "%c" (if (equal hexl-iso "")
+		   (if (or (< ch 32) (>= ch 127))
 		       46
 		     ch)
-		 (if (or (< ch 32) (>= ch 127))
+		 (if (or (< ch 32) (and (>= ch 127) (< ch 160)))
 		     46
 		   ch))))
 
@@ -795,7 +796,7 @@ and their encoded form is inserted byte by byte."
 	(coding (if (or (null buffer-file-coding-system)
 			;; coding-system-type equals t means undecided.
 			(eq (coding-system-type buffer-file-coding-system) t))
-		    default-buffer-file-coding-system
+		    (default-value 'buffer-file-coding-system)
 		  buffer-file-coding-system)))
     (cond ((and (> ch 0) (< ch 256))
 	   (hexl-insert-char ch num))

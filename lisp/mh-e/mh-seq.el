@@ -1,7 +1,7 @@
 ;;; mh-seq.el --- MH-E sequences support
 
 ;; Copyright (C) 1993, 1995,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
@@ -146,8 +146,7 @@ The list appears in a buffer named \"*MH-E Sequences*\"."
         (seq-list mh-seq-list)
         (max-len 0))
     (with-output-to-temp-buffer temp-buffer
-      (save-excursion
-        (set-buffer temp-buffer)
+      (with-current-buffer temp-buffer
         (erase-buffer)
         (message "Listing sequences ...")
         (insert "Sequences in folder " folder ":\n")

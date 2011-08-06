@@ -1,5 +1,5 @@
 /* Definitions and headers for communication with NeXT/Open/GNUstep API.
-   Copyright (C) 1989, 1993, 2005, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1993, 2005, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -54,7 +54,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 @class EmacsToolbar;
 
-@interface EmacsView : NSView <NSTextInput>
+@interface EmacsView : NSView <NSTextInput> /* 10.6+: NSWindowDelegate */
    {
    char *old_title;
    BOOL windowClosing;
@@ -104,7 +104,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
    ========================================================================== */
 
-@interface EmacsMenu : NSMenu
+@interface EmacsMenu : NSMenu  /* 10.6+: <NSMenuDelegate> */
 {
   struct frame *frame;
   unsigned long keyEquivModMask;
@@ -131,7 +131,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 @class EmacsImage;
 
-@interface EmacsToolbar : NSToolbar
+@interface EmacsToolbar : NSToolbar  /* 10.6+: <NSToolbarDelegate> */
    {
      EmacsView *emacsView;
      NSMutableDictionary *identifierToItem;
@@ -174,7 +174,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 - (Lisp_Object)runDialogAt: (NSPoint)p;
 @end
 
-@interface EmacsTooltip : NSObject
+@interface EmacsTooltip : NSObject  /* 10.6+: <NSWindowDelegate> */
   {
     NSWindow *win;
     NSTextField *textField;
@@ -318,6 +318,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #endif	/* NS_IMPL_COCOA */
 
 extern NSArray *ns_send_types, *ns_return_types;
+extern NSString *ns_app_name;
 extern EmacsMenu *mainMenu, *svcsMenu, *dockMenu;
 
 /* Apple removed the declaration, but kept the implementation */
@@ -328,8 +329,15 @@ extern EmacsMenu *mainMenu, *svcsMenu, *dockMenu;
 #endif
 
 #ifndef NS_HAVE_NSINTEGER
+#if defined(__LP64__) && __LP64__
+typedef double CGFloat;
 typedef long NSInteger;
 typedef unsigned long NSUInteger;
+#else
+typedef float CGFloat;
+typedef int NSInteger;
+typedef unsigned int NSUInteger;
+#endif /* not LP64 */
 #endif /* not NS_HAVE_NSINTEGER */
 
 #endif  /* __OBJC__ */
@@ -700,7 +708,8 @@ extern void nxatoms_of_nsselect ();
 extern int ns_lisp_to_cursor_type ();
 extern Lisp_Object ns_cursor_type_to_lisp (int arg);
 extern Lisp_Object Qnone;
-extern char ns_no_defaults;
+extern void ns_set_name_as_filename (struct frame *f);
+extern void ns_set_doc_edited (struct frame *f, Lisp_Object arg);
 
 extern int
 ns_defined_color (struct frame *f, char *name, XColor *color_def, int alloc,

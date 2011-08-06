@@ -1,6 +1,6 @@
 Emacs TODO List                                                   -*-outline-*-
 
-Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
   Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
@@ -16,8 +16,6 @@ to the FSF.
 suitable for anyone from beginners to experts.
 
 ** Convert modes that use view-mode to be derived from special-mode instead.
-
-** make emacsclient accept -nw as a synonym to -t.
 
 ** Replace some uses of the preprocessor code in Makefile.in with the equivalent autoconf.
 
@@ -42,6 +40,8 @@ This needs a bit of care, since often people have become used to
 expecting such variables to always be defined, eg when they modify
 things in their .emacs.
 
+** See if other files can use generated-autoload-file (see eg ps-print).
+
 * Small but important fixes needed in existing features:
 
 ** Flymake's customization mechanism needs to be both simpler (fewer
@@ -52,12 +52,6 @@ command it will use.
 I suggest totally rewriting that part of Flymake, using the simplest
 mechanism that sufficies for the specific needs.  That will be easy
 for users to customize.
-
-** Make "emacs --daemon" start emacs without showing any frame. 
-Use emacsclient later to open frames.
-
-** Make it possible to reliably turn on minor modes using "mode:" in the local 
-variables section.
 
 ** Compute the list of active keymaps *after* reading the first event.
 
@@ -117,8 +111,6 @@ variables section.
 ** The toolbar should show keyboard equivalents in its tooltips.
 
 ** Add function to redraw the tool bar.
-
-** M-! M-n should fetch the buffer-file-name as the default.
 
 ** Redesign the load-history data structure so it can cope better
   with evaluating definitions of the same function from different files,
@@ -196,9 +188,6 @@ scroll bars are extensible.
   by http://savannah.nongnu.org/projects/emacs-rtf/, which is still in
   very early stages.
 
-** Add a command to make a "Local Variables" section in the current buffer
-  and/or add a variable to the list.
-
 ** Implement primitive and higher-level functions to allow filling
   properly with variable-pitch faces.
 
@@ -207,7 +196,7 @@ scroll bars are extensible.
   posn-at-point and posn-at-x-y should now make it doable in elisp.
 
 ** Implement intelligent search/replace, going beyond query-replace
-  (see http://graphics.csail.mit.edu/~rcm/chi04.pdf).
+  (see http://groups.csail.mit.edu/uid/projects/clustering/chi04.pdf).
 
 ** Implement other text formatting properties.
 *** Footnotes that can appear either in place or at the end of the page.
@@ -363,10 +352,6 @@ typically due to pilot errors and should thus be in debug-ignored-errors.
 
 ** Give desktop.el a feature to switch between different named
   desktops.
-
-** Replace finder.el with something that generates an Info file
-  which gives the same information through a menu structure.  [Dave
-  Love started on this.]
 
 ** Add a cpio mode, more or less like tar mode.
 

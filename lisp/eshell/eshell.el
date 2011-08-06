@@ -1,7 +1,7 @@
 ;;; eshell.el --- the Emacs command shell
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 ;; Version: 2.4.2
@@ -229,11 +229,10 @@
 (require 'esh-mode)
 
 (defgroup eshell nil
-  "Eshell is a command shell implemented entirely in Emacs Lisp.  It
-invokes no external processes beyond those requested by the user.  It
-is intended to be a functional replacement for command shells such as
-bash, zsh, rc, 4dos; since Emacs itself is capable of handling most of
-the tasks accomplished by such tools."
+  "A command shell implemented entirely in Emacs Lisp.
+It invokes no external processes beyond those requested by the
+user, and is intended to be a functional replacement for command
+shells such as bash, zsh, rc, 4dos."
   :tag "The Emacs shell"
   :link '(info-link "(eshell)Top")
   :version "21.1"

@@ -1,7 +1,7 @@
 ;;; apropos.el --- apropos commands for users and programmers
 
 ;; Copyright (C) 1989, 1994, 1995, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Joe Wells <jbw@bigbird.bu.edu>
 ;;	Daniel Pfeiffer <occitan@esperanto.org> (rewrite)
@@ -466,7 +466,7 @@ while a list of strings is used as a word list."
   (apropos-parse-pattern pattern)
   (let ((message
 	 (let ((standard-output (get-buffer-create "*Apropos*")))
-	   (print-help-return-message 'identity))))
+	   (help-print-return-message 'identity))))
     (or do-all (setq do-all apropos-do-all))
     (setq apropos-accumulator
 	  (apropos-internal apropos-regexp
@@ -649,8 +649,19 @@ thus be found in `load-history'."
 		   (apropos-documentation-property
 		    symbol 'widget-documentation t))
 	       (when (facep symbol)
-		 (apropos-documentation-property
-		  symbol 'face-documentation t))
+		 (let ((alias (get symbol 'face-alias)))
+		   (if alias
+		       (if (facep alias)
+			   (format "%slias for the face `%s'."
+				   (if (get symbol 'obsolete-face)
+				       "Obsolete a"
+				     "A")
+				   alias)
+			 ;; Never happens in practice because fails
+			 ;; (facep symbol) test.
+			 "(alias for undefined face)")
+		     (apropos-documentation-property
+		      symbol 'face-documentation t))))
 	       (when (get symbol 'custom-group)
 		   (apropos-documentation-property
 		    symbol 'group-documentation t)))))
@@ -725,8 +736,7 @@ Returns list of symbols and documentation found."
 	(apropos-sort-by-scores apropos-documentation-sort-by-scores)
 	f v sf sv)
     (unwind-protect
-	(save-excursion
-	  (set-buffer standard-input)
+	(with-current-buffer standard-input
 	  (apropos-documentation-check-doc-file)
 	  (if do-all
 	      (mapatoms
@@ -810,7 +820,7 @@ Returns list of symbols and documentation found."
 ;; Finds all documentation related to APROPOS-REGEXP in internal-doc-file-name.
 
 (defun apropos-documentation-check-doc-file ()
-  (let (type symbol (sepa 2) sepb)
+  (let (type symbol (sepa 2) sepb doc)
     (insert ?\^_)
     (backward-char)
     (insert-file-contents (concat doc-directory internal-doc-file-name))
@@ -829,7 +839,14 @@ Returns list of symbols and documentation found."
 			 3)		; variable documentation
 		  symbol (read)
 		  doc (buffer-substring (1+ (point)) (1- sepb)))
-	    (when (apropos-true-hit-doc doc)
+	    (when (and (apropos-true-hit-doc doc)
+                       ;; The DOC file lists all built-in funcs and vars.
+                       ;; If any are not currently bound, they can
+                       ;; only be platform-specific stuff (eg NS) not
+                       ;; in use on the current platform.
+                       ;; So we exclude them.
+                       (cond ((= 3 type) (boundp symbol))
+                             ((= 2 type) (fboundp symbol))))
 	      (or (and (setq apropos-item (assq symbol apropos-accumulator))
 		       (setcar (cdr apropos-item)
 			       (apropos-score-doc doc)))
@@ -965,8 +982,7 @@ If non-nil TEXT is a string that will be printed as a heading."
 	    (insert
 	     "If moving the mouse over text changes the text's color, "
 	     "you can click\n"
-	     "mouse-2 (second button from right) on that text to "
-	     "get more information.\n"))
+	     "or press return on that text to get more information.\n"))
 	(insert "In this buffer, go to the name of the command, or function,"
 		" or variable,\n"
 		(substitute-command-keys
@@ -1104,7 +1120,8 @@ If non-nil TEXT is a string that will be printed as a heading."
 
 (defun apropos-describe-plist (symbol)
   "Display a pretty listing of SYMBOL's plist."
-  (help-setup-xref (list 'apropos-describe-plist symbol) (interactive-p))
+  (help-setup-xref (list 'apropos-describe-plist symbol)
+		   (called-interactively-p 'interactive))
   (with-help-window (help-buffer)
     (set-buffer standard-output)
     (princ "Symbol ")

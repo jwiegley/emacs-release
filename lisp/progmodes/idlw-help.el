@@ -1,6 +1,6 @@
 ;;; idlw-help.el --- HTML Help code for IDLWAVE
 
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 ;;
 ;; Authors: J.D. Smith <jdsmith@as.arizona.edu>
@@ -41,7 +41,7 @@
 
 ;;; Code:
 (defvar idlwave-help-browse-url-available t
-  "Whether browse-url is available")
+  "Whether browse-url is available.")
 
 (require 'browse-url)
 
@@ -58,9 +58,9 @@
   (if idlwave-html-help-pre-v6 "#" "#wp"))
 
 (defcustom idlwave-html-system-help-location   "help/online_help/"
-  "The directory, relative to idlwave-system-directory, where the idl
+  "The directory, relative to `idlwave-system-directory', where the IDL
 HTML help files live, for IDL 6.2 and later.  This location, if found,
-is used in preference to the old idlwave-html-help-location."
+is used in preference to the old `idlwave-html-help-location'."
   :group 'idlwave-online-help
   :type 'directory)
 
@@ -69,7 +69,7 @@ is used in preference to the old idlwave-html-help-location."
       nil
     "/usr/local/etc/")
   "The directory where the idl_html_help/ dir lives.  Obsolete for IDL
-6.2 or later (see idlwave-html-system-help-location)."
+6.2 or later (see `idlwave-html-system-help-location')."
   :group 'idlwave-online-help
   :type 'directory)
 
@@ -82,13 +82,13 @@ is used in preference to the old idlwave-html-help-location."
   :type 'boolean)
 
 (defcustom idlwave-help-browser-function browse-url-browser-function
-  "Function to use to display html help.
+  "Function to use to display HTML help.
 Defaults to `browse-url-browser-function', which see."
   :group 'idlwave-online-help
   :type 'function)
 
 (defcustom idlwave-help-browser-generic-program browse-url-generic-program
-  "Program to run if using browse-url-generic-program."
+  "Program to run if using `browse-url-generic-program'."
   :group 'idlwave-online-help
   :type 'string)
 
@@ -97,7 +97,7 @@ Defaults to `browse-url-browser-function', which see."
 (defcustom idlwave-help-browser-generic-args
   (if (boundp 'browse-url-generic-args)
       browse-url-generic-args "")
-  "Program args to use if using browse-url-generic-program."
+  "Program args to use if using `browse-url-generic-program'."
   :group 'idlwave-online-help
   :type 'string)
 
@@ -112,7 +112,7 @@ must be explicitly set non-nil in order for the variable
   :type 'boolean)
 
 (defvar idlwave-help-directory ""
-  "Obsolete variable.  See idlwave-html-help-location.")
+  "Obsolete variable.  See `idlwave-html-help-location'.")
 
 (defcustom idlwave-help-use-dedicated-frame t
   "*Non-nil means, use a separate frame for Online Help if possible."
@@ -210,10 +210,10 @@ support."
   "The default width of the help frame.")
 
 (defvar idlwave-html-help-is-available nil
-  "Is the system online help text avaiable?")
+  "Is the system online help text available?")
 
 (defvar idlwave-help-mode-line-indicator ""
-  "Used for the special mode line in the idlwave-help-mode.")
+  "Used for the special mode line in the `idlwave-help-mode'.")
 
 (defvar idlwave-help-window-configuration nil)
 (defvar idlwave-help-special-topic-words nil) ; defined by get_rinfo
@@ -221,7 +221,7 @@ support."
 ;; Define the key bindings for the Help application
 
 (defvar idlwave-help-mode-map (make-sparse-keymap)
-  "The keymap used in idlwave-help-mode.")
+  "The keymap used in `idlwave-help-mode'.")
 
 (define-key idlwave-help-mode-map "q" 'idlwave-help-quit)
 (define-key idlwave-help-mode-map "w" 'widen)
@@ -303,7 +303,7 @@ When the hep text is a source file, the following commands are available
 Fontification:      [F]ontify the buffer like source code
 Jump:               [h] to function doclib header
                     [H] to file doclib header
-                    [.] back and forward between header and definition
+                    [.] back and forth between header and definition
 
 Here are all keybindings.
 \\{idlwave-help-mode-map}"
@@ -359,7 +359,7 @@ Here are all keybindings.
       (message "Cannot locate IDL Assistant, enabling default browser.")
       (setq idlwave-help-use-assistant nil)
       (unless idlwave-help-browse-url-available
-	(error "browse-url is not available; install it or IDL Assistant to use HTML help.")))))
+	(error "browse-url is not available; install it or IDL Assistant to use HTML help")))))
 
 
 (defvar idlwave-current-obj_new-class)
@@ -367,7 +367,7 @@ Here are all keybindings.
 (defvar idlwave-experimental)
 (defvar idlwave-last-context-help-pos)
 (defun idlwave-do-context-help (&optional arg)
-  "Wrapper around the call to idlwave-context-help1.
+  "Wrapper around the call to `idlwave-do-context-help1'.
 It collects and prints the diagnostics messages."
   (let ((marker (list (current-buffer) (point)))
 	(idlwave-help-diagnostics nil))
@@ -766,7 +766,7 @@ if passed as a function.  See `idlwave-help-use-dedicated-frame'."
   "Display HTML or other special help on a certain topic.
 Either loads an HTML link, if LINK is non-nil, or gets special-help on
 the optional arguments, if any special help is defined.  If LINK is
-`t', first look up the optional arguments in the routine info list to
+t, first look up the optional arguments in the routine info list to
 see if a link is set for it.  Try extra help functions if necessary."
   ;; Lookup link
   (if (eq link t)
@@ -807,8 +807,7 @@ see if a link is set for it.  Try extra help functions if necessary."
 (defun idlwave-help-get-special-help (name type class keyword)
   "Call the function given by `idlwave-extra-help-function'."
   (let* ((cw (selected-window))
-	 (help-pos (save-excursion
-		     (set-buffer (idlwave-help-get-help-buffer))
+	 (help-pos (with-current-buffer (idlwave-help-get-help-buffer)
 		     (let ((buffer-read-only nil))
 		       (funcall idlwave-extra-help-function
 				name type class keyword)))))
@@ -818,7 +817,7 @@ see if a link is set for it.  Try extra help functions if necessary."
     (select-window cw)))
 
 (defun idlwave-help-html-link (link)
-  "Get html help on a given LINK."
+  "Get HTML help on a given LINK."
   (let ((browse-url-browser-function idlwave-help-browser-function)
 	(help-loc (idlwave-html-help-location))
 	(browse-url-generic-program idlwave-help-browser-generic-program)
@@ -828,7 +827,7 @@ see if a link is set for it.  Try extra help functions if necessary."
     ;; Just a regular file name (+ anchor name)
     (unless (and (stringp help-loc)
 		 (file-directory-p help-loc))
-      (error "Invalid help location."))
+      (error "Invalid help location"))
     (setq full-link (browse-url-file-url (expand-file-name link help-loc)))
 
     ;; Select the browser
@@ -848,14 +847,14 @@ see if a link is set for it.  Try extra help functions if necessary."
 (defvar idlwave-current-tags-buffer)
 (defvar idlwave-current-tags-class)
 (defun idlwave-help-with-source (name type class keyword)
-  "Provide help for routines not documented in the IDL manuals.  Works
-by loading the routine source file into the help buffer.  Depending on
-the value of `idlwave-help-source-try-header', it attempts to show the
-routine definition or the header description.  If
-`idlwave-help-do-class-struct-tag' is non-nil, keyword is a tag to
-show help on from the class definition structure.  If
-`idlwave-help-do-struct-tag' is non-nil, show help from the matching
-structure tag definition.
+  "Provide help for routines not documented in the IDL manuals.
+Works by loading the routine source file into the help buffer.
+Depending on the value of `idlwave-help-source-try-header', it
+attempts to show the routine definition or the header description.
+If `idlwave-help-do-class-struct-tag' is non-nil, keyword is a tag
+to show help on from the class definition structure.
+If `idlwave-help-do-struct-tag' is non-nil, show help from the
+matching structure tag definition.
 
 This function can be used as `idlwave-extra-help-function'."
   (let* ((class-struct-tag idlwave-help-do-class-struct-tag)
@@ -954,7 +953,8 @@ This function can be used as `idlwave-extra-help-function'."
 
 (defun idlwave-help-find-routine-definition (name type class keyword)
   "Find the definition of routine CLASS::NAME in current buffer.
-KEYWORD is ignored. Returns the point of match if successful, nil otherwise."
+Returns the point of match if successful, nil otherwise.
+KEYWORD is ignored."
   (save-excursion
     (goto-char (point-max))
     (if (re-search-backward
@@ -1200,7 +1200,7 @@ Useful when source code is displayed as help.  See the option
 	   "(help location unknown)")))
 
 (defun idlwave-help-show-help-frame ()
-  "Show the help frame, creating it if necessary"
+  "Show the help frame, creating it if necessary."
   ;; Use a special frame for this
   (unless (frame-live-p idlwave-help-frame)
     (setq idlwave-help-frame
@@ -1224,8 +1224,7 @@ Useful when source code is displayed as help.  See the option
     (if buf
 	nil
       (setq buf (get-buffer-create "*IDLWAVE Help*"))
-      (save-excursion
-	(set-buffer buf)
+      (with-current-buffer buf
 	(idlwave-help-mode)))
     buf))
 
@@ -1256,7 +1255,7 @@ Useful when source code is displayed as help.  See the option
   (if (memq system-type '(ms-dos windows-nt))
       "bin/bin.x86/idl_assistant.exe"
     "bin/idl_assistant")
-  "The command, rooted at idlwave-system-directory, which invokes the
+  "The command, rooted at `idlwave-system-directory', which invokes the
 IDL assistant.")
 
 (defun idlwave-help-assistant-available ()
@@ -1295,7 +1294,7 @@ IDL assistant.")
       (unless (accept-process-output idlwave-help-assistant-process 15)
 	(error "Failed binding IDL_ASSISTANT socket"))
       (if (not port)
-	  (error "Unable to open IDL_ASSISTANT.")
+	  (error "Unable to open IDL_ASSISTANT")
 	(set-process-filter idlwave-help-assistant-process nil)
 	(setq idlwave-help-assistant-socket
 	      (open-network-stream "IDL_ASSISTANT_SOCK"
@@ -1320,7 +1319,7 @@ IDL assistant.")
     (if (string-match "\.html" link)
 	(setq topic (substring link 0 (match-beginning 0))
 	      anchor (substring link (match-end 0)))
-      (error "Malformed help link."))
+      (error "Malformed help link"))
 
     (setq file (expand-file-name (concat topic ".html") help-loc))
     (if (file-exists-p file)

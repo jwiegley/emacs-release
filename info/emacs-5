@@ -2,11 +2,11 @@ This is ../../info/emacs, produced by makeinfo version 4.11 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.1.
+updated for Emacs version 23.2.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,6 +25,311 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Emacs: (emacs).	The extensible self-documenting text editor.
 END-INFO-DIR-ENTRY
+
+
+File: emacs,  Node: Subdirectories in Dired,  Next: Subdir Switches,  Prev: Comparison in Dired,  Up: Dired
+
+37.11 Subdirectories in Dired
+=============================
+
+A Dired buffer displays just one directory in the normal case; but you
+can optionally include its subdirectories as well.
+
+   The simplest way to include multiple directories in one Dired buffer
+is to specify the options `-lR' for running `ls'.  (If you give a
+numeric argument when you run Dired, then you can specify these options
+in the minibuffer.)  That produces a recursive directory listing showing
+all subdirectories at all levels.
+
+   More often, you will want to show only specific subdirectories.  You
+can do this with the `i' command:
+
+`i'
+     Insert the contents of a subdirectory later in the buffer.
+
+   Use the `i' (`dired-maybe-insert-subdir') command on a line that
+describes a file which is a directory.  It inserts the contents of that
+directory into the same Dired buffer, and moves there.  Inserted
+subdirectory contents follow the top-level directory of the Dired
+buffer, just as they do in `ls -lR' output.
+
+   If the subdirectory's contents are already present in the buffer, the
+`i' command just moves to it.
+
+   In either case, `i' sets the Emacs mark before moving, so `C-u
+C-<SPC>' takes you back to the old position in the buffer (the line
+describing that subdirectory).  You can also use `^' to return to the
+parent directory in the same Dired buffer.
+
+   Use the `l' command (`dired-do-redisplay') to update the
+subdirectory's contents.  Use `C-u k' on the subdirectory header line
+to delete the subdirectory (*note Dired Updating::).  You can also hide
+and show inserted subdirectories (*note Hiding Subdirectories::).
+
+
+File: emacs,  Node: Subdir Switches,  Next: Subdirectory Motion,  Prev: Subdirectories in Dired,  Up: Dired
+
+37.12 Subdirectory Switches in Dired
+====================================
+
+You can insert subdirectories with specified `ls' switches in Dired
+buffers using `C-u i'.  You can change the `ls' switches of an already
+inserted subdirectory using `C-u l'.
+
+   Dired preserves the switches if you revert the buffer.  Deleting a
+subdirectory forgets about its switches.
+
+   Using `dired-undo' (usually bound to `C-_' and `C-x u') to reinsert
+or delete subdirectories that were inserted with explicit switches can
+bypass Dired's machinery for remembering (or forgetting) switches.
+Deleting a subdirectory using `dired-undo' does not forget its
+switches.  When later reinserted using `i', it will be reinserted using
+its old switches.  Using `dired-undo' to reinsert a subdirectory that
+was deleted using the regular Dired commands (not `dired-undo') will
+originally insert it with its old switches.  Reverting the buffer,
+however, will relist it using the buffer's default switches.  If any of
+this yields problems, you can easily correct the situation using `C-u
+i' or `C-u l'.
+
+   Dired does not remember the `R' switch.  Inserting a subdirectory
+with switches that include the `R' switch is equivalent to inserting
+each of its subdirectories using all remaining switches.  For instance,
+updating or killing a subdirectory that was inserted with the `R'
+switch will not update or kill its subdirectories.
+
+   The buffer's default switches do not affect subdirectories that were
+inserted using explicitly specified switches.  In particular, commands
+such as `s' that change the buffer's switches do not affect such
+subdirectories.  (They do, however, affect subdirectories without
+explicitly assigned switches.)
+
+   You can make Dired forget about all subdirectory switches and relist
+all subdirectories with the buffer's default switches using `M-x
+dired-reset-subdir-switches'.  This also reverts the Dired buffer.
+
+
+File: emacs,  Node: Subdirectory Motion,  Next: Hiding Subdirectories,  Prev: Subdir Switches,  Up: Dired
+
+37.13 Moving Over Subdirectories
+================================
+
+When a Dired buffer lists subdirectories, you can use the page motion
+commands `C-x [' and `C-x ]' to move by entire directories (*note
+Pages::).
+
+   The following commands move across, up and down in the tree of
+directories within one Dired buffer.  They move to "directory header
+lines", which are the lines that give a directory's name, at the
+beginning of the directory's contents.
+
+`C-M-n'
+     Go to next subdirectory header line, regardless of level
+     (`dired-next-subdir').
+
+`C-M-p'
+     Go to previous subdirectory header line, regardless of level
+     (`dired-prev-subdir').
+
+`C-M-u'
+     Go up to the parent directory's header line (`dired-tree-up').
+
+`C-M-d'
+     Go down in the directory tree, to the first subdirectory's header
+     line (`dired-tree-down').
+
+`<'
+     Move up to the previous directory-file line (`dired-prev-dirline').
+     These lines are the ones that describe a directory as a file in its
+     parent directory.
+
+`>'
+     Move down to the next directory-file line (`dired-prev-dirline').
+
+
+File: emacs,  Node: Hiding Subdirectories,  Next: Dired Updating,  Prev: Subdirectory Motion,  Up: Dired
+
+37.14 Hiding Subdirectories
+===========================
+
+"Hiding" a subdirectory means to make it invisible, except for its
+header line.
+
+`$'
+     Hide or show the subdirectory that point is in, and move point to
+     the next subdirectory (`dired-hide-subdir').  This is a toggle.  A
+     numeric argument serves as a repeat count.
+
+`M-$'
+     Hide all subdirectories in this Dired buffer, leaving only their
+     header lines (`dired-hide-all').  Or, if any subdirectory is
+     currently hidden, make all subdirectories visible again.  You can
+     use this command to get an overview in very deep directory trees
+     or to move quickly to subdirectories far away.
+
+   Ordinary Dired commands never consider files inside a hidden
+subdirectory.  For example, the commands to operate on marked files
+ignore files in hidden directories even if they are marked.  Thus you
+can use hiding to temporarily exclude subdirectories from operations
+without having to remove the Dired marks on files in those
+subdirectories.
+
+   *Note Dired Updating::, for how to insert or delete a subdirectory
+listing.
+
+
+File: emacs,  Node: Dired Updating,  Next: Dired and Find,  Prev: Hiding Subdirectories,  Up: Dired
+
+37.15 Updating the Dired Buffer
+===============================
+
+This section describes commands to update the Dired buffer to reflect
+outside (non-Dired) changes in the directories and files, and to delete
+part of the Dired buffer.
+
+`g'
+     Update the entire contents of the Dired buffer (`revert-buffer').
+
+`l'
+     Update the specified files (`dired-do-redisplay').  You specify the
+     files for `l' in the same way as for file operations.
+
+`k'
+     Delete the specified _file lines_--not the files, just the lines
+     (`dired-do-kill-lines').
+
+`s'
+     Toggle between alphabetical order and date/time order
+     (`dired-sort-toggle-or-edit').
+
+`C-u s SWITCHES <RET>'
+     Refresh the Dired buffer using SWITCHES as
+     `dired-listing-switches'.
+
+   Type `g' (`revert-buffer') to update the contents of the Dired
+buffer, based on changes in the files and directories listed.  This
+preserves all marks except for those on files that have vanished.
+Hidden subdirectories are updated but remain hidden.
+
+   To update only some of the files, type `l' (`dired-do-redisplay').
+Like the Dired file-operating commands, this command operates on the
+next N files (or previous -N files), or on the marked files if any, or
+on the current file.  Updating the files means reading their current
+status, then updating their lines in the buffer to indicate that status.
+
+   If you use `l' on a subdirectory header line, it updates the
+contents of the corresponding subdirectory.
+
+   If you use `C-x d' or some other Dired command to visit a directory
+that is already being shown in a Dired buffer, Dired switches to that
+buffer but does not update it.  If the buffer is not up-to-date, Dired
+displays a warning telling you to type <g> to update it.  You can also
+tell Emacs to revert each Dired buffer automatically when you revisit
+it, by setting the variable `dired-auto-revert-buffer' to a non-`nil'
+value.
+
+   To delete the specified _file lines_ from the buffer--not delete the
+files--type `k' (`dired-do-kill-lines').  Like the file-operating
+commands, this command operates on the next N files, or on the marked
+files if any; but it does not operate on the current file as a last
+resort.
+
+   If you use `k' with a numeric prefix argument to kill the line for a
+file that is a directory, which you have inserted in the Dired buffer
+as a subdirectory, it deletes that subdirectory from the buffer as
+well.  Typing `C-u k' on the header line for a subdirectory also
+deletes the subdirectory from the Dired buffer.
+
+   The `g' command brings back any individual lines that you have
+killed in this way, but not subdirectories--you must use `i' to
+reinsert a subdirectory.
+
+   The files in a Dired buffers are normally listed in alphabetical
+order by file names.  Alternatively Dired can sort them by date/time.
+The Dired command `s' (`dired-sort-toggle-or-edit') switches between
+these two sorting modes.  The mode line in a Dired buffer indicates
+which way it is currently sorted--by name, or by date.
+
+   `C-u s SWITCHES <RET>' lets you specify a new value for
+`dired-listing-switches'.
+
+
+File: emacs,  Node: Dired and Find,  Next: Wdired,  Prev: Dired Updating,  Up: Dired
+
+37.16 Dired and `find'
+======================
+
+You can select a set of files for display in a Dired buffer more
+flexibly by using the `find' utility to choose the files.
+
+   To search for files with names matching a wildcard pattern use `M-x
+find-name-dired'.  It reads arguments DIRECTORY and PATTERN, and
+chooses all the files in DIRECTORY or its subdirectories whose
+individual names match PATTERN.
+
+   The files thus chosen are displayed in a Dired buffer, in which the
+ordinary Dired commands are available.
+
+   If you want to test the contents of files, rather than their names,
+use `M-x find-grep-dired'.  This command reads two minibuffer
+arguments, DIRECTORY and REGEXP; it chooses all the files in DIRECTORY
+or its subdirectories that contain a match for REGEXP.  It works by
+running the programs `find' and `grep'.  See also `M-x grep-find', in
+*note Grep Searching::.  Remember to write the regular expression for
+`grep', not for Emacs.  (An alternative method of showing files whose
+contents match a given regexp is the `% g REGEXP' command, see *note
+Marks vs Flags::.)
+
+   The most general command in this series is `M-x find-dired', which
+lets you specify any condition that `find' can test.  It takes two
+minibuffer arguments, DIRECTORY and FIND-ARGS; it runs `find' in
+DIRECTORY, passing FIND-ARGS to tell `find' what condition to test.  To
+use this command, you need to know how to use `find'.
+
+   The format of listing produced by these commands is controlled by the
+variable `find-ls-option', whose default value specifies using options
+`-ld' for `ls'.  If your listings are corrupted, you may need to change
+the value of this variable.
+
+   The command `M-x locate' provides a similar interface to the
+`locate' program.  `M-x locate-with-filter' is similar, but keeps only
+files whose names match a given regular expression.
+
+   These buffers don't work entirely like ordinary Dired buffers: file
+operations work, but do not always automatically update the buffer.
+Reverting the buffer with `g' deletes all inserted subdirectories, and
+erases all flags and marks.
+
+
+File: emacs,  Node: Wdired,  Next: Image-Dired,  Prev: Dired and Find,  Up: Dired
+
+37.17 Editing the Dired Buffer
+==============================
+
+Wdired is a special mode that allows you to perform file operations by
+editing the Dired buffer directly (the "W" in "Wdired" stands for
+"writable.")  To enter Wdired mode, type `C-x C-q'
+(`dired-toggle-read-only') while in a Dired buffer.  Alternatively, use
+the `Immediate / Edit File Names' menu item.
+
+   While in Wdired mode, you can rename files by editing the file names
+displayed in the Dired buffer.  All the ordinary Emacs editing
+commands, including rectangle operations and `query-replace', are
+available for this.  Once you are done editing, type `C-c C-c'
+(`wdired-finish-edit').  This applies your changes and switches back to
+ordinary Dired mode.
+
+   Apart from simply renaming files, you can move a file to another
+directory by typing in the new file name (either absolute or relative).
+To mark a file for deletion, delete the entire file name.  To change
+the target of a symbolic link, edit the link target name which appears
+next to the link name.
+
+   The rest of the text in the buffer, such as the file sizes and
+modification dates, is marked read-only, so you can't edit it.
+However, if you set `wdired-allow-to-change-permissions' to `t', you
+can edit the file permissions.  For example, you can change
+`-rw-r--r--' to `-rw-rw-rw-' to make a file world-writable.  These
+changes also take effect when you type `C-c C-c'.
 
 
 File: emacs,  Node: Image-Dired,  Next: Misc Dired Features,  Prev: Wdired,  Up: Dired
@@ -128,6 +433,10 @@ this case.
 names into arguments for other Emacs commands.  It also displays what
 it added to the kill ring, so you can use it to display the list of
 currently marked files in the echo area.
+
+   If the directory you are visiting is under version control (*note
+Version Control::), then the normal VC diff and log commands will
+operate on the selected files.
 
    The command `M-x dired-compare-directories' is used to compare the
 current Dired buffer with another directory.  It marks all the files
@@ -1116,7 +1425,8 @@ File: emacs,  Node: Displaying the Diary,  Next: Format of Diary File,  Up: Diar
 ----------------------------
 
 Once you have created a diary file, you can use the calendar to view
-it.  You can also view today's events outside of Calendar mode.
+it.  You can also view today's events outside of Calendar mode.  In the
+following, key bindings refer to the Calendar buffer.
 
 `d'
      Display all diary entries for the selected date
@@ -1146,11 +1456,12 @@ it.  You can also view today's events outside of Calendar mode.
 
    Displaying the diary entries with `d' shows in a separate window the
 diary entries for the selected date in the calendar.  The mode line of
-the new window shows the date of the diary entries and any holidays
-that fall on that date.  If you specify a numeric argument with `d', it
-shows all the diary entries for that many successive days.  Thus, `2 d'
-displays all the entries for the selected date and for the following
-day.
+the new window shows the date of the diary entries.  Holidays are shown
+either in the buffer or in the mode line, depending on the display
+method you choose (*note Diary Display::).  If you specify a numeric
+argument with `d', it shows all the diary entries for that many
+successive days.  Thus, `2 d' displays all the entries for the selected
+date and for the following day.
 
    Another way to display the diary entries for a date is to click
 `Mouse-3' on the date, and then choose `Diary entries' from the menu
@@ -1159,7 +1470,7 @@ non-`nil', creating the calendar lists the diary entries for the
 current date (provided the current date is visible).
 
    To get a broader view of which days are mentioned in the diary, use
-the `m' command.  This displays the dates that have diary entries in a
+the `m' command.  This marks the dates that have diary entries in a
 different face.  *Note diary-entry-marker: Calendar Customizing.
 
    The command applies both to the currently visible months and to
@@ -1172,14 +1483,6 @@ the calendar marks diary dates automatically.
    To see the full diary file, rather than just some of the entries, use
 the `s' command.
 
-   Display of selected diary entries uses invisible text to hide entries
-that don't apply.  The diary buffer as you see it is an illusion, so
-simply printing the buffer does not print what you see on your screen.
-There is a special command to print hard copy of the diary buffer _as
-it appears_; this command is `M-x diary-print-entries'.  It sends the
-data directly to the printer.  You can customize it like `lpr-region'
-(*note Printing::).
-
    The command `M-x diary' displays the diary entries for the current
 date, independently of the calendar display, and optionally for the next
 few days as well; the variable `diary-number-of-entries' specifies how
@@ -1187,8 +1490,6 @@ many days to include.  *Note diary-number-of-entries: Diary Customizing.
 
    If you put `(diary)' in your `.emacs' file, this automatically
 displays a window with the day's diary entries, when you enter Emacs.
-The mode line of the displayed window shows the date and any holidays
-that fall on that date.
 
    Many users like to receive notice of events in their diary as email.
 To send such mail to yourself, use the command `M-x
@@ -1217,18 +1518,9 @@ first must begin with whitespace to indicate they continue a previous
 entry.  Lines that do not begin with valid dates and do not continue a
 preceding entry are ignored.
 
-   You can inhibit the marking of certain diary entries in the calendar
-window; to do this, insert an ampersand `diary-nonmarking-symbol'
-(default `&') at the beginning of the entry, before the date.  This has
-no effect on display of the entry in the diary window; it affects only
-marks on dates in the calendar window.  Nonmarking entries are
-especially useful for generic entries that would otherwise mark many
-different dates.
-
-   If the first line of a diary entry consists only of the date or day
-name with no following blanks or punctuation, then the diary window
-display doesn't include that line; only the continuation lines appear.
-For example, this entry:
+   You can also use a format where the first line of a diary entry
+consists only of the date or day name (with no following blanks or
+punctuation).  For example:
 
      02/11/1989
            Bill B. visits Princeton today
@@ -1238,24 +1530,20 @@ For example, this entry:
            7:30pm Dinner at George's
            8:00-10:00pm concert
 
-appears in the diary window without the date line at the beginning.
-This style of entry looks neater when you display just a single day's
+This entry will have a different appearance if you use the simple diary
+display (*note Diary Display::).  The simple diary display omits the
+date line at the beginning; only the continuation lines appear.  This
+style of entry looks neater when you display just a single day's
 entries, but can cause confusion if you ask for more than one day's
 entries.
 
-   You can edit the diary entries as they appear in the window, but it
-is important to remember that the buffer displayed contains the _entire_
-diary file, with portions of it concealed from view.  This means, for
-instance, that the `C-f' (`forward-char') command can put point at what
-appears to be the end of the line, but what is in reality the middle of
-some concealed line.
-
-   _Be careful when editing the diary entries!_  Inserting additional
-lines or adding/deleting characters in the middle of a visible line
-cannot cause problems, but editing at the end of a line may not do what
-you expect.  Deleting a line may delete other invisible entries that
-follow it.  Before editing the diary, it is best to display the entire
-file with `s' (`diary-show-all-entries').
+   You can inhibit the marking of certain diary entries in the calendar
+window; to do this, insert an ampersand `diary-nonmarking-symbol'
+(default `&') at the beginning of the entry, before the date.  This has
+no effect on display of the entry in the diary window; it affects only
+marks on dates in the calendar window.  Nonmarking entries are
+especially useful for generic entries that would otherwise mark many
+different dates.
 
 
 File: emacs,  Node: Date Formats,  Next: Adding to Diary,  Prev: Format of Diary File,  Up: Diary
@@ -1678,9 +1966,9 @@ diary suit your personal tastes.
 * Time Display Format::    Changing the format.
 * Diary Customizing::      Defaults you can set.
 * Non-Gregorian Diary::    Diary entries based on other calendars.
-* Fancy Diary Display::    Enhancing the diary display, sorting entries,
-                             using included diary files.
-* Sexp Diary Entries::     Fancy things you can do.
+* Diary Display::          A choice of ways to display the diary.
+* Fancy Diary Display::    Sorting diary entries, using included diary files.
+* Sexp Diary Entries::     More flexible diary entries.
 
 
 File: emacs,  Node: Calendar Customizing,  Next: Holiday Customizing,  Up: Advanced Calendar/Diary Usage
@@ -1812,7 +2100,7 @@ holiday, as a string.
 France on July 14 (i.e., the fourteenth day of the seventh month).  You
 can do this as follows:
 
-     (setq other-holidays '((holiday-fixed 7 14 "Bastille Day")))
+     (setq holiday-other-holidays '((holiday-fixed 7 14 "Bastille Day")))
 
    Many holidays occur on a specific day of the week, at a specific time
 of month.  Here is a holiday form describing Hurricane Supplication Day,
@@ -1828,7 +2116,7 @@ the month (1 specifies the first occurrence, 2 the second occurrence,
    You can specify holidays that occur on fixed days of the Baha'i,
 Chinese, Hebrew, Islamic, and Julian calendars too.  For example,
 
-     (setq other-holidays
+     (setq holiday-other-holidays
            '((holiday-hebrew 10 2 "Last day of Hanukkah")
              (holiday-islamic 3 12 "Mohammed's Birthday")
              (holiday-julian 4 2 "Jefferson's Birthday")))
@@ -1933,11 +2221,11 @@ File: emacs,  Node: Diary Customizing,  Next: Non-Gregorian Diary,  Prev: Time D
 38.15.5 Customizing the Diary
 -----------------------------
 
-Ordinarily, the mode line of the diary window indicates any holidays
-that fall on the date of the diary entries.  The process of checking for
-holidays can be slow, depending on the defined holidays.  In that case,
-setting `diary-show-holidays-flag' to `nil' will speed up the diary
-display.
+Ordinarily, the diary window indicates any holidays that fall on the
+date of the diary entries, either in the mode line or the buffer itself.
+The process of checking for holidays can be slow, depending on the
+defined holidays.  In that case, setting `diary-show-holidays-flag' to
+`nil' will speed up the diary display.
 
    The variable `diary-number-of-entries' controls the number of days
 of diary entries to be displayed at one time.  It affects the initial
@@ -1950,16 +2238,6 @@ no diary entries appear on Sunday, the current date's and the next
 day's diary entries appear Monday through Thursday, Friday through
 Monday's entries appear on Friday, while on Saturday only that day's
 entries appear.
-
-   The variable `diary-print-entries-hook' is a normal hook run after
-preparation of a temporary buffer containing just the diary entries
-currently visible in the diary buffer.  (The other, irrelevant diary
-entries are really absent from the temporary buffer; in the diary
-buffer, they are merely hidden.)  The default value of this hook does
-the printing with the command `lpr-buffer'.  If you want to use a
-different command to do the printing, just change the value of this
-hook.  Other uses might include, for example, rearranging the lines into
-order by day and time.
 
    You can customize the form of dates in your diary file by setting the
 variable `diary-date-forms'.  This variable is a list of patterns for
@@ -2017,7 +2295,7 @@ match part of a word beyond the date itself to distinguish it from the
 fourth pattern.
 
 
-File: emacs,  Node: Non-Gregorian Diary,  Next: Fancy Diary Display,  Prev: Diary Customizing,  Up: Advanced Calendar/Diary Usage
+File: emacs,  Node: Non-Gregorian Diary,  Next: Diary Display,  Prev: Diary Customizing,  Up: Advanced Calendar/Diary Usage
 
 38.15.6 Diary Entries Using non-Gregorian Calendars
 ---------------------------------------------------
@@ -2041,8 +2319,10 @@ entries; except that `diary-bahai-entry-symbol' (default `B') must
 precede a Baha'i date, `diary-hebrew-entry-symbol' (default `H') a
 Hebrew date, and `diary-islamic-entry-symbol' (default `I') an Islamic
 date.  Moreover, non-Gregorian month names may not be abbreviated
-(because the first three letters are often not unique).  For example, a
-diary entry for the Hebrew date Heshvan 25 could look like this:
+(because the first three letters are often not unique).  (Note also
+that you must use "Adar I" if you want Adar of a common Hebrew year.)
+For example, a diary entry for the Hebrew date Heshvan 25 could look
+like this:
 
      HHeshvan 25 Happy Hebrew birthday!
 
@@ -2096,36 +2376,87 @@ day-within-month in every month, and the `yearly' commands for the
 given non-Gregorian day and month in every year.
 
 
-File: emacs,  Node: Fancy Diary Display,  Next: Sexp Diary Entries,  Prev: Non-Gregorian Diary,  Up: Advanced Calendar/Diary Usage
+File: emacs,  Node: Diary Display,  Next: Fancy Diary Display,  Prev: Non-Gregorian Diary,  Up: Advanced Calendar/Diary Usage
 
-38.15.7 Fancy Diary Display
----------------------------
+38.15.7 Diary Display
+---------------------
 
-Diary display works by preparing the diary buffer and then running the
-function specified by the variable `diary-display-function'.  The
-default value (`diary-simple-display') hides the irrelevant diary
-entries and then displays the buffer.  The alternative
-`diary-fancy-display' displays diary entries and holidays by copying
-them into a special buffer that exists only for the sake of display.
-Copying to a separate buffer provides an opportunity to change the
-displayed text to make it prettier--for example, to sort the entries by
-the dates they apply to.
+Diary display works by preparing the list of diary entries and then
+running the function specified by the variable
+`diary-display-function'.  The default value `diary-fancy-display'
+displays diary entries and holidays by copying them into a special
+buffer that exists only for the sake of display.  Copying diary entries
+to a separate buffer provides an opportunity to change the displayed
+text to make it prettier--for example, to sort the entries by the dates
+they apply to.
 
-   As with simple diary display, you can print a hard copy of the buffer
-with `diary-print-entries'.  To print a hard copy of a day-by-day diary
-for a week, position point on Sunday of that week, type `7 d', and then
-do `M-x diary-print-entries'.  As usual, the inclusion of the holidays
-slows down the display slightly; you can speed things up by setting the
-variable `diary-show-holidays-flag' to `nil'.
-
-   Ordinarily, the fancy diary buffer does not show days for which
-there are no diary entries, even if that day is a holiday.  If you want
-such days to be shown in the fancy diary buffer, set the variable
+   Ordinarily, the fancy diary buffer does not show days for which there
+are no diary entries, even if that day is a holiday.  If you want such
+days to be shown in the fancy diary buffer, set the variable
 `diary-list-include-blanks' to `t'.
 
-   If you use the fancy diary display, you can use the normal hook
-`diary-list-entries-hook' to sort each day's diary entries by their
-time of day.  Here's how:
+   The fancy diary buffer enables View mode, a minor mode that provides
+commands for scrolling and searching the text.  For example, <SPC> and
+<DEL> scroll forward and backward, and <s> starts an incremental
+search.  See the documentation of the function `view-mode' for more
+information.
+
+   The alternative display method `diary-simple-display' shows the
+actual diary buffer, and uses invisible text to hide entries that don't
+apply.  Holidays are shown in the mode line.  The advantage of this
+method is that you can edit the buffer and save your changes directly to
+the diary file.  This method is not as flexible as the fancy method,
+however.  For example, it cannot sort entries.  Another disadvantage is
+that invisible text can be confusing.  For example, if you copy a region
+of text in order to paste it elsewhere, invisible text may be included.
+Similarly, since the diary buffer as you see it is an illusion, simply
+printing the buffer may not print what you see on your screen.
+
+   For this reason, there is a special command to print hard copy of the
+diary buffer _as it appears_; this command is `M-x
+diary-print-entries'.  It works with either display method, although
+with the fancy display you can also print the buffer like any other.  To
+print a hard copy of a day-by-day diary for a week, position point on
+the first day of the week, type `7 d', and then do `M-x
+diary-print-entries'.  As usual, the inclusion of the holidays slows
+down the display slightly; you can speed things up by setting the
+variable `diary-show-holidays-flag' to `nil'.
+
+   This command prepares a temporary buffer that contains only the diary
+entries currently visible in the diary buffer.  Unlike with the simple
+display, the other irrelevant entries are really absent, not just
+hidden.  After preparing the buffer, it runs the hook
+`diary-print-entries-hook'.  The default value of this hook sends the
+data directly to the printer with the command `lpr-buffer' (*note
+Printing::).  If you want to use a different command to do the
+printing, just change the value of this hook.  Other uses might include,
+for example, rearranging the lines into order by day and time.
+
+   You can edit the diary entries as they appear in the simple diary
+window, but it is important to remember that the buffer displayed
+contains the _entire_ diary file, with portions of it concealed from
+view.  This means, for instance, that the `C-f' (`forward-char')
+command can put point at what appears to be the end of the line, but
+what is in reality the middle of some concealed line.
+
+   _Be careful when editing the diary entries in the simple display!_
+Inserting additional lines or adding/deleting characters in the middle
+of a visible line cannot cause problems, but editing at the end of a
+line may not do what you expect.  Deleting a line may delete other
+invisible entries that follow it.  Before editing the simple diary
+buffer, it is best to display the entire file with `s'
+(`diary-show-all-entries').
+
+
+File: emacs,  Node: Fancy Diary Display,  Next: Sexp Diary Entries,  Prev: Diary Display,  Up: Advanced Calendar/Diary Usage
+
+38.15.8 Fancy Diary Display
+---------------------------
+
+The following features only work with the fancy diary display.
+
+   You can use the normal hook `diary-list-entries-hook' to sort each
+day's diary entries by their time of day.  Here's how:
 
      (add-hook 'diary-list-entries-hook 'diary-sort-entries t)
 
@@ -2133,10 +2464,9 @@ For each day, this sorts diary entries that begin with a recognizable
 time of day according to their times.  Diary entries without times come
 first within each day.
 
-   Fancy diary display also has the ability to process included diary
-files.  This permits a group of people to share a diary file for events
-that apply to all of them.  Lines in the diary file starting with
-`diary-include-string':
+   Your main diary file can include other files.  This permits a group
+of people to share a diary file for events that apply to all of them.
+Lines in the diary file starting with `diary-include-string':
 
      #include "FILENAME"
 
@@ -2149,20 +2479,20 @@ of inclusions, of course).  Here is how to enable the include facility:
      (add-hook 'diary-mark-entries-hook 'diary-mark-included-diary-files)
 
    The include mechanism works only with the fancy diary display,
-because ordinary diary display shows the entries directly from your
-diary file.
+because simple diary display shows the entries directly from your diary
+file.
 
 
 File: emacs,  Node: Sexp Diary Entries,  Prev: Fancy Diary Display,  Up: Advanced Calendar/Diary Usage
 
-38.15.8 Sexp Entries and the Fancy Diary Display
+38.15.9 Sexp Entries and the Fancy Diary Display
 ------------------------------------------------
 
 Sexp diary entries allow you to do more than just have complicated
 conditions under which a diary entry applies.  Sexp entries should be
 preceded by `diary-sexp-entry-symbol' (default `%%') in the diary file.
-If you use the fancy diary display, sexp entries can generate the text
-of the entry depending on the date itself.
+With the fancy diary display, sexp entries can generate the text of the
+entry depending on the date itself.
 
    For example, an anniversary diary entry can insert the number of
 years since the anniversary date into the text of the diary entry.
@@ -2409,7 +2739,14 @@ File: emacs,  Node: Navigation,  Next: Searching,  Up: Document View
 When in DocView mode, you can scroll the current page using the usual
 Emacs movement keys: `C-p', `C-n', `C-b', `C-f', and the arrow keys.
 
-   To display the next page, type `n', <next> or `C-x ]'
+   By default, the line-motion keys `C-p' and `C-n' stop scrolling at
+the beginning and end of the current page, respectively.  However, if
+you change the variable `doc-view-continuous' to a non-`nil' value,
+then `C-p' displays the previous page if you are already at the
+beginning of the current page, and `C-n' displays the next page if you
+are at the end of the current page.
+
+   You can also display the next page by typing `n', <next> or `C-x ]'
 (`doc-view-next-page').  To display the previous page, type `p',
 <prior> or `C-x [' (`doc-view-previous-page').
 
@@ -2682,6 +3019,10 @@ emulator window.
      optionally replace the region with the output
      (`shell-command-on-region').
 
+`M-& CMD <RET>'
+     Run the shell command line CMD asynchronously, and display the
+     output (`async-shell-command').
+
 `M-x shell'
      Run a subshell with input and output through an Emacs buffer.  You
      can then give commands interactively.
@@ -2738,6 +3079,11 @@ a synchronous shell command, `shell-command' returns the command's exit
 status (0 means success), when it is called from a Lisp program.  You
 do not get any status information for an asynchronous command, since it
 hasn't finished yet when `shell-command' returns.
+
+   You can also type `M-&' (`async-shell-command') to execute a shell
+command asynchronously.  This behaves exactly like calling
+`shell-command' with `&', except that you do not need to add the `&' to
+the shell command line.
 
    `M-|' (`shell-command-on-region') is like `M-!' but passes the
 contents of the region as the standard input to the shell command,
@@ -3087,10 +3433,8 @@ File: emacs,  Node: Shell Ring,  Next: Shell History Copying,  Up: Shell History
 `C-<DOWN>'
      Fetch the next later old shell command.
 
-`M-r REGEXP <RET>'
-`M-s REGEXP <RET>'
-     Search backwards or forwards for old shell commands that match
-     REGEXP.
+`M-r'
+     Begin an incremental regexp search of old shell commands.
 
 `C-c C-x'
      Fetch the next subsequent command from the history.
@@ -3116,17 +3460,16 @@ shell input.  `M-n' does likewise except that it finds successively
 more recent shell commands from the buffer.  `C-<UP>' works like `M-p',
 and `C-<DOWN>' like `M-n'.
 
-   The history search commands `M-r' and `M-s' read a regular
-expression and search through the history for a matching command.  Aside
-from the choice of which command to fetch, they work just like `M-p'
-and `M-n'.  If you enter an empty regexp, these commands reuse the same
-regexp used last time.
-
-   When you find the previous input you want, you can resubmit it by
-typing <RET>, or you can edit it first and then resubmit it if you
-wish.  Any partial input you were composing before navigating the
-history list is restored when you go to the beginning or end of the
-history ring.
+   The history search command `M-r' begins an incremental regular
+expression search of previous shell commands.  After typing `M-r',
+start typing the desired string or regular expression; the last
+matching shell command will be displayed in the current line.
+Incremental search commands have their usual effects--for instance,
+`C-s' and `C-r' search forward and backward for the next match (*note
+Incremental Search::).  When you find the desired input, type <RET> to
+terminate the search.  This puts the input in the command line.  Any
+partial input you were composing before navigating the history list is
+restored when you go to the beginning or end of the history ring.
 
    Often it is useful to reexecute several successive shell commands
 that were previously executed in sequence.  To do this, first find and
@@ -3297,11 +3640,6 @@ whether `pushd' behaves like `cd' if no argument is given
 (`shell-pushd-dextract'), and only add directories to the directory
 stack if they are not already on it (`shell-pushd-dunique').  The
 values you choose should match the underlying shell, of course.
-
-   If you want Shell mode to handle color output from shell commands,
-you can enable ANSI Color mode.  Here is how to do this:
-
-     (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
 
 
 File: emacs,  Node: Terminal emulator,  Next: Term Mode,  Prev: Shell Options,  Up: Shell
@@ -3518,24 +3856,25 @@ editing.
    If there is no Emacs server, the `emacsclient' program halts with an
 error message.  If the Emacs process has no existing frame--which can
 happen if it was started as a daemon (*note Emacs Server::)--then Emacs
-opens a frame on the terminal in which you called `emacsclient', as
-though you had used the `-t' option (*note emacsclient Options::).
+opens a frame on the terminal in which you called `emacsclient'.
 
-   On a graphical display, switching to the Emacs server is
-straightforward--just select its (system-level) window.  If you are
-using a text-only terminal, there are two ways to switch between
-`emacsclient''s shell and the Emacs server: (i) run the Emacs server
-and `emacsclient' on different virtual terminals, and switch to the
-Emacs server's virtual terminal after calling `emacsclient'; or (ii)
-call `emacsclient' from within the Emacs server itself, using Shell
-mode (*note Interactive Shell::) or Term mode (*note Term Mode::);
-`emacsclient' blocks only the subshell under Emacs, and you can still
-use Emacs to edit the file.
+   You can also force `emacsclient' to open a new frame on a graphical
+display, or on a text-only terminal, using the `-c' and `-t' options.
+*Note emacsclient Options::.
+
+   If you are running on a single text-only terminal, you can switch
+between `emacsclient''s shell and the Emacs server using one of two
+methods: (i) run the Emacs server and `emacsclient' on different
+virtual terminals, and switch to the Emacs server's virtual terminal
+after calling `emacsclient'; or (ii) call `emacsclient' from within the
+Emacs server itself, using Shell mode (*note Interactive Shell::) or
+Term mode (*note Term Mode::); `emacsclient' blocks only the subshell
+under Emacs, and you can still use Emacs to edit the file.
 
    When you finish editing FILE in the Emacs server, type `C-x #'
 (`server-edit') in its buffer.  This saves the file and sends a message
 back to the `emacsclient' program, telling it to exit.  Programs that
-use `EDITOR' usually wait for the "editor"--in the case
+use `EDITOR' usually wait for the "editor"--in this case
 `emacsclient'--to exit before doing something else.
 
    You can also call `emacsclient' with multiple file name arguments:
@@ -3560,9 +3899,9 @@ server buffer manually if you wish; you don't have to arrive at it with
 `C-x #'.  But `C-x #' is the way to tell `emacsclient' that you are
 finished.
 
-   If you set the variable `server-window' to a window or a frame, `C-x
-#' always displays the next server buffer in that window or in that
-frame.
+   If you set the value of the variable `server-window' to a window or
+a frame, `C-x #' always displays the next server buffer in that window
+or in that frame.
 
 
 File: emacs,  Node: emacsclient Options,  Prev: Invoking emacsclient,  Up: Emacs Server
@@ -3690,9 +4029,14 @@ File: emacs,  Node: Printing,  Next: Sorting,  Prev: Emacs Server,  Up: Top
 Emacs provides commands for printing hard copies of either an entire
 buffer or just part of one, with or without page headers.  You can
 invoke the printing commands directly, as detailed in the following
-section, or using the `File' menu on the menu bar.  See also the
-hardcopy commands of Dired (*note Misc File Ops::) and the diary (*note
-Displaying the Diary::).
+section, or using the `File' menu on the menu bar.
+
+   Aside from the commands described in this section, you can also
+"print" an Emacs buffer to HTML with `M-x htmlfontify-buffer'.  This
+command converts the current buffer to a HTML file, replacing Emacs
+faces with CSS-based markup.  In addition, see the hardcopy commands of
+Dired (*note Misc File Ops::) and the diary (*note Displaying the
+Diary::).
 
 `M-x print-buffer'
      Print hardcopy of current buffer with page headings containing the
@@ -5620,64 +5964,81 @@ first line:
 
      -*- mode: MODENAME; VAR: VALUE; ... -*-
 
-You can specify any number of variables/value pairs in this way, each
-pair with a colon and semicolon as shown above.  `mode: MODENAME;'
-specifies the major mode; this should come first in the line.  The
-VALUEs are not evaluated; they are used literally.  Here is an example
-that specifies Lisp mode and sets two variables with numeric values:
+You can specify any number of variable/value pairs in this way, each
+pair with a colon and semicolon as shown above.  The special
+variable/value pair `mode: MODENAME;', if present, specifies a major or
+minor mode; if you use this to specify a major mode, it should come
+first in the line.  The VALUEs are used literally, and not evaluated.
+
+   You can use the command `add-file-local-variable-prop-line' instead
+of adding entries by hand.  It prompts for a variable and value, and
+adds them to the first line in the appropriate way.  The command
+`delete-file-local-variable-prop-line' deletes a variable from the
+line.  The command `copy-dir-locals-to-file-locals-prop-line' copies
+directory-local variables (*note Directory Variables::) to the first
+line.
+
+   Here is an example first line that specifies Lisp mode and sets two
+variables with numeric values:
 
      ;; -*- mode: Lisp; fill-column: 75; comment-column: 50; -*-
 
-   You can also specify the coding system for a file in this way: just
-specify a value for the "variable" named `coding'.  The "value" must be
-a coding system name that Emacs recognizes.  *Note Coding Systems::.
-`unibyte: t' specifies unibyte loading for a particular Lisp file.
-*Note Enabling Multibyte::.
-
-   The `eval' pseudo-variable, described below, can be specified in the
-first line as well.
+Aside from `mode', other keywords that have special meanings as file
+variables are `coding', `unibyte', and `eval'.  These are described
+below.
 
    In shell scripts, the first line is used to identify the script
 interpreter, so you cannot put any local variables there.  To
 accommodate this, Emacs looks for local variable specifications in the
-_second_ line when the first line specifies an interpreter.  The same
-is true for man pages which start with the magic string `'\"' to
-specify a list of troff preprocessors (not all do, however).
+_second_ line if the first line specifies an interpreter.  The same is
+true for man pages which start with the magic string `'\"' to specify a
+list of troff preprocessors (not all do, however).
 
-   A "local variables list" goes near the end of the file.  It starts
-with a line containing the string `Local Variables:', and ends with a
-line containing the string `End:'.  In between come the variable names
-and values, one set per line, as `VARIABLE: VALUE'.  The VALUEs are not
-evaluated; they are used literally.  If a file has both a local
-variables list and a `-*-' line, Emacs processes _everything_ in the
-`-*-' line first, and _everything_ in the local variables list
-afterward.
+   Instead of using a `-*-' line, you can define file local variables
+using a "local variables list" near the end of the file.  The start of
+the local variables list should be no more than 3000 characters from
+the end of the file, and must be on the last page if the file is
+divided into pages.
 
-   Here is an example of a local variables list:
+   If a file has both a local variables list and a `-*-' line, Emacs
+processes _everything_ in the `-*-' line first, and _everything_ in the
+local variables list afterward.
+
+   A local variables list starts with a line containing the string
+`Local Variables:', and ends with a line containing the string `End:'.
+In between come the variable names and values, one set per line, like
+this:
 
      /* Local Variables: */
      /* mode:c           */
      /* comment-column:0 */
      /* End:             */
 
-   In this example, each line starts with the prefix `/*' and each line
-ends with the suffix `*/'.  Emacs recognizes these as the prefix and
-suffix by finding them surrounding the magic string `Local Variables:',
-on the first line of the list; it then automatically discards them from
-the other lines of the list.
-
-   The usual reason for using a prefix and/or suffix is to embed the
-local variables list in a comment, so it won't confuse other programs
-that the file is intended as input for.  The example above is for the C
+In this example, each line starts with the prefix `/*' and ends with
+the suffix `*/'.  Emacs recognizes the prefix and suffix by finding
+them surrounding the magic string `Local Variables:', on the first line
+of the list; it then automatically discards them from the other lines
+of the list.  The usual reason for using a prefix and/or suffix is to
+embed the local variables list in a comment, so it won't confuse other
+programs that the file is intended for.  The example above is for the C
 programming language, where comment lines start with `/*' and end with
-`*/'.  Don't use a prefix (or a suffix) if you don't need one.
+`*/'.
 
-   If you write a multi-line string value, you should put the prefix
-and suffix on each line, even lines that start or end within the
-string.  They will be stripped off for processing the list.  If you
-want to split a long string across multiple lines of the file, you can
-use backslash-newline, which is ignored in Lisp string constants.
-Here's an example of doing this:
+   You can construct the local variables list yourself, or use the
+command `add-file-local-variable'.  This prompts for a variable and
+value, and adds them to the list.  If necessary, it also adds the start
+and end markers.  The command `delete-file-local-variable' deletes a
+variable from the list.  The command `copy-dir-locals-to-file-locals'
+copies directory-local variables (*note Directory Variables::) to the
+list.
+
+   As with the `-*-' line, the variables in a local variables list are
+used literally, and are not evaluated first.  If you want to split a
+long string across multiple lines of the file, you can use
+backslash-newline, which is ignored in Lisp string constants; you
+should put the prefix and suffix on each line, even lines that start or
+end within the string, as they will be stripped off when processing the
+list.  Here is an example:
 
      # Local Variables:
      # compile-command: "cc foo.c -Dfoo=bar -Dhack=whatever \
@@ -5685,38 +6046,38 @@ Here's an example of doing this:
      # End:
 
    Some "variable names" have special meanings in a local variables
-list.  Specifying the "variable" `mode' really sets the major mode,
-while any value specified for the "variable" `eval' is simply evaluated
-as an expression (its value is ignored).  A value for `coding'
-specifies the coding system for character code conversion of this file,
-and a value of `t' for `unibyte' says to visit the file in a unibyte
-buffer.  These four "variables" are not really variables; setting them
-in any other context has no special meaning.
+list:
+
+   * `mode' enables the specified major or minor mode.
+
+   * `eval' evaluates the specified Lisp expression (the value returned
+     by that expression is ignored).
+
+   * `coding' specifies the coding system for character code conversion
+     of this file.  *Note Coding Systems::.
+
+   * `unibyte' says to visit the file in a unibyte buffer, if the value
+     is `t'.  *Note Enabling Multibyte::.
+
+These four "variables" are not really variables; setting them in any
+other context has no special meaning.
 
    _If `mode' is used to set a major mode, it should be the first
 "variable" in the list._  Otherwise, the entries that precede it will
-usually be ignored, since most modes kill all local variables as part
-of their initialization.
+usually have no effect, since most major modes kill all local variables
+as part of their initialization.
 
-   You can use the `mode' "variable" to set minor modes as well as the
-major modes; in fact, you can use it more than once, first to set the
-major mode and then to set minor modes which are specific to particular
-buffers.  But most minor modes should not be specified in the file at
-all, because they represent user preferences.
+   You can use the `mode' "variable" to enable minor modes as well as
+the major modes; in fact, you can use it more than once, first to set
+the major mode and then to enable minor modes which are specific to
+particular buffers.
 
-   For example, you may be tempted to try to turn on Auto Fill mode with
-a local variable list.  That is a mistake.  The choice of Auto Fill mode
-or not is a matter of individual taste, not a matter of the contents of
-particular files.  If you want to use Auto Fill, set up major mode hooks
-with your `.emacs' file to turn it on (when appropriate) for you alone
-(*note Init File::).  Don't use a local variable list to impose your
-taste on everyone.
-
-   The start of the local variables list must be no more than 3000
-characters from the end of the file, and must be in the last page if
-the file is divided into pages.  Otherwise, Emacs will not notice it is
-there.  The purpose of this rule is so that Emacs need not take the
-time to search the whole file.
+   Often, however, it is a mistake to enable minor modes this way.
+Most minor modes, like Auto Fill mode, represent individual user
+preferences.  If you want to use a minor mode, it is better to set up
+major mode hooks with your init file to turn that minor mode on for
+yourself alone (*note Init File::), instead of using a local variable
+list to impose your taste on everyone.
 
    Use the command `normal-mode' to reset the local variables and major
 mode of a buffer according to the file name and contents, including the
@@ -5730,7 +6091,7 @@ File: emacs,  Node: Safe File Variables,  Prev: Specifying File Variables,  Up: 
 
 File-local variables can be dangerous; when you visit someone else's
 file, there's no telling what its local variables list could do to your
-Emacs.  Improper values of the `eval' "variable," and other variables
+Emacs.  Improper values of the `eval' "variable", and other variables
 such as `load-path', could execute Lisp code you didn't intend to run.
 
    Therefore, whenever Emacs encounters file local variable values that
@@ -5740,8 +6101,8 @@ list, and asks you for confirmation before setting them.  You can type
 ignore it.  When Emacs is run in batch mode (*note Initial Options::),
 it can't really ask you, so it assumes the answer `n'.
 
-   Emacs normally recognizes certain variables/value pairs as safe.
-For instance, it is safe to give `comment-column' or `fill-column' any
+   Emacs normally recognizes certain variable/value pairs as safe.  For
+instance, it is safe to give `comment-column' or `fill-column' any
 integer value.  If a file specifies only known-safe variable/value
 pairs, Emacs does not ask for confirmation before setting them.
 Otherwise, you can tell Emacs to record all the variable/value pairs in
@@ -5774,9 +6135,9 @@ the values are known to be safe.
 The default is `maybe', which is neither `t' nor `nil', so normally
 Emacs does ask for confirmation about processing `eval' variables.
 
-   But there is an exception.  The `safe-local-eval-forms' is a
-customizable list of eval forms which are safe.  Emacs does not ask for
-confirmation when it finds these forms for the `eval' variable.
+   As an exception, Emacs never asks for confirmation to evaluate any
+`eval' form if that form occurs within the variable
+`safe-local-eval-forms'.
 
 
 File: emacs,  Node: Directory Variables,  Prev: File Variables,  Up: Variables
@@ -5825,6 +6186,13 @@ or Java source file.  Finally, it specifies a different `ChangeLog'
 file name for any file in the `src/imported' subdirectory of the
 directory where you put the `.dir-locals.el' file.
 
+   You can edit the `.dir-locals.el' file by hand, or use the command
+`add-dir-local-variable'.  This prompts for a mode (or subdirectory),
+variable and value, and adds an entry to the file.  The command
+`delete-dir-local-variable' deletes an entry.  The command
+`copy-file-locals-to-dir-locals' copies file local variables (*note
+File Variables::) to the `.dir-locals.el' file.
+
    Another method of specifying directory-local variables is to
 explicitly define a project class using
 `dir-locals-set-class-variables', and then tell Emacs which directories
@@ -5859,11 +6227,8 @@ File: emacs,  Node: Key Bindings,  Next: Syntax,  Prev: Variables,  Up: Customiz
 
 This section describes "key bindings", which map keys to commands, and
 "keymaps", which record key bindings.  It also explains how to
-customize key bindings.
-
-   Recall that a command is a Lisp function whose definition provides
-for interactive use.  Like every Lisp function, a command has a function
-name, which usually consists of lower-case letters and hyphens.
+customize key bindings, which is done by editing your init file (*note
+Init Rebinding::).
 
 * Menu:
 
@@ -5887,55 +6252,48 @@ File: emacs,  Node: Keymaps,  Next: Prefix Keymaps,  Up: Key Bindings
 57.4.1 Keymaps
 --------------
 
-The bindings between key sequences and command functions are recorded
-in data structures called "keymaps".  Emacs has many of these, each
-used on particular occasions.
+As described in *note Commands::, each Emacs command is a Lisp function
+whose definition provides for interactive use.  Like every Lisp
+function, a command has a function name, which usually consists of
+lower-case letters and hyphens.
 
    A "key sequence" ("key", for short) is a sequence of "input events"
 that have a meaning as a unit.  Input events include characters,
 function keys and mouse buttons--all the inputs that you can send to
-the computer with your terminal.  A key sequence gets its meaning from
-its "binding", which says what command it runs.  The role of keymaps is
-to record these bindings.
+the computer.  A key sequence gets its meaning from its "binding",
+which says what command it runs.
+
+   The bindings between key sequences and command functions are
+recorded in data structures called "keymaps".  Emacs has many of these,
+each used on particular occasions.
 
    The "global" keymap is the most important keymap because it is
-always in effect.  The global keymap defines keys for Fundamental mode;
-most of these definitions are common to most or all major modes.  Each
-major or minor mode can have its own keymap which overrides the global
-definitions of some keys.
+always in effect.  The global keymap defines keys for Fundamental mode
+(*note Major Modes::); most of these definitions are common to most or
+all major modes.  Each major or minor mode can have its own keymap
+which overrides the global definitions of some keys.
 
    For example, a self-inserting character such as `g' is
 self-inserting because the global keymap binds it to the command
 `self-insert-command'.  The standard Emacs editing characters such as
 `C-a' also get their standard meanings from the global keymap.
-Commands to rebind keys, such as `M-x global-set-key', actually work by
-storing the new binding in the proper place in the global map.  *Note
-Rebinding::.
+Commands to rebind keys, such as `M-x global-set-key', work by storing
+the new binding in the proper place in the global map (*note
+Rebinding::).
 
    Most modern keyboards have function keys as well as character keys.
 Function keys send input events just as character keys do, and keymaps
-can have bindings for them.  On text terminals, typing a function key
-actually sends the computer a sequence of characters; the precise
-details of the sequence depends on which function key and on the model
-of terminal you are using.  (Often the sequence starts with `<ESC> ['.)
-If Emacs understands your terminal type properly, it recognizes the
-character sequences forming function keys wherever they occur in a key
-sequence.  Thus, for most purposes, you can pretend the function keys
-reach Emacs directly and ignore their encoding as character sequences.
+can have bindings for them.  Key sequences can mix function keys and
+characters.  For example, if your keyboard has a <Home> function key,
+Emacs can recognize key sequences like `C-x <Home>'.  You can even mix
+mouse events with keyboard events, such as `S-down-mouse-1'.
 
-   Key sequences can mix function keys and characters.  For example, if
-your keyboard has a <Home> function key, Emacs also recognizes key
-sequences like `C-x <Home>'.  You can even mix mouse events with
-keyboard events, but we recommend against it, because such key
-sequences are inconvenient to use.
-
-   As a user, you can redefine any key, but it is usually best to stick
-to key sequences that consist of `C-c' followed by a letter (upper or
-lower case).  These keys are "reserved for users," so they won't
-conflict with any properly designed Emacs extension.  The function keys
-<F5> through <F9> are also reserved for users.  If you redefine some
-other key, your definition may be overridden by certain extensions or
-major modes which redefine the same key.
+   On text terminals, typing a function key actually sends the computer
+a sequence of characters; the precise details of the sequence depends
+on the function key and on the terminal type.  (Often the sequence
+starts with `<ESC> ['.)  If Emacs understands your terminal type
+properly, it automatically handles such sequences as single input
+events.
 
 
 File: emacs,  Node: Prefix Keymaps,  Next: Local Keymaps,  Prev: Keymaps,  Up: Key Bindings
@@ -5987,26 +6345,24 @@ File: emacs,  Node: Local Keymaps,  Next: Minibuffer Maps,  Prev: Prefix Keymaps
 57.4.3 Local Keymaps
 --------------------
 
-So far we have explained the ins and outs of the global map.  Major
+So far, we have explained the ins and outs of the global map.  Major
 modes customize Emacs by providing their own key bindings in "local
 keymaps".  For example, C mode overrides <TAB> to make it indent the
-current line for C code.  Portions of text in the buffer can specify
-their own keymaps to substitute for the keymap of the buffer's major
-mode.
+current line for C code.  Minor modes can also have local keymaps;
+whenever a minor mode is in effect, the definitions in its keymap
+override both the major mode's local keymap and the global keymap.  In
+addition, portions of text in the buffer can specify their own keymaps,
+which override all other keymaps.
 
-   Minor modes can also have local keymaps.  Whenever a minor mode is
-in effect, the definitions in its keymap override both the major mode's
-local keymap and the global keymap.
-
-   A local keymap can locally redefine a key as a prefix key by defining
-it as a prefix keymap.  If the key is also defined globally as a prefix,
-then its local and global definitions (both keymaps) effectively
-combine: both of them are used to look up the event that follows the
-prefix key.  Thus, if the mode's local keymap defines `C-c' as another
-keymap, and that keymap defines `C-z' as a command, this provides a
-local meaning for `C-c C-z'.  This does not affect other sequences that
-start with `C-c'; if those sequences don't have their own local
-bindings, their global bindings remain in effect.
+   A local keymap can redefine a key as a prefix key by defining it as
+a prefix keymap.  If the key is also defined globally as a prefix, its
+local and global definitions (both keymaps) effectively combine: both
+definitions are used to look up the event that follows the prefix key.
+For example, if a local keymap defines `C-c' as a prefix keymap, and
+that keymap defines `C-z' as a command, this provides a local meaning
+for `C-c C-z'.  This does not affect other sequences that start with
+`C-c'; if those sequences don't have their own local bindings, their
+global bindings remain in effect.
 
    Another way to think of this is that Emacs handles a multi-event key
 sequence by looking in several keymaps, one by one, for a binding of the
@@ -6015,22 +6371,6 @@ modes that are enabled, then it checks the major mode's keymap, and then
 it checks the global keymap.  This is not precisely how key lookup
 works, but it's good enough for understanding the results in ordinary
 circumstances.
-
-   Most major modes construct their keymaps when the mode is used for
-the first time in a session.  If you wish to change one of these
-keymaps, you must use the major mode's "mode hook" (*note Hooks::).
-
-   For example, the command `texinfo-mode' to select Texinfo mode runs
-the hook `texinfo-mode-hook'.  Here's how you can use the hook to add
-local bindings (not very useful, we admit) for `C-c n' and `C-c p' in
-Texinfo mode:
-
-     (add-hook 'texinfo-mode-hook
-               '(lambda ()
-                  (define-key texinfo-mode-map "\C-cp"
-                              'backward-paragraph)
-                  (define-key texinfo-mode-map "\C-cn"
-                              'forward-paragraph)))
 
 
 File: emacs,  Node: Minibuffer Maps,  Next: Rebinding,  Prev: Local Keymaps,  Up: Key Bindings
@@ -6044,7 +6384,7 @@ completion and exit commands.
    * `minibuffer-local-map' is used for ordinary input (no completion).
 
    * `minibuffer-local-ns-map' is similar, except that <SPC> exits just
-     like <RET>.  This is used mainly for Mocklisp compatibility.
+     like <RET>.
 
    * `minibuffer-local-completion-map' is for permissive completion.
 
@@ -6065,8 +6405,12 @@ File: emacs,  Node: Rebinding,  Next: Init Rebinding,  Prev: Minibuffer Maps,  U
 The way to redefine an Emacs key is to change its entry in a keymap.
 You can change the global keymap, in which case the change is effective
 in all major modes (except those that have their own overriding local
-definitions for the same key).  Or you can change the current buffer's
-local map, which affects all buffers using the same major mode.
+bindings for the same key).  Or you can change a local keymap, which
+affects all buffers using the same major mode.
+
+   In this section, we describe how to rebind keys for the present
+Emacs session.  *Note Init Rebinding::, for a description of how to
+make key rebindings affect future Emacs sessions.
 
 `M-x global-set-key <RET> KEY CMD <RET>'
      Define KEY globally to run CMD.
@@ -6080,18 +6424,14 @@ local map, which affects all buffers using the same major mode.
 `M-x local-unset-key <RET> KEY'
      Make KEY undefined locally (in the major mode now in effect).
 
-   For example, suppose you like to execute commands in a subshell
-within an Emacs buffer, instead of suspending Emacs and executing
-commands in your login shell.  Normally, `C-z' is bound to the function
-`suspend-emacs' (when not using the X Window System), but you can
-change `C-z' to invoke an interactive subshell within Emacs, by binding
-it to `shell' as follows:
+   For example, the following binds `C-z' to the `shell' command (*note
+Interactive Shell::), replacing the normal global definition of `C-z':
 
      M-x global-set-key <RET> C-z shell <RET>
 
-`global-set-key' reads the command name after the key.   After you
-press the key, a message like this appears so that you can confirm that
-you are binding the key you want:
+The `global-set-key' command reads the command name after the key.
+After you press the key, a message like this appears so that you can
+confirm that you are binding the key you want:
 
      Set key C-z to command:
 
@@ -6137,15 +6477,15 @@ File: emacs,  Node: Init Rebinding,  Next: Modifier Keys,  Prev: Rebinding,  Up:
 ---------------------------------------
 
 If you have a set of key bindings that you like to use all the time,
-you can specify them in your initialization file by writing Lisp code
-(*note Init File::).
+you can specify them in your initialization file by writing Lisp code.
+*Note Init File::, for a description of the initialization file.
 
    There are several ways to write a key binding using Lisp.  The
 simplest is to use the `kbd' macro, which converts a textual
 representation of a key sequence--similar to how we have written key
 sequences in this manual--into a form that can be passed as an argument
-to `global-set-key'.  For example, here's how to bind `C-z' to `shell'
-(*note Interactive Shell::):
+to `global-set-key'.  For example, here's how to bind `C-z' to the
+`shell' command (*note Interactive Shell::):
 
      (global-set-key (kbd "C-z") 'shell)
 
@@ -6181,14 +6521,14 @@ Indentation::):
      (global-set-key "\C-x\t" 'indent-rigidly)
 
    When the key sequence includes function keys or mouse button events,
-or non-ASCII characters such as `C-=' or `H-a', you must use a vector
-to specify the key sequence.  Each element in the vector stands for an
+or non-ASCII characters such as `C-=' or `H-a', you can use a vector to
+specify the key sequence.  Each element in the vector stands for an
 input event; the elements are separated by spaces and surrounded by a
-pair of square brackets.  If an element is a symbol, simply write the
-symbol's name--no other delimiters or punctuation are needed.  If a
-vector element is a character, write it as a Lisp character constant:
-`?' followed by the character as it would appear in a string.  Here are
-some examples:
+pair of square brackets.  If a vector element is a character, write it
+as a Lisp character constant: `?' followed by the character as it would
+appear in a string.  Function keys are represented by symbols (*note
+Function Keys::); simply write the symbol's name, with no other
+delimiters or punctuation.  Here are some examples:
 
      (global-set-key [?\C-=] 'make-symbolic-link)
      (global-set-key [?\M-\C-=] 'make-symbolic-link)
@@ -6203,6 +6543,20 @@ You can use a vector for the simple cases too:
    Language and coding systems may cause problems with key bindings for
 non-ASCII characters.  *Note Init Non-ASCII::.
 
+   As described in *note Local Keymaps::, major modes and minor modes
+can define local keymaps.  These keymaps are constructed when the mode
+is used for the first time in a session.  If you wish to change one of
+these keymaps, you must use the "mode hook" (*note Hooks::).
+
+   For example, Texinfo mode runs the hook `texinfo-mode-hook'.  Here's
+how you can use the hook to add local bindings for `C-c n' and `C-c p'
+in Texinfo mode:
+
+     (add-hook 'texinfo-mode-hook
+               '(lambda ()
+                  (define-key texinfo-mode-map "\C-cp" 'backward-paragraph)
+                  (define-key texinfo-mode-map "\C-cn" 'forward-paragraph)))
+
 
 File: emacs,  Node: Modifier Keys,  Next: Function Keys,  Prev: Init Rebinding,  Up: Key Bindings
 
@@ -6216,13 +6570,13 @@ This concerns only alphabetical characters, and does not apply to
 "shifted" versions of other keys; for instance, `C-@' is not the same
 as `C-2'.
 
-   When you customize Emacs, you can make modified alphabetical
-characters case-sensitive.  For instance, you could make `M-a' and
-`M-A' run different commands.
+   A <Control>-modified alphabetical character is always considered
+case-insensitive: Emacs always treats `C-A' as `C-a', `C-B' as `C-b',
+and so forth.  The reason for this is historical.
 
-   As a special exception, a <Control>-modified alphabetical character
-is always case-insensitive, for historical reasons: Emacs always treats
-`C-A' as `C-a', `C-B' as `C-b', and so forth.
+   For all other modifiers, you can make the modified alphabetical
+characters case-sensitive when you customize Emacs.  For instance, you
+could make `M-a' and `M-A' run different commands.
 
    Although only the <Control> and <Meta> modifier keys are commonly
 used, Emacs supports three other modifier keys.  These are called
@@ -6592,353 +6946,4 @@ minor customization, you should read the `Emacs Lisp Reference Manual'.
 * Terminal Init::       Each terminal type can have an init file.
 * Find Init::	        How Emacs finds the init file.
 * Init Non-ASCII::      Using non-ASCII characters in an init file.
-
-
-File: emacs,  Node: Init Syntax,  Next: Init Examples,  Up: Init File
-
-57.6.1 Init File Syntax
------------------------
-
-The init file contains one or more Lisp expressions.  Each of these
-consists of a function name followed by arguments, all surrounded by
-parentheses.  For example, `(setq fill-column 60)' calls the function
-`setq' to set the variable `fill-column' (*note Filling::) to 60.
-
-   You can set any Lisp variable with `setq', but with certain
-variables `setq' won't do what you probably want in the `.emacs' file.
-Some variables automatically become buffer-local when set with `setq';
-what you want in `.emacs' is to set the default value, using
-`setq-default'.  Some customizable minor mode variables do special
-things to enable the mode when you set them with Customize, but
-ordinary `setq' won't do that; to enable the mode in your `.emacs'
-file, call the minor mode command.  The following section has examples
-of both of these methods.
-
-   The second argument to `setq' is an expression for the new value of
-the variable.  This can be a constant, a variable, or a function call
-expression.  In `.emacs', constants are used most of the time.  They
-can be:
-
-Numbers:
-     Numbers are written in decimal, with an optional initial minus
-     sign.
-
-Strings:
-     Lisp string syntax is the same as C string syntax with a few extra
-     features.  Use a double-quote character to begin and end a string
-     constant.
-
-     In a string, you can include newlines and special characters
-     literally.  But often it is cleaner to use backslash sequences for
-     them: `\n' for newline, `\b' for backspace, `\r' for carriage
-     return, `\t' for tab, `\f' for formfeed (control-L), `\e' for
-     escape, `\\' for a backslash, `\"' for a double-quote, or `\OOO'
-     for the character whose octal code is OOO.  Backslash and
-     double-quote are the only characters for which backslash sequences
-     are mandatory.
-
-     `\C-' can be used as a prefix for a control character, as in
-     `\C-s' for ASCII control-S, and `\M-' can be used as a prefix for
-     a Meta character, as in `\M-a' for `Meta-A' or `\M-\C-a' for
-     `Control-Meta-A'.
-
-     *Note Init Non-ASCII::, for information about including non-ASCII
-     in your init file.
-
-Characters:
-     Lisp character constant syntax consists of a `?' followed by
-     either a character or an escape sequence starting with `\'.
-     Examples: `?x', `?\n', `?\"', `?\)'.  Note that strings and
-     characters are not interchangeable in Lisp; some contexts require
-     one and some contexts require the other.
-
-     *Note Init Non-ASCII::, for information about binding commands to
-     keys which send non-ASCII characters.
-
-True:
-     `t' stands for `true'.
-
-False:
-     `nil' stands for `false'.
-
-Other Lisp objects:
-     Write a single-quote (`'') followed by the Lisp object you want.
-
-
-File: emacs,  Node: Init Examples,  Next: Terminal Init,  Prev: Init Syntax,  Up: Init File
-
-57.6.2 Init File Examples
--------------------------
-
-Here are some examples of doing certain commonly desired things with
-Lisp expressions:
-
-   * Add a directory to the variable `load-path'.  You can then put
-     Lisp libraries that are not included with Emacs in this directory,
-     and load them with `M-x load-library'.  *Note Lisp Libraries::.
-
-          (add-to-list 'load-path "/path/to/lisp/libraries")
-
-   * Make <TAB> in C mode just insert a tab if point is in the middle
-     of a line.
-
-          (setq c-tab-always-indent nil)
-
-     Here we have a variable whose value is normally `t' for `true' and
-     the alternative is `nil' for `false'.
-
-   * Make searches case sensitive by default (in all buffers that do not
-     override this).
-
-          (setq-default case-fold-search nil)
-
-     This sets the default value, which is effective in all buffers
-     that do not have local values for the variable.  Setting
-     `case-fold-search' with `setq' affects only the current buffer's
-     local value, which is not what you probably want to do in an init
-     file.
-
-   * Specify your own email address, if Emacs can't figure it out
-     correctly.
-
-          (setq user-mail-address "rumsfeld@torture.gov")
-
-     Various Emacs packages that need your own email address use the
-     value of `user-mail-address'.
-
-   * Make Text mode the default mode for new buffers.
-
-          (setq default-major-mode 'text-mode)
-
-     Note that `text-mode' is used because it is the command for
-     entering Text mode.  The single-quote before it makes the symbol a
-     constant; otherwise, `text-mode' would be treated as a variable
-     name.
-
-   * Set up defaults for the Latin-1 character set which supports most
-     of the languages of Western Europe.
-
-          (set-language-environment "Latin-1")
-
-   * Turn off Line Number mode, a global minor mode.
-
-          (line-number-mode 0)
-
-   * Turn on Auto Fill mode automatically in Text mode and related
-     modes.
-
-          (add-hook 'text-mode-hook
-            '(lambda () (auto-fill-mode 1)))
-
-     This shows how to add a hook function to a normal hook variable
-     (*note Hooks::).  The function we supply is a list starting with
-     `lambda', with a single-quote in front of it to make it a list
-     constant rather than an expression.
-
-     It's beyond the scope of this manual to explain Lisp functions,
-     but for this example it is enough to know that the effect is to
-     execute `(auto-fill-mode 1)' when Text mode is entered.  You can
-     replace that with any other expression that you like, or with
-     several expressions in a row.
-
-     Emacs comes with a function named `turn-on-auto-fill' whose
-     definition is `(lambda () (auto-fill-mode 1))'.  Thus, a simpler
-     way to write the above example is as follows:
-
-          (add-hook 'text-mode-hook 'turn-on-auto-fill)
-
-   * Load the installed Lisp library named `foo' (actually a file
-     `foo.elc' or `foo.el' in a standard Emacs directory).
-
-          (load "foo")
-
-     When the argument to `load' is a relative file name, not starting
-     with `/' or `~', `load' searches the directories in `load-path'
-     (*note Lisp Libraries::).
-
-   * Load the compiled Lisp file `foo.elc' from your home directory.
-
-          (load "~/foo.elc")
-
-     Here an absolute file name is used, so no searching is done.
-
-   * Tell Emacs to find the definition for the function `myfunction' by
-     loading a Lisp library named `mypackage' (i.e. a file
-     `mypackage.elc' or `mypackage.el'):
-
-          (autoload 'myfunction "mypackage" "Do what I say." t)
-
-     Here the string `"Do what I say."' is the function's documentation
-     string.  You specify it in the `autoload' definition so it will be
-     available for help commands even when the package is not loaded.
-     The last argument, `t', indicates that this function is
-     interactive; that is, it can be invoked interactively by typing
-     `M-x myfunction <RET>' or by binding it to a key.  If the function
-     is not interactive, omit the `t' or use `nil'.
-
-   * Rebind the key `C-x l' to run the function `make-symbolic-link'
-     (*note Init Rebinding::).
-
-          (global-set-key "\C-xl" 'make-symbolic-link)
-
-     or
-
-          (define-key global-map "\C-xl" 'make-symbolic-link)
-
-     Note once again the single-quote used to refer to the symbol
-     `make-symbolic-link' instead of its value as a variable.
-
-   * Do the same thing for Lisp mode only.
-
-          (define-key lisp-mode-map "\C-xl" 'make-symbolic-link)
-
-   * Redefine all keys which now run `next-line' in Fundamental mode so
-     that they run `forward-line' instead.
-
-          (substitute-key-definition 'next-line 'forward-line
-                                     global-map)
-
-   * Make `C-x C-v' undefined.
-
-          (global-unset-key "\C-x\C-v")
-
-     One reason to undefine a key is so that you can make it a prefix.
-     Simply defining `C-x C-v ANYTHING' will make `C-x C-v' a prefix,
-     but `C-x C-v' must first be freed of its usual non-prefix
-     definition.
-
-   * Make `$' have the syntax of punctuation in Text mode.  Note the
-     use of a character constant for `$'.
-
-          (modify-syntax-entry ?\$ "." text-mode-syntax-table)
-
-   * Enable the use of the command `narrow-to-region' without
-     confirmation.
-
-          (put 'narrow-to-region 'disabled nil)
-
-   * Adjusting the configuration to various platforms and Emacs
-     versions.
-
-     Users typically want Emacs to behave the same on all systems, so
-     the same init file is right for all platforms.  However, sometimes
-     it happens that a function you use for customizing Emacs is not
-     available on some platforms or in older Emacs versions.  To deal
-     with that situation, put the customization inside a conditional
-     that tests whether the function or facility is available, like
-     this:
-
-          (if (fboundp 'blink-cursor-mode)
-              (blink-cursor-mode 0))
-
-          (if (boundp 'coding-category-utf-8)
-              (set-coding-priority '(coding-category-utf-8)))
-
-     You can also simply disregard the errors that occur if the
-     function is not defined.
-
-          (condition case ()
-              (set-face-background 'region "grey75")
-            (error nil))
-
-     A `setq' on a variable which does not exist is generally harmless,
-     so those do not need a conditional.
-
-
-File: emacs,  Node: Terminal Init,  Next: Find Init,  Prev: Init Examples,  Up: Init File
-
-57.6.3 Terminal-specific Initialization
----------------------------------------
-
-Each terminal type can have a Lisp library to be loaded into Emacs when
-it is run on that type of terminal.  For a terminal type named
-TERMTYPE, the library is called `term/TERMTYPE' and it is found by
-searching the directories `load-path' as usual and trying the suffixes
-`.elc' and `.el'.  Normally it appears in the subdirectory `term' of
-the directory where most Emacs libraries are kept.
-
-   The usual purpose of the terminal-specific library is to map the
-escape sequences used by the terminal's function keys onto more
-meaningful names, using `input-decode-map' (or `function-key-map'
-before it).  See the file `term/lk201.el' for an example of how this is
-done.  Many function keys are mapped automatically according to the
-information in the Termcap data base; the terminal-specific library
-needs to map only the function keys that Termcap does not specify.
-
-   When the terminal type contains a hyphen, only the part of the name
-before the first hyphen is significant in choosing the library name.
-Thus, terminal types `aaa-48' and `aaa-30-rv' both use the library
-`term/aaa'.  The code in the library can use `(getenv "TERM")' to find
-the full terminal type name.
-
-   The library's name is constructed by concatenating the value of the
-variable `term-file-prefix' and the terminal type.  Your `.emacs' file
-can prevent the loading of the terminal-specific library by setting
-`term-file-prefix' to `nil'.
-
-   Emacs runs the hook `term-setup-hook' at the end of initialization,
-after both your `.emacs' file and any terminal-specific library have
-been read in.  Add hook functions to this hook if you wish to override
-part of any of the terminal-specific libraries and to define
-initializations for terminals that do not have a library.  *Note
-Hooks::.
-
-
-File: emacs,  Node: Find Init,  Next: Init Non-ASCII,  Prev: Terminal Init,  Up: Init File
-
-57.6.4 How Emacs Finds Your Init File
--------------------------------------
-
-Normally Emacs uses the environment variable `HOME' (*note HOME:
-General Variables.) to find `.emacs'; that's what `~' means in a file
-name.  If `.emacs' is not found inside `~/' (nor `.emacs.el'), Emacs
-looks for `~/.emacs.d/init.el' (which, like `~/.emacs.el', can be
-byte-compiled).
-
-   However, if you run Emacs from a shell started by `su', Emacs tries
-to find your own `.emacs', not that of the user you are currently
-pretending to be.  The idea is that you should get your own editor
-customizations even if you are running as the super user.
-
-   More precisely, Emacs first determines which user's init file to use.
-It gets your user name from the environment variables `LOGNAME' and
-`USER'; if neither of those exists, it uses effective user-ID.  If that
-user name matches the real user-ID, then Emacs uses `HOME'; otherwise,
-it looks up the home directory corresponding to that user name in the
-system's data base of users.
-
-
-File: emacs,  Node: Init Non-ASCII,  Prev: Find Init,  Up: Init File
-
-57.6.5 Non-ASCII Characters in Init Files
------------------------------------------
-
-Language and coding systems may cause problems if your init file
-contains non-ASCII characters, such as accented letters, in strings or
-key bindings.
-
-   If you want to use non-ASCII characters in your init file, you
-should put a `-*-coding: CODING-SYSTEM-*-' tag on the first line of the
-init file, and specify a coding system that supports the character(s)
-in question.  *Note Recognize Coding::.  This is because the defaults
-for decoding non-ASCII text might not yet be set up by the time Emacs
-reads those parts of your init file which use such strings, possibly
-leading Emacs to decode those strings incorrectly.  You should then
-avoid adding Emacs Lisp code that modifies the coding system in other
-ways, such as calls to `set-language-environment'.
-
-   To bind non-ASCII keys, you must use a vector (*note Init
-Rebinding::).  The string syntax cannot be used, since the non-ASCII
-characters will be interpreted as meta keys.  For instance:
-
-     (global-set-key [?CHAR] 'some-function)
-
-Type `C-q', followed by the key you want to bind, to insert CHAR.
-
-   *Warning:* if you change the keyboard encoding, or change between
-multibyte and unibyte mode, or anything that would alter which code
-`C-q' would insert for that character, this key binding may stop
-working.  It is therefore advisable to use one and only one coding
-system, for your init file as well as the files you edit.  For example,
-don't mix the `latin-1' and `latin-9' coding systems.
 

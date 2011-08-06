@@ -1,6 +1,6 @@
 ;;; cwarn.el --- highlight suspicious C and C++ constructions
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;; Free Software Foundation, Inc.
 
 ;; Author: Anders Lindgren <andersl@andersl.com>
@@ -186,6 +186,8 @@ deactivated."
 ;;;###autoload
 (define-minor-mode cwarn-mode
   "Minor mode that highlights suspicious C and C++ constructions.
+
+Suspicious constructs are highlighted using `font-lock-warning-face'.
 
 Note, in addition to enabling this minor mode, the major mode must
 be included in the variable `cwarn-configuration'.  By default C and

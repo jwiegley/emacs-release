@@ -24,7 +24,7 @@
 This is version @value{VERSION}@value{EDITION} of @cite{The MH-E
 Manual}, last updated @value{UPDATED}.
 
-Copyright @copyright{} 1995, 2001, 2002, 2003, 2005, 2006, 2007, 2008, 2009
+Copyright @copyright{} 1995, 2001, 2002, 2003, 2005, 2006, 2007, 2008, 2009, 2010
 Free Software Foundation, Inc.
 
 @c This dual license has been agreed upon by the FSF.
@@ -6981,8 +6981,8 @@ base=/home/user/Mail
 # are subfolders within the folder
 mh=archive...:inbox:drafts:news:sent:trash
 
-vfolder_format=raw
-database=/home/user/Mail/mairix/database
+vfolder_format=mh
+database=/home/user/Mail/.mairix/database
 @end group
 @end smallexample
 
@@ -7023,7 +7023,7 @@ daily from cron:
 
 @smallexample
 mknmz -f /home/user/Mail/.namazu/mknmzrc -O /home/user/Mail/.namazu \
-         /home/user/Mail
+      -q /home/user/Mail
 @end smallexample
 
 @subsection pick

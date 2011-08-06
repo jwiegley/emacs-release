@@ -1,7 +1,7 @@
 ;;; make-mode.el --- makefile editing commands for Emacs
 
 ;; Copyright (C) 1992, 1994, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Thomas Neumann <tom@smart.bo.open.de>
 ;;	Eric S. Raymond <esr@snark.thyrsus.com>
@@ -104,7 +104,7 @@
     (t (:reverse-video t)))
   "Face to use for highlighting leading spaces in Font-Lock mode."
   :group 'makefile)
-(put 'makefile-space-face 'face-alias 'makefile-space)
+(define-obsolete-face-alias 'makefile-space-face 'makefile-space "22.1")
 
 (defface makefile-targets
   ;; This needs to go along both with foreground and background colors (i.e. shell)
@@ -231,15 +231,15 @@ to MODIFY A FILE WITHOUT YOUR CONFIRMATION when \"it seems necessary\"."
 ;; Special targets for DMake, Sun's make ...
 ;;
 (defcustom makefile-special-targets-list
-  '(("DEFAULT")      ("DONE")        ("ERROR")        ("EXPORT")
-    ("FAILED")       ("GROUPEPILOG") ("GROUPPROLOG")  ("IGNORE")
-    ("IMPORT")       ("INCLUDE")     ("INCLUDEDIRS")  ("INIT")
-    ("KEEP_STATE")   ("MAKEFILES")   ("MAKE_VERSION") ("NO_PARALLEL")
-    ("PARALLEL")     ("PHONY")       ("PRECIOUS")     ("REMOVE")
-    ("SCCS_GET")     ("SILENT")      ("SOURCE")       ("SUFFIXES")
-    ("WAIT")         ("c.o")         ("C.o")          ("m.o")
-    ("el.elc")       ("y.c")         ("s.o"))
-  "*List of special targets.
+  '("DEFAULT"      "DONE"        "ERROR"        "EXPORT"
+    "FAILED"       "GROUPEPILOG" "GROUPPROLOG"  "IGNORE"
+    "IMPORT"       "INCLUDE"     "INCLUDEDIRS"  "INIT"
+    "KEEP_STATE"   "MAKEFILES"   "MAKE_VERSION" "NO_PARALLEL"
+    "PARALLEL"     "PHONY"       "PRECIOUS"     "REMOVE"
+    "SCCS_GET"     "SILENT"      "SOURCE"       "SUFFIXES"
+    "WAIT"         "c.o"         "C.o"          "m.o"
+    "el.elc"       "y.c"         "s.o")
+  "List of special targets.
 You will be offered to complete on one of those in the minibuffer whenever
 you enter a \".\" at the beginning of a line in `makefile-mode'."
   :type '(repeat (list string))
@@ -272,7 +272,7 @@ not be enclosed in { } or ( )."
   "Characters to skip to find a line that might be a dependency.")
 
 (defvar makefile-rule-action-regex
-  "^\t[ \t]*\\([-@]*\\)[ \t]*\\(\\(?:.*\\\\\n\\)*.*\\)"
+  "^\t[ \t]*\\(?:\\([-@]+\\)[ \t]*\\)\\(.*\\(?:\\\\\n.*\\)*\\)"
   "Regex used to highlight rule action lines in font lock mode.")
 
 (defconst makefile-makepp-rule-action-regex
@@ -355,8 +355,9 @@ not be enclosed in { } or ( )."
      (3 'font-lock-string-face prepend t))
 
     ;; Rule actions.
+    ;; FIXME: When this spans multiple lines we need font-lock-multiline.
     (makefile-match-action
-     (1 font-lock-type-face)
+     (1 font-lock-type-face nil t)
      (2 'makefile-shell prepend)
      ;; Only makepp has builtin commands.
      (3 font-lock-builtin-face prepend t))
@@ -1185,87 +1186,34 @@ The context determines which are considered."
 		(skip-chars-backward "^$(){}:#= \t\n")
 		(point)))
 	 (try (buffer-substring beg (point)))
-	 (do-macros nil)
-	 (paren nil))
+	 (paren nil)
+	 (do-macros
+          (save-excursion
+            (goto-char beg)
+            (let ((pc (preceding-char)))
+              (cond
+               ;; Preceding "$" means macros only.
+               ((= pc ?$)
+                t)
 
-    (save-excursion
-      (goto-char beg)
-      (let ((pc (preceding-char)))
-	(cond
-	 ;; Beginning of line means anything.
-	 ((bolp)
-	  ())
+               ;; Preceding "$(" or "${" means macros only.
+               ((and (memq pc '(?\{ ?\())
+                     (progn
+                       (setq paren (if (eq paren ?\{) ?\} ?\)))
+                       (backward-char)
+                       (= (preceding-char) ?$)))
+                t)))))
 
-	 ;; Preceding "$" means macros only.
-	 ((= pc ?$)
-	  (setq do-macros t))
-
-	 ;; Preceding "$(" or "${" means macros only.
-	 ((and (or (= pc ?{)
-		   (= pc ?\())
-	       (progn
-		 (setq paren pc)
-		 (backward-char)
-		 (and (not (bolp))
-		      (= (preceding-char) ?$))))
-	  (setq do-macros t)))))
-
-    ;; Try completion.
-    (let* ((table (append (if do-macros
-			      '()
-			    makefile-target-table)
-			  makefile-macro-table))
-	   (completion (try-completion try table)))
-      (cond
-       ;; Exact match, so insert closing paren or colon.
-       ((eq completion t)
-	(insert (if do-macros
-		    (if (eq paren ?{)
-			?}
-		      ?\))
-		  (if (save-excursion
-			(goto-char beg)
-			(bolp))
-		      ":"
-		    " "))))
-
-       ;; No match.
-       ((null completion)
-	(message "Can't find completion for \"%s\"" try)
-	(ding))
-
-       ;; Partial completion.
-       ((not (string= try completion))
-	;; FIXME it would be nice to supply the closing paren if an
-	;; exact, unambiguous match were found.  That is not possible
-	;; right now.  Ditto closing ":" for targets.
-	(delete-region beg (point))
-
-	;; DO-MACROS means doing macros only.  If not that, then check
-	;; to see if this completion is a macro.  Special insertion
-	;; must be done for macros.
-	(if (or do-macros
-		(assoc completion makefile-macro-table))
-	    (let ((makefile-use-curly-braces-for-macros-p
-		   (or (eq paren ?{)
-		       makefile-use-curly-braces-for-macros-p)))
-	      (delete-backward-char 2)
-	      (makefile-do-macro-insertion completion)
-	      (delete-backward-char 1))
-
-	  ;; Just insert targets.
-	  (insert completion)))
-
-       ;; Can't complete any more, so make completion list.  FIXME
-       ;; this doesn't do the right thing when the completion is
-       ;; actually inserted.  I don't think there is an easy way to do
-       ;; that.
-       (t
-	(message "Making completion list...")
-	(let ((list (all-completions try table)))
-	  (with-output-to-temp-buffer "*Completions*"
-	    (display-completion-list list try)))
-	(message "Making completion list...done"))))))
+         (table (apply-partially 'completion-table-with-terminator
+                                   (cond
+                                    (do-macros (or paren ""))
+                                    ((save-excursion (goto-char beg) (bolp)) ":")
+                                    (t " "))
+                                   (append (if do-macros
+                                               '()
+                                             makefile-target-table)
+                                           makefile-macro-table))))
+    (completion-in-region beg (point) table)))
 
 
 
@@ -1486,9 +1434,10 @@ definition and conveniently use this command."
   (let ((this-line (count-lines (point-min) (point))))
     (setq this-line (max 1 this-line))
     (makefile-browser-toggle-state-for-line this-line)
-    (goto-line this-line)
+    (goto-char (point-min))
+    (forward-line (1- this-line))
     (let ((inhibit-read-only t))
-      (beginning-of-line)
+      (beginning-of-line)		; redundant?
       (if (makefile-browser-on-macro-line-p)
 	  (let ((macro-name (makefile-browser-this-line-macro-name)))
 	    (delete-region (point) (progn (end-of-line) (point)))
@@ -1528,7 +1477,7 @@ large dependencies from the browser to the client buffer.
 Insertion takes place at point."
   (interactive)
   (save-excursion
-    (goto-line 1)
+    (goto-char (point-min))
     (let ((current-line 1))
       (while (not (eobp))
 	(if (makefile-browser-get-state-for-line current-line)

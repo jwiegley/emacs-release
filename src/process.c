@@ -1,7 +1,7 @@
 /* Asynchronous subprocess control for GNU Emacs.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995,
 		 1996, 1998, 1999, 2001, 2002, 2003, 2004,
-		 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+		 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -38,6 +38,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <sys/types.h>		/* some typedefs are used in sys/file.h */
 #include <sys/file.h>
 #include <sys/stat.h>
+#include <setjmp.h>
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
@@ -119,10 +120,14 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "composite.h"
 #include "atimer.h"
 
+#if defined (USE_GTK) || defined (HAVE_GCONF)
+#include "xgselect.h"
+#endif /* defined (USE_GTK) || defined (HAVE_GCONF) */
+
 Lisp_Object Qprocessp;
 Lisp_Object Qrun, Qstop, Qsignal;
 Lisp_Object Qopen, Qclosed, Qconnect, Qfailed, Qlisten;
-Lisp_Object Qlocal, Qipv4, Qdatagram;
+Lisp_Object Qlocal, Qipv4, Qdatagram, Qseqpacket;
 Lisp_Object Qreal, Qnetwork, Qserial;
 #ifdef AF_INET6
 Lisp_Object Qipv6;
@@ -248,6 +253,10 @@ int update_tick;
 #endif /* DATAGRAM_SOCKETS */
 #endif /* BROKEN_DATAGRAM_SOCKETS */
 
+#if defined HAVE_LOCAL_SOCKETS && defined DATAGRAM_SOCKETS
+# define HAVE_SEQPACKET
+#endif
+
 #if !defined (ADAPTIVE_READ_BUFFERING) && !defined (NO_ADAPTIVE_READ_BUFFERING)
 #ifdef EMACS_HAS_USECS
 #define ADAPTIVE_READ_BUFFERING
@@ -284,6 +293,7 @@ static int keyboard_bit_set P_ ((SELECT_TYPE *));
 static void deactivate_process P_ ((Lisp_Object));
 static void status_notify P_ ((struct Lisp_Process *));
 static int read_process_output P_ ((Lisp_Object, int));
+static void create_pty P_ ((Lisp_Object));
 
 /* If we support a window system, turn on the code to poll periodically
    to detect C-g.  It isn't actually used when doing interrupt input.  */
@@ -294,7 +304,6 @@ static int read_process_output P_ ((Lisp_Object, int));
 static Lisp_Object get_process ();
 static void exec_sentinel ();
 
-extern EMACS_TIME timer_check ();
 extern int timers_run;
 
 /* Mask of bits indicating the descriptors that we wait for input on.  */
@@ -476,7 +485,7 @@ status_message (p)
 	  if (! NILP (Vlocale_coding_system))
 	    string = (code_convert_string_norecord
 		      (string, Vlocale_coding_system, 0));
-	  c1 = STRING_CHAR ((char *) SDATA (string), 0);
+	  c1 = STRING_CHAR ((char *) SDATA (string));
 	  c2 = DOWNCASE (c1);
 	  if (c1 != c2)
 	    Faset (string, make_number (0), make_number (c2));
@@ -785,6 +794,7 @@ nil, indicating the current buffer's process.  */)
       p->status = Fcons (Qexit, Fcons (make_number (0), Qnil));
       p->tick = ++process_tick;
       status_notify (p);
+      redisplay_preserve_echo_area (13);
     }
   else if (p->infd >= 0)
     {
@@ -816,6 +826,7 @@ nil, indicating the current buffer's process.  */)
 	    = Fcons (Qsignal, Fcons (make_number (SIGKILL), Qnil));
 	  p->tick = ++process_tick;
 	  status_notify (p);
+	  redisplay_preserve_echo_area (13);
 	}
     }
   remove_process (process);
@@ -1133,7 +1144,7 @@ DEFUN ("set-process-query-on-exit-flag",
        2, 2, 0,
        doc: /* Specify if query is needed for PROCESS when Emacs is exited.
 If the second argument FLAG is non-nil, Emacs will query the user before
-exiting if PROCESS is running.  */)
+exiting or killing a buffer if PROCESS is running.  */)
      (process, flag)
      register Lisp_Object process, flag;
 {
@@ -1519,7 +1530,7 @@ list_processes_1 (query_only)
 	    insert_string ("?");
 	  if (INTEGERP (speed))
 	    {
-	      sprintf (tembuf, " at %d b/s", XINT (speed));
+	      sprintf (tembuf, " at %ld b/s", (long) XINT (speed));
 	      insert_string (tembuf);
 	    }
 	  insert_string (")\n");
@@ -1530,6 +1541,8 @@ list_processes_1 (query_only)
 	  while (1)
 	    {
 	      tem1 = Fcar (tem);
+	      if (NILP (tem1))
+		break;
 	      Finsert (1, &tem1);
 	      tem = Fcdr (tem);
 	      if (NILP (tem))
@@ -1540,7 +1553,10 @@ list_processes_1 (query_only)
        }
     }
   if (exited)
-    status_notify (NULL);
+    {
+      status_notify (NULL);
+      redisplay_preserve_echo_area (13);
+    }
   return Qnil;
 }
 
@@ -1579,8 +1595,9 @@ at end of BUFFER, unless you specify an output stream or filter
 function to handle the output.  BUFFER may also be nil, meaning that
 this process is not associated with any buffer.
 
-PROGRAM is the program file name.  It is searched for in PATH.
-Remaining arguments are strings to give program as arguments.
+PROGRAM is the program file name.  It is searched for in PATH.  If
+nil, just associate a pty with the buffer.  Remaining arguments are
+strings to give program as arguments.
 
 If you want to separate standard output from standard error, invoke
 the command through a shell and redirect one of them using the shell
@@ -1634,7 +1651,8 @@ usage: (start-process NAME BUFFER PROGRAM &rest PROGRAM-ARGS)  */)
 
   program = args[2];
 
-  CHECK_STRING (program);
+  if (!NILP (program))
+    CHECK_STRING (program);
 
   proc = make_process (name);
   /* If an error occurs and we can't start the process, we want to
@@ -1680,7 +1698,8 @@ usage: (start-process NAME BUFFER PROGRAM &rest PROGRAM-ARGS)  */)
 	args2[0] = Qstart_process;
 	for (i = 0; i < nargs; i++) args2[i + 1] = args[i];
 	GCPRO2 (proc, current_dir);
-	coding_systems = Ffind_operation_coding_system (nargs + 1, args2);
+	if (!NILP (program))
+	  coding_systems = Ffind_operation_coding_system (nargs + 1, args2);
 	UNGCPRO;
 	if (CONSP (coding_systems))
 	  val = XCAR (coding_systems);
@@ -1698,7 +1717,8 @@ usage: (start-process NAME BUFFER PROGRAM &rest PROGRAM-ARGS)  */)
 	    args2[0] = Qstart_process;
 	    for (i = 0; i < nargs; i++) args2[i + 1] = args[i];
 	    GCPRO2 (proc, current_dir);
-	    coding_systems = Ffind_operation_coding_system (nargs + 1, args2);
+	    if (!NILP (program))
+	      coding_systems = Ffind_operation_coding_system (nargs + 1, args2);
 	    UNGCPRO;
 	  }
 	if (CONSP (coding_systems))
@@ -1709,71 +1729,6 @@ usage: (start-process NAME BUFFER PROGRAM &rest PROGRAM-ARGS)  */)
     XPROCESS (proc)->encode_coding_system = val;
   }
 
-  /* If program file name is not absolute, search our path for it.
-     Put the name we will really use in TEM.  */
-  if (!IS_DIRECTORY_SEP (SREF (program, 0))
-      && !(SCHARS (program) > 1
-	   && IS_DEVICE_SEP (SREF (program, 1))))
-    {
-      struct gcpro gcpro1, gcpro2, gcpro3, gcpro4;
-
-      tem = Qnil;
-      GCPRO4 (name, program, buffer, current_dir);
-      openp (Vexec_path, program, Vexec_suffixes, &tem, make_number (X_OK));
-      UNGCPRO;
-      if (NILP (tem))
-	report_file_error ("Searching for program", Fcons (program, Qnil));
-      tem = Fexpand_file_name (tem, Qnil);
-    }
-  else
-    {
-      if (!NILP (Ffile_directory_p (program)))
-	error ("Specified program for new process is a directory");
-      tem = program;
-    }
-
-  /* If program file name starts with /: for quoting a magic name,
-     discard that.  */
-  if (SBYTES (tem) > 2 && SREF (tem, 0) == '/'
-      && SREF (tem, 1) == ':')
-    tem = Fsubstring (tem, make_number (2), Qnil);
-
-  {
-    struct gcpro gcpro1;
-    GCPRO1 (tem);
-
-    /* Encode the file name and put it in NEW_ARGV.
-       That's where the child will use it to execute the program.  */
-    tem = Fcons (ENCODE_FILE (tem), Qnil);
-
-    /* Here we encode arguments by the coding system used for sending
-       data to the process.  We don't support using different coding
-       systems for encoding arguments and for encoding data sent to the
-       process.  */
-
-    for (i = 3; i < nargs; i++)
-      {
-	tem = Fcons (args[i], tem);
-	CHECK_STRING (XCAR (tem));
-	if (STRING_MULTIBYTE (XCAR (tem)))
-	  XSETCAR (tem,
-		   code_convert_string_norecord
-		   (XCAR (tem), XPROCESS (proc)->encode_coding_system, 1));
-      }
-
-    UNGCPRO;
-  }
-
-  /* Now that everything is encoded we can collect the strings into
-     NEW_ARGV.  */
-  new_argv = (unsigned char **) alloca ((nargs - 1) * sizeof (char *));
-  new_argv[nargs - 2] = 0;
-
-  for (i = nargs - 3; i >= 0; i--)
-    {
-      new_argv[i] = SDATA (XCAR (tem));
-      tem = XCDR (tem);
-    }
 
   XPROCESS (proc)->decoding_buf = make_uninit_string (0);
   XPROCESS (proc)->decoding_carryover = 0;
@@ -1782,7 +1737,78 @@ usage: (start-process NAME BUFFER PROGRAM &rest PROGRAM-ARGS)  */)
   XPROCESS (proc)->inherit_coding_system_flag
     = !(NILP (buffer) || !inherit_process_coding_system);
 
-  create_process (proc, (char **) new_argv, current_dir);
+  if (!NILP (program))
+    {
+      /* If program file name is not absolute, search our path for it.
+	 Put the name we will really use in TEM.  */
+      if (!IS_DIRECTORY_SEP (SREF (program, 0))
+	  && !(SCHARS (program) > 1
+	       && IS_DEVICE_SEP (SREF (program, 1))))
+	{
+	  struct gcpro gcpro1, gcpro2, gcpro3, gcpro4;
+
+	  tem = Qnil;
+	  GCPRO4 (name, program, buffer, current_dir);
+	  openp (Vexec_path, program, Vexec_suffixes, &tem, make_number (X_OK));
+	  UNGCPRO;
+	  if (NILP (tem))
+	    report_file_error ("Searching for program", Fcons (program, Qnil));
+	  tem = Fexpand_file_name (tem, Qnil);
+	}
+      else
+	{
+	  if (!NILP (Ffile_directory_p (program)))
+	    error ("Specified program for new process is a directory");
+	  tem = program;
+	}
+
+      /* If program file name starts with /: for quoting a magic name,
+	 discard that.  */
+      if (SBYTES (tem) > 2 && SREF (tem, 0) == '/'
+	  && SREF (tem, 1) == ':')
+	tem = Fsubstring (tem, make_number (2), Qnil);
+
+      {
+	struct gcpro gcpro1;
+	GCPRO1 (tem);
+
+	/* Encode the file name and put it in NEW_ARGV.
+	   That's where the child will use it to execute the program.  */
+	tem = Fcons (ENCODE_FILE (tem), Qnil);
+
+	/* Here we encode arguments by the coding system used for sending
+	   data to the process.  We don't support using different coding
+	   systems for encoding arguments and for encoding data sent to the
+	   process.  */
+
+	for (i = 3; i < nargs; i++)
+	  {
+	    tem = Fcons (args[i], tem);
+	    CHECK_STRING (XCAR (tem));
+	    if (STRING_MULTIBYTE (XCAR (tem)))
+	      XSETCAR (tem,
+		       code_convert_string_norecord
+		       (XCAR (tem), XPROCESS (proc)->encode_coding_system, 1));
+	  }
+
+	UNGCPRO;
+      }
+
+      /* Now that everything is encoded we can collect the strings into
+	 NEW_ARGV.  */
+      new_argv = (unsigned char **) alloca ((nargs - 1) * sizeof (char *));
+      new_argv[nargs - 2] = 0;
+
+      for (i = nargs - 3; i >= 0; i--)
+	{
+	  new_argv[i] = SDATA (XCAR (tem));
+	  tem = XCDR (tem);
+	}
+
+      create_process (proc, (char **) new_argv, current_dir);
+    }
+  else
+    create_pty (proc);
 
   return unbind_to (count, proc);
 }
@@ -1799,7 +1825,7 @@ start_process_unwind (proc)
     abort ();
 
   /* Was PROC started successfully?  */
-  if (XPROCESS (proc)->pid <= 0)
+  if (XPROCESS (proc)->pid == -1)
     remove_process (proc);
 
   return Qnil;
@@ -2268,6 +2294,88 @@ create_process (process, new_argv, current_dir)
     report_file_error ("Doing vfork", Qnil);
 }
 
+void
+create_pty (process)
+     Lisp_Object process;
+{
+  int inchannel, outchannel;
+
+  /* Use volatile to protect variables from being clobbered by longjmp.  */
+  volatile int forkin, forkout;
+  volatile int pty_flag = 0;
+
+  inchannel = outchannel = -1;
+
+#ifdef HAVE_PTYS
+  if (!NILP (Vprocess_connection_type))
+    outchannel = inchannel = allocate_pty ();
+
+  if (inchannel >= 0)
+    {
+#if ! defined (USG) || defined (USG_SUBTTY_WORKS)
+      /* On most USG systems it does not work to open the pty's tty here,
+	 then close it and reopen it in the child.  */
+#ifdef O_NOCTTY
+      /* Don't let this terminal become our controlling terminal
+	 (in case we don't have one).  */
+      forkout = forkin = emacs_open (pty_name, O_RDWR | O_NOCTTY, 0);
+#else
+      forkout = forkin = emacs_open (pty_name, O_RDWR, 0);
+#endif
+      if (forkin < 0)
+	report_file_error ("Opening pty", Qnil);
+#if defined (DONT_REOPEN_PTY)
+      /* In the case that vfork is defined as fork, the parent process
+	 (Emacs) may send some data before the child process completes
+	 tty options setup.  So we setup tty before forking.  */
+      child_setup_tty (forkout);
+#endif /* DONT_REOPEN_PTY */
+#else
+      forkin = forkout = -1;
+#endif /* not USG, or USG_SUBTTY_WORKS */
+      pty_flag = 1;
+    }
+#endif /* HAVE_PTYS */
+
+#ifdef O_NONBLOCK
+  fcntl (inchannel, F_SETFL, O_NONBLOCK);
+  fcntl (outchannel, F_SETFL, O_NONBLOCK);
+#else
+#ifdef O_NDELAY
+  fcntl (inchannel, F_SETFL, O_NDELAY);
+  fcntl (outchannel, F_SETFL, O_NDELAY);
+#endif
+#endif
+
+  /* Record this as an active process, with its channels.
+     As a result, child_setup will close Emacs's side of the pipes.  */
+  chan_process[inchannel] = process;
+  XPROCESS (process)->infd = inchannel;
+  XPROCESS (process)->outfd = outchannel;
+
+  /* Previously we recorded the tty descriptor used in the subprocess.
+     It was only used for getting the foreground tty process, so now
+     we just reopen the device (see emacs_get_tty_pgrp) as this is
+     more portable (see USG_SUBTTY_WORKS above).  */
+
+  XPROCESS (process)->pty_flag = pty_flag;
+  XPROCESS (process)->status = Qrun;
+  setup_process_coding_systems (process);
+
+  FD_SET (inchannel, &input_wait_mask);
+  FD_SET (inchannel, &non_keyboard_wait_mask);
+  if (inchannel > max_process_desc)
+    max_process_desc = inchannel;
+
+  XPROCESS (process)->pid = -2;
+#ifdef HAVE_PTYS
+  if (pty_flag)
+    XPROCESS (process)->tty_name = build_string (pty_name);
+  else
+#endif
+    XPROCESS (process)->tty_name = Qnil;
+}
+
 
 #ifdef HAVE_SOCKETS
 
@@ -2506,7 +2614,7 @@ Returns nil upon error setting address, ADDRESS otherwise.  */)
 #endif
 
 
-static struct socket_options {
+static const struct socket_options {
   /* The name of this option.  Should be lowercase version of option
      name without SO_ prefix. */
   char *name;
@@ -2557,7 +2665,7 @@ set_socket_option (s, opt, val)
      Lisp_Object opt, val;
 {
   char *name;
-  struct socket_options *sopt;
+  const struct socket_options *sopt;
   int ret = 0;
 
   CHECK_SYMBOL (opt);
@@ -3019,7 +3127,8 @@ compiled with getaddrinfo, a port number can also be specified as a
 string, e.g. "80", as well as an integer.  This is not portable.)
 
 :type TYPE -- TYPE is the type of connection.  The default (nil) is a
-stream type connection, `datagram' creates a datagram type connection.
+stream type connection, `datagram' creates a datagram type connection,
+`seqpacket' creates a reliable datagram connection.
 
 :family FAMILY -- FAMILY is the address (and protocol) family for the
 service specified by HOST and SERVICE.  The default (nil) is to use
@@ -3198,6 +3307,10 @@ usage: (make-network-process &rest ARGS)  */)
   else if (EQ (tem, Qdatagram))
     socktype = SOCK_DGRAM;
 #endif
+#ifdef HAVE_SEQPACKET
+  else if (EQ (tem, Qseqpacket))
+    socktype = SOCK_SEQPACKET;
+#endif
   else
     error ("Unsupported connection type");
 
@@ -3220,7 +3333,7 @@ usage: (make-network-process &rest ARGS)  */)
   QCaddress = is_server ? QClocal : QCremote;
 
   /* :nowait BOOL */
-  if (!is_server && socktype == SOCK_STREAM
+  if (!is_server && socktype != SOCK_DGRAM
       && (tem = Fplist_get (contact, QCnowait), !NILP (tem)))
     {
 #ifndef NON_BLOCKING_CONNECT
@@ -3315,7 +3428,7 @@ usage: (make-network-process &rest ARGS)  */)
      Some kernels have a bug which causes retrying connect to fail
      after a connect.  Polling can interfere with gethostbyname too.  */
 #ifdef POLL_FOR_INPUT
-  if (socktype == SOCK_STREAM)
+  if (socktype != SOCK_DGRAM)
     {
       record_unwind_protect (unwind_stop_other_atimers, Qnil);
       bind_polling_period (10);
@@ -3518,7 +3631,7 @@ usage: (make-network-process &rest ARGS)  */)
 	    }
 #endif
 
-	  if (socktype == SOCK_STREAM && listen (s, backlog))
+	  if (socktype != SOCK_DGRAM && listen (s, backlog))
 	    report_file_error ("Cannot listen on server socket", Qnil);
 
 	  break;
@@ -3681,7 +3794,7 @@ usage: (make-network-process &rest ARGS)  */)
   p->pid = 0;
   p->infd  = inch;
   p->outfd = outch;
-  if (is_server && socktype == SOCK_STREAM)
+  if (is_server && socktype != SOCK_DGRAM)
     p->status = Qlisten;
 
   /* Make the process marker point into the process buffer (if any).  */
@@ -3880,10 +3993,10 @@ format; see the description of ADDRESS in `make-network-process'.  */)
 
 struct ifflag_def {
   int flag_bit;
-  char *flag_sym;
+  const char *flag_sym;
 };
 
-static struct ifflag_def ifflag_table[] = {
+static const struct ifflag_def ifflag_table[] = {
 #ifdef IFF_UP
   { IFF_UP,		"up" },
 #endif
@@ -3979,7 +4092,7 @@ FLAGS is the current flags of the interface.  */)
   if (ioctl (s, SIOCGIFFLAGS, &rq) == 0)
     {
       int flags = rq.ifr_flags;
-      struct ifflag_def *fp;
+      const struct ifflag_def *fp;
       int fnum;
 
       any++;
@@ -4453,7 +4566,7 @@ wait_reading_process_output_1 ()
 }
 
 /* Use a wrapper around select to work around a bug in gdb 5.3.
-   Normally, the wrapper is optimzed away by inlining.
+   Normally, the wrapper is optimized away by inlining.
 
    If emacs is stopped inside select, the gdb backtrace doesn't
    show the function which called select, so it is practically
@@ -4661,11 +4774,8 @@ wait_reading_process_output (time_limit, microsecs, read_kbd, do_display,
       /* If status of something has changed, and no input is
 	 available, notify the user of the change right away.  After
 	 this explicit check, we'll let the SIGCHLD handler zap
-	 timeout to get our attention.  When Emacs is run
-	 interactively, only do this with a nonzero DO_DISPLAY
-	 argument, because status_notify triggers redisplay.  */
-      if (update_tick != process_tick
-	  && (do_display || noninteractive))
+	 timeout to get our attention.  */
+      if (update_tick != process_tick)
 	{
 	  SELECT_TYPE Atemp;
 #ifdef NON_BLOCKING_CONNECT
@@ -4691,6 +4801,7 @@ wait_reading_process_output (time_limit, microsecs, read_kbd, do_display,
 		 the loop, since timeout has already been zeroed out.  */
 	      clear_waiting_for_input ();
 	      status_notify (NULL);
+	      if (do_display) redisplay_preserve_echo_area (13);
 	    }
 	}
 
@@ -4824,7 +4935,9 @@ wait_reading_process_output (time_limit, microsecs, read_kbd, do_display,
 	      process_output_skip = 0;
 	    }
 #endif
-#ifdef HAVE_NS
+#if defined (USE_GTK) || defined (HAVE_GCONF)
+          nfds = xg_select
+#elif defined (HAVE_NS)
 	  nfds = ns_select
 #else
 	  nfds = select
@@ -5052,11 +5165,16 @@ wait_reading_process_output (time_limit, microsecs, read_kbd, do_display,
 		 It can't hurt.  */
 	      else if (nread == -1 && errno == EIO)
 		{
-		  /* Clear the descriptor now, so we only raise the signal once.  */
-		  FD_CLR (channel, &input_wait_mask);
-		  FD_CLR (channel, &non_keyboard_wait_mask);
+		  /* Clear the descriptor now, so we only raise the
+		     signal once.  Don't do this if `process' is only
+		     a pty.  */
+		  if (XPROCESS (proc)->pid != -2)
+		    {
+		      FD_CLR (channel, &input_wait_mask);
+		      FD_CLR (channel, &non_keyboard_wait_mask);
 
-		  kill (getpid (), SIGCHLD);
+		      kill (getpid (), SIGCHLD);
+		    }
 		}
 #endif /* HAVE_PTYS */
 	      /* If we can detect process termination, don't consider the process
@@ -5623,7 +5741,8 @@ send_process (proc, buf, len, object)
 	}
       else if (STRINGP (object))
 	{
-	  encode_coding_string (coding, object, 1);
+	  encode_coding_object (coding, object, 0, 0, SCHARS (object),
+				SBYTES (object), Qt);
 	}
       else
 	{
@@ -6106,7 +6225,10 @@ process_send_signal (process, signo, current_group, nomsg)
       p->status = Qrun;
       p->tick = ++process_tick;
       if (!nomsg)
-	status_notify (NULL);
+	{
+	  status_notify (NULL);
+	  redisplay_preserve_echo_area (13);
+	}
       break;
 #endif /* ! defined (SIGCONT) */
     case SIGINT:
@@ -6746,7 +6868,7 @@ exec_sentinel (proc, reason)
   record_unwind_protect (exec_sentinel_unwind, Fcons (proc, sentinel));
   /* Inhibit quit so that random quits don't screw up a running filter.  */
   specbind (Qinhibit_quit, Qt);
-  specbind (Qlast_nonmenu_event, Qt);
+  specbind (Qlast_nonmenu_event, Qt); /* Why? --Stef  */
 
   /* In case we get recursively called,
      and we already saved the match data nonrecursively,
@@ -6920,8 +7042,6 @@ status_notify (deleting_process)
     } /* end for */
 
   update_mode_lines++;  /* in case buffers use %s in mode-line-format */
-  redisplay_preserve_echo_area (13);
-
   UNGCPRO;
 }
 
@@ -7208,16 +7328,19 @@ init_process ()
 #ifdef HAVE_SOCKETS
  {
    Lisp_Object subfeatures = Qnil;
-   struct socket_options *sopt;
+   const struct socket_options *sopt;
 
 #define ADD_SUBFEATURE(key, val) \
-  subfeatures = Fcons (Fcons (key, Fcons (val, Qnil)), subfeatures)
+  subfeatures = pure_cons (pure_cons (key, pure_cons (val, Qnil)), subfeatures)
 
 #ifdef NON_BLOCKING_CONNECT
    ADD_SUBFEATURE (QCnowait, Qt);
 #endif
 #ifdef DATAGRAM_SOCKETS
    ADD_SUBFEATURE (QCtype, Qdatagram);
+#endif
+#ifdef HAVE_SEQPACKET
+   ADD_SUBFEATURE (QCtype, Qseqpacket);
 #endif
 #ifdef HAVE_LOCAL_SOCKETS
    ADD_SUBFEATURE (QCfamily, Qlocal);
@@ -7234,9 +7357,9 @@ init_process ()
 #endif
 
    for (sopt = socket_options; sopt->name; sopt++)
-     subfeatures = Fcons (intern (sopt->name), subfeatures);
+     subfeatures = pure_cons (intern_c_string (sopt->name), subfeatures);
 
-   Fprovide (intern ("make-network-process"), subfeatures);
+   Fprovide (intern_c_string ("make-network-process"), subfeatures);
  }
 #endif /* HAVE_SOCKETS */
 
@@ -7257,109 +7380,111 @@ init_process ()
 void
 syms_of_process ()
 {
-  Qprocessp = intern ("processp");
+  Qprocessp = intern_c_string ("processp");
   staticpro (&Qprocessp);
-  Qrun = intern ("run");
+  Qrun = intern_c_string ("run");
   staticpro (&Qrun);
-  Qstop = intern ("stop");
+  Qstop = intern_c_string ("stop");
   staticpro (&Qstop);
-  Qsignal = intern ("signal");
+  Qsignal = intern_c_string ("signal");
   staticpro (&Qsignal);
 
   /* Qexit is already staticpro'd by syms_of_eval; don't staticpro it
      here again.
 
-     Qexit = intern ("exit");
+     Qexit = intern_c_string ("exit");
      staticpro (&Qexit); */
 
-  Qopen = intern ("open");
+  Qopen = intern_c_string ("open");
   staticpro (&Qopen);
-  Qclosed = intern ("closed");
+  Qclosed = intern_c_string ("closed");
   staticpro (&Qclosed);
-  Qconnect = intern ("connect");
+  Qconnect = intern_c_string ("connect");
   staticpro (&Qconnect);
-  Qfailed = intern ("failed");
+  Qfailed = intern_c_string ("failed");
   staticpro (&Qfailed);
-  Qlisten = intern ("listen");
+  Qlisten = intern_c_string ("listen");
   staticpro (&Qlisten);
-  Qlocal = intern ("local");
+  Qlocal = intern_c_string ("local");
   staticpro (&Qlocal);
-  Qipv4 = intern ("ipv4");
+  Qipv4 = intern_c_string ("ipv4");
   staticpro (&Qipv4);
 #ifdef AF_INET6
-  Qipv6 = intern ("ipv6");
+  Qipv6 = intern_c_string ("ipv6");
   staticpro (&Qipv6);
 #endif
-  Qdatagram = intern ("datagram");
+  Qdatagram = intern_c_string ("datagram");
   staticpro (&Qdatagram);
+  Qseqpacket = intern_c_string ("seqpacket");
+  staticpro (&Qseqpacket);
 
-  QCport = intern (":port");
+  QCport = intern_c_string (":port");
   staticpro (&QCport);
-  QCspeed = intern (":speed");
+  QCspeed = intern_c_string (":speed");
   staticpro (&QCspeed);
-  QCprocess = intern (":process");
+  QCprocess = intern_c_string (":process");
   staticpro (&QCprocess);
 
-  QCbytesize = intern (":bytesize");
+  QCbytesize = intern_c_string (":bytesize");
   staticpro (&QCbytesize);
-  QCstopbits = intern (":stopbits");
+  QCstopbits = intern_c_string (":stopbits");
   staticpro (&QCstopbits);
-  QCparity = intern (":parity");
+  QCparity = intern_c_string (":parity");
   staticpro (&QCparity);
-  Qodd = intern ("odd");
+  Qodd = intern_c_string ("odd");
   staticpro (&Qodd);
-  Qeven = intern ("even");
+  Qeven = intern_c_string ("even");
   staticpro (&Qeven);
-  QCflowcontrol = intern (":flowcontrol");
+  QCflowcontrol = intern_c_string (":flowcontrol");
   staticpro (&QCflowcontrol);
-  Qhw = intern ("hw");
+  Qhw = intern_c_string ("hw");
   staticpro (&Qhw);
-  Qsw = intern ("sw");
+  Qsw = intern_c_string ("sw");
   staticpro (&Qsw);
-  QCsummary = intern (":summary");
+  QCsummary = intern_c_string (":summary");
   staticpro (&QCsummary);
 
-  Qreal = intern ("real");
+  Qreal = intern_c_string ("real");
   staticpro (&Qreal);
-  Qnetwork = intern ("network");
+  Qnetwork = intern_c_string ("network");
   staticpro (&Qnetwork);
-  Qserial = intern ("serial");
+  Qserial = intern_c_string ("serial");
   staticpro (&Qserial);
 
-  QCname = intern (":name");
+  QCname = intern_c_string (":name");
   staticpro (&QCname);
-  QCbuffer = intern (":buffer");
+  QCbuffer = intern_c_string (":buffer");
   staticpro (&QCbuffer);
-  QChost = intern (":host");
+  QChost = intern_c_string (":host");
   staticpro (&QChost);
-  QCservice = intern (":service");
+  QCservice = intern_c_string (":service");
   staticpro (&QCservice);
-  QCtype = intern (":type");
+  QCtype = intern_c_string (":type");
   staticpro (&QCtype);
-  QClocal = intern (":local");
+  QClocal = intern_c_string (":local");
   staticpro (&QClocal);
-  QCremote = intern (":remote");
+  QCremote = intern_c_string (":remote");
   staticpro (&QCremote);
-  QCcoding = intern (":coding");
+  QCcoding = intern_c_string (":coding");
   staticpro (&QCcoding);
-  QCserver = intern (":server");
+  QCserver = intern_c_string (":server");
   staticpro (&QCserver);
-  QCnowait = intern (":nowait");
+  QCnowait = intern_c_string (":nowait");
   staticpro (&QCnowait);
-  QCsentinel = intern (":sentinel");
+  QCsentinel = intern_c_string (":sentinel");
   staticpro (&QCsentinel);
-  QClog = intern (":log");
+  QClog = intern_c_string (":log");
   staticpro (&QClog);
-  QCnoquery = intern (":noquery");
+  QCnoquery = intern_c_string (":noquery");
   staticpro (&QCnoquery);
-  QCstop = intern (":stop");
+  QCstop = intern_c_string (":stop");
   staticpro (&QCstop);
-  QCoptions = intern (":options");
+  QCoptions = intern_c_string (":options");
   staticpro (&QCoptions);
-  QCplist = intern (":plist");
+  QCplist = intern_c_string (":plist");
   staticpro (&QCplist);
 
-  Qlast_nonmenu_event = intern ("last-nonmenu-event");
+  Qlast_nonmenu_event = intern_c_string ("last-nonmenu-event");
   staticpro (&Qlast_nonmenu_event);
 
   staticpro (&Vprocess_alist);
@@ -7367,67 +7492,67 @@ syms_of_process ()
   staticpro (&deleted_pid_list);
 #endif
 
-  Qeuid = intern ("euid");
+  Qeuid = intern_c_string ("euid");
   staticpro (&Qeuid);
-  Qegid = intern ("egid");
+  Qegid = intern_c_string ("egid");
   staticpro (&Qegid);
-  Quser = intern ("user");
+  Quser = intern_c_string ("user");
   staticpro (&Quser);
-  Qgroup = intern ("group");
+  Qgroup = intern_c_string ("group");
   staticpro (&Qgroup);
-  Qcomm = intern ("comm");
+  Qcomm = intern_c_string ("comm");
   staticpro (&Qcomm);
-  Qstate = intern ("state");
+  Qstate = intern_c_string ("state");
   staticpro (&Qstate);
-  Qppid = intern ("ppid");
+  Qppid = intern_c_string ("ppid");
   staticpro (&Qppid);
-  Qpgrp = intern ("pgrp");
+  Qpgrp = intern_c_string ("pgrp");
   staticpro (&Qpgrp);
-  Qsess = intern ("sess");
+  Qsess = intern_c_string ("sess");
   staticpro (&Qsess);
-  Qttname = intern ("ttname");
+  Qttname = intern_c_string ("ttname");
   staticpro (&Qttname);
-  Qtpgid = intern ("tpgid");
+  Qtpgid = intern_c_string ("tpgid");
   staticpro (&Qtpgid);
-  Qminflt = intern ("minflt");
+  Qminflt = intern_c_string ("minflt");
   staticpro (&Qminflt);
-  Qmajflt = intern ("majflt");
+  Qmajflt = intern_c_string ("majflt");
   staticpro (&Qmajflt);
-  Qcminflt = intern ("cminflt");
+  Qcminflt = intern_c_string ("cminflt");
   staticpro (&Qcminflt);
-  Qcmajflt = intern ("cmajflt");
+  Qcmajflt = intern_c_string ("cmajflt");
   staticpro (&Qcmajflt);
-  Qutime = intern ("utime");
+  Qutime = intern_c_string ("utime");
   staticpro (&Qutime);
-  Qstime = intern ("stime");
+  Qstime = intern_c_string ("stime");
   staticpro (&Qstime);
-  Qtime = intern ("time");
+  Qtime = intern_c_string ("time");
   staticpro (&Qtime);
-  Qcutime = intern ("cutime");
+  Qcutime = intern_c_string ("cutime");
   staticpro (&Qcutime);
-  Qcstime = intern ("cstime");
+  Qcstime = intern_c_string ("cstime");
   staticpro (&Qcstime);
-  Qctime = intern ("ctime");
+  Qctime = intern_c_string ("ctime");
   staticpro (&Qctime);
-  Qpri = intern ("pri");
+  Qpri = intern_c_string ("pri");
   staticpro (&Qpri);
-  Qnice = intern ("nice");
+  Qnice = intern_c_string ("nice");
   staticpro (&Qnice);
-  Qthcount = intern ("thcount");
+  Qthcount = intern_c_string ("thcount");
   staticpro (&Qthcount);
-  Qstart = intern ("start");
+  Qstart = intern_c_string ("start");
   staticpro (&Qstart);
-  Qvsize = intern ("vsize");
+  Qvsize = intern_c_string ("vsize");
   staticpro (&Qvsize);
-  Qrss = intern ("rss");
+  Qrss = intern_c_string ("rss");
   staticpro (&Qrss);
-  Qetime = intern ("etime");
+  Qetime = intern_c_string ("etime");
   staticpro (&Qetime);
-  Qpcpu = intern ("pcpu");
+  Qpcpu = intern_c_string ("pcpu");
   staticpro (&Qpcpu);
-  Qpmem = intern ("pmem");
+  Qpmem = intern_c_string ("pmem");
   staticpro (&Qpmem);
-  Qargs = intern ("args");
+  Qargs = intern_c_string ("args");
   staticpro (&Qargs);
 
   DEFVAR_BOOL ("delete-exited-processes", &delete_exited_processes,
@@ -7536,6 +7661,7 @@ The variable takes effect when `start-process' is called.  */);
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <setjmp.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -7896,75 +8022,75 @@ init_process ()
 void
 syms_of_process ()
 {
-  QCtype = intern (":type");
+  QCtype = intern_c_string (":type");
   staticpro (&QCtype);
-  QCname = intern (":name");
+  QCname = intern_c_string (":name");
   staticpro (&QCname);
-  QCtype = intern (":type");
+  QCtype = intern_c_string (":type");
   staticpro (&QCtype);
-  QCname = intern (":name");
+  QCname = intern_c_string (":name");
   staticpro (&QCname);
-  Qeuid = intern ("euid");
+  Qeuid = intern_c_string ("euid");
   staticpro (&Qeuid);
-  Qegid = intern ("egid");
+  Qegid = intern_c_string ("egid");
   staticpro (&Qegid);
-  Quser = intern ("user");
+  Quser = intern_c_string ("user");
   staticpro (&Quser);
-  Qgroup = intern ("group");
+  Qgroup = intern_c_string ("group");
   staticpro (&Qgroup);
-  Qcomm = intern ("comm");
+  Qcomm = intern_c_string ("comm");
   staticpro (&Qcomm);
-  Qstate = intern ("state");
+  Qstate = intern_c_string ("state");
   staticpro (&Qstate);
-  Qppid = intern ("ppid");
+  Qppid = intern_c_string ("ppid");
   staticpro (&Qppid);
-  Qpgrp = intern ("pgrp");
+  Qpgrp = intern_c_string ("pgrp");
   staticpro (&Qpgrp);
-  Qsess = intern ("sess");
+  Qsess = intern_c_string ("sess");
   staticpro (&Qsess);
-  Qttname = intern ("ttname");
+  Qttname = intern_c_string ("ttname");
   staticpro (&Qttname);
-  Qtpgid = intern ("tpgid");
+  Qtpgid = intern_c_string ("tpgid");
   staticpro (&Qtpgid);
-  Qminflt = intern ("minflt");
+  Qminflt = intern_c_string ("minflt");
   staticpro (&Qminflt);
-  Qmajflt = intern ("majflt");
+  Qmajflt = intern_c_string ("majflt");
   staticpro (&Qmajflt);
-  Qcminflt = intern ("cminflt");
+  Qcminflt = intern_c_string ("cminflt");
   staticpro (&Qcminflt);
-  Qcmajflt = intern ("cmajflt");
+  Qcmajflt = intern_c_string ("cmajflt");
   staticpro (&Qcmajflt);
-  Qutime = intern ("utime");
+  Qutime = intern_c_string ("utime");
   staticpro (&Qutime);
-  Qstime = intern ("stime");
+  Qstime = intern_c_string ("stime");
   staticpro (&Qstime);
-  Qtime = intern ("time");
+  Qtime = intern_c_string ("time");
   staticpro (&Qtime);
-  Qcutime = intern ("cutime");
+  Qcutime = intern_c_string ("cutime");
   staticpro (&Qcutime);
-  Qcstime = intern ("cstime");
+  Qcstime = intern_c_string ("cstime");
   staticpro (&Qcstime);
-  Qctime = intern ("ctime");
+  Qctime = intern_c_string ("ctime");
   staticpro (&Qctime);
-  Qpri = intern ("pri");
+  Qpri = intern_c_string ("pri");
   staticpro (&Qpri);
-  Qnice = intern ("nice");
+  Qnice = intern_c_string ("nice");
   staticpro (&Qnice);
-  Qthcount = intern ("thcount");
+  Qthcount = intern_c_string ("thcount");
   staticpro (&Qthcount);
-  Qstart = intern ("start");
+  Qstart = intern_c_string ("start");
   staticpro (&Qstart);
-  Qvsize = intern ("vsize");
+  Qvsize = intern_c_string ("vsize");
   staticpro (&Qvsize);
-  Qrss = intern ("rss");
+  Qrss = intern_c_string ("rss");
   staticpro (&Qrss);
-  Qetime = intern ("etime");
+  Qetime = intern_c_string ("etime");
   staticpro (&Qetime);
-  Qpcpu = intern ("pcpu");
+  Qpcpu = intern_c_string ("pcpu");
   staticpro (&Qpcpu);
-  Qpmem = intern ("pmem");
+  Qpmem = intern_c_string ("pmem");
   staticpro (&Qpmem);
-  Qargs = intern ("args");
+  Qargs = intern_c_string ("args");
   staticpro (&Qargs);
 
   defsubr (&Sget_buffer_process);

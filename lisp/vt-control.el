@@ -1,7 +1,7 @@
 ;;; vt-control.el --- Common VTxxx control functions
 
 ;; Copyright (C) 1993, 1994, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Rob Riepel <riepel@networking.stanford.edu>
 ;; Maintainer: Rob Riepel <riepel@networking.stanford.edu>
@@ -88,20 +88,23 @@
   (interactive)
   (send-string-to-terminal "\e=")
   (setq vt-applications-keypad-p t)
-  (if (or tell (interactive-p)) (message "Applications keypad enabled.")))
+  (if (or tell (called-interactively-p 'interactive))
+      (message "Applications keypad enabled.")))
 
 (defun vt-keypad-off (&optional tell)
   "Turn off the VT applications keypad."
   (interactive "p")
   (send-string-to-terminal "\e>")
   (setq vt-applications-keypad-p nil)
-  (if (or tell (interactive-p)) (message "Applications keypad disabled.")))
+  (if (or tell (called-interactively-p 'interactive))
+      (message "Applications keypad disabled.")))
 
 (defun vt-numlock nil
   "Toggle VT application keypad on and off."
   (interactive)
-  (if vt-applications-keypad-p (vt-keypad-off (interactive-p))
-    (vt-keypad-on (interactive-p))))
+  (if vt-applications-keypad-p
+      (vt-keypad-off (called-interactively-p 'interactive))
+    (vt-keypad-on (called-interactively-p 'interactive))))
 
 (provide 'vt-control)
 

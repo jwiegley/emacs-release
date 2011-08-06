@@ -1,7 +1,7 @@
 ;;; bib-mode.el --- major mode for editing bib files
 
 ;; Copyright (C) 1989, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009  Free Software Foundation, Inc.
+;;   2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Henry Kautz
 ;; (according to authors.el)
@@ -228,12 +228,11 @@ named by variable `unread-bib-file'."
 
 (defun bib-capitalize-title (s)
    "Like `capitalize', but don't capitalize stop words, except the first."
-   (save-excursion
-      (set-buffer (get-buffer-create "$$$Scratch$$$"))
-      (erase-buffer)
-      (insert s)
-      (bib-capitalize-title-region (point-min) (point-max))
-      (buffer-string)))
+   (with-current-buffer (get-buffer-create "$$$Scratch$$$")
+     (erase-buffer)
+     (insert s)
+     (bib-capitalize-title-region (point-min) (point-max))
+     (buffer-string)))
 
 (provide 'bib-mode)
 

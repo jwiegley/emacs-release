@@ -1,6 +1,6 @@
 ;;; url-cid.el --- Content-ID URL loader
 
-;; Copyright (C) 1998, 1999, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 1998, 1999, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes
@@ -35,8 +35,7 @@
     (setq part (mm-get-content-id cid))
     (if (not part)
 	(message "Unknown CID encountered: %s" cid)
-      (setq data (save-excursion
-		   (set-buffer (mm-handle-buffer part))
+      (setq data (with-current-buffer (mm-handle-buffer part)
 		   (buffer-string))
 	    content-type (mm-handle-type part)
 	    encoding (symbol-name (mm-handle-encoding part)))
@@ -55,8 +54,7 @@
   (cond
    ((fboundp 'mm-get-content-id)
     ;; Using Pterodactyl Gnus or later
-    (save-excursion
-      (set-buffer (generate-new-buffer " *url-cid*"))
+    (with-current-buffer (generate-new-buffer " *url-cid*")
       (url-cid-gnus (url-filename url))))
    (t
     (message "Unable to handle CID URL: %s" url))))

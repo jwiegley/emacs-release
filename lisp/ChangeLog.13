@@ -958,7 +958,7 @@
 	property to t.
 
 	* international/mule.el (coding-system-get):
-	Check `ascii-incompatible' for backward compatiblity.
+	Check `ascii-incompatible' for backward compatibility.
 	(set-file-name-coding-system): Signal an error for a coding system
 	not suitable for file name.
 	(set-keyboard-coding-system): Signal an error for a coding system
@@ -7242,7 +7242,7 @@
 
 	* subr.el (event-modifiers): Use internal-event-symbol-parse-modifiers.
 
-	* pcvs.el (cvs-revert-if-needed): Ignore `unknown' files, since cvs
+	* pcvs.el (cvs-revert-if-needed): Ignore `unknown' files, since CVS
 	did not touch them.
 
 2007-11-15  Jay Belanger  <jay.p.belanger@gmail.com>
@@ -16696,7 +16696,7 @@ See ChangeLog.12 for earlier changes.
 ;; add-log-time-zone-rule: t
 ;; End:
 
-    Copyright (C) 2007, 2008, 2009  Free Software Foundation, Inc.
+    Copyright (C) 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

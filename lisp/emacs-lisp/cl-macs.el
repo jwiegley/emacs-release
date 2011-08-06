@@ -1,7 +1,7 @@
 ;;; cl-macs.el --- Common Lisp macros
 
-;; Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+;;   2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Dave Gillespie <daveg@synaptics.com>
 ;; Version: 2.02
@@ -222,9 +222,15 @@ its argument list allows full Common Lisp conventions."
 (defconst lambda-list-keywords
   '(&optional &rest &key &allow-other-keys &aux &whole &body &environment))
 
-(defvar cl-macro-environment nil)
+(defvar cl-macro-environment nil
+  "Keep the list of currently active macros.
+It is a list of elements of the form either:
+- (SYMBOL . FUNCTION) where FUNCTION is the macro expansion function.
+- (SYMBOL-NAME . EXPANSION) where SYMBOL-NAME is the name of a symbol macro.")
 (defvar bind-block) (defvar bind-defs) (defvar bind-enquote)
 (defvar bind-inits) (defvar bind-lets) (defvar bind-forms)
+
+(declare-function help-add-fundoc-usage "help-fns" (docstring arglist))
 
 (defun cl-transform-lambda (form bind-block)
   (let* ((args (car form)) (body (cdr form)) (orig-args args)
@@ -485,7 +491,7 @@ The result of the body appears to the compiler as a quoted constant."
 				    (symbol-function 'byte-compile-file-form)))
 			(list 'byte-compile-file-form (list 'quote set))
 			'(byte-compile-file-form form)))
-	  (print set (symbol-value 'outbuffer)))
+	  (print set (symbol-value 'bytecomp-outbuffer)))
 	(list 'symbol-value (list 'quote temp)))
     (list 'quote (eval form))))
 
@@ -2185,11 +2191,21 @@ from ARGLIST using FUNC: (define-modify-macro incf (&optional (n 1)) +)"
 ;;;###autoload
 (defmacro defstruct (struct &rest descs)
   "Define a struct type.
-This macro defines a new Lisp data type called NAME, which contains data
-stored in SLOTs.  This defines a `make-NAME' constructor, a `copy-NAME'
-copier, a `NAME-p' predicate, and setf-able `NAME-SLOT' accessors.
+This macro defines a new data type called NAME that stores data
+in SLOTs.  It defines a `make-NAME' constructor, a `copy-NAME'
+copier, a `NAME-p' predicate, and slot accessors named `NAME-SLOT'.
+You can use the accessors to set the corresponding slots, via `setf'.
 
-\(fn (NAME OPTIONS...) (SLOT SLOT-OPTS...)...)"
+NAME may instead take the form (NAME OPTIONS...), where each
+OPTION is either a single keyword or (KEYWORD VALUE).
+See Info node `(cl)Structures' for a list of valid keywords.
+
+Each SLOT may instead take the form (SLOT SLOT-OPTS...), where
+SLOT-OPTS are keyword-value pairs for that slot.  Currently, only
+one keyword is supported, `:read-only'.  If this has a non-nil
+value, that slot cannot be set via `setf'.
+
+\(fn NAME SLOTS...)"
   (let* ((name (if (consp struct) (car struct) struct))
 	 (opts (cdr-safe struct))
 	 (slots nil)
@@ -2432,6 +2448,7 @@ copier, a `NAME-p' predicate, and setf-able `NAME-SLOT' accessors.
 
 ;;; Types and assertions.
 
+;;;###autoload
 (defmacro deftype (name arglist &rest body)
   "Define NAME as a new data type.
 The type name can then be used in `typecase', `check-type', etc."
@@ -2543,8 +2560,22 @@ and then returning foo."
 	 (cons (if (memq '&whole args) (delq '&whole args)
 		 (cons '--cl-whole-arg-- args)) body))
 	(list 'or (list 'get (list 'quote func) '(quote byte-compile))
-	      (list 'put (list 'quote func) '(quote byte-compile)
-		    '(quote cl-byte-compile-compiler-macro)))))
+	      (list 'progn
+		    (list 'put (list 'quote func) '(quote byte-compile)
+			  '(quote cl-byte-compile-compiler-macro))
+		    ;; This is so that describe-function can locate
+		    ;; the macro definition.
+		    (list 'let
+			  (list (list
+				 'file
+				 (or buffer-file-name
+				     (and (boundp 'byte-compile-current-file)
+					  (stringp byte-compile-current-file)
+					  byte-compile-current-file))))
+			  (list 'if 'file
+				(list 'put (list 'quote func)
+				      '(quote compiler-macro-file)
+				      '(purecopy (file-name-nondirectory file)))))))))
 
 ;;;###autoload
 (defun compiler-macroexpand (form)
@@ -2565,6 +2596,7 @@ and then returning foo."
       (byte-compile-normal-call form)
     (byte-compile-form form)))
 
+;;;###autoload
 (defmacro defsubst* (name args &rest body)
   "Define NAME as a function.
 Like `defun', except the function is automatically declared `inline',

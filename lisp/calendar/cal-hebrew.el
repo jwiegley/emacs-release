@@ -1,7 +1,7 @@
 ;;; cal-hebrew.el --- calendar functions for the Hebrew calendar
 
 ;; Copyright (C) 1995, 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Nachum Dershowitz <nachum@cs.uiuc.edu>
 ;;         Edward M. Reingold <reingold@cs.uiuc.edu>
@@ -505,7 +505,9 @@ or ALL is non-nil."
                       (+ abs-p 18)
                     (if (= (% abs-p 7) 6)
                         (+ abs-p 19)
-                      (+ abs-p 20))))
+                      (if (= (% abs-p 7) 2)
+                          (+ abs-p 21)
+                        (+ abs-p 20)))))
                  "Yom HaAtzma'ut")
            (list (calendar-gregorian-from-absolute (+ abs-p 33))
                  "Lag BaOmer")
@@ -646,8 +648,7 @@ A value of 0 in any position is a wildcard.  Optional argument COLOR is
 passed to `calendar-mark-visible-date' as MARK."
   ;; FIXME not the same as the Bahai and Islamic cases, so can't use
   ;; calendar-mark-1.
-  (save-excursion
-    (set-buffer calendar-buffer)
+  (with-current-buffer calendar-buffer
     (if (and (not (zerop month)) (not (zerop day)))
         (if (not (zerop year))
             ;; Fully specified Hebrew date.

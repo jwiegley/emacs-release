@@ -1,7 +1,8 @@
 ;;; help-fns.el --- Complex help functions
 
-;; Copyright (C) 1985, 1986, 1993, 1994, 1998, 1999, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1986, 1993, 1994, 1998, 1999, 2000, 2001, 2002,
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: help, internal
@@ -31,8 +32,6 @@
 
 ;;; Code:
 
-(require 'help-mode)
-
 ;; Functions
 
 ;;;###autoload
@@ -51,7 +50,8 @@
 	       fn (intern val)))))
   (if (null function)
       (message "You didn't specify a function")
-    (help-setup-xref (list #'describe-function function) (interactive-p))
+    (help-setup-xref (list #'describe-function function)
+		     (called-interactively-p 'interactive))
     (save-excursion
       (with-help-window (help-buffer)
 	(prin1 function)
@@ -157,19 +157,18 @@ KIND should be `var' for a variable or `subr' for a subroutine."
 	    (concat "src/" file)
 	  file)))))
 
-(defface help-argument-name '((((supports :slant italic)) :inherit italic))
-  "Face to highlight argument names in *Help* buffers."
-  :group 'help)
+(defcustom help-downcase-arguments nil
+  "If non-nil, argument names in *Help* buffers are downcased."
+  :type 'boolean
+  :group 'help
+  :version "23.2")
 
-(defun help-default-arg-highlight (arg)
-  "Default function to highlight arguments in *Help* buffers.
-It returns ARG in face `help-argument-name'; ARG is also
-downcased if it displays differently than the default
-face (according to `face-differs-from-default-p')."
-  (propertize (if (face-differs-from-default-p 'help-argument-name)
-                  (downcase arg)
-                arg)
-              'face 'help-argument-name))
+(defun help-highlight-arg (arg)
+  "Highlight ARG as an argument name for a *Help* buffer.
+Return ARG in face `help-argument-name'; ARG is also downcased
+if the variable `help-downcase-arguments' is non-nil."
+  (propertize (if help-downcase-arguments (downcase arg) arg)
+	      'face 'help-argument-name))
 
 (defun help-do-arg-highlight (doc args)
   (with-syntax-table (make-syntax-table emacs-lisp-mode-syntax-table)
@@ -187,7 +186,7 @@ face (according to `face-differs-from-default-p')."
                          "\\(?:-[a-z0-9-]+\\)?"  ; for ARG-xxx, ARG-n
                          "\\(?:-[{([<`\"].*?\\)?"; for ARG-{x}, (x), <x>, [x], `x'
                          "\\>")                  ; end of word
-                 (help-default-arg-highlight arg)
+                 (help-highlight-arg arg)
                  doc t t 1)))))
 
 (defun help-highlight-arguments (usage doc &rest args)
@@ -270,8 +269,9 @@ suitable file is found, return nil."
 		   "^;;; Generated autoloads from \\(.*\\)" nil t)
 	      (setq file-name
 		    (locate-file
-		     (match-string-no-properties 1)
-		     load-path nil 'readable))))))))
+		     (file-name-sans-extension
+		      (match-string-no-properties 1))
+		     load-path '(".el" ".elc") 'readable))))))))
 
     (cond
      ((and (not file-name) (subrp type))
@@ -406,7 +406,7 @@ suitable file is found, return nil."
 	(with-current-buffer standard-output
 	  (save-excursion
 	    (re-search-backward "`\\([^`']+\\)'" nil t)
-	    (help-xref-button 1 'help-function-def real-function file-name))))
+	    (help-xref-button 1 'help-function-def function file-name))))
       (princ ".")
       (with-current-buffer (help-buffer)
 	(fill-region-as-paragraph (save-excursion (goto-char pt1) (forward-line 0) (point))
@@ -453,14 +453,31 @@ suitable file is found, return nil."
 	    (fill-region-as-paragraph pt2 (point))
 	    (unless (looking-back "\n\n")
 	      (terpri)))))
-      (let* ((arglist (help-function-arglist def))
+      ;; Note that list* etc do not get this property until
+      ;; cl-hack-byte-compiler runs, after bytecomp is loaded.
+      (when (and (symbolp function)
+                 (eq (get function 'byte-compile)
+                     'cl-byte-compile-compiler-macro))
+	(princ "This function has a compiler macro")
+	(let ((lib (get function 'compiler-macro-file)))
+	  (when (stringp lib)
+	    (princ (format " in `%s'" lib))
+	    (with-current-buffer standard-output
+	      (save-excursion
+		(re-search-backward "`\\([^`']+\\)'" nil t)
+		(help-xref-button 1 'help-function-cmacro function lib)))))
+	(princ ".\n\n"))
+      (let* ((advertised (gethash def advertised-signature-table t))
+	     (arglist (if (listp advertised)
+			  advertised (help-function-arglist def)))
 	     (doc (documentation function))
 	     (usage (help-split-fundoc doc function)))
 	(with-current-buffer standard-output
 	  ;; If definition is a keymap, skip arglist note.
 	  (unless (keymapp function)
+	    (if usage (setq doc (cdr usage)))
 	    (let* ((use (cond
-			 (usage (setq doc (cdr usage)) (car usage))
+			 ((and usage (not (listp advertised))) (car usage))
 			 ((listp arglist)
 			  (format "%S" (help-make-usage function arglist)))
 			 ((stringp arglist) arglist)
@@ -591,7 +608,7 @@ it is displayed along with the global value."
 		(setq val (symbol-value variable)
 		      locus (variable-binding-locus variable)))))
 	  (help-setup-xref (list #'describe-variable variable buffer)
-			   (interactive-p))
+			   (called-interactively-p 'interactive))
 	  (with-help-window (help-buffer)
 	    (with-current-buffer buffer
 	      (prin1 variable)
@@ -710,6 +727,37 @@ it is displayed along with the global value."
 			     (use (format ";\n  use `%s' instead." (car obsolete)))
 			     (t ".")))
                 (terpri))
+
+	      (when (member (cons variable val) file-local-variables-alist)
+		(setq extra-line t)
+		(if (member (cons variable val) dir-local-variables-alist)
+		    (let ((file (and (buffer-file-name)
+				     (not (file-remote-p (buffer-file-name)))
+				     (dir-locals-find-file (buffer-file-name)))))
+		      (princ "  This variable is a directory local variable")
+		      (when file
+			(princ (concat "\n  from the file \""
+				       (if (consp file)
+					   (car file)
+					 file)
+				       "\"")))
+		      (princ ".\n"))
+		  (princ "  This variable is a file local variable.\n")))
+
+	      (when (memq variable ignored-local-variables)
+		(setq extra-line t)
+		(princ "  This variable is ignored when used as a file local \
+variable.\n"))
+
+	      ;; Can be both risky and safe, eg auto-fill-function.
+	      (when (risky-local-variable-p variable)
+		(setq extra-line t)
+		(princ "  This variable is potentially risky when used as a \
+file local variable.\n")
+		(when (assq variable safe-local-variable-values)
+		  (princ "  However, you have added it to \
+`safe-local-variable-values'.\n")))
+
 	      (when safe-var
                 (setq extra-line t)
 		(princ "  This variable is safe as a file local variable ")
@@ -741,8 +789,7 @@ it is displayed along with the global value."
 		  (terpri)
 		  (princ output))))
 
-	    (save-excursion
-	      (set-buffer standard-output)
+	    (with-current-buffer standard-output
 	      ;; Return the text we displayed.
 	      (buffer-string))))))))
 
@@ -754,7 +801,8 @@ The descriptions are inserted in a help buffer, which is then displayed.
 BUFFER defaults to the current buffer."
   (interactive)
   (setq buffer (or buffer (current-buffer)))
-  (help-setup-xref (list #'describe-syntax buffer) (interactive-p))
+  (help-setup-xref (list #'describe-syntax buffer)
+		   (called-interactively-p 'interactive))
   (with-help-window (help-buffer)
     (let ((table (with-current-buffer buffer (syntax-table))))
       (with-current-buffer standard-output
@@ -779,7 +827,8 @@ If BUFFER is non-nil, then describe BUFFER's category table instead.
 BUFFER should be a buffer or a buffer name."
   (interactive)
   (setq buffer (or buffer (current-buffer)))
-  (help-setup-xref (list #'describe-categories buffer) (interactive-p))
+  (help-setup-xref (list #'describe-categories buffer)
+		   (called-interactively-p 'interactive))
   (with-help-window (help-buffer)
     (let* ((table (with-current-buffer buffer (category-table)))
 	   (docs (char-table-extra-slot table 0)))

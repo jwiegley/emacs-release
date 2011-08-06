@@ -1,7 +1,7 @@
 ;;; hl-line.el --- highlight the current line
 
 ;; Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author:  Dave Love <fx@gnu.org>
 ;; Maintainer: FSF
@@ -176,7 +176,7 @@ Global-Hl-Line mode uses the functions `global-hl-line-unhighlight' and
     (remove-hook 'post-command-hook #'global-hl-line-highlight)))
 
 (defun global-hl-line-highlight ()
-  "Active the Global-Hl-Line overlay on the current line in the current window."
+  "Highlight the current line in the current window."
   (when global-hl-line-mode	; Might be changed outside the mode function.
     (unless (window-minibuffer-p (selected-window))
       (unless global-hl-line-overlay

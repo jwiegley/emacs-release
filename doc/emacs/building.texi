@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 2000, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Building, Maintaining, Programs, Top
 @chapter Compiling and Testing Programs
@@ -356,8 +356,10 @@ listed in the buffer named @samp{*grep*}.
 @item M-x grep-find
 @itemx M-x find-grep
 @itemx M-x rgrep
-Run @code{grep} via @code{find}, with user-specified arguments, and
-collect output in the buffer named @samp{*grep*}.
+Run @code{grep} via @code{find}, and collect output in the buffer
+named @samp{*grep*}.
+@item M-x zrgrep
+Run @code{zgrep} and collect output in the buffer named @samp{*grep*}.
 @item M-x kill-grep
 Kill the running @code{grep} subprocess.
 @end table
@@ -400,21 +402,22 @@ the @code{find-grep-dired} command, in @ref{Dired and Find}.
 
 @findex lgrep
 @findex rgrep
+@findex zrgrep
   The commands @kbd{M-x lgrep} (local grep) and @kbd{M-x rgrep}
 (recursive grep) are more user-friendly versions of @code{grep} and
 @code{grep-find}, which prompt separately for the regular expression
 to match, the files to search, and the base directory for the search.
-Case sensitivity of the search is controlled by the
-current value of @code{case-fold-search}.
+Case sensitivity of the search is controlled by the current value of
+@code{case-fold-search}.  The command @kbd{M-x zrgrep} is similar to
+@code{rgrep}, but it calls @code{zgrep} instead of @code{grep} to
+search the contents of gzipped files.
 
-These commands build the shell commands based on the variables
+  These commands build the shell commands based on the variables
 @code{grep-template} (for @code{lgrep}) and @code{grep-find-template}
-(for @code{rgrep}).
+(for @code{rgrep}).  The files to search can use aliases defined in
+the variable @code{grep-files-aliases}.
 
-The files to search can use aliases defined in the variable
-@code{grep-files-aliases}.
-
-Subdirectories listed in the variable
+  Subdirectories listed in the variable
 @code{grep-find-ignored-directories} such as those typically used by
 various version control systems, like CVS and arch, are automatically
 skipped by @code{rgrep}.
@@ -833,12 +836,11 @@ Fully qualified class name derived from the expression surrounding point
 @subsection GDB Graphical Interface
 
   The command @code{gdb} starts GDB in a graphical interface, using
-Emacs windows for display program state information.  In effect, this
-makes Emacs into an IDE (interactive development environment).  With
-it, you do not need to use textual GDB commands; you can control the
-debugging session with the mouse.  For example, you can click in the
-fringe of a source buffer to set a breakpoint there, or on a stack
-frame in the stack buffer to select that frame.
+Emacs windows for display program state information.  With it, you do
+not need to use textual GDB commands; you can control the debugging
+session with the mouse.  For example, you can click in the fringe of a
+source buffer to set a breakpoint there, or on a stack frame in the
+stack buffer to select that frame.
 
   This mode requires telling GDB that its ``screen size'' is
 unlimited, so it sets the height and width accordingly.  For correct
@@ -858,6 +860,7 @@ multiple programs within one Emacs session.
 * Other GDB-UI Buffers::        Input/output, locals, registers,
                                 assembler, threads and memory buffers.
 * Watch Expressions::           Monitor variable values in the speedbar.
+* Reverse Debugging::           Execute and reverse debug your program.
 @end menu
 
 @node GDB-UI Layout
@@ -882,7 +885,7 @@ displays the following frame layout:
 |--------------------------------+--------------------------------+
 |   Primary Source buffer        |   I/O buffer for debugged pgm  |
 |--------------------------------+--------------------------------+
-|   Stack buffer                 |   Breakpoints/thread buffer    |
+|   Stack buffer                 |   Breakpoints/Threads buffer   |
 +--------------------------------+--------------------------------+
 @end group
 @end smallexample
@@ -903,7 +906,7 @@ gdb-many-windows}.
 
   You may also specify additional GDB-related buffers to display,
 either in the same frame or a different one.  Select the buffers you
-want with the @samp{GUD->GDB-windows} and @samp{GUD->GDB-Frames}
+want with the @samp{GUD->GDB-Windows} and @samp{GUD->GDB-Frames}
 sub-menus.  If the menu-bar is unavailable, type @code{M-x
 gdb-display-@var{buffertype}-buffer} or @code{M-x
 gdb-frame-@var{buffertype}-buffer} respectively, where
@@ -1012,7 +1015,7 @@ Visit the source line for the breakpoint you click on.
 
 When @code{gdb-many-windows} is non-@code{nil}, the breakpoints buffer
 shares its window with the threads buffer.  To switch from one to the
-other click with @kbd{mouse-1} on the relevant button in the header
+other click with @kbd{Mouse-1} on the relevant button in the header
 line.
 
 @node Stack Buffer
@@ -1050,7 +1053,7 @@ as are the commands to send signals to the debugged program.
 @item Locals Buffer
 The locals buffer displays the values of local variables of the
 current frame for simple data types (@pxref{Frame Info, Frame Info,
-Information on a frame, gdb, The GNU debugger}). Press @key{RET} or
+Information on a frame, gdb, The GNU debugger}).  Press @key{RET} or
 click @kbd{Mouse-2} on the value if you want to edit it.
 
 Arrays and structures display their type only.  With GDB 6.4 or later,
@@ -1103,7 +1106,7 @@ size for these data items.
 When @code{gdb-many-windows} is non-@code{nil}, the threads buffer
 shares its window with the breakpoints buffer, and the locals buffer
 with the registers buffer.  To switch from one to the other click with
-@kbd{mouse-1} on the relevant button in the header line.
+@kbd{Mouse-1} on the relevant button in the header line.
 
 @node Watch Expressions
 @subsubsection Watch Expressions
@@ -1170,6 +1173,27 @@ To automatically raise the speedbar every time the display of watch
 expressions updates, set @code{gdb-speedbar-auto-raise} to
 non-@code{nil}.  This can be useful if you are debugging with a full
 screen Emacs frame.
+
+@node Reverse Debugging
+@subsubsection Reverse Debugging
+
+  The GDB tool bar shares many buttons with the other GUD debuggers
+for tasks like stepping and printing expressions.  It also has a
+further set of buttons that allow reverse debugging (@pxref{Process
+Record and Replay, , ,gdb, The GNU debugger}).  This is useful when it
+takes a long time to reproduce the conditions where your program fails
+or for transient problems, like race conditions in multi-threaded
+programs, where a failure might otherwise be hard to reproduce.
+
+To use reverse debugging, set a breakpoint slightly before the
+location of interest and run your program to that point.  Enable
+process recording by clicking on the record button.  At this point, a
+new set of buttons appear.  These buttons allow program execution in
+the reverse direction.  Run your program over the code where the
+problem occurs, and then use the new set of buttons to retrace your
+steps, examine values, and analyze the problem.  When analysis is
+complete, turn off process recording by clicking on the record button
+again.
 
 @node Executing Lisp
 @section Executing Lisp Expressions

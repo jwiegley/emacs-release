@@ -1,7 +1,7 @@
 ;;; vc-rcs.el --- support for RCS version-control
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author:     FSF (see vc.el for full credits)
@@ -25,6 +25,16 @@
 ;;; Commentary:
 
 ;; See vc.el
+
+;; Some features will not work with old RCS versions.  Where
+;; appropriate, VC finds out which version you have, and allows or
+;; disallows those features (stealing locks, for example, works only
+;; from 5.6.2 onwards).
+;; Even initial checkins will fail if your RCS version is so old that ci
+;; doesn't understand -t-; this has been known to happen to people running
+;; NExTSTEP 3.0.
+;;
+;; You can support the RCS -x option by customizing vc-rcs-master-templates.
 
 ;;; Code:
 
@@ -81,7 +91,7 @@ to use --brief and sets this variable to remember whether it worked."
 
 ;;;###autoload
 (defcustom vc-rcs-master-templates
-  '("%sRCS/%s,v" "%s%s,v" "%sRCS/%s")
+  (purecopy '("%sRCS/%s,v" "%s%s,v" "%sRCS/%s"))
   "Where to look for RCS master files.
 For a description of possible values, see `vc-check-master-templates'."
   :type '(choice (const :tag "Use standard RCS file names"
@@ -220,7 +230,7 @@ When VERSION is given, perform check for that version."
   (unless version (setq version (vc-working-revision file)))
   (with-temp-buffer
     (string= version
-	     (if (vc-trunk-p version)
+	     (if (vc-rcs-trunk-p version)
 		 (progn
 		   ;; Compare VERSION to the head version number.
 		   (vc-insert-file (vc-name file) "^[0-9]")
@@ -247,14 +257,6 @@ When VERSION is given, perform check for that version."
     ;; The workfile is unchanged if rcsdiff found no differences.
     (zerop status)))
 
-(defun vc-rcs-find-file-not-found-hook ()
-  (if (yes-or-no-p
-       (format "File %s was lost; check out from version control? "
-	       (file-name-nondirectory buffer-file-name)))
-      (save-excursion
-	(require 'vc)
-	(let ((default-directory (file-name-directory buffer-file-name)))
-          (not (vc-error-occurred (vc-checkout buffer-file-name)))))))
 
 ;;;
 ;;; State-changing functions
@@ -275,6 +277,8 @@ to the RCS command.
 Automatically retrieve a read-only version of the file with keywords
 expanded if `vc-keep-workfiles' is non-nil, otherwise, delete the workfile."
   (let (subdir name)
+    ;; When REV is specified, we need to force using "-t-".
+    (when rev (unless comment (setq comment "")))
     (dolist (file files)
       (and (not (file-exists-p
 		 (setq subdir (expand-file-name "RCS"
@@ -386,7 +390,7 @@ whether to remove it."
 	       (not (string= (vc-branch-part old-version)
 			     (vc-branch-part new-version))))
 	  (vc-rcs-set-default-branch file
-				     (if (vc-trunk-p new-version) nil
+				     (if (vc-rcs-trunk-p new-version) nil
 				       (vc-branch-part new-version)))
 	  ;; If this is an old RCS release, we might have
 	  ;; to remove a remaining lock.
@@ -446,7 +450,7 @@ attempt the checkout for all registered files beneath it."
 					 ;; use current workfile version
 					 workrev
 				       ;; REV is t ...
-				       (if (not (vc-trunk-p workrev))
+				       (if (not (vc-rcs-trunk-p workrev))
 					   ;; ... go to head of current branch
 					   (vc-branch-part workrev)
 					 ;; ... go to head of trunk
@@ -464,7 +468,7 @@ attempt the checkout for all registered files beneath it."
 		 (vc-rcs-set-default-branch
 		  file
 		  (if (vc-rcs-latest-on-branch-p file new-version)
-		      (if (vc-trunk-p new-version) nil
+		      (if (vc-rcs-trunk-p new-version) nil
 			(vc-branch-part new-version))
 		    new-version)))))
 	(message "Checking out %s...done" file))))))
@@ -473,10 +477,10 @@ attempt the checkout for all registered files beneath it."
   "Roll back, undoing the most recent checkins of FILES.  Directories are
 expanded to all registered subfiles in them."
   (if (not files)
-      (error "RCS backend doesn't support directory-level rollback."))
+      (error "RCS backend doesn't support directory-level rollback"))
   (dolist (file (vc-expand-dirs files))
 	  (let* ((discard (vc-working-revision file))
-		 (previous (if (vc-trunk-p discard) "" (vc-branch-part discard)))
+		 (previous (if (vc-rcs-trunk-p discard) "" (vc-branch-part discard)))
 		 (config (current-window-configuration))
 		 (done nil))
 	    (if (null (yes-or-no-p (format "Remove version %s from %s history? "
@@ -546,10 +550,24 @@ directory the operation is applied to all registered files beneath it."
 ;;; History functions
 ;;;
 
-(defun vc-rcs-print-log (files &optional buffer)
+(defun vc-rcs-print-log-cleanup ()
+  (let ((inhibit-read-only t))
+    (goto-char (point-max))
+    (forward-line -1)
+    (while (looking-at "=*\n")
+      (delete-char (- (match-end 0) (match-beginning 0)))
+      (forward-line -1))
+    (goto-char (point-min))
+    (when (looking-at "[\b\t\n\v\f\r ]+")
+      (delete-char (- (match-end 0) (match-beginning 0))))))
+
+(defun vc-rcs-print-log (files buffer &optional shortlog start-revision-ignored limit)
   "Get change log associated with FILE.  If FILE is a
 directory the operation is applied to all registered files beneath it."
-  (vc-do-command (or buffer "*vc*") 0 "rlog" (mapcar 'vc-name (vc-expand-dirs files))))
+  (vc-do-command (or buffer "*vc*") 0 "rlog" (mapcar 'vc-name (vc-expand-dirs files)))
+  (with-current-buffer (or buffer "*vc*")
+    (vc-rcs-print-log-cleanup))
+  (when limit 'limit-unsupported))
 
 (defun vc-rcs-diff (files &optional oldvers newvers buffer)
   "Get a difference report using RCS between two sets of files."
@@ -681,7 +699,8 @@ Optional arg REVISION is a revision to annotate from."
         ;; property of this approach is ability to push instructions
         ;; onto `path' directly, w/o need to maintain rev boundaries.
         (dolist (insn (cdr (assq :insn meta)))
-          (goto-line (pop insn))
+          (goto-char (point-min))
+          (forward-line (1- (pop insn)))
           (setq p (point))
           (case (pop insn)
             (k (setq s (buffer-substring-no-properties
@@ -713,7 +732,8 @@ Optional arg REVISION is a revision to annotate from."
                  (setq meta (cdr (assoc pre revisions))
                        prda nil)
                  (dolist (insn (cdr (assq :insn meta)))
-                   (goto-line (pop insn))
+                   (goto-char (point-min))
+                   (forward-line (1- (pop insn)))
                    (case (pop insn)
                      (k (delete-region
                          (point) (progn (forward-line (car insn))
@@ -807,6 +827,95 @@ systime, or nil if there is none.  Also, reposition point."
 ;;; Miscellaneous
 ;;;
 
+(defun vc-rcs-trunk-p (rev)
+  "Return t if REV is a revision on the trunk."
+  (not (eq nil (string-match "\\`[0-9]+\\.[0-9]+\\'" rev))))
+
+(defun vc-rcs-minor-part (rev)
+  "Return the minor revision number of a revision number REV."
+  (string-match "[0-9]+\\'" rev)
+  (substring rev (match-beginning 0) (match-end 0)))
+
+(defun vc-rcs-previous-revision (file rev)
+  "Return the revision number immediately preceding REV for FILE,
+or nil if there is no previous revision.  This default
+implementation works for MAJOR.MINOR-style revision numbers as
+used by RCS and CVS."
+  (let ((branch (vc-branch-part rev))
+        (minor-num (string-to-number (vc-rcs-minor-part rev))))
+    (when branch
+      (if (> minor-num 1)
+          ;; revision does probably not start a branch or release
+          (concat branch "." (number-to-string (1- minor-num)))
+        (if (vc-rcs-trunk-p rev)
+            ;; we are at the beginning of the trunk --
+            ;; don't know anything to return here
+            nil
+          ;; we are at the beginning of a branch --
+          ;; return revision of starting point
+          (vc-branch-part branch))))))
+
+(defun vc-rcs-next-revision (file rev)
+  "Return the revision number immediately following REV for FILE,
+or nil if there is no next revision.  This default implementation
+works for MAJOR.MINOR-style revision numbers as used by RCS
+and CVS."
+  (when (not (string= rev (vc-working-revision file)))
+    (let ((branch (vc-branch-part rev))
+	  (minor-num (string-to-number (vc-rcs-minor-part rev))))
+      (concat branch "." (number-to-string (1+ minor-num))))))
+
+(defun vc-rcs-update-changelog (files)
+  "Default implementation of update-changelog.
+Uses `rcs2log' which only works for RCS and CVS."
+  ;; FIXME: We (c|sh)ould add support for cvs2cl
+  (let ((odefault default-directory)
+	(changelog (find-change-log))
+	;; Presumably not portable to non-Unixy systems, along with rcs2log:
+	(tempfile (make-temp-file
+		   (expand-file-name "vc"
+				     (or small-temporary-file-directory
+					 temporary-file-directory))))
+        (login-name (or user-login-name
+                        (format "uid%d" (number-to-string (user-uid)))))
+	(full-name (or add-log-full-name
+		       (user-full-name)
+		       (user-login-name)
+		       (format "uid%d" (number-to-string (user-uid)))))
+	(mailing-address (or add-log-mailing-address
+			     user-mail-address)))
+    (find-file-other-window changelog)
+    (barf-if-buffer-read-only)
+    (vc-buffer-sync)
+    (undo-boundary)
+    (goto-char (point-min))
+    (push-mark)
+    (message "Computing change log entries...")
+    (message "Computing change log entries... %s"
+	     (unwind-protect
+		 (progn
+		   (setq default-directory odefault)
+		   (if (eq 0 (apply 'call-process
+                                    (expand-file-name "rcs2log"
+                                                      exec-directory)
+                                    nil (list t tempfile) nil
+                                    "-c" changelog
+                                    "-u" (concat login-name
+                                                 "\t" full-name
+                                                 "\t" mailing-address)
+                                    (mapcar
+                                     (lambda (f)
+                                       (file-relative-name
+					(expand-file-name f odefault)))
+                                     files)))
+                       "done"
+		     (pop-to-buffer (get-buffer-create "*vc*"))
+		     (erase-buffer)
+		     (insert-file-contents tempfile)
+		     "failed"))
+	       (setq default-directory (file-name-directory changelog))
+	       (delete-file tempfile)))))
+
 (defun vc-rcs-check-headers ()
   "Check if the current file has any headers in it."
   (save-excursion
@@ -827,6 +936,13 @@ systime, or nil if there is none.  Also, reposition point."
 (defun vc-rcs-rename-file (old new)
   ;; Just move the master file (using vc-rcs-master-templates).
   (vc-rename-master (vc-name old) new vc-rcs-master-templates))
+
+(defun vc-rcs-find-file-hook ()
+  ;; If the file is locked by some other user, make
+  ;; the buffer read-only.  Like this, even root
+  ;; cannot modify a file that someone else has locked.
+  (and (stringp (vc-state buffer-file-name 'RCS))
+       (setq buffer-read-only t)))
 
 
 ;;;
@@ -942,65 +1058,65 @@ Returns: nil            if no headers were found
   (cond
    ((not (get-file-buffer file)) nil)
    ((let (status version locking-user)
-     (save-excursion
-      (set-buffer (get-file-buffer file))
-      (goto-char (point-min))
-      (cond
-       ;; search for $Id or $Header
-       ;; -------------------------
-       ;; The `\ 's below avoid an RCS 5.7 bug when checking in this file.
-       ((or (and (search-forward "$Id\ : " nil t)
-		 (looking-at "[^ ]+ \\([0-9.]+\\) "))
-	    (and (progn (goto-char (point-min))
-			(search-forward "$Header\ : " nil t))
-		 (looking-at "[^ ]+ \\([0-9.]+\\) ")))
-	(goto-char (match-end 0))
-	;; if found, store the revision number ...
-	(setq version (match-string-no-properties 1))
-	;; ... and check for the locking state
-	(cond
-	 ((looking-at
-	   (concat "[0-9]+[/-][01][0-9][/-][0-3][0-9] "             ; date
-	    "[0-2][0-9]:[0-5][0-9]+:[0-6][0-9]+\\([+-][0-9:]+\\)? " ; time
-	           "[^ ]+ [^ ]+ "))                       ; author & state
-	  (goto-char (match-end 0)) ; [0-6] in regexp handles leap seconds
-	  (cond
-	   ;; unlocked revision
-	   ((looking-at "\\$")
-	    (setq locking-user 'none)
-	    (setq status 'rev-and-lock))
-	   ;; revision is locked by some user
-	   ((looking-at "\\([^ ]+\\) \\$")
-	    (setq locking-user (match-string-no-properties 1))
-	    (setq status 'rev-and-lock))
-	   ;; everything else: false
-	   (nil)))
-	 ;; unexpected information in
-	 ;; keyword string --> quit
-	 (nil)))
-       ;; search for $Revision
-       ;; --------------------
-       ((re-search-forward (concat "\\$"
-				   "Revision: \\([0-9.]+\\) \\$")
-			   nil t)
-	;; if found, store the revision number ...
-	(setq version (match-string-no-properties 1))
-	;; and see if there's any lock information
-	(goto-char (point-min))
-	(if (re-search-forward (concat "\\$" "Locker:") nil t)
-	    (cond ((looking-at " \\([^ ]+\\) \\$")
-		   (setq locking-user (match-string-no-properties 1))
-		   (setq status 'rev-and-lock))
-		  ((looking-at " *\\$")
-		   (setq locking-user 'none)
-		   (setq status 'rev-and-lock))
-		  (t
-		   (setq locking-user 'none)
-		   (setq status 'rev-and-lock)))
-	  (setq status 'rev)))
-       ;; else: nothing found
-       ;; -------------------
-       (t nil)))
+      (with-current-buffer (get-file-buffer file)
+        (save-excursion
+          (goto-char (point-min))
+          (cond
+           ;; search for $Id or $Header
+           ;; -------------------------
+           ;; The `\ 's below avoid an RCS 5.7 bug when checking in this file.
+           ((or (and (search-forward "$Id\ : " nil t)
+                     (looking-at "[^ ]+ \\([0-9.]+\\) "))
+                (and (progn (goto-char (point-min))
+                            (search-forward "$Header\ : " nil t))
+                     (looking-at "[^ ]+ \\([0-9.]+\\) ")))
+            (goto-char (match-end 0))
+            ;; if found, store the revision number ...
+            (setq version (match-string-no-properties 1))
+            ;; ... and check for the locking state
+            (cond
+             ((looking-at
+               (concat "[0-9]+[/-][01][0-9][/-][0-3][0-9] "              ; date
+                 "[0-2][0-9]:[0-5][0-9]+:[0-6][0-9]+\\([+-][0-9:]+\\)? " ; time
+                       "[^ ]+ [^ ]+ "))                        ; author & state
+              (goto-char (match-end 0)) ; [0-6] in regexp handles leap seconds
+              (cond
+               ;; unlocked revision
+               ((looking-at "\\$")
+                (setq locking-user 'none)
+                (setq status 'rev-and-lock))
+               ;; revision is locked by some user
+               ((looking-at "\\([^ ]+\\) \\$")
+                (setq locking-user (match-string-no-properties 1))
+                (setq status 'rev-and-lock))
+               ;; everything else: false
+               (nil)))
+             ;; unexpected information in
+             ;; keyword string --> quit
+             (nil)))
+           ;; search for $Revision
+           ;; --------------------
+           ((re-search-forward (concat "\\$"
+                                       "Revision: \\([0-9.]+\\) \\$")
+                               nil t)
+            ;; if found, store the revision number ...
+            (setq version (match-string-no-properties 1))
+            ;; and see if there's any lock information
+            (goto-char (point-min))
+            (if (re-search-forward (concat "\\$" "Locker:") nil t)
+                (cond ((looking-at " \\([^ ]+\\) \\$")
+                       (setq locking-user (match-string-no-properties 1))
+                       (setq status 'rev-and-lock))
+                      ((looking-at " *\\$")
+                       (setq locking-user 'none)
+                       (setq status 'rev-and-lock))
+                      (t
+                       (setq locking-user 'none)
+                       (setq status 'rev-and-lock)))
+              (setq status 'rev)))
+           ;; else: nothing found
+           ;; -------------------
+           (t nil))))
      (if status (vc-file-setprop file 'vc-working-revision version))
      (and (eq status 'rev-and-lock)
 	  (vc-file-setprop file 'vc-state

@@ -1,7 +1,7 @@
 ;;; ezimage --- Generalized Image management
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: file, tags, tools
@@ -300,8 +300,7 @@ Optional argument STRING is a string upon which to add text properties."
 See `ezimage-expand-image-button-alist' for details."
   (interactive)
   (with-output-to-temp-buffer "*Ezimage Images*"
-    (save-excursion
-      (set-buffer "*Ezimage Images*")
+    (with-current-buffer "*Ezimage Images*"
       (goto-char (point-max))
       (insert "Ezimage image cache.\n\n")
       (let ((start (point)) (end nil))
@@ -324,8 +323,7 @@ See `ezimage-expand-image-button-alist' for details."
 See `ezimage-expand-image-button-alist' for details."
   (interactive)
   (with-output-to-temp-buffer "*Ezimage Images*"
-    (save-excursion
-      (set-buffer "*Ezimage Images*")
+    (with-current-buffer "*Ezimage Images*"
       (goto-char (point-max))
       (insert "Ezimage image cache.\n\n")
       (let ((start (point)) (end nil))

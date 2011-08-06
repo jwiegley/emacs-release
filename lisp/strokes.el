@@ -1,7 +1,7 @@
 ;;; strokes.el --- control Emacs through mouse strokes
 
-;; Copyright (C) 1997, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1997, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: David Bakhash <cadet@alum.mit.edu>
 ;; Maintainer: FSF
@@ -1028,7 +1028,7 @@ o Strokes are a bit computer-dependent in that they depend somewhat on
   by customizing the group `strokes' via \\[customize-group]."))
     (set-buffer standard-output)
     (help-mode)
-    (print-help-return-message)))
+    (help-print-return-message)))
 
 (defalias 'strokes-report-bug 'report-emacs-bug)
 
@@ -1055,19 +1055,18 @@ This is based on the last time `strokes-window-configuration' was updated."
 	   ;; don't try to update strokes window configuration
 	   ;; if window is dedicated or a minibuffer
 	   nil)
-	  ((or (interactive-p)
+	  ((or (called-interactively-p 'interactive)
 	       (not (buffer-live-p (get-buffer strokes-buffer-name)))
 	       (null strokes-window-configuration))
 	   ;; create `strokes-window-configuration' from scratch...
 	   (save-excursion
 	     (save-window-excursion
-	       (get-buffer-create strokes-buffer-name)
+	       (set-buffer (get-buffer-create strokes-buffer-name))
 	       (set-window-buffer current-window strokes-buffer-name)
 	       (delete-other-windows)
 	       (fundamental-mode)
 	       (auto-save-mode 0)
-	       (if (featurep 'font-lock)
-		   (font-lock-mode 0))
+	       (font-lock-mode 0)
 	       (abbrev-mode 0)
 	       (buffer-disable-undo (current-buffer))
 	       (setq truncate-lines nil)
@@ -1092,7 +1091,7 @@ This is based on the last time `strokes-window-configuration' was updated."
   (cond ((and (file-exists-p strokes-file)
 	      (file-readable-p strokes-file))
 	 (load-file strokes-file))
-	((interactive-p)
+	((called-interactively-p 'interactive)
 	 (error "Trouble loading user-defined strokes; nothing done"))
 	(t
 	 (message "No user-defined strokes, sorry"))))
@@ -1107,7 +1106,7 @@ This is based on the last time `strokes-window-configuration' was updated."
 	    (setq strokes-global-map nil)
 	    (strokes-load-user-strokes)
 	    (if (and (not (equal current strokes-global-map))
-		     (or (interactive-p)
+		     (or (called-interactively-p 'interactive)
 			 (yes-or-no-p "Save your strokes? ")))
 		(progn
 		  (require 'pp)		; pretty-print variables
@@ -1187,20 +1186,22 @@ the stroke as a character in some language."
 		       (let ((char (or (car rainbow-chars) ?\.)))
 			 (loop for i from 0 to 2 do
 			       (loop for j from 0 to 2 do
-				     (goto-line (+ 16 i y))
+				     (goto-char (point-min))
+				     (forward-line (+ 15 i y))
 				     (forward-char (+ 1 j x))
 				     (delete-char 1)
 				     (insert char)))
 			 (setq rainbow-chars (cdr rainbow-chars)
 			       lift-flag nil))
 		     ;; Otherwise, just plot the point...
-		     (goto-line (+ 17 y))
+		     (goto-char (point-min))
+		     (forward-line (+ 16 y))
 		     (forward-char (+ 2 x))
 		     (subst-char-in-region (point) (1+ (point)) ?\s ?\*)))
 		  ((strokes-lift-p point)
 		   ;; a lift--tell the loop to X out the next point...
 		   (setq lift-flag t))))
-      (when (interactive-p)
+      (when (called-interactively-p 'interactive)
 	(pop-to-buffer " *strokes-xpm*")
 	;;	(xpm-mode 1)
 	(goto-char (point-min))
@@ -1534,8 +1535,7 @@ Encode/decode your strokes with \\[strokes-encode-buffer],
 (defun strokes-xpm-to-compressed-string (&optional xpm-buffer)
   "Convert XPM in XPM-BUFFER to compressed string representing the stroke.
 XPM-BUFFER defaults to ` *strokes-xpm*'."
-  (save-excursion
-    (set-buffer (setq xpm-buffer (or xpm-buffer " *strokes-xpm*")))
+  (with-current-buffer (setq xpm-buffer (or xpm-buffer " *strokes-xpm*"))
     (goto-char (point-min))
     (search-forward "/* pixels */")	; skip past header junk
     (forward-char 2)
@@ -1618,8 +1618,7 @@ Optional BUFFER defaults to the current buffer.
 Optional FORCE non-nil will ignore the buffer's read-only status."
   (interactive)
   ;;  (interactive "*bStrokify buffer: ")
-  (save-excursion
-    (set-buffer (setq buffer (get-buffer (or buffer (current-buffer)))))
+  (with-current-buffer (setq buffer (get-buffer (or buffer (current-buffer))))
     (when (or (not buffer-read-only)
 	      force
 	      inhibit-read-only
@@ -1667,8 +1666,7 @@ Optional FORCE non-nil will ignore the buffer's read-only status."
   ;; buffer is killed?
   ;;  (interactive "*bUnstrokify buffer: ")
   (interactive)
-  (save-excursion
-    (set-buffer (setq buffer (or buffer (current-buffer))))
+  (with-current-buffer (setq buffer (or buffer (current-buffer)))
     (when (or (not buffer-read-only)
 	      force
 	      inhibit-read-only
@@ -1704,9 +1702,8 @@ Optional FORCE non-nil will ignore the buffer's read-only status."
 (defun strokes-xpm-for-compressed-string (compressed-string &optional bufname)
   "Convert the stroke represented by COMPRESSED-STRING into an XPM.
 Store XPM in buffer BUFNAME if supplied \(default is ` *strokes-xpm*'\)"
-  (save-excursion
-    (or bufname (setq bufname " *strokes-xpm*"))
-    (set-buffer (get-buffer-create bufname))
+  (or bufname (setq bufname " *strokes-xpm*"))
+  (with-current-buffer (get-buffer-create bufname)
     (erase-buffer)
     (insert compressed-string)
     (goto-char (point-min))

@@ -2,7 +2,7 @@
 
 /* GNU Emacs site configuration template file.
    Copyright (C) 1988, 1993, 1994, 1999, 2000, 2001, 2002, 2004, 2005,
-     2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+     2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -26,6 +26,9 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #ifndef EMACS_CONFIG_H
 #define EMACS_CONFIG_H
 
+
+/* Generate dependencies with gcc. */
+#undef AUTO_DEPEND
 
 /* Define to 1 if the mktime function is broken. */
 #undef BROKEN_MKTIME
@@ -58,6 +61,23 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Define to the options passed to configure. */
 #undef EMACS_CONFIG_OPTIONS
+
+/* Enable expensive run-time checking of data types? */
+#undef ENABLE_CHECKING
+
+/* Define this to check for errors in cons list. */
+#undef GC_CHECK_CONS_LIST
+
+/* Define this temporarily to hunt a bug. If defined, the size of strings is
+   redundantly recorded in sdata structures so that it can be compared to the
+   sizes recorded in Lisp strings. */
+#undef GC_CHECK_STRING_BYTES
+
+/* Define this to check the string free list. */
+#undef GC_CHECK_STRING_FREE_LIST
+
+/* Define this to check for short string overrun. */
+#undef GC_CHECK_STRING_OVERRUN
 
 /* Define to 1 if the `getloadavg' function needs to be run setuid or setgid.
    */
@@ -121,6 +141,9 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* Define to 1 if using D-Bus. */
 #undef HAVE_DBUS
 
+/* Define to 1 if you have the `dbus_watch_get_unix_fd' function. */
+#undef HAVE_DBUS_WATCH_GET_UNIX_FD
+
 /* Define to 1 if you have the declaration of `sys_siglist', and to 0 if you
    don't. */
 #undef HAVE_DECL_SYS_SIGLIST
@@ -177,6 +200,9 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Define to 1 if you have the `gai_strerror' function. */
 #undef HAVE_GAI_STRERROR
+
+/* Define to 1 if using GConf. */
+#undef HAVE_GCONF
 
 /* Define to 1 if you have the `gdk_display_open' function. */
 #undef HAVE_GDK_DISPLAY_OPEN
@@ -715,6 +741,9 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* Define to 1 if you have the <utime.h> header file. */
 #undef HAVE_UTIME_H
 
+/* Define to 1 if you have the <utmp.h> header file. */
+#undef HAVE_UTMP_H
+
 /* Define to 1 if you have the `vfork' function. */
 #undef HAVE_VFORK
 
@@ -897,24 +926,15 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* Define to 1 if using an X toolkit. */
 #undef USE_X_TOOLKIT
 
+/* Define this to check for malloc buffer overrun. */
+#undef XMALLOC_OVERRUN_CHECK
+
 /* Define to the type of the 6th arg of XRegisterIMInstantiateCallback, either
    XPointer or XPointer*. */
 #undef XRegisterIMInstantiateCallback_arg6
 
-/* Define to 1 if on AIX 3.
-   System headers sometimes define this.
-   We just want to avoid a redefinition error message.  */
-#ifndef _ALL_SOURCE
-# undef _ALL_SOURCE
-#endif
-
 /* Number of bits in a file offset, on hosts where this is settable. */
 #undef _FILE_OFFSET_BITS
-
-/* Enable GNU extensions on systems that have them.  */
-#ifndef _GNU_SOURCE
-# undef _GNU_SOURCE
-#endif
 
 /* Define to 1 to make fseeko visible on some hosts (e.g. glibc 2.2). */
 #undef _LARGEFILE_SOURCE
@@ -932,16 +952,27 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* Define to 1 if you need to in order for `stat' and other things to work. */
 #undef _POSIX_SOURCE
 
-/* Enable extensions on Solaris.  */
-#ifndef __EXTENSIONS__
-# undef __EXTENSIONS__
+/* Enable extensions on AIX 3, Interix.  */
+#ifndef _ALL_SOURCE
+# undef _ALL_SOURCE
 #endif
+/* Enable GNU extensions on systems that have them.  */
+#ifndef _GNU_SOURCE
+# undef _GNU_SOURCE
+#endif
+/* Enable threading extensions on Solaris.  */
 #ifndef _POSIX_PTHREAD_SEMANTICS
 # undef _POSIX_PTHREAD_SEMANTICS
 #endif
+/* Enable extensions on HP NonStop.  */
 #ifndef _TANDEM_SOURCE
 # undef _TANDEM_SOURCE
 #endif
+/* Enable general extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+# undef __EXTENSIONS__
+#endif
+
 
 /* Define to rpl_ if the getopt replacement functions and variables should be
    used. */
@@ -1041,7 +1072,6 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
    side does this in s/darwin.h and we cannot
    parallel this exactly since GNUstep is multi-OS. */
 #ifdef HAVE_NS
-#define OTHER_FILES ns-app
 # ifdef NS_IMPL_GNUSTEP
 /* See also .m.o rule in Makefile.in */
 /* FIXME: are all these flags really needed?  Document here why.  */
@@ -1172,9 +1202,6 @@ typedef unsigned size_t;
 #if defined HAVE_X11R6 && !defined INHIBIT_X11R6_XIM
 #define HAVE_X11R6_XIM
 #endif
-
-/* Should we enable expensive run-time checking of data types?  */
-#undef ENABLE_CHECKING
 
 #if defined __GNUC__ && (__GNUC__ > 2 \
                          || (__GNUC__ == 2 && __GNUC_MINOR__ >= 5))

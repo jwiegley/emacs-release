@@ -1,7 +1,7 @@
 ;;; resume.el --- process command line args from within a suspended Emacs job
 
 ;; Copyright (C) 1992, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Joe Wells <jbw@bucsf.bu.edu>
 ;; Adapted-By: ESR
@@ -107,8 +107,7 @@
 ;;;###autoload
 (defun resume-suspend-hook ()
   "Clear out the file used for transmitting args when Emacs resumes."
-  (save-excursion
-    (set-buffer (get-buffer-create resume-emacs-args-buffer))
+  (with-current-buffer (get-buffer-create resume-emacs-args-buffer)
     (erase-buffer)
     (resume-write-buffer-to-file (current-buffer) resume-emacs-args-file)))
 
@@ -116,8 +115,7 @@
   "Writes the contents of BUFFER into FILE, if permissions allow."
   (if (not (file-writable-p file))
       (error "No permission to write file %s" file))
-  (save-excursion
-    (set-buffer buffer)
+  (with-current-buffer buffer
     (clear-visited-file-modtime)
     (save-restriction
       (widen)

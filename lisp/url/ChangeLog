@@ -1,6 +1,56 @@
-2009-07-29  Chong Yidong  <cyd@stupidchicken.com>
+2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
 
-	* Version 23.1 released.
+	* Version 23.2 released.
+
+2010-01-23  Chong Yidong  <cyd@stupidchicken.com>
+
+	* url-util.el: Require url-vars (Bug#5459).
+
+2009-11-27  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* url-parse.el (url-generic-parse-url): Bind deactivate-mark.
+
+2009-11-08  Kai Tetzlaff  <kai.tetzlaff@web.de>  (tiny change)
+
+	* url-http.el (url-http-handle-authentication): Use proxy server,
+	if any, for authentication (Bug#4883).
+
+2009-11-03  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* url-util.el (url-insert-entities-in-string):
+	* url-nfs.el (url-nfs-unescape):
+	* url-ldap.el (url-ldap):
+	* url-imap.el (url-imap):
+	* url-cid.el (url-cid-gnus, url-cid): Use with-current-buffer.
+
+2009-10-01  Glenn Morris  <rgm@gnu.org>
+
+	* url-http.el (url-dav-file-attributes): Fix declaration.
+
+2009-09-13  Chong Yidong  <cyd@stupidchicken.com>
+
+	* url-handlers.el (url-copy-file): Add fifth arg for compatibility
+	with 2005-06-25 change to copy-file (Bug#4410).
+
+2009-09-13  Glenn Morris  <rgm@gnu.org>
+
+	* url-file.el (url-file): Avoid assignment to free variable `filename'.
+
+2009-09-12  Chong Yidong  <cyd@stupidchicken.com>
+
+	* url-methods.el (url-scheme--registering-proxy): New variable.
+	(url-scheme-register-proxy, url-scheme-get-property): Avoid
+	calling url-scheme-register-proxy in an infloop (Bug#4191).
+
+2009-08-22  Glenn Morris  <rgm@gnu.org>
+
+	* url-file.el (url-file-build-filename):
+	* url-privacy.el (url-setup-privacy-info): Remove code for defunct
+	system-types Apple-Macintosh, emx, ms-windows, next-mach.
+
+2009-06-21  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Branch for 23.1.
 
 2009-03-27  Stefan Monnier  <monnier@iro.umontreal.ca>
 
@@ -9,7 +59,7 @@
 2009-02-21  Jason Rumney  <jasonr@gnu.org>
 
 	* url-expand.el (url-default-expander): Use concat to combine
-	parts. (Bug #1020)
+	parts.  (Bug #1020)
 
 2009-02-10  Glenn Morris  <rgm@gnu.org>
 
@@ -2147,7 +2197,7 @@
 ;; End:
 
     Copyright (C) 1999, 2001, 2002, 2004, 2005,
-	2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+	2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

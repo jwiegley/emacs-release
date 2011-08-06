@@ -10,7 +10,7 @@
 
 @copying
 Copyright @copyright{} 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -11315,6 +11315,7 @@ disappear forever into that big @file{/dev/null} in the sky.
 
 @item B DEL
 @kindex B DEL (Summary)
+@cindex deleting mail
 @findex gnus-summary-delete-article
 @c @icon{gnus-summary-mail-delete}
 Delete the mail article.  This is ``delete'' as in ``delete it from your
@@ -12030,8 +12031,8 @@ or newer is recommended.
 
 @end enumerate
 
-The variables that control security functionality on reading messages
-include:
+The variables that control security functionality on reading/composing
+messages include:
 
 @table @code
 @item mm-verify-option
@@ -12045,6 +12046,17 @@ protocols.  Otherwise, ask user.
 Option of decrypting encrypted parts.  @code{never}, no decryption;
 @code{always}, always decrypt; @code{known}, only decrypt known
 protocols.  Otherwise, ask user.
+
+@item mm-sign-option
+@vindex mm-sign-option
+Option of creating signed parts.  @code{nil}, use default signing
+keys; @code{guided}, ask user to select signing keys from the menu.
+
+@item mm-encrypt-option
+@vindex mm-encrypt-option
+Option of creating encrypted parts.  @code{nil}, use the first
+public-key matching the @samp{From:} header as the recipient;
+@code{guided}, ask user to select recipient keys from the menu.
 
 @item mml1991-use
 @vindex mml1991-use
@@ -13438,8 +13450,7 @@ So here's a new example:
          (body "You are fired.\n\nSincerely, your boss.")
          (organization "Important Work, Inc"))
         ("nnml:.*"
-         (From (save-excursion
-                 (set-buffer gnus-article-buffer)
+         (From (with-current-buffer gnus-article-buffer
                  (message-fetch-field "to"))))
         ("^nn.+:"
          (signature-file "~/.mail-signature"))))
@@ -14382,7 +14393,7 @@ installed.  You then define a server as follows:
 ;;
 (nntp "snews.bar.com"
       (nntp-open-connection-function nntp-open-tls-stream)
-      (nntp-port-number )
+      (nntp-port-number 563)
       (nntp-address "snews.bar.com"))
 @end lisp
 
@@ -16298,6 +16309,23 @@ Most people make most of their mail groups total-expirable, though.
 If @code{gnus-inhibit-user-auto-expire} is non-@code{nil}, user marking
 commands will not mark an article as expirable, even if the group has
 auto-expire turned on.
+
+@vindex gnus-mark-copied-or-moved-articles-as-expirable
+The expirable marks of articles will be removed when copying or moving
+them to a group in which auto-expire is not turned on.  This is for
+preventing articles from being expired unintentionally.  On the other
+hand, to a group that has turned auto-expire on, the expirable marks of
+articles that are copied or moved will not be changed by default.  I.e.,
+when copying or moving to such a group, articles that were expirable
+will be left expirable and ones that were not expirable will not be
+marked as expirable.  So, even though in auto-expire groups, some
+articles will never get expired (unless you read them again).  If you
+don't side with that behavior that unexpirable articles may be mixed
+into auto-expire groups, you can set
+@code{gnus-mark-copied-or-moved-articles-as-expirable} to a
+non-@code{nil} value.  In that case, articles that have been read will
+be marked as expirable automatically when being copied or moved to a
+group that has auto-expire turned on.  The default value is @code{nil}.
 
 
 @node Washing Mail
@@ -21776,7 +21804,7 @@ not be loaded, even though they would normally be so, for some reason or
 other.
 
 @item eval
-The value of this entry will be @code{eval}el.  This element will be
+The value of this entry will be @code{eval}ed.  This element will be
 ignored when handling global score files.
 
 @item read-only
@@ -21800,7 +21828,7 @@ You can do this with the following two score file entries:
 
 When you enter the group the first time, you will only see the new
 threads.  You then raise the score of the threads that you find
-interesting (with @kbd{I T} or @kbd{I S}), and ignore (@kbd{C y}) the
+interesting (with @kbd{I T} or @kbd{I S}), and ignore (@kbd{c y}) the
 rest.  Next time you enter the group, you will see new articles in the
 interesting threads, plus any new threads.
 
@@ -26926,6 +26954,15 @@ group).
 
 @acronym{IMAP} users might want to allow @samp{/} in group names though.
 
+@item gnus-safe-html-newsgroups
+@vindex gnus-safe-html-newsgroups
+Groups in which links in html articles are considered all safe.  The
+value may be a regexp matching those groups, a list of group names, or
+@code{nil}.  This overrides @code{mm-w3m-safe-url-regexp}.  The default
+value is @code{"\\`nnrss[+:]"}.  This is effective only when emacs-w3m
+renders html articles, i.e., in the case @code{mm-text-html-renderer} is
+set to @code{w3m}.  @xref{Display Customization, ,Display Customization,
+emacs-mime, The Emacs MIME Manual}.
 
 @end table
 
@@ -27058,6 +27095,10 @@ On the 26th of October 2000, Oort Gnus was begun and was released as
 Gnus 5.10 on May 1st 2003 (24 releases).
 
 On the January 4th 2004, No Gnus was begun.
+
+On April 19, 2010 Gnus development was moved to Git.  See
+http://git.gnus.org for details (http://www.gnus.org will be updated
+with the information when possible).
 
 If you happen upon a version of Gnus that has a prefixed name --
 ``(ding) Gnus'', ``September Gnus'', ``Red Gnus'', ``Quassia Gnus'',
@@ -28455,7 +28496,7 @@ directory is not used any more.  You can safely delete the entire
 hierarchy.
 
 @c FIXME: `gnus-load' is mentioned in README, which is not included in
-@c CVS.  We should find a better place for this item.
+@c the repository.  We should find a better place for this item.
 @item
 @code{(require 'gnus-load)}
 

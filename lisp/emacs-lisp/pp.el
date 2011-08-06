@@ -1,7 +1,7 @@
 ;;; pp.el --- pretty printer for Emacs Lisp
 
 ;; Copyright (C) 1989, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Randal Schwartz <merlyn@stonehenge.com>
 ;; Keywords: lisp
@@ -33,7 +33,7 @@
   :group 'lisp)
 
 (defcustom pp-escape-newlines t
-  "*Value of `print-escape-newlines' used by pp-* functions."
+  "Value of `print-escape-newlines' used by pp-* functions."
   :type 'boolean
   :group 'pp)
 
@@ -42,8 +42,7 @@
   "Return a string containing the pretty-printed representation of OBJECT.
 OBJECT can be any Lisp object.  Quoting characters are used as needed
 to make output that `read' can handle, whenever this is possible."
-  (save-excursion
-    (set-buffer (generate-new-buffer " pp-to-string"))
+  (with-current-buffer (generate-new-buffer " pp-to-string")
     (unwind-protect
 	(progn
 	  (lisp-mode-variables nil)
@@ -105,8 +104,7 @@ after OUT-BUFFER-NAME."
 	 (temp-buffer-show-function
 	  (function
 	   (lambda (buf)
-	     (save-excursion
-	       (set-buffer buf)
+	     (with-current-buffer buf
 	       (goto-char (point-min))
 	       (end-of-line 1)
 	       (if (or (< (1+ (point)) (point-max))

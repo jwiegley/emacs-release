@@ -1,6 +1,6 @@
 /* Parameters and display hooks for terminal devices.
    Copyright (C) 1985, 1986, 1993, 1994, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -183,6 +183,8 @@ enum event_kind
 #ifdef HAVE_DBUS
   , DBUS_EVENT
 #endif
+
+  , CONFIG_CHANGED_EVENT
 
 #ifdef WINDOWSNT
   /* Generated when an APPCOMMAND event is received, in response to
@@ -427,6 +429,7 @@ struct terminal
   void (*delete_glyphs_hook) P_ ((struct frame *, int));
 
   void (*ring_bell_hook) P_ ((struct frame *f));
+  void (*toggle_invisible_pointer_hook) P_ ((struct frame *f, int invisible));
 
   void (*reset_terminal_modes_hook) P_ ((struct terminal *));
   void (*set_terminal_modes_hook) P_ ((struct terminal *));

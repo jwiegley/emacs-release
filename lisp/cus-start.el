@@ -1,7 +1,7 @@
 ;;; cus-start.el --- define customization properties of builtins
 ;;
 ;; Copyright (C) 1997, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Keywords: internal
@@ -38,8 +38,7 @@
 	     (garbage-collection-messages alloc boolean)
 	     ;; buffer.c
 	     (mode-line-format mode-line sexp) ;Hard to do right.
-	     (default-major-mode internal function)
-	     (enable-multibyte-characters mule boolean)
+	     (major-mode internal function)
 	     (case-fold-search matching boolean)
 	     (fill-column fill integer)
 	     (left-margin fill integer)
@@ -179,6 +178,7 @@ Leaving \"Default\" unchecked is equivalent with specifying a default of
 					    (const :tag "always shown" t)
 					    (other :tag "hidden by keypress" 1))
 			      "22.1")
+	     (make-pointer-invisible mouse boolean "23.2")
 	     ;; fringe.c
 	     (overflow-newline-into-fringe fringe boolean)
 	     ;; indent.c
@@ -273,7 +273,6 @@ Leaving \"Default\" unchecked is equivalent with specifying a default of
 		      (const alt) (const hyper)
 		      (const super)) "23.1")
 	     (ns-antialias-text ns boolean "23.1")
-	     (ns-use-qd-smoothing ns boolean "23.1")
 	     ;; process.c
 	     (delete-exited-processes processes-basics boolean)
 	     ;; syntax.c
@@ -307,6 +306,12 @@ since it could result in memory overflow and make Emacs crash."
  		       (const :tag "Off (nil)" :value nil)
  		       (const :tag "Full screen (t)" :value t)
  		       (other :tag "Always" 1)) "22.1")
+	     (recenter-redisplay windows
+				 (choice
+				  (const :tag "Never (nil)" :value nil)
+				  (const :tag "Only on ttys" :value tty)
+				  (other :tag "Always" t))
+				 "23.1")
 	     ;; xdisp.c
 	     (scroll-step windows integer)
 	     (scroll-conservatively windows integer)
@@ -346,7 +351,9 @@ since it could result in memory overflow and make Emacs crash."
 	     ;; xterm.c
 	     (x-use-underline-position-properties display boolean "22.1")
 	     (x-underline-at-descent-line display boolean "22.1")
-	     (x-stretch-cursor display boolean "21.1")))
+	     (x-stretch-cursor display boolean "21.1")
+	     ;; xsettings.c
+	     (font-use-system-font font-selection boolean "23.2")))
       this symbol group type standard version native-p
       ;; This function turns a value
       ;; into an expression which produces that value.
@@ -390,6 +397,8 @@ since it could result in memory overflow and make Emacs crash."
 		       (fboundp 'x-selection-exists-p))
 		      ((string-match "fringe" (symbol-name symbol))
 		       (fboundp 'define-fringe-bitmap))
+		      ((equal "font-use-system-font" (symbol-name symbol))
+		       (featurep 'system-font-setting))
 		      (t t))))
     (if (not (boundp symbol))
 	;; If variables are removed from C code, give an error here!

@@ -1,7 +1,7 @@
 ;;; sendmail.el --- mail sending commands for Emacs.  -*- byte-compile-dynamic: t -*-
 
 ;; Copyright (C) 1985, 1986, 1992, 1993, 1994, 1995, 1996, 1998, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
@@ -58,7 +58,7 @@
   :type 'file)
 
 ;;;###autoload
-(defcustom mail-from-style 'angles
+(defcustom mail-from-style 'default
   "Specifies how \"From:\" fields look.
 
 If `nil', they contain just the return address like:
@@ -67,15 +67,14 @@ If `parens', they look like:
 	king@grassland.com (Elvis Parsley)
 If `angles', they look like:
 	Elvis Parsley <king@grassland.com>
-If `system-default', allows the mailer to insert its default From field
-derived from the envelope-from address.
 
-In old versions of Emacs, the `system-default' setting also caused
-Emacs to pass the proper email address from `user-mail-address'
-to the mailer to specify the envelope-from address.  But that is now
-controlled by a separate variable, `mail-specify-envelope-from'."
-  :type '(choice (const nil) (const parens) (const angles)
-		 (const system-default))
+Otherwise, most addresses look like `angles', but they look like
+`parens' if `angles' would need quoting and `parens' would not."
+  ;; The value `system-default' is now deprecated.
+  :type '(choice (const :tag "simple" nil)
+		 (const parens)
+		 (const angles)
+		 (const default))
   :version "20.3"
   :group 'sendmail)
 
@@ -168,10 +167,13 @@ This is used by the default mail-sending commands.  See also
 		(function-item feedmail-send-it :tag "Use Feedmail package")
 		(function-item mailclient-send-it :tag "Use Mailclient package")
 		function)
+  :initialize 'custom-initialize-delay
   :group 'sendmail)
 
+;;;###autoload(custom-initialize-delay 'send-mail-function nil)
+
 ;;;###autoload
-(defcustom mail-header-separator "--text follows this line--"
+(defcustom mail-header-separator (purecopy "--text follows this line--")
   "Line used to separate headers from text in messages being composed."
   :type 'string
   :group 'sendmail)
@@ -211,7 +213,7 @@ This variable has no effect unless your system uses sendmail as its mailer."
   :group 'sendmail)
 
 ;;;###autoload
-(defcustom mail-personal-alias-file "~/.mailrc"
+(defcustom mail-personal-alias-file (purecopy "~/.mailrc")
   "If non-nil, the name of the user's personal mail alias file.
 This file typically should be in same format as the `.mailrc' file used by
 the `Mail' or `mailx' program.
@@ -221,8 +223,7 @@ This file need not actually exist."
 
 ;;;###autoload
 (defcustom mail-setup-hook nil
-  "Normal hook, run each time a new outgoing mail message is initialized.
-The function `mail-setup' runs this hook."
+  "Normal hook, run each time a new outgoing message is initialized."
   :type 'hook
   :options '(fortune-to-signature spook mail-abbrevs-setup)
   :group 'sendmail)
@@ -240,7 +241,7 @@ The alias definitions in the file have this form:
   "The modification time of your mail alias file when it was last examined.")
 
 ;;;###autoload
-(defcustom mail-yank-prefix nil
+(defcustom mail-yank-prefix "> "
   "Prefix insert on lines of yanked message being replied to.
 If this is nil, use indentation, as specified by `mail-indentation-spaces'."
   :type '(choice (const nil) string)
@@ -283,7 +284,8 @@ This enables the hook functions to see the whole message header
 regardless of what part of it (if any) is included in the cited text.")
 
 ;;;###autoload
-(defcustom mail-citation-prefix-regexp "[ \t]*[-a-z0-9A-Z]*>+[ \t]*\\|[ \t]*"
+(defcustom mail-citation-prefix-regexp
+  (purecopy "\\([ \t]*\\(\\w\\|[_.]\\)+>+\\|[ \t]*[]>|}]\\)+")
   "Regular expression to match a citation prefix plus whitespace.
 It should match whatever sort of citation prefixes you want to handle,
 with whitespace before and after; it should also match just whitespace.
@@ -392,7 +394,7 @@ removed from alias expansions."
   nil)
 
 ;;;###autoload
-(defcustom mail-signature nil
+(defcustom mail-signature t
   "Text inserted at end of mail buffer when a message is initialized.
 If t, it means to insert the contents of the file `mail-signature-file'.
 If a string, that string is inserted.
@@ -408,16 +410,18 @@ and should insert whatever you want to insert."
 (put 'mail-signature 'risky-local-variable t)
 
 ;;;###autoload
-(defcustom mail-signature-file "~/.signature"
+(defcustom mail-signature-file (purecopy "~/.signature")
   "File containing the text inserted at end of mail buffer."
   :type 'file
   :group 'sendmail)
 
 ;;;###autoload
-(defcustom mail-default-directory "~/"
-  "Directory for mail buffers.
-Value of `default-directory' for mail buffers.
-This directory is used for auto-save files of mail buffers."
+(defcustom mail-default-directory (purecopy "~/")
+  "Value of `default-directory' for Mail mode buffers.
+This directory is used for auto-save files of Mail mode buffers.
+
+Note that Message mode does not use this variable; it auto-saves
+in `message-auto-save-directory'."
   :type '(directory :tag "Directory")
   :group 'sendmail
   :version "22.1")
@@ -552,7 +556,7 @@ actually occur.")
   (kill-local-variable 'buffer-file-coding-system)
   ;; This doesn't work for enable-multibyte-characters.
   ;; (kill-local-variable 'enable-multibyte-characters)
-  (set-buffer-multibyte default-enable-multibyte-characters)
+  (set-buffer-multibyte (default-value 'enable-multibyte-characters))
   (if current-input-method
       (inactivate-input-method))
   (setq mail-send-actions actions)
@@ -815,7 +819,7 @@ Prefix arg means don't delete this window."
 	  (switch-to-buffer newbuf))))))
 
 (defcustom mail-send-hook nil
-  "Hook run just before sending mail with `mail-send'."
+  "Hook run just before sending a message."
   :type 'hook
   :options '(flyspell-mode-off)
   :group 'sendmail)
@@ -931,7 +935,7 @@ This function uses `mail-envelope-from'."
 ;;;###autoload
 (defvar sendmail-coding-system nil
   "*Coding system for encoding the outgoing mail.
-This has higher priority than `default-buffer-file-coding-system'
+This has higher priority than the default `buffer-file-coding-system'
 and `default-sendmail-coding-system',
 but lower priority than the local value of `buffer-file-coding-system'.
 See also the function `select-message-coding-system'.")
@@ -954,7 +958,21 @@ See also the function `select-message-coding-system'.")
     (if (string-match "[^\0-\177]" fullname)
 	(setq fullname (rfc2047-encode-string fullname)
 	      quote-fullname t))
-    (cond ((eq mail-from-style 'angles)
+    (cond ((null mail-from-style)
+	   (insert "From: " login "\n"))
+	  ;; This is deprecated.
+	  ((eq mail-from-style 'system-default)
+	   nil)
+	  ((or (eq mail-from-style 'angles)
+	       (and (not (eq mail-from-style 'parens))
+		    ;; Use angles if no quoting is needed, or if
+		    ;; parens would need quoting too.
+		    (or (not (string-match "[^- !#-'*+/-9=?A-Z^-~]" fullname))
+			(let ((tmp (concat fullname nil)))
+			  (while (string-match "([^()]*)" tmp)
+			    (aset tmp (match-beginning 0) ?-)
+			    (aset tmp (1- (match-end 0)) ?-))
+			  (string-match "[\\()]" tmp)))))
 	   (insert "From: " fullname)
 	   (let ((fullname-start (+ (point-min) 6))
 		 (fullname-end (point-marker)))
@@ -973,7 +991,8 @@ See also the function `select-message-coding-system'.")
 		     (replace-match "\\\\\\&" t))
 		   (insert "\""))))
 	   (insert " <" login ">\n"))
-	  ((eq mail-from-style 'parens)
+	  ;; 'parens or default
+	  (t
 	   (insert "From: " login " (")
 	   (let ((fullname-start (point)))
 	     (if quote-fullname
@@ -996,12 +1015,7 @@ See also the function `select-message-coding-system'.")
 		       fullname-end 1)
 		 (replace-match "\\1(\\3)" t)
 		 (goto-char fullname-start))))
-	   (insert ")\n"))
-	  ((null mail-from-style)
-	   (insert "From: " login "\n"))
-	  ((eq mail-from-style 'system-default)
-	   nil)
-	  (t (error "Invalid value for `mail-from-style'")))))
+	   (insert ")\n")))))
 
 ;; Normally you will not need to modify these options unless you are
 ;; using some non-genuine substitute for sendmail which does not
@@ -1436,7 +1450,7 @@ Prefix argument ATPOINT means insert at point rather than the end."
   ;; whitespace, so that we don't modify the buffer needlessly.
   (if (and (memq mail-signature '(t nil))
 	   (not (file-readable-p mail-signature-file)))
-      (if (interactive-p)
+      (if (called-interactively-p 'interactive)
 	  (message "The signature file `%s' could not be read"
 		   mail-signature-file))
     (save-excursion
@@ -1495,18 +1509,34 @@ and don't delete any header fields."
   (interactive "P")
   (if mail-reply-action
       (let ((start (point))
-	    (original mail-reply-action))
+	    (original mail-reply-action)
+	    (omark (mark t)))
 	(and (consp original) (eq (car original) 'insert-buffer)
 	     (setq original (nth 1 original)))
 	(if (consp original)
-	    (apply (car original) (cdr original))
-	  ;; If the original message is in another window in the same frame,
-	  ;; delete that window to save screen space.
-	  ;; t means don't alter other frames.
+	    (progn
+	      ;; Call yank function, and set the mark if it doesn't.
+	      (apply (car original) (cdr original))
+	      (if (eq omark (mark t))
+		  (push-mark (point))))
+	  ;; If the original message is in another window in the same
+	  ;; frame, delete that window to save space.
 	  (delete-windows-on original t)
 	  (with-no-warnings
 	    ;; We really want this to set mark.
-	    (insert-buffer original))
+	    (insert-buffer original)
+	    ;; If they yank the original text, the encoding of the
+	    ;; original message is a better default than
+	    ;; the default buffer-file-coding-system.
+	    (and (coding-system-equal
+		  (default-value 'buffer-file-coding-system)
+		  buffer-file-coding-system)
+		 (setq buffer-file-coding-system
+		       (coding-system-change-text-conversion
+			buffer-file-coding-system
+			(coding-system-base
+			 (with-current-buffer original
+			   buffer-file-coding-system))))))
 	  (set-text-properties (point) (mark t) nil))
 	(if (consp arg)
 	    nil
@@ -1632,7 +1662,7 @@ If the current line has `mail-yank-prefix', insert it on the new line."
 ;; Put these commands last, to reduce chance of lossage from quitting
 ;; in middle of loading the file.
 
-;;;###autoload (add-hook 'same-window-buffer-names "*mail*")
+;;;###autoload (add-hook 'same-window-buffer-names (purecopy "*mail*"))
 
 ;;;###autoload
 (defun mail (&optional noerase to subject in-reply-to cc replybuffer actions)
@@ -1843,7 +1873,7 @@ The seventh argument ACTIONS is a list of actions to take
 	      ;; TRT, or the user will get prompted for the right
 	      ;; encoding when they send the message.
 	      (setq buffer-file-coding-system
-		    default-buffer-file-coding-system))))))))
+		    (default-value 'buffer-file-coding-system)))))))))
 
 (declare-function dired-move-to-filename "dired" (&optional raise-error eol))
 (declare-function dired-get-filename "dired" (&optional localp no-error-if-not-filep))

@@ -1,9 +1,9 @@
 ;;; mule-diag.el --- show diagnosis of multilingual environment (Mule)
 
 ;; Copyright (C) 1997, 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009
+;;   2005, 2006, 2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 ;; Copyright (C) 2003
@@ -32,7 +32,7 @@
 ;;; Code:
 
 ;; Make sure the help-xref button type is defined.
-(require 'help-fns)
+(require 'help-mode)
 
 ;;; General utility function
 
@@ -67,7 +67,8 @@ ISO-2022-based coding systems.
 With prefix ARG, the output format gets more cryptic,
 but still shows the full information."
   (interactive "P")
-  (help-setup-xref (list #'list-character-sets arg) (interactive-p))
+  (help-setup-xref (list #'list-character-sets arg)
+		   (called-interactively-p 'interactive))
   (with-output-to-temp-buffer "*Character Set List*"
     (with-current-buffer standard-output
       (if arg
@@ -158,7 +159,7 @@ SORT-KEY should be `name' or `iso-spec' (default `name')."
 				'type 'help-info
 				'help-args '("(emacs)Charsets"))
 	    (insert " --------------
-Character sets for defining another charset or obsolete now
+Character sets for defining other charsets, or for backward compatibility
 "))
 	(insert-text-button (symbol-name (car elt)) ; NAME
 			    :type 'list-charset-chars
@@ -314,7 +315,8 @@ meanings of these arguments."
   (interactive (list (read-charset "Charset: ")))
   (or (charsetp charset)
       (error "Invalid charset: %S" charset))
-  (help-setup-xref (list #'describe-character-set charset) (interactive-p))
+  (help-setup-xref (list #'describe-character-set charset)
+		   (called-interactively-p 'interactive))
   (with-output-to-temp-buffer (help-buffer)
     (with-current-buffer standard-output
       (insert "Character set: " (symbol-name charset))
@@ -419,7 +421,7 @@ meanings of these arguments."
   (if (null coding-system)
       (describe-current-coding-system)
     (help-setup-xref (list #'describe-coding-system coding-system)
-		     (interactive-p))
+		     (called-interactively-p 'interactive))
     (with-output-to-temp-buffer (help-buffer)
       (print-coding-system-briefly coding-system 'doc-string)
       (let ((type (coding-system-type coding-system))
@@ -516,8 +518,8 @@ in place of `..':
   eol-type of `process-coding-system' for read (of the current buffer, if any)
   `process-coding-system' for write (of the current buffer, if any)
   eol-type of `process-coding-system' for write (of the current buffer, if any)
-  `default-buffer-file-coding-system'
-  eol-type of `default-buffer-file-coding-system'
+  default `buffer-file-coding-system'
+  eol-type of default `buffer-file-coding-system'
   `default-process-coding-system' for read
   eol-type of `default-process-coding-system' for read
   `default-process-coding-system' for write
@@ -537,8 +539,9 @@ in place of `..':
      (coding-system-eol-type-mnemonic (car process-coding-systems))
      (coding-system-mnemonic (cdr process-coding-systems))
      (coding-system-eol-type-mnemonic (cdr process-coding-systems))
-     (coding-system-mnemonic default-buffer-file-coding-system)
-     (coding-system-eol-type-mnemonic default-buffer-file-coding-system)
+     (coding-system-mnemonic (default-value 'buffer-file-coding-system))
+     (coding-system-eol-type-mnemonic
+      (default-value 'buffer-file-coding-system))
      (coding-system-mnemonic (car default-process-coding-system))
      (coding-system-eol-type-mnemonic (car default-process-coding-system))
      (coding-system-mnemonic (cdr default-process-coding-system))
@@ -592,7 +595,7 @@ docstring, and print only the first line of the docstring."
 	  (print-coding-system-briefly buffer-file-coding-system)
 	(princ "Not set locally, use the default.\n"))
       (princ "Default coding system (for new files):\n  ")
-      (print-coding-system-briefly default-buffer-file-coding-system)
+      (print-coding-system-briefly (default-value 'buffer-file-coding-system))
       (princ "Coding system for keyboard input:\n  ")
       (print-coding-system-briefly (keyboard-coding-system))
       (princ "Coding system for terminal output:\n  ")
@@ -982,7 +985,8 @@ This shows which font is used for which character(s)."
   (if (= (length fontset) 0)
       (setq fontset (face-attribute 'default :fontset))
     (setq fontset (query-fontset fontset)))
-  (help-setup-xref (list #'describe-fontset fontset) (interactive-p))
+  (help-setup-xref (list #'describe-fontset fontset)
+		   (called-interactively-p 'interactive))
   (with-output-to-temp-buffer (help-buffer)
     (with-current-buffer standard-output
       (print-fontset fontset t))))
@@ -998,7 +1002,8 @@ see the function `describe-fontset' for the format of the list."
   (interactive "P")
   (if (not (and window-system (fboundp 'fontset-list)))
       (error "No fontsets being used")
-    (help-setup-xref (list #'list-fontsets arg) (interactive-p))
+    (help-setup-xref (list #'list-fontsets arg)
+		     (called-interactively-p 'interactive))
     (with-output-to-temp-buffer (help-buffer)
       (with-current-buffer standard-output
 	;; This code is duplicated near the end of mule-diag.
@@ -1017,7 +1022,8 @@ see the function `describe-fontset' for the format of the list."
 (defun list-input-methods ()
   "Display information about all input methods."
   (interactive)
-  (help-setup-xref '(list-input-methods) (interactive-p))
+  (help-setup-xref '(list-input-methods)
+		   (called-interactively-p 'interactive))
   (with-output-to-temp-buffer (help-buffer)
     (list-input-methods-1)
     (with-current-buffer standard-output
@@ -1087,7 +1093,8 @@ system which uses fontsets)."
       (insert "Version of this emacs:\n  " (emacs-version) "\n\n")
       (insert "Configuration options:\n  " system-configuration-options "\n\n")
       (insert "Multibyte characters awareness:\n"
-	      (format "  default: %S\n" default-enable-multibyte-characters)
+	      (format "  default: %S\n" (default-value
+					  'enable-multibyte-characters))
 	      (format "  current-buffer: %S\n\n" enable-multibyte-characters))
       (insert "Current language environment: " current-language-environment
 	      "\n\n")
@@ -1130,7 +1137,7 @@ system which uses fontsets)."
 	(insert "------------\t\t\t\t\t\t  ----- -----\n")
 	(dolist (fontset (fontset-list))
 	  (print-fontset fontset t)))
-      (print-help-return-message))))
+      (help-print-return-message))))
 
 ;;;###autoload
 (defun font-show-log (&optional limit)

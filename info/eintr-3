@@ -10,10 +10,10 @@ END-INFO-DIR-ENTRY
    This is an `Introduction to Programming in Emacs Lisp', for people
 who are not programmers.
 
-   Edition 3.08, 4 October 2008
+   Edition 3.10, 28 October 2009
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1997, 2001,
-2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software
+2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010    Free Software
 Foundation, Inc.
 
    Published by the:
@@ -110,7 +110,7 @@ introduction, it comes as a Texinfo source file, so you can read it
 on-line and as a typeset, printed book.)
 
    Go to the other on-line help that is part of GNU Emacs: the on-line
-documentation for all functions and variables, and `find-tags', the
+documentation for all functions and variables, and `find-tag', the
 program that takes you to sources.
 
    Here is an example of how I explore the sources.  Because of its
@@ -2100,17 +2100,14 @@ so that we cannot use it.
    Given that writing good English is a rare skill among programmers, we
 can ill afford to lose manuals this way.
 
-   (The Free Software Foundation sells printed copies of free GNU
-manuals (http://www.gnu.org/doc/doc.html), too.)
-
    Free documentation, like free software, is a matter of freedom, not
 price.  The problem with these manuals was not that O'Reilly Associates
-charged a price for printed copies--that in itself is fine.  (The Free
-Software Foundation sells printed copies of free GNU manuals, too.)
-But GNU manuals are available in source code form, while these manuals
-are available only on paper.  GNU manuals come with permission to copy
-and modify; the Perl manuals do not.  These restrictions are the
-problems.
+charged a price for printed copies--that in itself is fine.  The Free
+Software Foundation sells printed copies (http://shop.fsf.org) of free
+GNU manuals (http://www.gnu.org/doc/doc.html), too.  But GNU manuals
+are available in source code form, while these manuals are available
+only on paper.  GNU manuals come with permission to copy and modify;
+the Perl manuals do not.  These restrictions are the problems.
 
    The criterion for a free manual is pretty much the same as for free
 software: it is a matter of giving all users certain freedoms.
@@ -2777,7 +2774,6 @@ Index
 * debug-on-entry:                        debug-on-entry.      (line   6)
 * debug-on-quit:                         debug-on-quit.       (line   9)
 * debugging:                             Debugging.           (line   6)
-* default-mode-line-format:              Mode Line.           (line   6)
 * default.el init file:                  Site-wide Init.      (line   6)
 * defconst:                              defcustom.           (line 128)
 * defcustom:                             defcustom.           (line   6)
@@ -2843,7 +2839,7 @@ Index
 * Find a File:                           Find a File.         (line   6)
 * Find function documentation:           Finding More.        (line   6)
 * Find source of function:               Finding More.        (line  13)
-* find-tags:                             Finding More.        (line  39)
+* find-tag:                              Finding More.        (line  39)
 * Flowers in a field:                    Lisp Lists.          (line  18)
 * Focusing attention (narrowing):        Narrowing & Widening.
                                                               (line   6)
@@ -2959,6 +2955,7 @@ Index
 * min:                                   Columns of a graph.  (line 132)
 * Mode line format:                      Mode Line.           (line   6)
 * Mode selection, automatic:             Text and Auto-fill.  (line  22)
+* mode-line-format:                      Mode Line.           (line   6)
 * Motion by sentence and paragraph:      Regexp Search.       (line   6)
 * Narrowing:                             Narrowing & Widening.
                                                               (line   6)

@@ -1,9 +1,9 @@
 ;;; ethiopic.el --- support for Ethiopic	-*- coding: utf-8-emacs; -*-
 
-;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009
+;;   2005, 2006, 2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -50,7 +50,7 @@
   "CCL program to encode an Ethiopic code to code point of Ethiopic font.")
 
 (setq font-ccl-encoder-alist
-      (cons (cons "ethiopic" ccl-encode-ethio-font) font-ccl-encoder-alist))
+      (cons (cons (purecopy "ethiopic") ccl-encode-ethio-font) font-ccl-encoder-alist))
 
 (set-language-info-alist
  "Ethiopic" '((setup-function . setup-ethiopic-environment-internal)

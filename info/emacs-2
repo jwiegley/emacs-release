@@ -2,11 +2,11 @@ This is ../../info/emacs, produced by makeinfo version 4.11 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.1.
+updated for Emacs version 23.2.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,6 +25,51 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Emacs: (emacs).	The extensible self-documenting text editor.
 END-INFO-DIR-ENTRY
+
+
+File: emacs,  Node: Word Search,  Next: Regexp Search,  Prev: Nonincremental Search,  Up: Search
+
+19.3 Word Search
+================
+
+A "word search" finds a sequence of words without regard to the type of
+punctuation between them.  For instance, if you enter a search string
+that consists of two words separated by a single space, the search
+matches any sequence of those two words separated by one or more
+spaces, newlines, or other punctuation characters.  This is
+particularly useful for searching text documents, because you don't
+have to worry whether the words you are looking for are separated by
+newlines or spaces.
+
+`M-s w'
+     If incremental search is active, toggle word search mode
+     (`isearch-toggle-word'); otherwise, begin an incremental forward
+     word search (`isearch-forward-word').
+
+`M-s w <RET> WORDS <RET>'
+     Search for WORDS, using a forward nonincremental word search.
+
+`M-s w C-r <RET> WORDS <RET>'
+     Search backward for WORDS, using a nonincremental word search.
+
+   To begin a forward incremental word search, type `M-s w'.  If
+incremental search is not already active, this runs the command
+`isearch-forward-word'.  If incremental search is already active
+(whether a forward or backward search), `M-s w' switches to a word
+search while keeping the direction of the search and the current search
+string unchanged.  You can toggle word search back off by typing `M-s
+w' again.
+
+   To begin a nonincremental word search, type `M-s w <RET>' for a
+forward search, or `M-s w C-r <RET>' for a backward search.  These run
+the commands `word-search-forward' and `word-search-backward'
+respectively.
+
+   A nonincremental word search differs slightly from the incremental
+version in the way it finds a match: the last word in the search string
+must be an exact match for a whole word.  In an incremental word
+search, the last word in the search string can match part of a word;
+this allows the matching to proceed incrementally as you type.
 
 
 File: emacs,  Node: Regexp Search,  Next: Regexps,  Prev: Word Search,  Up: Search
@@ -490,12 +535,11 @@ effect of adding or removing an upper-case letter in the current search.
 
    If you set the variable `case-fold-search' to `nil', then all
 letters must match exactly, including case.  This is a per-buffer
-variable; altering the variable affects only the current buffer, but
-there is a default value in `default-case-fold-search' that you can
-also set.  *Note Locals::.  This variable applies to nonincremental
-searches also, including those performed by the replace commands (*note
-Replace::) and the minibuffer history matching commands (*note
-Minibuffer History::).
+variable; altering the variable normally affects only the current
+buffer, unless you change its default value.  *Note Locals::.  This
+variable applies to nonincremental searches also, including those
+performed by the replace commands (*note Replace::) and the minibuffer
+history matching commands (*note Minibuffer History::).
 
    Several related variables control case-sensitivity of searching and
 matching for specific commands or activities.  For instance,
@@ -785,13 +829,25 @@ no upper-case letters and `case-fold-search' is non-`nil'.  Aside from
 `occur' and its variants, all operate on the text from point to the end
 of the buffer, or on the region if it is active.
 
-`M-x occur <RET> REGEXP <RET>'
-     Display a list showing each line in the buffer that contains a
-     match for REGEXP.  To limit the search to part of the buffer,
-     narrow to that part (*note Narrowing::).  A numeric argument N
-     specifies that N lines of context are to be displayed before and
-     after each matching line.  Currently, `occur' can not correctly
-     handle multiline matches.
+`M-x multi-isearch-buffers'
+     Prompt for one or more buffer names, ending with <RET>; then,
+     begin a multi-buffer incremental search in those buffers.  (If the
+     search fails in one buffer, the next `C-s' tries searching the
+     next specified buffer, and so forth.)  With a prefix argument,
+     prompt for a regexp and begin a multi-buffer incremental search in
+     buffers matching that regexp.
+
+`M-x multi-isearch-buffers-regexp'
+     This command is just like `multi-isearch-buffers', except it
+     performs an incremental regexp search.
+
+`M-x occur'
+     Prompt for a regexp, and display a list showing each line in the
+     buffer that contains a match for it.  To limit the search to part
+     of the buffer, narrow to that part (*note Narrowing::).  A numeric
+     argument N specifies that N lines of context are to be displayed
+     before and after each matching line.  Currently, `occur' can not
+     correctly handle multiline matches.
 
      The buffer `*Occur*' containing the output serves as a menu for
      finding the occurrences in their original context.  Click
@@ -812,42 +868,43 @@ of the buffer, or on the region if it is active.
 `M-x list-matching-lines'
      Synonym for `M-x occur'.
 
-`M-x multi-occur <RET> BUFFERS <RET> REGEXP <RET>'
-     This function is just like `occur', except it is able to search
+`M-x multi-occur'
+     This command is just like `occur', except it is able to search
      through multiple buffers.  It asks you to specify the buffer names
      one by one.
 
-`M-x multi-occur-in-matching-buffers <RET> BUFREGEXP <RET> REGEXP <RET>'
-     This function is similar to `multi-occur', except the buffers to
+`M-x multi-occur-in-matching-buffers'
+     This command is similar to `multi-occur', except the buffers to
      search are specified by a regular expression that matches visited
      file names.  With a prefix argument, it uses the regular
      expression to match buffer names instead.
 
-`M-x how-many <RET> REGEXP <RET>'
-     Print the number of matches for REGEXP that exist in the buffer
-     after point.  If the region is active, this operates on the region
-     instead.
+`M-x how-many'
+     Prompt for a regexp, and print the number of matches for it in the
+     buffer after point.  If the region is active, this operates on the
+     region instead.
 
-`M-x flush-lines <RET> REGEXP <RET>'
-     This command deletes each line that contains a match for REGEXP,
-     operating on the text after point; it deletes the current line if
-     it contains a match starting after point.  If the region is
-     active, it operates on the region instead; if a line partially
-     contained in the region contains a match entirely contained in the
-     region, it is deleted.
+`M-x flush-lines'
+     Prompt for a regexp, and delete each line that contains a match for
+     it, operating on the text after point.  This command deletes the
+     current line if it contains a match starting after point.  If the
+     region is active, it operates on the region instead; if a line
+     partially contained in the region contains a match entirely
+     contained in the region, it is deleted.
 
      If a match is split across lines, `flush-lines' deletes all those
      lines.  It deletes the lines before starting to look for the next
      match; hence, it ignores a match starting on the same line at which
      another match ended.
 
-`M-x keep-lines <RET> REGEXP <RET>'
-     This command deletes each line that _does not_ contain a match for
-     REGEXP, operating on the text after point; if point is not at the
-     beginning of a line, it always keeps the current line.  If the
-     region is active, the command operates on the region instead; it
-     never deletes lines that are only partially contained in the
-     region (a newline that ends a line counts as part of that line).
+`M-x keep-lines'
+     Prompt for a regexp, and delete each line that _does not_ contain
+     a match for it, operating on the text after point.  If point is
+     not at the beginning of a line, this command always keeps the
+     current line.  If the region is active, the command operates on
+     the region instead; it never deletes lines that are only partially
+     contained in the region (a newline that ends a line counts as part
+     of that line).
 
      If a match is split across lines, this command keeps all those
      lines.
@@ -1949,7 +2006,7 @@ offers to reread it.
 10 megabytes), Emacs asks you for confirmation first.  You can answer
 `y' to proceed with visiting the file.  Note, however, that Emacs
 cannot visit files that are larger than the maximum Emacs buffer size,
-which is around 256 megabytes on 32-bit machines (*note Buffers::).  If
+which is around 512 megabytes on 32-bit machines (*note Buffers::).  If
 you try, Emacs will display an error message saying that the maximum
 buffer size has been exceeded.
 
@@ -2647,7 +2704,8 @@ continuously displayed.  To do this, just move the point to the end of
 the buffer, and it will stay there as the file contents change.
 However, if you are sure that the file will only change by growing at
 the end, use Auto-Revert Tail mode instead (`auto-revert-tail-mode').
-It is more efficient for this.
+It is more efficient for this.  Auto-Revert Tail mode works also for
+remote files.
 
    *Note VC Mode Line::, for Auto Revert peculiarities in buffers that
 visit files under version control.
@@ -3054,8 +3112,8 @@ Dired; see *note Dired::.
      Create a new directory named DIRNAME.
 
 `M-x delete-directory <RET> DIRNAME <RET>'
-     Delete the directory named DIRNAME.  It must be empty, or you get
-     an error.
+     Delete the directory named DIRNAME.  If it isn't empty, you will
+     be asked whether you want to delete it recursively.
 
    The command to display a directory listing is `C-x C-d'
 (`list-directory').  It reads using the minibuffer a file name which is
@@ -3088,11 +3146,12 @@ with arguments `directory-free-space-args'.
 
    The command `M-x delete-directory' prompts for a directory name
 using the minibuffer, and deletes the directory if it is empty.  If the
-directory is not empty, this signals an error.  On systems that have a
-"Trash" or "Recycle Bin" feature, you can make this command move the
-specified directory to the Trash or Recycle Bin, instead of deleting it
-outright, by changing the variable `delete-by-moving-to-trash' to `t'.
-*Note Misc File Ops::, for more information about using the Trash.
+directory is not empty, you will be asked whether you want to delete it
+recursively.  On systems that have a "Trash" or "Recycle Bin" feature,
+you can make this command move the specified directory to the Trash or
+Recycle Bin, instead of deleting it outright, by changing the variable
+`delete-by-moving-to-trash' to `t'.  *Note Misc File Ops::, for more
+information about using the Trash.
 
 
 File: emacs,  Node: Comparing Files,  Next: Diff Mode,  Prev: Directories,  Up: Files
@@ -3347,7 +3406,8 @@ MS-Windows, this command works only if the file resides in an NTFS file
 system.  On MS-DOS, it works by copying the file.
 
    `M-x copy-file' reads the file OLD and writes a new file named NEW
-with the same contents.
+with the same contents.  `M-x copy-directory' does the same for
+directories, by recursive copying all files and subdirectories.
 
    `M-x make-symbolic-link' reads two file names TARGET and LINKNAME,
 then creates a symbolic link named LINKNAME, which points at TARGET.
@@ -3719,7 +3779,7 @@ different from the value in other buffers.  *Note Locals::.
    A buffer's size cannot be larger than some maximum, which is defined
 by the largest buffer position representable by the "Emacs integer"
 data type.  This is because Emacs tracks buffer positions using that
-data type.  For 32-bit machines, the largest buffer size is 256
+data type.  For 32-bit machines, the largest buffer size is 512
 megabytes.
 
 * Menu:
@@ -3790,8 +3850,9 @@ for confirmation.  This variable also affects the `find-file' command
 
    One reason to create a new buffer is to use it for making temporary
 notes.  If you try to save it, Emacs asks for the file name to use.
-The variable `default-major-mode' determines the new buffer's major
-mode; the default value is Fundamental mode.  *Note Major Modes::.
+The default value of the variable `major-mode' determines the new
+buffer's major mode; the default value is Fundamental mode.  *Note
+Major Modes::.
 
    For conveniently switching between a few buffers, use the commands
 `C-x <LEFT>' and `C-x <RIGHT>'.  `C-x <RIGHT>' (`previous-buffer')
@@ -4228,7 +4289,8 @@ unique adds `<2>', `<3>', etc. to the end of the buffer names (all but
 one of them).
 
    Other methods work by adding parts of each file's directory to the
-buffer name.  To select one, customize the variable
+buffer name.  To select one, load the library `uniquify' (e.g.  using
+`(require 'uniquify)'), and customize the variable
 `uniquify-buffer-name-style' (*note Easy Customization::).
 
    To begin with, the `forward' naming method includes part of the
@@ -4709,6 +4771,7 @@ MS-DOS Mouse::.
 * Mode Line Mouse::     Mouse clicks on the mode line.
 * Creating Frames::     Creating additional Emacs frames with various contents.
 * Frame Commands::      Iconifying, deleting, and switching frames.
+* Fonts::               Changing the frame font.
 * Speedbar::            How to make and use a speedbar frame.
 * Multiple Displays::   How one Emacs job can talk to several displays.
 * Special Buffer Frames::  You can make certain buffers have their own frames.
@@ -4720,7 +4783,7 @@ MS-DOS Mouse::.
 * Tool Bars::           Enabling and disabling the tool bar.
 * Dialog Boxes::        Controlling use of dialog boxes.
 * Tooltips::            Displaying information at the current mouse position.
-* Mouse Avoidance::     Moving the mouse pointer out of the way.
+* Mouse Avoidance::     Preventing the mouse pointer from obscuring text.
 * Non-Window Terminals::  Multiple frames on terminals that show only one.
 * Text-Only Mouse::     Using the mouse in text-only terminals.
 
@@ -4901,12 +4964,29 @@ primary selection are lost.
 `M-w' (`kill-ring-save'), that text is also saved in the primary
 selection.  *Note Killing::.
 
+   If you set the region using the keyboard--for instance, by typing
+`C-<SPC>' and moving point away from the mark--the text in the region
+is not normally saved to the primary selection.  However, if you change
+the variable `select-active-regions' to `t', the region is saved to the
+primary selection whenever you activate the mark.  Each change to the
+region also updates the primary selection.
+
+   If you change `yank-pop-change-selection' to `t', rotating the kill
+ring with `M-y' (`yank-pop') also saves the new yank to the primary
+selection (*note Yanking::).
+
+   If you change `save-interprogram-paste-before-kill' to `t', each
+kill command first saves the existing selection onto the kill ring.
+This prevents you from losing the existing selection, at the risk of
+large memory consumption if other applications generate large
+selections.
+
    Whenever Emacs saves some text to the primary selection, it may also
 save it to the "cut buffer".  The cut buffer is an obsolete predecessor
-to the primary selection; most modern applications do not make use of
-it.  Because saving text to the cut buffer is slow and inefficient,
-Emacs only does it if the text is shorter than the value of
-`x-cut-buffer-max' (the default is 20000 characters).
+to the primary selection; most modern applications do not use it.
+Saving text to the cut buffer is slow and inefficient, so Emacs only
+does it if the text is shorter than the value of `x-cut-buffer-max'
+(20000 characters by default).
 
    You can yank the primary selection into Emacs using the usual yank
 commands, such as `C-y' (`yank') and `Mouse-2' (`mouse-yank-at-click').
@@ -5170,22 +5250,19 @@ variable `initial-frame-alist' to specify parameters that affect only
 the initial frame.  *Note Initial Parameters: (elisp)Initial
 Parameters, for more information.
 
-   For instance, one way to specify the principal font for all your
-Emacs frames is to modify `default-frame-alist' to specify the `font'
-parameter (*note Font X::):
+   Here is an example of using `default-frame-alist' to specify the
+default foreground color and font:
 
      (add-to-list 'default-frame-alist '(font . "10x20"))
-
-Here's a similar example for specifying a foreground color:
-
      (add-to-list 'default-frame-alist '(foreground-color . "blue"))
 
 By putting such customizations in your init file, you can control the
-appearance of all the frames Emacs creates, including the initial one.
-*Note Init File::.
+appearance of all the frames Emacs creates, including the initial one
+(*note Init File::).  *Note Fonts::, for other ways to set the default
+font.
 
 
-File: emacs,  Node: Frame Commands,  Next: Speedbar,  Prev: Creating Frames,  Up: Frames
+File: emacs,  Node: Frame Commands,  Next: Fonts,  Prev: Creating Frames,  Up: Frames
 
 25.6 Frame Commands
 ===================
@@ -5193,8 +5270,8 @@ File: emacs,  Node: Frame Commands,  Next: Speedbar,  Prev: Creating Frames,  Up
 The following commands let you create, delete and operate on frames:
 
 `C-z'
-     Iconify ("minimize") the selected Emacs frame
-     (`iconify-or-deiconify-frame').  *Note Exiting::.
+     Minimize (or "iconify) the selected Emacs frame (`suspend-frame').
+     *Note Exiting::.
 
 `C-x 5 0'
      Delete the selected frame (`delete-frame').  This is not allowed
@@ -5208,16 +5285,21 @@ The following commands let you create, delete and operate on frames:
 `C-x 5 1'
      Delete all frames except the selected one.
 
-   To make the command `C-x 5 o' work properly, you should tell Emacs
-how the system (or the window manager) handles focus-switching between
-windows.  There are two possibilities: either simply moving the mouse
-onto a window selects it (gives it focus), or you have to click on it
-to do so.  On X, this focus policy also affects whether the focus is
-given to a frame that Emacs raises.  Unfortunately there is no way
-Emacs can find out automatically which way the system handles this, so
-you have to explicitly say, by setting the variable
-`focus-follows-mouse'.  If just moving the mouse onto a window selects
-it, that variable should be `t'; if a click is necessary, the variable
+   The `C-x 5 0' (`delete-frame') command will never delete the last
+frame, to prevent you from losing the ability to interact with the
+Emacs process.  Note that when Emacs is run as a daemon (*note Emacs
+Server::), there is always a "virtual frame" that remains after all the
+ordinary, interactive frames are deleted.  In this case, `C-x 5 0' can
+delete the last interactive frame; you can use `emacsclient' to
+reconnect to the Emacs session.
+
+   On X, you may have to tell Emacs how the system (or the window
+manager) handles focus-switching between windows, in order for the
+command `C-x 5 o' (`other-frame') to work properly.  Unfortunately,
+there is no way for Emacs to detect this automatically, so you should
+set the variable `focus-follows-mouse'.  If simply moving the mouse
+onto a window selects it and gives it focus, the variable should be
+`t'; if you have to click on the window to select it, the variable
 should be `nil'.  The default is `t'.
 
    The window manager that is part of MS-Windows always gives focus to
@@ -5225,9 +5307,231 @@ a frame that raises, so this variable has no effect in the native
 MS-Windows build of Emacs.
 
 
-File: emacs,  Node: Speedbar,  Next: Multiple Displays,  Prev: Frame Commands,  Up: Frames
+File: emacs,  Node: Fonts,  Next: Speedbar,  Prev: Frame Commands,  Up: Frames
 
-25.7 Speedbar Frames
+25.7 Fonts
+==========
+
+By default, Emacs displays text in X using a 12-point monospace font.
+There are several different ways to specify a different font:
+
+   * Click on `Set Default Font' in the `Options' menu.  To save this
+     for future sessions, click on `Save Options' in the `Options' menu.
+
+   * Add a line to your init file (*note Init File::), modifying the
+     variable `default-frame-alist' to specify the `font' parameter
+     (*note Creating Frames::), like this:
+
+          (add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono-12"))
+
+   * Add an `emacs.font' X resource setting to your X resource file,
+     like this:
+
+          emacs.font: DejaVu Sans Mono-12
+
+     You must restart X, or use the `xrdb' command, for the X resources
+     file to take effect.  *Note Resources::.  When specifying a font
+     in your X resources file, you should not quote it.
+
+   * If you are running Emacs on the GNOME desktop, you can tell Emacs
+     to use the default system font by setting the variable
+     `font-use-system-font' to `t' (the default is `nil').  For this to
+     work, Emacs must be compiled with Gconf support; this is done
+     automatically if the libraries are present at compile time.
+
+   * Use the command line option `-fn' (or `--font').  *Note Font X::.
+
+   On X, there are four different ways to express a "font name".  The
+first is to use a "Fontconfig pattern".  Fontconfig patterns have the
+following form:
+
+     FONTNAME[-FONTSIZE][:NAME1=VALUES1][:NAME2=VALUES2]...
+
+Within this format, any of the elements in braces may be omitted.
+Here, FONTNAME is the "family name" of the font, such as `Monospace' or
+`DejaVu Serif'; FONTSIZE is the "point size" of the font (one
+"printer's point" is about 1/72 of an inch); and the `NAME=VALUES'
+entries specify settings such as the slant and weight of the font.
+Each VALUES may be a single value, or a list of values separated by
+commas.  In addition, some property values are valid with only one kind
+of property name, in which case the `NAME=' part may be omitted.
+
+   Here is a list of common font properties:
+
+`slant'
+     One of `italic', `oblique' or `roman'.
+
+`weight'
+     One of `light', `medium', `demibold', `bold' or `black'.
+
+`style'
+     Some fonts define special styles which are a combination of slant
+     and weight.  For instance, `Dejavu Sans' defines the `book' style,
+     which overrides the slant and weight properties.
+
+`width'
+     One of `condensed', `normal', or `expanded'.
+
+`spacing'
+     One of `monospace', `proportional', `dual-width', or `charcell'.
+
+Here are some examples of Fontconfig patterns:
+
+     Monospace
+     Monospace-12
+     Monospace-12:bold
+     DejaVu Sans Mono:bold:italic
+     Monospace-12:weight=bold:slant=italic
+
+   See the Fontconfig manual for a more detailed description of
+Fontconfig patterns.  This manual is located in the file
+`fontconfig-user.html', distributed with Fontconfig.  It is also
+available online at `http://fontconfig.org/fontconfig-user.html'.  In
+particular, that manual describes additional font properties that
+influence how the font is hinted, antialiased, or scaled.
+
+   The second way to specify a font is to use a "GTK font description".
+These have the syntax
+
+     FONTNAME [PROPERTIES] [FONTSIZE]
+
+where FONTNAME is the family name, PROPERTIES is a list of property
+values separated by spaces, and FONTSIZE is the point size.  The
+properties that you may specify are as follows:
+
+`style'
+     One of `roman', `italic' or `oblique'.  If omitted, the `roman'
+     style is used.
+
+`weight'
+     One of `medium', `ultra-light', `light', `semi-bold', or `bold'.
+     If omitted, `medium' weight is used.
+
+Here are some examples of GTK font descriptions:
+
+     Monospace 12
+     Monospace Bold Italic 12
+
+   The third way to specify a font is to use an "XLFD" ("X Logical Font
+Description").  This is the traditional method for specifying fonts
+under X.  Each XLFD consists of fourteen words or numbers, separated by
+dashes, like this:
+
+     -misc-fixed-medium-r-semicondensed--13-*-*-*-c-60-iso8859-1
+
+A wildcard character (`*') in an XLFD matches any sequence of
+characters (including none), and `?' matches any single character.
+However, matching is implementation-dependent, and can be inaccurate
+when wildcards match dashes in a long name.  For reliable results,
+supply all 14 dashes and use wildcards only within a field.  Case is
+insignificant in an XLFD.  The syntax for an XLFD is as follows:
+
+     -MAKER-FAMILY-WEIGHT-SLANT-WIDTHTYPE-STYLE...
+     ...-PIXELS-HEIGHT-HORIZ-VERT-SPACING-WIDTH-REGISTRY-ENCODING
+
+The entries have the following meanings:
+
+MAKER
+     The name of the font manufacturer.
+
+FAMILY
+     The name of the font family (e.g. `courier').
+
+WEIGHT
+     The font weight--normally either `bold', `medium' or `light'.
+     Some font names support other values.
+
+SLANT
+     The font slant--normally `r' (roman), `i' (italic), `o' (oblique),
+     `ri' (reverse italic), or `ot' (other).  Some font names support
+     other values.
+
+WIDTHTYPE
+     The font width--normally `condensed', `extended', `semicondensed'
+     or `normal' (some font names support other values).
+
+STYLE
+     An optional additional style name.  Usually it is empty--most long
+     font names have two hyphens in a row at this point.
+
+PIXELS
+     The font height, in pixels.
+
+HEIGHT
+     The font height on the screen, measured in tenths of a printer's
+     point.  This is the point size of the font, times ten.  For a given
+     vertical resolution, HEIGHT and PIXELS are proportional;
+     therefore, it is common to specify just one of them and use `*'
+     for the other.
+
+HORIZ
+     The horizontal resolution, in pixels per inch, of the screen for
+     which the font is intended.
+
+VERT
+     The vertical resolution, in pixels per inch, of the screen for
+     which the font is intended.  Normally the resolution of the fonts
+     on your system is the right value for your screen; therefore, you
+     normally specify `*' for this and HORIZ.
+
+SPACING
+     This is `m' (monospace), `p' (proportional) or `c' (character
+     cell).
+
+WIDTH
+     The average character width, in pixels, multiplied by ten.
+
+REGISTRY
+ENCODING
+     The X font character set that the font depicts.  (X font character
+     sets are not the same as Emacs character sets, but they are
+     similar.)  You can use the `xfontsel' program to check which
+     choices you have.  Normally you should use `iso8859' for REGISTRY
+     and `1' for ENCODING.
+
+   The fourth and final method of specifying a font is to use a "font
+nickname".  Certain fonts have shorter nicknames, which you can use
+instead of a normal font specification.  For instance, `6x13' is
+equivalent to
+
+     -misc-fixed-medium-r-semicondensed--13-*-*-*-c-60-iso8859-1
+
+   On X, Emacs recognizes two types of fonts: "client-side" fonts,
+which are provided by the Xft and Fontconfig libraries, and
+"server-side" fonts, which are provided by the X server itself.  Most
+client-side fonts support advanced font features such as antialiasing
+and subpixel hinting, while server-side fonts do not.  Fontconfig and
+GTK patterns match only client-side fonts.
+
+   You will probably want to use a fixed-width default font--that is, a
+font in which all characters have the same width.  For Xft and
+Fontconfig fonts, you can use the `fc-list' command to list the
+available fixed-width fonts, like this:
+
+     fc-list :spacing=mono fc-list :spacing=charcell
+
+For server-side X fonts, you can use the `xlsfonts' program to list the
+available fixed-width fonts, like this:
+
+     xlsfonts -fn '*x*' | egrep "^[0-9]+x[0-9]+"
+     xlsfonts -fn '*-*-*-*-*-*-*-*-*-*-*-m*'
+     xlsfonts -fn '*-*-*-*-*-*-*-*-*-*-*-c*'
+
+Any font with `m' or `c' in the SPACING field of the XLFD is a
+fixed-width font.  To see what a particular font looks like, use the
+`xfd' command.  For example:
+
+     xfd -fn 6x13
+
+displays the entire font `6x13'.
+
+   While running Emacs, you can also set the font of a specific kind of
+text (*note Faces::), or a particular frame (*note Frame Parameters::).
+
+
+File: emacs,  Node: Speedbar,  Next: Multiple Displays,  Prev: Fonts,  Up: Frames
+
+25.8 Speedbar Frames
 ====================
 
 The "speedbar" is a special frame for conveniently navigating in or
@@ -5283,7 +5587,7 @@ Speedbar: (speedbar)Top.
 
 File: emacs,  Node: Multiple Displays,  Next: Special Buffer Frames,  Prev: Speedbar,  Up: Frames
 
-25.8 Multiple Displays
+25.9 Multiple Displays
 ======================
 
 A single Emacs can talk to more than one X display.  Initially, Emacs
@@ -5312,8 +5616,8 @@ others' edits if they are not careful.
 
 File: emacs,  Node: Special Buffer Frames,  Next: Frame Parameters,  Prev: Multiple Displays,  Up: Frames
 
-25.9 Special Buffer Frames
-==========================
+25.10 Special Buffer Frames
+===========================
 
 You can make certain chosen buffers, which Emacs normally displays in
 "another window," appear in special frames of their own.  To do this,
@@ -5374,7 +5678,7 @@ for the same buffer name.
 
 File: emacs,  Node: Frame Parameters,  Next: Scroll Bars,  Prev: Special Buffer Frames,  Up: Frames
 
-25.10 Setting Frame Parameters
+25.11 Setting Frame Parameters
 ==============================
 
 These commands are available for controlling the window management
@@ -5415,7 +5719,7 @@ Parameters: (elisp)Frame Parameters.
 
 File: emacs,  Node: Scroll Bars,  Next: Wheeled Mice,  Prev: Frame Parameters,  Up: Frames
 
-25.11 Scroll Bars
+25.12 Scroll Bars
 =================
 
 On graphical displays, Emacs normally makes a "scroll bar" at the left
@@ -5467,7 +5771,7 @@ frames with text starting at the left margin.
 
 File: emacs,  Node: Wheeled Mice,  Next: Drag and Drop,  Prev: Scroll Bars,  Up: Frames
 
-25.12 Scrolling With "Wheeled" Mice
+25.13 Scrolling With "Wheeled" Mice
 ===================================
 
 Some mice have a "wheel" instead of a third button.  You can usually
@@ -5486,7 +5790,7 @@ whether the scroll speed is linked to how fast you move the wheel.
 
 File: emacs,  Node: Drag and Drop,  Next: Menu Bars,  Prev: Wheeled Mice,  Up: Frames
 
-25.13 Drag and Drop
+25.14 Drag and Drop
 ===================
 
 Emacs supports "drag and drop" using the mouse.  For instance, dropping
@@ -5506,14 +5810,14 @@ protocol, are currently supported.
 
 File: emacs,  Node: Menu Bars,  Next: Tool Bars,  Prev: Drag and Drop,  Up: Frames
 
-25.14 Menu Bars
+25.15 Menu Bars
 ===============
 
 You can turn display of menu bars on or off with `M-x menu-bar-mode' or
 by customizing the variable `menu-bar-mode'.  With no argument, this
 command toggles Menu Bar mode, a minor mode.  With an argument, the
 command turns Menu Bar mode on if the argument is positive, off if the
-argument is not positive.  You can use the X resource `menuBarLines' to
+argument is not positive.  You can use the X resource `menuBar' to
 control the initial setting of Menu Bar mode.  *Note Resources::.
 
    Expert users often turn off the menu bar, especially on text-only
@@ -5529,7 +5833,7 @@ menus' visual appearance.
 
 File: emacs,  Node: Tool Bars,  Next: Dialog Boxes,  Prev: Menu Bars,  Up: Frames
 
-25.15 Tool Bars
+25.16 Tool Bars
 ===============
 
 The "tool bar" is a line (or lines) of icons at the top of the Emacs
@@ -5551,7 +5855,7 @@ or by customizing the option `tool-bar-mode'.
 
 File: emacs,  Node: Dialog Boxes,  Next: Tooltips,  Prev: Tool Bars,  Up: Frames
 
-25.16 Using Dialog Boxes
+25.17 Using Dialog Boxes
 ========================
 
 A dialog box is a special kind of menu for asking you a yes-or-no
@@ -5589,7 +5893,7 @@ effect.
 
 File: emacs,  Node: Tooltips,  Next: Mouse Avoidance,  Prev: Dialog Boxes,  Up: Frames
 
-25.17 Tooltips
+25.18 Tooltips
 ==============
 
 "Tooltips" are small windows that display text information at the
@@ -5617,14 +5921,21 @@ display tooltips.
 
 File: emacs,  Node: Mouse Avoidance,  Next: Non-Window Terminals,  Prev: Tooltips,  Up: Frames
 
-25.18 Mouse Avoidance
+25.19 Mouse Avoidance
 =====================
 
-Mouse Avoidance mode keeps the mouse pointer away from point, to avoid
-obscuring text you want to edit.  Whenever it moves the mouse, it also
-raises the frame.  To use Mouse Avoidance mode, customize the variable
-`mouse-avoidance-mode'.  You can set this to various values to move the
-mouse in several ways:
+On graphical terminals, the mouse pointer may obscure the text in the
+Emacs frame.  Emacs provides two methods to avoid this problem.
+
+   Firstly, Emacs hides the mouse pointer each time you type a
+self-inserting character, if the pointer lies inside an Emacs frame;
+moving the mouse pointer makes it visible again.  To disable this
+feature, set the variable `make-pointer-invisible' to `nil'.
+
+   Secondly, you can use Mouse Avoidance mode, a minor mode, to keep
+the mouse pointer away from point.  To use Mouse Avoidance mode,
+customize the variable `mouse-avoidance-mode'.  You can set this to
+various values to move the mouse in several ways:
 
 `banish'
      Move the mouse to the upper-right corner on any key-press;
@@ -5647,12 +5958,13 @@ mouse in several ways:
      As `animate', but changes the shape of the mouse pointer too.
 
    You can also use the command `M-x mouse-avoidance-mode' to enable
-the mode.
+the mode.  Whenever Mouse Avoidance mode moves the mouse, it also
+raises the frame.
 
 
 File: emacs,  Node: Non-Window Terminals,  Next: Text-Only Mouse,  Prev: Mouse Avoidance,  Up: Frames
 
-25.19 Non-Window Terminals
+25.20 Non-Window Terminals
 ==========================
 
 On a text-only terminal, Emacs can display only one Emacs frame at a
@@ -5678,7 +5990,7 @@ specify appears in the mode line when the frame is selected.
 
 File: emacs,  Node: Text-Only Mouse,  Prev: Non-Window Terminals,  Up: Frames
 
-25.20 Using a Mouse in Terminal Emulators
+25.21 Using a Mouse in Terminal Emulators
 =========================================
 
 Some text-only terminals support mouse clicks in the terminal window.
@@ -5886,12 +6198,12 @@ non-ASCII characters using multi-byte sequences.  Multibyte mode allows
 you to use all the supported languages and scripts without limitations.
 
    Under very special circumstances, you may want to disable multibyte
-character support, either for Emacs as a whole, or for a single buffer.
-When multibyte characters are disabled in a buffer, we call that
-"unibyte mode".  In unibyte mode, each character in the buffer has a
-character code ranging from 0 through 255 (0377 octal); 0 through 127
-(0177 octal) represent ASCII characters, and 128 (0200 octal) through
-255 (0377 octal) represent non-ASCII characters.
+character support, for a specific buffer.  When multibyte characters
+are disabled in a buffer, we call that "unibyte mode".  In unibyte
+mode, each character in the buffer has a character code ranging from 0
+through 255 (0377 octal); 0 through 127 (0177 octal) represent ASCII
+characters, and 128 (0200 octal) through 255 (0377 octal) represent
+non-ASCII characters.
 
    To edit a particular file in unibyte representation, visit it using
 `find-file-literally'.  *Note Visiting::.  You can convert a multibyte
@@ -5903,26 +6215,16 @@ can use `C-x <RET> c' (`universal-coding-system-argument') and specify
 `raw-text' doesn't disable format conversion, uncompression, or auto
 mode selection.
 
-   To turn off multibyte character support by default, start Emacs with
-the `--unibyte' option (*note Initial Options::), or set the
-environment variable `EMACS_UNIBYTE'.  You can also customize
-`enable-multibyte-characters' or, equivalently, directly set the
-variable `default-enable-multibyte-characters' to `nil' in your init
-file to have basically the same effect as `--unibyte'.  With
-`--unibyte', multibyte strings are not created during initialization
-from the values of environment variables, `/etc/passwd' entries etc.,
-even if those contain non-ASCII characters.
-
-   Emacs normally loads Lisp files as multibyte, regardless of whether
-you used `--unibyte'.  This includes the Emacs initialization file,
-`.emacs', and the initialization files of Emacs packages such as Gnus.
-However, you can specify unibyte loading for a particular Lisp file, by
-putting `-*-unibyte: t;-*-' in a comment on the first line (*note File
-Variables::).  Then that file is always loaded as unibyte text.  The
-motivation for these conventions is that it is more reliable to always
-load any particular Lisp file in the same way.  However, you can load a
-Lisp file as unibyte, on any one occasion, by typing `C-x <RET> c
-raw-text <RET>' immediately before loading it.
+   Emacs normally loads Lisp files as multibyte.  This includes the
+Emacs initialization file, `.emacs', and the initialization files of
+Emacs packages such as Gnus.  However, you can specify unibyte loading
+for a particular Lisp file, by putting `-*-unibyte: t;-*-' in a comment
+on the first line (*note File Variables::).  Then that file is always
+loaded as unibyte text.  The motivation for these conventions is that
+it is more reliable to always load any particular Lisp file in the same
+way.  However, you can load a Lisp file as unibyte, on any one
+occasion, by typing `C-x <RET> c raw-text <RET>' immediately before
+loading it.
 
    The mode line indicates whether multibyte character support is
 enabled in the current buffer.  If it is, there are two or more
@@ -5932,12 +6234,8 @@ before the indication of the visited file's end-of-line convention
 nothing precedes the colon except a single dash.  *Note Mode Line::,
 for more details about this.
 
-   To convert a unibyte session to a multibyte session, set
-`default-enable-multibyte-characters' to `t'.  Buffers which were
-created in the unibyte session before you turn on multibyte support
-will stay unibyte.  You can turn on multibyte support in a specific
-buffer by invoking the command `toggle-enable-multibyte-characters' in
-that buffer.
+   You can turn on multibyte support in a specific buffer by invoking
+the command `toggle-enable-multibyte-characters' in that buffer.
 
 
 File: emacs,  Node: Language Environments,  Next: Input Methods,  Prev: Enabling Multibyte,  Up: International
@@ -6151,6 +6449,10 @@ disable this feature).  If `input-method-verbose-flag' is non-`nil',
 the list of possible characters to type next is displayed in the echo
 area (but not when you are in the minibuffer).
 
+   Another facility for typing characters not on your keyboard is by
+using the `C-x 8 <RET>' (`ucs-insert') to insert a single character
+based on its Unicode name or code-point; see *note Inserting Text::.
+
 
 File: emacs,  Node: Select Input Method,  Next: Coding Systems,  Prev: Input Methods,  Up: International
 
@@ -6362,184 +6664,4 @@ three variants to specify the kind of end-of-line conversion.
 network transport contexts.  It is different from the SGML reference
 syntax record-start/record-end format which Emacs doesn't support
 directly.
-
-
-File: emacs,  Node: Recognize Coding,  Next: Specify Coding,  Prev: Coding Systems,  Up: International
-
-26.7 Recognizing Coding Systems
-===============================
-
-Whenever Emacs reads a given piece of text, it tries to recognize which
-coding system to use.  This applies to files being read, output from
-subprocesses, text from X selections, etc.  Emacs can select the right
-coding system automatically most of the time--once you have specified
-your preferences.
-
-   Some coding systems can be recognized or distinguished by which byte
-sequences appear in the data.  However, there are coding systems that
-cannot be distinguished, not even potentially.  For example, there is no
-way to distinguish between Latin-1 and Latin-2; they use the same byte
-values with different meanings.
-
-   Emacs handles this situation by means of a priority list of coding
-systems.  Whenever Emacs reads a file, if you do not specify the coding
-system to use, Emacs checks the data against each coding system,
-starting with the first in priority and working down the list, until it
-finds a coding system that fits the data.  Then it converts the file
-contents assuming that they are represented in this coding system.
-
-   The priority list of coding systems depends on the selected language
-environment (*note Language Environments::).  For example, if you use
-French, you probably want Emacs to prefer Latin-1 to Latin-2; if you use
-Czech, you probably want Latin-2 to be preferred.  This is one of the
-reasons to specify a language environment.
-
-   However, you can alter the coding system priority list in detail
-with the command `M-x prefer-coding-system'.  This command reads the
-name of a coding system from the minibuffer, and adds it to the front
-of the priority list, so that it is preferred to all others.  If you
-use this command several times, each use adds one element to the front
-of the priority list.
-
-   If you use a coding system that specifies the end-of-line conversion
-type, such as `iso-8859-1-dos', what this means is that Emacs should
-attempt to recognize `iso-8859-1' with priority, and should use DOS
-end-of-line conversion when it does recognize `iso-8859-1'.
-
-   Sometimes a file name indicates which coding system to use for the
-file.  The variable `file-coding-system-alist' specifies this
-correspondence.  There is a special function
-`modify-coding-system-alist' for adding elements to this list.  For
-example, to read and write all `.txt' files using the coding system
-`chinese-iso-8bit', you can execute this Lisp expression:
-
-     (modify-coding-system-alist 'file "\\.txt\\'" 'chinese-iso-8bit)
-
-The first argument should be `file', the second argument should be a
-regular expression that determines which files this applies to, and the
-third argument says which coding system to use for these files.
-
-   Emacs recognizes which kind of end-of-line conversion to use based on
-the contents of the file: if it sees only carriage-returns, or only
-carriage-return linefeed sequences, then it chooses the end-of-line
-conversion accordingly.  You can inhibit the automatic use of
-end-of-line conversion by setting the variable `inhibit-eol-conversion'
-to non-`nil'.  If you do that, DOS-style files will be displayed with
-the `^M' characters visible in the buffer; some people prefer this to
-the more subtle `(DOS)' end-of-line type indication near the left edge
-of the mode line (*note eol-mnemonic: Mode Line.).
-
-   By default, the automatic detection of coding system is sensitive to
-escape sequences.  If Emacs sees a sequence of characters that begin
-with an escape character, and the sequence is valid as an ISO-2022
-code, that tells Emacs to use one of the ISO-2022 encodings to decode
-the file.
-
-   However, there may be cases that you want to read escape sequences
-in a file as is.  In such a case, you can set the variable
-`inhibit-iso-escape-detection' to non-`nil'.  Then the code detection
-ignores any escape sequences, and never uses an ISO-2022 encoding.  The
-result is that all escape sequences become visible in the buffer.
-
-   The default value of `inhibit-iso-escape-detection' is `nil'.  We
-recommend that you not change it permanently, only for one specific
-operation.  That's because many Emacs Lisp source files in the Emacs
-distribution contain non-ASCII characters encoded in the coding system
-`iso-2022-7bit', and they won't be decoded correctly when you visit
-those files if you suppress the escape sequence detection.
-
-   The variables `auto-coding-alist', `auto-coding-regexp-alist' and
-`auto-coding-functions' are the strongest way to specify the coding
-system for certain patterns of file names, or for files containing
-certain patterns; these variables even override `-*-coding:-*-' tags in
-the file itself.  Emacs uses `auto-coding-alist' for tar and archive
-files, to prevent it from being confused by a `-*-coding:-*-' tag in a
-member of the archive and thinking it applies to the archive file as a
-whole.  Likewise, Emacs uses `auto-coding-regexp-alist' to ensure that
-RMAIL files, whose names in general don't match any particular pattern,
-are decoded correctly.  One of the builtin `auto-coding-functions'
-detects the encoding for XML files.
-
-   When you get new mail in Rmail, each message is translated
-automatically from the coding system it is written in, as if it were a
-separate file.  This uses the priority list of coding systems that you
-have specified.  If a MIME message specifies a character set, Rmail
-obeys that specification, unless `rmail-decode-mime-charset' is `nil'.
-For reading and saving Rmail files themselves, Emacs uses the coding
-system specified by the variable `rmail-file-coding-system'.  The
-default value is `nil', which means that Rmail files are not translated
-(they are read and written in the Emacs internal character code).
-
-
-File: emacs,  Node: Specify Coding,  Next: Output Coding,  Prev: Recognize Coding,  Up: International
-
-26.8 Specifying a File's Coding System
-======================================
-
-If Emacs recognizes the encoding of a file incorrectly, you can reread
-the file using the correct coding system by typing `C-x <RET> r
-CODING-SYSTEM <RET>'.  To see what coding system Emacs actually used to
-decode the file, look at the coding system mnemonic letter near the
-left edge of the mode line (*note Mode Line::), or type `C-h C <RET>'.
-
-   You can specify the coding system for a particular file in the file
-itself, using the `-*-...-*-' construct at the beginning, or a local
-variables list at the end (*note File Variables::).  You do this by
-defining a value for the "variable" named `coding'.  Emacs does not
-really have a variable `coding'; instead of setting a variable, this
-uses the specified coding system for the file.  For example, `-*-mode:
-C; coding: latin-1;-*-' specifies use of the Latin-1 coding system, as
-well as C mode.  When you specify the coding explicitly in the file,
-that overrides `file-coding-system-alist'.
-
-
-File: emacs,  Node: Output Coding,  Next: Text Coding,  Prev: Specify Coding,  Up: International
-
-26.9 Choosing Coding Systems for Output
-=======================================
-
-Once Emacs has chosen a coding system for a buffer, it stores that
-coding system in `buffer-file-coding-system'.  That makes it the
-default for operations that write from this buffer into a file, such as
-`save-buffer' and `write-region'.  You can specify a different coding
-system for further file output from the buffer using
-`set-buffer-file-coding-system' (*note Text Coding::).
-
-   You can insert any character Emacs supports into any Emacs buffer,
-but most coding systems can only handle a subset of these characters.
-Therefore, it's possible that the characters you insert cannot be
-encoded with the coding system that will be used to save the buffer.
-For example, you could visit a text file in Polish, encoded in
-`iso-8859-2', and add some Russian words to it.  When you save that
-buffer, Emacs cannot use the current value of
-`buffer-file-coding-system', because the characters you added cannot be
-encoded by that coding system.
-
-   When that happens, Emacs tries the most-preferred coding system (set
-by `M-x prefer-coding-system' or `M-x set-language-environment').  If
-that coding system can safely encode all of the characters in the
-buffer, Emacs uses it, and stores its value in
-`buffer-file-coding-system'.  Otherwise, Emacs displays a list of
-coding systems suitable for encoding the buffer's contents, and asks
-you to choose one of those coding systems.
-
-   If you insert the unsuitable characters in a mail message, Emacs
-behaves a bit differently.  It additionally checks whether the
-most-preferred coding system is recommended for use in MIME messages;
-if not, Emacs tells you that the most-preferred coding system is not
-recommended and prompts you for another coding system.  This is so you
-won't inadvertently send a message encoded in a way that your
-recipient's mail software will have difficulty decoding.  (You can
-still use an unsuitable coding system if you type its name in response
-to the question.)
-
-   When you send a message with Mail mode (*note Sending Mail::), Emacs
-has four different ways to determine the coding system to use for
-encoding the message text.  It tries the buffer's own value of
-`buffer-file-coding-system', if that is non-`nil'.  Otherwise, it uses
-the value of `sendmail-coding-system', if that is non-`nil'.  The third
-way is to use the default coding system for new files, which is
-controlled by your choice of language environment, if that is
-non-`nil'.  If all of these three values are `nil', Emacs encodes
-outgoing mail using the Latin-1 coding system.
 

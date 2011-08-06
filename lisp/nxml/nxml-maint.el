@@ -1,6 +1,6 @@
 ;;; nxml-maint.el --- commands for maintainers of nxml-*.el
 
-;; Copyright (C) 2003, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: James Clark
 ;; Keywords: XML
@@ -74,8 +74,7 @@
 (defun nxml-insert-target-repertoire-glyph-set (file var)
   (interactive "fTarget file: \nSVariable name: ")
   (let (lst head)
-    (save-excursion
-      (set-buffer (find-file-noselect file))
+    (with-current-buffer (find-file-noselect file)
       (goto-char (point-min))
       (while (re-search-forward "^ *\\([a-FA-F0-9]\\{2\\}\\)[ \t]+" nil t)
 	(let ((row (match-string 1))

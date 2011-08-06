@@ -1,7 +1,7 @@
 ;; idlw-shell.el --- run IDL as an inferior process of Emacs.
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
-;;    Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+;;   2009, 2010  Free Software Foundation, Inc.
 
 ;; Authors: J.D. Smith <jdsmith@as.arizona.edu>
 ;;          Carsten Dominik <dominik@astro.uva.nl>
@@ -241,13 +241,13 @@ to set this option to nil."
 
 (defcustom idlwave-shell-file-name-chars "~/A-Za-z0-9+:_.$#%={}\\- "
   "The characters allowed in file names, as a string.
-Used for file name completion. Must not contain `'', `,' and `\"'
+Used for file name completion.  Must not contain `'', `,' and `\"'
 because these are used as separators by IDL."
   :group 'idlwave-shell-general-setup
   :type 'string)
 
 (defcustom idlwave-shell-mode-hook '()
-  "*Hook for customising `idlwave-shell-mode'."
+  "*Hook for customizing `idlwave-shell-mode'."
   :group 'idlwave-shell-general-setup
   :type 'hook)
 
@@ -339,7 +339,7 @@ expression being examined."
   "*OBSOLETE VARIABLE, is no longer used.")
 
 (defcustom idlwave-shell-separate-examine-output t
-  "*Non-nil mean, put output of examine commands in their own buffer."
+  "*Non-nil means, put output of examine commands in their own buffer."
   :group 'idlwave-shell-command-setup
   :type 'boolean)
 
@@ -444,7 +444,7 @@ popup help text on the line."
 
 ;; Breakpoint Overlays etc
 (defgroup idlwave-shell-highlighting-and-faces nil
-  "Highlighting and Faces used by the IDLWAVE Shell mode."
+  "Highlighting and faces used by the IDLWAVE Shell mode."
   :prefix "idlwave-shell"
   :group 'idlwave)
 
@@ -521,7 +521,7 @@ t          Glyph when possible, otherwise face (same effect as 'glyph)."
 	  (const :tag "Glyph or face." t)))
 
 (defvar idlwave-shell-use-breakpoint-glyph t
-  "Obsolete variable.  See `idlwave-shell-mark-breakpoints.")
+  "Obsolete variable.  See `idlwave-shell-mark-breakpoints'.")
 
 (defcustom idlwave-shell-breakpoint-face 'idlwave-shell-bp
   "*The face for breakpoint lines in the source code.
@@ -640,7 +640,7 @@ the directory stack.")
   "The command which gets !PATH and !DIR info from the shell.")
 
 (defvar idlwave-shell-mode-line-info nil
-  "Additional info displayed in the mode line")
+  "Additional info displayed in the mode line.")
 
 (defvar idlwave-shell-default-directory nil
   "The default directory in the idlwave-shell buffer, of outside use.")
@@ -722,7 +722,7 @@ the directory stack.")
 
 
 (defvar idlwave-shell-bp-query "help,/breakpoints"
-  "Command to obtain list of breakpoints")
+  "Command to obtain list of breakpoints.")
 
 (defvar idlwave-shell-command-output nil
   "String for accumulating current command output.")
@@ -733,11 +733,10 @@ The current command is finished when the IDL prompt is displayed.
 This is evaluated if it is a list or called with funcall.")
 
 (defvar idlwave-shell-sentinel-hook nil
-  "Hook run when the idl process exits.")
+  "Hook run when the IDL process exits.")
 
 (defvar idlwave-shell-hide-output nil
-  "If non-nil the process output is not inserted into the output
-buffer.")
+  "If non-nil the process output is not inserted into the output buffer.")
 
 (defvar idlwave-shell-show-if-error nil
   "If non-nil the process output is inserted into the output buffer if
@@ -754,12 +753,12 @@ it contains an error message, even if hide-output is non-nil.")
   "List of commands to be sent to IDL.
 Each element of the list is list of \(CMD PCMD HIDE\), where CMD is a
 string to be sent to IDL and PCMD is a post-command to be placed on
-`idlwave-shell-post-command-hook'. If HIDE is non-nil, hide the output
-from command CMD. PCMD and HIDE are optional.")
+`idlwave-shell-post-command-hook'.  If HIDE is non-nil, hide the output
+from command CMD.  PCMD and HIDE are optional.")
 
 (defun idlwave-shell-buffer ()
   "Name of buffer associated with IDL process.
-The name of the buffer is made by surrounding `idlwave-shell-process-name
+The name of the buffer is made by surrounding `idlwave-shell-process-name'
 with `*'s."
   (concat "*" idlwave-shell-process-name "*"))
 
@@ -792,7 +791,7 @@ IDL is currently stopped.")
 
 (defconst idlwave-shell-halt-messages-re
   (mapconcat 'identity idlwave-shell-halt-messages "\\|")
-  "The regular expression computed from idlwave-shell-halt-messages")
+  "The regular expression computed from `idlwave-shell-halt-messages'.")
 
 (defconst idlwave-shell-trace-message-re
   "^% At "    ;; First line of a trace message
@@ -873,8 +872,8 @@ IDL has currently stepped.")
    -----------------
    RET after the end of the process' output sends the text from the
    end of process to the end of the current line.  RET before end of
-   process output copies the current line (except for the prompt) to the
-   end of the buffer.
+   process output copies the current line (except for the prompt) to
+   the end of the buffer.
 
    Command history, searching of previous commands, command line
    editing are available via the comint-mode key bindings, by default
@@ -941,7 +940,7 @@ IDL has currently stepped.")
    Info documentation for this package is available.  Use \\[idlwave-info]
    to display (complain to your sysadmin if that does not work).
    For Postscript and HTML versions of the documentation, check IDLWAVE's
-   homepage at `http://idlwave.org'.
+   homepage at URL `http://idlwave.org'.
    IDLWAVE has customize support - see the group `idlwave'.
 
 8. Keybindings
@@ -1126,9 +1125,9 @@ IDL has currently stepped.")
     (fset 'idl-shell 'idlwave-shell))
 
 (defvar idlwave-shell-idl-wframe nil
-  "Frame for displaying the idl shell window.")
+  "Frame for displaying the IDL shell window.")
 (defvar idlwave-shell-display-wframe nil
-  "Frame for displaying the idl source files.")
+  "Frame for displaying the IDL source files.")
 
 (defvar idlwave-shell-calling-stack-index 0)
 (defvar idlwave-shell-calling-stack-routine nil)
@@ -1271,9 +1270,9 @@ Return either nil or 'hide."
 					     show-if-error)
   "Send a command to IDL process.
 
-\(CMD PCMD HIDE\) are placed at the end of `
-idlwave-shell-pending-commands'.  If IDL is ready the first command,
-CMD, in `idlwave-shell-pending-commands' is sent to the IDL process.
+\(CMD PCMD HIDE\) are placed at the end of `idlwave-shell-pending-commands'.
+If IDL is ready the first command in `idlwave-shell-pending-commands',
+CMD, is sent to the IDL process.
 
 If optional second argument PCMD is non-nil it will be placed on
 `idlwave-shell-post-command-hook' when CMD is executed.
@@ -1287,7 +1286,7 @@ stepping through code with output.
 If optional fourth argument PREEMPT is non-nil CMD is put at front of
 `idlwave-shell-pending-commands'.  If PREEMPT is 'wait, wait for all
 output to complete and the next prompt to arrive before returning
-\(useful if you need an answer now\). IDL is considered ready if the
+\(useful if you need an answer now\).  IDL is considered ready if the
 prompt is present and if `idlwave-shell-ready' is non-nil.
 
 If SHOW-IF-ERROR is non-nil, show the output if it contains an error
@@ -1542,11 +1541,11 @@ and then calls `idlwave-shell-send-command' for any pending commands."
 		      (concat idlwave-shell-accumulation string)))
 
 
-;;; Test/Debug code
-	      ;(with-current-buffer
-	      ;	  (get-buffer-create "*idlwave-shell-output*")
-	      ;	(goto-char (point-max))
-	      ;	(insert "\nReceived STRING\n===>\n" string "\n<====\n"))
+              ;; ;; Test/Debug code
+	      ;;(with-current-buffer
+	      ;;    (get-buffer-create "*idlwave-shell-output*")
+	      ;;  (goto-char (point-max))
+	      ;;  (insert "\nReceived STRING\n===>\n" string "\n<====\n"))
 
 	      ;; Check for prompt in current accumulating output
 	      (when (setq idlwave-shell-ready
@@ -1554,8 +1553,7 @@ and then calls `idlwave-shell-send-command' for any pending commands."
 					idlwave-shell-accumulation))
 		;; Gather the command output
 		(if idlwave-shell-hide-output
-		    (save-excursion
-		      (set-buffer idlwave-shell-hidden-output-buffer)
+		    (with-current-buffer idlwave-shell-hidden-output-buffer
 		      (setq full-output (buffer-string))
 		      (goto-char (point-max))
 		      (re-search-backward idlwave-shell-prompt-pattern nil t)
@@ -1609,7 +1607,7 @@ and then calls `idlwave-shell-send-command' for any pending commands."
 			idlwave-shell-post-command-hook nil
 			idlwave-shell-hide-output nil
 			idlwave-shell-show-if-error nil))
-		;; Done with post command. Do pending command if
+		;; Done with post command.  Do pending command if
 		;; any.
 		(idlwave-shell-send-command)))
 	  (store-match-data data)))))
@@ -1619,8 +1617,7 @@ and then calls `idlwave-shell-send-command' for any pending commands."
   (let* ((buf (idlwave-shell-buffer))
 	 (win (get-buffer-window buf)))
     (when (get-buffer buf)
-      (save-excursion
-	(set-buffer (idlwave-shell-buffer))
+      (with-current-buffer (idlwave-shell-buffer)
 	(goto-char (point-max))
 	(insert (format "\n\n  Process %s %s" process event))
 	(if (and idlwave-shell-save-command-history
@@ -1640,8 +1637,7 @@ and then calls `idlwave-shell-send-command' for any pending commands."
     (idlwave-shell-cleanup)
     ;; Run the hook, if possible in the shell buffer.
     (if (get-buffer buf)
-	(save-excursion
-	  (set-buffer buf)
+	(with-current-buffer buf
 	  (run-hooks 'idlwave-shell-sentinel-hook))
       (run-hooks 'idlwave-shell-sentinel-hook))))
 
@@ -1654,7 +1650,7 @@ and then calls `idlwave-shell-send-command' for any pending commands."
 (defvar idlwave-shell-syntax-error
   "^% Syntax error.\\s-*\n\\s-*At:\\s-*\\(.*\\),\\s-*Line\\s-*\\(.*\\)"
   "A regular expression to match an IDL syntax error.
-The 1st pair matches the file name, the second pair matches the line
+The first pair matches the file name, the second pair matches the line
 number.")
 
 (defvar idlwave-shell-other-error
@@ -1697,13 +1693,14 @@ in IDL5 which inserts random linebreaks in long module and file names.")
 (defvar idlwave-shell-electric-debug-mode) ; defined by easy-mmode
 
 (defun idlwave-shell-scan-for-state ()
-  "Scan for state info.  Looks for messages in output from last IDL
-command indicating where IDL has stopped. The types of messages we are
-interested in are execution halted, stepped, breakpoint, interrupted
-at and trace messages.  For breakpoint messages process any attached
-count or command parameters.  Update the stop line if a message is
-found.  The variable `idlwave-shell-current-state' is set to 'error,
-'halt, or 'breakpoint, which describes the status, or nil for none of
+  "Scan for state info.
+Looks for messages in output from last IDL command indicating where
+IDL has stopped.  The types of messages we are interested in are
+execution halted, stepped, breakpoint, interrupted at and trace
+messages.  For breakpoint messages process any attached count or
+command parameters.  Update the stop line if a message is found.
+The variable `idlwave-shell-current-state' is set to 'error, 'halt,
+or 'breakpoint, which describes the status, or nil for none of
 the above."
   (let (trace)
     (cond
@@ -1936,7 +1933,7 @@ Also get rid of widget events in the queue."
 			      (idlwave-shell-hide-p 'misc) nil t))
 
 (defun idlwave-shell-quit (&optional arg)
-  "Exit the idl process after confirmation.
+  "Exit the IDL process after confirmation.
 With prefix ARG, exit without confirmation."
   (interactive "P")
   (if (not (idlwave-shell-is-running))
@@ -2088,13 +2085,12 @@ HEAP_GC, /VERBOSE"
 (defun idlwave-shell-filter-directory ()
   "Get the current directory from `idlwave-shell-command-output'.
 Change the default directory for the process buffer to concur."
-  (save-excursion
-    (set-buffer (idlwave-shell-buffer))
+  (with-current-buffer (idlwave-shell-buffer)
     (if (string-match ",___cur[\n\r ]+\\([^\n\r]+\\)[\n\r]"
 		      idlwave-shell-command-output)
 	(let ((dir (substring idlwave-shell-command-output
 			      (match-beginning 1) (match-end 1))))
-;	  (message "Setting Emacs working dir to %s" dir)
+          ;; (message "Setting Emacs working dir to %s" dir)
 	  (setq idlwave-shell-default-directory dir)
 	  (setq default-directory (file-name-as-directory dir))))))
 
@@ -2222,7 +2218,7 @@ args of an executive .run, .rnew or .compile."
       (memq (preceding-char) '(?\' ?\")))))
 
 (defun idlwave-shell-batch-command ()
-  "Returns t if we're in a batch command statement like @foo"
+  "Return t if we're in a batch command statement like @foo"
   (let ((limit (save-excursion (beginning-of-line) (point))))
     (save-excursion
       ;; Skip backwards over filename
@@ -2231,7 +2227,7 @@ args of an executive .run, .rnew or .compile."
       (and (eq (preceding-char) ?@) (not (idlwave-in-quote))))))
 
 (defun idlwave-shell-shell-command ()
-  "Returns t if we're in a shell command statement like $ls"
+  "Return t if we're in a shell command statement like $ls"
   (save-excursion
     (idlwave-beginning-of-statement)
     (looking-at "\\$")))
@@ -2239,7 +2235,7 @@ args of an executive .run, .rnew or .compile."
 ;; Debugging Commands ------------------------------------------------------
 
 (defun idlwave-shell-redisplay (&optional hide)
-  "Tries to resync the display with where execution has stopped.
+  "Try to resync the display with where execution has stopped.
 Issues a \"help,/trace\" command followed by a call to
 `idlwave-shell-display-line'.  Also updates the breakpoint
 overlays."
@@ -2309,18 +2305,19 @@ overlays."
 
 (defun idlwave-shell-goto-frame (&optional frame)
   "Set buffer to FRAME with point at the frame line.
-If the optional argument FRAME is nil then idlwave-shell-pc-frame is
-used.  Does nothing if the resulting frame is nil."
+If the optional argument FRAME is nil then `idlwave-shell-pc-frame'
+is used.  Does nothing if the resulting frame is nil."
   (if frame ()
     (setq frame (idlwave-shell-pc-frame)))
   (cond
    (frame
     (set-buffer (idlwave-find-file-noselect (car frame) 'shell))
     (widen)
-    (goto-line (nth 1 frame)))))
+    (goto-char (point-min))
+    (forward-line (1- (nth 1 frame))))))
 
 (defun idlwave-shell-pc-frame ()
-  "Returns the frame for IDL execution."
+  "Return the frame for IDL execution."
   (and idlwave-shell-halt-frame
        (list (nth 0 idlwave-shell-halt-frame)
 	     (nth 1 idlwave-shell-halt-frame)
@@ -2340,13 +2337,13 @@ used.  Does nothing if the resulting frame is nil."
 
 (defvar idlwave-shell-suppress-electric-debug nil)
 (defun idlwave-shell-display-line (frame &optional col debug)
-  "display frame file in other window with overlay arrow.
+  "Display frame file in other window with overlay arrow.
 
-frame is a list of file name, line number, and subroutine name.  if
-frame is nil then remove overlay.  if col is set, move point to that
-column in the line.  if debug is non-nil, enable the electric debug
-mode.  if it is 'disable, do not enable no matter what the setting of
-'idlwave-shell-automatic-electric-debug'.  if it is 'force, enable no
+FRAME is a list of file name, line number, and subroutine name.  If
+FRAME is nil then remove overlay.  If COL is set, move point to that
+column in the line.  If DEBUG is non-nil, enable the electric debug
+mode.  If it is 'disable, do not enable no matter what the setting of
+`idlwave-shell-automatic-electric-debug'.  If it is 'force, enable no
 matter what the settings of that variable."
   (if (not frame)
       ;; remove stop-line overlay from old position
@@ -2362,10 +2359,10 @@ matter what the settings of that variable."
 	;; fixme: errors are dangerous in shell filters.  but i think i
 	;; have never encountered this one.
         (error "invalid frame - unable to access file: %s" (car frame))
-;;;
-;;; buffer : the buffer to display a line in.
-;;; select-shell: current buffer is the shell.
-;;;
+      ;;
+      ;; buffer : the buffer to display a line in.
+      ;; select-shell: current buffer is the shell.
+      ;;
       (setq idlwave-shell-mode-line-info
 	    (if (nth 2 frame)
 		(format "[%d:%s]"
@@ -2384,12 +2381,11 @@ matter what the settings of that variable."
 					     nil (idlwave-shell-source-frame)))
 
 	;; enter the buffer and mark the line
-        (save-excursion
-          (set-buffer buffer)
+        (with-current-buffer buffer
           (save-restriction
             (widen)
-            (goto-line (nth 1 frame))
-	    (forward-line 0)
+            (goto-char (point-min))
+            (forward-line (1- (nth 1 frame)))
             (setq pos (point))
 	    (setq idlwave-shell-is-stopped t)
 
@@ -2448,7 +2444,8 @@ matter what the settings of that variable."
 
 
 (defun idlwave-shell-step (arg)
-  "Step one source line. If given prefix argument ARG, step ARG source lines."
+  "Step one source line.
+If given prefix argument ARG, step ARG source lines."
   (interactive "p")
   (or (not arg) (< arg 1)
       (setq arg 1))
@@ -2473,14 +2470,14 @@ Uses IDL's stepover executive command which does not enter called functions."
 					   no-show)
   "Set breakpoint at current line.
 
-If Count is nil then an ordinary breakpoint is set.  We treat a count
+If COUNT is nil then an ordinary breakpoint is set.  We treat a COUNT
 of 1 as a temporary breakpoint using the ONCE keyword.  Counts greater
 than 1 use the IDL AFTER=count keyword to break only after reaching
-the statement count times.
+the statement COUNT times.
 
 Optional argument CMD is a list or function to evaluate upon reaching
 the breakpoint.  CONDITION is a break condition, and DISABLED, if
-non-nil disables the breakpoint"
+non-nil disables the breakpoint."
   (interactive "P")
   (when (listp count)
     (if (equal (car count) 4)
@@ -2615,8 +2612,8 @@ Returns nil if unable to obtain a module name."
 
 (defun idlwave-shell-clear-current-bp ()
   "Remove breakpoint at current line.
-This command can be called from the shell buffer if IDL is currently stopped
-at a breakpoint."
+This command can be called from the shell buffer if IDL is currently
+stopped at a breakpoint."
   (interactive)
   (let ((bp (idlwave-shell-find-current-bp)))
     (if bp (idlwave-shell-clear-bp bp))))
@@ -2691,8 +2688,8 @@ in the current routine."
 
 
 (defun idlwave-shell-set-bp-in-module (name type class)
-  "Set breakpoint in module.  Assumes that `idlwave-shell-sources-alist'
-contains an entry for that module."
+  "Set breakpoint in module.
+Assumes that `idlwave-shell-sources-alist' contains an entry for that module."
   (let* ((module (idlwave-make-full-name class name))
 	 (source-file
 	  (car-safe (cdr-safe
@@ -2711,8 +2708,7 @@ contains an entry for that module."
 	  (message "The source file for module %s is probably not compiled"
 		   module)
 	  (beep))
-      (save-excursion
-	(set-buffer buf)
+      (with-current-buffer buf
 	(save-excursion
 	  (goto-char (point-min))
 	  (let ((case-fold-search t))
@@ -2789,7 +2785,8 @@ Runs to the last statement and then steps 1 statement.  Use the .out command."
 	     (or (not bp-line) (funcall closer-func cur-line bp-line)))
 	    (setq bp-line cur-line))))
     (unless bp-line (error "No further breakpoints"))
-    (goto-line bp-line)))
+    (goto-char (point-min))
+    (forward-line (1- bp-line))))
 
 ;; Examine Commands ------------------------------------------------------
 
@@ -2819,8 +2816,8 @@ Runs to the last statement and then steps 1 statement.  Use the .out command."
        (idlwave-shell-print (if (idlwave-region-active-p) '(4) nil)
 			    ,help ,ev))))
 
-;;; Begin terrible hack section -- XEmacs tests for button2 explicitly
-;;; on drag events, calling drag-n-drop code if detected.  Ughhh...
+;; Begin terrible hack section -- XEmacs tests for button2 explicitly
+;; on drag events, calling drag-n-drop code if detected.  Ughhh...
 (defun idlwave-default-mouse-track-event-is-with-button (event n)
   t)
 
@@ -2837,17 +2834,17 @@ Runs to the last statement and then steps 1 statement.  Use the .out command."
 ;;; End terrible hack section
 
 (defun idlwave-shell-mouse-print (event)
-  "Print value of variable at the mouse position, with `help'"
+  "Print value of variable at the mouse position, with `print'."
   (interactive "e")
   (funcall (idlwave-shell-mouse-examine nil) event))
 
 (defun idlwave-shell-mouse-help (event)
-  "Print value of variable at the mouse position, with `print'."
+  "Print value of variable at the mouse position, with `help'."
   (interactive "e")
   (funcall (idlwave-shell-mouse-examine 'help) event))
 
 (defun idlwave-shell-examine-select (event)
-  "Pop-up a list to select from for examining the expression"
+  "Pop-up a list to select from for examining the expression."
   (interactive "e")
   (funcall (idlwave-shell-mouse-examine nil event) event))
 
@@ -2878,7 +2875,7 @@ An expression is an identifier plus 1 pair of matched parentheses
 directly following the identifier - an array or function call.
 Alternatively, an expression is the contents of any matched
 parentheses when the open parenthesis is not directly preceded by an
-identifier. If point is at the beginning or within an expression
+identifier.  If point is at the beginning or within an expression
 return the inner-most containing expression, otherwise, return the
 preceding expression.
 
@@ -2888,9 +2885,9 @@ use the current region as the expression.
 With double prefix arg ARG prompt for an expression.
 
 If EV is a valid event passed, pop-up a list from
-idlw-shell-examine-alist from which to select the help command text.
-If instead COMPLETE-HELP-TYPE is non-nil, choose from
-idlw-shell-examine-alist via mini-buffer shortcut key."
+`idlwave-shell-examine-alist' from which to select the help
+command text.  If instead COMPLETE-HELP-TYPE is non-nil, choose
+from `idlwave-shell-examine-alist' via mini-buffer shortcut key."
   (interactive "P")
 
   ;; For speed: assume the helper routine hasn't been lost, e.g. with
@@ -3032,8 +3029,7 @@ idlw-shell-examine-alist via mini-buffer shortcut key."
 (defun idlwave-shell-examine-display ()
   "View the examine command output in a separate buffer."
   (let (win cur-beg cur-end)
-    (save-excursion
-      (set-buffer (get-buffer-create "*Examine*"))
+    (with-current-buffer (get-buffer-create "*Examine*")
       (use-local-map idlwave-shell-examine-map)
       (setq buffer-read-only nil)
       (goto-char (point-max))
@@ -3118,13 +3114,11 @@ idlw-shell-examine-alist via mini-buffer shortcut key."
 
 (defun idlwave-shell-examine-display-clear ()
   (interactive)
-  (save-excursion
-    (let ((buf (get-buffer "*Examine*")))
-      (when (bufferp buf)
-	(set-buffer buf)
-	(setq buffer-read-only nil)
-	(erase-buffer)
-	(setq buffer-read-only t)))))
+  (let ((buf (get-buffer "*Examine*")))
+    (when (bufferp buf)
+      (with-current-buffer buf
+	(let ((inhibit-read-only t))
+          (erase-buffer))))))
 
 (defun idlwave-retrieve-expression-from-level (expr level)
   "Return IDL command to print the expression EXPR from stack level LEVEL.
@@ -3219,8 +3213,7 @@ size(___,/DIMENSIONS)"
 	 (process (get-buffer-process buffer))
 	 (process-mark (if process (process-mark process)))
 	 output-begin output-end)
-    (save-excursion
-      (set-buffer buffer)
+    (with-current-buffer buffer
       (goto-char process-mark)
       (beginning-of-line)
       (setq output-end (point))
@@ -3269,7 +3262,7 @@ Remaining elements of the cdr:
 data - Data associated with the breakpoint by idlwave-shell currently
 contains four items:
 
-count - number of times to execute breakpoint. When count reaches 0
+count - number of times to execute breakpoint.  When count reaches 0
   the breakpoint is cleared and removed from the alist.
 
 command - command to execute when breakpoint is reached, either a
@@ -3278,23 +3271,22 @@ command - command to execute when breakpoint is reached, either a
 
 condition - any condition to apply to the breakpoint.
 
-disabled - whether the bp is disabled")
+disabled - whether the bp is disabled.")
 
 (defun idlwave-shell-run-region (beg end &optional n)
   "Compile and run the region using the IDL process.
 Copies the region to a temporary file `idlwave-shell-temp-pro-file'
-and issues the IDL .run command for the file.  Because the
-region is compiled and run as a main program there is no
-problem with begin-end blocks extending over multiple
-lines - which would be a problem if `idlwave-shell-evaluate-region'
-was used.  An END statement is appended to the region if necessary.
+and issues the IDL .run command for the file.  Because the region
+is compiled and run as a main program there is no problem with
+begin-end blocks extending over multiple lines - which would be
+a problem if `idlwave-shell-evaluate-region' was used.
+An END statement is appended to the region if necessary.
 
 If there is a prefix argument, display IDL process."
   (interactive "r\nP")
   (let ((oldbuf (current-buffer)))
-    (save-excursion
-      (set-buffer (idlwave-find-file-noselect
-		   (idlwave-shell-temp-file 'pro) 'tmp))
+    (with-current-buffer (idlwave-find-file-noselect
+                          (idlwave-shell-temp-file 'pro) 'tmp)
       (set (make-local-variable 'comment-start-skip) ";+[ \t]*")
       (set (make-local-variable 'comment-start) ";")
       (erase-buffer)
@@ -3376,12 +3368,12 @@ Queries IDL using the string in `idlwave-shell-bp-query'."
 			      'hide))
 
 (defun idlwave-shell-bp-get (bp &optional item)
-  "Get a value for a breakpoint.  BP has the form of elements in
-idlwave-shell-bp-alist.  Optional second arg ITEM is the
-particular value to retrieve.  ITEM can be 'file, 'line, 'index,
-'module, 'count, 'cmd, 'condition, 'disabled, 'type, or
-'data.  'data returns a list of 'count, 'cmd and 'condition.
-Defaults to 'index."
+  "Get a value for a breakpoint.
+BP has the form of elements in `idlwave-shell-bp-alist'.
+Optional second arg ITEM is the particular value to retrieve.
+ITEM can be 'file, 'line, 'index, 'module, 'count, 'cmd,
+'condition, 'disabled, 'type, or 'data.  'data returns a list
+of 'count, 'cmd and 'condition.  Defaults to 'index."
   (cond
    ;; Frame
    ((eq item 'line) (nth 1 (car bp)))
@@ -3403,12 +3395,11 @@ Defaults to 'index."
    (t (nth 0 (car (cdr bp))))))
 
 (defun idlwave-shell-filter-bp (&optional no-show)
-  "Get the breakpoints from `idlwave-shell-command-output'.  Create
-`idlwave-shell-bp-alist' updating breakpoint count and command data
-from previous breakpoint list.  If NO-SHOW is set, don't update the
-breakpoint overlays."
-  (save-excursion
-    (set-buffer (get-buffer-create idlwave-shell-bp-buffer))
+  "Get the breakpoints from `idlwave-shell-command-output'.
+Create `idlwave-shell-bp-alist' updating breakpoint count and command
+data from previous breakpoint list.  If NO-SHOW is set, don't update
+the breakpoint overlays."
+  (with-current-buffer (get-buffer-create idlwave-shell-bp-buffer)
     (erase-buffer)
     (insert idlwave-shell-command-output)
     (goto-char (point-min))
@@ -3487,10 +3478,11 @@ If BP frame is in `idlwave-shell-bp-alist' updates the breakpoint data."
   (setcdr (cdr bp) data))
 
 (defun idlwave-shell-bp (frame &optional data module)
-  "Create a breakpoint structure containing FRAME and DATA.  Second
-and third args, DATA and MODULE, are optional.  Returns a breakpoint
-of the format used in `idlwave-shell-bp-alist'.  Can be used in commands
-attempting match a breakpoint in `idlwave-shell-bp-alist'."
+  "Create a breakpoint structure containing FRAME and DATA.
+Second and third args, DATA and MODULE, are optional.  Returns
+a breakpoint of the format used in `idlwave-shell-bp-alist'.
+Can be used in commands attempting match a breakpoint in
+`idlwave-shell-bp-alist'."
   (cons frame ;; (file line)
 	(cons (list nil module) ;; (index_id (module type) | module)
 	      data)))           ;; (count command condition disabled)
@@ -3501,7 +3493,7 @@ attempting match a breakpoint in `idlwave-shell-bp-alist'."
 (defun idlwave-shell-sources-bp (bp)
   "Check `idlwave-shell-sources-alist' for source of breakpoint using BP.
 If an equivalency is found, return the IDL internal source name.
-Otherwise return the filename in bp."
+Otherwise return the filename in BP."
   (let*
       ((bp-file (idlwave-shell-bp-get bp 'file))
        (bp-module (idlwave-shell-bp-get bp 'module))
@@ -3619,7 +3611,7 @@ considered the new breakpoint if the file name of frame matches."
       (message "Failed to identify breakpoint in IDL"))))
 
 (defvar idlwave-shell-bp-overlays nil
-  "Alist of overlays marking breakpoints")
+  "Alist of overlays marking breakpoints.")
 (defvar idlwave-shell-bp-glyph)
 
 (defvar idlwave-shell-debug-line-map (make-sparse-keymap))
@@ -3910,8 +3902,7 @@ handled by this command."
      (idlwave-shell-last-save-and-action-file
       (if (setq buf (idlwave-get-buffer-visiting
 		     idlwave-shell-last-save-and-action-file))
-	  (save-excursion
-	    (set-buffer buf)
+	  (with-current-buffer buf
 	    (save-buffer))))
      (t (setq idlwave-shell-last-save-and-action-file
 	      (read-file-name "File: ")))))
@@ -3950,7 +3941,7 @@ handled by this command."
   "Alist of IDL procedure names and compiled source files.
 Elements of the alist have the form:
 
-  (module name . (source-file-truename idlwave-internal-filename)).")
+  (module name . (source-file-truename idlwave-internal-filename))")
 
 (defun idlwave-shell-module-source-query (module &optional type)
   "Determine the source file for a given module.
@@ -3963,7 +3954,7 @@ Query as a function if TYPE set to something beside 'pro."
        'hide 'wait)))
 
 (defun idlwave-shell-module-source-filter (module)
-  "Get module source, and update idlwave-shell-sources-alist."
+  "Get module source, and update `idlwave-shell-sources-alist'."
   (let ((old (assoc (upcase module) idlwave-shell-sources-alist))
 	filename)
     (when (string-match "\.PATH *[\n\r]\\([^%][^\r\n]+\\)[\n\r]"
@@ -3988,11 +3979,10 @@ Queries IDL using the string in `idlwave-shell-sources-query'."
 
 (defun idlwave-shell-sources-filter ()
   "Get source files from `idlwave-shell-sources-query' output.
-Create `idlwave-shell-sources-alist' consisting of
-list elements of the form:
- (module name . (source-file-truename idlwave-internal-filename))."
-  (save-excursion
-    (set-buffer (get-buffer-create idlwave-shell-bp-buffer))
+Create `idlwave-shell-sources-alist' consisting of list elements
+of the form:
+ (module name . (source-file-truename idlwave-internal-filename))"
+  (with-current-buffer (get-buffer-create idlwave-shell-bp-buffer)
     (erase-buffer)
     (insert idlwave-shell-command-output)
     (goto-char (point-min))
@@ -4064,8 +4054,7 @@ list elements of the form:
   "Move point to next IDL syntax error."
   (interactive)
   (let (frame col)
-    (save-excursion
-      (set-buffer idlwave-shell-error-buffer)
+    (with-current-buffer idlwave-shell-error-buffer
       (goto-char idlwave-shell-error-last)
       (if (or
 	   (re-search-forward idlwave-shell-syntax-error nil t)
@@ -4106,7 +4095,7 @@ Otherwise, just expand the file name."
 ;; Keybindings ------------------------------------------------------------
 
 (defvar idlwave-shell-mode-map (copy-keymap comint-mode-map)
-  "Keymap for idlwave-mode.")
+  "Keymap for `idlwave-mode'.")
 (defvar idlwave-shell-electric-debug-mode-map (make-sparse-keymap))
 (defvar idlwave-shell-mode-prefix-map (make-sparse-keymap))
 (fset 'idlwave-shell-mode-prefix-map idlwave-shell-mode-prefix-map)
@@ -4343,7 +4332,7 @@ idlwave-shell-electric-debug-mode-map)
 
 ;; easy-mmode defines electric-debug-mode for us, so we need to advise it.
 (defadvice idlwave-shell-electric-debug-mode (after print-enter activate)
-  "Print out an entrance message"
+  "Print out an entrance message."
   (when idlwave-shell-electric-debug-mode
     (message
      "Electric Debugging mode entered.  Press [C-?] for help, [q] to quit"))
@@ -4522,14 +4511,13 @@ idlwave-shell-electric-debug-mode-map)
       (easy-menu-define
        idlwave-shell-mode-menu idlwave-shell-mode-map "IDL shell menus"
        idlwave-shell-menu-def)
-      (save-excursion
-	(mapc (lambda (buf)
-		(set-buffer buf)
-		(if (eq major-mode 'idlwave-mode)
-		    (progn
-		      (easy-menu-remove idlwave-mode-debug-menu)
-		      (easy-menu-add idlwave-mode-debug-menu))))
-	      (buffer-list)))))
+      (save-current-buffer
+	(dolist (buf (buffer-list))
+          (set-buffer buf)
+          (if (eq major-mode 'idlwave-mode)
+              (progn
+                (easy-menu-remove idlwave-mode-debug-menu)
+                (easy-menu-add idlwave-mode-debug-menu)))))))
 
 ;; The Breakpoint Glyph -------------------------------------------------------
 
@@ -4690,12 +4678,12 @@ static char * file[] = {
 (provide 'idlw-shell)
 (provide 'idlwave-shell)
 
-;;; Load the toolbar when wanted by the user.
+;; Load the toolbar when wanted by the user.
 
 (autoload 'idlwave-toolbar-toggle "idlw-toolbar"
-  "Toggle the IDLWAVE toolbar")
+  "Toggle the IDLWAVE toolbar.")
 (autoload 'idlwave-toolbar-add-everywhere "idlw-toolbar"
-  "Add IDLWAVE toolbar")
+  "Add IDLWAVE toolbar.")
 (defun idlwave-shell-toggle-toolbar ()
   "Toggle the display of the debugging toolbar."
   (interactive)

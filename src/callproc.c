@@ -1,6 +1,6 @@
 /* Synchronous subprocess invocation for GNU Emacs.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -23,6 +23,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <signal.h>
 #include <errno.h>
 #include <stdio.h>
+#include <setjmp.h>
 
 #ifndef USE_CRT_DLL
 extern int errno;
@@ -793,13 +794,11 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
 	if (process_coding.mode & CODING_MODE_LAST_BLOCK)
 	  break;
 
-#if (CALLPROC_BUFFER_SIZE_MIN != CALLPROC_BUFFER_SIZE_MAX)
 	/* Make the buffer bigger as we continue to read more data,
 	   but not past CALLPROC_BUFFER_SIZE_MAX.  */
 	if (bufsize < CALLPROC_BUFFER_SIZE_MAX && total_read > 32 * bufsize)
 	  if ((bufsize *= 2) > CALLPROC_BUFFER_SIZE_MAX)
 	    bufsize = CALLPROC_BUFFER_SIZE_MAX;
-#endif
 
 	if (display_p)
 	  {
@@ -1127,16 +1126,14 @@ child_setup (in, out, err, new_argv, set_pgrp, current_dir)
        at least check.  */
     if (chdir (temp) < 0)
       _exit (errno);
-#endif
-
-#ifdef DOS_NT
+#else /* DOS_NT */
     /* Get past the drive letter, so that d:/ is left alone.  */
     if (i > 2 && IS_DEVICE_SEP (temp[1]) && IS_DIRECTORY_SEP (temp[2]))
       {
 	temp += 2;
 	i -= 2;
       }
-#endif
+#endif /* DOS_NT */
 
     /* Strip trailing slashes for PWD, but leave "/" and "//" alone.  */
     while (i > 2 && IS_DIRECTORY_SEP (temp[i - 1]))

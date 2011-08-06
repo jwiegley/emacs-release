@@ -2,11 +2,11 @@ This is ../../info/emacs, produced by makeinfo version 4.11 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.1.
+updated for Emacs version 23.2.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,6 +25,186 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Emacs: (emacs).	The extensible self-documenting text editor.
 END-INFO-DIR-ENTRY
+
+
+File: emacs,  Node: Recognize Coding,  Next: Specify Coding,  Prev: Coding Systems,  Up: International
+
+26.7 Recognizing Coding Systems
+===============================
+
+Whenever Emacs reads a given piece of text, it tries to recognize which
+coding system to use.  This applies to files being read, output from
+subprocesses, text from X selections, etc.  Emacs can select the right
+coding system automatically most of the time--once you have specified
+your preferences.
+
+   Some coding systems can be recognized or distinguished by which byte
+sequences appear in the data.  However, there are coding systems that
+cannot be distinguished, not even potentially.  For example, there is no
+way to distinguish between Latin-1 and Latin-2; they use the same byte
+values with different meanings.
+
+   Emacs handles this situation by means of a priority list of coding
+systems.  Whenever Emacs reads a file, if you do not specify the coding
+system to use, Emacs checks the data against each coding system,
+starting with the first in priority and working down the list, until it
+finds a coding system that fits the data.  Then it converts the file
+contents assuming that they are represented in this coding system.
+
+   The priority list of coding systems depends on the selected language
+environment (*note Language Environments::).  For example, if you use
+French, you probably want Emacs to prefer Latin-1 to Latin-2; if you use
+Czech, you probably want Latin-2 to be preferred.  This is one of the
+reasons to specify a language environment.
+
+   However, you can alter the coding system priority list in detail
+with the command `M-x prefer-coding-system'.  This command reads the
+name of a coding system from the minibuffer, and adds it to the front
+of the priority list, so that it is preferred to all others.  If you
+use this command several times, each use adds one element to the front
+of the priority list.
+
+   If you use a coding system that specifies the end-of-line conversion
+type, such as `iso-8859-1-dos', what this means is that Emacs should
+attempt to recognize `iso-8859-1' with priority, and should use DOS
+end-of-line conversion when it does recognize `iso-8859-1'.
+
+   Sometimes a file name indicates which coding system to use for the
+file.  The variable `file-coding-system-alist' specifies this
+correspondence.  There is a special function
+`modify-coding-system-alist' for adding elements to this list.  For
+example, to read and write all `.txt' files using the coding system
+`chinese-iso-8bit', you can execute this Lisp expression:
+
+     (modify-coding-system-alist 'file "\\.txt\\'" 'chinese-iso-8bit)
+
+The first argument should be `file', the second argument should be a
+regular expression that determines which files this applies to, and the
+third argument says which coding system to use for these files.
+
+   Emacs recognizes which kind of end-of-line conversion to use based on
+the contents of the file: if it sees only carriage-returns, or only
+carriage-return linefeed sequences, then it chooses the end-of-line
+conversion accordingly.  You can inhibit the automatic use of
+end-of-line conversion by setting the variable `inhibit-eol-conversion'
+to non-`nil'.  If you do that, DOS-style files will be displayed with
+the `^M' characters visible in the buffer; some people prefer this to
+the more subtle `(DOS)' end-of-line type indication near the left edge
+of the mode line (*note eol-mnemonic: Mode Line.).
+
+   By default, the automatic detection of coding system is sensitive to
+escape sequences.  If Emacs sees a sequence of characters that begin
+with an escape character, and the sequence is valid as an ISO-2022
+code, that tells Emacs to use one of the ISO-2022 encodings to decode
+the file.
+
+   However, there may be cases that you want to read escape sequences
+in a file as is.  In such a case, you can set the variable
+`inhibit-iso-escape-detection' to non-`nil'.  Then the code detection
+ignores any escape sequences, and never uses an ISO-2022 encoding.  The
+result is that all escape sequences become visible in the buffer.
+
+   The default value of `inhibit-iso-escape-detection' is `nil'.  We
+recommend that you not change it permanently, only for one specific
+operation.  That's because many Emacs Lisp source files in the Emacs
+distribution contain non-ASCII characters encoded in the coding system
+`iso-2022-7bit', and they won't be decoded correctly when you visit
+those files if you suppress the escape sequence detection.
+
+   The variables `auto-coding-alist', `auto-coding-regexp-alist' and
+`auto-coding-functions' are the strongest way to specify the coding
+system for certain patterns of file names, or for files containing
+certain patterns; these variables even override `-*-coding:-*-' tags in
+the file itself.  Emacs uses `auto-coding-alist' for tar and archive
+files, to prevent it from being confused by a `-*-coding:-*-' tag in a
+member of the archive and thinking it applies to the archive file as a
+whole.  Likewise, Emacs uses `auto-coding-regexp-alist' to ensure that
+RMAIL files, whose names in general don't match any particular pattern,
+are decoded correctly.  One of the builtin `auto-coding-functions'
+detects the encoding for XML files.
+
+   When you get new mail in Rmail, each message is translated
+automatically from the coding system it is written in, as if it were a
+separate file.  This uses the priority list of coding systems that you
+have specified.  If a MIME message specifies a character set, Rmail
+obeys that specification, unless `rmail-decode-mime-charset' is `nil'.
+For reading and saving Rmail files themselves, Emacs uses the coding
+system specified by the variable `rmail-file-coding-system'.  The
+default value is `nil', which means that Rmail files are not translated
+(they are read and written in the Emacs internal character code).
+
+
+File: emacs,  Node: Specify Coding,  Next: Output Coding,  Prev: Recognize Coding,  Up: International
+
+26.8 Specifying a File's Coding System
+======================================
+
+If Emacs recognizes the encoding of a file incorrectly, you can reread
+the file using the correct coding system by typing `C-x <RET> r
+CODING-SYSTEM <RET>'.  To see what coding system Emacs actually used to
+decode the file, look at the coding system mnemonic letter near the
+left edge of the mode line (*note Mode Line::), or type `C-h C <RET>'.
+
+   You can specify the coding system for a particular file in the file
+itself, using the `-*-...-*-' construct at the beginning, or a local
+variables list at the end (*note File Variables::).  You do this by
+defining a value for the "variable" named `coding'.  Emacs does not
+really have a variable `coding'; instead of setting a variable, this
+uses the specified coding system for the file.  For example, `-*-mode:
+C; coding: latin-1;-*-' specifies use of the Latin-1 coding system, as
+well as C mode.  When you specify the coding explicitly in the file,
+that overrides `file-coding-system-alist'.
+
+
+File: emacs,  Node: Output Coding,  Next: Text Coding,  Prev: Specify Coding,  Up: International
+
+26.9 Choosing Coding Systems for Output
+=======================================
+
+Once Emacs has chosen a coding system for a buffer, it stores that
+coding system in `buffer-file-coding-system'.  That makes it the
+default for operations that write from this buffer into a file, such as
+`save-buffer' and `write-region'.  You can specify a different coding
+system for further file output from the buffer using
+`set-buffer-file-coding-system' (*note Text Coding::).
+
+   You can insert any character Emacs supports into any Emacs buffer,
+but most coding systems can only handle a subset of these characters.
+Therefore, it's possible that the characters you insert cannot be
+encoded with the coding system that will be used to save the buffer.
+For example, you could visit a text file in Polish, encoded in
+`iso-8859-2', and add some Russian words to it.  When you save that
+buffer, Emacs cannot use the current value of
+`buffer-file-coding-system', because the characters you added cannot be
+encoded by that coding system.
+
+   When that happens, Emacs tries the most-preferred coding system (set
+by `M-x prefer-coding-system' or `M-x set-language-environment').  If
+that coding system can safely encode all of the characters in the
+buffer, Emacs uses it, and stores its value in
+`buffer-file-coding-system'.  Otherwise, Emacs displays a list of
+coding systems suitable for encoding the buffer's contents, and asks
+you to choose one of those coding systems.
+
+   If you insert the unsuitable characters in a mail message, Emacs
+behaves a bit differently.  It additionally checks whether the
+most-preferred coding system is recommended for use in MIME messages;
+if not, Emacs tells you that the most-preferred coding system is not
+recommended and prompts you for another coding system.  This is so you
+won't inadvertently send a message encoded in a way that your
+recipient's mail software will have difficulty decoding.  (You can
+still use an unsuitable coding system if you type its name in response
+to the question.)
+
+   When you send a message with Message mode (*note Sending Mail::),
+Emacs has four different ways to determine the coding system to use for
+encoding the message text.  It tries the buffer's own value of
+`buffer-file-coding-system', if that is non-`nil'.  Otherwise, it uses
+the value of `sendmail-coding-system', if that is non-`nil'.  The third
+way is to use the default coding system for new files, which is
+controlled by your choice of language environment, if that is
+non-`nil'.  If all of these three values are `nil', Emacs encodes
+outgoing mail using the Latin-1 coding system.
 
 
 File: emacs,  Node: Text Coding,  Next: Communication Coding,  Prev: Output Coding,  Up: International
@@ -86,12 +266,12 @@ has no effect.
    An easy way to visit a file with no conversion is with the `M-x
 find-file-literally' command.  *Note Visiting::.
 
-   The variable `default-buffer-file-coding-system' specifies the
-choice of coding system to use when you create a new file.  It applies
-when you find a new file, and when you create a buffer and then save it
-in a file.  Selecting a language environment typically sets this
-variable to a good choice of default coding system for that language
-environment.
+   The default value of the variable `buffer-file-coding-system'
+specifies the choice of coding system to use when you create a new file.
+It applies when you find a new file, and when you create a buffer and
+then save it in a file.  Selecting a language environment typically sets
+this variable to a good choice of default coding system for that
+language environment.
 
    If you visit a file with a wrong coding system, you can correct this
 with `C-x <RET> r' (`revert-buffer-with-coding-system').  This visits
@@ -432,7 +612,7 @@ GB2312 characters has a wild card `*' in the FAMILY field.
 fontset is called `create-fontset-from-fontset-spec'.  You can also
 call this function explicitly to create a fontset.
 
-   *Note Font X::, for more information about font naming in X.
+   *Note Fonts::, for more information about font naming.
 
 
 File: emacs,  Node: Modifying Fontsets,  Next: Undisplayable Characters,  Prev: Defining Fontsets,  Up: International
@@ -500,23 +680,29 @@ File: emacs,  Node: Unibyte Mode,  Next: Charsets,  Prev: Undisplayable Characte
 The ISO 8859 Latin-N character sets define character codes in the range
 0240 to 0377 octal (160 to 255 decimal) to handle the accented letters
 and punctuation needed by various European languages (and some
-non-European ones).  If you disable multibyte characters, Emacs can
-still handle _one_ of these character codes at a time.  To specify
-_which_ of these codes to use, invoke `M-x set-language-environment'
-and specify a suitable language environment such as `Latin-N'.
+non-European ones).  Note that Emacs considers bytes with codes in this
+range as raw bytes, not as characters, even in a unibyte session, i.e.
+if you disable multibyte characters.  However, Emacs can still handle
+these character codes as if they belonged to _one_ of the single-byte
+character sets at a time.  To specify _which_ of these codes to use,
+invoke `M-x set-language-environment' and specify a suitable language
+environment such as `Latin-N'.
 
    For more information about unibyte operation, see *note Enabling
 Multibyte::.  Note particularly that you probably want to ensure that
 your initialization files are read as unibyte if they contain non-ASCII
 characters.
 
-   Emacs can also display those characters, provided the terminal or
-font in use supports them.  This works automatically.  Alternatively,
-on a graphical display, Emacs can also display single-byte characters
-through fontsets, in effect by displaying the equivalent multibyte
-characters according to the current language environment.  To request
-this, set the variable `unibyte-display-via-language-environment' to a
-non-`nil' value.
+   Emacs can also display bytes in the range 160 to 255 as readable
+characters, provided the terminal or font in use supports them.  This
+works automatically.  On a graphical display, Emacs can also display
+single-byte characters through fontsets, in effect by displaying the
+equivalent multibyte characters according to the current language
+environment.  To request this, set the variable
+`unibyte-display-via-language-environment' to a non-`nil' value.  Note
+that setting this only affects how these bytes are displayed, but does
+not change the fundamental fact that Emacs treats them as raw bytes,
+not as characters.
 
    If your terminal does not support display of the Latin-1 character
 set, Emacs can display these characters as ASCII sequences which at
@@ -574,46 +760,42 @@ File: emacs,  Node: Charsets,  Prev: Unibyte Mode,  Up: International
 26.19 Charsets
 ==============
 
-Emacs defines most of popular character sets (e.g. ascii, iso-8859-1,
-cp1250, big5, unicode) as "charsets" and a few of its own charsets
-(e.g. emacs, unicode-bmp, eight-bit).  All supported characters belong
-to one or more charsets.  Usually you don't have to take care of
-"charset", but knowing about it may help understanding the behavior of
-Emacs in some cases.
+In Emacs, "charset" is short for "character set".  Emacs supports most
+popular charsets (such as `ascii', `iso-8859-1', `cp1250', `big5', and
+`unicode'), in addition to some charsets of its own (such as `emacs',
+`unicode-bmp', and `eight-bit').  All supported characters belong to
+one or more charsets.
 
-   One example is a font selection.  In each language environment,
-charsets have different priorities.  Emacs, at first, tries to use a
-font that matches with charsets of higher priority.  For instance, in
-Japanese language environment, the charset `japanese-jisx0208' has the
-highest priority (*note Describe Language Environment::).  So, Emacs
-tries to use a font whose `registry' property is "JISX0208.1983-0" for
-characters belonging to that charset.
+   Emacs normally "does the right thing" with respect to charsets, so
+that you don't have to worry about them.  However, it is sometimes
+helpful to know some of the underlying details about charsets.
 
-   Another example is a use of `charset' text property.  When Emacs
-reads a file encoded in a coding systems that uses escape sequences to
-switch charsets (e.g. iso-2022-int-1), the buffer text keep the
-information of the original charset by `charset' text property.  By
-using this information, Emacs can write the file with the same byte
-sequence as the original.
+   One example is font selection (*note Fonts::).  Each language
+environment (*note Language Environments::) defines a "priority list"
+for the various charsets.  When searching for a font, Emacs initially
+attempts to find one that can display the highest-priority charsets.
+For instance, in the Japanese language environment, the charset
+`japanese-jisx0208' has the highest priority, so Emacs tries to use a
+font whose `registry' property is `JISX0208.1983-0'.
 
-   There are two commands for obtaining information about Emacs
+   There are two commands that can be used to obtain information about
 charsets.  The command `M-x list-charset-chars' prompts for a charset
 name, and displays all the characters in that character set.  The
-command `M-x describe-character-set' prompts for a charset name and
+command `M-x describe-character-set' prompts for a charset name, and
 displays information about that charset, including its internal
 representation within Emacs.
 
-   To display a list of all the supported charsets, type `M-x
+   To display a list of all supported charsets, type `M-x
 list-character-sets'.  The list gives the names of charsets and
-additional information to identity each charset (see ISO/IEC's this
-page <http://www.itscj.ipsj.or.jp/ISO-IR/> for the detail).  In the
-list, charsets are categorized into two; the normal charsets are listed
-first, and the supplementary charsets are listed last.  A charset in
-the latter category is used for defining another charset (as a parent
-or a subset), or was used only in Emacs of the older versions.
+additional information to identity each charset (see
+`http://www.itscj.ipsj.or.jp/ISO-IR/' for details).  In this list,
+charsets are divided into two categories: "normal charsets" are listed
+first, followed by "supplementary charsets".  A supplementary charset
+is one that is used to define another charset (as a parent or a
+subset), or to provide backward-compatibility for older Emacs versions.
 
    To find out which charset a character in the buffer belongs to, put
-point before it and type `C-u C-x ='.
+point before it and type `C-u C-x =' (*note International Chars::).
 
 
 File: emacs,  Node: Major Modes,  Next: Indentation,  Prev: International,  Up: Top
@@ -651,9 +833,9 @@ These include Lisp mode (which has several variants), C mode, Fortran
 mode, and others.  The remaining major modes are not intended for use
 on users' files; they are used in buffers created for specific purposes
 by Emacs, such as Dired mode for buffers made by Dired (*note Dired::),
-Mail mode for buffers made by `C-x m' (*note Sending Mail::), and Shell
-mode for buffers used for communicating with an inferior shell process
-(*note Interactive Shell::).
+Message mode for buffers made by `C-x m' (*note Sending Mail::), and
+Shell mode for buffers used for communicating with an inferior shell
+process (*note Interactive Shell::).
 
    Most programming-language major modes specify that only blank lines
 separate paragraphs.  This is to make the paragraph commands useful.
@@ -780,18 +962,29 @@ after `auto-mode-alist'.  By default, `magic-fallback-mode-alist'
 contains forms that check for image files, HTML/XML/SGML files, and
 Postscript files.
 
-   When you visit a file that does not specify a major mode to use, or
-when you create a new buffer with `C-x b', the variable
-`default-major-mode' specifies which major mode to use.  Normally its
-value is the symbol `fundamental-mode', which specifies Fundamental
-mode.  If `default-major-mode' is `nil', the major mode is taken from
-the previously current buffer.
+   Once a major mode is chosen, Emacs sets the value of the variable
+`major-mode' to the symbol for that major mode (e.g., `text-mode' for
+Text mode).  This is a per-buffer variable (*note Locals::); its
+buffer-local value is set automatically, and you should not change it
+yourself.
 
-   If you change the major mode of a buffer, you can go back to the
-major mode Emacs would choose automatically: use the command `M-x
-normal-mode' to do this.  This is the same function that `find-file'
-calls to choose the major mode.  It also processes the file's `-*-'
-line or local variables list (if any).  *Note File Variables::.
+   The default value of `major-mode' determines the major mode to use
+for files that do not specify a major mode, and for new buffers created
+with `C-x b'.  Normally, this default value is the symbol
+`fundamental-mode', which specifies Fundamental mode.  You can change
+it via the Customization interface (*note Easy Customization::), or by
+adding a line like this to your init file (*note Init File::):
+
+     (setq-default major-mode 'text-mode)
+
+If the default value of `major-mode' is `nil', the major mode is taken
+from the previously current buffer.
+
+   If you have changed the major mode of a buffer, you can return to
+the major mode Emacs would have chosen automatically, by typing `M-x
+normal-mode'.  This is the same function that `find-file' calls to
+choose the major mode.  It also processes the file's `-*-' line or
+local variables list (if any).  *Note File Variables::.
 
    The commands `C-x C-w' and `set-visited-file-name' change to a new
 major mode if the new file name implies a mode (*note Saving::).  (`C-x
@@ -843,27 +1036,31 @@ indentation.
      Indent from point to under an indentation point in the previous
      line.
 
-   In most major modes, the <TAB> key runs the command
-`indent-for-tab-command', which either performs indentation or inserts
-whitespace at point, depending on the situation.
+The <TAB> key runs `indent-for-tab-command' in most major modes (in C
+and related modes, <TAB> runs a separate command,
+`c-indent-line-or-region', which behaves similarly).  The major mode
+determines just what this entails.
 
-   In programming modes such as Lisp mode and C mode, <TAB> indents the
-current line if the region is inactive.  If the region is active, it
-indents every line in the region (*note Mark::).  Indentation means
-adding or removing some combination of space and tab characters
-("whitespace characters") at the start of the line, in a way that makes
-sense given the text in the preceding lines.  Exactly how indentation
-is performed depends on the major mode.  *Note Program Indent::.
+   In text modes, <TAB> inserts some combination of space and tab
+characters to advance point to the next tab stop (*note Tab Stops::).
+If the region is active and spans multiple lines, it advances the first
+character of each of those lines to the next tab stop (*note Using
+Region::).  For the purposes of this command, the position of the first
+non-whitespace character on the preceding line is treated as an
+additional tab stop.  Thus, you can use <TAB> to "align" point with the
+preceding line.
 
-   In text modes, <TAB> inserts some whitespace characters to advance
-point to the next tab stop (*note Tab Stops::).  For the purposes of
-this command, the position of the first non-whitespace character on the
-preceding line is treated as an additional tab stop.  You can therefore
-use <TAB> to "align" point with the preceding line.  If the region is
-active, <TAB> performs this action on every line in the region.
+   In programming modes, <TAB> adds or removes some combination of
+space and tab characters at the start of the line, in a way that makes
+sense given the text in the preceding lines.  If the region is active
+and spans multiple lines, all those lines are indented this way.  If
+point was initially within the current line's indentation, it is
+positioned after that indentation; otherwise, it remains at same point
+in the newly-indented text.  *Note Program Indent::.
 
-   Indentation is often performed with the help of "tab characters"
-(ASCII code 9), which are displayed as a stretch of empty space
+   Normally, indentation commands insert (or remove) an optimal mix of
+"tab characters" and spaces to align to the desired column.  Tab
+characters (ASCII code 9) are displayed as a stretch of empty space
 extending to the next "display tab stop".  By default, there is one
 display tab stop every eight columns; the number of columns is
 determined by the variable `tab-width'.  You can insert a single tab
@@ -874,10 +1071,18 @@ characters around point, inserting just enough whitespace to advance
 point up to the next tab stop.  By default, this involves deleting the
 existing whitespace and inserting a single tab character.
 
-   Normally, most of these indentation commands insert an optimal mix
-of tabs and spaces to align to the desired column.  *Note Just
-Spaces::, for how to disable use of tabs.  However, `C-q <TAB>' always
-inserts a tab, even when tabs are disabled for the indentation commands.
+   *Note Just Spaces::, for how to disable use of tabs.  However, `C-q
+<TAB>' always inserts a tab, even when tabs are disabled for the
+indentation commands.
+
+   The variable `tab-always-indent' tweaks the behavior of the <TAB>
+(`indent-for-tab-command') command.  The default value, `t', gives the
+behavior described above.  If you change the value to the symbol
+`complete', then <TAB> first tries to indent the current line, and if
+the line was already indented, it tries to complete the text at point
+(*note Symbol Completion::).  If the value is `nil', then <TAB> indents
+the current line only if point is at the left margin or in the line's
+indentation; otherwise, it inserts a real tab character.
 
 * Menu:
 
@@ -1040,10 +1245,11 @@ provides special commands for operating on text with an outline
 structure.
 
    Emacs has other major modes for text which contains "embedded"
-commands, such as TeX and LaTeX (*note TeX Mode::); HTML, SGML, and XML
-(*note HTML Mode::); and Groff and Nroff (*note Nroff Mode::).  In
-addition, you can edit formatted text in WYSIWYG style ("what you see
-is what you get"), using Enriched mode (*note Formatted Text::).
+commands, such as TeX and LaTeX (*note TeX Mode::); HTML and SGML
+(*note HTML Mode::); XML (*note nXML Mode: (nxml-mode)Top.); and Groff
+and Nroff (*note Nroff Mode::).  In addition, you can edit formatted
+text in WYSIWYG style ("what you see is what you get"), using Enriched
+mode (*note Formatted Text::).
 
    If you need to edit pictures made out of text characters (commonly
 referred to as "ASCII art"), use Picture mode, a special major mode for
@@ -1063,7 +1269,7 @@ editing such pictures.  *Note Picture Mode::.
 * Text Mode::	        The major modes for editing text files.
 * Outline Mode::        Editing outlines.
 * TeX Mode::	        Editing input to the formatter TeX.
-* HTML Mode::           Editing HTML, SGML, and XML files.
+* HTML Mode::           Editing HTML and SGML files.
 * Nroff Mode::	        Editing input to the formatter nroff.
 * Formatted Text::      Editing formatted text directly in WYSIWYG fashion.
 * Text Based Tables::   Editing text-based tables in WYSIWYG fashion.
@@ -1836,9 +2042,9 @@ or `C-M-i'.
    Entering Text mode runs the hook `text-mode-hook'.  Other major
 modes related to Text mode also run this hook, followed by hooks of
 their own; this includes Paragraph-Indent Text mode, Nroff mode, TeX
-mode, Outline mode, and Mail mode.  Hook functions on `text-mode-hook'
-can look at the value of `major-mode' to see which of these modes is
-actually being entered.  *Note Hooks::.
+mode, Outline mode, and Message mode.  Hook functions on
+`text-mode-hook' can look at the value of `major-mode' to see which of
+these modes is actually being entered.  *Note Hooks::.
 
 
 File: emacs,  Node: Outline Mode,  Next: TeX Mode,  Prev: Text Mode,  Up: Text
@@ -2531,20 +2737,12 @@ Latin-1 encoded files and TeX-encoded equivalents.
 
 File: emacs,  Node: HTML Mode,  Next: Nroff Mode,  Prev: TeX Mode,  Up: Text
 
-29.10 SGML, XML, and HTML Modes
-===============================
+29.10 SGML and HTML Modes
+=========================
 
-The major modes for SGML, XML, and HTML provide indentation support and
-commands for operating on tags.  XML mode is actually identical to SGML
-mode (to be precise, `xml-mode' is an alias for `sgml-mode'), because
-XML is a strict subset of SGML.  HTML mode is a slightly customized
+The major modes for SGML and HTML provide indentation support and
+commands for operating on tags.  HTML mode is a slightly customized
 variant of SGML mode.
-
-   In XML, every opening tag must have an explicit closing tag.  When
-the variable `sgml-xml-mode' is non-`nil', the tag insertion commands
-described below always insert explicit closing tags as well.  When you
-visit a file, Emacs determines whether it is XML by examining the file
-contents, and sets `sgml-xml-mode' accordingly.
 
 `C-c C-n'
      Interactively specify a special character and insert the SGML
@@ -2605,12 +2803,20 @@ contents, and sets `sgml-xml-mode' accordingly.
      Toggle the visibility of existing tags in the buffer.  This can be
      used as a cheap preview.
 
-   Emacs also provides a more advanced mode for editing XML documents,
-called nXML mode (`nxml-mode').  nXML mode is aware of many existing
-XML schema, and uses them to provide completion of XML elements via
-`C-<RET>' or `M-<TAB>', as well as "on-the-fly" validation of XML, with
-errors highlighted via Font Lock (*note Font Lock::).  It is described
-in its own manual.  *Note nXML Mode: (nxml-mode)Top.
+   The default mode for editing XML documents is called nXML mode
+(`xml-mode' or `nxml-mode').  This is a powerful major mode that can
+recognize many existing XML schema and use them to provide completion
+of XML elements via `C-<RET>' or `M-<TAB>', as well as "on-the-fly" XML
+validation with error highlighting.  It is described in its own manual.
+*Note nXML Mode: (nxml-mode)Top.
+
+   However, you can also use SGML mode to edit XML, since XML is a
+strict subset of SGML.  In XML, every opening tag must have an explicit
+closing tag.  When the variable `sgml-xml-mode' is non-`nil', the tag
+insertion commands described above always insert explicit closing tags
+as well.  When you visit a file in SGML mode, Emacs determines whether
+it is XML by examining the file contents, and sets `sgml-xml-mode'
+accordingly.
 
 
 File: emacs,  Node: Nroff Mode,  Next: Formatted Text,  Prev: HTML Mode,  Up: Text
@@ -3601,6 +3807,7 @@ these features can
 * Hideshow::            Displaying blocks selectively.
 * Symbol Completion::   Completion on symbol names of your program or language.
 * Glasses::             Making identifiersLikeThis more readable.
+* Semantic::            Suite of editing tools based on source code parsing.
 * Misc for Programs::   Other Emacs features useful for editing programs.
 * C Modes::             Special commands of C, C++, Objective-C,
                           Java, and Pike modes.
@@ -3632,13 +3839,14 @@ typing `M-x L-mode <RET>'.  *Note Choosing Modes::.
    The existing programming language major modes include Lisp, Scheme
 (a variant of Lisp) and the Scheme-based DSSSL expression language,
 Ada, ASM, AWK, C, C++, Delphi (Object Pascal), Fortran, Icon, IDL
-(CORBA), IDLWAVE, Java, Metafont (TeX's companion for font creation),
-Modula2, Objective-C, Octave, Pascal, Perl, Pike, PostScript, Prolog,
-Python, Ruby, Simula, Tcl, and VHDL.  An alternative mode for Perl is
-called CPerl mode.  Modes are available for the scripting languages of
-the common GNU and Unix shells, VMS DCL, and MS-DOS/MS-Windows `BAT'
-files.  There are also major modes for editing makefiles, DNS master
-files, and various sorts of configuration files.
+(CORBA), IDLWAVE, Java, Javascript, Metafont (TeX's companion for font
+creation), Modula2, Objective-C, Octave, Pascal, Perl, Pike,
+PostScript, Prolog, Python, Ruby, Simula, Tcl, and VHDL.  An
+alternative mode for Perl is called CPerl mode.  Modes are available
+for the scripting languages of the common GNU and Unix shells, VMS DCL,
+and MS-DOS/MS-Windows `BAT' files.  There are also major modes for
+editing makefiles, DNS master files, and various sorts of configuration
+files.
 
    In most programming languages, indentation should vary from line to
 line to illustrate the structure of the program.  So the major modes
@@ -4303,7 +4511,7 @@ to specify a fraction of a second.
 to search to find the matching opening delimiter.  If the match is not
 found in that distance, scanning stops, and nothing is displayed.  This
 is to prevent the scan for the matching delimiter from wasting lots of
-time when there is no match.  The default is 25600.
+time when there is no match.  The default is 102400.
 
    Show Paren mode provides a more powerful kind of automatic matching.
 Whenever point is before an opening delimiter or after a closing
@@ -4618,7 +4826,7 @@ program (and other programs it uses) are not generally available.
 completion based on the list of manual pages that are installed on your
 machine; the list of available manual pages is computed automatically
 the first time you invoke `woman'.  The word at point in the current
-buffer is used to suggest the default for the name the manual page.
+buffer is used to suggest the default for the name of the manual page.
 
    With a numeric argument, `M-x woman' recomputes the list of the
 manual pages used for completion.  This is useful if you add or delete
@@ -4779,7 +4987,7 @@ The command which implements this is `lisp-complete-symbol'.
 the spell-checker's dictionary.  *Note Spelling::.
 
 
-File: emacs,  Node: Glasses,  Next: Misc for Programs,  Prev: Symbol Completion,  Up: Programs
+File: emacs,  Node: Glasses,  Next: Semantic,  Prev: Symbol Completion,  Up: Programs
 
 30.9 Glasses minor mode
 =======================
@@ -4795,9 +5003,65 @@ to enable or disable the mode in the current buffer; you can also add
 in which you normally want to use Glasses mode.
 
 
-File: emacs,  Node: Misc for Programs,  Next: C Modes,  Prev: Glasses,  Up: Programs
+File: emacs,  Node: Semantic,  Next: Misc for Programs,  Prev: Glasses,  Up: Programs
 
-30.10 Other Features Useful for Editing Programs
+30.10 Semantic
+==============
+
+Semantic is a package that provides language-aware editing commands
+based on `source code parsers'.  This section provides a brief
+description of Semantic; for full details, see *note Semantic:
+(semantic)Top.
+
+   Most of the "language aware" features in Emacs, such as font lock
+(*note Font Lock::), rely on "rules of thumb"(1) that usually give good
+results but are never completely exact.  In contrast, the parsers used
+by Semantic have an exact understanding of programming language syntax.
+This allows Semantic to provide search, navigation, and completion
+commands that are powerful and precise.
+
+   To begin using Semantic, type `M-x semantic-mode' or click on the
+menu item named `Source Code Parsers (Semantic)' in the `Tools' menu.
+This enables Semantic mode, a global minor mode.
+
+   When Semantic mode is enabled, Emacs automatically attempts to
+parses each file you visit.  Currently, Semantic understands C, C++,
+Scheme, Javascript, Java, HTML, and Make.  Within each parsed buffer,
+the following commands are available:
+
+`C-c , j'
+     Prompt for the name of a function defined in the current file, and
+     move point there (`semantic-complete-jump-local').
+
+`C-c , J'
+     Prompt for the name of a function defined in any file Emacs has
+     parsed, and move point there (`semantic-complete-jump').
+
+`C-c , <SPC>'
+     Display a list of possible completions for the symbol at point
+     (`semantic-complete-analyze-inline').  This also activates a set
+     of special keybindings for choosing a completion: <RET> accepts
+     the current completion, `M-n' and `M-p' cycle through possible
+     completions, <TAB> completes as far as possible and then cycles,
+     and `C-g' or any other key aborts completion.
+
+`C-c , l'
+     Display a list of the possible completions of the symbol at point,
+     in another window (`semantic-analyze-possible-completions').
+
+In addition to the above commands, the Semantic package provides a
+variety of other ways to make use of parser information.  For instance,
+you can use it to display a list of completions when Emacs is idle.
+*Note Semantic: (semantic)Top, for details.
+
+   ---------- Footnotes ----------
+
+   (1) Regular expressions and syntax tables.
+
+
+File: emacs,  Node: Misc for Programs,  Next: C Modes,  Prev: Semantic,  Up: Programs
+
+30.11 Other Features Useful for Editing Programs
 ================================================
 
 A number of Emacs commands that aren't designed specifically for
@@ -4828,7 +5092,7 @@ Foldout::).
 
 File: emacs,  Node: C Modes,  Next: Asm Mode,  Prev: Misc for Programs,  Up: Programs
 
-30.11 C and Related Modes
+30.12 C and Related Modes
 =========================
 
 This section gives a brief description of the special features
@@ -4848,7 +5112,7 @@ special features.
 
 File: emacs,  Node: Motion in C,  Next: Electric C,  Up: C Modes
 
-30.11.1 C Mode Motion Commands
+30.12.1 C Mode Motion Commands
 ------------------------------
 
 This section describes commands for moving point, in C mode and related
@@ -4901,7 +5165,7 @@ modes.
 
 File: emacs,  Node: Electric C,  Next: Hungry Delete,  Prev: Motion in C,  Up: C Modes
 
-30.11.2 Electric C Characters
+30.12.2 Electric C Characters
 -----------------------------
 
 In C mode and related modes, certain printing characters are
@@ -4938,7 +5202,7 @@ directly.  *Note Custom Auto-newlines: (ccmode)Custom Auto-newlines.
 
 File: emacs,  Node: Hungry Delete,  Next: Other C Commands,  Prev: Electric C,  Up: C Modes
 
-30.11.3 Hungry Delete Feature in C
+30.12.3 Hungry Delete Feature in C
 ----------------------------------
 
 If you want to delete an entire block of whitespace at point, you can
@@ -4980,16 +5244,16 @@ Emacs.  `C-c C-d' is now bound to `c-hungry-delete-forward'.
 
 File: emacs,  Node: Other C Commands,  Prev: Hungry Delete,  Up: C Modes
 
-30.11.4 Other Commands for C Mode
+30.12.4 Other Commands for C Mode
 ---------------------------------
 
 `C-c C-w'
-`M-x c-subword-mode'
+`M-x subword-mode'
      Enable (or disable) "subword mode".  In subword mode, Emacs's word
      commands recognize upper case letters in `StudlyCapsIdentifiers'
      as word boundaries.  This is indicated by the flag `/w' on the
      mode line after the mode name (e.g. `C/law').  You can even use
-     `M-x c-subword-mode' in non-CC Mode buffers.
+     `M-x subword-mode' in non-CC Mode buffers.
 
      In the GNU project, we recommend using underscores to separate
      words within an identifier in C or C++, rather than using case
@@ -5093,7 +5357,7 @@ File: emacs,  Node: Other C Commands,  Prev: Hungry Delete,  Up: C Modes
 
 File: emacs,  Node: Asm Mode,  Next: Fortran,  Prev: C Modes,  Up: Programs
 
-30.12 Asm Mode
+30.13 Asm Mode
 ==============
 
 Asm mode is a major mode for editing files of assembler code.  It
@@ -5118,7 +5382,7 @@ comments in assembler syntax.
 
 File: emacs,  Node: Fortran,  Prev: Asm Mode,  Up: Programs
 
-30.13 Fortran Mode
+30.14 Fortran Mode
 ==================
 
 Fortran mode is meant for editing "fixed form" (and also "tab format")
@@ -5156,7 +5420,7 @@ runs the hook `fortran-mode-hook'.  *Note Hooks::.
 
 File: emacs,  Node: Fortran Motion,  Next: Fortran Indent,  Up: Fortran
 
-30.13.1 Motion Commands
+30.14.1 Motion Commands
 -----------------------
 
 In addition to the normal commands for moving by and operating on
@@ -5211,7 +5475,7 @@ move point to the start.
 
 File: emacs,  Node: Fortran Indent,  Next: Fortran Comments,  Prev: Fortran Motion,  Up: Fortran
 
-30.13.2 Fortran Indentation
+30.14.2 Fortran Indentation
 ---------------------------
 
 Special commands and features are needed for indenting fixed (or tab)
@@ -5230,7 +5494,7 @@ the required columns.
 
 File: emacs,  Node: ForIndent Commands,  Next: ForIndent Cont,  Up: Fortran Indent
 
-30.13.2.1 Fortran Indentation and Filling Commands
+30.14.2.1 Fortran Indentation and Filling Commands
 ..................................................
 
 `C-M-j'
@@ -5268,7 +5532,7 @@ point is in.  This removes any excess statement continuations.
 
 File: emacs,  Node: ForIndent Cont,  Next: ForIndent Num,  Prev: ForIndent Commands,  Up: Fortran Indent
 
-30.13.2.2 Continuation Lines
+30.14.2.2 Continuation Lines
 ............................
 
 Most Fortran 77 compilers allow two ways of writing continuation lines.
@@ -5313,7 +5577,7 @@ must always consist of one tab character.
 
 File: emacs,  Node: ForIndent Num,  Next: ForIndent Conv,  Prev: ForIndent Cont,  Up: Fortran Indent
 
-30.13.2.3 Line Numbers
+30.14.2.3 Line Numbers
 ......................
 
 If a number is the first non-whitespace in the line, Fortran
@@ -5336,7 +5600,7 @@ To turn off this feature, set the variable
 
 File: emacs,  Node: ForIndent Conv,  Next: ForIndent Vars,  Prev: ForIndent Num,  Up: Fortran Indent
 
-30.13.2.4 Syntactic Conventions
+30.14.2.4 Syntactic Conventions
 ...............................
 
 Fortran mode assumes that you follow certain conventions that simplify
@@ -5362,7 +5626,7 @@ followed.
 
 File: emacs,  Node: ForIndent Vars,  Prev: ForIndent Conv,  Up: Fortran Indent
 
-30.13.2.5 Variables for Fortran Indentation
+30.14.2.5 Variables for Fortran Indentation
 ...........................................
 
 Several additional variables control how Fortran indentation works:
@@ -5412,7 +5676,7 @@ in the following section.
 
 File: emacs,  Node: Fortran Comments,  Next: Fortran Autofill,  Prev: Fortran Indent,  Up: Fortran
 
-30.13.3 Fortran Comments
+30.14.3 Fortran Comments
 ------------------------
 
 The usual Emacs comment commands assume that a comment can follow a
@@ -5502,7 +5766,7 @@ from the context which one is meant.
 
 File: emacs,  Node: Fortran Autofill,  Next: Fortran Columns,  Prev: Fortran Comments,  Up: Fortran
 
-30.13.4 Auto Fill in Fortran Mode
+30.14.4 Auto Fill in Fortran Mode
 ---------------------------------
 
 Fortran mode has specialized support for Auto Fill mode, which is a
@@ -5526,7 +5790,7 @@ to `fortran-mode-hook'.  *Note Hooks::.
 
 File: emacs,  Node: Fortran Columns,  Next: Fortran Abbrev,  Prev: Fortran Autofill,  Up: Fortran
 
-30.13.5 Checking Columns in Fortran
+30.14.5 Checking Columns in Fortran
 -----------------------------------
 
 In standard Fortran 77, anything beyond column 72 is ignored.  Most
@@ -5592,7 +5856,7 @@ buffer.  This is the easiest way to get rid of old sequence numbers.
 
 File: emacs,  Node: Fortran Abbrev,  Prev: Fortran Columns,  Up: Fortran
 
-30.13.6 Fortran Keyword Abbrevs
+30.14.6 Fortran Keyword Abbrevs
 -------------------------------
 
 Fortran mode provides many built-in abbrevs for common keywords and
@@ -5923,8 +6187,11 @@ mode, which is a variant of Compilation mode (*note Compilation Mode::).
 `M-x grep-find'
 `M-x find-grep'
 `M-x rgrep'
-     Run `grep' via `find', with user-specified arguments, and collect
-     output in the buffer named `*grep*'.
+     Run `grep' via `find', and collect output in the buffer named
+     `*grep*'.
+
+`M-x zrgrep'
+     Run `zgrep' and collect output in the buffer named `*grep*'.
 
 `M-x kill-grep'
      Kill the running `grep' subprocess.
@@ -5963,12 +6230,13 @@ command, in *note Dired and Find::.
 grep) are more user-friendly versions of `grep' and `grep-find', which
 prompt separately for the regular expression to match, the files to
 search, and the base directory for the search.  Case sensitivity of the
-search is controlled by the current value of `case-fold-search'.
+search is controlled by the current value of `case-fold-search'.  The
+command `M-x zrgrep' is similar to `rgrep', but it calls `zgrep'
+instead of `grep' to search the contents of gzipped files.
 
    These commands build the shell commands based on the variables
 `grep-template' (for `lgrep') and `grep-find-template' (for `rgrep').
-
-   The files to search can use aliases defined in the variable
+The files to search can use aliases defined in the variable
 `grep-files-aliases'.
 
    Subdirectories listed in the variable
@@ -6338,12 +6606,11 @@ File: emacs,  Node: GDB Graphical Interface,  Prev: GUD Customization,  Up: Debu
 ------------------------------
 
 The command `gdb' starts GDB in a graphical interface, using Emacs
-windows for display program state information.  In effect, this makes
-Emacs into an IDE (interactive development environment).  With it, you
-do not need to use textual GDB commands; you can control the debugging
-session with the mouse.  For example, you can click in the fringe of a
-source buffer to set a breakpoint there, or on a stack frame in the
-stack buffer to select that frame.
+windows for display program state information.  With it, you do not
+need to use textual GDB commands; you can control the debugging session
+with the mouse.  For example, you can click in the fringe of a source
+buffer to set a breakpoint there, or on a stack frame in the stack
+buffer to select that frame.
 
    This mode requires telling GDB that its "screen size" is unlimited,
 so it sets the height and width accordingly.  For correct operation you
@@ -6363,6 +6630,7 @@ programs within one Emacs session.
 * Other GDB-UI Buffers::        Input/output, locals, registers,
                                 assembler, threads and memory buffers.
 * Watch Expressions::           Monitor variable values in the speedbar.
+* Reverse Debugging::           Execute and reverse debug your program.
 
 
 File: emacs,  Node: GDB-UI Layout,  Next: Source Buffers,  Up: GDB Graphical Interface
@@ -6384,7 +6652,7 @@ following frame layout:
      |--------------------------------+--------------------------------+
      |   Primary Source buffer        |   I/O buffer for debugged pgm  |
      |--------------------------------+--------------------------------+
-     |   Stack buffer                 |   Breakpoints/thread buffer    |
+     |   Stack buffer                 |   Breakpoints/Threads buffer   |
      +--------------------------------+--------------------------------+
 
    However, if `gdb-use-separate-io-buffer' is `nil', the I/O buffer
@@ -6401,7 +6669,7 @@ gdb-many-windows'.
 
    You may also specify additional GDB-related buffers to display,
 either in the same frame or a different one.  Select the buffers you
-want with the `GUD->GDB-windows' and `GUD->GDB-Frames' sub-menus.  If
+want with the `GUD->GDB-Windows' and `GUD->GDB-Frames' sub-menus.  If
 the menu-bar is unavailable, type `M-x gdb-display-BUFFERTYPE-buffer'
 or `M-x gdb-frame-BUFFERTYPE-buffer' respectively, where BUFFERTYPE is
 the relevant buffer type, such as `breakpoints'.  Most of these buffers
@@ -6499,7 +6767,7 @@ breakpoint which point is on.
 
    When `gdb-many-windows' is non-`nil', the breakpoints buffer shares
 its window with the threads buffer.  To switch from one to the other
-click with `mouse-1' on the relevant button in the header line.
+click with `Mouse-1' on the relevant button in the header line.
 
 
 File: emacs,  Node: Stack Buffer,  Next: Other GDB-UI Buffers,  Prev: Breakpoints Buffer,  Up: GDB Graphical Interface
@@ -6518,237 +6786,4 @@ buffer to that stack frame and type <RET> (`gdb-frames-select'), or
 click `Mouse-2' on a stack frame.  If the locals buffer is visible,
 selecting a stack frame updates it to display the local variables of the
 new frame.
-
-
-File: emacs,  Node: Other GDB-UI Buffers,  Next: Watch Expressions,  Prev: Stack Buffer,  Up: GDB Graphical Interface
-
-31.6.5.5 Other Buffers
-......................
-
-Input/Output Buffer
-     If the variable `gdb-use-separate-io-buffer' is non-`nil', the
-     program being debugged takes its input and displays its output
-     here.  Otherwise it uses the GUD buffer for that.  To toggle
-     whether GUD mode uses this buffer, do `M-x
-     gdb-use-separate-io-buffer'.  This takes effect when you next
-     restart the program you are debugging.
-
-     The history and replay commands from Shell mode are available here,
-     as are the commands to send signals to the debugged program.
-     *Note Shell Mode::.
-
-Locals Buffer
-     The locals buffer displays the values of local variables of the
-     current frame for simple data types (*note Frame Info: (gdb)Frame
-     Info.). Press <RET> or click `Mouse-2' on the value if you want to
-     edit it.
-
-     Arrays and structures display their type only.  With GDB 6.4 or
-     later, move point to their name and press <RET>, or alternatively
-     click `Mouse-2' there, to examine their values.  With earlier
-     versions of GDB, use `Mouse-2' or <RET> on the type description
-     (`[struct/union]' or `[array]').  *Note Watch Expressions::.
-
-Registers Buffer
-     The registers buffer displays the values held by the registers
-     (*note Registers: (gdb)Registers.).  Press <RET> or click
-     `Mouse-2' on a register if you want to edit its value.  With GDB
-     6.4 or later, recently changed register values display with
-     `font-lock-warning-face'.  With earlier versions of GDB, you can
-     press <SPC> to toggle the display of floating point registers
-     (`toggle-gdb-all-registers').
-
-Assembler Buffer
-     The assembler buffer displays the current frame as machine code.
-     An arrow points to the current instruction, and you can set and
-     remove breakpoints as in a source buffer.  Breakpoint icons also
-     appear in the fringe or margin.
-
-Threads Buffer
-     The threads buffer displays a summary of all threads currently in
-     your program (*note Threads: (gdb)Threads.).  Move point to any
-     thread in the list and press <RET> to select it
-     (`gdb-threads-select') and display the associated source in the
-     primary source buffer.  Alternatively, click `Mouse-2' on a thread
-     to select it.  If the locals buffer is visible, its contents
-     update to display the variables that are local in the new thread.
-
-     When there is more than one main thread and the threads buffer is
-     present, Emacs displays the selected thread number in the mode
-     line of many of the GDB-UI Buffers.
-
-Memory Buffer
-     The memory buffer lets you examine sections of program memory
-     (*note Memory: (gdb)Memory.).  Click `Mouse-1' on the appropriate
-     part of the header line to change the starting address or number
-     of data items that the buffer displays.  Alternatively, use `S' or
-     `N' respectively.  Click `Mouse-3' on the header line to select
-     the display format or unit size for these data items.
-
-   When `gdb-many-windows' is non-`nil', the threads buffer shares its
-window with the breakpoints buffer, and the locals buffer with the
-registers buffer.  To switch from one to the other click with `mouse-1'
-on the relevant button in the header line.
-
-
-File: emacs,  Node: Watch Expressions,  Prev: Other GDB-UI Buffers,  Up: GDB Graphical Interface
-
-31.6.5.6 Watch Expressions
-..........................
-
-If you want to see how a variable changes each time your program stops,
-move point into the variable name and click on the watch icon in the
-tool bar (`gud-watch') or type `C-x C-a C-w'.  If you specify a prefix
-argument, you can enter the variable name in the minibuffer.
-
-   Each watch expression is displayed in the speedbar.  Complex data
-types, such as arrays, structures and unions are represented in a tree
-format.  Leaves and simple data types show the name of the expression
-and its value and, when the speedbar frame is selected, display the
-type as a tooltip.  Higher levels show the name, type and address value
-for pointers and just the name and type otherwise.  Root expressions
-also display the frame address as a tooltip to help identify the frame
-in which they were defined.
-
-   To expand or contract a complex data type, click `Mouse-2' or press
-<SPC> on the tag to the left of the expression.  Emacs asks for
-confirmation before expanding the expression if its number of immediate
-children exceeds the value of the variable `gdb-max-children'.
-
-   To delete a complex watch expression, move point to the root
-expression in the speedbar and type `D' (`gdb-var-delete').
-
-   To edit a variable with a simple data type, or a simple element of a
-complex data type, move point there in the speedbar and type <RET>
-(`gdb-edit-value').  Or you can click `Mouse-2' on a value to edit it.
-Either way, this reads the new value using the minibuffer.
-
-   If you set the variable `gdb-show-changed-values' to non-`nil' (the
-default value), Emacs uses `font-lock-warning-face' to highlight values
-that have recently changed and `shadow' face to make variables which
-have gone out of scope less noticeable.  When a variable goes out of
-scope you can't edit its value.
-
-   If the variable `gdb-delete-out-of-scope' is non-`nil' (the default
-value), Emacs automatically deletes watch expressions which go out of
-scope.  Sometimes, when re-entering the same function, it may be useful
-to set this value to `nil' so that you don't need to recreate the watch
-expression.
-
-   If the variable `gdb-use-colon-colon-notation' is non-`nil', Emacs
-uses the `FUNCTION::VARIABLE' format.  This allows the user to display
-watch expressions which share the same variable name.  The default
-value is `nil'.
-
-   To automatically raise the speedbar every time the display of watch
-expressions updates, set `gdb-speedbar-auto-raise' to non-`nil'.  This
-can be useful if you are debugging with a full screen Emacs frame.
-
-
-File: emacs,  Node: Executing Lisp,  Next: Lisp Libraries,  Prev: Debuggers,  Up: Building
-
-31.7 Executing Lisp Expressions
-===============================
-
-Emacs has several different major modes for Lisp and Scheme.  They are
-the same in terms of editing commands, but differ in the commands for
-executing Lisp expressions.  Each mode has its own purpose.
-
-Emacs-Lisp mode
-     The mode for editing source files of programs to run in Emacs Lisp.
-     This mode defines `C-M-x' to evaluate the current defun.  *Note
-     Lisp Libraries::.
-
-Lisp Interaction mode
-     The mode for an interactive session with Emacs Lisp.  It defines
-     `C-j' to evaluate the sexp before point and insert its value in the
-     buffer.  *Note Lisp Interaction::.
-
-Lisp mode
-     The mode for editing source files of programs that run in Lisps
-     other than Emacs Lisp.  This mode defines `C-M-x' to send the
-     current defun to an inferior Lisp process.  *Note External Lisp::.
-
-Inferior Lisp mode
-     The mode for an interactive session with an inferior Lisp process.
-     This mode combines the special features of Lisp mode and Shell mode
-     (*note Shell Mode::).
-
-Scheme mode
-     Like Lisp mode but for Scheme programs.
-
-Inferior Scheme mode
-     The mode for an interactive session with an inferior Scheme
-     process.
-
-   Most editing commands for working with Lisp programs are in fact
-available globally.  *Note Programs::.
-
-
-File: emacs,  Node: Lisp Libraries,  Next: Lisp Eval,  Prev: Executing Lisp,  Up: Building
-
-31.8 Libraries of Lisp Code for Emacs
-=====================================
-
-Lisp code for Emacs editing commands is stored in files whose names
-conventionally end in `.el'.  This ending tells Emacs to edit them in
-Emacs-Lisp mode (*note Executing Lisp::).
-
-   Emacs Lisp code can be compiled into byte-code, which loads faster,
-takes up less space, and executes faster.  *Note Byte Compilation:
-(elisp)Byte Compilation.  By convention, the compiled code for a
-library goes in a separate file whose name ends in `.elc'.  Thus, the
-compiled code for `foo.el' goes in `foo.elc'.
-
-   To execute a file of Emacs Lisp code, use `M-x load-file'.  This
-command reads a file name using the minibuffer and then executes the
-contents of that file as Lisp code.  It is not necessary to visit the
-file first; in any case, this command reads the file as found on disk,
-not text in an Emacs buffer.
-
-   Once a file of Lisp code is installed in the Emacs Lisp library
-directories, users can load it using `M-x load-library'.  Programs can
-load it by calling `load', a more primitive function that is similar
-but accepts some additional arguments.
-
-   `M-x load-library' differs from `M-x load-file' in that it searches
-a sequence of directories and tries three file names in each directory.
-Suppose your argument is LIB; the three names are `LIB.elc', `LIB.el',
-and lastly just `LIB'.  If `LIB.elc' exists, it is by convention the
-result of compiling `LIB.el'; it is better to load the compiled file,
-since it will load and run faster.
-
-   If `load-library' finds that `LIB.el' is newer than `LIB.elc' file,
-it issues a warning, because it's likely that somebody made changes to
-the `.el' file and forgot to recompile it.  Nonetheless, it loads
-`LIB.elc'.  This is because people often leave unfinished edits the
-source file, and don't recompile it until they think it is ready to use.
-
-   The variable `load-path' specifies the sequence of directories
-searched by `M-x load-library'.  Its value should be a list of strings
-that are directory names; in addition, `nil' in this list stands for
-the current default directory.  (Generally, it is not a good idea to
-put `nil' in the list; if you find yourself wishing that `nil' were in
-the list, most likely what you really want is to do `M-x load-file'
-this once.)
-
-   The default value of `load-path' is a list of directories where the
-Lisp code for Emacs itself is stored.  If you have libraries of your
-own, put them in a single directory and add that directory to
-`load-path', by adding a line like this to your init file (*note Init
-File::):
-
-     (add-to-list 'load-path "/path/to/lisp/libraries")
-
-   Some commands are "autoloaded": when you run them, Emacs will
-automatically load the associated library first.  For instance, the
-`compile' and `compilation-mode' commands (*note Compilation::) are
-autoloaded; if you call either command, Emacs automatically loads the
-`compile' library.  In contrast, the command `recompile' is not
-autoloaded, so it is unavailable until you load the `compile' library.
-
-   By default, Emacs refuses to load compiled Lisp files which were
-compiled with XEmacs, a modified versions of Emacs--they can cause
-Emacs to crash.  Set the variable `load-dangerous-libraries' to `t' if
-you want to try loading them.
 

@@ -1,7 +1,7 @@
 ;;; cus-face.el --- customization support for faces
 ;;
 ;; Copyright (C) 1996, 1997, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Keywords: help, faces
@@ -50,7 +50,7 @@
 	  (if have-window-system
 	      (make-face-x-resource-internal face)))))
     ;; Don't record SPEC until we see it causes no errors.
-    (put face 'face-defface-spec spec)
+    (put face 'face-defface-spec (purecopy spec))
     (push (cons 'defface face) current-load-list)
     (when (and doc (null (face-documentation face)))
       (set-face-documentation face (purecopy doc)))

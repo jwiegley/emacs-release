@@ -1,8 +1,8 @@
 /* Coding system handler (conversion, detection, etc).
    Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-     2005, 2006, 2007, 2008, 2009
+     2005, 2006, 2007, 2008, 2009, 2010
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
    Copyright (C) 2003
@@ -289,6 +289,7 @@ encode_coding_XXX (coding)
 
 #include <config.h>
 #include <stdio.h>
+#include <setjmp.h>
 
 #include "lisp.h"
 #include "buffer.h"
@@ -992,6 +993,11 @@ record_conversion_result (struct coding_system *coding,
     case CODING_RESULT_INSUFFICIENT_MEM:
       Vlast_code_conversion_error = Qinsufficient_memory;
       break;
+    case CODING_RESULT_INSUFFICIENT_DST:
+      /* Don't record this error in Vlast_code_conversion_error
+	 because it happens just temporarily and is resolved when the
+	 whole conversion is finished.  */
+      break;
     case CODING_RESULT_SUCCESS:
       break;
     default:
@@ -999,6 +1005,10 @@ record_conversion_result (struct coding_system *coding,
     }
 }
 
+/* This wrapper macro is used to preserve validity of pointers into
+   buffer text across calls to decode_char, which could cause
+   relocation of buffers if it loads a charset map, because loading a
+   charset map allocates large structures.  */
 #define CODING_DECODE_CHAR(coding, src, src_base, src_end, charset, code, c) \
   do {									     \
     charset_map_loaded = 0;						     \
@@ -1858,7 +1868,7 @@ encode_coding_utf_16 (coding)
     {
       ASSURE_DESTINATION (safe_room);
       c = *charbuf++;
-      if (c >= MAX_UNICODE_CHAR)
+      if (c > MAX_UNICODE_CHAR)
 	c = coding->default_char;
 
       if (c < 0x10000)
@@ -2055,7 +2065,7 @@ detect_coding_emacs_mule (coding, detect_info)
 /* Parse emacs-mule multibyte sequence at SRC and return the decoded
    character.  If CMP_STATUS indicates that we must expect MSEQ or
    RULE described above, decode it and return the negative value of
-   the deocded character or rule.  If an invalid byte is found, return
+   the decoded character or rule.  If an invalid byte is found, return
    -1.  If SRC is too short, return -2.  */
 
 int
@@ -2172,7 +2182,7 @@ emacs_mule_char (coding, src, nbytes, nchars, id, cmp_status)
 	default:
 	  abort ();
 	}
-      c = DECODE_CHAR (charset, code);
+      CODING_DECODE_CHAR (coding, src, src_base, src_end, charset, code, c);
       if (c < 0)
 	goto invalid_code;
     }
@@ -2519,9 +2529,23 @@ decode_coding_emacs_mule (coding)
       else
 	{
 	  int nchars, nbytes;
+	  /* emacs_mule_char can load a charset map from a file, which
+	     allocates a large structure and might cause buffer text
+	     to be relocated as result.  Thus, we need to remember the
+	     original pointer to buffer text, and fixup all related
+	     pointers after the call.  */
+	  const unsigned char *orig = coding->source;
+	  EMACS_INT offset;
 
 	  c = emacs_mule_char (coding, src_base, &nbytes, &nchars, &id,
 			       cmp_status);
+	  offset = coding->source - orig;
+	  if (offset)
+	    {
+	      src += offset;
+	      src_base += offset;
+	      src_end += offset;
+	    }
 	  if (c < 0)
 	    {
 	      if (c == -1)
@@ -3238,9 +3262,13 @@ detect_coding_iso_2022 (coding, detect_info)
 		  int i = 1;
 		  while (src < src_end)
 		    {
+		      src_base = src;
 		      ONE_MORE_BYTE (c);
 		      if (c < 0xA0)
-			break;
+			{
+			  src = src_base;
+			  break;
+			}
 		      i++;
 		    }
 
@@ -3725,6 +3753,8 @@ decode_coding_iso_2022 (coding)
 	  continue;
 
 	case ISO_single_shift_2_7:
+	  if (! (CODING_ISO_FLAGS (coding) & CODING_ISO_FLAG_SEVEN_BITS))
+	    goto invalid_code;
 	case ISO_single_shift_2:
 	  if (! (CODING_ISO_FLAGS (coding) & CODING_ISO_FLAG_SINGLE_SHIFT))
 	    goto invalid_code;
@@ -3860,7 +3890,7 @@ decode_coding_iso_2022 (coding)
 	      continue;
 
 	    case '[':		/* specification of direction */
-	      if (! CODING_ISO_FLAGS (coding) & CODING_ISO_FLAG_DIRECTION)
+	      if (! (CODING_ISO_FLAGS (coding) & CODING_ISO_FLAG_DIRECTION))
 		goto invalid_code;
 	      /* For the moment, nested direction is not supported.
 		 So, `coding->mode & CODING_MODE_DIRECTION' zero means
@@ -5213,62 +5243,52 @@ decode_coding_ccl (coding)
   int *charbuf_end = coding->charbuf + coding->charbuf_size;
   int consumed_chars = 0;
   int multibytep = coding->src_multibyte;
-  struct ccl_program ccl;
+  struct ccl_program *ccl = &coding->spec.ccl->ccl;
   int source_charbuf[1024];
-  int source_byteidx[1024];
+  int source_byteidx[1025];
   Lisp_Object attrs, charset_list;
 
   CODING_GET_INFO (coding, attrs, charset_list);
-  setup_ccl_program (&ccl, CODING_CCL_DECODER (coding));
 
-  while (src < src_end)
+  while (1)
     {
       const unsigned char *p = src;
-      int *source, *source_end;
       int i = 0;
 
       if (multibytep)
-	while (i < 1024 && p < src_end)
-	  {
-	    source_byteidx[i] = p - src;
-	    source_charbuf[i++] = STRING_CHAR_ADVANCE (p);
-	  }
+	{
+	  while (i < 1024 && p < src_end)
+	    {
+	      source_byteidx[i] = p - src;
+	      source_charbuf[i++] = STRING_CHAR_ADVANCE (p);
+	    }
+	  source_byteidx[i] = p - src;
+	}
       else
 	while (i < 1024 && p < src_end)
 	  source_charbuf[i++] = *p++;
 
       if (p == src_end && coding->mode & CODING_MODE_LAST_BLOCK)
-	ccl.last_block = 1;
-
-      source = source_charbuf;
-      source_end = source + i;
-      while (source < source_end)
-	{
-	  ccl_driver (&ccl, source, charbuf,
-		      source_end - source, charbuf_end - charbuf,
-		      charset_list);
-	  source += ccl.consumed;
-	  charbuf += ccl.produced;
-	  if (ccl.status != CCL_STAT_SUSPEND_BY_DST)
-	    break;
-	}
-      if (source < source_end)
-	src += source_byteidx[source - source_charbuf];
+	ccl->last_block = 1;
+      ccl_driver (ccl, source_charbuf, charbuf, i, charbuf_end - charbuf,
+		  charset_list);
+      charbuf += ccl->produced;
+      if (multibytep)
+	src += source_byteidx[ccl->consumed];
       else
-	src = p;
-      consumed_chars += source - source_charbuf;
-
-      if (ccl.status != CCL_STAT_SUSPEND_BY_SRC
-	  && ccl.status != CODING_RESULT_INSUFFICIENT_SRC)
+	src += ccl->consumed;
+      consumed_chars += ccl->consumed;
+      if (p == src_end || ccl->status != CCL_STAT_SUSPEND_BY_SRC)
 	break;
     }
 
-  switch (ccl.status)
+  switch (ccl->status)
     {
     case CCL_STAT_SUSPEND_BY_SRC:
       record_conversion_result (coding, CODING_RESULT_INSUFFICIENT_SRC);
       break;
     case CCL_STAT_SUSPEND_BY_DST:
+      record_conversion_result (coding, CODING_RESULT_INSUFFICIENT_DST);
       break;
     case CCL_STAT_QUIT:
     case CCL_STAT_INVALID_CMD:
@@ -5287,7 +5307,7 @@ static int
 encode_coding_ccl (coding)
      struct coding_system *coding;
 {
-  struct ccl_program ccl;
+  struct ccl_program *ccl = &coding->spec.ccl->ccl;
   int multibytep = coding->dst_multibyte;
   int *charbuf = coding->charbuf;
   int *charbuf_end = charbuf + coding->charbuf_used;
@@ -5298,35 +5318,34 @@ encode_coding_ccl (coding)
   Lisp_Object attrs, charset_list;
 
   CODING_GET_INFO (coding, attrs, charset_list);
-  setup_ccl_program (&ccl, CODING_CCL_ENCODER (coding));
-
-  ccl.last_block = coding->mode & CODING_MODE_LAST_BLOCK;
-  ccl.dst_multibyte = coding->dst_multibyte;
+  if (coding->consumed_char == coding->src_chars
+      && coding->mode & CODING_MODE_LAST_BLOCK)
+    ccl->last_block = 1;
 
   while (charbuf < charbuf_end)
     {
-      ccl_driver (&ccl, charbuf, destination_charbuf,
+      ccl_driver (ccl, charbuf, destination_charbuf,
 		  charbuf_end - charbuf, 1024, charset_list);
       if (multibytep)
 	{
-	  ASSURE_DESTINATION (ccl.produced * 2);
-	  for (i = 0; i < ccl.produced; i++)
+	  ASSURE_DESTINATION (ccl->produced * 2);
+	  for (i = 0; i < ccl->produced; i++)
 	    EMIT_ONE_BYTE (destination_charbuf[i] & 0xFF);
 	}
       else
 	{
-	  ASSURE_DESTINATION (ccl.produced);
-	  for (i = 0; i < ccl.produced; i++)
+	  ASSURE_DESTINATION (ccl->produced);
+	  for (i = 0; i < ccl->produced; i++)
 	    *dst++ = destination_charbuf[i] & 0xFF;
-	  produced_chars += ccl.produced;
+	  produced_chars += ccl->produced;
 	}
-      charbuf += ccl.consumed;
-      if (ccl.status == CCL_STAT_QUIT
-	  || ccl.status == CCL_STAT_INVALID_CMD)
+      charbuf += ccl->consumed;
+      if (ccl->status == CCL_STAT_QUIT
+	  || ccl->status == CCL_STAT_INVALID_CMD)
 	break;
     }
 
-  switch (ccl.status)
+  switch (ccl->status)
     {
     case CCL_STAT_SUSPEND_BY_SRC:
       record_conversion_result (coding, CODING_RESULT_INSUFFICIENT_SRC);
@@ -5801,6 +5820,7 @@ setup_coding_system (coding_system, coding)
   coding->max_charset_id = SCHARS (val) - 1;
   coding->safe_charsets = SDATA (val);
   coding->default_char = XINT (CODING_ATTR_DEFAULT_CHAR (attrs));
+  coding->carryover_bytes = 0;
 
   coding_type = CODING_ATTR_TYPE (attrs);
   if (EQ (coding_type, Qundecided))
@@ -7109,6 +7129,7 @@ decode_coding (coding)
   Lisp_Object attrs;
   Lisp_Object undo_list;
   Lisp_Object translation_table;
+  struct ccl_spec cclspec;
   int carryover;
   int i;
 
@@ -7141,6 +7162,11 @@ decode_coding (coding)
   translation_table = get_translation_table (attrs, 0, NULL);
 
   carryover = 0;
+  if (coding->decoder == decode_coding_ccl)
+    {
+      coding->spec.ccl = &cclspec;
+      setup_ccl_program (&cclspec.ccl, CODING_CCL_DECODER (coding));
+    }
   do
     {
       EMACS_INT pos = coding->dst_pos + coding->produced_char;
@@ -7157,9 +7183,10 @@ decode_coding (coding)
 	coding->charbuf[i]
 	  = coding->charbuf[coding->charbuf_used - carryover + i];
     }
-  while (coding->consumed < coding->src_bytes
-	 && (coding->result == CODING_RESULT_SUCCESS
-	     || coding->result == CODING_RESULT_INVALID_SRC));
+  while (coding->result == CODING_RESULT_INSUFFICIENT_DST
+	 || (coding->consumed < coding->src_bytes
+	     && (coding->result == CODING_RESULT_SUCCESS
+		 || coding->result == CODING_RESULT_INVALID_SRC)));
 
   if (carryover > 0)
     {
@@ -7409,7 +7436,8 @@ consume_chars (coding, translation_table, max_lookup)
 	{
 	  EMACS_INT bytes;
 
-	  if (coding->encoder == encode_coding_raw_text)
+	  if (coding->encoder == encode_coding_raw_text
+	      || coding->encoder == encode_coding_ccl)
 	    c = *src++, pos++;
 	  else if ((bytes = MULTIBYTE_LENGTH (src, src_end)) > 0)
 	    c = STRING_CHAR_ADVANCE_NO_UNIFY (src), pos += bytes;
@@ -7508,6 +7536,7 @@ encode_coding (coding)
   Lisp_Object attrs;
   Lisp_Object translation_table;
   int max_lookup;
+  struct ccl_spec cclspec;
 
   attrs = CODING_ID_ATTRS (coding->id);
   if (coding->encoder == encode_coding_raw_text)
@@ -7529,6 +7558,11 @@ encode_coding (coding)
 
   ALLOC_CONVERSION_WORK_AREA (coding);
 
+  if (coding->encoder == encode_coding_ccl)
+    {
+      coding->spec.ccl = &cclspec;
+      setup_ccl_program (&cclspec.ccl, CODING_CCL_ENCODER (coding));
+    }
   do {
     coding_set_source (coding);
     consume_chars (coding, translation_table, max_lookup);
@@ -7862,7 +7896,7 @@ decode_coding_object (coding, src_object, from, from_byte, to, to_byte,
 	  if (! destination)
 	    {
 	      record_conversion_result (coding,
-					CODING_RESULT_INSUFFICIENT_DST);
+					CODING_RESULT_INSUFFICIENT_MEM);
 	      unbind_to (count, Qnil);
 	      return;
 	    }
@@ -9394,8 +9428,11 @@ DEFUN ("set-keyboard-coding-system-internal", Fset_keyboard_coding_system_intern
 {
   struct terminal *t = get_terminal (terminal, 1);
   CHECK_SYMBOL (coding_system);
-  setup_coding_system (Fcheck_coding_system (coding_system),
-		       TERMINAL_KEYBOARD_CODING (t));
+  if (NILP (coding_system))
+    coding_system = Qno_conversion;
+  else
+    Fcheck_coding_system (coding_system);
+  setup_coding_system (coding_system, TERMINAL_KEYBOARD_CODING (t));
   /* Characer composition should be disabled.  */
   TERMINAL_KEYBOARD_CODING (t)->common_flags
     &= ~CODING_ANNOTATE_COMPOSITION_MASK;
@@ -9616,7 +9653,7 @@ HIGHESTP non-nil means just return the highest priority one.  */)
   return Fnreverse (val);
 }
 
-static char *suffixes[] = { "-unix", "-dos", "-mac" };
+static const char *const suffixes[] = { "-unix", "-dos", "-mac" };
 
 static Lisp_Object
 make_subsidiaries (base)
@@ -10410,7 +10447,7 @@ syms_of_coding ()
   Vcode_conversion_reused_workbuf = Qnil;
 
   staticpro (&Vcode_conversion_workbuf_name);
-  Vcode_conversion_workbuf_name = build_string (" *code-conversion-work*");
+  Vcode_conversion_workbuf_name = make_pure_c_string (" *code-conversion-work*");
 
   reused_workbuf_in_use = 0;
 
@@ -10471,14 +10508,14 @@ syms_of_coding ()
 
   DEFSYM (Qcoding_system_error, "coding-system-error");
   Fput (Qcoding_system_error, Qerror_conditions,
-	Fcons (Qcoding_system_error, Fcons (Qerror, Qnil)));
+	pure_cons (Qcoding_system_error, pure_cons (Qerror, Qnil)));
   Fput (Qcoding_system_error, Qerror_message,
-	build_string ("Invalid coding system"));
+	make_pure_c_string ("Invalid coding system"));
 
   /* Intern this now in case it isn't already done.
      Setting this variable twice is harmless.
      But don't staticpro it here--that is done in alloc.c.  */
-  Qchar_table_extra_slots = intern ("char-table-extra-slots");
+  Qchar_table_extra_slots = intern_c_string ("char-table-extra-slots");
 
   DEFSYM (Qtranslation_table, "translation-table");
   Fput (Qtranslation_table, Qchar_table_extra_slots, make_number (2));
@@ -10504,48 +10541,48 @@ syms_of_coding ()
   staticpro (&Vcoding_category_table);
   /* Followings are target of code detection.  */
   ASET (Vcoding_category_table, coding_category_iso_7,
-	intern ("coding-category-iso-7"));
+	intern_c_string ("coding-category-iso-7"));
   ASET (Vcoding_category_table, coding_category_iso_7_tight,
-	intern ("coding-category-iso-7-tight"));
+	intern_c_string ("coding-category-iso-7-tight"));
   ASET (Vcoding_category_table, coding_category_iso_8_1,
-	intern ("coding-category-iso-8-1"));
+	intern_c_string ("coding-category-iso-8-1"));
   ASET (Vcoding_category_table, coding_category_iso_8_2,
-	intern ("coding-category-iso-8-2"));
+	intern_c_string ("coding-category-iso-8-2"));
   ASET (Vcoding_category_table, coding_category_iso_7_else,
-	intern ("coding-category-iso-7-else"));
+	intern_c_string ("coding-category-iso-7-else"));
   ASET (Vcoding_category_table, coding_category_iso_8_else,
-	intern ("coding-category-iso-8-else"));
+	intern_c_string ("coding-category-iso-8-else"));
   ASET (Vcoding_category_table, coding_category_utf_8_auto,
-	intern ("coding-category-utf-8-auto"));
+	intern_c_string ("coding-category-utf-8-auto"));
   ASET (Vcoding_category_table, coding_category_utf_8_nosig,
-	intern ("coding-category-utf-8"));
+	intern_c_string ("coding-category-utf-8"));
   ASET (Vcoding_category_table, coding_category_utf_8_sig,
-	intern ("coding-category-utf-8-sig"));
+	intern_c_string ("coding-category-utf-8-sig"));
   ASET (Vcoding_category_table, coding_category_utf_16_be,
-	intern ("coding-category-utf-16-be"));
+	intern_c_string ("coding-category-utf-16-be"));
   ASET (Vcoding_category_table, coding_category_utf_16_auto,
-	intern ("coding-category-utf-16-auto"));
+	intern_c_string ("coding-category-utf-16-auto"));
   ASET (Vcoding_category_table, coding_category_utf_16_le,
-	intern ("coding-category-utf-16-le"));
+	intern_c_string ("coding-category-utf-16-le"));
   ASET (Vcoding_category_table, coding_category_utf_16_be_nosig,
-	intern ("coding-category-utf-16-be-nosig"));
+	intern_c_string ("coding-category-utf-16-be-nosig"));
   ASET (Vcoding_category_table, coding_category_utf_16_le_nosig,
-	intern ("coding-category-utf-16-le-nosig"));
+	intern_c_string ("coding-category-utf-16-le-nosig"));
   ASET (Vcoding_category_table, coding_category_charset,
-	intern ("coding-category-charset"));
+	intern_c_string ("coding-category-charset"));
   ASET (Vcoding_category_table, coding_category_sjis,
-	intern ("coding-category-sjis"));
+	intern_c_string ("coding-category-sjis"));
   ASET (Vcoding_category_table, coding_category_big5,
-	intern ("coding-category-big5"));
+	intern_c_string ("coding-category-big5"));
   ASET (Vcoding_category_table, coding_category_ccl,
-	intern ("coding-category-ccl"));
+	intern_c_string ("coding-category-ccl"));
   ASET (Vcoding_category_table, coding_category_emacs_mule,
-	intern ("coding-category-emacs-mule"));
+	intern_c_string ("coding-category-emacs-mule"));
   /* Followings are NOT target of code detection.  */
   ASET (Vcoding_category_table, coding_category_raw_text,
-	intern ("coding-category-raw-text"));
+	intern_c_string ("coding-category-raw-text"));
   ASET (Vcoding_category_table, coding_category_undecided,
-	intern ("coding-category-undecided"));
+	intern_c_string ("coding-category-undecided"));
 
   DEFSYM (Qinsufficient_source, "insufficient-source");
   DEFSYM (Qinconsistent_eol, "inconsistent-eol");
@@ -10746,22 +10783,22 @@ Also used for decoding keyboard input on X Window system.  */);
   DEFVAR_LISP ("eol-mnemonic-unix", &eol_mnemonic_unix,
 	       doc: /*
 *String displayed in mode line for UNIX-like (LF) end-of-line format.  */);
-  eol_mnemonic_unix = build_string (":");
+  eol_mnemonic_unix = make_pure_c_string (":");
 
   DEFVAR_LISP ("eol-mnemonic-dos", &eol_mnemonic_dos,
 	       doc: /*
 *String displayed in mode line for DOS-like (CRLF) end-of-line format.  */);
-  eol_mnemonic_dos = build_string ("\\");
+  eol_mnemonic_dos = make_pure_c_string ("\\");
 
   DEFVAR_LISP ("eol-mnemonic-mac", &eol_mnemonic_mac,
 	       doc: /*
 *String displayed in mode line for MAC-like (CR) end-of-line format.  */);
-  eol_mnemonic_mac = build_string ("/");
+  eol_mnemonic_mac = make_pure_c_string ("/");
 
   DEFVAR_LISP ("eol-mnemonic-undecided", &eol_mnemonic_undecided,
 	       doc: /*
 *String displayed in mode line when end-of-line format is not yet determined.  */);
-  eol_mnemonic_undecided = build_string (":");
+  eol_mnemonic_undecided = make_pure_c_string (":");
 
   DEFVAR_LISP ("enable-character-translation", &Venable_character_translation,
 	       doc: /*
@@ -10886,25 +10923,25 @@ internal character representation.  */);
     for (i = 0; i < coding_arg_max; i++)
       args[i] = Qnil;
 
-    plist[0] = intern (":name");
+    plist[0] = intern_c_string (":name");
     plist[1] = args[coding_arg_name] = Qno_conversion;
-    plist[2] = intern (":mnemonic");
+    plist[2] = intern_c_string (":mnemonic");
     plist[3] = args[coding_arg_mnemonic] = make_number ('=');
-    plist[4] = intern (":coding-type");
+    plist[4] = intern_c_string (":coding-type");
     plist[5] = args[coding_arg_coding_type] = Qraw_text;
-    plist[6] = intern (":ascii-compatible-p");
+    plist[6] = intern_c_string (":ascii-compatible-p");
     plist[7] = args[coding_arg_ascii_compatible_p] = Qt;
-    plist[8] = intern (":default-char");
+    plist[8] = intern_c_string (":default-char");
     plist[9] = args[coding_arg_default_char] = make_number (0);
-    plist[10] = intern (":for-unibyte");
+    plist[10] = intern_c_string (":for-unibyte");
     plist[11] = args[coding_arg_for_unibyte] = Qt;
-    plist[12] = intern (":docstring");
-    plist[13] = build_string ("Do no conversion.\n\
+    plist[12] = intern_c_string (":docstring");
+    plist[13] = make_pure_c_string ("Do no conversion.\n\
 \n\
 When you visit a file with this coding, the file is read into a\n\
 unibyte buffer as is, thus each byte of a file is treated as a\n\
 character.");
-    plist[14] = intern (":eol-type");
+    plist[14] = intern_c_string (":eol-type");
     plist[15] = args[coding_arg_eol_type] = Qunix;
     args[coding_arg_plist] = Flist (16, plist);
     Fdefine_coding_system_internal (coding_arg_max, args);
@@ -10914,10 +10951,10 @@ character.");
     plist[5] = args[coding_arg_coding_type] = Qundecided;
     /* This is already set.
        plist[7] = args[coding_arg_ascii_compatible_p] = Qt; */
-    plist[8] = intern (":charset-list");
+    plist[8] = intern_c_string (":charset-list");
     plist[9] = args[coding_arg_charset_list] = Fcons (Qascii, Qnil);
     plist[11] = args[coding_arg_for_unibyte] = Qnil;
-    plist[13] = build_string ("No conversion on encoding, automatic conversion on decoding.");
+    plist[13] = make_pure_c_string ("No conversion on encoding, automatic conversion on decoding.");
     plist[15] = args[coding_arg_eol_type] = Qnil;
     args[coding_arg_plist] = Flist (16, plist);
     Fdefine_coding_system_internal (coding_arg_max, args);

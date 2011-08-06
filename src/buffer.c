@@ -1,7 +1,7 @@
 /* Buffer manipulation primitives for GNU Emacs.
    Copyright (C) 1985, 1986, 1987, 1988, 1989, 1993, 1994,
                  1995, 1997, 1998, 1999, 2000, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -26,6 +26,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <sys/param.h>
 #include <errno.h>
 #include <stdio.h>
+#include <setjmp.h>
 
 #ifndef USE_CRT_DLL
 extern int errno;
@@ -703,7 +704,7 @@ reset_buffer (b)
   b->clip_changed = 0;
   b->prevent_redisplay_optimizations_p = 1;
   b->backed_up = Qnil;
-  b->auto_save_modified = 0;
+  BUF_AUTOSAVE_MODIFF (b) = 0;
   b->auto_save_failure_time = -1;
   b->auto_save_file_name = Qnil;
   b->read_only = Qnil;
@@ -877,7 +878,8 @@ it is in the sequence to be tried) even if a buffer with that name exists.  */)
 
 DEFUN ("buffer-name", Fbuffer_name, Sbuffer_name, 0, 1, 0,
        doc: /* Return the name of BUFFER, as a string.
-With no argument or nil as argument, return the name of the current buffer.  */)
+BUFFER defaults to the current buffer.
+Return nil if BUFFER has been killed.  */)
      (buffer)
      register Lisp_Object buffer;
 {
@@ -1130,7 +1132,25 @@ A non-nil FLAG means mark the buffer modified.  */)
     }
 #endif /* CLASH_DETECTION */
 
-  SAVE_MODIFF = NILP (flag) ? MODIFF : 0;
+  /* Here we have a problem.  SAVE_MODIFF is used here to encode
+     buffer-modified-p (as SAVE_MODIFF<MODIFF) as well as
+     recent-auto-save-p (as SAVE_MODIFF<auto_save_modified).  So if we
+     modify SAVE_MODIFF to affect one, we may affect the other
+     as well.
+     E.g. if FLAG is nil we need to set SAVE_MODIFF to MODIFF, but
+     if SAVE_MODIFF<auto_save_modified that means we risk changing
+     recent-auto-save-p from t to nil.
+     Vice versa, if FLAG is non-nil and SAVE_MODIFF>=auto_save_modified
+     we risk changing recent-auto-save-p from nil to t.  */
+  SAVE_MODIFF = (NILP (flag)
+		 /* FIXME: This unavoidably sets recent-auto-save-p to nil.  */
+		 ? MODIFF
+		 /* Let's try to preserve recent-auto-save-p.  */
+		 : SAVE_MODIFF < MODIFF ? SAVE_MODIFF
+		 /* If SAVE_MODIFF == auto_save_modified == MODIFF,
+		    we can either decrease SAVE_MODIFF and auto_save_modified
+		    or increase MODIFF.  */
+		 : MODIFF++);
 
   /* Set update_mode_lines only if buffer is displayed in some window.
      Packages like jit-lock or lazy-lock preserve a buffer's modified
@@ -1539,8 +1559,8 @@ with SIGHUP.  */)
   /* Delete any auto-save file, if we saved it in this session.
      But not if the buffer is modified.  */
   if (STRINGP (b->auto_save_file_name)
-      && b->auto_save_modified != 0
-      && BUF_SAVE_MODIFF (b) < b->auto_save_modified
+      && BUF_AUTOSAVE_MODIFF (b) != 0
+      && BUF_SAVE_MODIFF (b) < BUF_AUTOSAVE_MODIFF (b)
       && BUF_SAVE_MODIFF (b) < BUF_MODIFF (b)
       && NILP (Fsymbol_value (intern ("auto-save-visited-file-name"))))
     {
@@ -1921,12 +1941,14 @@ set_buffer_internal_1 (b)
 
   for (tail = b->local_var_alist; CONSP (tail); tail = XCDR (tail))
     {
-      valcontents = SYMBOL_VALUE (XCAR (XCAR (tail)));
-      if ((BUFFER_LOCAL_VALUEP (valcontents))
+      if (CONSP (XCAR (tail))
+	  && SYMBOLP (XCAR (XCAR (tail)))
+	  && (valcontents = SYMBOL_VALUE (XCAR (XCAR (tail))),
+	      (BUFFER_LOCAL_VALUEP (valcontents)))
 	  && (tem = XBUFFER_LOCAL_VALUE (valcontents)->realvalue,
 	      (BOOLFWDP (tem) || INTFWDP (tem) || OBJFWDP (tem))))
-	/* Just reference the variable
-	     to cause it to become set for this buffer.  */
+	/* Just reference the variable to cause it to become set for
+	   this buffer.  */
 	Fsymbol_value (XCAR (XCAR (tail)));
     }
 
@@ -1935,12 +1957,14 @@ set_buffer_internal_1 (b)
   if (old_buf)
     for (tail = old_buf->local_var_alist; CONSP (tail); tail = XCDR (tail))
       {
-	valcontents = SYMBOL_VALUE (XCAR (XCAR (tail)));
-	if ((BUFFER_LOCAL_VALUEP (valcontents))
+	if (CONSP (tail)
+	    && SYMBOLP (XCAR (XCAR (tail)))
+	    && (valcontents = SYMBOL_VALUE (XCAR (XCAR (tail))),
+		(BUFFER_LOCAL_VALUEP (valcontents)))
 	    && (tem = XBUFFER_LOCAL_VALUE (valcontents)->realvalue,
 		(BOOLFWDP (tem) || INTFWDP (tem) || OBJFWDP (tem))))
-	  /* Just reference the variable
-               to cause it to become set for this buffer.  */
+	  /* Just reference the variable to cause it to become set for
+	     this buffer.  */
 	  Fsymbol_value (XCAR (XCAR (tail)));
       }
 }
@@ -2403,7 +2427,7 @@ current buffer is cleared.  */)
 	    p++, pos++;
 	  else if (CHAR_BYTE8_HEAD_P (*p))
 	    {
-	      c = STRING_CHAR_AND_LENGTH (p, stop - pos, bytes);
+	      c = STRING_CHAR_AND_LENGTH (p, bytes);
 	      /* Delete all bytes for this 8-bit character but the
 		 last one, and change the last one to the charcter
 		 code.  */
@@ -2473,7 +2497,9 @@ current buffer is cleared.  */)
 
 	  if (ASCII_BYTE_P (*p))
 	    p++, pos++;
-	  else if (EQ (flag, Qt) && (bytes = MULTIBYTE_LENGTH (p, pend)) > 0)
+	  else if (EQ (flag, Qt)
+		   && ! CHAR_BYTE8_HEAD_P (*p)
+		   && (bytes = MULTIBYTE_LENGTH (p, pend)) > 0)
 	    p += bytes, pos += bytes;
 	  else
 	    {
@@ -2653,18 +2679,19 @@ static void
 swap_out_buffer_local_variables (b)
      struct buffer *b;
 {
-  Lisp_Object oalist, alist, sym, tem, buffer;
+  Lisp_Object oalist, alist, sym, buffer;
 
   XSETBUFFER (buffer, b);
   oalist = b->local_var_alist;
 
   for (alist = oalist; CONSP (alist); alist = XCDR (alist))
     {
-      sym = XCAR (XCAR (alist));
-
-      /* Need not do anything if some other buffer's binding is now encached.  */
-      tem = XBUFFER_LOCAL_VALUE (SYMBOL_VALUE (sym))->buffer;
-      if (EQ (tem, buffer))
+      if (CONSP (XCAR (alist))
+	  && (sym = XCAR (XCAR (alist)), SYMBOLP (sym))
+	  /* Need not do anything if some other buffer's binding is
+	     now encached.  */
+	  && EQ (XBUFFER_LOCAL_VALUE (SYMBOL_VALUE (sym))->buffer,
+		 buffer))
 	{
 	  /* Symbol is set up for this buffer's old local value:
 	     swap it out!  */
@@ -4566,7 +4593,7 @@ buffer_slot_type_mismatch (newval, type)
 
   switch (type)
     {
-    case Lisp_Int:    predicate = Qintegerp; break;
+    case_Lisp_Int:    predicate = Qintegerp; break;
     case Lisp_String: predicate = Qstringp;  break;
     case Lisp_Symbol: predicate = Qsymbolp;  break;
     default: abort ();
@@ -5155,7 +5182,7 @@ init_buffer_once ()
   /* Must do these before making the first buffer! */
 
   /* real setup is done in bindings.el */
-  buffer_defaults.mode_line_format = build_string ("%-");
+  buffer_defaults.mode_line_format = make_pure_c_string ("%-");
   buffer_defaults.header_line_format = Qnil;
   buffer_defaults.abbrev_mode = Qnil;
   buffer_defaults.overwrite_mode = Qnil;
@@ -5295,27 +5322,27 @@ init_buffer_once ()
   current_buffer = 0;
   all_buffers = 0;
 
-  QSFundamental = build_string ("Fundamental");
+  QSFundamental = make_pure_c_string ("Fundamental");
 
-  Qfundamental_mode = intern ("fundamental-mode");
+  Qfundamental_mode = intern_c_string ("fundamental-mode");
   buffer_defaults.major_mode = Qfundamental_mode;
 
-  Qmode_class = intern ("mode-class");
+  Qmode_class = intern_c_string ("mode-class");
 
-  Qprotected_field = intern ("protected-field");
+  Qprotected_field = intern_c_string ("protected-field");
 
-  Qpermanent_local = intern ("permanent-local");
+  Qpermanent_local = intern_c_string ("permanent-local");
 
-  Qkill_buffer_hook = intern ("kill-buffer-hook");
+  Qkill_buffer_hook = intern_c_string ("kill-buffer-hook");
   Fput (Qkill_buffer_hook, Qpermanent_local, Qt);
 
-  Qucs_set_table_for_input = intern ("ucs-set-table-for-input");
+  Qucs_set_table_for_input = intern_c_string ("ucs-set-table-for-input");
 
   /* super-magic invisible buffer */
-  Vprin1_to_string_buffer = Fget_buffer_create (build_string (" prin1"));
+  Vprin1_to_string_buffer = Fget_buffer_create (make_pure_c_string (" prin1"));
   Vbuffer_alist = Qnil;
 
-  Fset_buffer (Fget_buffer_create (build_string ("*scratch*")));
+  Fset_buffer (Fget_buffer_create (make_pure_c_string ("*scratch*")));
 
   inhibit_modification_hooks = 0;
 }
@@ -5444,45 +5471,45 @@ syms_of_buffer ()
   staticpro (&Vbuffer_alist);
   staticpro (&Qprotected_field);
   staticpro (&Qpermanent_local);
-  Qpermanent_local_hook = intern ("permanent-local-hook");
+  Qpermanent_local_hook = intern_c_string ("permanent-local-hook");
   staticpro (&Qpermanent_local_hook);
   staticpro (&Qkill_buffer_hook);
-  Qoverlayp = intern ("overlayp");
+  Qoverlayp = intern_c_string ("overlayp");
   staticpro (&Qoverlayp);
-  Qevaporate = intern ("evaporate");
+  Qevaporate = intern_c_string ("evaporate");
   staticpro (&Qevaporate);
-  Qmodification_hooks = intern ("modification-hooks");
+  Qmodification_hooks = intern_c_string ("modification-hooks");
   staticpro (&Qmodification_hooks);
-  Qinsert_in_front_hooks = intern ("insert-in-front-hooks");
+  Qinsert_in_front_hooks = intern_c_string ("insert-in-front-hooks");
   staticpro (&Qinsert_in_front_hooks);
-  Qinsert_behind_hooks = intern ("insert-behind-hooks");
+  Qinsert_behind_hooks = intern_c_string ("insert-behind-hooks");
   staticpro (&Qinsert_behind_hooks);
-  Qget_file_buffer = intern ("get-file-buffer");
+  Qget_file_buffer = intern_c_string ("get-file-buffer");
   staticpro (&Qget_file_buffer);
-  Qpriority = intern ("priority");
+  Qpriority = intern_c_string ("priority");
   staticpro (&Qpriority);
-  Qwindow = intern ("window");
+  Qwindow = intern_c_string ("window");
   staticpro (&Qwindow);
-  Qbefore_string = intern ("before-string");
+  Qbefore_string = intern_c_string ("before-string");
   staticpro (&Qbefore_string);
-  Qafter_string = intern ("after-string");
+  Qafter_string = intern_c_string ("after-string");
   staticpro (&Qafter_string);
-  Qfirst_change_hook = intern ("first-change-hook");
+  Qfirst_change_hook = intern_c_string ("first-change-hook");
   staticpro (&Qfirst_change_hook);
-  Qbefore_change_functions = intern ("before-change-functions");
+  Qbefore_change_functions = intern_c_string ("before-change-functions");
   staticpro (&Qbefore_change_functions);
-  Qafter_change_functions = intern ("after-change-functions");
+  Qafter_change_functions = intern_c_string ("after-change-functions");
   staticpro (&Qafter_change_functions);
   /* The next one is initialized in init_buffer_once.  */
   staticpro (&Qucs_set_table_for_input);
 
-  Qkill_buffer_query_functions = intern ("kill-buffer-query-functions");
+  Qkill_buffer_query_functions = intern_c_string ("kill-buffer-query-functions");
   staticpro (&Qkill_buffer_query_functions);
 
   Fput (Qprotected_field, Qerror_conditions,
-	Fcons (Qprotected_field, Fcons (Qerror, Qnil)));
+	pure_cons (Qprotected_field, pure_cons (Qerror, Qnil)));
   Fput (Qprotected_field, Qerror_message,
-	build_string ("Attempt to modify a protected field"));
+	make_pure_c_string ("Attempt to modify a protected field"));
 
   /* All these use DEFVAR_LISP_NOPRO because the slots in
      buffer_defaults will all be marked via Vbuffer_defaults.  */
@@ -5698,19 +5725,20 @@ A string is printed verbatim in the mode line except for %-constructs:
 Decimal digits after the % specify field width to which to pad.  */);
 
   DEFVAR_LISP_NOPRO ("default-major-mode", &buffer_defaults.major_mode,
-		     doc: /* *Major mode for new buffers.  Defaults to `fundamental-mode'.
-A value of nil means use current buffer's major mode,
-provided it is not marked as "special".
-
-When a mode is used by default, `find-file' switches to it
-before it reads the contents into the buffer and before
-it finishes setting up the buffer.  Thus, the mode and
-its hooks should not expect certain variables such as
-`buffer-read-only' and `buffer-file-coding-system' to be set up.  */);
+		     doc: /* *Value of `major-mode' for new buffers.  */);
 
   DEFVAR_PER_BUFFER ("major-mode", &current_buffer->major_mode,
 		     make_number (Lisp_Symbol),
-		     doc: /* Symbol for current buffer's major mode.  */);
+		     doc: /* Symbol for current buffer's major mode.
+The default value (normally `fundamental-mode') affects new buffers.
+A value of nil means to use the current buffer's major mode, provided
+it is not marked as "special".
+
+When a mode is used by default, `find-file' switches to it before it
+reads the contents into the buffer and before it finishes setting up
+the buffer.  Thus, the mode and its hooks should not expect certain
+variables such as `buffer-read-only' and `buffer-file-coding-system'
+to be set up.  */);
 
   DEFVAR_PER_BUFFER ("mode-name", &current_buffer->mode_name,
                      Qnil,
@@ -5730,17 +5758,17 @@ Format with `format-mode-line' to produce a string value.  */);
 		     doc: /* *Non-nil if searches and matches should ignore case.  */);
 
   DEFVAR_PER_BUFFER ("fill-column", &current_buffer->fill_column,
-		     make_number (Lisp_Int),
+		     make_number (LISP_INT_TAG),
 		     doc: /* *Column beyond which automatic line-wrapping should happen.
 Interactively, you can set the buffer local value using \\[set-fill-column].  */);
 
   DEFVAR_PER_BUFFER ("left-margin", &current_buffer->left_margin,
-		     make_number (Lisp_Int),
+		     make_number (LISP_INT_TAG),
 		     doc: /* *Column for the default `indent-line-function' to indent to.
 Linefeed indents to this column in Fundamental mode.  */);
 
   DEFVAR_PER_BUFFER ("tab-width", &current_buffer->tab_width,
-		     make_number (Lisp_Int),
+		     make_number (LISP_INT_TAG),
 		     doc: /* *Distance between tab stops (for display of tab characters), in columns.  */);
 
   DEFVAR_PER_BUFFER ("ctl-arrow", &current_buffer->ctl_arrow, Qnil,
@@ -5761,7 +5789,7 @@ use the function `set-buffer-multibyte' to change a buffer's representation.
 Changing its default value with `setq-default' is supported.
 See also variable `default-enable-multibyte-characters' and Info node
 `(elisp)Text Representations'.  */);
-  XSYMBOL (intern ("enable-multibyte-characters"))->constant = 1;
+  XSYMBOL (intern_c_string ("enable-multibyte-characters"))->constant = 1;
 
   DEFVAR_PER_BUFFER ("buffer-file-coding-system",
 		     &current_buffer->buffer_file_coding_system, Qnil,
@@ -5851,9 +5879,14 @@ If it is nil, that means don't auto-save this buffer.  */);
 Backing up is done before the first time the file is saved.  */);
 
   DEFVAR_PER_BUFFER ("buffer-saved-size", &current_buffer->save_length,
-		     make_number (Lisp_Int),
+		     make_number (LISP_INT_TAG),
 		     doc: /* Length of current buffer when last read in, saved or auto-saved.
-0 initially.  */);
+0 initially.
+-1 means auto-saving turned off until next real save.
+
+If you set this to -2, that means don't turn off auto-saving in this buffer
+if its text size shrinks.   If you use `buffer-swap-text' on a buffer,
+you probably should set this to -2 in that buffer.  */);
 
   DEFVAR_PER_BUFFER ("selective-display", &current_buffer->selective_display,
 		     Qnil,
@@ -6265,7 +6298,7 @@ If any of them returns nil, the buffer is not killed.  */);
 	       doc: /* Normal hook run before changing the major mode of a buffer.
 The function `kill-all-local-variables' runs this before doing anything else.  */);
   Vchange_major_mode_hook = Qnil;
-  Qchange_major_mode_hook = intern ("change-major-mode-hook");
+  Qchange_major_mode_hook = intern_c_string ("change-major-mode-hook");
   staticpro (&Qchange_major_mode_hook);
 
   defsubr (&Sbuffer_live_p);
@@ -6327,7 +6360,7 @@ keys_of_buffer ()
 
   /* This must not be in syms_of_buffer, because Qdisabled is not
      initialized when that function gets called.  */
-  Fput (intern ("erase-buffer"), Qdisabled, Qt);
+  Fput (intern_c_string ("erase-buffer"), Qdisabled, Qt);
 }
 
 /* arch-tag: e48569bf-69a9-4b65-a23b-8e68769436e1

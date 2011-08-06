@@ -1,7 +1,7 @@
 ;;; font-lock.el --- Electric font lock mode
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski
@@ -1019,7 +1019,8 @@ The region it returns may start or end in the middle of a line.")
   "Fontify the current buffer the way the function `font-lock-mode' would."
   (interactive)
   (font-lock-set-defaults)
-  (let ((font-lock-verbose (or font-lock-verbose (interactive-p))))
+  (let ((font-lock-verbose (or font-lock-verbose
+			       (called-interactively-p 'interactive))))
     (funcall font-lock-fontify-buffer-function)))
 
 (defun font-lock-unfontify-buffer ()
@@ -1766,6 +1767,23 @@ A LEVEL of nil is equal to a LEVEL of 0, a LEVEL of t is equal to
 
 (defvar font-lock-set-defaults nil)	; Whether we have set up defaults.
 
+(defun font-lock-refresh-defaults ()
+  "Restart fontification in current buffer after recomputing from defaults.
+Recompute fontification variables using `font-lock-defaults' (or,
+if nil, using `font-lock-defaults-alist') and
+`font-lock-maximum-decoration'.  Then restart fontification.
+
+Use this function when you have changed any of the above
+variables directly.
+
+Note: This function will erase modifications done by
+`font-lock-add-keywords' or `font-lock-remove-keywords', but will
+preserve `hi-lock-mode' highlighting patterns."
+  (let ((hi-lock--inhibit-font-lock-hook t))
+    (font-lock-mode -1))
+  (kill-local-variable 'font-lock-set-defaults)
+  (font-lock-mode 1))
+
 (defvar font-lock-mode-major-mode)
 (defun font-lock-set-defaults ()
   "Set fontification defaults appropriately for this mode.
@@ -1872,7 +1890,7 @@ Sets various variables using `font-lock-defaults' (or, if nil, using
 (defface font-lock-string-face
   '((((class grayscale) (background light)) (:foreground "DimGray" :slant italic))
     (((class grayscale) (background dark)) (:foreground "LightGray" :slant italic))
-    (((class color) (min-colors 88) (background light)) (:foreground "RosyBrown"))
+    (((class color) (min-colors 88) (background light)) (:foreground "VioletRed4"))
     (((class color) (min-colors 88) (background dark)) (:foreground "LightSalmon"))
     (((class color) (min-colors 16) (background light)) (:foreground "RosyBrown"))
     (((class color) (min-colors 16) (background dark)) (:foreground "LightSalmon"))
@@ -1901,7 +1919,7 @@ Sets various variables using `font-lock-defaults' (or, if nil, using
 (defface font-lock-builtin-face
   '((((class grayscale) (background light)) (:foreground "LightGray" :weight bold))
     (((class grayscale) (background dark)) (:foreground "DimGray" :weight bold))
-    (((class color) (min-colors 88) (background light)) (:foreground "Orchid"))
+    (((class color) (min-colors 88) (background light)) (:foreground "MediumOrchid4"))
     (((class color) (min-colors 88) (background dark)) (:foreground "LightSteelBlue"))
     (((class color) (min-colors 16) (background light)) (:foreground "Orchid"))
     (((class color) (min-colors 16) (background dark)) (:foreground "LightSteelBlue"))
@@ -1925,7 +1943,7 @@ Sets various variables using `font-lock-defaults' (or, if nil, using
      (:foreground "Gray90" :weight bold :slant italic))
     (((class grayscale) (background dark))
      (:foreground "DimGray" :weight bold :slant italic))
-    (((class color) (min-colors 88) (background light)) (:foreground "DarkGoldenrod"))
+    (((class color) (min-colors 88) (background light)) (:foreground "sienna"))
     (((class color) (min-colors 88) (background dark)) (:foreground "LightGoldenrod"))
     (((class color) (min-colors 16) (background light)) (:foreground "DarkGoldenrod"))
     (((class color) (min-colors 16) (background dark)) (:foreground "LightGoldenrod"))
@@ -1951,7 +1969,7 @@ Sets various variables using `font-lock-defaults' (or, if nil, using
      (:foreground "LightGray" :weight bold :underline t))
     (((class grayscale) (background dark))
      (:foreground "Gray50" :weight bold :underline t))
-    (((class color) (min-colors 88) (background light)) (:foreground "CadetBlue"))
+    (((class color) (min-colors 88) (background light)) (:foreground "dark cyan"))
     (((class color) (min-colors 88) (background dark)) (:foreground "Aquamarine"))
     (((class color) (min-colors 16) (background light)) (:foreground "CadetBlue"))
     (((class color) (min-colors 16) (background dark)) (:foreground "Aquamarine"))
@@ -2265,7 +2283,7 @@ in which C preprocessor directives are used. e.g. `asm-mode' and
 		 "save-match-data" "save-current-buffer"
 		 "unwind-protect" "condition-case" "track-mouse"
 		 "eval-after-load" "eval-and-compile" "eval-when-compile"
-		 "eval-when" "eval-at-startup" "eval-next-after-load"
+		 "eval-when" "eval-next-after-load"
 		 "with-case-table" "with-category-table"
 		 "with-current-buffer" "with-electric-help"
 		 "with-local-quit" "with-no-warnings"
@@ -2283,7 +2301,7 @@ in which C preprocessor directives are used. e.g. `asm-mode' and
 		 "restart-bind" "restart-case" "in-package"
 		 "break" "ignore-errors"
 		 "loop" "do" "do*" "dotimes" "dolist" "the" "locally"
-		 "proclaim" "declaim" "declare" "symbol-macrolet"
+		 "proclaim" "declaim" "declare" "symbol-macrolet" "letf"
 		 "lexical-let" "lexical-let*" "flet" "labels" "compiler-let"
 		 "destructuring-bind" "macrolet" "tagbody" "block" "go"
 		 "multiple-value-bind" "multiple-value-prog1"

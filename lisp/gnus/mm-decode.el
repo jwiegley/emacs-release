@@ -1,7 +1,7 @@
 ;;; mm-decode.el --- Functions for decoding MIME things
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;	MORIOKA Tomohiko <morioka@jaist.ac.jp>
@@ -1265,7 +1265,7 @@ or replaced."
 	(goto-char (point-min))
 	(if (re-search-forward "\
 <meta\\s-+http-equiv=[\"']?content-type[\"']?\\s-+content=[\"']\
-text/\\(\\sw+\\)\\(?:\;\\s-*charset=\\(.+?\\)\\)?[\"'][^>]*>" nil t)
+text/\\(\\sw+\\)\\(?:\;\\s-*charset=\\(.+\\)\\)?[\"'][^>]*>" nil t)
 	    (if (and (match-beginning 2)
 		     (string-match "\\`html\\'" (match-string 1)))
 		;; Don't modify existing meta tag.

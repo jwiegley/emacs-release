@@ -1,6 +1,6 @@
 ;;; face-remap.el --- Functions for managing `face-remapping-alist'
 ;;
-;; Copyright (C) 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
 ;;
 ;; Author: Miles Bader <miles@gnu.org>
 ;; Keywords: faces face remapping display user commands
@@ -211,10 +211,10 @@ The amount of scaling is determined by the variable
 face size by the value of the variable `text-scale-mode-step'
 \(a negative amount shrinks the text).
 
-The `text-scale-increase' and `text-scale-decrease' functions may
-be used to interactively modify the variable
-`text-scale-mode-amount' (they also enable or disable
-`text-scale-mode' as necessary)."
+The `text-scale-increase', `text-scale-decrease', and
+`text-scale-set' functions may be used to interactively modify
+the variable `text-scale-mode-amount' (they also enable or
+disable `text-scale-mode' as necessary)."
   :lighter (" " text-scale-mode-lighter)
   (when text-scale-mode-remapping
     (face-remap-remove-relative text-scale-mode-remapping))
@@ -228,6 +228,19 @@ be used to interactively modify the variable
 					  (expt text-scale-mode-step
 						text-scale-mode-amount))))
   (force-window-update (current-buffer)))
+
+;;;###autoload
+(defun text-scale-set (level)
+  "Set the scale factor of the default face in the current buffer to LEVEL.
+If LEVEL is non-zero, `text-scale-mode' is enabled, otherwise it is disabled.
+
+LEVEL is a number of steps, with 0 representing the default size.
+Each step scales the height of the default face by the variable
+`text-scale-mode-step' (a negative number decreases the height by
+the same amount)."
+  (interactive "p")
+  (setq text-scale-mode-amount level)
+  (text-scale-mode (if (zerop text-scale-mode-amount) -1 1)))
 
 ;;;###autoload
 (defun text-scale-increase (inc)
@@ -404,7 +417,8 @@ may be more appropriate."
 An interface to `buffer-face-mode' which uses the `variable-pitch' face.
 Besides the choice of face, it is the same as `buffer-face-mode'."
   (interactive (list (or current-prefix-arg 'toggle)))
-  (buffer-face-mode-invoke 'variable-pitch arg (interactive-p)))
+  (buffer-face-mode-invoke 'variable-pitch arg
+			   (called-interactively-p 'interactive)))
 
 
 (provide 'face-remap)

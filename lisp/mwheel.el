@@ -1,7 +1,7 @@
 ;;; mwheel.el --- Wheel mouse support
 
 ;; Copyright (C) 1998, 2000, 2001, 2002, 2002, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 ;; Maintainer: William M. Perry <wmperry@gnu.org>
 ;; Keywords: mouse
 
@@ -41,27 +41,25 @@
 (require 'custom)
 (require 'timer)
 
+(defvar mouse-wheel-mode)
+
 ;; Setter function for mouse-button user-options.  Switch Mouse Wheel
 ;; mode off and on again so that the old button is unbound and
 ;; new button is bound to mwheel-scroll.
 
 (defun mouse-wheel-change-button (var button)
-  (let ((active mouse-wheel-mode))
-    ;; Deactivate before changing the setting.
-    (when active (mouse-wheel-mode -1))
-    (set-default var button)
-    (when active (mouse-wheel-mode 1))))
+  (set-default var button)
+  ;; Sync the bindings.
+  (when (bound-and-true-p mouse-wheel-mode) (mouse-wheel-mode 1)))
 
 (defvar mouse-wheel-down-button 4)
 (make-obsolete-variable 'mouse-wheel-down-button
                         'mouse-wheel-down-event
 			"22.1")
 (defcustom mouse-wheel-down-event
-  ;; In the latest versions of XEmacs, we could just use mouse-%s as well.
-  (if (memq window-system '(w32 ns))
+  (if (or (featurep 'w32-win) (featurep 'ns-win))
       'wheel-up
-    (intern (format (if (featurep 'xemacs) "button%s" "mouse-%s")
-		    mouse-wheel-down-button)))
+    (intern (format "mouse-%s" mouse-wheel-down-button)))
   "Event used for scrolling down."
   :group 'mouse
   :type 'symbol
@@ -72,11 +70,9 @@
                         'mouse-wheel-up-event
 			"22.1")
 (defcustom mouse-wheel-up-event
-  ;; In the latest versions of XEmacs, we could just use mouse-%s as well.
-  (if (memq window-system '(w32 ns))
+  (if (or (featurep 'w32-win) (featurep 'ns-win))
       'wheel-down
-    (intern (format (if (featurep 'xemacs) "button%s" "mouse-%s")
-		    mouse-wheel-up-button)))
+    (intern (format "mouse-%s" mouse-wheel-up-button)))
   "Event used for scrolling up."
   :group 'mouse
   :type 'symbol
@@ -87,9 +83,7 @@
                         'mouse-wheel-click-event
 			"22.1")
 (defcustom mouse-wheel-click-event
-  ;; In the latest versions of XEmacs, we could just use mouse-%s as well.
-  (intern (format (if (featurep 'xemacs) "button%s" "mouse-%s")
-		  mouse-wheel-click-button))
+  (intern (format "mouse-%s" mouse-wheel-click-button))
   "Event that should be temporarily inhibited after mouse scrolling.
 The mouse wheel is typically on the mouse-2 button, so it may easily
 happen that text is accidentally yanked into the buffer when
@@ -137,7 +131,8 @@ less than a full screen."
             (choice :tag "scroll amount"
                     (const :tag "Full screen" :value nil)
                     (integer :tag "Specific # of lines")
-                    (float :tag "Fraction of window"))))))
+                    (float :tag "Fraction of window")))))
+  :set 'mouse-wheel-change-button)
 
 (defcustom mouse-wheel-progressive-speed t
   "If non-nil, the faster the user moves the wheel, the faster the scrolling.
@@ -184,6 +179,12 @@ This can be slightly disconcerting, but some people prefer it."
   (if (eq (event-basic-type last-input-event) mouse-wheel-click-event)
       (setq this-command 'ignore)))
 
+(defvar mwheel-scroll-up-function 'scroll-up
+  "Function that does the job of scrolling upward.")
+
+(defvar mwheel-scroll-down-function 'scroll-down
+  "Function that does the job of scrolling downward.")
+
 (defun mwheel-scroll (event)
   "Scroll up or down according to the EVENT.
 This should only be bound to mouse buttons 4 and 5."
@@ -211,12 +212,12 @@ This should only be bound to mouse buttons 4 and 5."
     (unwind-protect
 	(let ((button (mwheel-event-button event)))
 	  (cond ((eq button mouse-wheel-down-event)
-                 (condition-case nil (scroll-down amt)
+                 (condition-case nil (funcall mwheel-scroll-down-function amt)
                    ;; Make sure we do indeed scroll to the beginning of
                    ;; the buffer.
                    (beginning-of-buffer
                     (unwind-protect
-                        (scroll-down)
+                        (funcall mwheel-scroll-down-function)
                       ;; If the first scroll succeeded, then some scrolling
                       ;; is possible: keep scrolling til the beginning but
                       ;; do not signal an error.  For some reason, we have
@@ -226,9 +227,9 @@ This should only be bound to mouse buttons 4 and 5."
                       ;; to only affect scroll-down.  --Stef
                       (set-window-start (selected-window) (point-min))))))
 		((eq button mouse-wheel-up-event)
-                 (condition-case nil (scroll-up amt)
+                 (condition-case nil (funcall mwheel-scroll-up-function amt)
                    ;; Make sure we do indeed scroll to the end of the buffer.
-                   (end-of-buffer (while t (scroll-up)))))
+                   (end-of-buffer (while t (funcall mwheel-scroll-up-function)))))
 		(t (error "Bad binding in mwheel-scroll"))))
       (if curwin (select-window curwin)))
     ;; If there is a temporarily active region, deactivate it iff
@@ -245,35 +246,36 @@ This should only be bound to mouse buttons 4 and 5."
 	  (run-with-timer mouse-wheel-inhibit-click-time nil
 			  'mwheel-inhibit-click-timeout))))
 
-;;;###autoload
+(defvar mwheel-installed-bindings nil)
+
+;; preloaded ;;;###autoload
 (define-minor-mode mouse-wheel-mode
   "Toggle mouse wheel support.
 With prefix argument ARG, turn on if positive, otherwise off.
 Return non-nil if the new state is enabled."
+  :init-value t
+  ;; We'd like to use custom-initialize-set here so the setup is done
+  ;; before dumping, but at the point where the defcustom is evaluated,
+  ;; the corresponding function isn't defined yet, so
+  ;; custom-initialize-set signals an error.
+  :initialize 'custom-initialize-delay
   :global t
   :group 'mouse
-  (let* ((dn mouse-wheel-down-event)
-         (up mouse-wheel-up-event)
-         (keys
-          (nconc (mapcar (lambda (amt) `[(,@(if (consp amt) (car amt)) ,up)])
-			 mouse-wheel-scroll-amount)
-                 (mapcar (lambda (amt) `[(,@(if (consp amt) (car amt)) ,dn)])
-			 mouse-wheel-scroll-amount))))
-    ;; This condition-case is here because Emacs 19 will throw an error
-    ;; if you try to define a key that it does not know about.  I for one
-    ;; prefer to just unconditionally do a mwheel-install in my .emacs, so
-    ;; that if the wheeled-mouse is there, it just works, and this way it
-    ;; doesn't yell at me if I'm on my laptop or another machine, etc.
-    (condition-case ()
-	(dolist (key keys)
-	  (cond (mouse-wheel-mode
-		 (global-set-key key 'mwheel-scroll))
-		((eq (lookup-key (current-global-map) key) 'mwheel-scroll)
-		 (global-unset-key key))))
-      (error nil))))
+  ;; Remove previous bindings, if any.
+  (while mwheel-installed-bindings
+    (let ((key (pop mwheel-installed-bindings)))
+      (when (eq (lookup-key (current-global-map) key) 'mwheel-scroll)
+        (global-unset-key key))))
+  ;; Setup bindings as needed.
+  (when mouse-wheel-mode
+    (dolist (event (list mouse-wheel-down-event mouse-wheel-up-event))
+      (dolist (key (mapcar (lambda (amt) `[(,@(if (consp amt) (car amt)) ,event)])
+                           mouse-wheel-scroll-amount))
+        (global-set-key key 'mwheel-scroll)
+        (push key mwheel-installed-bindings)))))
 
 ;;; Compatibility entry point
-;;;###autoload
+;; preloaded ;;;###autoload
 (defun mwheel-install (&optional uninstall)
   "Enable mouse wheel support."
   (mouse-wheel-mode (if uninstall -1 1)))

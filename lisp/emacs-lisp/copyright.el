@@ -1,7 +1,7 @@
 ;;; copyright.el --- update the copyright notice in current buffer
 
 ;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 1998, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Daniel Pfeiffer <occitan@esperanto.org>
 ;; Keywords: maint, tools
@@ -223,8 +223,9 @@ version \\([0-9]+\\), or (at"
                (< (string-to-number (match-string 3))
                   (string-to-number copyright-current-gpl-version))
 	       (or noquery
-		   (y-or-n-p (format "Replace GPL version by %s? "
-				     copyright-current-gpl-version)))
+                   (save-match-data
+                     (y-or-n-p (format "Replace GPL version by %s? "
+                                       copyright-current-gpl-version))))
 	       (progn
 		 (if (match-end 2)
 		     ;; Esperanto bilingual comment in two-column.el

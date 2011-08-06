@@ -1,7 +1,7 @@
 ;;; em-hist.el --- history list management
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -86,7 +86,7 @@
   :group 'eshell-hist)
 
 (defcustom eshell-history-file-name
-  (concat eshell-directory-name "history")
+  (expand-file-name "history" eshell-directory-name)
   "*If non-nil, name of the file to read/write input history.
 See also `eshell-read-history' and `eshell-write-history'.
 If it is nil, Eshell will use the value of HISTFILE."
@@ -582,6 +582,10 @@ See also `eshell-read-history'."
 	    (setq textargs (cdr textargs)
 		  posb (cdr posb)
 		  pose (cdr pose))))))))
+
+(defvar pcomplete-stub)
+(defvar pcomplete-last-completion-raw)
+(declare-function pcomplete-actual-arg "pcomplete")
 
 (defun eshell-complete-history-reference ()
   "Complete a history reference, by completing the event designator."

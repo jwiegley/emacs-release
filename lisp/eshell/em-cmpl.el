@@ -1,7 +1,7 @@
 ;;; em-cmpl.el --- completion using the TAB key
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -402,7 +402,7 @@ to writing a completion function."
 	  (setq filename (substring filename 1)
 		pcomplete-stub filename
 		glob-name t))
-      (let* ((paths (split-string (getenv "PATH") path-separator))
+      (let* ((paths (eshell-parse-colon-path eshell-path-env))
 	     (cwd (file-name-as-directory
 		   (expand-file-name default-directory)))
 	     (path "") (comps-in-path ())

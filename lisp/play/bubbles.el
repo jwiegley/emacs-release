@@ -1,6 +1,6 @@
 ;;; bubbles.el --- Puzzle game for Emacs.
 
-;; Copyright (C) 2007, 2008, 2009  Free Software Foundation, Inc.
+;; Copyright (C) 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author:      Ulf Jasper <ulf.jasper@web.de>
 ;; URL:         http://ulf.epplejasper.de/
@@ -82,7 +82,7 @@
 (defconst bubbles-version "0.5" "Version number of bubbles.el.")
 
 (require 'gamegrid)
-(require 'cl)
+(eval-when-compile (require 'cl))       ; for 'case
 
 ;; User options
 

@@ -1,7 +1,8 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+@c   Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/frames
 @node Frames, Positions, Windows, Top
@@ -609,11 +610,15 @@ the @code{user-position} parameter (see above) does for the position
 parameters @code{top} and @code{left}.
 
 @item fullscreen
-Specify that width, height or both shall be set to the size of the screen.
-The value @code{fullwidth} specifies that width shall be the size of the
-screen.  The value @code{fullheight} specifies that height shall be the
-size of the screen.  The value @code{fullboth} specifies that both the
-width and the height shall be set to the size of the screen.
+Specify that width, height or both shall be maximized.  The value
+@code{fullwidth} specifies that width shall be as wide as possible.
+The value @code{fullheight} specifies that height shall be as tall as
+possible.  The value @code{fullboth} specifies that both the width and
+the height shall be set to the size of the screen.  The value
+@code{maximized} specifies that the frame shall be maximized.  The
+difference between @code{maximized} and @code{fullboth} is that the
+former still has window manager decorations while the latter really
+covers the whole screen.
 @end table
 
 @node Layout Parameters
@@ -751,6 +756,10 @@ geometry changes.  Some window managers, including versions of Fvwm2
 and KDE, fail to confirm, so Xt hangs.  Set this to @code{nil} to
 prevent hanging with those window managers.
 
+@item sticky
+If non-@code{nil}, the frame is visible on all virtual desktops on systems
+with virtual desktops.
+
 @ignore
 @item parent-id
 @c ??? Not yet working.
@@ -812,7 +821,7 @@ This variable controls how the cursor looks in a window that is not
 selected.  It supports the same values as the @code{cursor-type} frame
 parameter; also, @code{nil} means don't display a cursor in
 nonselected windows, and @code{t} (the default) means use a standard
-modificatoin of the usual cursor type (solid box becomes hollow box,
+modification of the usual cursor type (solid box becomes hollow box,
 and bar becomes a narrower bar).
 @end defopt
 
@@ -972,12 +981,17 @@ selected frame.
 @defunx frame-pixel-width &optional frame
 These functions return the height and width of the main display area
 of @var{frame}, measured in pixels.  If you don't supply @var{frame},
-they use the selected frame.
+they use the selected frame.  For a text-only terminal, the results are
+in characters rather than pixels.
 
-These values include the internal borders, and windows' scroll bars
-and fringes (which belong to individual windows, not to the frame
-itself), but do not include menu bars or tool bars (except when using
-X without an X toolkit).
+These values include the internal borders, and windows' scroll bars and
+fringes (which belong to individual windows, not to the frame itself).
+The exact value of the heights depends on the window-system and toolkit
+in use.  With Gtk+, the height does not include any tool bar or menu
+bar.  With the Motif or Lucid toolkits, it includes the tool bar but
+not the menu bar.  In a graphical version with no toolkit, it includes
+both the tool bar and menu bar.  For a text-only terminal, the result
+includes the menu bar.
 @end defun
 
 @defun frame-char-height &optional frame
@@ -2152,6 +2166,11 @@ If the name @var{color} is not defined, the value is @code{nil}.
 @node Resources
 @section X Resources
 
+This section describes some of the functions and variables for
+querying and using X resources, or their equivalent on your operating
+system.  @xref{X Resources,, X Resources, emacs, The GNU Emacs
+Manual}, for more information about X resources.
+
 @defun x-get-resource attribute class &optional component subclass
 The function @code{x-get-resource} retrieves a resource value from the X
 Window defaults database.
@@ -2205,7 +2224,11 @@ or @file{~/.Xresources}).  Then:
 @end group
 @end example
 
-  @xref{X Resources,, X Resources, emacs, The GNU Emacs Manual}.
+@defvar inhibit-x-resources
+If this variable is non-@code{nil}, Emacs does not look up X
+resources, and X resources do not have any effect when creating new
+frames.
+@end defvar
 
 @node Display Feature Testing
 @section Display Feature Testing

@@ -1,7 +1,7 @@
 ;;; nnrss.el --- interfacing with RSS
 
 ;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Shenghuo Zhu <zsh@cs.rochester.edu>
 ;; Keywords: RSS
@@ -226,8 +226,6 @@ used to render text.  If it is nil, text will simply be folded.")
 	      (link (nth 2 e))
 	      (enclosure (nth 7 e))
 	      (comments (nth 8 e))
-	      ;; Enable encoding of Newsgroups header in XEmacs.
-	      (default-enable-multibyte-characters t)
 	      (rfc2047-header-encoding-alist
 	       (if (mm-coding-system-p 'utf-8)
 		   (cons '("Newsgroups" . utf-8)
@@ -272,7 +270,7 @@ used to render text.  If it is nil, text will simply be folded.")
 		      (replace-match "\n")
 		    (replace-match "\n\n")))
 		(unless (eobp)
-		  (let ((fill-column default-fill-column)
+		  (let ((fill-column (default-value 'fill-column))
 			(window (get-buffer-window nntp-server-buffer)))
 		    (when window
 		      (setq fill-column
@@ -310,7 +308,11 @@ used to render text.  If it is nil, text will simply be folded.")
 		    "<#/part>\n"
 		    "<#/multipart>\n"))
 	  (condition-case nil
-	      (mml-to-mime)
+	      ;; Allow `mml-to-mime' to generate MIME article without
+	      ;; making inquiry to a user for unknown encoding.
+	      (let ((mml-confirmation-set
+		     (cons 'unknown-encoding mml-confirmation-set)))
+		(mml-to-mime))
 	    (error
 	     (erase-buffer)
 	     (insert header
@@ -425,7 +427,7 @@ otherwise return nil."
 (defun nnrss-fetch (url &optional local)
   "Fetch URL and put it in a the expected Lisp structure."
   (mm-with-unibyte-buffer
-    ;;some CVS versions of url.el need this to close the connection quickly
+    ;;some versions of url.el need this to close the connection quickly
     (let (cs xmlform htmlform)
       ;; bit o' work necessary for w3 pre-cvs and post-cvs
       (if local

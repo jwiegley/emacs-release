@@ -1,7 +1,7 @@
 ;;; tooltip.el --- show tooltip windows
 
 ;; Copyright (C) 1997, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Gerd Moellmann <gerd@acm.org>
 ;; Keywords: help c mouse tools
@@ -52,7 +52,7 @@ the help text in the echo area, and does not make a pop-up window."
   ;; Even if we start on a text-only terminal, make this non-nil by
   ;; default because we can open a graphical frame later (multi-tty).
   :init-value t
-  :initialize 'custom-initialize-safe-default
+  :initialize 'custom-initialize-delay
   :group 'tooltip
   (unless (or (null tooltip-mode) (fboundp 'x-show-tip))
     (error "Sorry, tooltips are not yet available on this system"))

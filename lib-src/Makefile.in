@@ -1,6 +1,6 @@
 # Makefile for lib-src subdirectory in GNU Emacs.
 # Copyright (C) 1985, 1987, 1988, 1993, 1994, 2001, 2002, 2003, 2004,
-#               2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+#               2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 # This file is part of GNU Emacs.
 
@@ -110,7 +110,8 @@ INSTALLABLE_SCRIPTS = rcs-checkin grep-changelog
 
 # Things that Emacs runs internally, or during the build process,
 #  which should not be installed in bindir.
-UTILITIES=  profile${EXEEXT} digest-doc${EXEEXT} sorted-doc${EXEEXT} movemail${EXEEXT} cvtmail${EXEEXT} fakemail${EXEEXT} \
+UTILITIES=  profile${EXEEXT} digest-doc${EXEEXT} sorted-doc${EXEEXT} \
+            movemail${EXEEXT} fakemail${EXEEXT} \
             hexl${EXEEXT} update-game-score${EXEEXT}
 
 DONT_INSTALL= test-distrib${EXEEXT} make-docfile${EXEEXT}
@@ -297,14 +298,14 @@ maybe-blessmail: BLESSMAIL
 $(DESTDIR)${archlibdir}: all
 	@echo
 	@echo "Installing utilities run internally by Emacs."
-	$(top_srcdir)/mkinstalldirs $(DESTDIR)${archlibdir}
+	umask 022; $(top_srcdir)/mkinstalldirs $(DESTDIR)${archlibdir}
 	if [ `(cd $(DESTDIR)${archlibdir} && /bin/pwd)` != `/bin/pwd` ]; then \
 	  for file in ${UTILITIES}; do \
 	    $(INSTALL_PROGRAM) $(INSTALL_STRIP) $$file $(DESTDIR)${archlibdir}/$$file ; \
 	  done ; \
         fi
-	$(top_srcdir)/mkinstalldirs $(DESTDIR)${gamedir}
-	touch $(DESTDIR)${gamedir}/snake-scores
+	umask 022; $(top_srcdir)/mkinstalldirs $(DESTDIR)${gamedir}; \
+	touch $(DESTDIR)${gamedir}/snake-scores; \
 	touch $(DESTDIR)${gamedir}/tetris-scores
 /* If the following commands fail, that is not a big deal.
    update-game-score will detect at runtime that it is not setuid,
@@ -337,7 +338,7 @@ uninstall:
 	for file in ${INSTALLABLES} ${INSTALLABLE_SCRIPTS}; do \
 	  rm -f $(DESTDIR)${bindir}/`echo $${file} | sed '$(TRANSFORM)'` ; \
 	done)
-	(cd $(DESTDIR)${archlibdir}; \
+	(cd $(DESTDIR)${archlibdir} && \
 	 rm -f ${UTILITIES} ${INSTALLABLES} ${SCRIPTS} ${INSTALLABLE_SCRIPTS})
 
 mostlyclean:
@@ -424,13 +425,10 @@ movemail${EXEEXT}: movemail.o pop.o $(GETOPTDEPS)
 	$(CC) ${LINK_CFLAGS} ${MOVE_FLAGS} movemail.o pop.o $(GETOPTOBJS) $(LOADLIBES) $(LIBS_MAIL) $(LIBS_MOVE) -o movemail
 
 movemail.o: ${srcdir}/movemail.c ../src/config.h $(GETOPT_H)
-	$(CC) -c ${CPP_CFLAGS} -Demacs ${MOVE_FLAGS} ${srcdir}/movemail.c
+	$(CC) -c ${CPP_CFLAGS} ${MOVE_FLAGS} ${srcdir}/movemail.c
 
 pop.o: ${srcdir}/pop.c  ../src/config.h
 	$(CC) -c ${CPP_CFLAGS} ${MOVE_FLAGS} ${srcdir}/pop.c
-
-cvtmail${EXEEXT}: ${srcdir}/cvtmail.c
-	$(CC) ${ALL_CFLAGS} ${srcdir}/cvtmail.c $(LOADLIBES) -o cvtmail
 
 fakemail${EXEEXT}: ${srcdir}/fakemail.c ../src/config.h
 	$(CC) ${ALL_CFLAGS} ${srcdir}/fakemail.c $(LOADLIBES) -o fakemail

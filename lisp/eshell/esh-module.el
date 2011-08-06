@@ -1,7 +1,7 @@
 ;;; esh-module.el --- Eshell modules
 
 ;; Copyright (C) 1999, 2000, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 ;; Keywords: processes
@@ -38,7 +38,7 @@ customizing the variable `eshell-modules-list'."
 ;; load the defgroup's for the standard extension modules, so that
 ;; documentation can be provided when the user customize's
 ;; `eshell-modules-list'.
-(require 'esh-groups)
+(load "esh-groups" nil 'nomessage)
 
 ;;; User Variables:
 

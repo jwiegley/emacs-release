@@ -1,7 +1,7 @@
 /* Composite sequence support.
    Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
    Copyright (C) 2003, 2006
@@ -24,6 +24,7 @@ You should have received a copy of the GNU General Public License
 along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
+#include <setjmp.h>
 #include "lisp.h"
 #include "buffer.h"
 #include "character.h"
@@ -156,6 +157,7 @@ Lisp_Object composition_hash_table;
 Lisp_Object Vcompose_chars_after_function;
 
 Lisp_Object Qauto_composed;
+Lisp_Object Vauto_composition_mode;
 Lisp_Object Vauto_composition_function;
 Lisp_Object Qauto_composition_function;
 Lisp_Object Vcomposition_function_table;
@@ -988,6 +990,14 @@ autocmp_chars (cft_element, charpos, bytepos, limit, win, face, string)
 	    {
 	      Lisp_Object args[6];
 
+	      /* Save point as marker before calling out to lisp.  */
+	      if (NILP (string))
+		{
+		  Lisp_Object m = Fmake_marker ();
+		  set_marker_both (m, Qnil, pt, pt_byte);
+		  record_unwind_protect (restore_point_unwind, m);
+		}
+
 	      args[0] = Vauto_composition_function;
 	      args[1] = AREF (elt, 2);
 	      args[2] = pos;
@@ -996,8 +1006,10 @@ autocmp_chars (cft_element, charpos, bytepos, limit, win, face, string)
 	      args[5] = string;
 	      gstring = safe_call (6, args);
 	    }
-	  if (NILP (string))
-	    TEMP_SET_PT_BOTH (pt, pt_byte);
+	  else if (NILP (string))
+	    {
+	      TEMP_SET_PT_BOTH (pt, pt_byte);
+	    }
 	  return unbind_to (count, gstring);
 	}
     }
@@ -1038,7 +1050,7 @@ composition_compute_stop_pos (cmp_it, charpos, bytepos, endpos, string)
   if (NILP (string) && PT > charpos && PT < endpos)
     cmp_it->stop_pos = PT;
   if (NILP (current_buffer->enable_multibyte_characters)
-      || ! FUNCTIONP (Vauto_composition_function))
+      || NILP (Vauto_composition_mode))
     return;
   if (bytepos < 0)
     {
@@ -1103,6 +1115,9 @@ composition_reseat_it (cmp_it, charpos, bytepos, endpos, w, face, string)
      struct face *face;
      Lisp_Object string;
 {
+  if (NILP (string) && charpos < PT && PT < endpos)
+    endpos = PT;
+
   if (cmp_it->ch == -2)
     {
       composition_compute_stop_pos (cmp_it, charpos, bytepos, endpos, string);
@@ -1268,11 +1283,12 @@ static Lisp_Object _work_val;
 static int _work_char;
 
 /* 1 iff the character C is composable.  */
-#define CHAR_COMPOSABLE_P(C)					\
-  (_work_val = CHAR_TABLE_REF (Vunicode_category_table, (C)),	\
-   (SYMBOLP (_work_val)						\
-    && (_work_char = SDATA (SYMBOL_NAME (_work_val))[0]) != 'C'	\
-    && _work_char != 'Z'))
+#define CHAR_COMPOSABLE_P(C)						\
+  ((C) == 0x200C || (C) == 0x200D					\
+   || (_work_val = CHAR_TABLE_REF (Vunicode_category_table, (C)),	\
+       (SYMBOLP (_work_val)						\
+	&& (_work_char = SDATA (SYMBOL_NAME (_work_val))[0]) != 'C'	\
+	&& _work_char != 'Z')))
 
 /* This is like find_composition, but find an automatic composition
    instead.  If found, set *GSTRING to the glyph-string representing
@@ -1320,7 +1336,7 @@ find_automatic_composition (pos, limit, start, end, gstring, string)
  retry:
   check_val = Qnil;
   /* At first, check if POS is composable.  */
-  c = STRING_CHAR (cur.p, 0);
+  c = STRING_CHAR (cur.p);
   if (! CHAR_COMPOSABLE_P (c))
     {
       if (limit < 0)
@@ -1346,7 +1362,7 @@ find_automatic_composition (pos, limit, start, end, gstring, string)
 		fore_check_limit = cur.pos;
 		break;
 	      }
-	    c = STRING_CHAR (cur.p, 0);
+	    c = STRING_CHAR (cur.p);
 	    if (! CHAR_COMPOSABLE_P (c))
 	      break;
 	    val = CHAR_TABLE_REF (Vcomposition_function_table, c);
@@ -1367,7 +1383,7 @@ find_automatic_composition (pos, limit, start, end, gstring, string)
       if (get_property_and_range (cur.pos, Qcomposition, &val, &b, &e, Qnil)
 	  && COMPOSITION_VALID_P (b, e, val))
 	break;
-      c = STRING_CHAR (cur.p, 0);
+      c = STRING_CHAR (cur.p);
       if (! CHAR_COMPOSABLE_P (c))
 	break;
       val = CHAR_TABLE_REF (Vcomposition_function_table, c);
@@ -1390,7 +1406,7 @@ find_automatic_composition (pos, limit, start, end, gstring, string)
 
 	  if (NILP (check_val))
 	    {
-	      c = STRING_CHAR (cur.p, 0);
+	      c = STRING_CHAR (cur.p);
 	      check_val = CHAR_TABLE_REF (Vcomposition_function_table, c);
 	    }
 	  for (; CONSP (check_val); check_val = XCDR (check_val))
@@ -1448,49 +1464,53 @@ find_automatic_composition (pos, limit, start, end, gstring, string)
   return 0;
 }
 
+/* Return the adjusted point provided that point is moved from LAST_PT
+   to NEW_PT.  */
+
 int
-composition_adjust_point (last_pt)
-     EMACS_INT last_pt;
+composition_adjust_point (last_pt, new_pt)
+     EMACS_INT last_pt, new_pt;
 {
   EMACS_INT charpos, bytepos, startpos, beg, end, pos;
   Lisp_Object val;
   int i;
 
-  if (PT == BEGV || PT == ZV)
-    return PT;
+  if (new_pt == BEGV || new_pt == ZV)
+    return new_pt;
 
   /* At first check the static composition. */
-  if (get_property_and_range (PT, Qcomposition, &val, &beg, &end, Qnil)
+  if (get_property_and_range (new_pt, Qcomposition, &val, &beg, &end, Qnil)
       && COMPOSITION_VALID_P (beg, end, val))
     {
-      if (beg < PT /* && end > PT   <- It's always the case.  */
+      if (beg < new_pt /* && end > new_pt   <- It's always the case.  */
 	  && (last_pt <= beg || last_pt >= end))
-	return (PT < last_pt ? beg : end);
-      return PT;
+	return (new_pt < last_pt ? beg : end);
+      return new_pt;
     }
 
   if (NILP (current_buffer->enable_multibyte_characters)
-      || ! FUNCTIONP (Vauto_composition_function))
-    return PT;
+      || NILP (Vauto_composition_mode))
+    return new_pt;
 
   /* Next check the automatic composition.  */
-  if (! find_automatic_composition (PT, (EMACS_INT) -1, &beg, &end, &val, Qnil)
-      || beg == PT)
-    return PT;
+  if (! find_automatic_composition (new_pt, (EMACS_INT) -1, &beg, &end, &val,
+				    Qnil)
+      || beg == new_pt)
+    return new_pt;
   for (i = 0; i < LGSTRING_GLYPH_LEN (val); i++)
     {
       Lisp_Object glyph = LGSTRING_GLYPH (val, i);
 
       if (NILP (glyph))
 	break;
-      if (beg + LGLYPH_FROM (glyph) == PT)
-	return PT;
-      if (beg + LGLYPH_TO (glyph) >= PT)
-	return (PT < last_pt
+      if (beg + LGLYPH_FROM (glyph) == new_pt)
+	return new_pt;
+      if (beg + LGLYPH_TO (glyph) >= new_pt)
+	return (new_pt < last_pt
 		? beg + LGLYPH_FROM (glyph)
 		: beg + LGLYPH_TO (glyph) + 1);
     }
-  return PT;
+  return new_pt;
 }
 
 DEFUN ("composition-get-gstring", Fcomposition_get_gstring,
@@ -1652,7 +1672,7 @@ See `find-composition' for more details.  */)
   if (!find_composition (from, to, &start, &end, &prop, string))
     {
       if (!NILP (current_buffer->enable_multibyte_characters)
-	  && FUNCTIONP (Vauto_composition_function)
+	  && ! NILP (Vauto_composition_mode)
 	  && find_automatic_composition (from, to, &start, &end, &gstring,
 					 string))
 	return list3 (make_number (start), make_number (end), gstring);
@@ -1710,7 +1730,7 @@ syms_of_composite ()
 {
   int i;
 
-  Qcomposition = intern ("composition");
+  Qcomposition = intern_c_string ("composition");
   staticpro (&Qcomposition);
 
   /* Make a hash table for static composition.  */
@@ -1771,13 +1791,18 @@ inserted or deleted to keep `composition' property of buffer text
 valid.
 
 The default value is the function `compose-chars-after'.  */);
-  Vcompose_chars_after_function = intern ("compose-chars-after");
+  Vcompose_chars_after_function = intern_c_string ("compose-chars-after");
 
-  Qauto_composed = intern ("auto-composed");
+  Qauto_composed = intern_c_string ("auto-composed");
   staticpro (&Qauto_composed);
 
-  Qauto_composition_function = intern ("auto-composition-function");
+  Qauto_composition_function = intern_c_string ("auto-composition-function");
   staticpro (&Qauto_composition_function);
+
+  DEFVAR_LISP ("auto-composition-mode", &Vauto_composition_mode,
+	       doc: /* Non-nil if Auto-Composition mode is enabled.
+Use the command `auto-composition-mode' to change this variable. */);
+  Vauto_composition_mode = Qt;
 
   DEFVAR_LISP ("auto-composition-function", &Vauto_composition_function,
 	       doc: /* Function to call to compose characters automatically.

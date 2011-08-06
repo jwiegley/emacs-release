@@ -1,6 +1,6 @@
 /* Utility and Unix shadow routines for GNU Emacs support programs on NT.
    Copyright (C) 1994, 2002, 2003, 2004, 2005, 2006, 2007,
-                 2008, 2009 Free Software Foundation, Inc.
+                 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -36,7 +36,10 @@ int getppid(void);
 char * getlogin ();
 char * cuserid (char * s);
 unsigned getuid ();
+unsigned getegid ();
+unsigned getgid ();
 int setuid (unsigned uid);
+int setegid (unsigned gid);
 char * getpass (const char * prompt);
 int fchown (int fd, unsigned uid, unsigned gid);
 

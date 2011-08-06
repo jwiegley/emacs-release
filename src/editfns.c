@@ -1,7 +1,7 @@
 /* Lisp functions pertaining to editing.
    Copyright (C) 1985, 1986, 1987, 1989, 1993, 1994, 1995, 1996,
                  1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -22,6 +22,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <config.h>
 #include <sys/types.h>
 #include <stdio.h>
+#include <setjmp.h>
 
 #ifdef HAVE_PWD_H
 #include <pwd.h>
@@ -230,7 +231,7 @@ A multibyte character is handled correctly.  */)
   if (SCHARS (string))
     {
       if (STRING_MULTIBYTE (string))
-	XSETFASTINT (val, STRING_CHAR (SDATA (string), SBYTES (string)));
+	XSETFASTINT (val, STRING_CHAR (SDATA (string)));
       else
 	XSETFASTINT (val, SREF (string, 0));
     }
@@ -996,6 +997,9 @@ functions that change the buffer will still cause deactivation
 of the mark at the end of the command.  To prevent that, bind
 `deactivate-mark' with `let'.
 
+If you only want to save the current buffer but not point nor mark,
+then just use `save-current-buffer', or even `with-current-buffer'.
+
 usage: (save-excursion &rest BODY)  */)
      (args)
      Lisp_Object args;
@@ -1570,7 +1574,8 @@ instead of the current time.  The argument should have the form
 have the form (HIGH . LOW), but this is considered obsolete.
 
 WARNING: Since the result is floating point, it may not be exact.
-Do not use this function if precise time stamps are required.  */)
+If precise time stamps are required, use either `current-time',
+or (if you need time as a string) `format-time-string'.  */)
      (specified_time)
      Lisp_Object specified_time;
 {
@@ -1892,7 +1897,7 @@ usage: (encode-time SECOND MINUTE HOUR DAY MONTH YEAR &optional ZONE)  */)
 }
 
 DEFUN ("current-time-string", Fcurrent_time_string, Scurrent_time_string, 0, 1, 0,
-       doc: /* Return the current time, as a human-readable string.
+       doc: /* Return the current local time, as a human-readable string.
 Programs can use this function to decode a time,
 since the number of columns in each field is fixed
 if the year is in the range 1000-9999.
@@ -2698,7 +2703,7 @@ determines whether case is significant or ignored.  */)
       else
 	{
 	  c1 = BUF_FETCH_BYTE (bp1, i1);
-	  c1 = unibyte_char_to_multibyte (c1);
+	  MAKE_CHAR_MULTIBYTE (c1);
 	  i1++;
 	}
 
@@ -2711,7 +2716,7 @@ determines whether case is significant or ignored.  */)
       else
 	{
 	  c2 = BUF_FETCH_BYTE (bp2, i2);
-	  c2 = unibyte_char_to_multibyte (c2);
+	  MAKE_CHAR_MULTIBYTE (c2);
 	  i2++;
 	}
 
@@ -2865,8 +2870,8 @@ Both characters must have the same length of multi-byte form.  */)
 		{
 		  if (MODIFF - 1 == SAVE_MODIFF)
 		    SAVE_MODIFF++;
-		  if (MODIFF - 1 == current_buffer->auto_save_modified)
-		    current_buffer->auto_save_modified++;
+		  if (MODIFF - 1 == BUF_AUTOSAVE_MODIFF (current_buffer))
+		    BUF_AUTOSAVE_MODIFF (current_buffer)++;
 		}
 
 	      /* The before-change-function may have moved the gap
@@ -2982,7 +2987,7 @@ check_translation (pos, pos_byte, end, val)
 		      memcpy (newbuf, buf, sizeof (int) * buf_used);
 		      buf = newbuf;
 		    }
-		  buf[buf_used++] = STRING_CHAR_AND_LENGTH (p, 0, len);
+		  buf[buf_used++] = STRING_CHAR_AND_LENGTH (p, len);
 		  pos_byte += len;
 		}
 	      if (XINT (AREF (elt, i)) != buf[i])
@@ -3051,7 +3056,7 @@ It returns the number of characters changed.  */)
       Lisp_Object val;
 
       if (multibyte)
-	oc = STRING_CHAR_AND_LENGTH (p, MAX_MULTIBYTE_LENGTH, len);
+	oc = STRING_CHAR_AND_LENGTH (p, len);
       else
 	oc = *p, len = 1;
       if (oc < size)
@@ -3063,8 +3068,7 @@ It returns the number of characters changed.  */)
 	      if (string_multibyte)
 		{
 		  str = tt + string_char_to_byte (table, oc);
-		  nc = STRING_CHAR_AND_LENGTH (str, MAX_MULTIBYTE_LENGTH,
-					       str_len);
+		  nc = STRING_CHAR_AND_LENGTH (str, str_len);
 		}
 	      else
 		{
@@ -3274,12 +3278,26 @@ Lisp_Object
 save_restriction_restore (data)
      Lisp_Object data;
 {
+  struct buffer *cur = NULL;
+  struct buffer *buf = (CONSP (data)
+			? XMARKER (XCAR (data))->buffer
+			: XBUFFER (data));
+
+  if (buf && buf != current_buffer && !NILP (buf->pt_marker))
+    { /* If `buf' uses markers to keep track of PT, BEGV, and ZV (as
+	 is the case if it is or has an indirect buffer), then make
+	 sure it is current before we update BEGV, so
+	 set_buffer_internal takes care of managing those markers.  */
+      cur = current_buffer;
+      set_buffer_internal (buf);
+    }
+
   if (CONSP (data))
     /* A pair of marks bounding a saved restriction.  */
     {
       struct Lisp_Marker *beg = XMARKER (XCAR (data));
       struct Lisp_Marker *end = XMARKER (XCDR (data));
-      struct buffer *buf = beg->buffer; /* END should have the same buffer. */
+      eassert (buf == end->buffer);
 
       if (buf /* Verify marker still points to a buffer.  */
 	  && (beg->charpos != BUF_BEGV (buf) || end->charpos != BUF_ZV (buf)))
@@ -3304,8 +3322,6 @@ save_restriction_restore (data)
   else
     /* A buffer, which means that there was no old restriction.  */
     {
-      struct buffer *buf = XBUFFER (data);
-
       if (buf /* Verify marker still points to a buffer.  */
 	  && (BUF_BEGV (buf) != BUF_BEG (buf) || BUF_ZV (buf) != BUF_Z (buf)))
 	/* The buffer has been narrowed, get rid of the narrowing.  */
@@ -3316,6 +3332,9 @@ save_restriction_restore (data)
 	  buf->clip_changed = 1; /* Remember that the narrowing changed. */
 	}
     }
+
+  if (cur)
+    set_buffer_internal (cur);
 
   return Qnil;
 }
@@ -3763,7 +3782,11 @@ usage: (format STRING &rest OBJECTS)  */)
 	       to be as large as is calculated here.  Easy check for
 	       the case PRECISION = 0. */
 	    thissize = precision[n] ? CONVERTED_BYTE_SIZE (multibyte, args[n]) : 0;
+	    /* The precision also constrains how much of the argument
+	       string will finally appear (Bug#5710). */
 	    actual_width = lisp_string_width (args[n], -1, NULL, NULL);
+	    if (precision[n] != -1)
+	      actual_width = min(actual_width,precision[n]);
 	  }
 	/* Would get MPV otherwise, since Lisp_Int's `point' to low memory.  */
 	else if (INTEGERP (args[n]) && *format != 's')
@@ -4158,8 +4181,8 @@ usage: (format STRING &rest OBJECTS)  */)
 	      len = make_number (SCHARS (args[n]));
 	      new_len = make_number (info[n].end - info[n].start);
 	      props = text_property_list (args[n], make_number (0), len, Qnil);
-	      extend_property_ranges (props, len, new_len);
-	      /* If successive arguments have properites, be sure that
+	      props = extend_property_ranges (props, new_len);
+	      /* If successive arguments have properties, be sure that
 		 the value of `composition' property be the copy.  */
 	      if (n > 1 && info[n - 1].end)
 		make_composition_value_copy (props);
@@ -4610,7 +4633,7 @@ syms_of_editfns ()
   initial_tz = 0;
 
   Qbuffer_access_fontify_functions
-    = intern ("buffer-access-fontify-functions");
+    = intern_c_string ("buffer-access-fontify-functions");
   staticpro (&Qbuffer_access_fontify_functions);
 
   DEFVAR_LISP ("inhibit-field-text-motion", &Vinhibit_field_text_motion,
@@ -4631,7 +4654,7 @@ of the buffer being accessed.  */);
     /* Do this here, because init_buffer_once is too early--it won't work.  */
     Fset_buffer (Vprin1_to_string_buffer);
     /* Make sure buffer-access-fontify-functions is nil in this buffer.  */
-    Fset (Fmake_local_variable (intern ("buffer-access-fontify-functions")),
+    Fset (Fmake_local_variable (intern_c_string ("buffer-access-fontify-functions")),
 	  Qnil);
     Fset_buffer (obuf);
   }
@@ -4674,9 +4697,9 @@ functions if all the text being accessed has this property.  */);
   defsubr (&Sregion_end);
 
   staticpro (&Qfield);
-  Qfield = intern ("field");
+  Qfield = intern_c_string ("field");
   staticpro (&Qboundary);
-  Qboundary = intern ("boundary");
+  Qboundary = intern_c_string ("boundary");
   defsubr (&Sfield_beginning);
   defsubr (&Sfield_end);
   defsubr (&Sfield_string);

@@ -2,10 +2,10 @@ This is ../../info/elisp, produced by makeinfo version 4.11 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.1.
+corresponding to Emacs version 23.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -25,6 +25,198 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Simple Types,  Next: Composite Types,  Up: Customization Types
+
+14.4.1 Simple Types
+-------------------
+
+This section describes all the simple customization types.
+
+`sexp'
+     The value may be any Lisp object that can be printed and read
+     back.  You can use `sexp' as a fall-back for any option, if you
+     don't want to take the time to work out a more specific type to
+     use.
+
+`integer'
+     The value must be an integer, and is represented textually in the
+     customization buffer.
+
+`number'
+     The value must be a number (floating point or integer), and is
+     represented textually in the customization buffer.
+
+`float'
+     The value must be a floating point number, and is represented
+     textually in the customization buffer.
+
+`string'
+     The value must be a string, and the customization buffer shows
+     just the contents, with no delimiting `"' characters and no
+     quoting with `\'.
+
+`regexp'
+     Like `string' except that the string must be a valid regular
+     expression.
+
+`character'
+     The value must be a character code.  A character code is actually
+     an integer, but this type shows the value by inserting the
+     character in the buffer, rather than by showing the number.
+
+`file'
+     The value must be a file name, and you can do completion with
+     `M-<TAB>'.
+
+`(file :must-match t)'
+     The value must be a file name for an existing file, and you can do
+     completion with `M-<TAB>'.
+
+`directory'
+     The value must be a directory name, and you can do completion with
+     `M-<TAB>'.
+
+`hook'
+     The value must be a list of functions (or a single function, but
+     that is obsolete usage).  This customization type is used for hook
+     variables.  You can use the `:options' keyword in a hook variable's
+     `defcustom' to specify a list of functions recommended for use in
+     the hook; see *note Variable Definitions::.
+
+`alist'
+     The value must be a list of cons-cells, the CAR of each cell
+     representing a key, and the CDR of the same cell representing an
+     associated value.  The user can add and delete key/value pairs, and
+     edit both the key and the value of each pair.
+
+     You can specify the key and value types like this:
+
+          (alist :key-type KEY-TYPE :value-type VALUE-TYPE)
+
+     where KEY-TYPE and VALUE-TYPE are customization type
+     specifications.  The default key type is `sexp', and the default
+     value type is `sexp'.
+
+     The user can add any key matching the specified key type, but you
+     can give some keys a preferential treatment by specifying them
+     with the `:options' (see *note Variable Definitions::).  The
+     specified keys will always be shown in the customize buffer
+     (together with a suitable value), with a checkbox to include or
+     exclude or disable the key/value pair from the alist.  The user
+     will not be able to edit the keys specified by the `:options'
+     keyword argument.
+
+     The argument to the `:options' keywords should be a list of
+     specifications for reasonable keys in the alist.  Ordinarily, they
+     are simply atoms, which stand for themselves as.  For example:
+
+          :options '("foo" "bar" "baz")
+
+     specifies that there are three "known" keys, namely `"foo"',
+     `"bar"' and `"baz"', which will always be shown first.
+
+     You may want to restrict the value type for specific keys, for
+     example, the value associated with the `"bar"' key can only be an
+     integer.  You can specify this by using a list instead of an atom
+     in the list.  The first element will specify the key, like before,
+     while the second element will specify the value type.  For example:
+
+          :options '("foo" ("bar" integer) "baz")
+
+     Finally, you may want to change how the key is presented.  By
+     default, the key is simply shown as a `const', since the user
+     cannot change the special keys specified with the `:options'
+     keyword.  However, you may want to use a more specialized type for
+     presenting the key, like `function-item' if you know it is a
+     symbol with a function binding.  This is done by using a
+     customization type specification instead of a symbol for the key.
+
+          :options '("foo" ((function-item some-function) integer)
+                     "baz")
+
+     Many alists use lists with two elements, instead of cons cells.
+     For example,
+
+          (defcustom list-alist '(("foo" 1) ("bar" 2) ("baz" 3))
+            "Each element is a list of the form (KEY VALUE).")
+
+     instead of
+
+          (defcustom cons-alist '(("foo" . 1) ("bar" . 2) ("baz" . 3))
+            "Each element is a cons-cell (KEY . VALUE).")
+
+     Because of the way lists are implemented on top of cons cells, you
+     can treat `list-alist' in the example above as a cons cell alist,
+     where the value type is a list with a single element containing
+     the real value.
+
+          (defcustom list-alist '(("foo" 1) ("bar" 2) ("baz" 3))
+            "Each element is a list of the form (KEY VALUE)."
+            :type '(alist :value-type (group integer)))
+
+     The `group' widget is used here instead of `list' only because the
+     formatting is better suited for the purpose.
+
+     Similarly, you can have alists with more values associated with
+     each key, using variations of this trick:
+
+          (defcustom person-data '(("brian"  50 t)
+                                   ("dorith" 55 nil)
+                                   ("ken"    52 t))
+            "Alist of basic info about people.
+          Each element has the form (NAME AGE MALE-FLAG)."
+            :type '(alist :value-type (group integer boolean)))
+
+          (defcustom pets '(("brian")
+                            ("dorith" "dog" "guppy")
+                            ("ken" "cat"))
+            "Alist of people's pets.
+          In an element (KEY . VALUE), KEY is the person's name,
+          and the VALUE is a list of that person's pets."
+            :type '(alist :value-type (repeat string)))
+
+`plist'
+     The `plist' custom type is similar to the `alist' (see above),
+     except that the information is stored as a property list, i.e. a
+     list of this form:
+
+          (KEY VALUE KEY VALUE KEY VALUE ...)
+
+     The default `:key-type' for `plist' is `symbol', rather than
+     `sexp'.
+
+`symbol'
+     The value must be a symbol.  It appears in the customization
+     buffer as the name of the symbol.
+
+`function'
+     The value must be either a lambda expression or a function name.
+     When it is a function name, you can do completion with `M-<TAB>'.
+
+`variable'
+     The value must be a variable name, and you can do completion with
+     `M-<TAB>'.
+
+`face'
+     The value must be a symbol which is a face name, and you can do
+     completion with `M-<TAB>'.
+
+`boolean'
+     The value is boolean--either `nil' or `t'.  Note that by using
+     `choice' and `const' together (see the next section), you can
+     specify that the value must be `nil' or `t', but also specify the
+     text to describe each value in a way that fits the specific
+     meaning of the alternative.
+
+`coding-system'
+     The value must be a coding-system name, and you can do completion
+     with `M-<TAB>'.
+
+`color'
+     The value must be a valid color name, and you can do completion
+     with `M-<TAB>'.  A sample is provided.
 
 
 File: elisp,  Node: Composite Types,  Next: Splicing into Lists,  Prev: Simple Types,  Up: Customization Types
@@ -607,7 +799,8 @@ facilities call the `load' function to do the work.
 
  -- Command: load-library library
      This command loads the library named LIBRARY.  It is equivalent to
-     `load', except in how it reads its argument interactively.
+     `load', except for the way it reads its argument interactively.
+     *Note Lisp Libraries: (emacs)Lisp Libraries.
 
  -- Variable: load-in-progress
      This variable is non-`nil' if Emacs is in the process of loading a
@@ -813,10 +1006,7 @@ The only exception is when a particular file specifies no decoding.
    The reason Emacs is designed this way is so that Lisp programs give
 predictable results, regardless of how Emacs was started.  In addition,
 this enables programs that depend on using multibyte text to work even
-in a unibyte Emacs.  Of course, such programs should be designed to
-notice whether the user prefers unibyte or multibyte text, by checking
-`default-enable-multibyte-characters', and convert representations
-appropriately.
+in a unibyte Emacs.
 
    In most Emacs Lisp programs, the fact that non-ASCII strings are
 multibyte strings should not be noticeable, since inserting them in
@@ -1207,13 +1397,14 @@ File: elisp,  Node: Where Defined,  Next: Unloading,  Prev: Named Features,  Up:
 `load-history'.
 
  -- Variable: load-history
-     This variable's value is an alist connecting library file names
-     with the names of functions and variables they define, the
-     features they provide, and the features they require.
+     The value of this variable is an alist that associates the names of
+     loaded library files with the names of the functions and variables
+     they defined, as well as the features they provided or required.
 
-     Each element is a list and describes one library.  The CAR of the
-     list is the absolute file name of the library, as a string.  The
-     rest of the list elements have these forms:
+     Each element in this alist describes one loaded library (including
+     libraries that are preloaded at startup).  It is a list whose CAR
+     is the absolute file name of the library (a string).  The rest of
+     the list elements have these forms:
 
     `VAR'
           The symbol VAR was defined as a variable.
@@ -1306,8 +1497,16 @@ File: elisp,  Node: Hooks for Loading,  Prev: Unloading,  Up: Loading
 15.10 Hooks for Loading
 =======================
 
-You can ask for code to be executed if and when a particular library is
-loaded, by calling `eval-after-load'.
+You can ask for code to be executed each time Emacs loads a library, by
+using the variable `after-load-functions':
+
+ -- Variable: after-load-functions
+     This abnormal hook is run after loading a file.  Each function in
+     the hook is called with a single argument, the absolute filename
+     of the file that was just loaded.
+
+   If you want code to be executed when a _particular_ library is
+loaded, use the function `eval-after-load':
 
  -- Function: eval-after-load library form
      This function arranges to evaluate FORM at the end of loading the
@@ -1315,7 +1514,7 @@ loaded, by calling `eval-after-load'.
      loaded, it evaluates FORM right away.  Don't forget to quote FORM!
 
      You don't need to give a directory or extension in the file name
-     LIBRARY--normally you just give a bare file name, like this:
+     LIBRARY.  Normally, you just give a bare file name, like this:
 
           (eval-after-load "edebug" '(def-edebug-spec c-point t))
 
@@ -1335,29 +1534,28 @@ loaded, by calling `eval-after-load'.
      An error in FORM does not undo the load, but does prevent
      execution of the rest of FORM.
 
-   In general, well-designed Lisp programs should not use this feature.
-The clean and modular ways to interact with a Lisp library are (1)
-examine and set the library's variables (those which are meant for
-outside use), and (2) call the library's functions.  If you wish to do
-(1), you can do it immediately--there is no need to wait for when the
-library is loaded.  To do (2), you must load the library (preferably
-with `require').
+   Normally, well-designed Lisp programs should not use
+`eval-after-load'.  If you need to examine and set the variables
+defined in another library (those meant for outside use), you can do it
+immediately--there is no need to wait until the library is loaded.  If
+you need to call functions defined by that library, you should load the
+library, preferably with `require' (*note Named Features::).
 
    But it is OK to use `eval-after-load' in your personal
-customizations if you don't feel they must meet the design standards for
-programs meant for wider use.
+customizations if you don't feel that they must meet the design
+standards for programs meant for wider use.
 
  -- Variable: after-load-alist
-     This variable, an alist built by `eval-after-load', holds the
-     expressions to evaluate when particular libraries are loaded.  Each
-     element looks like this:
+     This variable stores an alist built by `eval-after-load',
+     containing the expressions to evaluate when certain libraries are
+     loaded.  Each element looks like this:
 
           (REGEXP-OR-FEATURE FORMS...)
 
      The key REGEXP-OR-FEATURE is either a regular expression or a
      symbol, and the value is a list of forms.  The forms are evaluated
-     when the key matches the absolute true name of the file being
-     `load'ed or the symbol being `provide'd.
+     when the key matches the absolute true name or feature name of the
+     library being loaded.
 
 
 File: elisp,  Node: Byte Compilation,  Next: Advising Functions,  Prev: Loading,  Up: Top
@@ -2593,11 +2791,11 @@ for that function.
 
    A more robust method is to use macros that are translated into the
 proper access forms at activation time, i.e., when constructing the
-advised definition.  Access macros access actual arguments by position
-regardless of how these actual arguments get distributed onto the
-argument variables of a function.  This is robust because in Emacs Lisp
-the meaning of an argument is strictly determined by its position in the
-argument list.
+advised definition.  Access macros access actual arguments by their
+(zero-based) position, regardless of how these actual arguments get
+distributed onto the argument variables of a function.  This is robust
+because in Emacs Lisp the meaning of an argument is strictly determined
+by its position in the argument list.
 
  -- Macro: ad-get-arg position
      This returns the actual argument that was supplied at POSITION.
@@ -3495,7 +3693,7 @@ instrument any top-level form regardless of the values of
 
    While Edebug is active, the command `I' (`edebug-instrument-callee')
 instruments the definition of the function or macro called by the list
-form after point, if is not already instrumented.  This is possible
+form after point, if it is not already instrumented.  This is possible
 only if Edebug knows where to find the source for that function; for
 this reason, after loading Edebug, `eval-region' records the position
 of every definition it evaluates, even if not instrumenting it.  See
@@ -6084,7 +6282,7 @@ delete duplicates in history.
  -- User Option: history-length
      The value of this variable specifies the maximum length for all
      history lists that don't specify their own maximum lengths.  If the
-     value is `t', that means there no maximum (don't delete old
+     value is `t', that means there is no maximum (don't delete old
      elements).  The value of `history-length' property of the history
      list variable's symbol, if set, overrides this variable for that
      particular history list.
@@ -6193,7 +6391,6 @@ certain kinds of names with completion.
 * Menu:
 
 * Basic Completion::       Low-level functions for completing strings.
-                             (These are too low level to use the minibuffer.)
 * Minibuffer Completion::  Invoking the minibuffer with completion.
 * Completion Commands::    Minibuffer commands that do completion.
 * High-Level Completion::  Convenient special cases of completion
@@ -6209,29 +6406,22 @@ File: elisp,  Node: Basic Completion,  Next: Minibuffer Completion,  Up: Complet
 20.6.1 Basic Completion Functions
 ---------------------------------
 
-The completion functions `try-completion', `all-completions' and
-`test-completion' have nothing in themselves to do with minibuffers.
-We describe them in this chapter so as to keep them near the
+The following completion functions have nothing in themselves to do
+with minibuffers.  We describe them here to keep them near the
 higher-level completion features that do use the minibuffer.
-
-   If you store a completion alist in a variable, you should mark the
-variable as "risky" with a non-`nil' `risky-local-variable' property.
 
  -- Function: try-completion string collection &optional predicate
      This function returns the longest common substring of all possible
      completions of STRING in COLLECTION.  The value of COLLECTION must
      be a list of strings or symbols, an alist, an obarray, a hash
-     table, or a function that implements a virtual set of strings (see
-     below).
+     table, or a completion function (*note Programmed Completion::).
 
      Completion compares STRING against each of the permissible
-     completions specified by COLLECTION; if the beginning of the
-     permissible completion equals STRING, it matches.  If no
-     permissible completions match, `try-completion' returns `nil'.  If
-     only one permissible completion matches, and the match is exact,
-     then `try-completion' returns `t'.  Otherwise, the value is the
-     longest initial sequence common to all the permissible completions
-     that match.
+     completions specified by COLLECTION.  If no permissible
+     completions match, `try-completion' returns `nil'.  If there is
+     just one matching completion, and the match is exact, it returns
+     `t'.  Otherwise, it returns the longest initial sequence common to
+     all possible matching completions.
 
      If COLLECTION is an alist (*note Association Lists::), the
      permissible completions are the elements of the alist that are
@@ -6258,9 +6448,9 @@ variable as "risky" with a non-`nil' `risky-local-variable' property.
      the function is solely responsible for performing completion;
      `try-completion' returns whatever this function returns.  The
      function is called with three arguments: STRING, PREDICATE and
-     `nil'.  (The reason for the third argument is so that the same
+     `nil' (the reason for the third argument is so that the same
      function can be used in `all-completions' and do the appropriate
-     thing in either case.)  *Note Programmed Completion::.
+     thing in either case).  *Note Programmed Completion::.
 
      If the argument PREDICATE is non-`nil', then it must be a function
      of one argument, unless COLLECTION is a hash table, in which case
@@ -6318,9 +6508,11 @@ variable as "risky" with a non-`nil' `risky-local-variable' property.
      STRING.  The arguments to this function (aside from NOSPACE) are
      the same as those of `try-completion'.  Also, this function uses
      `completion-regexp-list' in the same way that `try-completion'
-     does.  The optional argument NOSPACE only matters if STRING is the
-     empty string.  In that case, if NOSPACE is non-`nil', completions
-     that start with a space are ignored.
+     does.
+
+     The optional argument NOSPACE is obsolete.  If it is non-`nil',
+     completions that start with a space are ignored unless STRING
+     starts with a space.
 
      If COLLECTION is a function, it is called with three arguments:
      STRING, PREDICATE and `t'; then `all-completions' returns whatever
@@ -6359,6 +6551,10 @@ variable as "risky" with a non-`nil' `risky-local-variable' property.
      the values STRING, PREDICATE and `lambda'; whatever it returns,
      `test-completion' returns in turn.
 
+   If you store a completion alist in a variable, you should mark the
+variable as "risky" with a non-`nil' `risky-local-variable' property.
+*Note File Local Variables::.
+
  -- Variable: completion-ignore-case
      If the value of this variable is non-`nil', Emacs does not
      consider case significant in completion.  Note, however, that this
@@ -6386,6 +6582,23 @@ variable as "risky" with a non-`nil' `risky-local-variable' property.
 
           (defvar foo (lazy-completion-table foo make-my-alist))
 
+   The function `completion-in-region' provides a convenient way to
+perform completion on an arbitrary stretch of text in an Emacs buffer:
+
+ -- Function: completion-in-region start end collection &optional
+          predicate
+     This function completes the text in the current buffer between the
+     positions START and END, using COLLECTION.  The argument
+     COLLECTION has the same meaning as in `try-completion' (*note
+     Basic Completion::).
+
+     This function inserts the completion text directly into the current
+     buffer.  Unlike `completing-read' (*note Minibuffer Completion::),
+     it does not activate the minibuffer.
+
+     For this function to work, point must be somewhere between START
+     and END.
+
 
 File: elisp,  Node: Minibuffer Completion,  Next: Completion Commands,  Prev: Basic Completion,  Up: Completion
 
@@ -6402,11 +6615,12 @@ minibuffer with completion.
      PROMPT, which must be a string.
 
      The actual completion is done by passing COLLECTION and PREDICATE
-     to the function `try-completion'.  This happens in certain
-     commands bound in the local keymaps used for completion.  Some of
-     these commands also call `test-completion'.  Thus, if PREDICATE is
-     non-`nil', it should be compatible with COLLECTION and
-     `completion-ignore-case'.  *Note Definition of test-completion::.
+     to the function `try-completion' (*note Basic Completion::).  This
+     happens in certain commands bound in the local keymaps used for
+     completion.  Some of these commands also call `test-completion'.
+     Thus, if PREDICATE is non-`nil', it should be compatible with
+     COLLECTION and `completion-ignore-case'.  *Note Definition of
+     test-completion::.
 
      The value of the optional argument REQUIRE-MATCH determines how
      the user may exit the minibuffer:
@@ -6787,182 +7001,4 @@ specification.  *Note Defining Commands::.
    See also the functions `read-coding-system' and
 `read-non-nil-coding-system', in *note User-Chosen Coding Systems::,
 and `read-input-method-name', in *note Input Methods::.
-
-
-File: elisp,  Node: Reading File Names,  Next: Completion Styles,  Prev: High-Level Completion,  Up: Completion
-
-20.6.5 Reading File Names
--------------------------
-
-The high-level completion functions `read-file-name',
-`read-directory-name', and `read-shell-command' are designed to read
-file names, directory names, and shell commands respectively.  They
-provide special features, including automatic insertion of the default
-directory.
-
- -- Function: read-file-name prompt &optional directory default
-          require-match initial predicate
-     This function reads a file name in the minibuffer, prompting with
-     PROMPT and providing completion.
-
-     The optional argument REQUIRE-MATCH has the same meaning as in
-     `completing-read'.  *Note Minibuffer Completion::.
-
-     `read-file-name' uses `minibuffer-local-filename-completion-map'
-     as the keymap if REQUIRE-MATCH is `nil', and uses
-     `minibuffer-local-filename-must-match-map' if REQUIRE-MATCH is
-     non-`nil'.  *Note Completion Commands::.
-
-     The argument DIRECTORY specifies the directory to use for
-     completion of relative file names.  It should be an absolute
-     directory name.  If `insert-default-directory' is non-`nil',
-     DIRECTORY is also inserted in the minibuffer as initial input.  It
-     defaults to the current buffer's value of `default-directory'.
-
-     If you specify INITIAL, that is an initial file name to insert in
-     the buffer (after DIRECTORY, if that is inserted).  In this case,
-     point goes at the beginning of INITIAL.  The default for INITIAL
-     is `nil'--don't insert any file name.  To see what INITIAL does,
-     try the command `C-x C-v'.  *Please note:* we recommend using
-     DEFAULT rather than INITIAL in most cases.
-
-     If DEFAULT is non-`nil', then the function returns DEFAULT if the
-     user exits the minibuffer with the same non-empty contents that
-     `read-file-name' inserted initially.  The initial minibuffer
-     contents are always non-empty if `insert-default-directory' is
-     non-`nil', as it is by default.  DEFAULT is not checked for
-     validity, regardless of the value of REQUIRE-MATCH.  However, if
-     REQUIRE-MATCH is non-`nil', the initial minibuffer contents should
-     be a valid file (or directory) name.  Otherwise `read-file-name'
-     attempts completion if the user exits without any editing, and
-     does not return DEFAULT.  DEFAULT is also available through the
-     history commands.
-
-     If DEFAULT is `nil', `read-file-name' tries to find a substitute
-     default to use in its place, which it treats in exactly the same
-     way as if it had been specified explicitly.  If DEFAULT is `nil',
-     but INITIAL is non-`nil', then the default is the absolute file
-     name obtained from DIRECTORY and INITIAL.  If both DEFAULT and
-     INITIAL are `nil' and the buffer is visiting a file,
-     `read-file-name' uses the absolute file name of that file as
-     default.  If the buffer is not visiting a file, then there is no
-     default.  In that case, if the user types <RET> without any
-     editing, `read-file-name' simply returns the pre-inserted contents
-     of the minibuffer.
-
-     If the user types <RET> in an empty minibuffer, this function
-     returns an empty string, regardless of the value of REQUIRE-MATCH.
-     This is, for instance, how the user can make the current buffer
-     visit no file using `M-x set-visited-file-name'.
-
-     If PREDICATE is non-`nil', it specifies a function of one argument
-     that decides which file names are acceptable completion
-     possibilities.  A file name is an acceptable value if PREDICATE
-     returns non-`nil' for it.
-
-     `read-file-name' does not automatically expand file names.  You
-     must call `expand-file-name' yourself if an absolute file name is
-     required.
-
-     Here is an example:
-
-          (read-file-name "The file is ")
-
-          ;; After evaluation of the preceding expression,
-          ;;   the following appears in the minibuffer:
-
-          ---------- Buffer: Minibuffer ----------
-          The file is /gp/gnu/elisp/-!-
-          ---------- Buffer: Minibuffer ----------
-
-     Typing `manual <TAB>' results in the following:
-
-          ---------- Buffer: Minibuffer ----------
-          The file is /gp/gnu/elisp/manual.texi-!-
-          ---------- Buffer: Minibuffer ----------
-
-     If the user types <RET>, `read-file-name' returns the file name as
-     the string `"/gp/gnu/elisp/manual.texi"'.
-
- -- Variable: read-file-name-function
-     If non-`nil', this should be a function that accepts the same
-     arguments as `read-file-name'.  When `read-file-name' is called,
-     it calls this function with the supplied arguments instead of
-     doing its usual work.
-
- -- User Option: read-file-name-completion-ignore-case
-     If this variable is non-`nil', `read-file-name' ignores case when
-     performing completion.
-
- -- Function: read-directory-name prompt &optional directory default
-          require-match initial
-     This function is like `read-file-name' but allows only directory
-     names as completion possibilities.
-
-     If DEFAULT is `nil' and INITIAL is non-`nil',
-     `read-directory-name' constructs a substitute default by combining
-     DIRECTORY (or the current buffer's default directory if DIRECTORY
-     is `nil') and INITIAL.  If both DEFAULT and INITIAL are `nil',
-     this function uses DIRECTORY as substitute default, or the current
-     buffer's default directory if DIRECTORY is `nil'.
-
- -- User Option: insert-default-directory
-     This variable is used by `read-file-name', and thus, indirectly,
-     by most commands reading file names.  (This includes all commands
-     that use the code letters `f' or `F' in their interactive form.
-     *Note Code Characters for interactive: Interactive Codes.)  Its
-     value controls whether `read-file-name' starts by placing the name
-     of the default directory in the minibuffer, plus the initial file
-     name if any.  If the value of this variable is `nil', then
-     `read-file-name' does not place any initial input in the
-     minibuffer (unless you specify initial input with the INITIAL
-     argument).  In that case, the default directory is still used for
-     completion of relative file names, but is not displayed.
-
-     If this variable is `nil' and the initial minibuffer contents are
-     empty, the user may have to explicitly fetch the next history
-     element to access a default value.  If the variable is non-`nil',
-     the initial minibuffer contents are always non-empty and the user
-     can always request a default value by immediately typing <RET> in
-     an unedited minibuffer.  (See above.)
-
-     For example:
-
-          ;; Here the minibuffer starts out with the default directory.
-          (let ((insert-default-directory t))
-            (read-file-name "The file is "))
-
-          ---------- Buffer: Minibuffer ----------
-          The file is ~lewis/manual/-!-
-          ---------- Buffer: Minibuffer ----------
-
-          ;; Here the minibuffer is empty and only the prompt
-          ;;   appears on its line.
-          (let ((insert-default-directory nil))
-            (read-file-name "The file is "))
-
-          ---------- Buffer: Minibuffer ----------
-          The file is -!-
-          ---------- Buffer: Minibuffer ----------
-
- -- Function: read-shell-command prompt &optional initial-contents hist
-          &rest args
-     This function reads a shell command from the minibuffer, prompting
-     with PROMPT and providing intelligent completion.  It completes
-     the first word of the command using candidates that are appropriate
-     for command names, and the rest of the command words as file names.
-
-     This function uses `minibuffer-local-shell-command-map' as the
-     keymap for minibuffer input.  The HIST argument specifies the
-     history list to use; if is omitted or `nil', it defaults to
-     `shell-command-history' (*note shell-command-history: Minibuffer
-     History.).  The optional argument INITIAL-CONTENTS specifies the
-     initial content of the minibuffer (*note Initial Input::).  The
-     rest of ARGS, if present, are used as the DEFAULT and
-     INHERIT-INPUT-METHOD arguments in `read-from-minibuffer' (*note
-     Text from Minibuffer::).
-
- -- Variable: minibuffer-local-shell-command-map
-     This keymap is used by `read-shell-command' for completing command
-     and file names that are part of a shell command.
 

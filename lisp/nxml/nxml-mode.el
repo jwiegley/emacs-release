@@ -1,6 +1,6 @@
 ;;; nxml-mode.el --- a new XML mode
 
-;; Copyright (C) 2003, 2004, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2004, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: James Clark
 ;; Keywords: XML
@@ -50,8 +50,7 @@
 
 (defgroup nxml-faces nil
   "Faces for XML syntax highlighting."
-  :group 'nxml
-  :group 'font-lock-faces)
+  :group 'nxml)
 
 (defcustom nxml-char-ref-display-glyph-flag t
   "*Non-nil means display glyph following character reference.
@@ -882,16 +881,17 @@ Called with `font-lock-beg' and `font-lock-end' dynamically bound."
 (defun nxml-extend-after-change-region (start end pre-change-length)
   (unless nxml-degraded
     (setq nxml-last-fontify-end nil)
-
-    (nxml-with-degradation-on-error 'nxml-extend-after-change-region
-	(save-excursion
-	  (save-restriction
-	    (widen)
-	    (save-match-data
-	      (nxml-with-invisible-motion
-		(nxml-with-unmodifying-text-property-changes
-                  (nxml-extend-after-change-region1
-                   start end pre-change-length)))))))))
+    (let ((region (nxml-with-degradation-on-error
+		   'nxml-extend-after-change-region
+		   (save-excursion
+		     (save-restriction
+		       (widen)
+		       (save-match-data
+			 (nxml-with-invisible-motion
+			   (nxml-with-unmodifying-text-property-changes
+			     (nxml-extend-after-change-region1
+			      start end pre-change-length)))))))))
+      (if (consp region) region))))
 
 (defun nxml-extend-after-change-region1 (start end pre-change-length)
   (let* ((region (nxml-after-change1 start end pre-change-length))
@@ -1254,29 +1254,31 @@ No extra whitespace is inserted."
 
 (defun nxml-balanced-close-start-tag (block-or-inline)
   (let ((token-end (nxml-token-before))
-	(pos (1+ (point))))
+	(pos (1+ (point)))
+	(token-start xmltok-start))
     (unless (or (eq xmltok-type 'partial-start-tag)
 		(and (memq xmltok-type '(start-tag
 					 empty-element
 					 partial-empty-element))
 		     (>= token-end pos)))
       (error "Not in a start-tag"))
+    ;; Note that this insertion changes xmltok-start.
     (insert "></"
 	    (buffer-substring-no-properties (+ xmltok-start 1)
 					    (min xmltok-name-end (point)))
 	    ">")
     (if (eq block-or-inline 'inline)
 	(goto-char pos)
-      (goto-char xmltok-start)
+      (goto-char token-start)
       (back-to-indentation)
-      (if (= (point) xmltok-start)
+      (if (= (point) token-start)
 	  (let ((indent (current-column)))
-	  (goto-char pos)
-	  (insert "\n")
-	  (indent-line-to indent)
-	  (goto-char pos)
-	  (insert "\n")
-	  (indent-line-to (+ nxml-child-indent indent)))
+	    (goto-char pos)
+	    (insert "\n")
+	    (indent-line-to indent)
+	    (goto-char pos)
+	    (insert "\n")
+	    (indent-line-to (+ nxml-child-indent indent)))
 	(goto-char pos)))))
 
 (defun nxml-finish-element ()
@@ -2651,6 +2653,9 @@ With a prefix argument, inserts the character directly."
 (put 'processing-instruction 'nxml-friendly-name "processing instruction")
 (put 'entity-ref 'nxml-friendly-name "entity reference")
 (put 'char-ref 'nxml-friendly-name "character reference")
+
+;;;###autoload
+(defalias 'xml-mode 'nxml-mode)
 
 (provide 'nxml-mode)
 

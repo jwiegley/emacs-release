@@ -1,7 +1,7 @@
 ;;; calccomp.el --- composition functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -377,7 +377,8 @@
 		(list 'horiz "(" (math-compose-expr (nth 1 a) 0) ")")
 	      (math-compose-expr (nth 1 a) 201))
 	    (let ((calc-language 'flat)
-		  (calc-number-radix 10))
+		  (calc-number-radix 10)
+                  (calc-twos-complement-mode nil))
 	      (math-compose-expr (nth 2 a) 0))))
      ((and (eq (car a) '/)
 	   (eq calc-language 'big))

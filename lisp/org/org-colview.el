@@ -1,12 +1,12 @@
 ;;; org-colview.el --- Column View in Org-mode
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.21b
+;; Version: 6.33x
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -34,6 +34,7 @@
 (require 'org)
 
 (declare-function org-agenda-redo "org-agenda" ())
+(declare-function org-agenda-do-context-action "org-agenda" ())
 
 ;;; Column View
 
@@ -81,8 +82,28 @@ This is the compiled version of the format.")
 (org-defkey org-columns-map "\M-b" 'backward-char)
 (org-defkey org-columns-map "a" 'org-columns-edit-allowed)
 (org-defkey org-columns-map "s" 'org-columns-edit-attributes)
-(org-defkey org-columns-map "\M-f" (lambda () (interactive) (goto-char (1+ (point)))))
-(org-defkey org-columns-map [right] (lambda () (interactive) (goto-char (1+ (point)))))
+(org-defkey org-columns-map "\M-f"
+	    (lambda () (interactive) (goto-char (1+ (point)))))
+(org-defkey org-columns-map [right]
+	    (lambda () (interactive) (goto-char (1+ (point)))))
+(org-defkey org-columns-map [down]
+	    (lambda () (interactive)
+	      (let ((col (current-column)))
+		(beginning-of-line 2)
+		(while (and (org-invisible-p2) (not (eobp)))
+		  (beginning-of-line 2))
+		(move-to-column col)
+		(if (eq major-mode 'org-agenda-mode)
+		    (org-agenda-do-context-action)))))
+(org-defkey org-columns-map [up]
+	    (lambda () (interactive)
+	      (let ((col (current-column)))
+		(beginning-of-line 0)
+		(while (and (org-invisible-p2) (not (bobp)))
+		  (beginning-of-line 0))
+		(move-to-column col)
+		(if (eq major-mode 'org-agenda-mode)
+		    (org-agenda-do-context-action)))))
 (org-defkey org-columns-map [(shift right)] 'org-columns-next-allowed-value)
 (org-defkey org-columns-map "n" 'org-columns-next-allowed-value)
 (org-defkey org-columns-map [(shift left)] 'org-columns-previous-allowed-value)
@@ -95,8 +116,8 @@ This is the compiled version of the format.")
 (org-defkey org-columns-map [(shift meta left)] 'org-columns-delete)
 (dotimes (i 10)
   (org-defkey org-columns-map (number-to-string i)
-              `(lambda () (interactive)
-                 (org-columns-next-allowed-value nil ,i))))
+	      `(lambda () (interactive)
+		 (org-columns-next-allowed-value nil ,i))))
 
 (easy-menu-define org-columns-menu org-columns-map "Org Column Menu"
   '("Column"
@@ -149,12 +170,12 @@ This is the compiled version of the format.")
 	 (face1 (list color 'org-agenda-column-dateline ref-face))
 	 (pl (or (get-text-property (point-at-bol) 'prefix-length) 0))
 	 (cphr (get-text-property (point-at-bol) 'org-complex-heading-regexp))
-	 pom property ass width f string ov column val modval s2 title)
+	 pom property ass width f string ov column val modval s2 title calc)
     ;; Check if the entry is in another buffer.
     (unless props
       (if (eq major-mode 'org-agenda-mode)
-	  (setq pom (or (get-text-property (point) 'org-hd-marker)
-			(get-text-property (point) 'org-marker))
+	  (setq pom (or (org-get-at-bol 'org-hd-marker)
+			(org-get-at-bol 'org-marker))
 		props (if pom (org-entry-properties pom) nil))
 	(setq props (org-entry-properties nil))))
     ;; Walk the format
@@ -173,19 +194,26 @@ This is the compiled version of the format.")
 		      (nth 2 column)
 		      (length property))
 	    f (format "%%-%d.%ds | " width width)
+	    calc (nth 7 column)
 	    val (or (cdr ass) "")
-	    modval (or (and org-columns-modify-value-for-display-function
-			    (functionp
-			     org-columns-modify-value-for-display-function)
-			    (funcall
-			     org-columns-modify-value-for-display-function
-			     title val))
-		       (if (equal property "ITEM")
-			   (if (org-mode-p)
-			       (org-columns-cleanup-item
-				val org-columns-current-fmt-compiled)
-			     (org-agenda-columns-cleanup-item
-			      val pl cphr org-columns-current-fmt-compiled)))))
+	    modval (cond ((and org-columns-modify-value-for-display-function
+			       (functionp
+				org-columns-modify-value-for-display-function))
+			  (funcall org-columns-modify-value-for-display-function
+				   title val))
+			 ((equal property "ITEM")
+			  (if (org-mode-p)
+			      (org-columns-cleanup-item
+			       val org-columns-current-fmt-compiled)
+			    (org-agenda-columns-cleanup-item
+			     val pl cphr org-columns-current-fmt-compiled)))
+			 ((and calc (functionp calc)
+			       (not (string= val ""))
+			       (not (get-text-property 0 'org-computed val)))
+			  (org-columns-number-to-string
+			   (funcall calc (org-columns-string-to-number
+					  val (nth 4 column)))
+			   (nth 4 column)))))
       (setq s2 (org-columns-add-ellipses (or modval val) width))
       (setq string (format f s2))
       ;; Create the overlay
@@ -204,18 +232,18 @@ This is the compiled version of the format.")
 	    (save-excursion
 	      (goto-char beg)
 	      (org-unmodified (insert " ")))))) ;; FIXME: add props and remove later?
-    ;; Make the rest of the line disappear.
-    (org-unmodified
-     (setq ov (org-columns-new-overlay beg (point-at-eol)))
-     (org-overlay-put ov 'invisible t)
-     (org-overlay-put ov 'keymap org-columns-map)
-     (org-overlay-put ov 'intangible t)
-     (push ov org-columns-overlays)
-     (setq ov (org-make-overlay (1- (point-at-eol)) (1+ (point-at-eol))))
-     (org-overlay-put ov 'keymap org-columns-map)
-     (push ov org-columns-overlays)
-     (let ((inhibit-read-only t))
-       (put-text-property (max (point-min) (1- (point-at-bol)))
+      ;; Make the rest of the line disappear.
+      (org-unmodified
+       (setq ov (org-columns-new-overlay beg (point-at-eol)))
+       (org-overlay-put ov 'invisible t)
+       (org-overlay-put ov 'keymap org-columns-map)
+       (org-overlay-put ov 'intangible t)
+       (push ov org-columns-overlays)
+       (setq ov (org-make-overlay (1- (point-at-eol)) (1+ (point-at-eol))))
+       (org-overlay-put ov 'keymap org-columns-map)
+       (push ov org-columns-overlays)
+       (let ((inhibit-read-only t))
+	 (put-text-property (max (point-min) (1- (point-at-bol)))
 			  (min (point-max) (1+ (point-at-eol)))
 			  'read-only "Type `e' to edit property")))))
 
@@ -241,6 +269,7 @@ for the duration of the command.")
 
 (defvar header-line-format)
 (defvar org-columns-previous-hscroll 0)
+
 (defun org-columns-display-here-title ()
   "Overlay the newline before the current line with the table title."
   (interactive)
@@ -279,6 +308,9 @@ for the duration of the command.")
 	  org-columns-previous-hscroll (window-hscroll))
     (force-mode-line-update)))
 
+(defvar org-colview-initial-truncate-line-value nil
+  "Remember the value of `truncate-lines' across colview.")
+
 (defun org-columns-remove-overlays ()
   "Remove all currently active column overlays."
   (interactive)
@@ -296,7 +328,9 @@ for the duration of the command.")
        (let ((inhibit-read-only t))
 	 (remove-text-properties (point-min) (point-max) '(read-only t))))
       (when org-columns-flyspell-was-active
-	(flyspell-mode 1)))))
+	(flyspell-mode 1))
+      (when (local-variable-p 'org-colview-initial-truncate-line-value)
+	(setq truncate-lines org-colview-initial-truncate-line-value)))))
 
 (defun org-columns-cleanup-item (item fmt)
   "Remove from ITEM what is a column in the format FMT."
@@ -326,6 +360,7 @@ for the duration of the command.")
   s)
 
 (defvar org-agenda-columns-remove-prefix-from-item)
+
 (defun org-agenda-columns-cleanup-item (item pl cphr fmt)
   "Cleanup the time property for agenda column view.
 See also the variable `org-agenda-columns-remove-prefix-from-item'."
@@ -345,6 +380,7 @@ See also the variable `org-agenda-columns-remove-prefix-from-item'."
     (message "Value is: %s" (or value ""))))
 
 (defvar org-agenda-columns-active) ;; defined in org-agenda.el
+
 (defun org-columns-quit ()
   "Remove the column overlays and in this way exit column editing."
   (interactive)
@@ -396,6 +432,7 @@ Where possible, use the standard interface for changing this line."
 				   (<= (overlay-start x) eol)
 				   x))
 			    org-columns-overlays)))
+	 (org-columns-time (time-to-number-of-days (current-time)))
 	 nval eval allowed)
     (cond
      ((equal key "CLOCKSUM")
@@ -404,8 +441,9 @@ Where possible, use the standard interface for changing this line."
       (setq eval '(org-with-point-at pom
 		    (org-edit-headline))))
      ((equal key "TODO")
-      (setq eval '(org-with-point-at pom
-				     (call-interactively 'org-todo))))
+      (setq eval '(org-with-point-at
+		   pom
+		   (call-interactively 'org-todo))))
      ((equal key "PRIORITY")
       (setq eval '(org-with-point-at pom
 		    (call-interactively 'org-priority))))
@@ -424,7 +462,7 @@ Where possible, use the standard interface for changing this line."
      (t
       (setq allowed (org-property-get-allowed-values pom key 'table))
       (if allowed
-	  (setq nval (org-ido-completing-read "Value: " allowed nil t))
+	  (setq nval (org-icompleting-read "Value: " allowed nil t))
 	(setq nval (read-string "Edit: " value)))
       (setq nval (org-trim nval))
       (when (not (equal nval value))
@@ -481,8 +519,8 @@ Where possible, use the standard interface for changing this line."
 (defun org-columns-edit-allowed ()
   "Edit the list of allowed values for the current property."
   (interactive)
-  (let* ((pom (or (get-text-property (point-at-bol) 'org-marker)
-		  (get-text-property (point-at-bol) 'org-hd-marker)
+  (let* ((pom (or (org-get-at-bol 'org-marker)
+		  (org-get-at-bol 'org-hd-marker)
 		  (point)))
 	 (key (get-char-property (point) 'org-columns-key))
 	 (key1 (concat key "_ALL"))
@@ -639,7 +677,8 @@ around it."
   (org-verify-version 'columns)
   (org-columns-remove-overlays)
   (move-marker org-columns-begin-marker (point))
-  (let (beg end fmt cache maxwidths)
+  (let ((org-columns-time (time-to-number-of-days (current-time)))
+	beg end fmt cache maxwidths)
     (setq fmt (org-columns-get-format-and-top-level))
     (save-excursion
       (goto-char org-columns-top-level-marker)
@@ -656,7 +695,10 @@ around it."
 	    (narrow-to-region beg end)
 	    (org-clock-sum))))
       (while (re-search-forward (concat "^" outline-regexp) end t)
-	(push (cons (org-current-line) (org-entry-properties)) cache))
+	(if (and org-columns-skip-archived-trees
+		 (looking-at (concat ".*:" org-archive-tag ":")))
+	    (org-end-of-subtree t)
+	  (push (cons (org-current-line) (org-entry-properties)) cache)))
       (when cache
 	(setq maxwidths (org-columns-get-autowidth-alist fmt cache))
 	(org-set-local 'org-columns-current-maxwidths maxwidths)
@@ -664,17 +706,59 @@ around it."
 	(when (org-set-local 'org-columns-flyspell-was-active
 			     (org-bound-and-true-p flyspell-mode))
 	  (flyspell-mode 0))
+	(unless (local-variable-p 'org-colview-initial-truncate-line-value)
+	  (org-set-local 'org-colview-initial-truncate-line-value
+			 truncate-lines))
+	(setq truncate-lines t)
 	(mapc (lambda (x)
-		(goto-line (car x))
+		(org-goto-line (car x))
 		(org-columns-display-here (cdr x)))
 	      cache)))))
 
-(defun org-columns-new (&optional prop title width op fmt &rest rest)
+(eval-when-compile (defvar org-columns-time))
+
+(defvar org-columns-compile-map
+  '(("none" none +)
+    (":" add_times +)
+    ("+" add_numbers +)
+    ("$" currency +)
+    ("X" checkbox +)
+    ("X/" checkbox-n-of-m +)
+    ("X%" checkbox-percent +)
+    ("max" max_numbers max)
+    ("min" min_numbers min)
+    ("mean" mean_numbers
+     (lambda (&rest x) (/ (apply '+ x) (float (length x)))))
+    (":max" max_times max)
+    (":min" min_times min)
+    (":mean" mean_times
+     (lambda (&rest x) (/ (apply '+ x) (float (length x)))))
+    ("@min" min_age min (lambda (x) (- org-columns-time x)))
+    ("@max" max_age max (lambda (x) (- org-columns-time x)))
+    ("@mean" mean_age
+     (lambda (&rest x) (/ (apply '+ x) (float (length x))))
+     (lambda (x) (- org-columns-time x))))
+  "Operator <-> format,function,calc  map.
+Used to compile/uncompile columns format and completing read in
+interactive function org-columns-new.
+
+operator    string used in #+COLUMNS definition describing the
+	    summary type
+format      symbol describing summary type selected interactively in
+	    org-columns-new and internally in
+	    org-columns-number-to-string and
+	    org-columns-string-to-number
+function    called with a list of values as argument to calculate
+	    the summary value
+calc        function called on every element before summarizing. This is
+	    optional and should only be specified if needed")
+
+(defun org-columns-new (&optional prop title width op fmt fun &rest rest)
   "Insert a new column, to the left of the current column."
   (interactive)
   (let ((editp (and prop (assoc prop org-columns-current-fmt-compiled)))
 	cell)
-    (setq prop (org-ido-completing-read
+    (setq prop (org-icompleting-read
 		"Property: " (mapcar 'list (org-buffer-property-keys t nil t))
 		nil nil prop))
     (setq title (read-string (concat "Column title [" prop "]: ") (or title prop)))
@@ -682,20 +766,22 @@ around it."
     (if (string-match "\\S-" width)
 	(setq width (string-to-number width))
       (setq width nil))
-    (setq fmt (org-ido-completing-read "Summary [none]: "
-			       '(("none") ("add_numbers") ("currency") ("add_times") ("checkbox") ("checkbox-n-of-m") ("checkbox-percent"))
-			       nil t))
-    (if (string-match "\\S-" fmt)
-	(setq fmt (intern fmt))
-      (setq fmt nil))
+    (setq fmt (org-icompleting-read
+	       "Summary [none]: "
+	       (mapcar (lambda (x) (list (symbol-name (cadr x))))
+		       org-columns-compile-map)
+	       nil t))
+    (setq fmt (intern fmt)
+	  fun (cdr (assoc fmt (mapcar 'cdr org-columns-compile-map))))
     (if (eq fmt 'none) (setq fmt nil))
     (if editp
 	(progn
 	  (setcar editp prop)
-	  (setcdr editp (list title width nil fmt)))
+	  (setcdr editp (list title width nil fmt nil fun)))
       (setq cell (nthcdr (1- (current-column))
 			 org-columns-current-fmt-compiled))
-      (setcdr cell (cons (list prop title width nil fmt)
+      (setcdr cell (cons (list prop title width nil fmt nil
+			       (car fun) (cadr fun))
 			 (cdr cell))))
     (org-columns-store-format)
     (org-columns-redo)))
@@ -812,7 +898,9 @@ Don't set this, this is meant for dynamic scoping.")
   "Compute all columns that have operators defined."
   (org-unmodified
    (remove-text-properties (point-min) (point-max) '(org-summaries t)))
-  (let ((columns org-columns-current-fmt-compiled) col)
+  (let ((columns org-columns-current-fmt-compiled)
+	(org-columns-time (time-to-number-of-days (current-time)))
+	col)
     (while (setq col (pop columns))
       (when (nth 3 col)
 	(save-excursion
@@ -840,12 +928,14 @@ Don't set this, this is meant for dynamic scoping.")
   (interactive)
   (let* ((re (concat "^" outline-regexp))
 	 (lmax 30) ; Does anyone use deeper levels???
-	 (lsum (make-vector lmax 0))
+	 (lvals (make-vector lmax nil))
 	 (lflag (make-vector lmax nil))
 	 (level 0)
 	 (ass (assoc property org-columns-current-fmt-compiled))
 	 (format (nth 4 ass))
 	 (printf (nth 5 ass))
+	 (fun (nth 6 ass))
+	 (calc (or (nth 7 ass) 'identity))
 	 (beg org-columns-top-level-marker)
 	 last-level val valflag flag end sumpos sum-alist sum str str1 useval)
     (save-excursion
@@ -863,7 +953,8 @@ Don't set this, this is meant for dynamic scoping.")
 	(cond
 	 ((< level last-level)
 	  ;; put the sum of lower levels here as a property
-	  (setq sum (aref lsum last-level)   ; current sum
+	  (setq sum (when (aref lvals last-level)
+		      (apply fun (aref lvals last-level)))
 		flag (aref lflag last-level) ; any valid entries from children?
 		str (org-columns-number-to-string sum format printf)
 		str1 (org-add-props (copy-sequence str) nil 'org-computed t 'face 'bold)
@@ -877,21 +968,24 @@ Don't set this, this is meant for dynamic scoping.")
 				  (list 'org-summaries sum-alist))))
 	  (when (and val (not (equal val (if flag str val))))
 	    (org-entry-put nil property (if flag str val)))
-	  ;; add current to current  level accumulator
+	  ;; add current to current level accumulator
 	  (when (or flag valflag)
-	    (aset lsum level (+ (aref lsum level)
-				(if flag sum (org-column-string-to-number
-					      (if flag str val) format))))
+	    (push (if flag
+		      sum
+		    (funcall calc (org-columns-string-to-number
+				   (if flag str val) format)))
+		  (aref lvals level))
 	    (aset lflag level t))
 	  ;; clear accumulators for deeper levels
 	  (loop for l from (1+ level) to (1- lmax) do
-		(aset lsum l 0)
+		(aset lvals l nil)
 		(aset lflag l nil)))
 	 ((>= level last-level)
 	  ;; add what we have here to the accumulator for this level
-	  (aset lsum level (+ (aref lsum level)
-			      (org-column-string-to-number (or val "0") format)))
-	  (and valflag (aset lflag level t)))
+	  (when valflag
+	    (push (funcall calc (org-columns-string-to-number val format))
+		  (aref lvals level))
+	    (aset lflag level t)))
 	 (t (error "This should not happen")))))))
 
 (defun org-columns-redo ()
@@ -908,14 +1002,13 @@ Don't set this, this is meant for dynamic scoping.")
 	  (call-interactively 'org-columns)
 	(org-agenda-redo)
 	(call-interactively 'org-agenda-columns)))
-    (goto-line line)
+    (org-goto-line line)
     (move-to-column col))
   (message "Recomputing columns...done"))
 
 (defun org-columns-not-in-agenda ()
   (if (eq major-mode 'org-agenda-mode)
       (error "This command is only allowed in Org-mode buffers")))
-
 
 (defun org-string-to-number (s)
   "Convert string to number, and interpret hh:mm:ss."
@@ -929,7 +1022,8 @@ Don't set this, this is meant for dynamic scoping.")
 (defun org-columns-number-to-string (n fmt &optional printf)
   "Convert a computed column number to a string value, according to FMT."
   (cond
-   ((eq fmt 'add_times)
+   ((not (numberp n)) "")
+   ((memq fmt '(add_times max_times min_times mean_times))
     (let* ((h (floor n)) (m (floor (+ 0.5 (* 60 (- n h))))))
       (format org-time-clocksum-format h m)))
    ((eq fmt 'checkbox)
@@ -942,6 +1036,8 @@ Don't set this, this is meant for dynamic scoping.")
    (printf (format printf n))
    ((eq fmt 'currency)
     (format "%.2f" n))
+   ((memq fmt '(min_age max_age mean_age))
+    (org-format-time-period n))
    (t (number-to-string n))))
 
 (defun org-nofm-to-completion (n m &optional percent)
@@ -949,35 +1045,44 @@ Don't set this, this is meant for dynamic scoping.")
       (format "[%d/%d]" n m)
     (format "[%d%%]"(floor (+ 0.5 (* 100. (/ (* 1.0 n) m)))))))
 
-(defun org-column-string-to-number (s fmt)
+(defun org-columns-string-to-number (s fmt)
   "Convert a column value to a number that can be used for column computing."
-  (cond
-   ((string-match ":" s)
-    (let ((l (nreverse (org-split-string s ":"))) (sum 0.0))
-      (while l
-	(setq sum (+ (string-to-number (pop l)) (/ sum 60))))
-      sum))
-   ((memq fmt '(checkbox checkbox-n-of-m checkbox-percent))
-    (if (equal s "[X]") 1. 0.000001))
-   (t (string-to-number s))))
+  (if s
+      (cond
+       ((memq fmt '(min_age max_age mean_age))
+	(cond ((string= s "") org-columns-time)
+	      ((string-match
+		"\\([0-9]+\\)d \\([0-9]+\\)h \\([0-9]+\\)m \\([0-9]+\\)s"
+		s)
+	       (+ (* 60 (+ (* 60 (+ (* 24 (string-to-number (match-string 1 s)))
+				    (string-to-number (match-string 2 s))))
+			   (string-to-number (match-string 3 s))))
+		  (string-to-number (match-string 4 s))))
+	      (t (time-to-number-of-days (apply 'encode-time
+						(org-parse-time-string s t))))))
+       ((string-match ":" s)
+	(let ((l (nreverse (org-split-string s ":"))) (sum 0.0))
+	  (while l
+	    (setq sum (+ (string-to-number (pop l)) (/ sum 60))))
+	  sum))
+       ((memq fmt '(checkbox checkbox-n-of-m checkbox-percent))
+	(if (equal s "[X]") 1. 0.000001))
+       (t (string-to-number s)))))
 
 (defun org-columns-uncompile-format (cfmt)
   "Turn the compiled columns format back into a string representation."
-  (let ((rtn "") e s prop title op width fmt printf)
+  (let ((rtn "") e s prop title op op-match width fmt printf fun calc)
     (while (setq e (pop cfmt))
       (setq prop (car e)
 	    title (nth 1 e)
 	    width (nth 2 e)
 	    op (nth 3 e)
 	    fmt (nth 4 e)
-	    printf (nth 5 e))
-      (cond
-       ((eq fmt 'add_times) (setq op ":"))
-       ((eq fmt 'checkbox) (setq op "X"))
-       ((eq fmt 'checkbox-n-of-m) (setq op "X/"))
-       ((eq fmt 'checkbox-percent) (setq op "X%"))
-       ((eq fmt 'add_numbers) (setq op "+"))
-       ((eq fmt 'currency) (setq op "$")))
+	    printf (nth 5 e)
+	    fun (nth 6 e)
+	    calc (nth 7 e))
+      (when (setq op-match (rassoc (list fmt fun calc) org-columns-compile-map))
+	(setq op (car op-match)))
       (if (and op printf) (setq op (concat op ";" printf)))
       (if (equal title prop) (setq title nil))
       (setq s (concat "%" (if width (number-to-string width))
@@ -996,8 +1101,11 @@ title        the title field for the columns
 width        the column width in characters, can be nil for automatic
 operator     the operator if any
 format       the output format for computed results, derived from operator
-printf       a printf format for computed values"
-  (let ((start 0) width prop title op f printf)
+printf       a printf format for computed values
+fun          the lisp function to compute summary values, derived from operator
+calc         function to get values from base elements
+"
+  (let ((start 0) width prop title op op-match f printf fun calc)
     (setq org-columns-current-fmt-compiled nil)
     (while (string-match
 	    (org-re "%\\([0-9]+\\)?\\([[:alnum:]_-]+\\)\\(?:(\\([^)]+\\))\\)?\\(?:{\\([^}]+\\)}\\)?\\s-*")
@@ -1008,20 +1116,19 @@ printf       a printf format for computed values"
 	    title (or (match-string 3 fmt) prop)
 	    op (match-string 4 fmt)
 	    f nil
-	    printf nil)
+	    printf nil
+	    fun '+
+	    calc nil)
       (if width (setq width (string-to-number width)))
       (when (and op (string-match ";" op))
 	(setq printf (substring op (match-end 0))
 	      op (substring op 0 (match-beginning 0))))
-      (cond
-       ((equal op "+")  (setq f 'add_numbers))
-       ((equal op "$")  (setq f 'currency))
-       ((equal op ":")  (setq f 'add_times))
-       ((equal op "X")  (setq f 'checkbox))
-       ((equal op "X/") (setq f 'checkbox-n-of-m))
-       ((equal op "X%") (setq f 'checkbox-percent))
-       )
-      (push (list prop title width op f printf) org-columns-current-fmt-compiled))
+      (when (setq op-match (assoc op org-columns-compile-map))
+	(setq f (cadr op-match)
+	      fun (caddr op-match)
+	      calc (cadddr op-match)))
+      (push (list prop title width op f printf fun calc)
+	    org-columns-current-fmt-compiled))
     (setq org-columns-current-fmt-compiled
 	  (nreverse org-columns-current-fmt-compiled))))
 
@@ -1038,25 +1145,36 @@ containing the title row and all other rows.  Each row is a list
 of fields."
   (save-excursion
     (let* ((title (mapcar 'cadr org-columns-current-fmt-compiled))
+	   (re-comment (concat "\\*+[ \t]+" org-comment-string "\\>"))
+	   (re-archive (concat ".*:" org-archive-tag ":"))
 	   (n (length title)) row tbl)
       (goto-char (point-min))
       (while (re-search-forward "^\\(\\*+\\) " nil t)
-	(when (and (or (null maxlevel)
-                       (>= maxlevel
-                           (if org-odd-levels-only
-                               (/ (1+ (length (match-string 1))) 2)
-                             (length (match-string 1)))))
-                   (get-char-property (match-beginning 0) 'org-columns-key))
-	  (setq row nil)
-	  (loop for i from 0 to (1- n) do
-		(push (or (get-char-property (+ (match-beginning 0) i) 'org-columns-value-modified)
-			  (get-char-property (+ (match-beginning 0) i) 'org-columns-value)
-			  "")
-		      row))
-	  (setq row (nreverse row))
-	  (unless (and skip-empty-rows
-		       (eq 1 (length (delete "" (delete-dups row)))))
-	    (push row tbl))))
+	(catch 'next
+	  (when (and (or (null maxlevel)
+			 (>= maxlevel
+			     (if org-odd-levels-only
+				 (/ (1+ (length (match-string 1))) 2)
+			       (length (match-string 1)))))
+		     (get-char-property (match-beginning 0) 'org-columns-key))
+	    (when (save-excursion
+		    (goto-char (point-at-bol))
+		    (or (looking-at re-comment)
+			(looking-at re-archive)))
+	      (org-end-of-subtree t)
+	      (throw 'next t))
+	    (setq row nil)
+	    (loop for i from 0 to (1- n) do
+		  (push
+		   (org-quote-vert
+		    (or (get-char-property (+ (match-beginning 0) i) 'org-columns-value-modified)
+			(get-char-property (+ (match-beginning 0) i) 'org-columns-value)
+			""))
+		   row))
+	    (setq row (nreverse row))
+	    (unless (and skip-empty-rows
+			 (eq 1 (length (delete "" (delete-dups (copy-sequence row))))))
+	      (push row tbl)))))
       (append (list title 'hline) (nreverse tbl)))))
 
 (defun org-dblock-write:columnview (params)
@@ -1065,18 +1183,18 @@ PARAMS is a property list of parameters:
 
 :width    enforce same column widths with <N> specifiers.
 :id       the :ID: property of the entry where the columns view
-          should be built.  When the symbol `local', call locally.
-          When `global' call column view with the cursor at the beginning
-          of the buffer (usually this means that the whole buffer switches
-          to column view).  When \"file:path/to/file.org\", invoke column
-          view at the start of that file.  Otherwise, the ID is located
-          using `org-id-find'.
+	  should be built.  When the symbol `local', call locally.
+	  When `global' call column view with the cursor at the beginning
+	  of the buffer (usually this means that the whole buffer switches
+	  to column view).  When \"file:path/to/file.org\", invoke column
+	  view at the start of that file.  Otherwise, the ID is located
+	  using `org-id-find'.
 :hlines   When t, insert a hline before each item.  When a number, insert
-          a hline before each level <= that number.
+	  a hline before each level <= that number.
 :vlines   When t, make each column a colgroup to enforce vertical lines.
 :maxlevel When set to a number, don't capture headlines below this level.
 :skip-empty-rows
-          When t, skip rows where all specifiers other than ITEM are empty."
+	  When t, skip rows where all specifiers other than ITEM are empty."
   (let ((pos (move-marker (make-marker) (point)))
 	(hlines (plist-get params :hlines))
 	(vlines (plist-get params :vlines))
@@ -1148,7 +1266,7 @@ PARAMS is a property list of parameters:
       (while (setq line (pop content-lines))
 	(when (string-match "^#" line)
 	  (insert "\n" line)
-	  (when (string-match "^#\\+TBLFM" line)
+	  (when (string-match "^[ \t]*#\\+TBLFM" line)
 	    (setq recalc t))))
       (if recalc
 	  (progn (goto-char pos) (org-table-recalculate 'all))
@@ -1172,7 +1290,7 @@ and tailing newline characters."
   "Create a dynamic block capturing a column view table."
   (interactive)
   (let ((defaults '(:name "columnview" :hlines 1))
-	(id (org-ido-completing-read
+	(id (org-icompleting-read
 	     "Capture columns (local, global, entry with :ID: property) [local]: "
 	     (append '(("global") ("local"))
 		     (mapcar 'list (org-property-values "ID"))))))
@@ -1197,13 +1315,14 @@ and tailing newline characters."
   (org-verify-version 'columns)
   (org-columns-remove-overlays)
   (move-marker org-columns-begin-marker (point))
-  (let (fmt cache maxwidths m p a d)
+  (let ((org-columns-time (time-to-number-of-days (current-time)))
+	 cache maxwidths m p a d fmt)
     (cond
      ((and (boundp 'org-agenda-overriding-columns-format)
 	   org-agenda-overriding-columns-format)
       (setq fmt org-agenda-overriding-columns-format)
       (org-set-local 'org-agenda-overriding-columns-format fmt))
-     ((setq m (get-text-property (point-at-bol) 'org-hd-marker))
+     ((setq m (org-get-at-bol 'org-hd-marker))
       (setq fmt (or (org-entry-get m "COLUMNS" t)
 		    (with-current-buffer (marker-buffer m)
 		      org-columns-default-format))))
@@ -1225,8 +1344,8 @@ and tailing newline characters."
       ;; Get and cache the properties
       (goto-char (point-min))
       (while (not (eobp))
-	(when (setq m (or (get-text-property (point) 'org-hd-marker)
-			  (get-text-property (point) 'org-marker)))
+	(when (setq m (or (org-get-at-bol 'org-hd-marker)
+			  (org-get-at-bol 'org-marker)))
 	  (setq p (org-entry-properties m))
 
 	  (when (or (not (setq a (assoc org-effort-property p)))
@@ -1247,7 +1366,7 @@ and tailing newline characters."
 			     (org-bound-and-true-p flyspell-mode))
 	  (flyspell-mode 0))
 	(mapc (lambda (x)
-		(goto-line (car x))
+		(org-goto-line (car x))
 		(org-columns-display-here (cdr x)))
 	      cache)
 	(when org-agenda-columns-show-summaries
@@ -1257,10 +1376,11 @@ and tailing newline characters."
   "Summarize the summarizable columns in column view in the agenda.
 This will add overlays to the date lines, to show the summary for each day."
   (let* ((fmt (mapcar (lambda (x)
-			(list (car x) (if (equal (car x) "CLOCKSUM")
-					  'add_times (nth 4 x))))
+			(if (equal (car x) "CLOCKSUM")
+			    (list "CLOCKSUM" (nth 2 x) nil 'add_times nil '+ 'identity)
+			  (cdr x)))
 		      org-columns-current-fmt-compiled))
-	 line c c1 stype props lsum entries prop v)
+	 line c c1 stype calc sumfunc props lsum entries prop v)
     (catch 'exit
       (when (delq nil (mapcar 'cadr fmt))
 	;; OK, at least one summation column, it makes sense to try this
@@ -1283,24 +1403,40 @@ This will add overlays to the date lines, to show the summary for each day."
 	      (setq props
 		    (mapcar
 		     (lambda (f)
-		       (setq prop (car f) stype (nth 1 f))
+		       (setq prop (car f)
+			     stype (nth 3 f)
+			     sumfunc (nth 5 f)
+			     calc (or (nth 6 f) 'identity))
 		       (cond
 			((equal prop "ITEM")
 			 (cons prop (buffer-substring (point-at-bol)
 						      (point-at-eol))))
 			((not stype) (cons prop ""))
-			(t
-			 ;; do the summary
-			 (setq lsum 0)
-			 (mapc (lambda (x)
-				 (setq v (cdr (assoc prop x)))
-				 (if v (setq lsum (+ lsum
-						     (org-column-string-to-number
-						      v stype)))))
-			       entries)
-			 (setq lsum (org-columns-number-to-string lsum stype))
-			 (put-text-property
-			  0 (length lsum) 'face 'bold lsum)
+			(t ;; do the summary
+			 (setq lsum nil)
+			 (dolist (x entries)
+			   (setq v (cdr (assoc prop x)))
+			   (if v
+			       (push
+				(funcall
+				 (if (not (get-text-property 0 'org-computed v))
+				     calc
+				   'identity)
+				 (org-columns-string-to-number
+				  v stype))
+				lsum)))
+			 (setq lsum (remove nil lsum))
+			 (setq lsum
+			       (cond ((> (length lsum) 1)
+				      (org-columns-number-to-string
+				       (apply sumfunc lsum) stype))
+				     ((eq (length lsum) 1)
+				      (org-columns-number-to-string
+				       (car lsum) stype))
+				     (t "")))
+			 (put-text-property 0 (length lsum) 'face 'bold lsum)
+			 (unless (eq calc 'identity)
+			   (put-text-property 0 (length lsum) 'org-computed t lsum))
 			 (cons prop lsum))))
 		     fmt))
 	      (org-columns-display-here props 'dateline)
@@ -1333,6 +1469,18 @@ This will add overlays to the date lines, to show the summary for each day."
 					  org-columns-current-fmt-compiled))
 			   (equal (nth 4 a) (nth 4 fm)))
 		  (org-columns-compute (car fm)))))))))))
+
+(defun org-format-time-period (interval)
+  "Convert time in fractional days to days/hours/minutes/seconds"
+  (if (numberp interval)
+    (let* ((days (floor interval))
+	   (frac-hours (* 24 (- interval days)))
+	   (hours (floor frac-hours))
+	   (minutes (floor (* 60 (- frac-hours hours))))
+	   (seconds (floor (* 60 (- (* 60 (- frac-hours hours)) minutes)))))
+      (format "%dd %02dh %02dm %02ds" days hours minutes seconds))
+    ""))
+
 
 (provide 'org-colview)
 

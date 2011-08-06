@@ -1,7 +1,7 @@
 ;;; pcmpl-unix.el --- standard UNIX completions
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -51,7 +51,7 @@ with the SSH option \"HashKnownHosts no\"."
 ;;;###autoload
 (defun pcomplete/cd ()
   "Completion for `cd'."
-  (pcomplete-here (pcomplete-dirs)))
+  (while (pcomplete-here (pcomplete-dirs))))
 
 ;;;###autoload
 (defalias 'pcomplete/pushd 'pcomplete/cd)
@@ -85,7 +85,10 @@ with the SSH option \"HashKnownHosts no\"."
   (while (pcomplete-here (funcall pcomplete-command-completion-function))))
 
 (defun pcmpl-unix-read-passwd-file (file)
-  "Return an alist correlating gids to group names in FILE."
+  "Return an alist correlating gids to group names in FILE.
+
+If FILE is in hashed format (as described in the OpenSSH
+documentation), this function returns nil."
   (let (names)
     (when (file-readable-p file)
       (with-temp-buffer

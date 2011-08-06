@@ -1,6 +1,6 @@
 ;;; yenc.el --- elisp native yenc decoder
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Jesper Harder <harder@ifa.au.dk>
 ;; Keywords: yenc news
@@ -89,8 +89,8 @@
 	      (when (re-search-forward "^=yend.*$" end t)
 		(setq last (match-beginning 0))
 		(setq footer-alist (yenc-parse-line (match-string 0)))
-		(let (default-enable-multibyte-characters)
-		  (setq work-buffer (generate-new-buffer " *yenc-work*")))
+		(letf (((default-value 'enable-multibyte-characters) nil))
+		      (setq work-buffer (generate-new-buffer " *yenc-work*")))
 		(while (< first last)
 		  (setq char (char-after first))
 		  (cond ((or (eq char ?\r)

@@ -1,7 +1,7 @@
 ;;; x-win.el --- parse relevant switches and set up for X  -*-coding: iso-2022-7bit;-*-
 
 ;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009 Free Software Foundation, Inc.
+;;   2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: FSF
 ;; Keywords: terminals, i18n
@@ -133,9 +133,9 @@ When a session manager tells Emacs that the window system is shutting
 down, this function is called.  It calls the functions in the hook
 `emacs-save-session-functions'.  Functions are called with the current
 buffer set to a temporary buffer.  Functions should use `insert' to insert
-lisp code to save the session state.  The buffer is saved
-in a file in the home directory of the user running Emacs.  The file
-is evaluated when Emacs is restarted by the session manager.
+lisp code to save the session state.  The buffer is saved in a file in the
+home directory of the user running Emacs.  The file is evaluated when
+Emacs is restarted by the session manager.
 
 If any of the functions returns non-nil, no more functions are called
 and this function returns non-nil.  This will inform the session manager
@@ -272,13 +272,6 @@ exists."
 (defvar x-alternatives-map
   (let ((map (make-sparse-keymap)))
     ;; Map certain keypad keys into ASCII characters that people usually expect.
-    (define-key map [backspace] [127])
-    (define-key map [delete] [127])
-    (define-key map [tab] [?\t])
-    (define-key map [linefeed] [?\n])
-    (define-key map [clear] [?\C-l])
-    (define-key map [return] [?\C-m])
-    (define-key map [escape] [?\e])
     (define-key map [M-backspace] [?\M-\d])
     (define-key map [M-delete] [?\M-\d])
     (define-key map [M-tab] [?\M-\t])
@@ -302,17 +295,6 @@ exists."
         (set-keymap-parent map (keymap-parent local-function-key-map))
         (set-keymap-parent local-function-key-map map)))
     (set-terminal-parameter frame 'x-setup-function-keys t)))
-
-;; These tell read-char how to convert
-;; these special chars to ASCII.
-(put 'backspace 'ascii-character 127)
-(put 'delete 'ascii-character 127)
-(put 'tab 'ascii-character ?\t)
-(put 'linefeed 'ascii-character ?\n)
-(put 'clear 'ascii-character 12)
-(put 'return 'ascii-character 13)
-(put 'escape 'ascii-character ?\e)
-
 
 ;;;; Keysyms
 
@@ -1215,7 +1197,7 @@ as returned by `x-server-vendor'."
 ;; We keep track of the last text selected here, so we can check the
 ;; current selection against it, and avoid passing back our own text
 ;; from x-cut-buffer-or-selection-value.  We track all three
-;; seperately in case another X application only sets one of them
+;; separately in case another X application only sets one of them
 ;; (say the cut buffer) we aren't fooled by the PRIMARY or
 ;; CLIPBOARD selection staying the same.
 (defvar x-last-selected-text-clipboard nil
@@ -1304,7 +1286,7 @@ The value nil is the same as this list:
 ")
 
 ;; Get a selection value of type TYPE by calling x-get-selection with
-;; an appropiate DATA-TYPE argument decided by `x-select-request-type'.
+;; an appropriate DATA-TYPE argument decided by `x-select-request-type'.
 ;; The return value is already decoded.  If x-get-selection causes an
 ;; error, this function return nil.
 
@@ -1443,9 +1425,11 @@ The value nil is the same as this list:
 (declare-function accelerate-menu "xmenu.c" (&optional frame) t)
 
 (defun x-menu-bar-open (&optional frame)
-  "Open the menu bar if `menu-bar-mode' is on. otherwise call `tmm-menubar'."
+  "Open the menu bar if `menu-bar-mode' is on, otherwise call `tmm-menubar'."
   (interactive "i")
-  (if menu-bar-mode (accelerate-menu frame)
+  (if (and menu-bar-mode
+	   (fboundp 'accelerate-menu))
+      (accelerate-menu frame)
     (tmm-menubar)))
 
 
@@ -1498,7 +1482,7 @@ The value nil is the same as this list:
   ;; Create the standard fontset.
   (condition-case err
 	(create-fontset-from-fontset-spec standard-fontset-spec t)
-    (error (display-warning 
+    (error (display-warning
 	    'initialization
 	    (format "Creation of the standard fontset failed: %s" err)
 	    :error)))
@@ -1573,9 +1557,6 @@ The value nil is the same as this list:
   ;; (if (featurep 'motif)
   ;;     (global-set-key [f10] 'ignore))
 
-  ;; Turn on support for mouse wheels.
-  (mouse-wheel-mode 1)
-
   ;; Enable CLIPBOARD copy/paste through menu bar commands.
   (menu-bar-enable-clipboard)
 
@@ -1597,6 +1578,8 @@ The value nil is the same as this list:
 (define-key special-event-map [drag-n-drop] 'x-dnd-handle-drag-n-drop-event)
 
 (defcustom x-gtk-stock-map
+  (mapcar (lambda (arg)
+	    (cons (purecopy (car arg)) (purecopy (cdr arg))))
   '(
     ("etc/images/new" . "gtk-new")
     ("etc/images/open" . "gtk-open")
@@ -1653,10 +1636,14 @@ The value nil is the same as this list:
     ("images/mail/save-draft" . "gtk-mail-handling")
     ("images/mail/send" . "gtk-mail-send")
     ("images/mail/spam" . "gtk-spam")
+    ;; Used for GDB Graphical Interface
+    ("images/gud/break" . "gtk-no")
+    ("images/gud/recstart" . "gtk-media-record")
+    ("images/gud/recstop" . "gtk-media-stop")
     ;; No themed versions available:
     ;; mail/preview (combining stock_mail and stock_zoom)
     ;; mail/save    (combining stock_mail, stock_save and stock_convert)
-    )
+    ))
   "How icons for tool bars are mapped to Gtk+ stock items.
 Emacs must be compiled with the Gtk+ toolkit for this to have any effect.
 A value that begins with n: denotes a named icon instead of a stock icon."
@@ -1667,7 +1654,7 @@ A value that begins with n: denotes a named icon instead of a stock icon."
   :group 'x)
 
 (defcustom icon-map-list '(x-gtk-stock-map)
-  "A list of alists that maps icon file names to stock/named icons.
+  "A list of alists that map icon file names to stock/named icons.
 The alists are searched in the order they appear.  The first match is used.
 The keys in the alists are file names without extension and with two directory
 components.  For example, to map /usr/share/emacs/22.1.1/etc/images/open.xpm

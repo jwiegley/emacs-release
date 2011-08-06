@@ -1,7 +1,7 @@
 ;;; log-edit.el --- Major mode for editing CVS commit messages
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: pcl-cvs cvs commit log
@@ -147,6 +147,13 @@ can be obtained from `log-edit-files'."
   :group 'log-edit
   :type '(hook :options (log-edit-set-common-indentation
 			 log-edit-add-to-changelog)))
+
+(defcustom log-edit-strip-single-file-name t
+  "If non-nil, remove file name from single-file log entries."
+  :type 'boolean
+  :safe 'booleanp
+  :group 'log-edit
+  :version "23.2")
 
 (defvar cvs-changelog-full-paragraphs t)
 (make-obsolete-variable 'cvs-changelog-full-paragraphs
@@ -466,7 +473,8 @@ If you want to abort the commit, simply delete the buffer."
   "Insert the template specified by the CVS administrator, if any.
 This simply uses the local CVS/Template file."
   (interactive)
-  (when (or (interactive-p) (= (point-min) (point-max)))
+  (when (or (called-interactively-p 'interactive)
+	    (= (point-min) (point-max)))
     (when (file-readable-p "CVS/Template")
       (insert-file-contents "CVS/Template"))))
 
@@ -475,7 +483,8 @@ This simply uses the local CVS/Template file."
 This contacts the repository to get the rcstemplate file and
 can thus take some time."
   (interactive)
-  (when (or (interactive-p) (= (point-min) (point-max)))
+  (when (or (called-interactively-p 'interactive)
+	    (= (point-min) (point-max)))
     (when (file-readable-p "CVS/Root")
       ;; Ignore the stderr stuff, even if it's an error.
       (call-process "cvs" nil '(t nil) nil
@@ -521,7 +530,7 @@ regardless of user name or time."
     (log-edit-insert-changelog-entries (log-edit-files)))
   (log-edit-set-common-indentation)
   (goto-char (point-min))
-  (when (looking-at "\\*\\s-+")
+  (when (and log-edit-strip-single-file-name (looking-at "\\*\\s-+"))
     (forward-line 1)
     (when (not (re-search-forward "^\\*\\s-+" nil t))
       (goto-char (point-min))
@@ -556,23 +565,21 @@ A \"page\" in a ChangeLog file is the area between two dates."
 (defun log-edit-changelog-paragraph ()
   "Return the bounds of the ChangeLog paragraph containing point.
 If we are between paragraphs, return the previous paragraph."
-  (save-excursion
-    (beginning-of-line)
-    (if (looking-at "^[ \t]*$")
-        (skip-chars-backward " \t\n" (point-min)))
-    (list (progn
-            (if (re-search-backward "^[ \t]*\n" nil 'or-to-limit)
-                (goto-char (match-end 0)))
-            (point))
-          (if (re-search-forward "^[ \t\n]*$" nil t)
-              (match-beginning 0)
-            (point-max)))))
+  (beginning-of-line)
+  (if (looking-at "^[ \t]*$")
+      (skip-chars-backward " \t\n" (point-min)))
+  (list (progn
+          (if (re-search-backward "^[ \t]*\n" nil 'or-to-limit)
+              (goto-char (match-end 0)))
+          (point))
+        (if (re-search-forward "^[ \t\n]*$" nil t)
+            (match-beginning 0)
+          (point-max))))
 
 (defun log-edit-changelog-subparagraph ()
   "Return the bounds of the ChangeLog subparagraph containing point.
 A subparagraph is a block of non-blank lines beginning with an asterisk.
 If we are between sub-paragraphs, return the previous subparagraph."
-  (save-excursion
     (end-of-line)
     (if (search-backward "*" nil t)
         (list (progn (beginning-of-line) (point))
@@ -581,16 +588,17 @@ If we are between sub-paragraphs, return the previous subparagraph."
                 (if (re-search-forward "^[ \t]*[\n*]" nil t)
                     (match-beginning 0)
                   (point-max))))
-      (list (point) (point)))))
+    (list (point) (point))))
 
 (defun log-edit-changelog-entry ()
   "Return the bounds of the ChangeLog entry containing point.
 The variable `log-edit-changelog-full-paragraphs' decides whether an
 \"entry\" is a paragraph or a subparagraph; see its documentation string
 for more details."
-  (if log-edit-changelog-full-paragraphs
-      (log-edit-changelog-paragraph)
-    (log-edit-changelog-subparagraph)))
+  (save-excursion
+    (if log-edit-changelog-full-paragraphs
+        (log-edit-changelog-paragraph)
+      (log-edit-changelog-subparagraph))))
 
 (defvar user-full-name)
 (defvar user-mail-address)
@@ -659,11 +667,17 @@ where LOGBUFFER is the name of the ChangeLog buffer, and each
                                   pattern
                                   "\\($\\|[^[:alnum:]]\\)"))
 
-	    (let (texts)
-	      (while (re-search-forward pattern nil t)
+	    (let (texts
+                  (pos (point)))
+	      (while (and (not (eobp)) (re-search-forward pattern nil t))
 		(let ((entry (log-edit-changelog-entry)))
-		  (push entry texts)
-		  (goto-char (elt entry 1))))
+                  (if (< (elt entry 1) (max (1+ pos) (point)))
+                      ;; This is not relevant, actually.
+                      nil
+                    (push entry texts))
+                  ;; Make sure we make progress.
+                  (setq pos (max (1+ pos) (elt entry 1)))
+		  (goto-char pos)))
 
 	      (cons (current-buffer) texts))))))))
 

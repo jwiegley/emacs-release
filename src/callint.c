@@ -1,6 +1,6 @@
 /* Call a Lisp function interactively.
    Copyright (C) 1985, 1986, 1993, 1994, 1995, 1997, 2000, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -20,6 +20,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
+#include <setjmp.h>
 
 #include "lisp.h"
 #include "buffer.h"
@@ -126,7 +127,7 @@ If the string begins with `@', Emacs searches the key sequence which
  invoked the command for its first mouse click (or any other event
  which specifies a window).
 If the string begins with `^' and `shift-select-mode' is non-nil,
- Emacs first calls the function `handle-shift-select'.
+ Emacs first calls the function `handle-shift-selection'.
 You may use `@', `*', and `^' together.  They are processed in the
  order that they appear, before reading any arguments.
 usage: (interactive &optional ARGS)  */)
@@ -904,46 +905,45 @@ syms_of_callint ()
   callint_message = Qnil;
   staticpro (&callint_message);
 
-  preserved_fns = Fcons (intern ("region-beginning"),
-			 Fcons (intern ("region-end"),
-				Fcons (intern ("point"),
-				       Fcons (intern ("mark"), Qnil))));
-  staticpro (&preserved_fns);
+  preserved_fns = pure_cons (intern_c_string ("region-beginning"),
+			 pure_cons (intern_c_string ("region-end"),
+				pure_cons (intern_c_string ("point"),
+				       pure_cons (intern_c_string ("mark"), Qnil))));
 
-  Qlist = intern ("list");
+  Qlist = intern_c_string ("list");
   staticpro (&Qlist);
-  Qlet = intern ("let");
+  Qlet = intern_c_string ("let");
   staticpro (&Qlet);
-  Qif = intern ("if");
+  Qif = intern_c_string ("if");
   staticpro (&Qif);
-  Qwhen = intern ("when");
+  Qwhen = intern_c_string ("when");
   staticpro (&Qwhen);
-  Qletx = intern ("let*");
+  Qletx = intern_c_string ("let*");
   staticpro (&Qletx);
-  Qsave_excursion = intern ("save-excursion");
+  Qsave_excursion = intern_c_string ("save-excursion");
   staticpro (&Qsave_excursion);
-  Qprogn = intern ("progn");
+  Qprogn = intern_c_string ("progn");
   staticpro (&Qprogn);
 
-  Qminus = intern ("-");
+  Qminus = intern_c_string ("-");
   staticpro (&Qminus);
 
-  Qplus = intern ("+");
+  Qplus = intern_c_string ("+");
   staticpro (&Qplus);
 
-  Qhandle_shift_selection = intern ("handle-shift-selection");
+  Qhandle_shift_selection = intern_c_string ("handle-shift-selection");
   staticpro (&Qhandle_shift_selection);
 
-  Qcall_interactively = intern ("call-interactively");
+  Qcall_interactively = intern_c_string ("call-interactively");
   staticpro (&Qcall_interactively);
 
-  Qcommand_debug_status = intern ("command-debug-status");
+  Qcommand_debug_status = intern_c_string ("command-debug-status");
   staticpro (&Qcommand_debug_status);
 
-  Qenable_recursive_minibuffers = intern ("enable-recursive-minibuffers");
+  Qenable_recursive_minibuffers = intern_c_string ("enable-recursive-minibuffers");
   staticpro (&Qenable_recursive_minibuffers);
 
-  Qmouse_leave_buffer_hook = intern ("mouse-leave-buffer-hook");
+  Qmouse_leave_buffer_hook = intern_c_string ("mouse-leave-buffer-hook");
   staticpro (&Qmouse_leave_buffer_hook);
 
   DEFVAR_KBOARD ("prefix-arg", Vprefix_arg,

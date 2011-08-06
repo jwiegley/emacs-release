@@ -1,7 +1,7 @@
 ;;; cc-cmds.el --- user level commands for CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2003- Alan Mackenzie
@@ -50,8 +50,6 @@
 (cc-bytecomp-defun delete-forward-p)	; XEmacs
 (cc-bytecomp-defvar filladapt-mode)	; c-fill-paragraph contains a kludge
 					; which looks at this.
-(cc-bytecomp-defun c-forward-subword)
-(cc-bytecomp-defun c-backward-subword)
 
 ;; Indentation / Display syntax functions
 (defvar c-fix-backslashes t)
@@ -263,9 +261,9 @@ With universal argument, inserts the analysis as a comment on that line."
 			 "a" "")
 		     (if c-hungry-delete-key "h" "")
 		     (if (and
-			  ;; cc-subword might not be loaded.
-			  (boundp 'c-subword-mode)
-			  (symbol-value 'c-subword-mode))
+			  ;; subword might not be loaded.
+			  (boundp 'subword-mode)
+			  (symbol-value 'subword-mode))
 			 "w"
 		       "")))
 	(bare-mode-name (if (string-match "\\(^[^/]*\\)/" mode-name)
@@ -322,7 +320,7 @@ after special characters such as brace, comma, semi-colon, and colon."
   (c-keep-region-active))
 
 (defalias 'c-toggle-auto-state 'c-toggle-auto-newline)
-(make-obsolete 'c-toggle-auto-state 'c-toggle-auto-newline)
+(make-obsolete 'c-toggle-auto-state 'c-toggle-auto-newline "22.1")
 
 (defun c-toggle-hungry-state (&optional arg)
   "Toggle hungry-delete-key feature.
@@ -1324,20 +1322,24 @@ keyword on the line, the keyword is not inserted inside a literal, and
 	(delete-char -2)))))
 
 
+
+(declare-function subword-forward "subword" (&optional arg))
+(declare-function subword-backward "subword" (&optional arg))
+
 ;; "nomenclature" functions + c-scope-operator.
 (defun c-forward-into-nomenclature (&optional arg)
   "Compatibility alias for `c-forward-subword'."
   (interactive "p")
-  (require 'cc-subword)
-  (c-forward-subword arg))
-(make-obsolete 'c-forward-into-nomenclature 'c-forward-subword)
+  (require 'subword)
+  (subword-forward arg))
+(make-obsolete 'c-forward-into-nomenclature 'subword-forward "23.2")
 
 (defun c-backward-into-nomenclature (&optional arg)
   "Compatibility alias for `c-backward-subword'."
   (interactive "p")
-  (require 'cc-subword)
-  (c-backward-subword arg))
-(make-obsolete 'c-backward-into-nomenclature 'c-backward-subword)
+  (require 'subword)
+  (subword-backward arg))
+(make-obsolete 'c-backward-into-nomenclature 'subword-backward "23.2")
 
 (defun c-scope-operator ()
   "Insert a double colon scope operator at point.
@@ -2808,7 +2810,9 @@ move forward to the end of the containing preprocessor conditional.
 function stops at them when going backward, but not when going
 forward."
   (interactive "p")
-  (c-forward-conditional (- count) -1)
+  (let ((new-point (c-scan-conditionals (- count) -1)))
+    (push-mark)
+    (goto-char new-point))
   (c-keep-region-active))
 
 (defun c-up-conditional-with-else (count)
@@ -2816,7 +2820,9 @@ forward."
 Just like `c-up-conditional', except it also stops at \"#else\"
 directives."
   (interactive "p")
-  (c-forward-conditional (- count) -1 t)
+  (let ((new-point (c-scan-conditionals (- count) -1 t)))
+    (push-mark)
+    (goto-char new-point))
   (c-keep-region-active))
 
 (defun c-down-conditional (count)
@@ -2828,7 +2834,9 @@ move backward into the previous preprocessor conditional.
 function stops at them when going forward, but not when going
 backward."
   (interactive "p")
-  (c-forward-conditional count 1)
+  (let ((new-point (c-scan-conditionals count 1)))
+    (push-mark)
+    (goto-char new-point))
   (c-keep-region-active))
 
 (defun c-down-conditional-with-else (count)
@@ -2836,15 +2844,24 @@ backward."
 Just like `c-down-conditional', except it also stops at \"#else\"
 directives."
   (interactive "p")
-  (c-forward-conditional count 1 t)
+  (let ((new-point (c-scan-conditionals count 1 t)))
+    (push-mark)
+    (goto-char new-point))
   (c-keep-region-active))
 
 (defun c-backward-conditional (count &optional target-depth with-else)
   "Move back across a preprocessor conditional, leaving mark behind.
 A prefix argument acts as a repeat count.  With a negative argument,
-move forward across a preprocessor conditional."
+move forward across a preprocessor conditional.
+
+The optional arguments TARGET-DEPTH and WITH-ELSE are historical,
+and have the same meanings as in `c-scan-conditionals'.  If you
+are calling c-forward-conditional from a program, you might want
+to call `c-scan-conditionals' directly instead."
   (interactive "p")
-  (c-forward-conditional (- count) target-depth with-else)
+  (let ((new-point (c-scan-conditionals (- count) target-depth with-else)))
+    (push-mark)
+    (goto-char new-point))
   (c-keep-region-active))
 
 (defun c-forward-conditional (count &optional target-depth with-else)
@@ -2852,21 +2869,42 @@ move forward across a preprocessor conditional."
 A prefix argument acts as a repeat count.  With a negative argument,
 move backward across a preprocessor conditional.
 
+If there aren't enough conditionals after \(or before) point, an
+error is signalled.
+
+\"#elif\" is treated like \"#else\" followed by \"#if\", except that
+the nesting level isn't changed when tracking subconditionals.
+
+The optional arguments TARGET-DEPTH and WITH-ELSE are historical,
+and have the same meanings as in `c-scan-conditionals'.  If you
+are calling c-forward-conditional from a program, you might want
+to call `c-scan-conditionals' directly instead."
+  (interactive "p")
+  (let ((new-point (c-scan-conditionals count target-depth with-else)))
+    (push-mark)
+    (goto-char new-point)))
+
+(defun c-scan-conditionals (count &optional target-depth with-else)
+  "Scan forward across COUNT preprocessor conditionals.
+With a negative argument, scan backward across preprocessor
+conditionals.  Return the end position.  Point is not moved.
+
+If there aren't enough preprocessor conditionals, throw an error.
+
 \"#elif\" is treated like \"#else\" followed by \"#if\", except that
 the nesting level isn't changed when tracking subconditionals.
 
 The optional argument TARGET-DEPTH specifies the wanted nesting depth
-after each scan.  I.e. if TARGET-DEPTH is -1, the function will move
-out of the enclosing conditional.  A non-integer non-nil TARGET-DEPTH
+after each scan.  E.g. if TARGET-DEPTH is -1, the end position will be
+outside the enclosing conditional.  A non-integer non-nil TARGET-DEPTH
 counts as -1.
 
 If the optional argument WITH-ELSE is non-nil, \"#else\" directives
 are treated as conditional clause limits.  Normally they are ignored."
-  (interactive "p")
   (let* ((forward (> count 0))
 	 (increment (if forward -1 1))
 	 (search-function (if forward 're-search-forward 're-search-backward))
-	 (new))
+	 new)
     (unless (integerp target-depth)
       (setq target-depth (if target-depth -1 0)))
     (save-excursion
@@ -2935,9 +2973,8 @@ are treated as conditional clause limits.  Normally they are ignored."
 	      (error "No containing preprocessor conditional"))
 	  (goto-char (setq new found)))
 	(setq count (+ count increment))))
-    (push-mark)
-    (goto-char new))
-  (c-keep-region-active))
+    (c-keep-region-active)
+    new))
 
 
 ;; commands to indent lines, regions, defuns, and expressions
@@ -4431,7 +4468,7 @@ If a fill prefix is specified, it overrides all the above."
 	     (indent-to col))))))
 
 (defalias 'c-comment-line-break-function 'c-indent-new-comment-line)
-(make-obsolete 'c-comment-line-break-function 'c-indent-new-comment-line)
+(make-obsolete 'c-comment-line-break-function 'c-indent-new-comment-line "21.1")
 
 ;; advice for indent-new-comment-line for older Emacsen
 (unless (boundp 'comment-line-break-function)

@@ -1,7 +1,7 @@
 ;;; remember --- a mode for quickly jotting down things to remember
 
 ;; Copyright (C) 1999, 2000, 2001, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 ;; Created: 29 Mar 1999
@@ -451,7 +451,7 @@ application."
   (remember-region (point-min) (point-max)))
 
 ;; Org needs this
-(define-obsolete-function-alias 'remember-buffer 'remember-finalize)
+(define-obsolete-function-alias 'remember-buffer 'remember-finalize "23.1")
 
 (defun remember-destroy ()
   "Destroy the current *Remember* buffer."

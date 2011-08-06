@@ -2,7 +2,7 @@ This is ../../info/dired-x, produced by makeinfo version 4.11 from
 dired-x.texi.
 
 Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009  Free Software Foundation, Inc.
+2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -33,7 +33,7 @@ are provided by the file `dired-x.el'.
 
 
    Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009  Free Software Foundation, Inc.
+2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -137,8 +137,6 @@ from `dired.el'
    * `dired-find-buffer-nocreate'
 
    * `dired-initial-position'
-
-   * `dired-up-directory'
 
 and the following functions from `dired-aux.el'
 
@@ -1680,32 +1678,32 @@ Variable Index
 
 
 Tag Table:
-Node: Top963
-Node: Introduction2373
-Node: Features3174
-Node: Technical Details4155
-Node: Installation4604
-Node: Optional Installation Dired Jump5726
-Node: Optional Installation File At Point7308
-Node: Omitting Files in Dired8360
-Node: Omitting Variables9848
-Node: Omitting Examples13057
-Node: Omitting Technical14287
-Node: Local Variables14684
-Node: Shell Command Guessing16562
-Node: Virtual Dired19819
-Node: Advanced Mark Commands21344
-Node: Advanced Cleaning Functions22743
-Node: Advanced Cleaning Variables23549
-Node: Special Marking Function24672
-Node: Multiple Dired Directories26235
-Node: Find File At Point27452
-Node: Miscellaneous Commands30212
-Node: Bugs33692
-Node: GNU Free Documentation License34286
-Node: Concept Index59454
-Node: Command Index63751
-Node: Key Index67398
-Node: Variable Index69548
+Node: Top969
+Node: Introduction2385
+Node: Features3186
+Node: Technical Details4167
+Node: Installation4589
+Node: Optional Installation Dired Jump5711
+Node: Optional Installation File At Point7293
+Node: Omitting Files in Dired8345
+Node: Omitting Variables9833
+Node: Omitting Examples13042
+Node: Omitting Technical14272
+Node: Local Variables14669
+Node: Shell Command Guessing16547
+Node: Virtual Dired19804
+Node: Advanced Mark Commands21329
+Node: Advanced Cleaning Functions22728
+Node: Advanced Cleaning Variables23534
+Node: Special Marking Function24657
+Node: Multiple Dired Directories26220
+Node: Find File At Point27437
+Node: Miscellaneous Commands30197
+Node: Bugs33677
+Node: GNU Free Documentation License34271
+Node: Concept Index59439
+Node: Command Index63736
+Node: Key Index67383
+Node: Variable Index69533
 
 End Tag Table

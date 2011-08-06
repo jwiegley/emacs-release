@@ -1,8 +1,8 @@
 ;;; mule-conf.el --- configure multilingual environment
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
-;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
+;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 ;; Copyright (C) 2003
@@ -1245,7 +1245,7 @@ is treated as a character."
   :coding-type 'raw-text
   :eol-type 'unix
   :mnemonic ?=)
-  
+
 (define-coding-system 'iso-latin-1
   "ISO 2022 based 8-bit encoding for Latin-1 (MIME:ISO-8859-1)."
   :coding-type 'charset
@@ -1327,7 +1327,7 @@ is treated as a character."
   :mime-charset 'utf-16)
 
 (define-coding-system 'utf-16be-with-signature
-  "UTF-16 (big endian, with signature)."
+  "UTF-16 (big endian, with signature (BOM))."
   :coding-type 'utf-16
   :mnemonic ?U
   :charset-list '(unicode)
@@ -1504,6 +1504,7 @@ for decoding and encoding files, process I/O, etc."
 ;; Tar files are not decoded at all, but we treat them as raw bytes.
 
 (setq file-coding-system-alist
+      (mapcar (lambda (arg) (cons (purecopy (car arg)) (cdr arg)))
       '(("\\.elc\\'" . utf-8-emacs)
 	("\\.utf\\(-8\\)?\\'" . utf-8)
 	("\\.xml\\'" . xml-find-file-coding-system)
@@ -1516,7 +1517,7 @@ for decoding and encoding files, process I/O, etc."
 	("\\.tar\\'" . (no-conversion . no-conversion))
 	( "\\.po[tx]?\\'\\|\\.po\\." . po-find-file-coding-system)
 	("\\.\\(tex\\|ltx\\|dtx\\|drv\\)\\'" . latexenc-find-file-coding-system)
-	("" . (undecided . nil))))
+	("" . (undecided . nil)))))
 
 
 ;;; Setting coding categories and their priorities.
@@ -1551,10 +1552,6 @@ for decoding and encoding files, process I/O, etc."
 ;; the charsets defined in this file but might be required by user
 ;; code.
 (provide 'code-pages)
-
-;; Local variables:
-;; no-byte-compile: t
-;; End:
 
 ;; arch-tag: 7d5fed55-b6df-42f6-8d3d-0011190551f5
 ;;; mule-conf.el ends here

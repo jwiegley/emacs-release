@@ -1,7 +1,7 @@
 ;;; gamegrid.el --- library for implementing grid-based games on Emacs
 
 ;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Glynn Clements <glynn@sensei.co.uk>
 ;; Version: 1.02
@@ -586,7 +586,8 @@ FILE is created there."
 			  (t ""))))
     (sort-fields 1 (point-min) (point-max))
     (reverse-region (point-min) (point-max))
-    (goto-line (1+ gamegrid-score-file-length))
+    (goto-char (point-min))
+    (forward-line gamegrid-score-file-length)
     (delete-region (point) (point-max))
     (setq buffer-read-only t)
     (save-buffer)))

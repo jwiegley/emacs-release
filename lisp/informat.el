@@ -1,7 +1,7 @@
 ;;; informat.el --- info support functions package for Emacs
 
 ;; Copyright (C) 1986, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: help
@@ -497,8 +497,7 @@ For example, invoke \"emacs -batch -f batch-info-validate $info/ ~/*.info\""
 		      nil ;(message "Checking validity of info file %s... OK" file)
 		    (message "----------------------------------------------------------------------")
 		    (message ">> PROBLEMS IN INFO FILE %s" file)
-		    (save-excursion
-		      (set-buffer loss-name)
+		    (with-current-buffer loss-name
 		      (princ (buffer-substring-no-properties
 			      (point-min) (point-max))))
 		    (message "----------------------------------------------------------------------")

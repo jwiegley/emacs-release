@@ -1,7 +1,7 @@
 ;;; socks.el --- A Socks v5 Client for Emacs
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2002,
-;;   2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: William M. Perry <wmperry@gnu.org>
 ;;         Dave Love <fx@gnu.org>
@@ -387,7 +387,7 @@ version.")
 	 ((= authtype socks-authentication-null)
 	  (and socks-debug (message "No authentication necessary")))
 	 ((= authtype socks-authentication-failure)
-	  (error "No acceptable authentication methods found."))
+	  (error "No acceptable authentication methods found"))
 	 (t
 	  (let* ((auth-type (gethash 'authtype info))
 		 (auth-handler (assoc auth-type socks-authentication-methods))
@@ -435,27 +435,29 @@ version.")
 			      (error "Unsupported address type for HTTP: %d" atype)))
 			    port)))
      ((equal version 4)
-      (setq request (format
-		     "%c%c%c%c%s%s%c"
-		     version		; version
-		     command		; command
-		     (lsh port -8)	; port, high byte
-		     (- port (lsh (lsh port -8) 8)) ; port, low byte
-		     addr		; address
-		     (user-full-name)	; username
-		     0			; terminate username
-		     )))
+      (setq request (string-make-unibyte
+		     (format
+		      "%c%c%c%c%s%s%c"
+		      version		; version
+		      command		; command
+		      (lsh port -8)	; port, high byte
+		      (- port (lsh (lsh port -8) 8)) ; port, low byte
+		      addr		; address
+		      (user-full-name)	; username
+		      0			; terminate username
+		      ))))
      ((equal version 5)
-      (setq request (format
-		     "%c%c%c%c%s%c%c"
-		     version		; version
-		     command		; command
-		     0			; reserved
-		     atype		; address type
-		     addr		; address
-		     (lsh port -8)	; port, high byte
-		     (- port (lsh (lsh port -8) 8)) ; port, low byte
-		     )))
+      (setq request (string-make-unibyte
+		     (format
+		      "%c%c%c%c%s%c%c"
+		      version		; version
+		      command		; command
+		      0			; reserved
+		      atype		; address type
+		      addr		; address
+		      (lsh port -8)	; port, high byte
+		      (- port (lsh (lsh port -8) 8)) ; port, low byte
+		      ))))
      (t
       (error "Unknown protocol version: %d" version)))
     (process-send-string proc request)

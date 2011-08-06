@@ -1,8 +1,8 @@
 /* Basic character set support.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-     2008, 2009  Free Software Foundation, Inc.
+     2008, 2009, 2010  Free Software Foundation, Inc.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-     2005, 2006, 2007, 2008, 2009
+     2005, 2006, 2007, 2008, 2009, 2010
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
 
@@ -31,6 +31,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <unistd.h>
 #include <ctype.h>
 #include <sys/types.h>
+#include <setjmp.h>
 #include "lisp.h"
 #include "character.h"
 #include "charset.h"
@@ -511,12 +512,13 @@ load_charset_map_from_file (charset, mapfile, control_flag)
   int eof;
   Lisp_Object suffixes;
   struct charset_map_entries *head, *entries;
-  int n_entries;
-  int count = SPECPDL_INDEX ();
+  int n_entries, count;
+  USE_SAFE_ALLOCA;
 
   suffixes = Fcons (build_string (".map"),
 		    Fcons (build_string (".TXT"), Qnil));
 
+  count = SPECPDL_INDEX ();
   specbind (Qfile_name_handler_alist, Qnil);
   fd = openp (Vcharset_map_path, mapfile, suffixes, NULL, Qnil);
   unbind_to (count, Qnil);
@@ -524,8 +526,13 @@ load_charset_map_from_file (charset, mapfile, control_flag)
       || ! (fp = fdopen (fd, "r")))
     error ("Failure in loading charset map: %S", SDATA (mapfile));
 
-  head = entries = ((struct charset_map_entries *)
-		    alloca (sizeof (struct charset_map_entries)));
+  /* Use SAFE_ALLOCA instead of alloca, as `charset_map_entries' is
+     large (larger than MAX_ALLOCA).  */
+  SAFE_ALLOCA (head, struct charset_map_entries *,
+	       sizeof (struct charset_map_entries));
+  entries = head;
+  bzero (entries, sizeof (struct charset_map_entries));
+
   n_entries = 0;
   eof = 0;
   while (1)
@@ -548,9 +555,10 @@ load_charset_map_from_file (charset, mapfile, control_flag)
 
       if (n_entries > 0 && (n_entries % 0x10000) == 0)
 	{
-	  entries->next = ((struct charset_map_entries *)
-			   alloca (sizeof (struct charset_map_entries)));
+	  SAFE_ALLOCA (entries->next, struct charset_map_entries *,
+		       sizeof (struct charset_map_entries));
 	  entries = entries->next;
+	  bzero (entries, sizeof (struct charset_map_entries));
 	}
       idx = n_entries % 0x10000;
       entries->entry[idx].from = from;
@@ -562,6 +570,7 @@ load_charset_map_from_file (charset, mapfile, control_flag)
   close (fd);
 
   load_charset_map (charset, head, n_entries, control_flag);
+  SAFE_FREE ();
 }
 
 static void
@@ -576,6 +585,7 @@ load_charset_map_from_vector (charset, vec, control_flag)
   int n_entries;
   int len = ASIZE (vec);
   int i;
+  USE_SAFE_ALLOCA;
 
   if (len % 2 == 1)
     {
@@ -583,8 +593,13 @@ load_charset_map_from_vector (charset, vec, control_flag)
       return;
     }
 
-  head = entries = ((struct charset_map_entries *)
-		    alloca (sizeof (struct charset_map_entries)));
+  /* Use SAFE_ALLOCA instead of alloca, as `charset_map_entries' is
+     large (larger than MAX_ALLOCA).  */
+  SAFE_ALLOCA (head, struct charset_map_entries *,
+	       sizeof (struct charset_map_entries));
+  entries = head;
+  bzero (entries, sizeof (struct charset_map_entries));
+
   n_entries = 0;
   for (i = 0; i < len; i += 2)
     {
@@ -617,9 +632,10 @@ load_charset_map_from_vector (charset, vec, control_flag)
 
       if (n_entries > 0 && (n_entries % 0x10000) == 0)
 	{
-	  entries->next = ((struct charset_map_entries *)
-			   alloca (sizeof (struct charset_map_entries)));
+	  SAFE_ALLOCA (entries->next, struct charset_map_entries *,
+		       sizeof (struct charset_map_entries));
 	  entries = entries->next;
+	  bzero (entries, sizeof (struct charset_map_entries));
 	}
       idx = n_entries % 0x10000;
       entries->entry[idx].from = from;
@@ -629,6 +645,7 @@ load_charset_map_from_vector (charset, vec, control_flag)
     }
 
   load_charset_map (charset, head, n_entries, control_flag);
+  SAFE_FREE ();
 }
 
 
@@ -1322,19 +1339,19 @@ define_charset_internal (name, dimension, code_space, min_code, max_code,
   args[charset_arg_superset] = Qnil;
   args[charset_arg_unify_map] = Qnil;
 
-  plist[0] = intern (":name");
+  plist[0] = intern_c_string (":name");
   plist[1] = args[charset_arg_name];
-  plist[2] = intern (":dimension");
+  plist[2] = intern_c_string (":dimension");
   plist[3] = args[charset_arg_dimension];
-  plist[4] = intern (":code-space");
+  plist[4] = intern_c_string (":code-space");
   plist[5] = args[charset_arg_code_space];
-  plist[6] = intern (":iso-final-char");
+  plist[6] = intern_c_string (":iso-final-char");
   plist[7] = args[charset_arg_iso_final];
-  plist[8] = intern (":emacs-mule-id");
+  plist[8] = intern_c_string (":emacs-mule-id");
   plist[9] = args[charset_arg_emacs_mule_id];
-  plist[10] = intern (":ascii-compatible-p");
+  plist[10] = intern_c_string (":ascii-compatible-p");
   plist[11] = args[charset_arg_ascii_compatible_p];
-  plist[12] = intern (":code-offset");
+  plist[12] = intern_c_string (":code-offset");
   plist[13] = args[charset_arg_code_offset];
 
   args[charset_arg_plist] = Flist (14, plist);
@@ -1798,7 +1815,7 @@ encode_char (charset, c)
 
   if (CHARSET_UNIFIED_P (charset))
     {
-      Lisp_Object deunifier, deunified;
+      Lisp_Object deunifier;
       int code_index = -1;
 
       deunifier = CHARSET_DEUNIFIER (charset);
@@ -2196,10 +2213,6 @@ Clear temporary charset mapping tables.
 It should be called only from temacs invoked for dumping.  */)
      ()
 {
-  int i;
-  struct charset *charset;
-  Lisp_Object attrs;
-
   if (temp_charset_work)
     {
       free (temp_charset_work);
@@ -2282,11 +2295,6 @@ usage: (set-charset-priority &rest charsets)  */)
   Vemacs_mule_charset_list = Fnreverse (list_emacs_mule);
   if (charset_unibyte < 0)
     charset_unibyte = charset_iso_8859_1;
-  {
-    struct charset *charset = CHARSET_FROM_ID (charset_unibyte);
-    for (i = 128; i < 256; i++)
-      charset_unibyte_decoder[i - 128] = DECODE_CHAR (charset, i);
-  }
 
   return Qnil;
 }
@@ -2310,7 +2318,7 @@ init_charset ()
 {
   Lisp_Object tempdir;
   tempdir = Fexpand_file_name (build_string ("charsets"), Vdata_directory);
-  if (access (SDATA (tempdir), 0) < 0)
+  if (access ((char *) SDATA (tempdir), 0) < 0)
     {
       dir_warning ("Error: charsets directory (%s) does not exist.\n\
 Emacs will not function correctly without the character map files.\n\
@@ -2340,15 +2348,6 @@ init_charset_once ()
   charset_jisx0208_1978 = -1;
   charset_jisx0208 = -1;
   charset_ksc5601 = -1;
-
-  for (i = 0; i < 128; i++)
-    unibyte_to_multibyte_table[i] = i;
-  for (; i < 256; i++)
-    unibyte_to_multibyte_table[i] = BYTE8_TO_CHAR (i);
-  for (i = 0; i < 32; i++)
-    charset_unibyte_decoder[i] = -1;
-  for (; i < 128; i++)
-    charset_unibyte_decoder[i] = 128 + i;
 }
 
 #ifdef emacs

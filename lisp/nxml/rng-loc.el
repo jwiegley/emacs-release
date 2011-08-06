@@ -1,6 +1,6 @@
 ;;; rng-loc.el --- locate the schema to use for validation
 
-;; Copyright (C) 2003, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: James Clark
 ;; Keywords: XML, RelaxNG
@@ -508,8 +508,7 @@ saved to the first writable file in `rng-schema-locating-files'."
 					 "schema location")
 				       file)))))
 	  (t
-	   (save-excursion
-	     (set-buffer (find-file-noselect file))
+	   (with-current-buffer (find-file-noselect file)
 	     (let ((modified (buffer-modified-p)))
 	       (if (> (buffer-size) 0)
 		   (let (xmltok-dtd)

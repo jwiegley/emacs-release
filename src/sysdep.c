@@ -1,6 +1,6 @@
 /* Interfaces to system-dependent kernel and library entries.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -168,7 +168,7 @@ struct utimbuf {
 #define LPASS8 0
 #endif
 
-static int baud_convert[] =
+static const int baud_convert[] =
   {
     0, 50, 75, 110, 135, 150, 200, 300, 600, 1200,
     1800, 2400, 4800, 9600, 19200, 38400
@@ -578,12 +578,6 @@ child_setup_tty (out)
   /* rms: Formerly it set s.main.c_cc[VINTR] to 0377 here
      unconditionally.  Then a SIGNALS_VIA_CHARACTERS conditional
      would force it to 0377.  That looks like duplicated code.  */
-#ifndef SIGNALS_VIA_CHARACTERS
-  /* QUIT and INTR work better as signals, so disable character forms */
-  s.main.c_cc[VQUIT] = CDISABLE;
-  s.main.c_cc[VINTR] = CDISABLE;
-  s.main.c_lflag &= ~ISIG;
-#endif /* no TIOCGPGRP or no TIOCGLTC or no TIOCGETC */
   s.main.c_cc[VEOL] = CDISABLE;
   s.main.c_cflag = (s.main.c_cflag & ~CBAUD) | B9600; /* baud rate sanity */
 #endif /* AIX */
@@ -629,18 +623,11 @@ sys_suspend ()
   }
 
 #else /* No SIGTSTP */
-#ifdef USG_JOBCTRL /* If you don't know what this is don't mess with it */
-  ptrace (0, 0, 0, 0);		/* set for ptrace - caught by csh */
-  kill (getpid (), SIGQUIT);
-
-#else /* No SIGTSTP or USG_JOBCTRL */
-
 /* On a system where suspending is not implemented,
    instead fork a subshell and let it talk directly to the terminal
    while we wait.  */
   sys_subshell ();
 
-#endif /* no USG_JOBCTRL */
 #endif /* no SIGTSTP */
 }
 
@@ -2788,14 +2775,10 @@ set_file_times (filename, atime, mtime)
 /*
  * Make a directory.
  */
-#ifdef MKDIR_PROTOTYPE
-MKDIR_PROTOTYPE
-#else
 int
 mkdir (dpath, dmode)
      char *dpath;
      int dmode;
-#endif
 {
   int cpid, status, fd;
   struct stat statbuf;
@@ -3217,8 +3200,8 @@ list_system_processes ()
   return proclist;
 }
 
-/* The WINDOWSNT implementation is on w32.c.
-   The MSDOS implementation is on dosfns.c.  */
+/* The WINDOWSNT implementation is in w32.c.
+   The MSDOS implementation is in dosfns.c.  */
 #elif !defined (WINDOWSNT) && !defined (MSDOS)
 
 Lisp_Object
@@ -3320,7 +3303,7 @@ procfs_ttyname (int rdev)
 
 	      if (MINOR (rdev) >= minor_beg && MINOR (rdev) <= minor_end)
 		{
-		  sprintf (name + strlen (name), "%lu", MINOR (rdev));
+		  sprintf (name + strlen (name), "%u", MINOR (rdev));
 		  break;
 		}
 	    }
@@ -3391,7 +3374,7 @@ system_process_attributes (Lisp_Object pid)
 
   CHECK_NUMBER_OR_FLOAT (pid);
   proc_id = FLOATP (pid) ? XFLOAT_DATA (pid) : XINT (pid);
-  sprintf (procfn, "/proc/%lu", proc_id);
+  sprintf (procfn, "/proc/%u", proc_id);
   if (stat (procfn, &st) < 0)
     return attrs;
 
@@ -3760,8 +3743,8 @@ system_process_attributes (Lisp_Object pid)
   return attrs;
 }
 
-/* The WINDOWSNT implementation is on w32.c.
-   The MSDOS implementation is on dosfns.c.  */
+/* The WINDOWSNT implementation is in w32.c.
+   The MSDOS implementation is in dosfns.c.  */
 #elif !defined (WINDOWSNT) && !defined (MSDOS)
 
 Lisp_Object

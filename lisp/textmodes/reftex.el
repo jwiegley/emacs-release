@@ -1,6 +1,6 @@
 ;;; reftex.el --- minor mode for doing \label, \ref, \cite, \index in LaTeX
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <dominik@science.uva.nl>
 ;; Maintainer: auctex-devel@gnu.org
@@ -1822,9 +1822,8 @@ When DIE is non-nil, throw an error if file not found."
     (let ((buffer-read-only nil)) (erase-buffer)))
    ((setq buffer (get-buffer buffer))
     ;; buffer exists
-    (save-excursion
-      (set-buffer buffer)
-      (let ((buffer-read-only nil)) (erase-buffer))))))
+    (with-current-buffer buffer
+      (let ((inhibit-read-only t)) (erase-buffer))))))
 
 (defun reftex-this-word (&optional class)
   ;; Grab the word around point.
@@ -2063,17 +2062,16 @@ When DIE is non-nil, throw an error if file not found."
              ;;       with limited Magic
 
              ;; The magic goes away
-             (let ((format-alist nil)
-                   (auto-mode-alist (reftex-auto-mode-alist))
-                   (default-major-mode 'fundamental-mode)
-                   (enable-local-variables nil)
-                   (after-insert-file-functions nil))
+             (letf ((format-alist nil)
+                    (auto-mode-alist (reftex-auto-mode-alist))
+                    ((default-value 'major-mode) 'fundamental-mode)
+                    (enable-local-variables nil)
+                    (after-insert-file-functions nil))
                (setq buf (find-file-noselect file)))
 
              ;; Is there a hook to run?
              (when (listp reftex-initialize-temporary-buffers)
-               (save-excursion
-                 (set-buffer buf)
+               (with-current-buffer buf
                  (run-hooks 'reftex-initialize-temporary-buffers))))
 
            ;; Lets see if we got a license to kill :-|
@@ -2100,8 +2098,7 @@ When DIE is non-nil, throw an error if file not found."
         (and (buffer-modified-p buffer)
              (y-or-n-p (format "Save file %s? "
                                (buffer-file-name buffer)))
-             (save-excursion
-               (set-buffer buffer)
+             (with-current-buffer buffer
                (save-buffer)))
         (kill-buffer buffer))
       (pop reftex-buffers-to-kill)))))

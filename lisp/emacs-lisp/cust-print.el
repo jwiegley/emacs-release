@@ -1,7 +1,7 @@
 ;;; cust-print.el --- handles print-level and print-circle
 
-;; Copyright (C) 1992, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1992, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+;;   2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Daniel LaLiberte <liberte@holonexus.org>
 ;; Adapted-By: ESR
@@ -130,7 +130,7 @@
 ;;This is defined by emacs.")
 
 (defcustom print-level nil
-  "*Controls how many levels deep a nested data object will print.
+  "Controls how many levels deep a nested data object will print.
 
 If nil, printing proceeds recursively and may lead to
 max-lisp-eval-depth being exceeded or an error may occur:
@@ -146,7 +146,7 @@ level 1."
 
 
 (defcustom print-circle nil
-  "*Controls the printing of recursive structures.
+  "Controls the printing of recursive structures.
 
 If nil, printing proceeds recursively and may lead to
 `max-lisp-eval-depth' being exceeded or an error may occur:
@@ -165,11 +165,7 @@ but if you need to do so, try the cl-read.el package."
 
 
 (defcustom custom-print-vectors nil
-  "*Non-nil if printing of vectors should obey print-level and print-length.
-
-For Emacs 18, setting print-level, or adding custom print list or
-vector handling will make this happen anyway.  Emacs 19 obeys
-print-level, but not for vectors."
+  "Non-nil if printing of vectors should obey `print-level' and `print-length'."
   :type 'boolean
   :group 'cust-print)
 
@@ -336,15 +332,13 @@ This is the custom-print replacement for the standard `prin1-to-string'."
   (let ((buf (get-buffer-create " *custom-print-temp*")))
     ;; We must erase the buffer before printing in case an error
     ;; occurred during the last prin1-to-string and we are in debugger.
-    (save-excursion
-      (set-buffer buf)
+    (with-current-buffer buf
       (erase-buffer))
     ;; We must be in the current-buffer when the print occurs.
     (if noescape
 	(custom-princ object buf)
       (custom-prin1 object buf))
-    (save-excursion
-      (set-buffer buf)
+    (with-current-buffer buf
       (buffer-string)
       ;; We could erase the buffer again, but why bother?
       )))

@@ -2,7 +2,7 @@
 ;; An older version of this was known as libc.el.
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Ralph Schleicher <rs@nunatak.allgaeu.org>
 ;;         (did not show signs of life (Nov 2001)  -stef)
@@ -861,6 +861,12 @@ Return nil if there is nothing appropriate in the buffer near point."
              ;; sort of fallback match scheme existed.
              ("(elisp)Index"          nil "^ -+ .*: " "\\( \\|$\\)")))
 
+;; docstrings talk about elisp, so have apropos-mode follow emacs-lisp-mode
+(info-lookup-maybe-add-help
+ :mode 'apropos-mode
+ :regexp "[^][()`',\" \t\n]+" ;; same as emacs-lisp-mode above
+ :other-modes '(emacs-lisp-mode))
+
 (info-lookup-maybe-add-help
  :mode 'lisp-interaction-mode
  :regexp "[^][()`',\" \t\n]+"
@@ -930,11 +936,18 @@ Return nil if there is nothing appropriate in the buffer near point."
  :doc-spec '(("(bash)Builtin Index"       nil "^`" "[ .']")
              ("(bash)Reserved Word Index" nil "^`" "[ .']")
              ("(bash)Variable Index"      nil "^`" "[ .']")
+
              ;; coreutils (version 4.5.10) doesn't have a separate program
              ;; index, so exclude extraneous stuff (most of it) by demanding
              ;; "[a-z]+" in the trans-func.
+             ;; coreutils version 8.1 has node "Concept Index" and past
+             ;; versions have node "Index", look for both, whichever is
+             ;; absent is quietly ignored
              ("(coreutils)Index"
               (lambda (item) (if (string-match "\\`[a-z]+\\'" item) item)))
+             ("(coreutils)Concept Index"
+              (lambda (item) (if (string-match "\\`[a-z]+\\'" item) item)))
+
              ;; diff (version 2.8.1) has only a few programs, index entries
              ;; are things like "foo invocation".
              ("(diff)Index"

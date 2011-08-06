@@ -1,7 +1,7 @@
 ;;; isearch.el --- incremental search minor mode
 
-;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1999, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1999, 2000, 2001,
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Daniel LaLiberte <liberte@cs.uiuc.edu>
@@ -109,7 +109,7 @@ string, and RET terminates editing and does a nonincremental search."
   :type 'boolean
   :group 'isearch)
 
-(defcustom search-whitespace-regexp "\\s-+"
+(defcustom search-whitespace-regexp (purecopy "\\s-+")
   "If non-nil, regular expression to match a sequence of whitespace chars.
 This applies to regular expression incremental search.
 When you put a space or spaces in the incremental regexp, it stands for
@@ -322,7 +322,7 @@ A value of nil means highlight all matches."
   "Face for lazy highlighting of matches other than the current one."
   :group 'lazy-highlight
   :group 'basic-faces)
-(put 'isearch-lazy-highlight-face 'face-alias 'lazy-highlight)
+(define-obsolete-face-alias 'isearch-lazy-highlight-face 'lazy-highlight "22.1")
 (defvar lazy-highlight-face 'lazy-highlight)
 (define-obsolete-variable-alias 'isearch-lazy-highlight-face
                                 'lazy-highlight-face
@@ -347,7 +347,7 @@ A value of nil means highlight all matches."
 (eval-when-compile (require 'help-macro))
 
 (make-help-screen isearch-help-for-help-internal
-  "Type a help option: [bkm] or ?"
+  (purecopy "Type a help option: [bkm] or ?")
   "You have typed %THIS-KEY%, the help character.  Type a Help option:
 \(Type \\<help-map>\\[help-quit] to exit the Help command.)
 
@@ -798,10 +798,14 @@ It is called by the function `isearch-forward' and other related functions."
   (setq	isearch-mode " Isearch")  ;; forward? regexp?
   (force-mode-line-update)
 
-  (isearch-push-state)
-
   (setq overriding-terminal-local-map isearch-mode-map)
   (run-hooks 'isearch-mode-hook)
+
+  ;; Pushing the initial state used to be before running isearch-mode-hook,
+  ;; but a hook might set `isearch-push-state-function' used in
+  ;; `isearch-push-state' to save mode-specific initial state.  (Bug#4994)
+  (isearch-push-state)
+
   (isearch-update)
 
   (add-hook 'mouse-leave-buffer-hook 'isearch-done)
@@ -1212,10 +1216,12 @@ If first char entered is \\[isearch-yank-word-or-char], then do word search inst
 (defun isearch-cancel ()
   "Terminate the search and go back to the starting point."
   (interactive)
-  (if (functionp (isearch-pop-fun-state (car (last isearch-cmds))))
-      (funcall (isearch-pop-fun-state (car (last isearch-cmds)))
-               (car (last isearch-cmds))))
-  (goto-char isearch-opoint)
+  (if (and isearch-push-state-function isearch-cmds)
+      ;; For defined push-state function, restore the first state.
+      ;; This calls pop-state function and restores original point.
+      (let ((isearch-cmds (last isearch-cmds)))
+	(isearch-top-state))
+    (goto-char isearch-opoint))
   (isearch-done t)                      ; exit isearch
   (isearch-clean-overlays)
   (signal 'quit nil))                   ; and pass on quit signal
@@ -1401,7 +1407,6 @@ string.  NLINES has the same meaning as in `occur'."
 	(search-upper-case nil))
     (occur regexp nlines)))
 
-(declare-function hi-lock-regexp-okay "hi-lock" (regexp))
 (declare-function hi-lock-read-face-name "hi-lock" ())
 
 (defun isearch-highlight-regexp ()
@@ -1749,7 +1754,10 @@ Scroll-bar or mode-line events are processed appropriately."
 (put 'digit-argument 'isearch-scroll t)
 
 (defcustom isearch-allow-scroll nil
-  "If non-nil, scrolling commands are allowed during incremental search."
+  "Whether scrolling is allowed during incremental search.
+If non-nil, scrolling commands can be used in Isearch mode.
+However, the current match will never scroll offscreen.
+If nil, scolling commands will first cancel Isearch mode."
   :type 'boolean
   :group 'isearch)
 
@@ -2496,8 +2504,8 @@ since they have special meaning in a regexp."
 
 (defun isearch-text-char-description (c)
   (cond
-   ((< c ?\s) (format "^%c" (+ c 64)))
-   ((= c ?\^?) "^?")
+   ((< c ?\s) (propertize (format "^%c" (+ c 64)) 'face 'escape-glyph))
+   ((= c ?\^?) (propertize "^?" 'face 'escape-glyph))
    (t (char-to-string c))))
 
 ;; General function to unread characters or events.

@@ -1,6 +1,6 @@
 ;;; rng-maint.el --- commands for RELAX NG maintainers
 
-;; Copyright (C) 2003, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: James Clark
 ;; Keywords: XML, RelaxNG
@@ -46,8 +46,7 @@
 						       rng-dir)))
 	(texi-buf (find-file-noselect (expand-file-name rng-manual-texi
 							rng-dir))))
-    (save-excursion
-      (set-buffer texi-buf)
+    (with-current-buffer texi-buf
       (erase-buffer)
       (let ((standard-output texi-buf))
 	(princ (format "\\input texinfo @c -*- texinfo -*-\n\
@@ -212,14 +211,12 @@
 	     ))))
 
 (defun rng-manual-output-force-new-line ()
-  (save-excursion
-    (set-buffer standard-output)
+  (with-current-buffer standard-output
     (unless (eq (char-before) ?\n)
       (insert ?\n))))
 
 (defun rng-manual-output-force-blank-line ()
-  (save-excursion
-    (set-buffer standard-output)
+  (with-current-buffer standard-output
     (if (eq (char-before) ?\n)
 	(unless (eq (char-before (1- (point))) ?\n)
 	  (insert ?\n))

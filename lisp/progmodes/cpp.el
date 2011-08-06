@@ -1,6 +1,6 @@
 ;;; cpp.el --- highlight or hide text according to cpp conditionals
 
-;; Copyright (C) 1994, 1995, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 1994, 1995, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;; Free Software Foundation
 
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
@@ -575,8 +575,7 @@ You can also use the keyboard accelerators indicated like this: [K]ey."
   "Save the current cpp configuration in a file."
   (interactive)
   (require 'pp)
-  (save-excursion
-    (set-buffer cpp-edit-buffer)
+  (with-current-buffer cpp-edit-buffer
     (let ((buffer (find-file-noselect cpp-config-file)))
       (set-buffer buffer)
       (erase-buffer)

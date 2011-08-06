@@ -1,7 +1,7 @@
 ;;; tpu-extras.el --- scroll margins and free cursor mode for TPU-edt
 
 ;; Copyright (C) 1993, 1994, 1995, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Rob Riepel <riepel@networking.stanford.edu>
 ;; Maintainer: Rob Riepel <riepel@networking.stanford.edu>
@@ -135,7 +135,10 @@ the previous line when starting from a line beginning."
   "Minor mode to allow the cursor to move freely about the screen."
   :init-value nil
   (if (not tpu-cursor-free-mode)
-      (tpu-trim-line-ends)))
+      (tpu-trim-line-ends))
+  (if (not tpu-cursor-free-mode)
+      (message "The cursor is now bound to the flow of your text.")
+    (message "The cursor will now move freely about the screen.")))
 
 
 ;;;  Hooks  --  Set cursor free in picture mode.
@@ -436,7 +439,7 @@ A repeat count means scroll that many sections."
     (ad-enable-advice f 'around 'tpu-respect-bottom-scroll-margin)
     (ad-activate f))
   ;; report scroll margin settings if running interactively
-  (and (interactive-p)
+  (and (called-interactively-p 'interactive)
        (message "Scroll margins set.  Top = %s%%, Bottom = %s%%"
 		tpu-top-scroll-margin tpu-bottom-scroll-margin)))
 
@@ -447,15 +450,13 @@ A repeat count means scroll that many sections."
 (defun tpu-set-cursor-free ()
   "Allow the cursor to move freely about the screen."
   (interactive)
-  (tpu-cursor-free-mode 1)
-  (message "The cursor will now move freely about the screen."))
+  (tpu-cursor-free-mode 1))
 
 ;;;###autoload
 (defun tpu-set-cursor-bound ()
   "Constrain the cursor to the flow of the text."
   (interactive)
-  (tpu-cursor-free-mode -1)
-  (message "The cursor is now bound to the flow of your text."))
+  (tpu-cursor-free-mode -1))
 
 ;; Local Variables:
 ;; generated-autoload-file: "tpu-edt.el"

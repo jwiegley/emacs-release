@@ -4,7 +4,7 @@ This document describes Supercite, an Emacs package for citing and
 attributing replies to mail and news messages.
 
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009 Free Software Foundation, Inc.
+2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -31,7 +31,7 @@ File: sc,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 attributing replies to mail and news messages.
 
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009 Free Software Foundation, Inc.
+2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1525,11 +1525,12 @@ steps:
 
   1. Insert the original message, including the mail headers into the
      reply buffer. At this point you should not modify the raw text in
-     any way, and you should place all the original headers into the
-     body of the reply.  This means that many of the mail headers will
-     be duplicated, one copy above the `mail-header-separator' line and
-     one copy below, however there will probably be more headers below
-     this line.
+     any way (except for any necessary decoding, e.g. of
+     quoted-printable text), and you should place all the original
+     headers into the body of the reply.  This means that many of the
+     mail headers will be duplicated, one copy above the
+     `mail-header-separator' line and one copy below, however there
+     will probably be more headers below this line.
 
   2. Set `point' to the beginning of the line containing the first mail
      header in the body of the reply. Set `mark' at the end of the
@@ -2530,41 +2531,41 @@ each appears under its `sc-'VARIABLE name and its VARIABLE name.
 
 
 Tag Table:
-Node: Top1110
-Node: Introduction2517
-Node: Usage Overview3544
-Node: What Supercite Does Not Do4706
-Node: What Supercite Does5838
-Node: Citations8670
-Node: Citation Elements10960
-Node: Recognizing Citations12843
-Node: Information Keys and the Info Alist14602
-Node: Reference Headers17189
-Node: The Built-in Header Rewrite Functions18755
-Node: Electric References21205
-Node: Getting Connected24085
-Node: Replying and Yanking27218
-Node: Reply Buffer Initialization27536
-Node: Filling Cited Text34424
-Node: Selecting an Attribution37897
-Node: Attribution Preferences38755
-Node: Anonymous Attributions42671
-Node: Author Names45711
-Node: Configuring the Citation Engine48191
-Node: Using Regi49916
-Node: Frames You Can Customize53791
-Node: Post-yank Formatting Commands56319
-Node: Citing Commands57465
-Node: Insertion Commands59676
-Node: Variable Toggling Shortcuts60616
-Node: Mail Field Commands62975
-Node: Miscellaneous Commands65312
-Node: Hints to MUA Authors65750
-Node: Thanks and History69252
-Node: GNU Free Documentation License71309
-Node: Concept Index96486
-Node: Command Index104340
-Node: Key Index111611
-Node: Variable Index113984
+Node: Top1116
+Node: Introduction2529
+Node: Usage Overview3556
+Node: What Supercite Does Not Do4718
+Node: What Supercite Does5850
+Node: Citations8682
+Node: Citation Elements10972
+Node: Recognizing Citations12855
+Node: Information Keys and the Info Alist14614
+Node: Reference Headers17201
+Node: The Built-in Header Rewrite Functions18767
+Node: Electric References21217
+Node: Getting Connected24097
+Node: Replying and Yanking27230
+Node: Reply Buffer Initialization27548
+Node: Filling Cited Text34436
+Node: Selecting an Attribution37909
+Node: Attribution Preferences38767
+Node: Anonymous Attributions42683
+Node: Author Names45723
+Node: Configuring the Citation Engine48203
+Node: Using Regi49928
+Node: Frames You Can Customize53803
+Node: Post-yank Formatting Commands56331
+Node: Citing Commands57477
+Node: Insertion Commands59688
+Node: Variable Toggling Shortcuts60628
+Node: Mail Field Commands62987
+Node: Miscellaneous Commands65324
+Node: Hints to MUA Authors65762
+Node: Thanks and History69336
+Node: GNU Free Documentation License71393
+Node: Concept Index96570
+Node: Command Index104424
+Node: Key Index111695
+Node: Variable Index114068
 
 End Tag Table

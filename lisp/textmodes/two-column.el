@@ -1,7 +1,7 @@
 ;;; two-column.el --- minor mode for editing of two-column text
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Daniel Pfeiffer <occitan@esperanto.org>
 ;; Adapted-By: ESR, Daniel Pfeiffer
@@ -407,8 +407,7 @@ First column's text    sSs  Second column's text
        (if (y-or-n-p (concat "Overwrite associated buffer `"
 			     (buffer-name (2C-other))
 			     "'? "))
-	   (save-excursion
-	     (set-buffer (2C-other))
+	   (with-current-buffer (2C-other)
 	     (erase-buffer))
 	 (signal 'quit nil)))
   (let ((point (point))
@@ -537,7 +536,8 @@ off trailing spaces with \\[delete-trailing-whitespace]."
     (if (get-buffer-window (2C-other t))
 	(select-window (get-buffer-window (2C-other)))
       (switch-to-buffer (2C-other)))
-    (newline (goto-line line))
+    (goto-char (point-min))
+    (newline (forward-line (1- line)))
     (if col
 	(move-to-column col)
       (end-of-line 1))))

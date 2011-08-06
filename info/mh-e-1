@@ -3,8 +3,8 @@ mh-e.texi.
 
 This is version 8.2 of `The MH-E Manual', last updated 2009-06-13.
 
-   Copyright (C) 1995, 2001, 2002, 2003, 2005, 2006, 2007, 2008, 2009
-Free Software Foundation, Inc.
+   Copyright (C) 1995, 2001, 2002, 2003, 2005, 2006, 2007, 2008, 2009,
+2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of either:
@@ -39,8 +39,8 @@ The MH-E Manual
 
 This is version 8.2 of `The MH-E Manual', last updated 2009-06-13.
 
-   Copyright (C) 1995, 2001, 2002, 2003, 2005, 2006, 2007, 2008, 2009
-Free Software Foundation, Inc.
+   Copyright (C) 1995, 2001, 2002, 2003, 2005, 2006, 2007, 2008, 2009,
+2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of either:
@@ -4655,8 +4655,8 @@ the file `/home/user/Mail/.mairix/config' with the following contents:
      # are subfolders within the folder
      mh=archive...:inbox:drafts:news:sent:trash
 
-     vfolder_format=raw
-     database=/home/user/Mail/mairix/database
+     vfolder_format=mh
+     database=/home/user/Mail/.mairix/database
 
    Use the following command line to generate the mairix index. Run
 this daily from cron:
@@ -4685,7 +4685,7 @@ the original messages are indexed anyway.
 daily from cron:
 
      mknmz -f /home/user/Mail/.namazu/mknmzrc -O /home/user/Mail/.namazu \
-              /home/user/Mail
+           -q /home/user/Mail
 
 15.1.5 pick
 -----------

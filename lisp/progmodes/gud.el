@@ -1,11 +1,11 @@
 ;;; gud.el --- Grand Unified Debugger mode for running GDB and other debuggers
 
+;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 2000, 2001, 2002, 2003,
+;;  2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+
 ;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: FSF
 ;; Keywords: unix, tools
-
-;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 2000, 2001, 2002, 2003,
-;;  2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -43,6 +43,7 @@
 (require 'comint)
 
 (defvar gdb-active-process)
+(defvar gdb-recording)
 (defvar gdb-define-alist)
 (defvar gdb-macro-info)
 (defvar gdb-server-prefix)
@@ -145,6 +146,36 @@ Used to grey out relevant toolbar icons.")
 
 (easy-mmode-defmap gud-menu-map
   '(([help]     "Info (debugger)" . gud-goto-info)
+    ([rfinish]	menu-item "Reverse Finish Function" gud-rfinish
+                  :enable (not gud-running)
+		  :visible (and gdb-recording
+				(eq gud-minor-mode 'gdba)))
+    ([rstepi]	menu-item "Reverse Step Instruction" gud-rstepi
+                  :enable (not gud-running)
+		  :visible (and gdb-recording
+				(eq gud-minor-mode 'gdba)))
+    ([rnexti]	menu-item "Reverse Next Instruction" gud-rnexti
+                  :enable (not gud-running)
+		  :visible (and gdb-recording
+				(eq gud-minor-mode 'gdba)))
+    ([rstep]	menu-item "Reverse Step Line" gud-rstep
+                  :enable (not gud-running)
+		  :visible (and gdb-recording
+				(eq gud-minor-mode 'gdba)))
+    ([rnext]	menu-item "Reverse Next Line" gud-rnext
+                  :enable (not gud-running)
+		  :visible (and gdb-recording
+				(eq gud-minor-mode 'gdba)))
+    ([rcont]	menu-item "Reverse Continue" gud-rcont
+                  :enable (not gud-running)
+		  :visible (and gdb-recording
+				(eq gud-minor-mode 'gdba)))
+    ([recstart] menu-item "Start Recording" gdb-toggle-recording-1
+		  :visible (and (not gdb-recording)
+				(eq gud-minor-mode 'gdba)))
+    ([recstop] menu-item "Stop Recording" gdb-toggle-recording
+		  :visible (and gdb-recording
+				(eq gud-minor-mode 'gdba)))
     ([tooltips] menu-item "Show GUD tooltips" gud-tooltip-mode
                   :enable (and (not emacs-basic-display)
 			       (display-graphic-p)
@@ -291,6 +322,14 @@ Used to grey out relevant toolbar icons.")
 		 (gud-stepi . "gud/stepi")
 		 (gud-up . "gud/up")
 		 (gud-down . "gud/down")
+		 (gdb-toggle-recording-1 . "gud/recstart")
+		 (gdb-toggle-recording . "gud/recstop")
+		 (gud-rcont . "gud/rcont")
+		 (gud-rnext . "gud/rnext")
+		 (gud-rstep . "gud/rstep")
+		 (gud-rfinish . "gud/rfinish")
+		 (gud-rnexti . "gud/rnexti")
+		 (gud-rstepi . "gud/rstepi")
 		 (gud-goto-info . "info"))
 	       map)
       (tool-bar-local-item-from-menu
@@ -432,8 +471,8 @@ The value t means that there is no stack, and we are in display-file mode.")
 (defun gud-speedbar-item-info ()
   "Display the data type of the watch expression element."
   (let ((var (nth (- (line-number-at-pos (point)) 2) gdb-var-list)))
-    (if (nth 6 var)
-	(speedbar-message "%s: %s" (nth 6 var) (nth 3 var))
+    (if (nth 7 var)
+	(speedbar-message "%s: %s" (nth 7 var) (nth 3 var))
       (speedbar-message "%s" (nth 3 var)))))
 
 (defun gud-install-speedbar-variables ()
@@ -511,7 +550,8 @@ required by the caller."
 	    (let* (char (depth 0) (start 0) (var (car var-list))
 			(varnum (car var)) (expr (nth 1 var))
 			(type (if (nth 3 var) (nth 3 var) " "))
-			(value (nth 4 var)) (status (nth 5 var)))
+			(value (nth 4 var)) (status (nth 5 var))
+			(has-more (nth 6 var)))
 	      (put-text-property
 	       0 (length expr) 'face font-lock-variable-name-face expr)
 	      (put-text-property
@@ -520,9 +560,10 @@ required by the caller."
 		(setq depth (1+ depth)
 		      start (1+ (match-beginning 0))))
 	      (if (eq depth 0) (setq parent nil))
-	      (if (or (equal (nth 2 var) "0")
-		      (and (equal (nth 2 var) "1")
-			   (string-match "char \\*$" type)))
+	      (if (and (or (not has-more) (string-equal has-more "0"))
+		       (or (equal (nth 2 var) "0")
+			   (and (equal (nth 2 var) "1")
+			   (string-match "char \\*$" type)) ))
 		  (speedbar-make-tag-line
 		   'bracket ?? nil nil
 		   (concat expr "\t" value)
@@ -2270,7 +2311,7 @@ gud, see `gud-mode'."
 
   ;; Set gud-jdb-classpath from the CLASSPATH environment variable,
   ;; if CLASSPATH is set.
-  (setq gud-jdb-classpath-string (getenv "CLASSPATH"))
+  (setq gud-jdb-classpath-string (or (getenv "CLASSPATH") "."))
   (if gud-jdb-classpath-string
       (setq gud-jdb-classpath
 	    (gud-jdb-parse-classpath-string gud-jdb-classpath-string)))
@@ -2299,7 +2340,8 @@ gud, see `gud-mode'."
   (gud-def gud-up     "up\C-Mwhere"   "<"    "Up one stack frame.")
   (gud-def gud-down   "down\C-Mwhere" ">"    "Up one stack frame.")
   (gud-def gud-run    "run"           nil    "Run the program.") ;if VM start using jdb
-  (gud-def gud-print  "print %e"  "\C-p" "Evaluate Java expression at point.")
+  (gud-def gud-print  "print %e"  "\C-p" "Print value of expression at point.")
+  (gud-def gud-pstar  "dump %e"  nil "Print all object information at point.")
 
   (setq comint-prompt-regexp "^> \\|^[^ ]+\\[[0-9]+\\] ")
   (setq paragraph-start comint-prompt-regexp)
@@ -2439,7 +2481,7 @@ comint mode, which see."
 
 ;; Cause our buffers to be displayed, by default,
 ;; in the selected window.
-;;;###autoload (add-hook 'same-window-regexps "\\*gud-.*\\*\\(\\|<[0-9]+>\\)")
+;;;###autoload (add-hook 'same-window-regexps (purecopy "\\*gud-.*\\*\\(\\|<[0-9]+>\\)"))
 
 (defcustom gud-chdir-before-run t
   "Non-nil if GUD should `cd' to the debugged executable."
@@ -2708,7 +2750,8 @@ Obeying it means displaying in another window the specified file and line."
 		    (setq gud-keep-buffer t)))
 	    (save-restriction
 	      (widen)
-	      (goto-line line)
+	      (goto-char (point-min))
+	      (forward-line (1- line))
 	      (setq pos (point))
 	      (or gud-overlay-arrow-position
 		  (setq gud-overlay-arrow-position (make-marker)))
@@ -2821,20 +2864,20 @@ Obeying it means displaying in another window the specified file and line."
   (let ((proc (get-buffer-process gud-comint-buffer)))
     (or proc (error "Current buffer has no process"))
     ;; Arrange for the current prompt to get deleted.
-    (save-excursion
-      (set-buffer gud-comint-buffer)
-      (save-restriction
-	(widen)
-	(if (marker-position gud-delete-prompt-marker)
-	    ;; We get here when printing an expression.
-	    (goto-char gud-delete-prompt-marker)
-	  (goto-char (process-mark proc))
-	  (forward-line 0))
-	(if (looking-at comint-prompt-regexp)
-	    (set-marker gud-delete-prompt-marker (point)))
-	(if (memq gud-minor-mode '(gdbmi gdba))
-	    (apply comint-input-sender (list proc command))
-	  (process-send-string proc (concat command "\n")))))))
+    (with-current-buffer gud-comint-buffer
+      (save-excursion
+        (save-restriction
+          (widen)
+          (if (marker-position gud-delete-prompt-marker)
+              ;; We get here when printing an expression.
+              (goto-char gud-delete-prompt-marker)
+            (goto-char (process-mark proc))
+            (forward-line 0))
+          (if (looking-at comint-prompt-regexp)
+              (set-marker gud-delete-prompt-marker (point)))
+          (if (memq gud-minor-mode '(gdbmi gdba))
+              (apply comint-input-sender (list proc command))
+            (process-send-string proc (concat command "\n"))))))))
 
 (defun gud-refresh (&optional arg)
   "Fix up a possibly garbled display, and redraw the arrow."
@@ -3052,8 +3095,7 @@ class of the file (using s to separate nested class ids)."
           ;; symbols until 'topmost-intro is reached to find out if
           ;; point is within a nested class
           (if (and fbuffer (equal (symbol-file 'java-mode) "cc-mode"))
-              (save-excursion
-                (set-buffer fbuffer)
+              (with-current-buffer fbuffer
                 (let ((nclass) (syntax))
                   ;; While the c-syntactic information does not start
                   ;; with the 'topmost-intro symbol, there may be
@@ -3212,7 +3254,7 @@ Treats actions as defuns."
 ;; .PROCESSORNAME-gdbinit so that the host and target gdbinit files
 ;; don't interfere with each other.
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("/\\.[a-z0-9-]*gdbinit" . gdb-script-mode))
+(add-to-list 'auto-mode-alist (cons (purecopy "/\\.[a-z0-9-]*gdbinit") 'gdb-script-mode))
 
 ;;;###autoload
 (define-derived-mode gdb-script-mode nil "GDB-Script"
@@ -3317,8 +3359,7 @@ only tooltips in the buffer containing the overlay arrow."
   (remove-hook 'post-command-hook
 	       'gud-tooltip-activate-mouse-motions-if-enabled)
   (dolist (buffer (buffer-list))
-    (save-excursion
-      (set-buffer buffer)
+    (with-current-buffer buffer
       (if (and gud-tooltip-mode
 	       (memq major-mode gud-tooltip-modes))
 	  (gud-tooltip-activate-mouse-motions t)

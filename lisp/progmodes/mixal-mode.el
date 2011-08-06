@@ -1,13 +1,13 @@
 ;;; mixal-mode.el --- Major mode for the mix asm language.
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Pieter E.J. Pareit <pieter.pareit@gmail.com>
 ;; Maintainer: Pieter E.J. Pareit <pieter.pareit@gmail.com>
 ;; Created: 09 Nov 2002
 ;; Version: 0.1
-;; Keywords: Knuth mix mixal asm mixvm "The Art Of Computer Programming"
+;; Keywords: languages Knuth mix mixal asm mixvm "The Art Of Computer Programming"
 
 ;; This file is part of GNU Emacs.
 

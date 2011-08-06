@@ -2,10 +2,10 @@ This is ../../info/elisp, produced by makeinfo version 4.11 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.1.
+corresponding to Emacs version 23.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -32,14 +32,11 @@ File: elisp,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 Emacs Lisp
 **********
 
-This Info file contains edition 3.0 of the GNU Emacs Lisp Reference
-Manual, corresponding to GNU Emacs version 23.1.
-
-   This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.1.
+This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
+corresponding to Emacs version 23.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -592,7 +589,6 @@ Minibuffers
 Completion
 
 * Basic Completion::        Low-level functions for completing strings.
-                              (These are too low level to use the minibuffer.)
 * Minibuffer Completion::   Invoking the minibuffer with completion.
 * Completion Commands::     Minibuffer commands that do completion.
 * High-Level Completion::   Convenient special cases of completion
@@ -1415,7 +1411,7 @@ chapters describe features that are peculiar to Emacs Lisp or relate
 specifically to editing.
 
    This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.1.
+corresponding to Emacs version 23.2.
 
 * Menu:
 
@@ -2031,11 +2027,11 @@ File: elisp,  Node: Integer Type,  Next: Floating Point Type,  Up: Programming T
 2.3.1 Integer Type
 ------------------
 
-The range of values for integers in Emacs Lisp is -268435456 to
-268435455 (29 bits; i.e., -2**28 to 2**28 - 1) on most machines.  (Some
+The range of values for integers in Emacs Lisp is -536870912 to
+536870911 (30 bits; i.e., -2**29 to 2**29 - 1) on most machines.  (Some
 machines may provide a wider range.)  It is important to note that the
 Emacs Lisp arithmetic functions do not check for overflow.  Thus `(1+
-268435455)' is -268435456 on most machines.
+536870911)' is -536870912 on most machines.
 
    The read syntax for integers is a sequence of (base ten) digits with
 an optional sign at the beginning and an optional period at the end.
@@ -2046,7 +2042,13 @@ leading `+' or a final `.'.
      1                ; The integer 1.
      1.               ; Also the integer 1.
      +1               ; Also the integer 1.
-     536870913        ; Also the integer 1 on a 29-bit implementation.
+     1073741825       ; Also the integer 1 on a 30-bit implementation.
+
+As a special exception, if a sequence of digits specifies an integer
+too large or too small to be a valid integer object, the Lisp reader
+reads it as a floating-point number (*note Floating Point Type::).  For
+instance, on most machines `536870912' is read as the floating-point
+number `536870912.0'.
 
    *Note Numbers::, for more information.
 
@@ -2261,8 +2263,8 @@ range of basic character codes.
    In a string, the 2**7 bit attached to an ASCII character indicates a
 meta character; thus, the meta characters that can fit in a string have
 codes in the range from 128 to 255, and are the meta versions of the
-ordinary ASCII characters.  (In Emacs versions 18 and older, this
-convention was used for characters outside of strings as well.)
+ordinary ASCII characters.  *Note Strings of Events::, for details
+about <META>-handling in strings.
 
    The read syntax for meta characters uses `\M-'.  For example,
 `?\M-A' stands for `M-A'.  You can use `\M-' together with octal
@@ -2913,11 +2915,14 @@ File: elisp,  Node: Hash Table Type,  Next: Function Type,  Prev: Bool-Vector Ty
 
 A hash table is a very fast kind of lookup table, somewhat like an
 alist in that it maps keys to corresponding values, but much faster.
-Hash tables have no read syntax, and print using hash notation.  *Note
-Hash Tables::, for functions that operate on hash tables.
+The printed representation of a hash table specifies its properties and
+contents, like this:
 
      (make-hash-table)
-          => #<hash-table 'eql nil 0/65 0x83af980>
+          => #s(hash-table size 65 test eql rehash-size 1.5
+                                  rehash-threshold 0.8 data ())
+
+*Note Hash Tables::, for more information about hash tables.
 
 
 File: elisp,  Node: Function Type,  Next: Macro Type,  Prev: Hash Table Type,  Up: Programming Types
@@ -3742,9 +3747,9 @@ File: elisp,  Node: Integer Basics,  Next: Float Basics,  Up: Numbers
 ==================
 
 The range of values for an integer depends on the machine.  The minimum
-range is -268435456 to 268435455 (29 bits; i.e., -2**28 to 2**28 - 1),
+range is -536870912 to 536870911 (30 bits; i.e., -2**29 to 2**29 - 1),
 but some machines may provide a wider range.  Many examples in this
-chapter assume an integer has 29 bits.  
+chapter assume an integer has 30 bits.  
 
    The Lisp reader reads an integer as a sequence of digits with
 optional initial sign and optional final period.
@@ -3753,7 +3758,7 @@ optional initial sign and optional final period.
       1.              ; The integer 1.
      +1               ; Also the integer 1.
      -1               ; The integer -1.
-      536870913       ; Also the integer 1, due to overflow.
+      1073741825      ; Also the integer 1, due to overflow.
       0               ; The integer 0.
      -0               ; The integer 0.
 
@@ -3773,37 +3778,37 @@ Allowed values of RADIX run from 2 to 36.  For example:
 bitwise operators (*note Bitwise Operations::), it is often helpful to
 view the numbers in their binary form.
 
-   In 29-bit binary, the decimal integer 5 looks like this:
+   In 30-bit binary, the decimal integer 5 looks like this:
 
-     0 0000  0000 0000  0000 0000  0000 0101
+     00 0000  0000 0000  0000 0000  0000 0101
 
 (We have inserted spaces between groups of 4 bits, and two spaces
 between groups of 8 bits, to make the binary integer easier to read.)
 
    The integer -1 looks like this:
 
-     1 1111  1111 1111  1111 1111  1111 1111
+     11 1111  1111 1111  1111 1111  1111 1111
 
--1 is represented as 29 ones.  (This is called "two's complement"
+-1 is represented as 30 ones.  (This is called "two's complement"
 notation.)
 
    The negative integer, -5, is creating by subtracting 4 from -1.  In
 binary, the decimal integer 4 is 100.  Consequently, -5 looks like this:
 
-     1 1111  1111 1111  1111 1111  1111 1011
+     11 1111  1111 1111  1111 1111  1111 1011
 
-   In this implementation, the largest 29-bit binary integer value is
-268,435,455 in decimal.  In binary, it looks like this:
+   In this implementation, the largest 30-bit binary integer value is
+536,870,911 in decimal.  In binary, it looks like this:
 
-     0 1111  1111 1111  1111 1111  1111 1111
+     01 1111  1111 1111  1111 1111  1111 1111
 
    Since the arithmetic functions do not check whether integers go
-outside their range, when you add 1 to 268,435,455, the value is the
-negative integer -268,435,456:
+outside their range, when you add 1 to 536,870,911, the value is the
+negative integer -536,870,912:
 
-     (+ 1 268435455)
-          => -268435456
-          => 1 0000  0000 0000  0000 0000  0000 0000
+     (+ 1 536870911)
+          => -536870912
+          => 10 0000  0000 0000  0000 0000  0000 0000
 
    Many of the functions described in this chapter accept markers for
 arguments in place of numbers.  (*Note Markers::.)  Since the actual
@@ -4370,21 +4375,21 @@ reproducing the same pattern "moved over."
      The function `lsh', like all Emacs Lisp arithmetic functions, does
      not check for overflow, so shifting left can discard significant
      bits and change the sign of the number.  For example, left shifting
-     268,435,455 produces -2 on a 29-bit machine:
+     536,870,911 produces -2 on a 30-bit machine:
 
-          (lsh 268435455 1)          ; left shift
+          (lsh 536870911 1)          ; left shift
                => -2
 
-     In binary, in the 29-bit implementation, the argument looks like
+     In binary, in the 30-bit implementation, the argument looks like
      this:
 
-          ;; Decimal 268,435,455
-          0 1111  1111 1111  1111 1111  1111 1111
+          ;; Decimal 536,870,911
+          01 1111  1111 1111  1111 1111  1111 1111
 
      which becomes the following when left shifted:
 
           ;; Decimal -2
-          1 1111  1111 1111  1111 1111  1111 1110
+          11 1111  1111 1111  1111 1111  1111 1110
 
  -- Function: ash integer1 count
      `ash' ("arithmetic shift") shifts the bits in INTEGER1 to the left
@@ -4400,39 +4405,39 @@ reproducing the same pattern "moved over."
 
           (ash -6 -1) => -3
           ;; Decimal -6 becomes decimal -3.
-          1 1111  1111 1111  1111 1111  1111 1010
+          11 1111  1111 1111  1111 1111  1111 1010
                =>
-          1 1111  1111 1111  1111 1111  1111 1101
+          11 1111  1111 1111  1111 1111  1111 1101
 
      In contrast, shifting the pattern of bits one place to the right
      with `lsh' looks like this:
 
-          (lsh -6 -1) => 268435453
-          ;; Decimal -6 becomes decimal 268,435,453.
-          1 1111  1111 1111  1111 1111  1111 1010
+          (lsh -6 -1) => 536870909
+          ;; Decimal -6 becomes decimal 536,870,909.
+          11 1111  1111 1111  1111 1111  1111 1010
                =>
-          0 1111  1111 1111  1111 1111  1111 1101
+          01 1111  1111 1111  1111 1111  1111 1101
 
      Here are other examples:
 
-                             ;               29-bit binary values
+                             ;               30-bit binary values
 
-          (lsh 5 2)          ;   5  =  0 0000  0000 0000  0000 0000  0000 0101
-               => 20         ;      =  0 0000  0000 0000  0000 0000  0001 0100
+          (lsh 5 2)          ;   5  =  00 0000  0000 0000  0000 0000  0000 0101
+               => 20         ;      =  00 0000  0000 0000  0000 0000  0001 0100
           (ash 5 2)
                => 20
-          (lsh -5 2)         ;  -5  =  1 1111  1111 1111  1111 1111  1111 1011
-               => -20        ;      =  1 1111  1111 1111  1111 1111  1110 1100
+          (lsh -5 2)         ;  -5  =  11 1111  1111 1111  1111 1111  1111 1011
+               => -20        ;      =  11 1111  1111 1111  1111 1111  1110 1100
           (ash -5 2)
                => -20
-          (lsh 5 -2)         ;   5  =  0 0000  0000 0000  0000 0000  0000 0101
-               => 1          ;      =  0 0000  0000 0000  0000 0000  0000 0001
+          (lsh 5 -2)         ;   5  =  00 0000  0000 0000  0000 0000  0000 0101
+               => 1          ;      =  00 0000  0000 0000  0000 0000  0000 0001
           (ash 5 -2)
                => 1
-          (lsh -5 -2)        ;  -5  =  1 1111  1111 1111  1111 1111  1111 1011
-               => 134217726  ;      =  0 0111  1111 1111  1111 1111  1111 1110
-          (ash -5 -2)        ;  -5  =  1 1111  1111 1111  1111 1111  1111 1011
-               => -2         ;      =  1 1111  1111 1111  1111 1111  1111 1110
+          (lsh -5 -2)        ;  -5  =  11 1111  1111 1111  1111 1111  1111 1011
+               => 268435454  ;      =  00 0111  1111 1111  1111 1111  1111 1110
+          (ash -5 -2)        ;  -5  =  11 1111  1111 1111  1111 1111  1111 1011
+               => -2         ;      =  11 1111  1111 1111  1111 1111  1111 1110
 
  -- Function: logand &rest ints-or-markers
      This function returns the "logical and" of the arguments: the Nth
@@ -4458,19 +4463,19 @@ reproducing the same pattern "moved over."
      representation consists entirely of ones.  If `logand' is passed
      just one argument, it returns that argument.
 
-                             ;                29-bit binary values
+                             ;                30-bit binary values
 
-          (logand 14 13)     ; 14  =  0 0000  0000 0000  0000 0000  0000 1110
-                             ; 13  =  0 0000  0000 0000  0000 0000  0000 1101
-               => 12         ; 12  =  0 0000  0000 0000  0000 0000  0000 1100
+          (logand 14 13)     ; 14  =  00 0000  0000 0000  0000 0000  0000 1110
+                             ; 13  =  00 0000  0000 0000  0000 0000  0000 1101
+               => 12         ; 12  =  00 0000  0000 0000  0000 0000  0000 1100
 
-          (logand 14 13 4)   ; 14  =  0 0000  0000 0000  0000 0000  0000 1110
-                             ; 13  =  0 0000  0000 0000  0000 0000  0000 1101
-                             ;  4  =  0 0000  0000 0000  0000 0000  0000 0100
-               => 4          ;  4  =  0 0000  0000 0000  0000 0000  0000 0100
+          (logand 14 13 4)   ; 14  =  00 0000  0000 0000  0000 0000  0000 1110
+                             ; 13  =  00 0000  0000 0000  0000 0000  0000 1101
+                             ;  4  =  00 0000  0000 0000  0000 0000  0000 0100
+               => 4          ;  4  =  00 0000  0000 0000  0000 0000  0000 0100
 
           (logand)
-               => -1         ; -1  =  1 1111  1111 1111  1111 1111  1111 1111
+               => -1         ; -1  =  11 1111  1111 1111  1111 1111  1111 1111
 
  -- Function: logior &rest ints-or-markers
      This function returns the "inclusive or" of its arguments: the Nth
@@ -4479,16 +4484,16 @@ reproducing the same pattern "moved over."
      is zero, which is an identity element for this operation.  If
      `logior' is passed just one argument, it returns that argument.
 
-                             ;               29-bit binary values
+                             ;               30-bit binary values
 
-          (logior 12 5)      ; 12  =  0 0000  0000 0000  0000 0000  0000 1100
-                             ;  5  =  0 0000  0000 0000  0000 0000  0000 0101
-               => 13         ; 13  =  0 0000  0000 0000  0000 0000  0000 1101
+          (logior 12 5)      ; 12  =  00 0000  0000 0000  0000 0000  0000 1100
+                             ;  5  =  00 0000  0000 0000  0000 0000  0000 0101
+               => 13         ; 13  =  00 0000  0000 0000  0000 0000  0000 1101
 
-          (logior 12 5 7)    ; 12  =  0 0000  0000 0000  0000 0000  0000 1100
-                             ;  5  =  0 0000  0000 0000  0000 0000  0000 0101
-                             ;  7  =  0 0000  0000 0000  0000 0000  0000 0111
-               => 15         ; 15  =  0 0000  0000 0000  0000 0000  0000 1111
+          (logior 12 5 7)    ; 12  =  00 0000  0000 0000  0000 0000  0000 1100
+                             ;  5  =  00 0000  0000 0000  0000 0000  0000 0101
+                             ;  7  =  00 0000  0000 0000  0000 0000  0000 0111
+               => 15         ; 15  =  00 0000  0000 0000  0000 0000  0000 1111
 
  -- Function: logxor &rest ints-or-markers
      This function returns the "exclusive or" of its arguments: the Nth
@@ -4497,16 +4502,16 @@ reproducing the same pattern "moved over."
      result is 0, which is an identity element for this operation.  If
      `logxor' is passed just one argument, it returns that argument.
 
-                             ;               29-bit binary values
+                             ;               30-bit binary values
 
-          (logxor 12 5)      ; 12  =  0 0000  0000 0000  0000 0000  0000 1100
-                             ;  5  =  0 0000  0000 0000  0000 0000  0000 0101
-               => 9          ;  9  =  0 0000  0000 0000  0000 0000  0000 1001
+          (logxor 12 5)      ; 12  =  00 0000  0000 0000  0000 0000  0000 1100
+                             ;  5  =  00 0000  0000 0000  0000 0000  0000 0101
+               => 9          ;  9  =  00 0000  0000 0000  0000 0000  0000 1001
 
-          (logxor 12 5 7)    ; 12  =  0 0000  0000 0000  0000 0000  0000 1100
-                             ;  5  =  0 0000  0000 0000  0000 0000  0000 0101
-                             ;  7  =  0 0000  0000 0000  0000 0000  0000 0111
-               => 14         ; 14  =  0 0000  0000 0000  0000 0000  0000 1110
+          (logxor 12 5 7)    ; 12  =  00 0000  0000 0000  0000 0000  0000 1100
+                             ;  5  =  00 0000  0000 0000  0000 0000  0000 0101
+                             ;  7  =  00 0000  0000 0000  0000 0000  0000 0111
+               => 14         ; 14  =  00 0000  0000 0000  0000 0000  0000 1110
 
  -- Function: lognot integer
      This function returns the logical complement of its argument: the
@@ -4515,9 +4520,9 @@ reproducing the same pattern "moved over."
 
           (lognot 5)
                => -6
-          ;;  5  =  0 0000  0000 0000  0000 0000  0000 0101
+          ;;  5  =  00 0000  0000 0000  0000 0000  0000 0101
           ;; becomes
-          ;; -6  =  1 1111  1111 1111  1111 1111  1111 1010
+          ;; -6  =  11 1111  1111 1111  1111 1111  1111 1010
 
 
 File: elisp,  Node: Math Functions,  Next: Random Numbers,  Prev: Bitwise Operations,  Up: Numbers
@@ -4758,10 +4763,10 @@ putting strings together, or by taking them apart.
                => "abc"
 
      In the above example, the index for `a' is 0, the index for `b' is
-     1, and the index for `c' is 2.  The index 3--which is the the
-     fourth character in the string--marks the character position up to
-     which the substring is copied.  Thus, `abc' is copied from the
-     string `"abcdefg"'.
+     1, and the index for `c' is 2.  The index 3--which is the fourth
+     character in the string--marks the character position up to which
+     the substring is copied.  Thus, `abc' is copied from the string
+     `"abcdefg"'.
 
      A negative number counts from the end of the string, so that -1
      signifies the index of the last character of the string.  For
@@ -5431,7 +5436,7 @@ codes 88 and 120 respectively.
      When STRING-OR-CHAR is a string, this function returns a new
      string in which each letter in the argument that is lower case is
      converted to upper case.  When STRING-OR-CHAR is a character, this
-     function returns the corresponding upper case character (an an
+     function returns the corresponding upper case character (an
      integer); if the original character is upper case, or is not a
      letter, the return value is equal to the original character.
 

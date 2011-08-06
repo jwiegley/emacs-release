@@ -1,7 +1,7 @@
 ;;; texnfo-upd.el --- utilities for updating nodes and menus in Texinfo files
 
 ;; Copyright (C) 1989, 1990, 1991, 1992, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Robert J. Chassell
 ;; Maintainer: bug-texinfo@gnu.org
@@ -1723,8 +1723,7 @@ node names in pre-existing `@node' lines that lack names."
   "Return a list of the included files in OUTER-FILE."
   (let ((included-file-list (list outer-file))
 	start)
-    (save-excursion
-      (set-buffer (find-file-noselect outer-file))
+    (with-current-buffer (find-file-noselect outer-file)
       (widen)
       (goto-char (point-min))
       (while (re-search-forward "^@include" nil t)

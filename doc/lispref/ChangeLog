@@ -1,6 +1,332 @@
-2009-07-29  Chong Yidong  <cyd@stupidchicken.com>
+2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
 
-	* Version 23.1 released.
+	* Version 23.2 released.
+
+2010-05-03  Štěpán Němec  <stepnem@gmail.com>  (tiny change)
+
+	* windows.texi (Textual Scrolling):
+	* tips.texi (Coding Conventions):
+	* minibuf.texi (Minibuffer History):
+	* maps.texi (Standard Keymaps):
+	* loading.texi (Where Defined):
+	* edebug.texi (Instrumenting): Fix typos.
+
+2010-04-25  Chong Yidong  <cyd@stupidchicken.com>
+
+	* keymaps.texi (Menu Bar): Document :advertised-binding property.
+
+	* functions.texi (Obsolete Functions): Document
+	set-advertised-calling-convention.
+
+	* minibuf.texi (Basic Completion): Document completion-in-region.
+	(Programmed Completion): Document completion-annotate-function.
+
+	* commands.texi (Reading One Event): Document read-key.
+	(Distinguish Interactive): Document KIND arg to
+	called-interactively-p.  Delete obsolete interactive-p.
+
+	* elisp.texi (Top): Update node description.
+
+2010-04-14  Juri Linkov  <juri@jurta.org>
+
+	Fix @deffn without category.
+
+	* abbrevs.texi (Abbrev Expansion): Replace @deffn with @defun
+	for `abbrev-insert'.
+
+	* buffers.texi (Indirect Buffers): Add category `Command'
+	to @deffn of `clone-indirect-buffer'.
+
+	* windows.texi (Cyclic Window Ordering): Replace @deffn with @defun
+	for `next-window' and `previous-window'.  Add category `Command'
+	to @deffn of `pop-to-buffer'.
+
+2010-04-01  Chong Yidong  <cyd@stupidchicken.com>
+
+	* nonascii.texi (Text Representations): Don't mark
+	enable-multibyte-characters as a user option.
+
+2010-03-31  Eli Zaretskii  <eliz@gnu.org>
+
+	* control.texi (Handling Errors): How to re-throw a signal caught
+	by condition-case.
+
+2010-03-26  Chong Yidong  <cyd@stupidchicken.com>
+
+	* loading.texi (Hooks for Loading): Document after-load-functions.
+	Copyedits.
+
+2010-03-24  Arni Magnusson  <arnima@hafro.is>  (tiny change)
+
+	* frames.texi (Cursor Parameters): Fix typo.  (Bug#5760)
+
+2010-03-21  Chong Yidong  <cyd@stupidchicken.com>
+
+	* processes.texi (Network Processes): Document seqpacket type.
+
+2010-03-06  Chong Yidong  <cyd@stupidchicken.com>
+
+	* objects.texi (Integer Type): Take note of the read syntax
+	exception for numbers that cannot fit in the integer type.
+
+2010-03-03  Glenn Morris  <rgm@gnu.org>
+
+	* numbers.texi (Integer Basics, Bitwise Operations):
+	* objects.texi (Integer Type): Update for integers now being 30-bit.
+
+2010-02-27  Chong Yidong  <cyd@stupidchicken.com>
+
+	* display.texi (Low-Level Font): Document :otf font-spec property.
+
+2010-02-01  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* display.texi (Line Height): Avoid obsolete special default variables
+	like default-major-mode.
+
+2010-01-28  Alan Mackenzie  <acm@muc.de>
+
+	* display.texi (Auto Faces): Say fontification-functions is called
+	whether or not Font Lock is enabled.  Tidy up the wording a bit.
+
+2010-01-17  Chong Yidong  <cyd@stupidchicken.com>
+
+	* elisp.texi: Remove duplicate edition information (Bug#5407).
+
+2010-01-17  Juanma Barranquero  <lekktu@gmail.com>
+
+	* two.el (volume-header-toc-markup): Fix typos in docstring.
+
+2010-01-04  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	Avoid dubious uses of save-excursions.
+	* positions.texi (Excursions): Recommend the use of
+	save-current-buffer if applicable.
+	* text.texi (Clickable Text): Fix the example code which used
+	save-excursion in a naive way which sometimes preserves point and
+	sometimes not.
+	* variables.texi (Creating Buffer-Local):
+	* os.texi (Session Management):
+	* display.texi (GIF Images):
+	* control.texi (Cleanups): Use (save|with)-current-buffer.
+
+2010-01-02  Eli Zaretskii  <eliz@gnu.org>
+
+	* modes.texi (Example Major Modes): Fix indentation.  (Bug#5195)
+
+2010-01-02  Chong Yidong  <cyd@stupidchicken.com>
+
+	* nonascii.texi (Text Representations, Character Codes)
+	(Converting Representations, Explicit Encoding)
+	(Translation of Characters): Use hex notation consistently.
+	(Character Sets): Fix map-charset-chars doc (Bug#5197).
+
+2010-01-01  Chong Yidong  <cyd@stupidchicken.com>
+
+	* loading.texi (Where Defined): Make it clearer that these are
+	loaded files (Bug#5068).
+
+2009-12-29  Chong Yidong  <cyd@stupidchicken.com>
+
+	* minibuf.texi (Completion Styles): Document `initials' style.
+
+2009-12-25  Chong Yidong  <cyd@stupidchicken.com>
+
+	* frames.texi (Resources): Describe inhibit-x-resources.
+	(Size Parameters): Copyedit.
+
+	* hash.texi (Creating Hash):
+	* objects.texi (Hash Table Type): Document the new hash table
+	printed representation.
+
+	* minibuf.texi (Basic Completion): 4th arg to all-completions is
+	obsolete.
+
+	* processes.texi (Process Buffers): Document
+	process-kill-buffer-query-function.
+
+2009-12-05  Glenn Morris  <rgm@gnu.org>
+
+	* hooks.texi (Standard Hooks): Remove diary-display-hook, replaced by
+	diary-display-function, and no longer recommended to be a hook.
+	Update for changes in the names of calendar and diary hooks.
+	diary-print-entries-hook has changed section.
+
+2009-11-28  Eli Zaretskii  <eliz@gnu.org>
+
+	* text.texi (Special Properties): More accurate description of
+	what the `cursor' property does.
+
+2009-11-26  Kevin Ryde  <user42@zip.com.au>
+
+	* commands.texi (Misc Events): vindex mouse-wheel-up-event and
+	mouse-wheel-down-event, the closest thing to a definition for them.
+	* os.texi (Startup Summary): vindex inhibit-startup-message and
+	inhibit-splash-screen.
+	(Command-Line Arguments): vindex argv.
+	(Suspending Emacs): vindex suspend-tty-functions and
+	resume-tty-functions.  Don't want to index every hook, but having
+	the programming ones is helpful.
+
+2009-11-14  Chong Yidong  <cyd@stupidchicken.com>
+
+	* commands.texi (Motion Events): Fix typo (Bug#4907).
+
+2009-11-08  Chong Yidong  <cyd@stupidchicken.com>
+
+	* searching.texi (Char Classes): Note that [:upper:] and [:lower:]
+	are affected by case-fold-search (Bug#4483).
+
+2009-11-02  Chong Yidong  <cyd@stupidchicken.com>
+
+	* minibuf.texi (Reading File Names): Note that read-file-name may
+	use a graphical file dialog.
+
+2009-10-31  Glenn Morris  <rgm@gnu.org>
+
+	* nonascii.texi (User-Chosen Coding Systems): Minor reword.  (Bug#4817)
+
+2009-10-16  Kevin Ryde  <user42@zip.com.au>
+
+	* files.texi (Magic File Names): Add @vindex file-name-handler-alist,
+	in particular so `info-lookup-symbol' can find its docs.
+
+2009-10-16  Chong Yidong  <cyd@stupidchicken.com>
+
+	* variables.texi (Constant Variables): Distinguish from defconst
+	variables.
+	(Defining Variables): Add cindex.
+
+2009-10-15  Chong Yidong  <cyd@stupidchicken.com>
+
+	* os.texi (Time of Day): Clarify that the microsecond part is
+	ignored (Bug#4637).
+
+2009-10-11  Glenn Morris  <rgm@gnu.org>
+
+	* frames.texi (Size and Position): Clarify what is included in the frame
+	height.  (Bug#4535)
+
+2009-10-10  Glenn Morris  <rgm@gnu.org>
+
+	* windows.texi (Size of Window): The relationship between window and
+	frame heights is not so simple.  (Bug#4535)
+	Mention window-full-height-p.
+
+2009-10-07  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* positions.texi (Text Lines): Remove goto-line, since it shouldn't be
+	used from Lisp.
+
+2009-10-07  Eli Zaretskii  <eliz@gnu.org>
+
+	* files.texi (Directory Names) <abbreviate-file-name>:
+	Document that root home directories are not replaced with "~".
+
+2009-10-06  Eli Zaretskii  <eliz@gnu.org>
+
+	* text.texi (Special Properties): Document the meaning of the
+	`cursor' text property whose value is an integer.
+
+2009-10-05  Michael Albinus  <michael.albinus@gmx.de>
+
+	* files.texi (Magic File Names): Add `copy-directory'.
+
+2009-10-05  Eli Zaretskii  <eliz@gnu.org>
+
+	* files.texi (File Attributes): Fix description of file
+	attributes.  (Bug#4638) Update attributes of files.texi example to
+	be more representative.
+
+2009-10-05  Michael Albinus  <michael.albinus@gmx.de>
+
+	* files.texi (Create/Delete Dirs): New command copy-directory.
+
+2009-10-04  Juanma Barranquero  <lekktu@gmail.com>
+
+	* anti.texi (Antinews):
+	* macros.texi (Indenting Macros):
+	* strings.texi (Creating Strings, Case Conversion):
+	Remove duplicate words.
+
+2009-10-01  Michael Albinus  <michael.albinus@gmx.de>
+
+	* files.texi (Create/Delete Dirs): delete-directory has an
+	optional parameter RECURSIVE.
+
+2009-10-01  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* buffers.texi (Swapping Text): Minor clarification.
+
+2009-10-01  Glenn Morris  <rgm@gnu.org>
+
+	* functions.texi (Declaring Functions): Mention that we also search for
+	".m" files in the src/ directory.
+
+2009-09-25  David Engster  <deng@randomsample.de>
+
+	* display.texi (Managing Overlays): Document copy-overlay (Bug#4549).
+
+2009-09-22  Glenn Morris  <rgm@gnu.org>
+
+	* internals.texi (Building Emacs): Mention preloaded-file-list.
+
+2009-09-14  Alan Mackenzie  <acm@muc.de>
+
+	* os.texi (Terminal Output): Put "@code{}" around "stdout".
+
+2009-09-13  Chong Yidong  <cyd@stupidchicken.com>
+
+	* functions.texi (Anonymous Functions): Rearrange discussion,
+	giving usage of unquoted lambda forms first.  Mention that
+	`function' and `#'' are no longer required (Bug#4290).
+
+2009-09-11  Alan Mackenzie  <acm@muc.de>
+
+	* os.texi (Terminal Output): Document `send-string-to-terminal' in
+	batch mode.
+
+2009-09-01  Glenn Morris  <rgm@gnu.org>
+
+	* display.texi (Face Functions): Mention define-obsolete-face-alias.
+
+2009-08-26  Ulrich Mueller  <ulm@gentoo.org>
+
+	* nonascii.texi (Character Codes): Fix typos.
+
+2009-08-25  Michael Albinus  <michael.albinus@gmx.de>
+
+	* processes.texi (Synchronous Processes): New defvar
+	process-file-side-effects.
+
+2009-08-25  Glenn Morris  <rgm@gnu.org>
+
+	* display.texi (Fontsets): Fix typo.
+
+	* files.texi (Format Conversion Round-Trip): Mention nil regexp.
+
+2009-08-19  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* processes.texi (Asynchronous Processes): Adjust arglist of
+	start-process-shell-command and start-file-process-shell-command.
+
+2009-08-15  Chong Yidong  <cyd@stupidchicken.com>
+
+	* advice.texi (Argument Access in Advice): Note that argument
+	positions are zero-based (Bug#3932).
+
+	* commands.texi (Distinguish Interactive): Minor copyedit.
+
+	* display.texi (Face Attributes): Add xref to Displaying Faces for
+	explanation of "underlying face".
+
+	* customize.texi (Common Keywords): Add xref to Loading.
+
+	* loading.texi (How Programs Do Loading): Add xref to Lisp
+	Libraries node in the Emacs manual.
+
+2009-08-13  Chong Yidong  <cyd@stupidchicken.com>
+
+	* objects.texi (Meta-Char Syntax): Add xref to Strings of Events.
 
 2009-07-18  Chong Yidong  <cyd@stupidchicken.com>
 
@@ -9,6 +335,13 @@
 2009-07-18  Glenn Morris  <rgm@gnu.org>
 
 	* loading.texi (Repeated Loading): Fix typo.
+
+2009-07-16  Richard Stallman  <rms@gnu.org>
+
+	* buffers.texi (Swapping Text): Recommend setting
+	write-region-annotate-functions and buffer-saved-size.
+
+	* backups.texi (Auto-Saving): Document buffer-saved-size = -2.
 
 2009-07-15  Glenn Morris  <rgm@gnu.org>
 
@@ -23,6 +356,11 @@
 	(Specification Examples): defmacro is actually not the same as defun.
 	Escape "`" in example.
 
+2009-07-15  Chong Yidong  <cyd@stupidchicken.com>
+
+	* markers.texi (The Mark): Document optional arg to
+	deactivate-mark.
+
 2009-07-11  Kevin Ryde  <user42@zip.com.au>
 
 	* hooks.texi (Standard Hooks): Fix cross-references.
@@ -30,6 +368,9 @@
 	* loading.texi (Named Features): Refer to eval-after-load.
 
 2009-07-11  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (TEXI2PDF): New.
+	(elisp.pdf): New target.
 
 	* searching.texi (Regexp Backslash): Fix typo.
 
@@ -44,11 +385,8 @@
 	* objects.texi (Character Type, String Type):
 	Merge in some menu descriptions from elisp.texi.
 
-	* files.texi (Format Conversion):
 	* hash.texi (Hash Tables):
-	* minibuf.texi (Completion):
 	* modes.texi (Multiline Font Lock):
-	* os.texi (System Interface):
 	End menu description with period.
 
 2009-07-09  Glenn Morris  <rgm@gnu.org>
@@ -86,14 +424,26 @@
 
 	* commands.texi (Using Interactive): Fix cross-reference.
 
+2009-07-01  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* frames.texi (Management Parameters): Mention sticky.
+
 2009-07-01  Andreas Schwab  <aschwab@redhat.com>
 
 	* help.texi (Help Functions): Fix description of help-buffer and
 	help-setup-xref to use @defun instead of @deffn.
 
+2009-07-01  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* frames.texi (Size Parameters): Mention maximized for fullscreen.
+
 2009-06-24  Chong Yidong  <cyd@stupidchicken.com>
 
 	* display.texi (Window Systems): Add ns to the list.
+
+2009-06-21  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Branch for 23.1.
 
 2009-06-17  Martin Rudalics  <rudalics@gmx.at>
 
@@ -879,7 +1229,7 @@
 2009-01-08  Jason Rumney  <jasonr@gnu.org>
 
 	* frames.texi (Pointer Shape): Clarify that only X supports
-	changing the standard pointer shapes. (Bug#1485)
+	changing the standard pointer shapes.  (Bug#1485)
 
 2009-01-08  Chong Yidong  <cyd@stupidchicken.com>
 
@@ -7622,7 +7972,7 @@
 2002-08-05  Per Abrahamsen  <abraham@dina.kvl.dk>
 
 	* customize.texi (Splicing into Lists): Fixed example.
-	Reported by Fabrice Bauzac <fabrice.bauzac@wanadoo.fr>
+	Reported by Fabrice Bauzac <fabrice.bauzac@wanadoo.fr>.
 
 2002-06-17  Juanma Barranquero  <lektu@terra.es>
 
@@ -8136,7 +8486,7 @@
 ;; End:
 
     Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-      2007, 2008, 2009  Free Software Foundation, Inc.
+      2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

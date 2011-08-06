@@ -1,7 +1,7 @@
 ;;; xml.el --- XML parser
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Emmanuel Briot  <briot@gnat.com>
 ;; Maintainer: Mark A. Hershberger <mah@everybody.org>
@@ -822,6 +822,25 @@ This follows the rule [28] in the XML specifications."
 			      (nreverse children)
 			      "")
 		   (substring string point))))))
+
+(defun xml-substitute-numeric-entities (string)
+  "Substitute SGML numeric entities by their respective utf characters.
+This function replaces numeric entities in the input STRING and
+returns the modified string.  For example \"&#42;\" gets replaced
+by \"*\"."
+  (if (and string (stringp string))
+      (let ((start 0))
+        (while (string-match "&#\\([0-9]+\\);" string start)
+          (condition-case nil
+              (setq string (replace-match
+                            (string (read (substring string
+                                                     (match-beginning 1)
+                                                     (match-end 1))))
+                            nil nil string))
+            (error nil))
+          (setq start (1+ (match-beginning 0))))
+        string)
+    nil))
 
 ;;*******************************************************************
 ;;**

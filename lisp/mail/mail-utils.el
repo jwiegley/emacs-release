@@ -1,7 +1,7 @@
 ;;; mail-utils.el --- utility functions used both by rmail and rnews
 
 ;; Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009  Free Software Foundation, Inc.
+;;   2009, 2010  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail, news
@@ -123,16 +123,21 @@ we expect to find and remove the wrapper characters =?ISO-8859-1?Q?....?=."
 	(setq i (match-end 0)))
       (apply 'concat (nreverse (cons (substring string i) strings))))))
 
+;; FIXME Gnus for some reason has `quoted-printable-decode-region' in qp.el.
 ;;;###autoload
 (defun mail-unquote-printable-region (beg end &optional wrapper noerror
 					  unibyte)
   "Undo the \"quoted printable\" encoding in buffer from BEG to END.
 If the optional argument WRAPPER is non-nil,
 we expect to find and remove the wrapper characters =?ISO-8859-1?Q?....?=.
-If NOERROR is non-nil, return t if successful.
+On encountering malformed quoted-printable text, exits with an error,
+unless NOERROR is non-nil, in which case it continues, and returns nil
+when finished.  Returns non-nil on successful completion.
 If UNIBYTE is non-nil, insert converted characters as unibyte.
 That is useful if you are going to character code decoding afterward,
 as Rmail does."
+  ;; FIXME: `unibyte' should always be non-nil, and the iso-latin-1
+  ;; specific handling should be removed (or moved elsewhere and generalized).
   (interactive "r\nP")
   (let (failed)
     (save-match-data
@@ -244,6 +249,10 @@ Return a modified address list."
   "Prune addresses from DESTINATIONS, a list of recipient addresses.
 All addresses matching `rmail-dont-reply-to-names' are removed from
 the comma-separated list.  The pruned list is returned."
+  ;; FIXME this (setting a user option the first time a command is used)
+  ;; is somewhat strange.  Normally one would never set the option,
+  ;; but instead fall back to the default so long as it was nil.
+  ;; Or just set the default directly in the defcustom.
   (if (null rmail-dont-reply-to-names)
       (setq rmail-dont-reply-to-names
 	    (concat (if rmail-default-dont-reply-to-names

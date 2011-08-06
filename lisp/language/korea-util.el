@@ -1,9 +1,9 @@
 ;;; korea-util.el --- utilities for Korean
 
-;; Copyright (C) 1997, 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 1997, 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009
+;;   2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -30,9 +30,9 @@
 
 ;;;###autoload
 (defvar default-korean-keyboard
-  (if (string-match "3" (or (getenv "HANGUL_KEYBOARD_TYPE") ""))
+   (purecopy (if (string-match "3" (or (getenv "HANGUL_KEYBOARD_TYPE") ""))
       "3"
-    "")
+    ""))
   "*The kind of Korean keyboard for Korean input method.
 \"\" for 2, \"3\" for 3.")
 
@@ -99,7 +99,8 @@
   `((global [?\S- ] toggle-korean-input-method nil)
     (global [Hangul] toggle-korean-input-method nil)
     (global [C-f9] quail-hangul-switch-symbol-ksc nil)
-    (global [f9]  quail-hangul-switch-hanja nil)
+    (global [f9] hangul-to-hanja-conversion nil)
+    (global [Hangul_Hanja] hangul-to-hanja-conversion nil)
     (,isearch-mode-map [?\S- ] isearch-toggle-korean-input-method nil)
     (,isearch-mode-map [Hangul] isearch-toggle-korean-input-method nil)
     (,isearch-mode-map [C-f9] isearch-hangul-switch-symbol-ksc nil)
@@ -107,6 +108,7 @@
 
 ;;;###autoload
 (defun setup-korean-environment-internal ()
+  (use-cjk-char-width-table 'ko_KR)
   (let ((key-bindings korean-key-bindings))
     (while key-bindings
       (let* ((this (car key-bindings))
@@ -124,6 +126,7 @@
 
 (defun exit-korean-environment ()
   "Exit Korean language environment."
+  (use-default-char-width-table)
   (let ((key-bindings korean-key-bindings))
     (while key-bindings
       (let* ((this (car key-bindings))

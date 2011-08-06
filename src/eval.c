@@ -1,6 +1,6 @@
 /* Evaluator for GNU Emacs Lisp interpreter.
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -20,12 +20,12 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
+#include <setjmp.h>
 #include "lisp.h"
 #include "blockinput.h"
 #include "commands.h"
 #include "keyboard.h"
 #include "dispextern.h"
-#include <setjmp.h>
 
 #if HAVE_X_WINDOWS
 #include "xterm.h"
@@ -48,41 +48,6 @@ struct backtrace
 };
 
 struct backtrace *backtrace_list;
-
-/* This structure helps implement the `catch' and `throw' control
-   structure.  A struct catchtag contains all the information needed
-   to restore the state of the interpreter after a non-local jump.
-
-   Handlers for error conditions (represented by `struct handler'
-   structures) just point to a catch tag to do the cleanup required
-   for their jumps.
-
-   catchtag structures are chained together in the C calling stack;
-   the `next' member points to the next outer catchtag.
-
-   A call like (throw TAG VAL) searches for a catchtag whose `tag'
-   member is TAG, and then unbinds to it.  The `val' member is used to
-   hold VAL while the stack is unwound; `val' is returned as the value
-   of the catch form.
-
-   All the other members are concerned with restoring the interpreter
-   state.  */
-
-struct catchtag
-{
-  Lisp_Object tag;
-  Lisp_Object val;
-  struct catchtag *next;
-  struct gcpro *gcpro;
-  jmp_buf jmp;
-  struct backtrace *backlist;
-  struct handler *handlerlist;
-  int lisp_eval_depth;
-  int pdlcount;
-  int poll_suppress_count;
-  int interrupt_input_blocked;
-  struct byte_stack *byte_stack;
-};
 
 struct catchtag *catchlist;
 
@@ -223,7 +188,7 @@ init_eval_once ()
   specpdl_ptr = specpdl;
   /* Don't forget to update docs (lispref node "Local Variables").  */
   max_specpdl_size = 1000;
-  max_lisp_eval_depth = 400;
+  max_lisp_eval_depth = 500;
 
   Vrun_hooks = Qnil;
 }
@@ -586,10 +551,10 @@ usage: (function ARG)  */)
 
 
 DEFUN ("interactive-p", Finteractive_p, Sinteractive_p, 0, 0, 0,
-       doc: /* Return t if the function was run directly by user input.
+       doc: /* Return t if the containing function was run directly by user input.
 This means that the function was called with `call-interactively'
 \(which includes being called as the binding of a key)
-and input is currently coming from the keyboard (not in keyboard macro),
+and input is currently coming from the keyboard (not a keyboard macro),
 and Emacs is not running in batch mode (`noninteractive' is nil).
 
 The only known proper use of `interactive-p' is in deciding whether to
@@ -598,28 +563,41 @@ of using it for any other purpose, it is quite likely that you're
 making a mistake.  Think: what do you want to do when the command is
 called from a keyboard macro?
 
-If you want to test whether your function was called with
-`call-interactively', the way to do that is by adding an extra
-optional argument, and making the `interactive' spec specify non-nil
-unconditionally for that argument.  (`p' is a good way to do this.)  */)
+To test whether your function was called with `call-interactively',
+either (i) add an extra optional argument and give it an `interactive'
+spec that specifies non-nil unconditionally (such as \"p\"); or (ii)
+use `called-interactively-p'.  */)
      ()
 {
   return (INTERACTIVE && interactive_p (1)) ? Qt : Qnil;
 }
 
 
-DEFUN ("called-interactively-p", Fcalled_interactively_p, Scalled_interactively_p, 0, 0, 0,
-       doc: /* Return t if the function using this was called with `call-interactively'.
-This is used for implementing advice and other function-modifying
-features of Emacs.
+DEFUN ("called-interactively-p", Fcalled_interactively_p, Scalled_interactively_p, 0, 1, 0,
+       doc: /* Return t if the containing function was called by `call-interactively'.
+If KIND is `interactive', then only return t if the call was made
+interactively by the user, i.e. not in `noninteractive' mode nor
+when `executing-kbd-macro'.
+If KIND is `any', on the other hand, it will return t for any kind of
+interactive call, including being called as the binding of a key, or
+from a keyboard macro, or in `noninteractive' mode.
 
-The cleanest way to test whether your function was called with
-`call-interactively' is by adding an extra optional argument,
-and making the `interactive' spec specify non-nil unconditionally
-for that argument.  (`p' is a good way to do this.)  */)
-     ()
+The only known proper use of `interactive' for KIND is in deciding
+whether to display a helpful message, or how to display it.  If you're
+thinking of using it for any other purpose, it is quite likely that
+you're making a mistake.  Think: what do you want to do when the
+command is called from a keyboard macro?
+
+This function is meant for implementing advice and other
+function-modifying features.  Instead of using this, it is sometimes
+cleaner to give your function an extra optional argument whose
+`interactive' spec specifies non-nil unconditionally (\"p\" is a good
+way to do this), or via (not (or executing-kbd-macro noninteractive)).  */)
+     (kind)
+     Lisp_Object kind;
 {
-  return interactive_p (1) ? Qt : Qnil;
+  return ((INTERACTIVE || !EQ (kind, intern ("interactive")))
+	  && interactive_p (1)) ? Qt : Qnil;
 }
 
 
@@ -1944,14 +1922,13 @@ find_handler_clause (handlers, conditions, sig, data)
 	{
 	  max_lisp_eval_depth += 15;
 	  max_specpdl_size++;
-#ifdef PROTOTYPES
-	  internal_with_output_to_temp_buffer ("*Backtrace*",
-					       (Lisp_Object (*) (Lisp_Object)) Fbacktrace,
-					       Qnil);
-#else
-	  internal_with_output_to_temp_buffer ("*Backtrace*",
-					       Fbacktrace, Qnil);
-#endif
+	  if (noninteractive)
+	    Fbacktrace ();
+	  else
+	    internal_with_output_to_temp_buffer
+	      ("*Backtrace*",
+	       (Lisp_Object (*) (Lisp_Object)) Fbacktrace,
+	       Qnil);
 	  max_specpdl_size--;
 	  max_lisp_eval_depth -= 15;
 	}
@@ -2119,7 +2096,6 @@ then strings and vectors are not accepted.  */)
     return Qnil;
 }
 
-/* ARGSUSED */
 DEFUN ("autoload", Fautoload, Sautoload, 2, 5, 0,
        doc: /* Define FUNCTION to autoload from FILE.
 FUNCTION is a symbol; FILE is a file name string to pass to `load'.
@@ -2136,9 +2112,7 @@ this does nothing and returns nil.  */)
      (function, file, docstring, interactive, type)
      Lisp_Object function, file, docstring, interactive, type;
 {
-#ifdef NO_ARG_ARRAY
   Lisp_Object args[4];
-#endif
 
   CHECK_SYMBOL (function);
   CHECK_STRING (file);
@@ -2153,17 +2127,13 @@ this does nothing and returns nil.  */)
     /* Only add entries after dumping, because the ones before are
        not useful and else we get loads of them from the loaddefs.el.  */
     LOADHIST_ATTACH (Fcons (Qautoload, function));
-
-#ifdef NO_ARG_ARRAY
-  args[0] = file;
-  args[1] = docstring;
-  args[2] = interactive;
-  args[3] = type;
-
-  return Ffset (function, Fcons (Qautoload, Flist (4, &args[0])));
-#else /* NO_ARG_ARRAY */
-  return Ffset (function, Fcons (Qautoload, Flist (4, &file)));
-#endif /* not NO_ARG_ARRAY */
+  else
+    /* We don't want the docstring in purespace (instead,
+       Snarf-documentation should (hopefully) overwrite it).  */
+    docstring = make_number (0);
+  return Ffset (function,
+		Fpurecopy (list5 (Qautoload, file, docstring,
+				  interactive, type)));
 }
 
 Lisp_Object
@@ -2650,7 +2620,6 @@ run_hook_with_args (nargs, args, cond)
      enum run_hooks_condition cond;
 {
   Lisp_Object sym, val, ret;
-  Lisp_Object globals;
   struct gcpro gcpro1, gcpro2, gcpro3;
 
   /* If we are dying or still initializing,
@@ -2671,7 +2640,7 @@ run_hook_with_args (nargs, args, cond)
     }
   else
     {
-      globals = Qnil;
+      Lisp_Object globals = Qnil;
       GCPRO3 (sym, val, globals);
 
       for (;
@@ -2684,18 +2653,28 @@ run_hook_with_args (nargs, args, cond)
 	    {
 	      /* t indicates this hook has a local binding;
 		 it means to run the global binding too.  */
+	      globals = Fdefault_value (sym);
+	      if (NILP (globals)) continue;
 
-	      for (globals = Fdefault_value (sym);
-		   CONSP (globals) && ((cond == to_completion)
-				       || (cond == until_success ? NILP (ret)
-					   : !NILP (ret)));
-		   globals = XCDR (globals))
+	      if (!CONSP (globals) || EQ (XCAR (globals), Qlambda))
 		{
-		  args[0] = XCAR (globals);
-		  /* In a global value, t should not occur.  If it does, we
-		     must ignore it to avoid an endless loop.  */
-		  if (!EQ (args[0], Qt))
-		    ret = Ffuncall (nargs, args);
+		  args[0] = globals;
+		  ret = Ffuncall (nargs, args);
+		}
+	      else
+		{
+		  for (;
+		       CONSP (globals) && ((cond == to_completion)
+					   || (cond == until_success ? NILP (ret)
+					       : !NILP (ret)));
+		       globals = XCDR (globals))
+		    {
+		      args[0] = XCAR (globals);
+		      /* In a global value, t should not occur.  If it does, we
+			 must ignore it to avoid an endless loop.  */
+		      if (!EQ (args[0], Qt))
+			ret = Ffuncall (nargs, args);
+		    }
 		}
 	    }
 	  else
@@ -3613,42 +3592,42 @@ To prevent this happening, set `quit-flag' to nil
 before making `inhibit-quit' nil.  */);
   Vinhibit_quit = Qnil;
 
-  Qinhibit_quit = intern ("inhibit-quit");
+  Qinhibit_quit = intern_c_string ("inhibit-quit");
   staticpro (&Qinhibit_quit);
 
-  Qautoload = intern ("autoload");
+  Qautoload = intern_c_string ("autoload");
   staticpro (&Qautoload);
 
-  Qdebug_on_error = intern ("debug-on-error");
+  Qdebug_on_error = intern_c_string ("debug-on-error");
   staticpro (&Qdebug_on_error);
 
-  Qmacro = intern ("macro");
+  Qmacro = intern_c_string ("macro");
   staticpro (&Qmacro);
 
-  Qdeclare = intern ("declare");
+  Qdeclare = intern_c_string ("declare");
   staticpro (&Qdeclare);
 
   /* Note that the process handling also uses Qexit, but we don't want
      to staticpro it twice, so we just do it here.  */
-  Qexit = intern ("exit");
+  Qexit = intern_c_string ("exit");
   staticpro (&Qexit);
 
-  Qinteractive = intern ("interactive");
+  Qinteractive = intern_c_string ("interactive");
   staticpro (&Qinteractive);
 
-  Qcommandp = intern ("commandp");
+  Qcommandp = intern_c_string ("commandp");
   staticpro (&Qcommandp);
 
-  Qdefun = intern ("defun");
+  Qdefun = intern_c_string ("defun");
   staticpro (&Qdefun);
 
-  Qand_rest = intern ("&rest");
+  Qand_rest = intern_c_string ("&rest");
   staticpro (&Qand_rest);
 
-  Qand_optional = intern ("&optional");
+  Qand_optional = intern_c_string ("&optional");
   staticpro (&Qand_optional);
 
-  Qdebug = intern ("debug");
+  Qdebug = intern_c_string ("debug");
   staticpro (&Qdebug);
 
   DEFVAR_LISP ("stack-trace-on-error", &Vstack_trace_on_error,
@@ -3723,7 +3702,7 @@ DECL is a list `(declare ...)' containing the declarations.
 The value the function returns is not used.  */);
   Vmacro_declaration_function = Qnil;
 
-  Vrun_hooks = intern ("run-hooks");
+  Vrun_hooks = intern_c_string ("run-hooks");
   staticpro (&Vrun_hooks);
 
   staticpro (&Vautoload_queue);

@@ -1,7 +1,7 @@
 ;;; ediff-vers.el --- version control interface to Ediff
 
 ;; Copyright (C) 1995, 1996, 1997, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
@@ -123,8 +123,7 @@ comparison or merge operations are being performed."
 	(fundamental-mode))
       (let ((output-buffer (ediff-rcs-get-output-buffer filename buff)))
 	(delete-windows-on output-buffer)
-	(save-excursion
-	  (set-buffer output-buffer)
+	(with-current-buffer output-buffer
 	  (apply 'call-process "co" nil t nil
 		 ;; -q: quiet (no diagnostics)
 		 (append switches rcs-default-co-switches
@@ -137,10 +136,8 @@ comparison or merge operations are being performed."
   ;; Optional NAME is name to use instead of `*RCS-output*'.
   ;; This is a modified version from rcs.el v1.1.  I use it here to make
   ;; Ediff immune to changes in rcs.el
-  (let* ((default-major-mode 'fundamental-mode) ; no frills!
-	 (buf (get-buffer-create name)))
-    (save-excursion
-      (set-buffer buf)
+  (let ((buf (get-buffer-create name)))
+    (with-current-buffer buf
       (setq buffer-read-only nil
 	    default-directory (file-name-directory (expand-file-name file)))
       (erase-buffer))

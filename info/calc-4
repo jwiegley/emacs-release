@@ -4,7 +4,7 @@ calc.texi.
 This file documents Calc, the GNU Emacs calculator.
 
 Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009 Free Software Foundation, Inc.
+2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -2535,10 +2535,11 @@ find it, you may need to set the `calc-gnuplot-name' variable in your
 Calc init file or `.emacs'.  You may also need to set some Lisp
 variables to show Calc how to run GNUPLOT on your system; these are
 described under `g D' and `g O' below.  If you are using the X window
-system, Calc will configure GNUPLOT for you automatically.  If you have
-GNUPLOT 3.0 or later and you are not using X, Calc will configure
-GNUPLOT to display graphs using simple character graphics that will
-work on any terminal.
+system or MS-Windows, Calc will configure GNUPLOT for you
+automatically.  If you have GNUPLOT 3.0 or later and you are using a
+Unix or GNU system without X, Calc will configure GNUPLOT to display
+graphs using simple character graphics that will work on any
+Posix-compatible terminal.
 
 * Menu:
 
@@ -2959,8 +2960,9 @@ override it with a plain `g D' command.  If you enter a blank line this
 command shows you the current default.  The special name `default'
 signifies that Calc should choose `x11' if the X window system is in
 use (as indicated by the presence of a `DISPLAY' environment variable),
-or otherwise `dumb' under GNUPLOT 3.0 and later, or `postscript' under
-GNUPLOT 2.0.  This is the initial default value.
+`windows' on MS-Windows, or otherwise `dumb' under GNUPLOT 3.0 and
+later, or `postscript' under GNUPLOT 2.0.  This is the initial default
+value.
 
    The `dumb' device is an interface to "dumb terminals," i.e.,
 terminals with no special graphics facilities.  It writes a crude
@@ -2986,12 +2988,12 @@ device name used by `g P' (`calc-graph-print').  This is initially
 once again to use `dumb' to create a plot on any text-only printer.
 
    The `g O' (`calc-graph-output') command sets the name of the output
-file used by GNUPLOT.  For some devices, notably `x11', there is no
-output file and this information is not used.  Many other "devices" are
-really file formats like `postscript'; in these cases the output in the
-desired format goes into the file you name with `g O'.  Type `g O
-stdout <RET>' to set GNUPLOT to write to its standard output stream,
-i.e., to `*Gnuplot Trail*'.  This is the default setting.
+file used by GNUPLOT.  For some devices, notably `x11' and `windows',
+there is no output file and this information is not used.  Many other
+"devices" are really file formats like `postscript'; in these cases the
+output in the desired format goes into the file you name with `g O'.
+Type `g O stdout <RET>' to set GNUPLOT to write to its standard output
+stream, i.e., to `*Gnuplot Trail*'.  This is the default setting.
 
    Another special output name is `tty', which means that GNUPLOT is
 going to write graphics commands directly to its standard output, which
@@ -3041,14 +3043,15 @@ current device is `x11'.
 specifying the position and size of the X window.  The normal value is
 `default', which generally means your window manager will let you place
 the window interactively.  Entering `800x500+0+0' would create an
-800-by-500 pixel window in the upper-left corner of the screen.
+800-by-500 pixel window in the upper-left corner of the screen.  This
+command has no effect if the current device is `windows'.
 
    The buffer called `*Gnuplot Trail*' holds a transcript of the
 session with GNUPLOT.  This shows the commands Calc has "typed" to
 GNUPLOT and the responses it has received.  Calc tries to notice when an
 error message has appeared here and display the buffer for you when
 this happens.  You can check this buffer yourself if you suspect
-something has gone wrong.
+something has gone wrong(1).
 
    The `g C' (`calc-graph-command') command prompts you to enter any
 line of text, then simply sends that line to the current GNUPLOT
@@ -3062,6 +3065,9 @@ use `g C' for this purpose.
 happens automatically when Calc thinks there is something you will want
 to see in either of these buffers.  If you type `g v' or `g V' when the
 relevant buffer is already displayed, the buffer is hidden again.
+(Note that on MS-Windows, the `*Gnuplot Trail*' buffer will usually
+show nothing of interest, because GNUPLOT's responses are not
+communicated back to Calc.)
 
    One reason to use `g v' is to add your own commands to the `*Gnuplot
 Commands*' buffer.  Press `g v', then use `C-x o' to switch into that
@@ -3089,6 +3095,14 @@ killed it manually by then.
 also views the `*Gnuplot Trail*' buffer so that you can see the process
 being killed.  This is better if you are killing GNUPLOT because you
 think it has gotten stuck.
+
+   ---------- Footnotes ----------
+
+   (1) On MS-Windows, due to the peculiarities of how the Windows
+version of GNUPLOT (called `wgnuplot') works, the GNUPLOT responses are
+not communicated back to Calc.  Instead, you need to look them up in
+the GNUPLOT command window that is displayed as in normal interactive
+usage of GNUPLOT.
 
 
 File: calc,  Node: Kill and Yank,  Next: Keypad Mode,  Prev: Graphics,  Up: Top
@@ -5369,7 +5383,7 @@ the function with code that looks roughly like this:
 
      (let ((calc-command-flags nil))
        (unwind-protect
-           (save-excursion
+           (save-current-buffer
              (calc-select-buffer)
              _body of function_
              _renumber stack_

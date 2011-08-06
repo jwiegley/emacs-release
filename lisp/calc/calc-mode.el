@@ -1,7 +1,7 @@
 ;;; calc-mode.el --- calculator modes for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -664,7 +664,7 @@
      (message "Not surrounding vectors with brackets"))))
 
 (defun calc-matrix-brackets (arg)
-  (interactive "sCode letters (R, O, C, P): ")
+  (interactive "sCode letters (R, O, C): ")
   (calc-wrapper
    (let ((code (append (and (string-match "[rR]" arg) '(R))
 		       (and (string-match "[oO]" arg) '(O))

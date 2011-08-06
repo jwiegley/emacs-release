@@ -1,7 +1,7 @@
 ;;; gnus-sum.el --- summary mode commands for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -667,6 +667,17 @@ string with the suggested prefix."
   :version "21.1"
   :group 'gnus-summary
   :type 'boolean)
+
+(defcustom gnus-mark-copied-or-moved-articles-as-expirable nil
+  "If non-nil, mark articles copied or moved to auto-expire group as expirable.
+If nil, the expirable marks will be unchanged except that the marks
+will be removed when copying or moving articles to a group that has
+not turned auto-expire on.  If non-nil, articles that have been read
+will be marked as expirable when being copied or moved to a group in
+which auto-expire is turned on."
+  :version "23.2"
+  :type 'boolean
+  :group 'gnus-summary-marks)
 
 (defcustom gnus-view-pseudos nil
   "*If `automatic', pseudo-articles will be viewed automatically.
@@ -3058,8 +3069,7 @@ The following commands are available:
   (setq buffer-read-only t		;Disable modification
 	show-trailing-whitespace nil)
   (setq truncate-lines t)
-  (setq selective-display t)
-  (setq selective-display-ellipses t)	;Display `...'
+  (add-to-invisibility-spec '(gnus-sum . t))
   (gnus-summary-set-display-table)
   (gnus-set-default-directory)
   (make-local-variable 'gnus-summary-line-format)
@@ -4991,7 +5001,7 @@ Unscored articles will be counted as having a score of zero."
 	    (lambda (header)
 	      (setq previous-time
 		    (condition-case ()
-			(time-to-seconds (mail-header-parse-date
+			(gnus-float-time (mail-header-parse-date
 					  (mail-header-date header)))
 		      (error previous-time))))
 	    (sort
@@ -6711,7 +6721,31 @@ Also do horizontal recentering."
   (when (and gnus-auto-center-summary
 	     (not (eq gnus-auto-center-summary 'vertical)))
     (gnus-horizontal-recenter))
-  (recenter n))
+  (if (fboundp 'recenter-top-bottom)
+      (recenter-top-bottom n)
+    (recenter n)))
+
+(put 'gnus-recenter 'isearch-scroll t)
+
+(defun gnus-forward-line-ignore-invisible (n)
+  "Move N lines forward (backward if N is negative).
+Like forward-line, but skip over (and don't count) invisible lines."
+  (let (done)
+    (while (and (> n 0) (not done))
+      ;; If the following character is currently invisible,
+      ;; skip all characters with that same `invisible' property value.
+      (while (gnus-invisible-p (point))
+	(goto-char (gnus-next-char-property-change (point))))
+      (forward-line 1)
+      (if (eobp)
+	  (setq done t)
+	(setq n (1- n))))
+    (while (and (< n 0) (not done))
+      (forward-line -1)
+      (if (bobp) (setq done t)
+	(setq n (1+ n))
+	(while (and (not (bobp)) (gnus-invisible-p (1- (point))))
+	  (goto-char (gnus-previous-char-property-change (point))))))))
 
 (defun gnus-summary-recenter ()
   "Center point in the summary window.
@@ -6728,16 +6762,19 @@ displayed, no centering will be performed."
 			     gnus-auto-center-summary
                            (/ (1- (window-height)) 2)))))
 	   (height (1- (window-height)))
-	   (bottom (save-excursion (goto-char (point-max))
-				   (forward-line (- height))
-				   (point)))
+	   (bottom (save-excursion
+		     (goto-char (point-max))
+		     (gnus-forward-line-ignore-invisible (- height))
+		     (point)))
 	   (window (get-buffer-window (current-buffer))))
       (when (get-buffer-window gnus-article-buffer)
 	;; Only do recentering when the article buffer is displayed,
 	;; Set the window start to either `bottom', which is the biggest
 	;; possible valid number, or the second line from the top,
 	;; whichever is the least.
-	(let ((top-pos (save-excursion (forward-line (- top)) (point))))
+	(let ((top-pos (save-excursion
+			 (gnus-forward-line-ignore-invisible (- top))
+			 (point))))
 	  (if (> bottom top-pos)
 	      ;; Keep the second line from the top visible
 	      (set-window-start window top-pos)
@@ -6746,12 +6783,12 @@ displayed, no centering will be performed."
 	    ;; visible, or revert to using TOP-POS.
 	    (save-excursion
 	      (goto-char (point-max))
-	      (forward-line -1)
+	      (gnus-forward-line-ignore-invisible -1)
 	      (let ((last-line-start (point)))
 		(goto-char bottom)
 		(set-window-start window (point) t)
 		(when (not (pos-visible-in-window-p last-line-start window))
-		  (forward-line 1)
+		  (gnus-forward-line-ignore-invisible 1)
 		  (set-window-start window (min (point) top-pos) t)))))))
       ;; Do horizontal recentering while we're at it.
       (when (and (get-buffer-window (current-buffer) t)
@@ -8273,7 +8310,7 @@ articles that are younger than AGE days."
 
 (defalias 'gnus-summary-delete-marked-as-read 'gnus-summary-limit-to-unread)
 (make-obsolete
- 'gnus-summary-delete-marked-as-read 'gnus-summary-limit-to-unread)
+ 'gnus-summary-delete-marked-as-read 'gnus-summary-limit-to-unread "Emacs 20.4")
 
 (defun gnus-summary-limit-to-unread (&optional all)
   "Limit the summary buffer to articles that are not marked as read.
@@ -8368,7 +8405,7 @@ If UNREPLIED (the prefix), limit to unreplied articles."
 
 (defalias 'gnus-summary-delete-marked-with 'gnus-summary-limit-exclude-marks)
 (make-obsolete 'gnus-summary-delete-marked-with
-	       'gnus-summary-limit-exclude-marks)
+	       'gnus-summary-limit-exclude-marks "Emacs 20.4")
 
 (defun gnus-summary-limit-exclude-marks (marks &optional reverse)
   "Exclude articles that are marked with MARKS (e.g. \"DK\").
@@ -9753,11 +9790,12 @@ ACTION can be either `move' (the default), `crosspost' or `copy'."
 				       (list (cdr art-group)))))
 
 	    ;; See whether the article is to be put in the cache.
-	    (let ((marks (if (gnus-group-auto-expirable-p to-group)
-			     gnus-article-mark-lists
-			   (delete '(expirable . expire)
-				   (copy-sequence gnus-article-mark-lists))))
-		  (to-article (cdr art-group)))
+	    (let* ((expirable (gnus-group-auto-expirable-p to-group))
+		   (marks (if expirable
+			      gnus-article-mark-lists
+			    (delete '(expirable . expire)
+				    (copy-sequence gnus-article-mark-lists))))
+		   (to-article (cdr art-group)))
 
 	      ;; Enter the article into the cache in the new group,
 	      ;; if that is required.
@@ -9795,6 +9833,17 @@ ACTION can be either `move' (the default), `crosspost' or `copy'."
 		      (gnus-add-marked-articles
 		       to-group (cdar marks) (list to-article) info)))
 		  (setq marks (cdr marks)))
+
+		(when (and expirable
+			   gnus-mark-copied-or-moved-articles-as-expirable
+			   (not (memq 'expire to-marks)))
+		  ;; Mark this article as expirable.
+		  (push 'expire to-marks)
+		  (when (equal to-group gnus-newsgroup-name)
+		    (push to-article gnus-newsgroup-expirable))
+		  ;; Copy the expirable mark to other group.
+		  (gnus-add-marked-articles
+		   to-group 'expire (list to-article) info))
 
 		(gnus-request-set-mark
 		 to-group (list (list (list to-article) 'add to-marks))))
@@ -10798,7 +10847,7 @@ If NO-EXPIRE, auto-expiry will be inhibited."
 (defalias 'gnus-summary-mark-as-unread-forward
   'gnus-summary-tick-article-forward)
 (make-obsolete 'gnus-summary-mark-as-unread-forward
-	       'gnus-summary-tick-article-forward)
+	       'gnus-summary-tick-article-forward "Emacs 20.4")
 (defun gnus-summary-tick-article-forward (n)
   "Tick N articles forwards.
 If N is negative, tick backwards instead.
@@ -10809,7 +10858,7 @@ The difference between N and the number of articles ticked is returned."
 (defalias 'gnus-summary-mark-as-unread-backward
   'gnus-summary-tick-article-backward)
 (make-obsolete 'gnus-summary-mark-as-unread-backward
-	       'gnus-summary-tick-article-backward)
+	       'gnus-summary-tick-article-backward "Emacs 20.4")
 (defun gnus-summary-tick-article-backward (n)
   "Tick N articles backwards.
 The difference between N and the number of articles ticked is returned."
@@ -10817,7 +10866,7 @@ The difference between N and the number of articles ticked is returned."
   (gnus-summary-mark-forward (- n) gnus-ticked-mark))
 
 (defalias 'gnus-summary-mark-as-unread 'gnus-summary-tick-article)
-(make-obsolete 'gnus-summary-mark-as-unread 'gnus-summary-tick-article)
+(make-obsolete 'gnus-summary-mark-as-unread 'gnus-summary-tick-article "Emacs 20.4")
 (defun gnus-summary-tick-article (&optional article clear-mark)
   "Mark current article as unread.
 Optional 1st argument ARTICLE specifies article number to be marked as unread.
@@ -11255,29 +11304,45 @@ If ARG is positive number, turn showing conversation threads on."
     (gnus-message 6 "Threading is now %s" (if gnus-show-threads "on" "off"))
     (gnus-summary-position-point)))
 
+(eval-and-compile
+  (if (fboundp 'remove-overlays)
+      (defalias 'gnus-remove-overlays 'remove-overlays)
+    (defun gnus-remove-overlays (beg end name val)
+      "Clear BEG and END of overlays whose property NAME has value VAL.
+For compatibility with Emacs 21 and XEmacs."
+      (dolist (ov (gnus-overlays-in beg end))
+	(when (eq (gnus-overlay-get ov name) val)
+	  (gnus-delete-overlay ov))))))
+
 (defun gnus-summary-show-all-threads ()
   "Show all threads."
   (interactive)
-  (save-excursion
-    (let ((buffer-read-only nil))
-      (subst-char-in-region (point-min) (point-max) ?\^M ?\n t)))
+  (gnus-remove-overlays (point-min) (point-max) 'invisible 'gnus-sum)
   (gnus-summary-position-point))
 
 (defun gnus-summary-show-thread ()
   "Show thread subtrees.
 Returns nil if no thread was there to be shown."
   (interactive)
-  (let ((buffer-read-only nil)
-	(orig (point))
-	(end (point-at-eol))
-	;; Leave point at bol
-	(beg (progn (beginning-of-line) (point))))
-    (prog1
-	;; Any hidden lines here?
-	(search-forward "\r" end t)
-      (subst-char-in-region beg end ?\^M ?\n t)
+  (let* ((orig (point))
+	 (end (point-at-eol))
+	 ;; Leave point at bol
+	 (beg (progn (beginning-of-line) (if (bobp) (point) (1- (point)))))
+	 (eoi (when (eq (get-char-property end 'invisible) 'gnus-sum)
+		(if (fboundp 'next-single-char-property-change)
+		    (or (next-single-char-property-change end 'invisible)
+			(point-max))
+		  (while (progn
+			   (end-of-line 2)
+			   (and (not (eobp))
+				(eq (get-char-property (point) 'invisible)
+				    'gnus-sum))))
+		  (point)))))
+    (when eoi
+      (gnus-remove-overlays beg eoi 'invisible 'gnus-sum)
       (goto-char orig)
-      (gnus-summary-position-point))))
+      (gnus-summary-position-point)
+      eoi)))
 
 (defun gnus-summary-maybe-hide-threads ()
   "If requested, hide the threads that should be hidden."
@@ -11326,22 +11391,26 @@ If PREDICATE is supplied, threads that satisfy this predicate
 will not be hidden.
 Returns nil if no threads were there to be hidden."
   (interactive)
-  (let ((buffer-read-only nil)
-	(start (point))
+  (let ((start (point))
+	(starteol (line-end-position))
 	(article (gnus-summary-article-number)))
     (goto-char start)
     ;; Go forward until either the buffer ends or the subthread ends.
     (when (and (not (eobp))
 	       (or (zerop (gnus-summary-next-thread 1 t))
 		   (goto-char (point-max))))
-      (prog1
-	  (if (and (> (point) start)
-		   (search-backward "\n" start t))
-	      (progn
-		(subst-char-in-region start (point) ?\n ?\^M)
-		(gnus-summary-goto-subject article))
-	    (goto-char start)
-	    nil)))))
+      (if (and (> (point) start)
+	       ;; FIXME: this should actually search for a non-invisible \n.
+	       (search-backward "\n" start t))
+	  (progn
+	    (when (> (point) starteol)
+	      (gnus-remove-overlays starteol (point) 'invisible 'gnus-sum)
+	      (let ((ol (gnus-make-overlay starteol (point) nil t nil)))
+		(gnus-overlay-put ol 'invisible 'gnus-sum)
+		(gnus-overlay-put ol 'evaporate t)))
+	    (gnus-summary-goto-subject article))
+	(goto-char start)
+	nil))))
 
 (defun gnus-summary-go-to-next-thread (&optional previous)
   "Go to the same level (or less) next thread.

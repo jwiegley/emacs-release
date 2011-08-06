@@ -1,7 +1,7 @@
 ;;; reftex-index.el --- index support with RefTeX
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <dominik@science.uva.nl>
 ;; Maintainer: auctex-devel@gnu.org
@@ -424,8 +424,7 @@ With prefix 3, restrict index to region."
 
     (if (get-buffer-window buffer-name)
         (select-window (get-buffer-window buffer-name))
-      (let ((default-major-mode 'reftex-index-mode))
-        (switch-to-buffer buffer-name)))
+      (switch-to-buffer buffer-name))
 
     (or (eq major-mode 'reftex-index-mode) (reftex-index-mode))
 
@@ -1013,8 +1012,7 @@ When index is restricted, select the previous section as restriction criterion."
     (setq beg (match-beginning 0) end (match-end 0))
     (setq old (nth 2 data))
     (and (equal old new) (error "Entry unchanged"))
-    (save-excursion
-      (set-buffer (get-file-buffer (nth 3 data)))
+    (with-current-buffer (get-file-buffer (nth 3 data))
       (goto-char beg)
       (unless (looking-at (regexp-quote old))
         (error "This should not happen (reftex-index-change-entry)"))
@@ -1088,7 +1086,8 @@ When index is restricted, select the previous section as restriction criterion."
   "Go to the CHAR section in the index."
   (let ((pos (point))
         (case-fold-search nil))
-    (goto-line 3)
+    (goto-char (point-min))
+    (forward-line 2)
     (if (re-search-forward (concat "^" (char-to-string char)) nil t)
         (progn
           (beginning-of-line)
@@ -1594,7 +1593,7 @@ this function repeatedly."
           (while (re-search-forward re2 nil t)
             (push (cons (count-lines 1 (point)) (match-string 1)) superphrases)
             (incf ntimes2))))
-      (save-excursion
+      (save-current-buffer
         (while (setq file (pop files))
           (setq buf (reftex-get-file-buffer-force file))
           (when buf

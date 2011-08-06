@@ -1,6 +1,6 @@
 ;;; hashcash.el --- Add hashcash payments to email
 
-;; Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009  Free Software Foundation
+;; Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010  Free Software Foundation
 
 ;; Written by: Paul Foley <mycroft@actrix.gen.nz> (1997-2002)
 ;; Maintainer: Paul Foley <mycroft@actrix.gen.nz>
@@ -161,8 +161,7 @@ For example, you may want to set this to '(\"-Z2\") to reduce header length."
   "Generate a hashcash payment by finding a VAL-bit collison on STR."
   (if (and (> val 0)
 	   hashcash-path)
-      (save-excursion
-	(set-buffer (get-buffer-create " *hashcash*"))
+      (with-current-buffer (get-buffer-create " *hashcash*")
 	(erase-buffer)
 	(apply 'call-process hashcash-path nil t nil
 	       "-m" "-q" "-b" (number-to-string val) str

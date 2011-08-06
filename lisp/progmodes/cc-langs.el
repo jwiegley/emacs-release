@@ -1,7 +1,7 @@
 ;;; cc-langs.el --- language specific settings for CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2002- Alan Mackenzie
@@ -306,9 +306,9 @@ the evaluated constant value at compile time."
 	:style toggle :selected c-auto-newline]
        ["Hungry delete"         c-toggle-hungry-state
 	:style toggle :selected c-hungry-delete-key]
-       ["Subword mode"          c-subword-mode
-	:style toggle :selected (and (boundp 'c-subword-mode)
-                                     c-subword-mode)])))
+       ["Subword mode"          subword-mode
+	:style toggle :selected (and (boundp 'subword-mode)
+                                     subword-mode)])))
 
 
 ;;; Syntax tables.
@@ -2885,7 +2885,7 @@ tested at the beginning of every sexp in a suspected label,
 i.e. before \":\".  Only used if `c-recognize-colon-labels' is set."
   t (concat
      ;; Don't allow string literals.
-     "[\"']\\|"
+     "\"\\|"
      ;; All keywords except `c-label-kwds' and `c-protection-kwds'.
      (c-make-keywords-re t
        (set-difference (c-lang-const c-keywords)

@@ -1,11 +1,11 @@
 ;;; ja-dic-cnv.el --- convert a Japanese dictionary (SKK-JISYO.L) to Emacs Lisp
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009
+;;   2005, 2006, 2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
-;; Keywords: mule, multilingual, Japanese
+;; Keywords: i18n, mule, multilingual, Japanese
 
 ;; This file is part of GNU Emacs.
 
@@ -45,44 +45,30 @@
 ;; Name of a file to generate from SKK dictionary.
 (defvar ja-dic-filename "ja-dic.el")
 
-;; To make a generated ja-dic.el smaller.
-(define-coding-system 'iso-2022-7bit-short
- "Like `iso-2022-7bit' but no ASCII designation before SPC."
-  :coding-type 'iso-2022
-  :mnemonic ?J
-  :charset-list 'iso-2022
-  :designation [(ascii t) nil nil nil]
-  :flags '(short 7-bit designation))
-
 (defun skkdic-convert-okuri-ari (skkbuf buf)
   (message "Processing OKURI-ARI entries ...")
   (goto-char (point-min))
-  (save-excursion
-    (set-buffer buf)
+  (with-current-buffer buf
     (insert ";; Setting okuri-ari entries.\n"
 	    "(skkdic-set-okuri-ari\n"))
   (while (not (eobp))
-    (let ((from (point))
-	  to)
-      (end-of-line)
-      (setq to (point))
+    (if (/= (following-char) ?>)
+	(let ((from (point))
+	      (to (line-end-position)))
+	  (with-current-buffer buf
+	    (insert-buffer-substring skkbuf from to)
+	    (beginning-of-line)
+	    (insert "\"")
+	    (search-forward " ")
+	    (delete-char 1)		; delete the first '/'
+	    (let ((p (point)))
+	      (end-of-line)
+	      (delete-char -1)		; delete the last '/'
+	      (subst-char-in-region p (point) ?/ ? 'noundo))
+	    (insert "\"\n"))))
 
-      (save-excursion
-	(set-buffer buf)
-	(insert-buffer-substring skkbuf from to)
-	(beginning-of-line)
-	(insert "\"")
-	(search-forward " ")
-	(delete-char 1)			; delete the first '/'
-	(let ((p (point)))
-	  (end-of-line)
-	  (delete-char -1)		; delete the last '/'
-	  (subst-char-in-region p (point) ?/ ? 'noundo))
-	(insert "\"\n"))
-
-      (forward-line 1)))
-  (save-excursion
-    (set-buffer buf)
+    (forward-line 1))
+  (with-current-buffer buf
     (insert ")\n\n")))
 
 (defconst skkdic-postfix-list '(skkdic-postfix-list))
@@ -111,15 +97,13 @@
 (defun skkdic-convert-postfix (skkbuf buf)
   (message "Processing POSTFIX entries ...")
   (goto-char (point-min))
-  (save-excursion
-    (set-buffer buf)
+  (with-current-buffer buf
     (insert ";; Setting postfix entries.\n"
 	    "(skkdic-set-postfix\n"))
 
   ;; Initialize SKKDIC-POSTFIX-LIST by predefined data
   ;; SKKDIC-POSTFIX-DATA.
-  (save-excursion
-    (set-buffer buf)
+  (with-current-buffer buf
     (let ((l skkdic-postfix-data)
 	  kana candidates entry)
       (while l
@@ -146,8 +130,7 @@
 	(if (not (member str candidates))
 	    (setq candidates (cons str candidates)))
 	(goto-char (match-end 1)))
-      (save-excursion
-	(set-buffer buf)
+      (with-current-buffer buf
 	(insert "\"" kana)
 	(while candidates
 	  (insert " " (car candidates))
@@ -160,8 +143,7 @@
 				skkdic-postfix-list)))
 	  (setq candidates (cdr candidates)))
 	(insert "\"\n"))))
-  (save-excursion
-    (set-buffer buf)
+  (with-current-buffer buf
     (insert ")\n\n")))
 
 (defconst skkdic-prefix-list '(skkdic-prefix-list))
@@ -169,8 +151,7 @@
 (defun skkdic-convert-prefix (skkbuf buf)
   (message "Processing PREFIX entries ...")
   (goto-char (point-min))
-  (save-excursion
-    (set-buffer buf)
+  (with-current-buffer buf
     (insert ";; Setting prefix entries.\n"
 	    "(skkdic-set-prefix\n"))
   (save-excursion
@@ -182,16 +163,14 @@
 	  (if (not (member str candidates))
 	      (setq candidates (cons str candidates)))
 	  (goto-char (match-end 1)))
-	(save-excursion
-	  (set-buffer buf)
+	(with-current-buffer buf
 	  (insert "\"" kana)
 	  (while candidates
 	    (insert " " (car candidates))
 	    (set-nested-alist (car candidates) kana skkdic-prefix-list)
 	    (setq candidates (cdr candidates)))
 	  (insert "\"\n")))))
-  (save-excursion
-    (set-buffer buf)
+  (with-current-buffer buf
     (insert ")\n\n")))
 
 ;; FROM and TO point the head and tail of "/J../J../.../".
@@ -315,8 +294,7 @@
 
 (defun skkdic-convert-okuri-nasi (skkbuf buf)
   (message "Processing OKURI-NASI entries ...")
-  (save-excursion
-    (set-buffer buf)
+  (with-current-buffer buf
     (insert ";; Setting okuri-nasi entries.\n"
 	    "(skkdic-set-okuri-nasi\n")
     (let ((l (nreverse skkdic-okuri-nasi-entries))
@@ -354,13 +332,12 @@ The name of generated file is specified by the variable `ja-dic-filename'."
   (let* ((coding-system-for-read 'euc-japan)
 	 (skkbuf(find-file-noselect (expand-file-name filename)))
 	 (buf (get-buffer-create "*skkdic-work*")))
-    (save-excursion
-      ;; Setup and generate the header part of working buffer.
-      (set-buffer buf)
+    ;; Setup and generate the header part of working buffer.
+    (with-current-buffer buf
       (erase-buffer)
       (buffer-disable-undo)
       (insert ";;; ja-dic.el --- dictionary for Japanese input method"
-	      " -*-coding: iso-2022-jp; byte-compile-disable-print-circle:t; -*-\n"
+	      " -*-coding: euc-japan; byte-compile-disable-print-circle:t; -*-\n"
 	      ";;\tGenerated by the command `skkdic-convert'\n"
 	      ";;\tDate: " (current-time-string) "\n"
 	      ";;\tOriginal SKK dictionary file: "
@@ -415,15 +392,14 @@ The name of generated file is specified by the variable `ja-dic-filename'."
 	(skkdic-convert-okuri-nasi skkbuf buf)
 
 	;; Postfix
-	(save-excursion
-	  (set-buffer buf)
+	(with-current-buffer buf
 	  (goto-char (point-max))
 	  (insert ";;\n(provide 'ja-dic)\n\n;;; ja-dic.el ends here\n")))
 
       ;; Save the working buffer.
       (set-buffer buf)
       (set-visited-file-name (expand-file-name ja-dic-filename dirname) t)
-      (set-buffer-file-coding-system 'iso-2022-7bit-short)
+      (set-buffer-file-coding-system 'euc-japan)
       (save-buffer 0))
     (kill-buffer skkbuf)
     (switch-to-buffer buf)))

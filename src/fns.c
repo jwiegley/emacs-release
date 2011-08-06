@@ -1,7 +1,7 @@
 /* Random utility Lisp functions.
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997,
                  1998, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -24,6 +24,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <unistd.h>
 #endif
 #include <time.h>
+#include <setjmp.h>
 
 /* Note on some machines this defines `vector' as a typedef,
    so make sure we don't use that name in this file.  */
@@ -44,10 +45,8 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #ifdef HAVE_MENUS
 #if defined (HAVE_X_WINDOWS)
 #include "xterm.h"
-#elif defined (MAC_OS)
-#include "macterm.h"
 #endif
-#endif
+#endif /* HAVE_MENUS */
 
 #ifndef NULL
 #define NULL ((POINTER_TYPE *)0)
@@ -297,7 +296,7 @@ If string STR1 is greater, the value is a positive number N;
       else
 	{
 	  c1 = SREF (str1, i1++);
-	  c1 = unibyte_char_to_multibyte (c1);
+	  MAKE_CHAR_MULTIBYTE (c1);
 	}
 
       if (STRING_MULTIBYTE (str2))
@@ -305,7 +304,7 @@ If string STR1 is greater, the value is a positive number N;
       else
 	{
 	  c2 = SREF (str2, i2++);
-	  c2 = unibyte_char_to_multibyte (c2);
+	  MAKE_CHAR_MULTIBYTE (c2);
 	}
 
       if (c1 == c2)
@@ -661,7 +660,6 @@ concat (nargs, args, target_type, last_special)
 	    }
 	  toindex_byte += thislen_byte;
 	  toindex += thisleni;
-	  STRING_SET_CHARS (val, SCHARS (val));
 	}
       /* Copy a single-byte string to a multibyte string.  */
       else if (STRINGP (this) && STRINGP (val))
@@ -704,10 +702,10 @@ concat (nargs, args, target_type, last_special)
 		  {
 		    XSETFASTINT (elt, SREF (this, thisindex)); thisindex++;
 		    if (some_multibyte
-			&& XINT (elt) >= 0200
+			&& !ASCII_CHAR_P (XINT (elt))
 			&& XINT (elt) < 0400)
 		      {
-			c = unibyte_char_to_multibyte (XINT (elt));
+			c = BYTE8_TO_CHAR (XINT (elt));
 			XSETINT (elt, c);
 		      }
 		  }
@@ -1713,8 +1711,7 @@ to be sure of changing the value of `foo'.  */)
 	{
 	  if (STRING_MULTIBYTE (seq))
 	    {
-	      c = STRING_CHAR (SDATA (seq) + ibyte,
-			       SBYTES (seq) - ibyte);
+	      c = STRING_CHAR (SDATA (seq) + ibyte);
 	      cbytes = CHAR_BYTES (c);
 	    }
 	  else
@@ -1744,8 +1741,7 @@ to be sure of changing the value of `foo'.  */)
 	    {
 	      if (STRING_MULTIBYTE (seq))
 		{
-		  c = STRING_CHAR (SDATA (seq) + ibyte,
-				   SBYTES (seq) - ibyte);
+		  c = STRING_CHAR (SDATA (seq) + ibyte);
 		  cbytes = CHAR_BYTES (c);
 		}
 	      else
@@ -1929,38 +1925,6 @@ merge (org_l1, org_l2, pred)
 }
 
 
-#if 0 /* Unsafe version.  */
-DEFUN ("plist-get", Fplist_get, Splist_get, 2, 2, 0,
-       doc: /* Extract a value from a property list.
-PLIST is a property list, which is a list of the form
-\(PROP1 VALUE1 PROP2 VALUE2...).  This function returns the value
-corresponding to the given PROP, or nil if PROP is not
-one of the properties on the list.  */)
-     (plist, prop)
-     Lisp_Object plist;
-     Lisp_Object prop;
-{
-  Lisp_Object tail;
-
-  for (tail = plist;
-       CONSP (tail) && CONSP (XCDR (tail));
-       tail = XCDR (XCDR (tail)))
-    {
-      if (EQ (prop, XCAR (tail)))
-	return XCAR (XCDR (tail));
-
-      /* This function can be called asynchronously
-	 (setup_coding_system).  Don't QUIT in that case.  */
-      if (!interrupt_input_blocked)
-	QUIT;
-    }
-
-  CHECK_LIST_END (tail, prop);
-
-  return Qnil;
-}
-#endif
-
 /* This does not check for quits.  That is safe since it must terminate.  */
 
 DEFUN ("plist-get", Fplist_get, Splist_get, 2, 2, 0,
@@ -1986,6 +1950,13 @@ properties on the list.  This function never signals an error.  */)
       halftail = XCDR (halftail);
       if (EQ (tail, halftail))
 	break;
+
+#if 0 /* Unsafe version.  */
+      /* This function can be called asynchronously
+	 (setup_coding_system).  Don't QUIT in that case.  */
+      if (!interrupt_input_blocked)
+	QUIT;
+#endif
     }
 
   return Qnil;
@@ -2269,9 +2240,7 @@ internal_equal (o1, o2, depth, props)
 	return 0;
       return 1;
 
-    case Lisp_Int:
-    case Lisp_Symbol:
-    case Lisp_Type_Limit:
+    default:
       break;
     }
 
@@ -3218,7 +3187,7 @@ The data read from the system are decoded using `locale-coding-system'.  */)
   while (IS_BASE64_IGNORABLE (c))
 
 /* Table of characters coding the 64 values.  */
-static char base64_value_to_char[64] =
+static const char base64_value_to_char[64] =
 {
   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',	/*  0- 9 */
   'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',	/* 10-19 */
@@ -3230,7 +3199,7 @@ static char base64_value_to_char[64] =
 };
 
 /* Table of base64 values for first 128 characters.  */
-static short base64_char_to_value[128] =
+static const short base64_char_to_value[128] =
 {
   -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,	/*   0-  9 */
   -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,	/*  10- 19 */
@@ -3392,7 +3361,7 @@ base64_encode_1 (from, to, length, line_break, multibyte)
     {
       if (multibyte)
 	{
-	  c = STRING_CHAR_AND_LENGTH (from + i, length - i, bytes);
+	  c = STRING_CHAR_AND_LENGTH (from + i, bytes);
 	  if (CHAR_BYTE8_P (c))
 	    c = CHAR_TO_BYTE8 (c);
 	  else if (c >= 256)
@@ -3432,7 +3401,7 @@ base64_encode_1 (from, to, length, line_break, multibyte)
 
       if (multibyte)
 	{
-	  c = STRING_CHAR_AND_LENGTH (from + i, length - i, bytes);
+	  c = STRING_CHAR_AND_LENGTH (from + i, bytes);
 	  if (CHAR_BYTE8_P (c))
 	    c = CHAR_TO_BYTE8 (c);
 	  else if (c >= 256)
@@ -3456,7 +3425,7 @@ base64_encode_1 (from, to, length, line_break, multibyte)
 
       if (multibyte)
 	{
-	  c = STRING_CHAR_AND_LENGTH (from + i, length - i, bytes);
+	  c = STRING_CHAR_AND_LENGTH (from + i, bytes);
 	  if (CHAR_BYTE8_P (c))
 	    c = CHAR_TO_BYTE8 (c);
 	  else if (c >= 256)
@@ -4567,7 +4536,7 @@ sxhash (obj, depth)
 
   switch (XTYPE (obj))
     {
-    case Lisp_Int:
+    case_Lisp_Int:
       hash = XUINT (obj);
       break;
 
@@ -4605,8 +4574,9 @@ sxhash (obj, depth)
 
     case Lisp_Float:
       {
-	unsigned char *p = (unsigned char *) &XFLOAT_DATA (obj);
-	unsigned char *e = p + sizeof XFLOAT_DATA (obj);
+	double val = XFLOAT_DATA (obj);
+	unsigned char *p = (unsigned char *) &val;
+	unsigned char *e = p + sizeof val;
 	for (hash = 0; p < e; ++p)
 	  hash = SXHASH_COMBINE (hash, *p);
 	break;
@@ -5154,33 +5124,33 @@ void
 syms_of_fns ()
 {
   /* Hash table stuff.  */
-  Qhash_table_p = intern ("hash-table-p");
+  Qhash_table_p = intern_c_string ("hash-table-p");
   staticpro (&Qhash_table_p);
-  Qeq = intern ("eq");
+  Qeq = intern_c_string ("eq");
   staticpro (&Qeq);
-  Qeql = intern ("eql");
+  Qeql = intern_c_string ("eql");
   staticpro (&Qeql);
-  Qequal = intern ("equal");
+  Qequal = intern_c_string ("equal");
   staticpro (&Qequal);
-  QCtest = intern (":test");
+  QCtest = intern_c_string (":test");
   staticpro (&QCtest);
-  QCsize = intern (":size");
+  QCsize = intern_c_string (":size");
   staticpro (&QCsize);
-  QCrehash_size = intern (":rehash-size");
+  QCrehash_size = intern_c_string (":rehash-size");
   staticpro (&QCrehash_size);
-  QCrehash_threshold = intern (":rehash-threshold");
+  QCrehash_threshold = intern_c_string (":rehash-threshold");
   staticpro (&QCrehash_threshold);
-  QCweakness = intern (":weakness");
+  QCweakness = intern_c_string (":weakness");
   staticpro (&QCweakness);
-  Qkey = intern ("key");
+  Qkey = intern_c_string ("key");
   staticpro (&Qkey);
-  Qvalue = intern ("value");
+  Qvalue = intern_c_string ("value");
   staticpro (&Qvalue);
-  Qhash_table_test = intern ("hash-table-test");
+  Qhash_table_test = intern_c_string ("hash-table-test");
   staticpro (&Qhash_table_test);
-  Qkey_or_value = intern ("key-or-value");
+  Qkey_or_value = intern_c_string ("key-or-value");
   staticpro (&Qkey_or_value);
-  Qkey_and_value = intern ("key-and-value");
+  Qkey_and_value = intern_c_string ("key-and-value");
   staticpro (&Qkey_and_value);
 
   defsubr (&Ssxhash);
@@ -5200,17 +5170,17 @@ syms_of_fns ()
   defsubr (&Smaphash);
   defsubr (&Sdefine_hash_table_test);
 
-  Qstring_lessp = intern ("string-lessp");
+  Qstring_lessp = intern_c_string ("string-lessp");
   staticpro (&Qstring_lessp);
-  Qprovide = intern ("provide");
+  Qprovide = intern_c_string ("provide");
   staticpro (&Qprovide);
-  Qrequire = intern ("require");
+  Qrequire = intern_c_string ("require");
   staticpro (&Qrequire);
-  Qyes_or_no_p_history = intern ("yes-or-no-p-history");
+  Qyes_or_no_p_history = intern_c_string ("yes-or-no-p-history");
   staticpro (&Qyes_or_no_p_history);
-  Qcursor_in_echo_area = intern ("cursor-in-echo-area");
+  Qcursor_in_echo_area = intern_c_string ("cursor-in-echo-area");
   staticpro (&Qcursor_in_echo_area);
-  Qwidget_type = intern ("widget-type");
+  Qwidget_type = intern_c_string ("widget-type");
   staticpro (&Qwidget_type);
 
   staticpro (&string_char_byte_cache_string);
@@ -5224,18 +5194,18 @@ syms_of_fns ()
   DEFVAR_LISP ("features", &Vfeatures,
     doc: /* A list of symbols which are the features of the executing Emacs.
 Used by `featurep' and `require', and altered by `provide'.  */);
-  Vfeatures = Fcons (intern ("emacs"), Qnil);
-  Qsubfeatures = intern ("subfeatures");
+  Vfeatures = Fcons (intern_c_string ("emacs"), Qnil);
+  Qsubfeatures = intern_c_string ("subfeatures");
   staticpro (&Qsubfeatures);
 
 #ifdef HAVE_LANGINFO_CODESET
-  Qcodeset = intern ("codeset");
+  Qcodeset = intern_c_string ("codeset");
   staticpro (&Qcodeset);
-  Qdays = intern ("days");
+  Qdays = intern_c_string ("days");
   staticpro (&Qdays);
-  Qmonths = intern ("months");
+  Qmonths = intern_c_string ("months");
   staticpro (&Qmonths);
-  Qpaper = intern ("paper");
+  Qpaper = intern_c_string ("paper");
   staticpro (&Qpaper);
 #endif	/* HAVE_LANGINFO_CODESET */
 
@@ -5251,9 +5221,9 @@ non-nil.  */);
   DEFVAR_BOOL ("use-file-dialog", &use_file_dialog,
     doc: /* *Non-nil means mouse commands use a file dialog to ask for files.
 This applies to commands from menus and tool bar buttons even when
-they are initiated from the keyboard.  The value of `use-dialog-box'
-takes precedence over this variable, so a file dialog is only used if
-both `use-dialog-box' and this variable are non-nil.  */);
+they are initiated from the keyboard.  If `use-dialog-box' is nil,
+that disables the use of a file dialog, regardless of the value of
+this variable.  */);
   use_file_dialog = 1;
 
   defsubr (&Sidentity);

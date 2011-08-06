@@ -1,9 +1,9 @@
 ;;; characters.el --- set syntax and category for multibyte characters
 
-;; Copyright (C) 1997, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 1997, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009
+;;   2005, 2006, 2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 ;; Copyright (C) 2003
@@ -184,7 +184,8 @@ Combining diacritic or mark (Unicode General Category M)")
 (map-charset-chars #'modify-category-entry 'latin-jisx0201 ?r)
 
 (dolist (l '(katakana-jisx0201 japanese-jisx0208 japanese-jisx0212
-			       japanese-jisx0213-1 japanese-jisx0213-2))
+			       japanese-jisx0213-1 japanese-jisx0213-2
+			       cp932-2-byte))
   (map-charset-chars #'modify-category-entry l ?j))
 
 ;; Unicode equivalents of JISX0201-kana
@@ -1035,27 +1036,55 @@ Combining diacritic or mark (Unicode General Category M)")
  (lambda (range ignore) (set-char-table-range char-width-table range 2))
  'arabic-2-column)
 
-(defvar cjk-char-width-table
-  (let ((table (make-char-table nil)))
-    (dolist (charset '(big5 chinese-gb2312 chinese-cns11643-1
-			    japanese-jisx0208 cp932-2-byte korean-ksc5601))
-      (map-charset-chars #'(lambda (range arg)
-			     (set-char-table-range table range 2))
-			 charset))
-    (optimize-char-table table)
-    (set-char-table-parent table char-width-table)
-    table)
-  "Character width table used in CJK language environment.")
+;; Internal use only.
+;; Alist of locale symbol vs charsets.  In a language environment
+;; corresponding to the locale, width of characters in the charsets is
+;; set to 2.  Each element has the form:
+;;   (LOCALE TABLE (CHARSET (FROM-CODE . TO-CODE) ...) ...)
+;; LOCALE: locale symbol
+;; TABLE: char-table used for char-width-table, initially nil.
+;; CAHRSET: character set
+;; FROM-CODE, TO-CODE: range of code-points in CHARSET
 
-(defun use-cjk-char-width-table ()
-  "Internal use only.
-Setup char-width-table appropriate for CJK language environment."
-  (setq char-width-table cjk-char-width-table))
+(defvar cjk-char-width-table-list
+  '((ja_JP nil (japanese-jisx0208 (#x2121 . #x287E))
+	       (cp932-2-byte (#x8140 . #x879F)))
+    (zh_CN nil (chinese-gb2312 (#x2121 . #x297E)))
+    (zh_HK nil (big5-hkscs (#xA140 . #xA3FE) (#xC6A0 . #xC8FE)))
+    (zh_TW nil (big5 (#xA140 . #xA3FE))
+	       (chinese-cns11643-1 (#x2121 . #x427E)))
+    (ko_KR nil (korean-ksc5601 (#x2121 . #x2C7E)))))
+
+;; Internal use only.
+;; Setup char-width-table appropriate for a language environment
+;; corresponding to LOCALE-NAME (symbol).
+
+(defun use-cjk-char-width-table (locale-name)
+  (while (char-table-parent char-width-table)
+    (setq char-width-table (char-table-parent char-width-table)))
+  (let ((slot (assq locale-name cjk-char-width-table-list))
+	table)
+    (or slot (error "Unknown locale for CJK language environment: %s"
+		    locale-name))
+    (unless (nth 1 slot)
+      (let ((table (make-char-table nil)))
+	(dolist (charset-info (nthcdr 2 slot))
+	  (let ((charset (car charset-info)))
+	    (dolist (code-range (cdr charset-info))
+	      (map-charset-chars #'(lambda (range arg)
+				     (set-char-table-range table range 2))
+				 charset nil
+				 (car code-range) (cdr code-range)))))
+	(optimize-char-table table)
+	(set-char-table-parent table char-width-table)
+	(setcar (cdr slot) table)))
+    (setq char-width-table (nth 1 slot))))
 
 (defun use-default-char-width-table ()
   "Internal use only.
 Setup char-width-table appropriate for non-CJK language environment."
-  (setq char-width-table (char-table-parent cjk-char-width-table)))
+  (while (char-table-parent char-width-table)
+    (setq char-width-table (char-table-parent char-width-table))))
 
 (optimize-char-table (standard-case-table))
 (optimize-char-table (standard-syntax-table))
@@ -1095,7 +1124,7 @@ Setup char-width-table appropriate for non-CJK language environment."
 	 (#x0E00 #x0E5F thai)
 	 (#x0E80 #x0EDF lao)
 	 (#x0F00 #x0FFF tibetan)
-	 (#x1000 #x105F myanmar)
+	 (#x1000 #x109F burmese)
 	 (#x10A0 #x10FF georgian)
 	 (#x1100 #x11FF hangul)
 	 (#x1200 #x139F ethiopic)
@@ -1122,6 +1151,7 @@ Setup char-width-table appropriate for non-CJK language environment."
 	 (#x3400 #x9FAF han)
 	 (#xA000 #xA4CF yi)
 	 (#xAA00 #xAA5F cham)
+	 (#xAA60 #xAA7B burmese)
 	 (#xAA80 #xAADF tai-viet)
 	 (#xAC00 #xD7AF hangul)
 	 (#xF900 #xFAFF han)

@@ -1,7 +1,7 @@
 ;;; viper-keym.el --- Viper keymaps
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
@@ -165,8 +165,7 @@ Enter as a sexp.  Examples: \"\\C-z\", [(control ?z)]."
 			    [(control ?z)])))
 	   (mapc
 	    (lambda (buf)
-	      (save-excursion
-		(set-buffer buf)
+	      (with-current-buffer buf
 		(when (and (boundp 'viper-insert-basic-map)
 			   (keymapp viper-insert-basic-map))
 		  (when old-value

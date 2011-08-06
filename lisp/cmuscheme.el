@@ -1,7 +1,7 @@
 ;;; cmuscheme.el --- Scheme process in a buffer. Adapted from tea.el
 
 ;; Copyright (C) 1988, 1994, 1997, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Olin Shivers <olin.shivers@cs.cmu.edu>
 ;; Maintainer: FSF
@@ -248,7 +248,7 @@ is run).
   (setq scheme-program-name cmd)
   (setq scheme-buffer "*scheme*")
   (pop-to-buffer "*scheme*"))
-;;;###autoload (add-hook 'same-window-buffer-names "*scheme*")
+;;;###autoload (add-hook 'same-window-buffer-names (purecopy "*scheme*"))
 
 (defun scheme-start-file (prog)
   "Return the name of the start file corresponding to PROG.

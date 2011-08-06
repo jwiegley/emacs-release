@@ -1,6 +1,6 @@
 /* Dump an executable image.
    Copyright (C) 1985, 1986, 1987, 1988, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -104,6 +104,7 @@ static int adjust_lnnoptrs (int, int, char *);
 static int pagemask;
 
 #ifdef emacs
+#include <setjmp.h>
 #include "lisp.h"
 
 static void

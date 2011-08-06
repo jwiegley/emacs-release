@@ -1,6 +1,6 @@
 /* sound.c -- sound support.
    Copyright (C) 1998, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -44,6 +44,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <unistd.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <setjmp.h>
 #include "lisp.h"
 #include "dispextern.h"
 #include "atimer.h"
@@ -1525,13 +1526,13 @@ Internal use only, use `play-sound' instead.  */)
 void
 syms_of_sound ()
 {
-  QCdevice = intern (":device");
+  QCdevice = intern_c_string(":device");
   staticpro (&QCdevice);
-  QCvolume = intern (":volume");
+  QCvolume = intern_c_string (":volume");
   staticpro (&QCvolume);
-  Qsound = intern ("sound");
+  Qsound = intern_c_string ("sound");
   staticpro (&Qsound);
-  Qplay_sound_functions = intern ("play-sound-functions");
+  Qplay_sound_functions = intern_c_string ("play-sound-functions");
   staticpro (&Qplay_sound_functions);
 
   defsubr (&Splay_sound_internal);

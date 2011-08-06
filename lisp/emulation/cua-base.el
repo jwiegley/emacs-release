@@ -1,7 +1,7 @@
 ;;; cua-base.el --- emulate CUA key bindings
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Kim F. Storm <storm@cua.dk>
 ;; Keywords: keyboard emulation convenience cua
@@ -1196,8 +1196,8 @@ If ARG is the atom `-', scroll upward by nearly full screen."
 	(set-cursor-color color))
     (if (and type
 	     (symbolp type)
-	     (not (eq type default-cursor-type)))
-	(setq default-cursor-type type))))
+	     (not (eq type (default-value 'cursor-type))))
+	(setq-default cursor-type type))))
 
 
 ;;; Pre-command hook
@@ -1504,7 +1504,12 @@ If ARG is the atom `-', scroll upward by nearly full screen."
    forward-sexp backward-sexp
    forward-list backward-list
    forward-sentence backward-sentence
-   forward-paragraph backward-paragraph))
+   forward-paragraph backward-paragraph
+   ;; CC mode motion commands
+   c-forward-conditional c-backward-conditional
+   c-down-conditional c-up-conditional
+   c-down-conditional-with-else c-up-conditional-with-else
+   c-beginning-of-statement c-end-of-statement))
   (put cmd 'CUA 'move))
 
 ;; State prior to enabling cua-mode
@@ -1599,7 +1604,7 @@ shifted movement key, set `cua-highlight-region-shift-only'."
     (if (nth 2 cua--saved-state)
 	(pc-selection-mode 1))
     (setq shift-select-mode (nth 3 cua--saved-state))
-    (if (interactive-p)
+    (if (called-interactively-p 'interactive)
 	(message "CUA mode disabled.%s%s%s%s"
 		 (if (nth 1 cua--saved-state) " Delete-Selection" "")
 		 (if (and (nth 1 cua--saved-state) (nth 2 cua--saved-state)) " and" "")

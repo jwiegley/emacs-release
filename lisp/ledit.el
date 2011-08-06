@@ -1,7 +1,7 @@
 ;;; ledit.el --- Emacs side of ledit interface
 
 ;; Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: languages
@@ -94,11 +94,10 @@
   (if ledit-save-files
       (save-some-buffers))
   (if (get-buffer ledit-buffer)
-      (save-excursion
-       (set-buffer ledit-buffer)
-       (goto-char (point-min))
-       (write-region (point-min) (point-max) ledit-zap-file)
-       (erase-buffer)))
+      (with-current-buffer ledit-buffer
+        (goto-char (point-min))
+        (write-region (point-min) (point-max) ledit-zap-file)
+        (erase-buffer)))
   (suspend-emacs ledit-go-to-lisp-string)
   (load ledit-read-file t t))
 
@@ -108,12 +107,11 @@
   (if ledit-save-files
       (save-some-buffers))
   (if (get-buffer ledit-buffer)
-      (save-excursion
-       (set-buffer ledit-buffer)
-       (goto-char (point-min))
-       (insert "(declare (macros t))\n")
-       (write-region (point-min) (point-max) ledit-compile-file)
-       (erase-buffer)))
+      (with-current-buffer ledit-buffer
+        (goto-char (point-min))
+        (insert "(declare (macros t))\n")
+        (write-region (point-min) (point-max) ledit-compile-file)
+        (erase-buffer)))
   (suspend-emacs ledit-go-to-liszt-string)
   (load ledit-read-file t t))
 

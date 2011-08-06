@@ -1,7 +1,7 @@
 ;;; smtpmail.el --- simple SMTP protocol (RFC 821) for sending mail
 
 ;; Copyright (C) 1995, 1996, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Tomoji Kagatani <kagatani@rbc.ncl.omron.co.jp>
 ;; Maintainer: Simon Josefsson <simon@josefsson.org>
@@ -242,8 +242,7 @@ The list is in preference order.")
 	     (let ((sendmail-coding-system smtpmail-code-conv-from))
 	       (select-message-coding-system)))))
     (unwind-protect
-	(save-excursion
-	  (set-buffer tembuf)
+	(with-current-buffer tembuf
 	  (erase-buffer)
 	  ;; Use the same `buffer-file-coding-system' as in the mail
 	  ;; buffer, otherwise any `write-region' invocations (e.g., in

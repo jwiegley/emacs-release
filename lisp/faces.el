@@ -1,7 +1,8 @@
 ;;; faces.el --- Lisp faces
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -69,10 +70,11 @@ a font height that isn't optimal."
 ;; unavailable, and we fall back on the courier and helv families,
 ;; which are generally available.
 (defcustom face-font-family-alternatives
+  (mapcar (lambda (arg) (mapcar 'purecopy arg))
   '(("Monospace" "courier" "fixed")
     ("courier" "CMU Typewriter Text" "fixed")
     ("Sans Serif" "helv" "helvetica" "arial" "fixed")
-    ("helv" "helvetica" "arial" "fixed"))
+    ("helv" "helvetica" "arial" "fixed")))
   "Alist of alternative font family names.
 Each element has the form (FAMILY ALTERNATIVE1 ALTERNATIVE2 ...).
 If fonts of family FAMILY can't be loaded, try ALTERNATIVE1, then
@@ -87,6 +89,7 @@ ALTERNATIVE2 etc."
 
 ;; This is defined originally in xfaces.c.
 (defcustom face-font-registry-alternatives
+  (mapcar (lambda (arg) (mapcar 'purecopy arg))
   (if (eq system-type 'windows-nt)
       '(("iso8859-1" "ms-oemlatin")
 	("gb2312.1980" "gb2312" "gbk" "gb18030")
@@ -96,7 +99,7 @@ ALTERNATIVE2 etc."
     '(("gb2312.1980" "gb2312.80&gb8565.88" "gbk" "gb18030")
       ("jisx0208.1990" "jisx0208.1983" "jisx0208.1978")
       ("ksc5601.1989" "ksx1001.1992" "ksc5601.1987")
-      ("muletibetan-2" "muletibetan-0")))
+      ("muletibetan-2" "muletibetan-0"))))
   "Alist of alternative font registry names.
 Each element has the form (REGISTRY ALTERNATIVE1 ALTERNATIVE2 ...).
 If fonts of registry REGISTRY can be loaded, font selection
@@ -283,6 +286,11 @@ If FRAME is omitted or nil, use the selected frame."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defcustom face-x-resources
+  (mapcar
+   (lambda (arg)
+     ;; FIXME; can we purecopy some of the conses too?
+     (cons (car arg)
+	   (cons (purecopy (car (cdr arg))) (purecopy (cdr (cdr arg))))))
   '((:family (".attributeFamily" . "Face.AttributeFamily"))
     (:foundry (".attributeFoundry" . "Face.AttributeFoundry"))
     (:width (".attributeWidth" . "Face.AttributeWidth"))
@@ -302,7 +310,7 @@ If FRAME is omitted or nil, use the selected frame."
     (:bold (".attributeBold" . "Face.AttributeBold"))
     (:italic (".attributeItalic" . "Face.AttributeItalic"))
     (:font (".attributeFont" . "Face.AttributeFont"))
-    (:inherit (".attributeInherit" . "Face.AttributeInherit")))
+    (:inherit (".attributeInherit" . "Face.AttributeInherit"))))
   "List of X resources and classes for face attributes.
 Each element has the form (ATTRIBUTE ENTRY1 ENTRY2...) where ATTRIBUTE is
 the name of a face attribute, and each ENTRY is a cons of the form
@@ -552,7 +560,7 @@ If FACE is a face-alias, get the documentation for the target face."
     (if alias
         (progn
           (setq doc (get alias 'face-documentation))
-          (format "%s is an alias for the face `%s'.%s" face alias
+	  (format "%s is an alias for the face `%s'.%s" face alias
                   (if doc (format "\n%s" doc)
                     "")))
       (get face 'face-documentation))))
@@ -582,7 +590,7 @@ the default for new frames (this is done automatically each time an
 attribute is changed on all frames).
 
 ARGS must come in pairs ATTRIBUTE VALUE.  ATTRIBUTE must be a valid
-face attribute name. All attributes can be set to `unspecified';
+face attribute name.  All attributes can be set to `unspecified';
 this fact is not further mentioned below.
 
 The following attributes are recognized:
@@ -727,10 +735,10 @@ like an underlying face would be, with higher priority than underlying faces."
 	(unless foundry
 	  (setq foundry (match-string 1 family)))
 	(setq family (match-string 2 family)))
-      (when (stringp family)
+      (when (or (stringp family) (eq family 'unspecified))
 	(internal-set-lisp-face-attribute face :family (purecopy family)
 					  where))
-      (when (stringp foundry)
+      (when (or (stringp foundry) (eq foundry 'unspecified))
 	(internal-set-lisp-face-attribute face :foundry (purecopy foundry)
 					  where)))
     (while args
@@ -980,9 +988,9 @@ Otherwise, return a single face."
 (defun face-valid-attribute-values (attribute &optional frame)
   "Return valid values for face attribute ATTRIBUTE.
 The optional argument FRAME is used to determine available fonts
-and colors.  If it is nil or not specified, the selected frame is
-used.  Value is an alist of (NAME . VALUE) if ATTRIBUTE expects a value
-out of a set of discrete values.  Value is `integerp' if ATTRIBUTE expects
+and colors.  If it is nil or not specified, the selected frame is used.
+Value is an alist of (NAME . VALUE) if ATTRIBUTE expects a value out
+of a set of discrete values.  Value is `integerp' if ATTRIBUTE expects
 an integer value."
   (let ((valid
          (case attribute
@@ -1039,7 +1047,7 @@ an integer value."
       valid)))
 
 
-(defvar face-attribute-name-alist
+(defconst face-attribute-name-alist
   '((:family . "font family")
     (:foundry . "font foundry")
     (:width . "character set width")
@@ -1227,7 +1235,7 @@ Value is a list (FACE NEW-VALUE) where FACE is the face read
 ;;; Listing faces.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar list-faces-sample-text
+(defconst list-faces-sample-text
   "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   "*Text string to display as the sample text for `list-faces-display'.")
 
@@ -1265,8 +1273,7 @@ arg, prompt for a regular expression."
     (setq max-length (1+ max-length)
 	  line-format (format "%%-%ds" max-length))
     (with-help-window "*Faces*"
-      (save-excursion
-	(set-buffer standard-output)
+      (with-current-buffer standard-output
 	(setq truncate-lines t)
 	(insert
 	 (substitute-command-keys
@@ -1347,14 +1354,14 @@ If FRAME is omitted or nil, use the selected frame."
 		  (:inherit . "Inherit")))
 	(max-width (apply #'max (mapcar #'(lambda (x) (length (cdr x)))
 					attrs))))
-    (help-setup-xref (list #'describe-face face) (interactive-p))
+    (help-setup-xref (list #'describe-face face)
+		     (called-interactively-p 'interactive))
     (unless face
       (setq face 'default))
     (if (not (listp face))
 	(setq face (list face)))
     (with-help-window (help-buffer)
-      (save-excursion
-	(set-buffer standard-output)
+      (with-current-buffer standard-output
 	(dolist (f face)
 	  (if (stringp f) (setq f (intern f)))
 	  ;; We may get called for anonymous faces (i.e., faces
@@ -1368,10 +1375,29 @@ If FRAME is omitted or nil, use the selected frame."
 		    file-name)
 		(insert (concat " (" (propertize "sample" 'font-lock-face f) ")"))
 		(princ (concat " (" customize-label ")\n"))
-		(insert "Documentation: "
-			(or (face-documentation f)
-			    "Not documented as a face.")
-			"\n")
+		;; FIXME not sure how much of this belongs here, and
+		;; how much in `face-documentation'.  The latter is
+		;; not used much, but needs to return nil for
+		;; undocumented faces.
+		(let ((alias (get f 'face-alias))
+		      (face f)
+		      obsolete)
+		  (when alias
+		    (setq face alias)
+		    (insert
+		     (format "\n  %s is an alias for the face `%s'.\n%s"
+			     f alias
+			     (if (setq obsolete (get f 'obsolete-face))
+				 (format "  This face is obsolete%s; use `%s' instead.\n"
+					 (if (stringp obsolete)
+					     (format " since %s" obsolete)
+					   "")
+					 alias)
+			       ""))))
+		  (insert "\nDocumentation:\n"
+			  (or (face-documentation face)
+			      "Not documented as a face.")
+			  "\n\n"))
 		(with-current-buffer standard-output
 		  (save-excursion
 		    (re-search-backward
@@ -1921,28 +1947,25 @@ according to the `background-mode' and `display-type' frame parameters."
 (defun x-handle-named-frame-geometry (parameters)
   "Add geometry parameters for a named frame to parameter list PARAMETERS.
 Value is the new parameter list."
-  (let* ((name (or (cdr (assq 'name parameters))
-		   (cdr (assq 'name default-frame-alist))))
-	 (x-resource-name name)
-	 (res-geometry (when name
-			 ;; FIXME: x-get-resource fails if the X
-			 ;; connection is not open, e.g. if we call
-			 ;; make-frame-on-display.  We should detect
-			 ;; this case here, and open the connection.
-			 ;; (Bug#3194).
-			 (ignore-errors
-			   (x-get-resource "geometry" "Geometry")))))
-    (when res-geometry
-      (let ((parsed (x-parse-geometry res-geometry)))
-	;; If the resource specifies a position, call the position
-	;; and size "user-specified".
-	(when (or (assq 'top parsed)
-		  (assq 'left parsed))
-	  (setq parsed (append '((user-position . t) (user-size . t)) parsed)))
-	;; Put the geometry parameters at the end.  Copy
-	;; default-frame-alist so that they go after it.
-	(setq parameters (append parameters default-frame-alist parsed))))
-    parameters))
+  ;; Note that `x-resource-name' has a global meaning.
+  (let ((x-resource-name (or (cdr (assq 'name parameters))
+			     (cdr (assq 'name default-frame-alist)))))
+    (when x-resource-name
+      ;; Before checking X resources, we must have an X connection.
+      (or (window-system)
+	  (x-display-list)
+	  (x-open-connection (or (cdr (assq 'display parameters))
+				 x-display-name)))
+      (let (res-geometry parsed)
+	(and (setq res-geometry (x-get-resource "geometry" "Geometry"))
+	     (setq parsed (x-parse-geometry res-geometry))
+	     (setq parameters
+		   (append parameters default-frame-alist parsed
+			   ;; If the resource specifies a position,
+			   ;; take note of that.
+			   (if (or (assq 'top parsed) (assq 'left parsed))
+			       '((user-position . t) (user-size . t)))))))))
+  parameters)
 
 
 (defun x-handle-reverse-video (frame parameters)
@@ -2013,7 +2036,7 @@ Calculate the face definitions using the face specs, custom theme
 settings, X resources, and `face-new-frame-defaults'.
 Finally, apply any relevant face attributes found amongst the
 frame parameters in PARAMETERS and `default-frame-alist'."
-  (dolist (face (nreverse (face-list)))
+  (dolist (face (nreverse (face-list))) ;Why reverse?  --Stef
     (condition-case ()
 	(progn
 	  ;; Initialize faces from face spec and custom theme.
@@ -2141,7 +2164,7 @@ terminal type to a different value."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Compatiblity with 20.2
+;;; Compatibility with 20.2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Update a frame's faces when we change its default font.
@@ -2261,9 +2284,14 @@ terminal type to a different value."
   "Basic face for highlighting."
   :group 'basic-faces)
 
+;; Region face: under NS, default to the system-defined selection
+;; color (optimized for the fixed white background of other apps),
+;; if background is light.
 (defface region
   '((((class color) (min-colors 88) (background dark))
      :background "blue3")
+    (((class color) (min-colors 88) (background light) (type ns))
+     :background "ns_selection_color")
     (((class color) (min-colors 88) (background light))
      :background "lightgoldenrod2")
     (((class color) (min-colors 16) (background dark))
@@ -2341,6 +2369,8 @@ terminal type to a different value."
   :version "21.1"
   :group 'mode-line-faces
   :group 'basic-faces)
+;; No need to define aliases of this form for new faces.
+(define-obsolete-face-alias 'modeline 'mode-line "21.1")
 
 (defface mode-line-inactive
   '((default
@@ -2357,6 +2387,7 @@ terminal type to a different value."
   :version "22.1"
   :group 'mode-line-faces
   :group 'basic-faces)
+(define-obsolete-face-alias 'modeline-inactive 'mode-line-inactive "22.1")
 
 (defface mode-line-highlight
   '((((class color) (min-colors 88))
@@ -2367,6 +2398,7 @@ terminal type to a different value."
   :version "22.1"
   :group 'mode-line-faces
   :group 'basic-faces)
+(define-obsolete-face-alias 'modeline-highlight 'mode-line-highlight "22.1")
 
 (defface mode-line-emphasis
   '((t (:weight bold)))
@@ -2382,12 +2414,7 @@ Use the face `mode-line-highlight' for features that can be selected."
   :version "22.1"
   :group 'mode-line-faces
   :group 'basic-faces)
-
-;; Make `modeline' an alias for `mode-line', for compatibility.
-(put 'modeline 'face-alias 'mode-line)
-(put 'modeline-inactive 'face-alias 'mode-line-inactive)
-(put 'modeline-highlight 'face-alias 'mode-line-highlight)
-(put 'modeline-buffer-id 'face-alias 'mode-line-buffer-id)
+(define-obsolete-face-alias 'modeline-buffer-id 'mode-line-buffer-id "22.1")
 
 (defface header-line
   '((default
@@ -2509,6 +2536,9 @@ Note: Other faces cannot inherit from the cursor face."
   :group 'menu
   :group 'basic-faces)
 
+(defface help-argument-name '((((supports :slant italic)) :inherit italic))
+  "Face to highlight argument names in *Help* buffers."
+  :group 'help)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Manipulating font names.
@@ -2553,16 +2583,16 @@ Note: Other faces cannot inherit from the cursor face."
       (encoding		"[^-]+")
       )
   (setq x-font-regexp
-	(concat "\\`\\*?[-?*]"
+	(purecopy (concat "\\`\\*?[-?*]"
 		foundry - family - weight\? - slant\? - swidth - adstyle -
 		pixelsize - pointsize - resx - resy - spacing - avgwidth -
 		registry - encoding "\\*?\\'"
-		))
+		)))
   (setq x-font-regexp-head
-	(concat "\\`[-?*]" foundry - family - weight\? - slant\?
-		"\\([-*?]\\|\\'\\)"))
-  (setq x-font-regexp-slant (concat - slant -))
-  (setq x-font-regexp-weight (concat - weight -))
+	(purecopy (concat "\\`[-?*]" foundry - family - weight\? - slant\?
+		"\\([-*?]\\|\\'\\)")))
+  (setq x-font-regexp-slant (purecopy (concat - slant -)))
+  (setq x-font-regexp-weight (purecopy (concat - weight -)))
   nil)
 
 

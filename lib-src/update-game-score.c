@@ -1,6 +1,6 @@
 /* update-game-score.c --- Update a score file
 
-Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
   Free Software Foundation, Inc.
 
 Author: Colin Walters <walters@debian.org>
@@ -21,7 +21,7 @@ You should have received a copy of the GNU General Public License
 along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
-/* This program is allows a game to securely and atomically update a
+/* This program allows a game to securely and atomically update a
    score file.  It should be installed setuid, owned by an appropriate
    user like `games'.
 
@@ -254,15 +254,15 @@ main (argc, argv)
       lose_syserr ("Failed to read scores file");
     }
   push_score (&scores, &scorecount, newscore, user_id, newdata);
+  sort_scores (scores, scorecount, reverse);
   /* Limit the number of scores.  If we're using reverse sorting, then
      we should increment the beginning of the array, to skip over the
      *smallest* scores.  Otherwise, we just decrement the number of
      scores, since the smallest will be at the end. */
   if (scorecount > MAX_SCORES)
     scorecount -= (scorecount - MAX_SCORES);
-    if (reverse)
-      scores += (scorecount - MAX_SCORES);
-  sort_scores (scores, scorecount, reverse);
+  if (reverse)
+    scores += (scorecount - MAX_SCORES);
   if (write_scores (scorefile, scores, scorecount) < 0)
     {
       unlock_file (scorefile, lockstate);

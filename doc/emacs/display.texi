@@ -1,6 +1,8 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 2000, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+@c   Free Software Foundation, Inc.
+
 @c See file emacs.texi for copying conditions.
 @node Display, Search, Registers, Top
 @chapter Controlling the Display
@@ -53,8 +55,10 @@ commands:
 
 @table @kbd
 @item C-l
-Scroll the selected window to center point vertically within it and
-redisplay the screen (@code{recenter-top-bottom}).
+Scroll the selected window so that the current line is the center-most
+text line; on subsequent consecutive invocations, make the current
+line the top-most line, the bottom-most line, and so forth in cyclic
+order; also, maybe redisplay the screen (@code{recenter-top-bottom}).
 @item C-v
 @itemx @key{next}
 @itemx @key{PageDown}
@@ -70,20 +74,27 @@ Scroll heuristically to bring useful information onto the screen
 
 @kindex C-l
 @findex recenter-top-bottom
-  The most basic scrolling command is @kbd{C-l}
-(@code{recenter-top-bottom}).  This @dfn{recenters} the selected
-window, scrolling it so that the current screen line is exactly in the
-center of the window, or as close to the center as possible.  It also
-clears the screen and redisplays all windows; this is useful in case
-the screen becomes garbled for any reason (@pxref{Screen Garbled}).
+  @kbd{C-l} (@code{recenter-top-bottom}) is a basic scrolling command.
+It @dfn{recenters} the selected window, scrolling it so that the
+current screen line is exactly in the center of the window, or as
+close to the center as possible.
 
   Typing @kbd{C-l} twice in a row (@kbd{C-l C-l}) scrolls the window
 so that point is on the topmost screen line.  Typing a third @kbd{C-l}
 scrolls the window so that point is on the bottom-most screen line.
 Each successive @kbd{C-l} cycles through these three screen positions.
-(If you change the variable @code{scroll-margin} to a non-zero value
-@var{n}, Emacs leaves @var{n} screen lines between point and the top
-or bottom of the window.  @xref{Auto Scrolling}.)
+
+@vindex recenter-positions
+  You can change the cycling order by customizing the list variable
+@code{recenter-positions}.  Each list element should be the symbol
+@code{top}, @code{middle}, or @code{bottom}, or a number; an integer
+number means to move the line to the specified screen line, while a
+floating-point number between 0.0 and 1.0 specifies a percentage of
+the screen space from the top.  The default, @code{(middle top
+bottom)}, is the cycling order described above.  Furthermore, if you
+change the variable @code{scroll-margin} to a non-zero value @var{n},
+Emacs always leaves @var{n} screen lines between point and the top or
+bottom of the window (@pxref{Auto Scrolling}).
 
   You can also supply @kbd{C-l} with a prefix argument.  With a plain
 prefix argument, @kbd{C-u C-l}, Emacs simply recenters point.  With a
@@ -95,6 +106,18 @@ puts point on the bottom line, and @kbd{C-u - 5 C-l} puts it five
 lines from the bottom.  When given an argument, @kbd{C-l} does not
 clear the screen or cycle through different screen positions.
 
+  The more primitive command @code{recenter} behaves like
+@code{recenter-top-bottom}, but does not cycle among screen positions.
+Prior to Emacs 23, @kbd{C-l} was bound to @code{recenter}.
+
+@vindex recenter-redisplay
+  If the variable @code{recenter-redisplay} has a non-@code{nil}
+value, Emacs clears and redisplays the screen each time @kbd{C-l}
+recenters the window; the special value @code{tty} (the default) says
+to do this on text-terminal frames only.  Redisplaying is useful in
+case the screen becomes garbled for any reason (@pxref{Screen
+Garbled}).
+
 @kindex C-v
 @kindex M-v
 @kindex next
@@ -103,7 +126,7 @@ clear the screen or cycle through different screen positions.
 @kindex PageUp
 @findex scroll-up
 @findex scroll-down
-  To read the buffer a windowful at a time, use @kbd{C-v}
+  To read the buffer a windowful at a time, type @kbd{C-v}
 (@code{scroll-up}).  This scrolls forward by nearly the whole window
 height.  The effect is to take the two lines at the bottom of the
 window and put them at the top, followed by lines that were not
@@ -201,13 +224,17 @@ lines are truncated rather than continued (@pxref{Line Truncation}).
 If a window shows truncated lines, Emacs performs automatic horizontal
 scrolling whenever point moves off the left or right edge of the
 screen.  To disable automatic horizontal scrolling, set the variable
-@code{auto-hscroll-mode} to @code{nil}.
+@code{auto-hscroll-mode} to @code{nil}.  Note that when the automatic
+horizontal scrolling is turned off, if point moves off the edge of the
+screen, the cursor disappears to indicate that.  (On text-mode
+terminals, the cursor is left at the edge instead.)
 
 @vindex hscroll-margin
   The variable @code{hscroll-margin} controls how close point can get
-to the window's edges before automatic scrolling occurs.  It
-is measured in columns.  If the value is 5, then moving point within 5
-columns of an edge causes horizontal scrolling away from that edge.
+to the window's edges before automatic scrolling occurs.  It is
+measured in columns.  For example, if the value is 5, then moving
+point within 5 columns of an edge causes horizontal scrolling away
+from that edge.
 
 @vindex hscroll-step
   The variable @code{hscroll-step} determines how many columns to
@@ -231,10 +258,18 @@ Scroll to the right (@code{scroll-right}).
 @kindex C-x >
 @findex scroll-left
 @findex scroll-right
-  @kbd{C-x <} (@code{scroll-left}) scrolls the selected window to the
-left by the full width of the window, less two columns.  (In other
-words, the text in the window moves left relative to the window.)
-With a numeric argument @var{n}, it scrolls by @var{n} columns.
+  @kbd{C-x <} (@code{scroll-left}) scrolls text in the selected window
+to the left by the full width of the window, less two columns.  (In
+other words, the text in the window moves left relative to the
+window.)  With a numeric argument @var{n}, it scrolls by @var{n}
+columns.
+
+  If the text is scrolled to the left, and point moves off the left
+edge of the window, the cursor will freeze at the left edge of the
+window, until point moves back to the displayed portion of the text.
+This is independent of the current setting of
+@code{auto-hscroll-mode}, which, for text scrolled to the left, only
+affects the behavior at the right edge of the window.
 
   @kbd{C-x >} (@code{scroll-right}) scrolls similarly to the right.
 The window cannot be scrolled any farther to the right once it is
@@ -501,6 +536,12 @@ default face, just like @kbd{C-x C-+} and @kbd{C-x C--} respectively.
 You may find it convenient to bind to these commands, rather than
 @code{text-scale-adjust}.
 
+@cindex set buffer face height
+@findex text-scale-set
+The command @code{text-scale-set} sets the height of the default face
+in the current buffer to an absolute level specified by its prefix
+argument.
+
 @findex text-scale-mode
   The above commands automatically enable or disable the minor mode
 @code{text-scale-mode}, depending on whether the current font scaling
@@ -683,8 +724,8 @@ the buffer is loaded.  For example, to highlight all occurrences of
 the word ``whim'' using the default face (a yellow background)
 @kbd{C-x w h whim @key{RET} @key{RET}}.  Any face can be used for
 highlighting, Hi Lock provides several of its own and these are
-pre-loaded into a history list.  While being prompted for a face use
-@kbd{M-p} and @kbd{M-n} to cycle through them.
+pre-loaded into a list of default values.  While being prompted
+for a face use @kbd{M-n} and @kbd{M-p} to cycle through them.
 
 You can use this command multiple times, specifying various regular
 expressions to highlight in different ways.
@@ -736,15 +777,14 @@ have Hi Lock highlight the edited patterns.
 
 @vindex hi-lock-file-patterns-policy
 The variable @code{hi-lock-file-patterns-policy} controls whether Hi
-Lock mode should automatically extract and highlight patterns found in
-a file when it is visited.  Its value can be @code{nil} (never
-highlight), @code{t} (highlight the patterns), @code{ask} (query the
-user), or a function.  If it is a function,
-@code{hi-lock-find-patterns} calls it with the patterns as argument;
-if the function returns non-@code{nil}, the patterns are used.  The
-default is @code{nil}.  Note that patterns are always highlighted if
-you call @code{hi-lock-find-patterns} directly, regardless of the
-value of this variable.
+Lock mode should automatically extract and highlight patterns found in a
+file when it is visited.  Its value can be @code{nil} (never highlight),
+@code{ask} (query the user), or a function.  If it is a function,
+@code{hi-lock-find-patterns} calls it with the patterns as argument; if
+the function returns non-@code{nil}, the patterns are used.  The default
+is @code{ask}.  Note that patterns are always highlighted if you call
+@code{hi-lock-find-patterns} directly, regardless of the value of this
+variable.
 
 @vindex hi-lock-exclude-modes
 Also, @code{hi-lock-find-patterns} does nothing if the current major
@@ -808,11 +848,6 @@ both arrow bitmaps in right fringe.  To show just the angle bitmaps in
 the left fringe, but no arrow bitmaps, use @code{((top .  left)
 (bottom . left))}.
 
-@vindex default-indicate-buffer-boundaries
-  The value of the variable @code{default-indicate-buffer-boundaries}
-is the default value for @code{indicate-buffer-boundaries} in buffers
-that do not override it.
-
 @node Useless Whitespace
 @section Useless Whitespace
 
@@ -842,7 +877,6 @@ portion (@pxref{Narrowing}), type @kbd{M-x delete-trailing-whitespace
 @key{RET}}.  This command does not remove newline characters.
 
 @vindex indicate-empty-lines
-@vindex default-indicate-empty-lines
 @cindex unused lines
 @cindex fringes, and unused line indication
   Emacs can indicate unused lines at the end of the window with a
@@ -852,11 +886,11 @@ lines at the end of the buffer then stand out because they do not have
 this image in the fringe.
 
   To enable this feature, set the buffer-local variable
-@code{indicate-empty-lines} to a non-@code{nil} value.  The default
-value of this variable is controlled by the variable
-@code{default-indicate-empty-lines}; by setting that variable, you
-can enable or disable this feature for all new buffers.  (This feature
-currently doesn't work on text-only terminals.)
+@code{indicate-empty-lines} to a non-@code{nil} value.  You can enable
+or disable this feature for all new buffers by setting the default
+value of this variable, e.g.@: @code{(setq-default
+indicate-empty-lines t)};.  (This feature currently doesn't work on
+text-only terminals.)
 
 @node Selective Display
 @section Selective Display
@@ -1048,17 +1082,15 @@ buffers are displayed with their graphics, as are non-@acronym{ASCII} multibyte
 printing characters (octal codes above 0400).
 
 @vindex tab-width
-@vindex default-tab-width
   Some @acronym{ASCII} control characters are displayed in special
 ways.  The newline character (octal code 012) is displayed by starting
 a new line.  The tab character (octal code 011) is displayed by moving
 to the next tab stop column (normally every 8 columns).  The number of
 spaces per tab is controlled by the variable @code{tab-width}, which
 must have an integer value between 1 and 1000, inclusive, and is made
-local by changing it.  Note that how the tab character in the buffer
+buffer-local by changing it.  Note that how the tab character in the buffer
 is displayed has nothing to do with the definition of @key{TAB} as a
-command.  The variable @code{default-tab-width} controls the default
-value of this variable for buffers where you have not set it locally.
+command.
 
   Other @acronym{ASCII} control characters are normally displayed as a caret
 (@samp{^}) followed by the non-control version of the character; thus,
@@ -1246,10 +1278,6 @@ it.
 @c the reason for that pxref is because an xref early in the
 @c ``echo area'' section leads here.
 
-@vindex inverse-video
-  If the variable @code{inverse-video} is non-@code{nil}, Emacs attempts
-to invert all the lines of the display from what they normally are.
-
 @vindex visible-bell
   If the variable @code{visible-bell} is non-@code{nil}, Emacs attempts
 to make the whole screen blink when it would normally make an audible bell
@@ -1264,35 +1292,51 @@ there is someting to echo.  @xref{Echo Area}.
 
 @vindex baud-rate
   The variable @anchor{baud-rate}@code{baud-rate} holds the output
-speed of the terminal, as far as Emacs knows.  Setting this variable
-does not change the speed of actual data transmission, but the value
-is used for calculations.  On text-only terminals, it affects padding,
-and decisions about whether to scroll part of the screen or redraw it
-instead.  It also affects the behavior of incremental search.
-
-  On graphical displays, @code{baud-rate} is only used to determine
-how frequently to look for pending input during display updating.  A
+speed of the terminal.  Setting this variable does not change the
+speed of actual data transmission, but the value is used for
+calculations.  On text-only terminals, it affects padding, and
+decisions about whether to scroll part of the screen or redraw it
+instead.  It also affects the behavior of incremental search.  On
+graphical displays, @code{baud-rate} is only used to determine how
+frequently to look for pending input during display updating.  A
 higher value of @code{baud-rate} means that check for pending input
 will be done less frequently.
 
+@cindex mouse pointer
 @cindex hourglass pointer display
+@vindex display-hourglass
 @vindex hourglass-delay
-  On graphical displays, Emacs can optionally display the mouse pointer
-in a special shape to say that Emacs is busy.  To turn this feature on
-or off, customize the group @code{cursor}.  You can also control the
-amount of time Emacs must remain busy before the busy indicator is
-displayed, by setting the variable @code{hourglass-delay}.
+  On graphical displays, Emacs displays the mouse pointer as an
+hourglass if Emacs is busy.  To disable this feature, set the variable
+@code{display-hourglass} to @code{nil}.  The variable
+@code{hourglass-delay} determines the number of seconds of ``busy
+time'' before the hourglass is shown; the default is 1.
+
+@vindex make-pointer-invisible
+  If the mouse pointer lies inside an Emacs frame, Emacs makes it
+invisible each time you type a character to insert text, to prevent it
+from obscuring the text.  (To be precise, the hiding occurs when you
+type a ``self-inserting'' character.  @xref{Inserting Text}.)  Moving
+the mouse pointer makes it visible again.  To disable this feature,
+set the variable @code{make-pointer-invisible} to @code{nil}.
+
+@vindex underline-minimum-offset
+@vindex x-underline-at-descent-line
+  On graphical displays, the variable @code{underline-minimum-offset}
+determines the minimum distance between the baseline and underline, in
+pixels, for underlined text.  By default, the value is 1; increasing
+it may improve the legibility of underlined text for certain fonts.
+(However, Emacs will never draw the underline below the current line
+area.)  The variable @code{x-underline-at-descent-line} determines how
+to draw underlined text.  The default is @code{nil}, which means to
+draw it at the baseline level of the font; if you change it to
+@code{nil}, Emacs draws the underline at the same height as the font's
+descent line.
 
 @vindex overline-margin
-  On graphical displays, the variable @code{overline-margin} specifies
-the vertical position of an overline above the text, including the
-height of the overline itself, in pixels.  The default value is 2.
-
-@vindex x-underline-at-descent-line
-  On graphical displays, Emacs normally draws an underline at the
-baseline level of the font.  If @code{x-underline-at-descent-line} is
-non-@code{nil}, Emacs draws the underline at the same height as the
-font's descent line.
+  The variable @code{overline-margin} specifies the vertical position
+of an overline above the text, including the height of the overline
+itself, in pixels; the default is 2.
 
 @findex tty-suppress-bold-inverse-default-colors
   On some text-only terminals, bold face and inverse video together

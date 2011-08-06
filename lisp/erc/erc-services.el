@@ -1,6 +1,6 @@
 ;;; erc-services.el --- Identify to NickServ
 
-;; Copyright (C) 2002, 2003, 2004, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -303,7 +303,11 @@ The last two elements are optional."
 		 (boolean :tag "Use current nick in identify message?")
 		 (choice :tag "Command to use (optional)"
 		  (string :tag "Command")
-		  (const :tag "No special command necessary" nil)))))
+		  (const :tag "No special command necessary" nil))
+		 (choice :tag "Detect Success"
+			 (regexp :tag "Pattern to match")
+			 (const :tag "Do not try to detect success" nil)))))
+
 
 (defsubst erc-nickserv-alist-sender (network &optional entry)
   (nth 1 (or entry (assoc network erc-nickserv-alist))))

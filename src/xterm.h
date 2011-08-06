@@ -1,6 +1,6 @@
 /* Definitions and headers for communication with X protocol.
    Copyright (C) 1989, 1993, 1994, 1998, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -165,6 +165,9 @@ struct x_display_info
 
   /* The cursor to use for vertical scroll bars.  */
   Cursor vertical_scroll_bar_cursor;
+
+  /* The invisible cursor used for pointer blanking.  */
+  Cursor invisible_cursor;
 
 #ifdef USE_GTK
   /* The GDK cursor for scroll bars and popup menus.  */
@@ -352,14 +355,21 @@ struct x_display_info
   size_t x_dnd_atoms_size;
   size_t x_dnd_atoms_length;
 
-  /* Extended window manager hints, Atoms supported by the window manager  */
+  /* Extended window manager hints, Atoms supported by the window manager and
+     atoms for settig the window type.  */
   Atom *net_supported_atoms;
   int nr_net_supported_atoms;
   Window net_supported_window;
+  Atom Xatom_net_window_type, Xatom_net_window_type_tooltip;
 
   /* Atoms dealing with maximization and fullscreen */
   Atom Xatom_net_wm_state, Xatom_net_wm_state_fullscreen_atom,
-    Xatom_net_wm_state_maximized_horz, Xatom_net_wm_state_maximized_vert;
+    Xatom_net_wm_state_maximized_horz, Xatom_net_wm_state_maximized_vert,
+    Xatom_net_wm_state_sticky;
+
+  /* XSettings atoms and windows.  */
+  Atom Xatom_xsettings_sel, Xatom_xsettings_prop, Xatom_xsettings_mgr;
+  Window xsettings_window;
 };
 
 #ifdef HAVE_X_I18N
@@ -372,10 +382,13 @@ extern void check_x P_ ((void));
 
 extern struct frame *x_window_to_frame P_ ((struct x_display_info *, int));
 
-#if defined (USE_X_TOOLKIT) || defined (USE_GTK)
 extern struct frame *x_any_window_to_frame P_ ((struct x_display_info *, int));
-extern struct frame *x_non_menubar_window_to_frame P_ ((struct x_display_info *, int));
+extern struct frame *x_menubar_window_to_frame P_ ((struct x_display_info *, int));
 extern struct frame *x_top_window_to_frame P_ ((struct x_display_info *, int));
+
+#if ! defined (USE_X_TOOLKIT) && ! defined (USE_GTK)
+#define x_any_window_to_frame x_window_to_frame
+#define x_top_window_to_frame x_window_to_frame
 #endif
 
 /* This is a chain of structures for all the X displays currently in use.  */
@@ -521,6 +534,7 @@ struct x_output
   Cursor hand_cursor;
   Cursor hourglass_cursor;
   Cursor horizontal_drag_cursor;
+  Cursor current_cursor;
 
   /* Window whose cursor is hourglass_cursor.  This window is temporarily
      mapped to display an hourglass cursor.  */
@@ -963,6 +977,9 @@ extern unsigned int x_x_to_emacs_modifiers P_ ((struct x_display_info *,
 						unsigned));
 extern int x_display_pixel_height P_ ((struct x_display_info *));
 extern int x_display_pixel_width P_ ((struct x_display_info *));
+
+extern void x_set_sticky P_ ((struct frame *, Lisp_Object, Lisp_Object));
+extern void x_wait_for_event P_ ((struct frame *, int));
 
 /* Defined in xselect.c */
 

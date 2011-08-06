@@ -1,7 +1,7 @@
 ;;; calendar.el --- calendar functions
 
 ;; Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1997,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Edward M. Reingold <reingold@cs.uiuc.edu>
@@ -114,7 +114,7 @@
 
 ;;; Code:
 
-(require 'cal-loaddefs)
+(load "cal-loaddefs" nil t)
 
 ;; Avoid recursive load of calendar when loading cal-menu.  Yuck.
 (provide 'calendar)
@@ -161,6 +161,16 @@ three options overrides the value of `calendar-view-diary-initially-flag'."
   "Minimum height `calendar-generate-window' should use for calendar window."
   :type 'integer
   :version "22.1"
+  :group 'calendar)
+
+;; See discussion in bug#1806.
+(defcustom calendar-split-width-threshold nil
+  "Value to use for `split-width-threshold' when creating a calendar.
+This only affects frames wider than the default value of
+`split-width-threshold'."
+  :type '(choice (const nil)
+                 (integer))
+  :version "23.2"
   :group 'calendar)
 
 (defcustom calendar-week-start-day 0
@@ -214,10 +224,10 @@ If nil, make an icon of the frame.  If non-nil, delete the frame."
 (defface calendar-today
   '((t (:underline t)))
   "Face for indicating today's date in the calendar.
-See `calendar-today-marker'."
+See the variable `calendar-today-marker'."
   :group 'calendar-faces)
-;; Backward-compatibility alias.  FIXME make obsolete.
-(put 'calendar-today-face 'face-alias 'calendar-today)
+
+(define-obsolete-face-alias 'calendar-today-face 'calendar-today "22.1")
 
 (defface diary
   '((((min-colors 88) (class color) (background light))
@@ -234,8 +244,8 @@ See `calendar-today-marker'."
 Used to mark diary entries in the calendar (see `diary-entry-marker'),
 and to highlight the date header in the fancy diary."
   :group 'calendar-faces)
-;; Backward-compatibility alias.  FIXME make obsolete.
-(put 'diary-face 'face-alias 'diary)
+
+(define-obsolete-face-alias 'diary-face 'diary "22.1")
 
 (defface holiday
   '((((class color) (background light))
@@ -247,8 +257,8 @@ and to highlight the date header in the fancy diary."
   "Face for indicating in the calendar dates that have holidays.
 See `calendar-holiday-marker'."
   :group 'calendar-faces)
-;; Backward-compatibility alias.  FIXME make obsolete.
-(put 'holiday-face 'face-alias 'holiday)
+
+(define-obsolete-face-alias 'holiday-face 'holiday "22.1")
 
 ;; These briefly checked font-lock-mode, but that is broken, since it
 ;; is a buffer-local variable, and which buffer happens to be current
@@ -1280,22 +1290,61 @@ If optional prefix argument ARG is non-nil, prompts for the month
 and year, else uses the current date.  If NODISPLAY is non-nil, don't
 display the generated calendar."
   (interactive "P")
-  (set-buffer (get-buffer-create calendar-buffer))
-  (calendar-mode)
-  (let* ((pop-up-windows t)
-         (split-height-threshold 1000)
-         (date (if arg (calendar-read-date t)
-                 (calendar-current-date)))
-         (month (calendar-extract-month date))
-         (year (calendar-extract-year date)))
-    (calendar-increment-month month year (- calendar-offset))
-    ;; Display the buffer before calling calendar-generate-window so that it
-    ;; can get a chance to adjust the window sizes to the frame size.
-    (or nodisplay (pop-to-buffer calendar-buffer))
-    (calendar-generate-window month year)
-    (if (and calendar-view-diary-initially-flag
-             (calendar-date-is-visible-p date))
-        (diary-view-entries)))
+  (let ((buff (current-buffer)))
+    (set-buffer (get-buffer-create calendar-buffer))
+    (calendar-mode)
+    (let* ((pop-up-windows t)
+           ;; Not really needed now, but means we use exactly the same
+           ;; behavior as before in the non-wide case (see below).
+           (split-height-threshold 1000)
+           (split-width-threshold calendar-split-width-threshold)
+           (date (if arg (calendar-read-date t)
+                   (calendar-current-date)))
+           (month (calendar-extract-month date))
+           (year (calendar-extract-year date)))
+      (calendar-increment-month month year (- calendar-offset))
+      ;; Display the buffer before calling calendar-generate-window so that it
+      ;; can get a chance to adjust the window sizes to the frame size.
+      (unless nodisplay
+        ;; We want a window configuration that looks something like
+        ;; X        X | Y
+        ;; -        -----
+        ;; C        Z | C
+        ;; where C is the calendar, and the LHS is the traditional,
+        ;; non-wide frame, and the RHS is the wide frame case.
+        ;; We should end up in the same state regardless of whether the
+        ;; windows were initially split or not.
+        ;; Previously, we only thought about the non-wide case.
+        ;; We could just set split-height-threshold to 1000, relying on
+        ;; the fact that the window splitting treated a single window as
+        ;; a special case and would always split it (vertically).  The
+        ;; same thing does not work in the wide-frame case, so now we do
+        ;; the splitting by hand.
+        ;; See discussion in bug#1806.
+        ;; Actually, this still does not do quite the right thing in the
+        ;; wide frame case if started from a configuration like the LHS.
+        ;; Eg if you start with a non-wide frame, call calendar, then
+        ;; make the frame wider.  This one is problematic because you
+        ;; might need to split a totally unrelated window.  Oh well, it
+        ;; seems unlikely, and perhaps respecting the original layout is
+        ;; the right thing in that case.
+        ;;
+        ;; Is this a wide frame?  If so, split it horizontally.
+        (if (window-splittable-p t) (split-window-horizontally))
+        (pop-to-buffer calendar-buffer)
+        ;; Has the window already been split vertically?
+        (when (and (not (window-dedicated-p))
+                   (window-full-height-p))
+          (let ((win (split-window-vertically)))
+            ;; In the upper window, show whatever was visible before.
+            ;; This looks better than using other-buffer.
+            (switch-to-buffer buff)
+            ;; Switch to the lower window with the calendar buffer.
+            (select-window win))))
+      (calendar-generate-window month year)
+      (if (and calendar-view-diary-initially-flag
+               (calendar-date-is-visible-p date))
+          (diary-view-entries))))
   (if calendar-view-holidays-initially-flag
       (let* ((diary-buffer (get-file-buffer diary-file))
              (diary-window (if diary-buffer (get-buffer-window diary-buffer)))
@@ -1325,7 +1374,12 @@ Optional integers MON and YR are used instead of today's date."
     ;; Don't do any window-related stuff if we weren't called from a
     ;; window displaying the calendar.
     (when in-calendar-window
-      (if (or (one-window-p t) (not (window-full-width-p)))
+      ;; The second test used to be window-full-width-p.
+      ;; Not sure what it was/is for, except perhaps some way of saying
+      ;; "try not to mess with existing configurations".
+      ;; If did the wrong thing on wide frames, where we have done a
+      ;; horizontal split in calendar-basic-setup.
+      (if (or (one-window-p t) (not (window-safely-shrinkable-p)))
           ;; Don't mess with the window size, but ensure that the first
           ;; line is fully visible.
           (set-window-vscroll nil 0)
@@ -1594,6 +1648,14 @@ line."
     (define-key map [down-mouse-2]
       (easy-menu-binding cal-menu-global-mouse-menu))
 
+    ;; Left-click moves us forward in time, right-click backwards.
+    ;; cf scroll-bar.el.
+    (define-key map [vertical-scroll-bar mouse-1] 'calendar-scroll-left)
+    (define-key map [vertical-scroll-bar drag-mouse-1] 'calendar-scroll-left)
+    ;; down-mouse-2 stays as scroll-bar-drag.
+    (define-key map [vertical-scroll-bar mouse-3] 'calendar-scroll-right)
+    (define-key map [vertical-scroll-bar drag-mouse-3] 'calendar-scroll-right)
+
     map)
   "Keymap for `calendar-mode'.")
 
@@ -1784,10 +1846,15 @@ the STRINGS are just concatenated and the result truncated."
          (t (set-buffer buffer)
             (bury-buffer))))))
 
-(defun calendar-current-date ()
-  "Return the current date in a list (month day year)."
-  (let ((now (decode-time)))
-    (list (nth 4 now) (nth 3 now) (nth 5 now))))
+(defun calendar-current-date (&optional offset)
+  "Return the current date in a list (month day year).
+Optional integer OFFSET is a number of days from the current date."
+  (let* ((now (decode-time))
+         (now (list (nth 4 now) (nth 3 now) (nth 5 now))))
+    (if (zerop (or offset 0))
+        now
+      (calendar-gregorian-from-absolute
+       (+ offset (calendar-absolute-from-gregorian now))))))
 
 (defun calendar-column-to-segment ()
   "Convert current column to calendar month \"segment\".
@@ -2332,6 +2399,7 @@ The date is marked with `calendar-today-marker'.  You might want to add
 this function to `calendar-today-visible-hook'."
   (calendar-mark-visible-date (calendar-cursor-to-date) calendar-today-marker))
 
+;; FIXME why the car? Almost every usage calls list on the args.
 (defun calendar-date-compare (date1 date2)
   "Return t if DATE1 is before DATE2, nil otherwise.
 The actual dates are in the car of DATE1 and DATE2."
@@ -2442,7 +2510,7 @@ DATE is (month day year).  Calendars that do not apply are omitted."
            (format "Mayan date: %s"
                    (calendar-mayan-date-string date))))))
 
-(declare-function x-popup-menu "xmenu.c" (position menu))
+(declare-function x-popup-menu "menu.c" (position menu))
 
 (defun calendar-print-other-dates (&optional event)
   "Show dates on other calendars for date under the cursor.

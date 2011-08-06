@@ -1,7 +1,7 @@
 ;;; cc-vars.el --- user customization variables for CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2002- Alan Mackenzie
@@ -451,7 +451,7 @@ comment-only lines."
   :group 'c)
 
 (make-obsolete-variable 'c-comment-continuation-stars
-			'c-block-comment-prefix)
+			'c-block-comment-prefix "21.1")
 
 ;; Although c-comment-continuation-stars is obsolete, we look at it in
 ;; some places in CC Mode anyway, so make the compiler ignore it

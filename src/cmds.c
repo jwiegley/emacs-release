@@ -1,6 +1,6 @@
 /* Simple built-in editing commands.
    Copyright (C) 1985, 1993, 1994, 1995, 1996, 1997, 1998, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -20,6 +20,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
+#include <setjmp.h>
 #include "lisp.h"
 #include "commands.h"
 #include "buffer.h"
@@ -29,6 +30,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "keyboard.h"
 #include "keymap.h"
 #include "dispextern.h"
+#include "frame.h"
 
 Lisp_Object Qkill_forward_chars, Qkill_backward_chars, Vblink_paren_function;
 
@@ -315,15 +317,42 @@ N was explicitly specified.  */)
   return value;
 }
 
+int nonundocount;
+
 /* Note that there's code in command_loop_1 which typically avoids
    calling this.  */
 DEFUN ("self-insert-command", Fself_insert_command, Sself_insert_command, 1, 1, "p",
        doc: /* Insert the character you type.
-Whichever character you type to run this command is inserted.  */)
+Whichever character you type to run this command is inserted.
+Before insertion, `expand-abbrev' is executed if the inserted character does
+not have word syntax and the previous character in the buffer does.
+After insertion, the value of `auto-fill-function' is called if the
+`auto-fill-chars' table has a non-nil value for the inserted character.  */)
      (n)
      Lisp_Object n;
 {
+  int remove_boundary = 1;
   CHECK_NUMBER (n);
+
+  if (!EQ (Vthis_command, current_kboard->Vlast_command))
+    nonundocount = 0;
+
+  if (NILP (Vexecuting_kbd_macro)
+      && !EQ (minibuf_window, selected_window))
+    {
+      if (nonundocount <= 0 || nonundocount >= 20)
+	{
+	  remove_boundary = 0;
+	  nonundocount = 0;
+	}
+      nonundocount++;
+    }
+
+  if (remove_boundary
+      && CONSP (current_buffer->undo_list)
+      && NILP (XCAR (current_buffer->undo_list)))
+    /* Remove the undo_boundary that was just pushed.  */
+    current_buffer->undo_list = XCDR (current_buffer->undo_list);
 
   /* Barf if the key that invoked this was not a character.  */
   if (!CHARACTERP (last_command_event))
@@ -333,29 +362,26 @@ Whichever character you type to run this command is inserted.  */)
 				    XINT (last_command_event));
     if (XINT (n) >= 2 && NILP (current_buffer->overwrite_mode))
       {
-	int modified_char = character;
-	/* Add the offset to the character, for Finsert_char.
-	   We pass internal_self_insert the unmodified character
-	   because it itself does this offsetting.  */
-	if (! NILP (current_buffer->enable_multibyte_characters))
-	  modified_char = unibyte_char_to_multibyte (modified_char);
-
 	XSETFASTINT (n, XFASTINT (n) - 2);
 	/* The first one might want to expand an abbrev.  */
 	internal_self_insert (character, 1);
 	/* The bulk of the copies of this char can be inserted simply.
 	   We don't have to handle a user-specified face specially
 	   because it will get inherited from the first char inserted.  */
-	Finsert_char (make_number (modified_char), n, Qt);
+	Finsert_char (make_number (character), n, Qt);
 	/* The last one might want to auto-fill.  */
 	internal_self_insert (character, 0);
       }
     else
       while (XINT (n) > 0)
 	{
+	  int val;
 	  /* Ok since old and new vals both nonneg */
 	  XSETFASTINT (n, XFASTINT (n) - 1);
-	  internal_self_insert (character, XFASTINT (n) != 0);
+	  val = internal_self_insert (character, XFASTINT (n) != 0);
+	  if (val == 2)
+	    nonundocount = 0;
+	  frame_make_pointer_invisible ();
 	}
   }
 
@@ -471,8 +497,6 @@ internal_self_insert (c, noautofill)
       hairy = 2;
     }
 
-  if (NILP (current_buffer->enable_multibyte_characters))
-    MAKE_CHAR_MULTIBYTE (c);
   synt = SYNTAX (c);
 
   if (!NILP (current_buffer->abbrev_mode)
@@ -481,7 +505,7 @@ internal_self_insert (c, noautofill)
       && PT > BEGV
       && (!NILP (current_buffer->enable_multibyte_characters)
 	  ? SYNTAX (XFASTINT (Fprevious_char ())) == Sword
-	  : (SYNTAX (unibyte_char_to_multibyte (XFASTINT (Fprevious_char ())))
+	  : (SYNTAX (UNIBYTE_TO_CHAR (XFASTINT (Fprevious_char ())))
 	     == Sword)))
     {
       int modiff = MODIFF;
@@ -566,16 +590,16 @@ internal_self_insert (c, noautofill)
 void
 syms_of_cmds ()
 {
-  Qkill_backward_chars = intern ("kill-backward-chars");
+  Qkill_backward_chars = intern_c_string ("kill-backward-chars");
   staticpro (&Qkill_backward_chars);
 
-  Qkill_forward_chars = intern ("kill-forward-chars");
+  Qkill_forward_chars = intern_c_string ("kill-forward-chars");
   staticpro (&Qkill_forward_chars);
 
-  Qoverwrite_mode_binary = intern ("overwrite-mode-binary");
+  Qoverwrite_mode_binary = intern_c_string ("overwrite-mode-binary");
   staticpro (&Qoverwrite_mode_binary);
 
-  Qexpand_abbrev = intern ("expand-abbrev");
+  Qexpand_abbrev = intern_c_string ("expand-abbrev");
   staticpro (&Qexpand_abbrev);
 
   DEFVAR_LISP ("self-insert-face", &Vself_insert_face,
@@ -611,6 +635,7 @@ keys_of_cmds ()
 {
   int n;
 
+  nonundocount = 0;
   initial_define_key (global_map, Ctl ('I'), "self-insert-command");
   for (n = 040; n < 0177; n++)
     initial_define_key (global_map, n, "self-insert-command");

@@ -1,7 +1,7 @@
 ;;; gnus-art.el --- article mode commands for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -727,8 +727,8 @@ Each element is a regular expression."
   :type '(repeat regexp)
   :group 'gnus-article-various)
 
-(make-obsolete-variable 'gnus-article-hide-pgp-hook
-			"This variable is obsolete in Gnus 5.10.")
+(make-obsolete-variable 'gnus-article-hide-pgp-hook nil
+			"Gnus 5.10 (Emacs-22.1)")
 
 (defface gnus-button
   '((t (:weight bold)))
@@ -766,6 +766,7 @@ Obsolete; use the face `gnus-signature' for customizations instead."
   :group 'gnus-article-signature)
 ;; backward-compatibility alias
 (put 'gnus-signature-face 'face-alias 'gnus-signature)
+(put 'gnus-signature-face 'obsolete-face "22.1")
 
 (defface gnus-header-from
   '((((class color)
@@ -781,6 +782,7 @@ Obsolete; use the face `gnus-signature' for customizations instead."
   :group 'gnus-article-highlight)
 ;; backward-compatibility alias
 (put 'gnus-header-from-face 'face-alias 'gnus-header-from)
+(put 'gnus-header-from-face 'obsolete-face "22.1")
 
 (defface gnus-header-subject
   '((((class color)
@@ -796,6 +798,7 @@ Obsolete; use the face `gnus-signature' for customizations instead."
   :group 'gnus-article-highlight)
 ;; backward-compatibility alias
 (put 'gnus-header-subject-face 'face-alias 'gnus-header-subject)
+(put 'gnus-header-subject-face 'obsolete-face "22.1")
 
 (defface gnus-header-newsgroups
   '((((class color)
@@ -813,6 +816,7 @@ articles."
   :group 'gnus-article-highlight)
 ;; backward-compatibility alias
 (put 'gnus-header-newsgroups-face 'face-alias 'gnus-header-newsgroups)
+(put 'gnus-header-newsgroups-face 'obsolete-face "22.1")
 
 (defface gnus-header-name
   '((((class color)
@@ -828,6 +832,7 @@ articles."
   :group 'gnus-article-highlight)
 ;; backward-compatibility alias
 (put 'gnus-header-name-face 'face-alias 'gnus-header-name)
+(put 'gnus-header-name-face 'obsolete-face "22.1")
 
 (defface gnus-header-content
   '((((class color)
@@ -842,6 +847,7 @@ articles."
   :group 'gnus-article-highlight)
 ;; backward-compatibility alias
 (put 'gnus-header-content-face 'face-alias 'gnus-header-content)
+(put 'gnus-header-content-face 'obsolete-face "22.1")
 
 (defcustom gnus-header-face-alist
   '(("From" nil gnus-header-from)
@@ -1217,8 +1223,8 @@ predicate.  See Info node `(gnus)Customizing Articles'."
   :link '(custom-manual "(gnus)Customizing Articles")
   :type gnus-article-treat-custom)
 
-(make-obsolete-variable 'gnus-treat-strip-pgp
-			"This option is obsolete in Gnus 5.10.")
+(make-obsolete-variable 'gnus-treat-strip-pgp nil
+			"Gnus 5.10 (Emacs 22.1)")
 
 (defcustom gnus-treat-strip-pem nil
   "Strip PEM signatures.
@@ -1409,15 +1415,19 @@ predicate.  See Info node `(gnus)Customizing Articles'."
   :type gnus-article-treat-custom)
 
 (make-obsolete-variable 'gnus-treat-display-xface
-			'gnus-treat-display-x-face)
+			'gnus-treat-display-x-face "22.1")
 
 (defcustom gnus-treat-display-x-face
   (and (not noninteractive)
        (gnus-image-type-available-p 'xbm)
        (if (featurep 'xemacs)
 	   (featurep 'xface)
-	 (and (string-match "^0x" (shell-command-to-string "uncompface"))
-	      (executable-find "icontopbm")))
+	 (condition-case nil
+             (and (string-match "^0x" (shell-command-to-string "uncompface"))
+                  (executable-find "icontopbm"))
+           ;; shell-command-to-string may signal an error, e.g. if
+           ;; shell-file-name is not found.
+           (error nil)))
        'head)
   "Display X-Face headers.
 Valid values are nil and `head'.
@@ -4270,7 +4280,6 @@ If variable `gnus-use-long-file-name' is non-nil, it is
   "s" gnus-article-show-summary
   "\C-c\C-m" gnus-article-mail
   "?" gnus-article-describe-briefly
-  "e" gnus-summary-edit-article
   "<" beginning-of-buffer
   ">" end-of-buffer
   "\C-c\C-i" gnus-info-find-node
@@ -4281,6 +4290,7 @@ If variable `gnus-use-long-file-name' is non-nil, it is
   "\C-hc" gnus-article-describe-key-briefly
   "\C-hb" gnus-article-describe-bindings
 
+  "e" gnus-article-read-summary-keys
   "\C-d" gnus-article-read-summary-keys
   "\M-*" gnus-article-read-summary-keys
   "\M-#" gnus-article-read-summary-keys
@@ -4740,6 +4750,23 @@ General format specifiers can also be used.  See Info node
 		(vector (caddr c) (car c) :active t))
 	      gnus-mime-button-commands)))
 
+(defmacro gnus-bind-safe-url-regexp (&rest body)
+  "Bind `mm-w3m-safe-url-regexp' according to `gnus-safe-html-newsgroups'."
+  `(let ((mm-w3m-safe-url-regexp
+	  (let ((group (if (and (eq major-mode 'gnus-article-mode)
+				(gnus-buffer-live-p
+				 gnus-article-current-summary))
+			   (with-current-buffer gnus-article-current-summary
+			     gnus-newsgroup-name)
+			 gnus-newsgroup-name)))
+	    (if (cond ((stringp gnus-safe-html-newsgroups)
+		       (string-match gnus-safe-html-newsgroups group))
+		      ((consp gnus-safe-html-newsgroups)
+		       (member group gnus-safe-html-newsgroups)))
+		nil
+	      mm-w3m-safe-url-regexp))))
+     ,@body))
+
 (defun gnus-mime-button-menu (event prefix)
  "Construct a context-sensitive menu of MIME commands."
  (interactive "e\nP")
@@ -4765,7 +4792,7 @@ General format specifiers can also be used.  See Info node
 	(or (search-forward "\n\n") (goto-char (point-max)))
 	(let ((inhibit-read-only t))
 	  (delete-region (point) (point-max))
-	  (mm-display-parts handles))))))
+	  (gnus-bind-safe-url-regexp (mm-display-parts handles)))))))
 
 (defun gnus-article-jump-to-part (n)
   "Jump to MIME part N."
@@ -4839,15 +4866,9 @@ and `gnus-mime-delete-part', and not provided at run-time normally."
 	 ,gnus-summary-buffer no-highlight))
      t)
     (gnus-article-edit-done)
-    (gnus-summary-expand-window)
-    (gnus-summary-show-article)
+    (gnus-configure-windows 'article)
     (when (and current-id (integerp gnus-auto-select-part))
-      (gnus-article-jump-to-part
-       (if (text-property-any (point-min) (point-max)
-			      'gnus-part (+ current-id gnus-auto-select-part))
-	   (+ current-id gnus-auto-select-part)
-	 (with-current-buffer gnus-article-buffer
-	   (length gnus-article-mime-handle-alist)))))))
+      (gnus-article-jump-to-part (+ current-id gnus-auto-select-part)))))
 
 (defun gnus-mime-replace-part (file)
   "Replace MIME part under point with an external body."
@@ -5267,7 +5288,7 @@ If no internal viewer is available, use an external viewer."
       (when handle
 	(if (mm-handle-undisplayer handle)
 	    (mm-remove-part handle)
-	  (mm-display-part handle))))))
+	  (gnus-bind-safe-url-regexp (mm-display-part handle)))))))
 
 (defun gnus-mime-action-on-part (&optional action)
   "Do something with the MIME attachment at \(point\)."
@@ -5488,7 +5509,7 @@ N is the numerical prefix."
 		    (save-restriction
 		      (narrow-to-region (point)
 					(if (eobp) (point) (1+ (point))))
-		      (mm-display-part handle)
+		      (gnus-bind-safe-url-regexp (mm-display-part handle))
 		      ;; We narrow to the part itself and
 		      ;; then call the treatment functions.
 		      (goto-char (point-min))
@@ -5767,7 +5788,7 @@ If displaying \"text/html\" is discouraged \(see
 				       (set-buffer gnus-summary-buffer)
 				     (error))
 				   gnus-newsgroup-ignored-charsets)))
-	      (mm-display-part handle t))
+	      (gnus-bind-safe-url-regexp (mm-display-part handle t)))
 	    (goto-char (point-max)))
 	   ((and text not-attachment)
 	    (when move
@@ -5903,7 +5924,7 @@ If displaying \"text/html\" is discouraged \(see
 		  (mail-parse-ignored-charsets
 		   (with-current-buffer gnus-summary-buffer
 		     gnus-newsgroup-ignored-charsets)))
-	      (mm-display-part preferred)
+	      (gnus-bind-safe-url-regexp (mm-display-part preferred))
 	      ;; Do highlighting.
 	      (save-excursion
 		(save-restriction
@@ -6277,27 +6298,6 @@ not have a face in `gnus-article-boring-faces'."
   (interactive)
   (gnus-message 6 (substitute-command-keys "\\<gnus-article-mode-map>\\[gnus-article-goto-next-page]:Next page	 \\[gnus-article-goto-prev-page]:Prev page  \\[gnus-article-show-summary]:Show summary  \\[gnus-info-find-node]:Run Info  \\[gnus-article-describe-briefly]:This help")))
 
-(defun gnus-article-summary-command ()
-  "Execute the last keystroke in the summary buffer."
-  (interactive)
-  (let ((obuf (current-buffer))
-	(owin (current-window-configuration))
-	func)
-    (switch-to-buffer gnus-article-current-summary 'norecord)
-    (setq func (lookup-key (current-local-map) (this-command-keys)))
-    (call-interactively func)
-    (set-buffer obuf)
-    (set-window-configuration owin)
-    (set-window-point (get-buffer-window (current-buffer)) (point))))
-
-(defun gnus-article-summary-command-nosave ()
-  "Execute the last keystroke in the summary buffer."
-  (interactive)
-  (let (func)
-    (pop-to-buffer gnus-article-current-summary)
-    (setq func (lookup-key (current-local-map) (this-command-keys)))
-    (call-interactively func)))
-
 (defun gnus-article-check-buffer ()
   "Beep if not in an article buffer."
   (unless (equal major-mode 'gnus-article-mode)
@@ -6340,7 +6340,7 @@ not have a face in `gnus-article-boring-faces'."
 	  (pop-to-buffer gnus-article-current-summary)
 	  ;; We disable the pick minor mode commands.
 	  (let (gnus-pick-mode)
-	    (setq func (lookup-key (current-local-map) keys))))
+	    (setq func (key-binding keys t))))
 	(if (or (not func)
 		(numberp func))
 	    (ding)
@@ -6365,9 +6365,9 @@ not have a face in `gnus-article-boring-faces'."
 		 (gnus-configure-windows 'article)
 		 (unless (setq win (get-buffer-window summary-buffer 'visible))
 		   (let ((gnus-buffer-configuration
-			  '(article ((vertical 1.0
-					       (summary 0.25 point)
-					       (article 1.0))))))
+			  '((article ((vertical 1.0
+						(summary 0.25 point)
+						(article 1.0)))))))
 		     (gnus-configure-windows 'article))
 		   (setq win (get-buffer-window summary-buffer 'visible)))
 		 (gnus-select-frame-set-input-focus (window-frame win))
@@ -6375,7 +6375,7 @@ not have a face in `gnus-article-boring-faces'."
 	(setq in-buffer (current-buffer))
 	;; We disable the pick minor mode commands.
 	(if (and (setq func (let (gnus-pick-mode)
-			      (lookup-key (current-local-map) keys)))
+			      (key-binding keys t)))
 		 (functionp func)
 		 (condition-case code
 		     (progn
@@ -6469,6 +6469,8 @@ KEY is a string or a vector."
 ;;`gnus-agent-mode' in gnus-agent.el will define it.
 (defvar gnus-agent-summary-mode)
 (defvar gnus-draft-mode)
+;; Calling help-buffer will autoload help-mode.
+(defvar help-xref-stack-item)
 
 (defun gnus-article-describe-bindings (&optional prefix)
   "Show a list of all defined keys, and their definitions.
@@ -6479,10 +6481,17 @@ then we display only bindings that start with that prefix."
   (let ((keymap (copy-keymap gnus-article-mode-map))
 	(map (copy-keymap gnus-article-send-map))
 	(sumkeys (where-is-internal 'gnus-article-read-summary-keys))
-	agent draft)
+	parent agent draft)
     (define-key keymap "S" map)
     (define-key map [t] nil)
     (with-current-buffer gnus-article-current-summary
+      (set-keymap-parent
+       keymap
+       (if (setq parent (keymap-parent gnus-article-mode-map))
+	   (prog1
+	       (setq parent (copy-keymap parent))
+	     (set-keymap-parent parent (current-local-map)))
+	 (current-local-map)))
       (set-keymap-parent map (key-binding "S"))
       (let (key def gnus-pick-mode)
 	(while sumkeys
@@ -7929,7 +7938,8 @@ url is put as the `gnus-button-url' overlay property on the button."
     (unless file
       (error "Couldn't find library %s" library))
     (find-file file)
-    (goto-line (string-to-number line))))
+    (goto-char (point-min))
+    (forward-line (1- (string-to-number line)))))
 
 (defun gnus-button-handle-man (url)
   "Fetch a man page."
@@ -8319,7 +8329,7 @@ For example:
   (when (and gnus-article-encrypt-protocol
 	     gnus-novice-user)
     (unless (gnus-y-or-n-p "Really encrypt article(s)? ")
-      (error "Encrypt aborted.")))
+      (error "Encrypt aborted")))
   (let ((func (cdr (assoc protocol gnus-article-encrypt-protocol-alist))))
     (unless func
       (error "Can't find the encrypt protocol %s" protocol))

@@ -1,7 +1,8 @@
 ;;; font-core.el --- Core interface to font-lock
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: languages, faces
@@ -75,6 +76,8 @@ Other variables include that for syntactic keyword fontification,
 functions, `font-lock-fontify-buffer-function',
 `font-lock-unfontify-buffer-function', `font-lock-fontify-region-function',
 `font-lock-unfontify-region-function', and `font-lock-inhibit-thing-lock'.")
+;;;###autoload
+(put 'font-lock-defaults 'risky-local-variable t)
 (make-variable-buffer-local 'font-lock-defaults)
 
 (defvar font-lock-defaults-alist nil
@@ -297,8 +300,9 @@ means that Font Lock mode is turned on for buffers in C and C++ modes only."
 
 (define-globalized-minor-mode global-font-lock-mode
   font-lock-mode turn-on-font-lock-if-desired
-  :extra-args (dummy)
-  :initialize 'custom-initialize-safe-default
+  ;; What was this :extra-args thingy for?  --Stef
+  ;; :extra-args (dummy)
+  :initialize 'custom-initialize-delay
   :init-value (not (or noninteractive emacs-basic-display))
   :group 'font-lock
   :version "22.1")

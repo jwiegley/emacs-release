@@ -1,7 +1,7 @@
 ;;; calc-store.el --- value storage functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -637,8 +637,7 @@
 
 (defun calc-insert-variables (buf)
   (interactive "bBuffer in which to save variable values: ")
-  (save-excursion
-    (set-buffer buf)
+  (with-current-buffer buf
     (mapatoms (function
 	       (lambda (x)
 		 (and (string-match "\\`var-" (symbol-name x))

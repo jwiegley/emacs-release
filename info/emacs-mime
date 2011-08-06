@@ -4,7 +4,7 @@ emacs-mime.texi.
 This file documents the Emacs MIME interface functionality.
 
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009 Free Software Foundation, Inc.
+2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -48,7 +48,7 @@ read at least RFC2045 and RFC2047.
    This file documents the Emacs MIME interface functionality.
 
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009 Free Software Foundation, Inc.
+2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -356,7 +356,9 @@ File: emacs-mime,  Node: Display Customization,  Next: Files and Directories,  P
      A regular expression that matches safe URL names, i.e. URLs that
      are unlikely to leak personal information when rendering HTML
      email (the default value is `\\`cid:').  If `nil' consider all
-     URLs safe.
+     URLs safe.  In Gnus, this will be overridden according to the value
+     of the variable `gnus-safe-html-newsgroups', *Note Various
+     Various: (gnus)Various Various.
 
 `mm-inline-text-html-with-w3m-keymap'
      You can use emacs-w3m command keys in the inlined text/html part by
@@ -1389,7 +1391,8 @@ DECODED TIME
      Take a date and return a time.
 
 `time-to-seconds'
-     Take a time and return seconds.
+     Take a time and return seconds.  Note that Emacs has a built-in
+     function, `float-time', that does this.
 
 `seconds-to-time'
      Take seconds and return a time.
@@ -2222,9 +2225,9 @@ File: emacs-mime,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
                                                               (line  42)
 * mm-display-part:                       Display.             (line   9)
 * mm-enable-external:                    Display Customization.
-                                                              (line 126)
+                                                              (line 128)
 * mm-external-terminal-program:          Display Customization.
-                                                              (line 123)
+                                                              (line 125)
 * mm-file-name-collapse-whitespace:      Files and Directories.
                                                               (line  33)
 * mm-file-name-delete-control:           Files and Directories.
@@ -2256,7 +2259,7 @@ File: emacs-mime,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
 * mm-inline-text-html-with-images:       Display Customization.
                                                               (line 104)
 * mm-inline-text-html-with-w3m-keymap:   Display Customization.
-                                                              (line 119)
+                                                              (line 121)
 * mm-inlined-types:                      Display Customization.
                                                               (line  17)
 * mm-interactively-view-part:            Display.             (line  30)
@@ -2327,42 +2330,42 @@ File: emacs-mime,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
 
 
 Tag Table:
-Node: Top1051
-Node: Decoding and Viewing3235
-Node: Dissection4016
-Node: Non-MIME4390
-Node: Handles5976
-Node: Display6828
-Node: Display Customization7549
-Ref: Display Customization-Footnote-113861
-Ref: Display Customization-Footnote-213941
-Node: Files and Directories14068
-Node: New Viewers15789
-Node: Composing16913
-Node: Simple MML Example17874
-Node: MML Definition18517
-Node: Advanced MML Example22338
-Node: Encoding Customization25078
-Node: Charset Translation29514
-Node: Conversion32050
-Node: Flowed text33171
-Node: Interface Functions34256
-Node: Basic Functions39814
-Node: rfc204540858
-Node: rfc223141373
-Node: ietf-drums42662
-Node: rfc204743747
-Node: time-date47086
-Node: qp50453
-Node: base6451420
-Node: binhex52373
-Node: uudecode52769
-Node: yenc53125
-Node: rfc184353403
-Node: mailcap54012
-Node: Standards54936
-Node: GNU Free Documentation License56357
-Node: Index81507
+Node: Top1057
+Node: Decoding and Viewing3247
+Node: Dissection4028
+Node: Non-MIME4402
+Node: Handles5988
+Node: Display6840
+Node: Display Customization7561
+Ref: Display Customization-Footnote-114031
+Ref: Display Customization-Footnote-214111
+Node: Files and Directories14238
+Node: New Viewers15959
+Node: Composing17083
+Node: Simple MML Example18044
+Node: MML Definition18687
+Node: Advanced MML Example22508
+Node: Encoding Customization25248
+Node: Charset Translation29684
+Node: Conversion32220
+Node: Flowed text33341
+Node: Interface Functions34426
+Node: Basic Functions39984
+Node: rfc204541028
+Node: rfc223141543
+Node: ietf-drums42832
+Node: rfc204743917
+Node: time-date47256
+Node: qp50700
+Node: base6451667
+Node: binhex52620
+Node: uudecode53016
+Node: yenc53372
+Node: rfc184353650
+Node: mailcap54259
+Node: Standards55183
+Node: GNU Free Documentation License56604
+Node: Index81754
 
 End Tag Table
 

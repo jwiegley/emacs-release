@@ -1,6 +1,6 @@
 /* Header file for the buffer manipulation primitives.
    Copyright (C) 1985, 1986, 1993, 1994, 1995, 1997, 1998, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -157,6 +157,10 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Overlay modification count.  */
 #define BUF_OVERLAY_MODIFF(buf) ((buf)->text->overlay_modiff)
+
+/* Modification count as of last auto-save.  */
+/* FIXME: should we move this into ->text->auto_save_modiff?  */
+#define BUF_AUTOSAVE_MODIFF(buf) ((buf)->auto_save_modified)
 
 /* Interval tree of buffer.  */
 #define BUF_INTERVALS(buf) ((buf)->text->intervals)
@@ -330,7 +334,7 @@ extern unsigned char *_fetch_multibyte_char_p;
 #define FETCH_MULTIBYTE_CHAR(pos)				 	\
   (_fetch_multibyte_char_p = (((pos) >= GPT_BYTE ? GAP_SIZE : 0) 	\
 			       + (pos) + BEG_ADDR - BEG_BYTE),	 	\
-   STRING_CHAR (_fetch_multibyte_char_p, 0))
+   STRING_CHAR (_fetch_multibyte_char_p))
 
 /* Return character at position POS.  If the current buffer is unibyte
    and the character is not ASCII, make the returning character
@@ -339,7 +343,7 @@ extern unsigned char *_fetch_multibyte_char_p;
 #define FETCH_CHAR_AS_MULTIBYTE(pos)			\
   (!NILP (current_buffer->enable_multibyte_characters)	\
    ? FETCH_MULTIBYTE_CHAR ((pos))			\
-   : unibyte_to_multibyte_table[(FETCH_BYTE ((pos)))])
+   : UNIBYTE_TO_CHAR (FETCH_BYTE ((pos))))
 
 
 /* Macros for accessing a character or byte,
@@ -389,7 +393,7 @@ extern unsigned char *_fetch_multibyte_char_p;
   (_fetch_multibyte_char_p						\
      = (((pos) >= BUF_GPT_BYTE (buf) ? BUF_GAP_SIZE (buf) : 0)		\
         + (pos) + BUF_BEG_ADDR (buf) - BEG_BYTE),			\
-   STRING_CHAR (_fetch_multibyte_char_p, 0))
+   STRING_CHAR (_fetch_multibyte_char_p))
 
 /* Define the actual buffer data structures.  */
 
@@ -584,6 +588,9 @@ struct buffer
   /* This isn't really used by the C code, so could be deleted.  */
   Lisp_Object backed_up;
   /* Length of file when last read or saved.
+     -1 means auto saving turned off because buffer shrank a lot.
+     -2 means don't turn off auto saving if buffer shrinks.
+       (That value is used with buffer-swap-text.)
      This is not in the  struct buffer_text
      because it's not used in indirect buffers at all.  */
   Lisp_Object save_length;
@@ -598,8 +605,9 @@ struct buffer
      point into this buffer or may point nowhere.  */
   Lisp_Object mark;
 
-  /* Alist of elements (SYMBOL . VALUE-IN-THIS-BUFFER)
-     for all per-buffer variables of this buffer.  */
+  /* Alist of elements (SYMBOL . VALUE-IN-THIS-BUFFER) for all
+     per-buffer variables of this buffer.  For locally unbound
+     symbols, just the symbol appears as the element.  */
   Lisp_Object local_var_alist;
 
   /* Symbol naming major mode (eg, lisp-mode).  */

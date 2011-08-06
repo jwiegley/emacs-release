@@ -1,7 +1,7 @@
 ;;; gnus-srvr.el --- virtual server support for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -177,6 +177,7 @@ If nil, a faster, but more primitive, buffer is used instead."
   :group 'gnus-server-visual)
 ;; backward-compatibility alias
 (put 'gnus-server-agent-face 'face-alias 'gnus-server-agent)
+(put 'gnus-server-agent-face 'obsolete-face "22.1")
 
 (defface gnus-server-opened
   '((((class color) (background light)) (:foreground "Green3" :bold t))
@@ -186,6 +187,7 @@ If nil, a faster, but more primitive, buffer is used instead."
   :group 'gnus-server-visual)
 ;; backward-compatibility alias
 (put 'gnus-server-opened-face 'face-alias 'gnus-server-opened)
+(put 'gnus-server-opened-face 'obsolete-face "22.1")
 
 (defface gnus-server-closed
   '((((class color) (background light)) (:foreground "Steel Blue" :italic t))
@@ -196,6 +198,7 @@ If nil, a faster, but more primitive, buffer is used instead."
   :group 'gnus-server-visual)
 ;; backward-compatibility alias
 (put 'gnus-server-closed-face 'face-alias 'gnus-server-closed)
+(put 'gnus-server-closed-face 'obsolete-face "22.1")
 
 (defface gnus-server-denied
   '((((class color) (background light)) (:foreground "Red" :bold t))
@@ -205,6 +208,7 @@ If nil, a faster, but more primitive, buffer is used instead."
   :group 'gnus-server-visual)
 ;; backward-compatibility alias
 (put 'gnus-server-denied-face 'face-alias 'gnus-server-denied)
+(put 'gnus-server-denied-face 'obsolete-face "22.1")
 
 (defface gnus-server-offline
   '((((class color) (background light)) (:foreground "Orange" :bold t))
@@ -214,6 +218,7 @@ If nil, a faster, but more primitive, buffer is used instead."
   :group 'gnus-server-visual)
 ;; backward-compatibility alias
 (put 'gnus-server-offline-face 'face-alias 'gnus-server-offline)
+(put 'gnus-server-offline-face 'obsolete-face "22.1")
 
 (defvar gnus-server-font-lock-keywords
   '(("(\\(agent\\))" 1 'gnus-server-agent)

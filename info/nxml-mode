@@ -4,7 +4,7 @@ nxml-mode.texi.
 This manual documents nxml-mode, an Emacs major mode for editing XML
 with RELAX NG support.
 
-   Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -38,7 +38,7 @@ nXML Mode
 This manual documents nxml-mode, an Emacs major mode for editing XML
 with RELAX NG support.
 
-   Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -453,10 +453,10 @@ used.
 visit a file in nXML mode. However, if you have just created a new file
 and the schema cannot be inferred from the file-name, then this will
 not locate the right schema.  In this case, you should insert the
-start-tag of the root element and then use the command `C-c C-a', which
-reapplies the rules based on the current content of the document.  It
-is usually not necessary to insert the complete start-tag; often just
-`<NAME' is enough.
+start-tag of the root element and then use the command `C-c C-s C-a',
+which reapplies the rules based on the current content of the document.
+It is usually not necessary to insert the complete start-tag; often
+just `<NAME' is enough.
 
    If you want to use a schema that has not yet been added to the
 schema locating files, you can use the command `C-c C-s C-f' to
@@ -771,20 +771,20 @@ nXML mode has some limitations:
 
 
 Tag Table:
-Node: Top1350
-Node: Completion2722
-Node: Inserting end-tags7030
-Node: Paragraphs8345
-Node: Outlining10600
-Node: Locating a schema16210
-Node: Commands for locating a schema17652
-Node: Schema locating files20267
-Node: Schema locating file syntax basics21155
-Node: Using the document's URI to locate a schema23042
-Node: Using the document element to locate a schema25562
-Node: Using type identifiers in schema locating files26623
-Node: Using multiple schema locating files29034
-Node: DTDs30857
-Node: Limitations32317
+Node: Top1356
+Node: Completion2734
+Node: Inserting end-tags7042
+Node: Paragraphs8357
+Node: Outlining10612
+Node: Locating a schema16222
+Node: Commands for locating a schema17664
+Node: Schema locating files20282
+Node: Schema locating file syntax basics21170
+Node: Using the document's URI to locate a schema23057
+Node: Using the document element to locate a schema25577
+Node: Using type identifiers in schema locating files26638
+Node: Using multiple schema locating files29049
+Node: DTDs30872
+Node: Limitations32332
 
 End Tag Table

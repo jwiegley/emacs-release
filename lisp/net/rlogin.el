@@ -1,7 +1,7 @@
 ;;; rlogin.el --- remote login interface
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1997, 1998, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Noah Friedman
 ;; Maintainer: Noah Friedman <friedman@splode.com>
@@ -130,7 +130,7 @@ this variable is set from that."
   (define-key rlogin-mode-map "\C-i" 'rlogin-tab-or-complete)))
 
 
-;;;###autoload (add-hook 'same-window-regexps "^\\*rlogin-.*\\*\\(\\|<[0-9]+>\\)")
+;;;###autoload (add-hook 'same-window-regexps (purecopy "^\\*rlogin-.*\\*\\(\\|<[0-9]+>\\)"))
 
 (defvar rlogin-history nil)
 

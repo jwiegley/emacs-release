@@ -1,7 +1,7 @@
 ;;; pcvs.el --- a front-end to CVS
 
 ;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: (The PCL-CVS Trust) pcl-cvs@cyclic.com
 ;;	(Per Cederqvist) ceder@lysator.liu.se
@@ -399,7 +399,7 @@ from the current buffer."
       ;;(cvs-minor-mode 1)
       (let ((lbd list-buffers-directory))
 	(if (fboundp mode) (funcall mode) (fundamental-mode))
-	(when lbd (set (make-local-variable 'list-buffers-directory) lbd)))
+	(when lbd (setq list-buffers-directory lbd)))
       (cvs-minor-mode 1)
       ;;(set (make-local-variable 'cvs-buffer) cvs-buf)
       (if normal
@@ -1456,7 +1456,7 @@ The POSTPROC specified there (typically `log-edit') is then called,
   (let ((buf (cvs-temp-buffer "message" 'normal 'nosetup))
 	(setupfun (or (nth 2 (cdr (assoc "message" cvs-buffer-name-alist)))
 		      'log-edit)))
-    (funcall setupfun 'cvs-do-commit setup 
+    (funcall setupfun 'cvs-do-commit setup
 	     '((log-edit-listfun . cvs-commit-filelist)
 	       (log-edit-diff-function . cvs-mode-diff)) buf)
     (set (make-local-variable 'cvs-minor-wrap-function) 'cvs-commit-minor-wrap)
@@ -1521,7 +1521,7 @@ This is best called from a `log-view-mode' buffer."
       ;; Set the filename before, so log-edit can correctly setup its
       ;; log-edit-initial-files variable.
       (set (make-local-variable 'cvs-edit-log-files) (list file)))
-    (funcall setupfun 'cvs-do-edit-log nil 
+    (funcall setupfun 'cvs-do-edit-log nil
 	     '((log-edit-listfun . cvs-edit-log-filelist)
 	       (log-edit-diff-function . cvs-mode-diff))
 	     buf)
@@ -2054,7 +2054,10 @@ With a prefix, opens the buffer in an OTHER window."
 			  (t (if view 'view-buffer 'switch-to-buffer)))
 		    buf)
 	   (when (and cvs-find-file-and-jump (cvs-applicable-p fi 'diff-base))
-	     (goto-line (cvs-find-modif fi)))
+	     (save-restriction
+	       (widen)
+	       (goto-char (point-min))
+	       (forward-line (1- (cvs-find-modif fi)))))
 	   buf))))))
 
 

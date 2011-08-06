@@ -1,13 +1,13 @@
 ;;; emacsbug.el --- command to report Emacs bugs to appropriate mailing list
 
-;; Copyright (C) 1985, 1994, 1997, 1998, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1994, 1997, 1998, 2000, 2001, 2002, 2003, 2004,
+;;   2005, 2006, 2007, 2008, 2009, 2010
+;;   Free Software Foundation, Inc.
 
 ;; Author: K. Shane Hartman
 ;; Maintainer: FSF
 ;; Keywords: maint mail
 
-;; Not fully installed because it can work only on Internet hosts.
 ;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software: you can redistribute it and/or modify
@@ -32,8 +32,6 @@
 
 ;;; Code:
 
-(require 'sendmail)
-
 (defgroup emacsbug nil
   "Sending Emacs bug reports."
   :group 'maint
@@ -44,10 +42,11 @@
   :group 'emacsbug
   :type 'string)
 
-(defcustom report-emacs-bug-pretest-address "emacs-pretest-bug@gnu.org"
+(defcustom report-emacs-bug-pretest-address "bug-gnu-emacs@gnu.org"
   "Address of mailing list for GNU Emacs pretest bugs."
   :group 'emacsbug
-  :type 'string)
+  :type 'string
+  :version "23.2")                ; emacs-pretest-bug -> bug-gnu-emacs
 
 (defcustom report-emacs-bug-no-confirmation nil
   "If non-nil, suppress the confirmations asked for the sake of novice users."
@@ -63,10 +62,19 @@
 
 
 (defvar report-emacs-bug-orig-text nil
-  "The automatically-created initial text of bug report.")
+  "The automatically-created initial text of the bug report.")
+
+(defvar report-emacs-bug-send-command nil
+  "Name of the command to send the bug report, as a string.")
+(make-variable-buffer-local 'report-emacs-bug-send-command)
+
+(defvar report-emacs-bug-send-hook nil
+  "Hook run before sending the bug report.")
+(make-variable-buffer-local 'report-emacs-bug-send-hook)
 
 (declare-function x-server-vendor "xfns.c" (&optional terminal))
 (declare-function x-server-version "xfns.c" (&optional terminal))
+(declare-function message-sort-headers "message" ())
 
 ;;;###autoload
 (defun report-emacs-bug (topic &optional recent-keys)
@@ -92,6 +100,7 @@ Prompts for bug subject.  Leaves you in a mail buffer."
 				report-emacs-bug-pretest-address
 			      report-emacs-bug-address))
 	 ;; Put these properties on semantically-void text.
+	 ;; report-emacs-bug-hook deletes these regions before sending.
 	 (prompt-properties '(field emacsbug-prompt
 				    intangible but-helpful
 				    rear-nonsticky t))
@@ -99,41 +108,49 @@ Prompts for bug subject.  Leaves you in a mail buffer."
     (setq message-end-point
 	  (with-current-buffer (get-buffer-create "*Messages*")
 	    (point-max-marker)))
-    (compose-mail reporting-address
-		  topic)
-    ;; The rest of this does not execute
-    ;; if the user was asked to confirm and said no.
+    (compose-mail reporting-address topic)
+    ;; The rest of this does not execute if the user was asked to
+    ;; confirm and said no.
+    ;; Message-mode sorts the headers before sending.  We sort now so
+    ;; that report-emacs-bug-orig-text remains valid.  (Bug#5178)
+    (if (eq major-mode 'message-mode)
+        (message-sort-headers))
     (rfc822-goto-eoh)
     (forward-line 1)
-
     (let ((signature (buffer-substring (point) (point-max))))
       (delete-region (point) (point-max))
       (insert signature)
       (backward-char (length signature)))
     (unless report-emacs-bug-no-explanations
       ;; Insert warnings for novice users.
-      (when (string-match "@gnu\\.org^" reporting-address)
+      (when (string-match "@gnu\\.org$" reporting-address)
 	(insert "This bug report will be sent to the Free Software Foundation,\n")
 	(let ((pos (point)))
 	  (insert "not to your local site managers!")
-	  (put-text-property pos (point) 'face 'highlight)))
+          (overlay-put (make-overlay pos (point)) 'face 'highlight)))
       (insert "\nPlease write in ")
       (let ((pos (point)))
 	(insert "English")
-	(put-text-property pos (point) 'face 'highlight))
+        (overlay-put (make-overlay pos (point)) 'face 'highlight))
       (insert " if possible, because the Emacs maintainers
 usually do not have translators to read other languages for them.\n\n")
       (insert (format "Your bug report will be posted to the %s mailing list"
 		      reporting-address))
-      (if pretest-p
-	  (insert ".\n\n")
-	(insert ",\nand to the gnu.emacs.bug news group.\n\n")))
+      ;; Nowadays all bug reports end up there.
+;;;      (if pretest-p (insert ".\n\n")
+	(insert ",\nand to the gnu.emacs.bug news group.\n\n"))
 
     (insert "Please describe exactly what actions triggered the bug\n"
-	    "and the precise symptoms of the bug:\n\n")
-    (add-text-properties (point) (save-excursion (mail-text) (point))
+	    "and the precise symptoms of the bug.  If you can, give\n"
+	    "a recipe starting from `emacs -Q':\n\n")
+    ;; Stop message-mode stealing the properties we are about to add.
+    (if (boundp 'message-strip-special-text-properties)
+        (set (make-local-variable 'message-strip-special-text-properties) nil))
+    (add-text-properties (save-excursion
+                           (rfc822-goto-eoh)
+                           (line-beginning-position 2))
+                         (point)
                          prompt-properties)
-
     (setq user-point (point))
     (insert "\n\n")
 
@@ -143,8 +160,8 @@ usually do not have translators to read other languages for them.\n\n")
 
     (let ((debug-file (expand-file-name "DEBUG" data-directory)))
       (if (file-readable-p debug-file)
-	  (insert "If you would like to further debug the crash, please read the file\n"
-		  debug-file " for instructions.\n")))
+	  (insert "For information about debugging Emacs, please read the file\n"
+		  debug-file ".\n")))
     (add-text-properties (1+ user-point) (point) prompt-properties)
 
     (insert "\n\nIn " (emacs-version) "\n")
@@ -166,8 +183,8 @@ usually do not have translators to read other languages for them.\n\n")
      '("LC_ALL" "LC_COLLATE" "LC_CTYPE" "LC_MESSAGES"
        "LC_MONETARY" "LC_NUMERIC" "LC_TIME" "LANG" "XMODIFIERS"))
     (insert (format "  locale-coding-system: %s\n" locale-coding-system))
-    (insert (format "  default-enable-multibyte-characters: %s\n"
-		    default-enable-multibyte-characters))
+    (insert (format "  default enable-multibyte-characters: %s\n"
+		    (default-value 'enable-multibyte-characters)))
     (insert "\n")
     (insert (format "Major mode: %s\n"
 		    (format-mode-line
@@ -206,31 +223,56 @@ usually do not have translators to read other languages for them.\n\n")
 	      (setq beg-pos (point)))
 	    (insert "\n\nRecent messages:\n")
 	    (insert-buffer-substring message-buf beg-pos end-pos))))
-    ;; This is so the user has to type something
-    ;; in order to send easily.
+    ;; After Recent messages, to avoid the messages produced by
+    ;; list-load-path-shadows.
+    (unless (looking-back "\n")
+      (insert "\n"))
+    (insert "\n")
+    (insert "Load-path shadows:\n")
+    (message "Checking for load-path shadows...")
+    (let ((shadows (list-load-path-shadows t)))
+      (message "Checking for load-path shadows...done")
+      (insert (if (zerop (length shadows))
+                  "None found.\n"
+                shadows)))
+    (insert (format "\nFeatures:\n%s\n" features))
+    (fill-region (line-beginning-position 0) (point))
+    ;; This is so the user has to type something in order to send easily.
     (use-local-map (nconc (make-sparse-keymap) (current-local-map)))
     (define-key (current-local-map) "\C-c\C-i" 'report-emacs-bug-info)
+    ;; Could test major-mode instead.
+    (cond ((memq mail-user-agent '(message-user-agent gnus-user-agent))
+           (setq report-emacs-bug-send-command "message-send-and-exit"
+                 report-emacs-bug-send-hook 'message-send-hook))
+          ((eq mail-user-agent 'sendmail-user-agent)
+           (setq report-emacs-bug-send-command "mail-send-and-exit"
+                 report-emacs-bug-send-hook 'mail-send-hook))
+          ((eq mail-user-agent 'mh-e-user-agent)
+           (setq report-emacs-bug-send-command "mh-send-letter"
+                 report-emacs-bug-send-hook 'mh-before-send-letter-hook)))
     (unless report-emacs-bug-no-explanations
       (with-output-to-temp-buffer "*Bug Help*"
-	(if (eq mail-user-agent 'sendmail-user-agent)
-	    (princ (substitute-command-keys
-		    "Type \\[mail-send-and-exit] to send the bug report.\n")))
+	(princ "While in the mail buffer:\n\n")
+        (if report-emacs-bug-send-command
+            (princ (substitute-command-keys
+                    (format "  Type \\[%s] to send the bug report.\n"
+                            report-emacs-bug-send-command))))
 	(princ (substitute-command-keys
-		"Type \\[kill-buffer] RET to cancel (don't send it).\n"))
+		"  Type \\[kill-buffer] RET to cancel (don't send it).\n"))
 	(terpri)
 	(princ (substitute-command-keys
-		"Type \\[report-emacs-bug-info] to visit in Info the Emacs Manual section
-about when and how to write a bug report,
-and what information to supply so that the bug can be fixed.
-Type SPC to scroll through this section and its subsections."))))
+		"  Type \\[report-emacs-bug-info] to visit in Info the Emacs Manual section
+    about when and how to write a bug report, and what
+    information you should include to help fix the bug.")))
+      (shrink-window-if-larger-than-buffer (get-buffer-window "*Bug Help*")))
     ;; Make it less likely people will send empty messages.
-    (make-local-variable 'mail-send-hook)
-    (add-hook 'mail-send-hook 'report-emacs-bug-hook)
-    (save-excursion
-      (goto-char (point-max))
-      (skip-chars-backward " \t\n")
-      (make-local-variable 'report-emacs-bug-orig-text)
-      (setq report-emacs-bug-orig-text (buffer-substring (point-min) (point))))
+    (if report-emacs-bug-send-hook
+        (add-hook report-emacs-bug-send-hook 'report-emacs-bug-hook nil t))
+    (goto-char (point-max))
+    (skip-chars-backward " \t\n")
+    (make-local-variable 'report-emacs-bug-orig-text)
+    (setq report-emacs-bug-orig-text
+          (buffer-substring-no-properties (point-min) (point)))
     (goto-char user-point)))
 
 (defun report-emacs-bug-info ()
@@ -239,53 +281,55 @@ Type SPC to scroll through this section and its subsections."))))
   (info "(emacs)Bugs"))
 
 (defun report-emacs-bug-hook ()
+  "Do some checking before sending a bug report."
   (save-excursion
-    (save-excursion
-      (goto-char (point-max))
-      (skip-chars-backward " \t\n")
-      (if (and (= (- (point) (point-min))
-		  (length report-emacs-bug-orig-text))
-	       (equal (buffer-substring (point-min) (point))
-		      report-emacs-bug-orig-text))
-	  (error "No text entered in bug report")))
-
+    (goto-char (point-max))
+    (skip-chars-backward " \t\n")
+    (and (= (- (point) (point-min))
+            (length report-emacs-bug-orig-text))
+         (string-equal (buffer-substring-no-properties (point-min) (point))
+                       report-emacs-bug-orig-text)
+         (error "No text entered in bug report"))
     ;; Check the buffer contents and reject non-English letters.
-    (save-excursion
-      (goto-char (point-min))
-      (skip-chars-forward "\0-\177")
-      (if (not (eobp))
-	  (if (or report-emacs-bug-no-confirmation
-		  (y-or-n-p "Convert non-ASCII letters to hexadecimal? "))
-	      (while (progn (skip-chars-forward "\0-\177")
-			    (not (eobp)))
-		(let ((ch (following-char)))
-		  (delete-char 1)
-		  (insert (format "=%02x" ch)))))))
+    ;; FIXME message-mode probably does this anyway.
+    (goto-char (point-min))
+    (skip-chars-forward "\0-\177")
+    (unless (eobp)
+      (if (or report-emacs-bug-no-confirmation
+              (y-or-n-p "Convert non-ASCII letters to hexadecimal? "))
+          (while (progn (skip-chars-forward "\0-\177")
+                        (not (eobp)))
+            (let ((ch (following-char)))
+              (delete-char 1)
+              (insert (format "=%02x" ch))))))
 
     ;; The last warning for novice users.
-    (if (or report-emacs-bug-no-confirmation
-	    (yes-or-no-p
-	     "Send this bug report to the Emacs maintainers? "))
-	;; Just send the current mail.
-	nil
+    (unless (or report-emacs-bug-no-confirmation
+                (yes-or-no-p
+                 "Send this bug report to the Emacs maintainers? "))
       (goto-char (point-min))
       (if (search-forward "To: ")
-	  (let ((pos (point)))
-	    (end-of-line)
-	    (delete-region pos (point))))
-      (kill-local-variable 'mail-send-hook)
+          (delete-region (point) (line-end-position)))
+      (if report-emacs-bug-send-hook
+          (kill-local-variable report-emacs-bug-send-hook))
       (with-output-to-temp-buffer "*Bug Help*"
-	(princ (substitute-command-keys "\
+	(princ (substitute-command-keys
+                (format "\
 You invoked the command M-x report-emacs-bug,
 but you decided not to mail the bug report to the Emacs maintainers.
 
 If you want to mail it to someone else instead,
 please insert the proper e-mail address after \"To: \",
-and send the mail again using \\[mail-send-and-exit].")))
+and send the mail again%s."
+                        (if report-emacs-bug-send-command
+                            (format " using \\[%s]"
+                                    report-emacs-bug-send-command)
+                          "")))))
       (error "M-x report-emacs-bug was cancelled, please read *Bug Help* buffer"))
 
-    ;; Unclutter
-    (mail-text)
+    ;; Delete the uninteresting text that was just to help fill out the report.
+    (rfc822-goto-eoh)
+    (forward-line 1)
     (let ((pos (1- (point))))
       (while (setq pos (text-property-any pos (point-max)
                                           'field 'emacsbug-prompt))

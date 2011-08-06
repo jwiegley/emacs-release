@@ -152,7 +152,7 @@ Aquí hay un resumen de operaciones simples de movimiento del cursor,
 incluyendo los comandos de movimiento por palabra y oración:
 
 	C-f 	Avanzar un carácter
-	C-d 	Retroceder un carácter
+	C-b 	Retroceder un carácter
 
 	M-f 	Avanzar una palabra
 	M-b 	Retroceder una palabra
@@ -1180,7 +1180,7 @@ siguiente nota de derechos de reproducción (que puede encontrar en el
 archivo TUTORIAL).
 
 Copyright (C) 1985, 1996, 1998, 2001, 2002, 2003, 2004,
-   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+   2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
    Se permite a cualquiera hacer o distribuir copias literales de este
    documento como se recibe, en cualquier medio, siempre que la nota

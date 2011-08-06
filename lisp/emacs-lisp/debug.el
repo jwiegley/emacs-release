@@ -1,7 +1,7 @@
 ;;; debug.el --- debuggers and related commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: lisp, tools, maint
@@ -35,13 +35,13 @@
   :group 'debug)
 
 (defcustom debugger-mode-hook nil
-  "*Hooks run when `debugger-mode' is turned on."
+  "Hooks run when `debugger-mode' is turned on."
   :type 'hook
   :group 'debugger
   :version "20.3")
 
 (defcustom debugger-batch-max-lines 40
-  "*Maximum lines to show in debugger buffer in a noninteractive Emacs.
+  "Maximum lines to show in debugger buffer in a noninteractive Emacs.
 When the debugger is entered and Emacs is running in batch mode,
 if the backtrace text has more than this many lines,
 the middle is discarded, and just the beginning and end are displayed."
@@ -119,8 +119,7 @@ first will be printed into the backtrace buffer."
     (let (debugger-value
 	  (debug-on-error nil)
 	  (debug-on-quit nil)
-	  (debugger-buffer (let ((default-major-mode 'fundamental-mode))
-			     (get-buffer-create "*Backtrace*")))
+	  (debugger-buffer (get-buffer-create "*Backtrace*"))
 	  (debugger-old-buffer (current-buffer))
 	  (debugger-step-after-exit nil)
           (debugger-will-be-back nil)
@@ -267,7 +266,7 @@ first will be printed into the backtrace buffer."
 That buffer should be current already."
   (setq buffer-read-only nil)
   (erase-buffer)
-  (set-buffer-multibyte nil)
+  (set-buffer-multibyte t)		;Why was it nil ?  -stef
   (setq buffer-undo-list t)
   (let ((standard-output (current-buffer))
 	(print-escape-newlines t)
@@ -330,8 +329,7 @@ That buffer should be current already."
 (defun debugger-make-xrefs (&optional buffer)
   "Attach cross-references to function names in the `*Backtrace*' buffer."
   (interactive "b")
-  (save-excursion
-    (set-buffer (or buffer (current-buffer)))
+  (with-current-buffer (or buffer (current-buffer))
     (setq buffer (current-buffer))
     (let ((inhibit-read-only t)
 	  (old-end (point-min)) (new-end (point-min)))
@@ -674,7 +672,7 @@ Complete list of commands:
   (run-mode-hooks 'debugger-mode-hook))
 
 (defcustom debugger-record-buffer "*Debugger-record*"
-  "*Buffer name for expression values, for \\[debugger-record-expression]."
+  "Buffer name for expression values, for \\[debugger-record-expression]."
   :type 'string
   :group 'debugger
   :version "20.3")
@@ -874,7 +872,8 @@ To specify a nil argument interactively, exit with an empty minibuffer."
   "Display a list of all the functions now set to debug on entry."
   (interactive)
   (require 'help-mode)
-  (help-setup-xref '(debugger-list-functions) (interactive-p))
+  (help-setup-xref '(debugger-list-functions)
+		   (called-interactively-p 'interactive))
   (with-output-to-temp-buffer (help-buffer)
     (with-current-buffer standard-output
       (if (null debug-function-list)

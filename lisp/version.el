@@ -1,7 +1,7 @@
 ;;; version.el --- record version number of Emacs -*- no-byte-compile: t -*-
 
-;; Copyright (C) 1985, 1992, 1994, 1995, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 1985, 1992, 1994, 1995, 1999, 2000, 2001, 2002, 2003,
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
@@ -24,24 +24,23 @@
 
 ;;; Commentary:
 
+;; This file is loaded uncompiled when dumping Emacs.
+;; Doc-strings should adhere to the conventions of make-docfile.
+
 ;;; Code:
 
-(defconst emacs-copyright "Copyright (C) 2009 Free Software Foundation, Inc."
-  "Short copyright string for this version of Emacs.")
+(defconst emacs-copyright "Copyright (C) 2010 Free Software Foundation, Inc." "\
+Short copyright string for this version of Emacs.")
 
-(defconst emacs-version "23.1" "\
+(defconst emacs-version "23.2" "\
 Version numbers of this version of Emacs.")
 
-(defconst emacs-major-version
-  (progn (string-match "^[0-9]+" emacs-version)
-	 (string-to-number (match-string 0 emacs-version)))
-  "Major version number of this version of Emacs.
+(defconst emacs-major-version (progn (string-match "^[0-9]+" emacs-version) (string-to-number (match-string 0 emacs-version))) "\
+Major version number of this version of Emacs.
 This variable first existed in version 19.23.")
 
-(defconst emacs-minor-version
-  (progn (string-match "^[0-9]+\\.\\([0-9]+\\)" emacs-version)
-	 (string-to-number (match-string 1 emacs-version)))
-  "Minor version number of this version of Emacs.
+(defconst emacs-minor-version (progn (string-match "^[0-9]+\\.\\([0-9]+\\)" emacs-version) (string-to-number (match-string 1 emacs-version))) "\
+Minor version number of this version of Emacs.
 This variable first existed in version 19.23.")
 
 (defconst emacs-build-time (current-time) "\
@@ -56,7 +55,7 @@ Don't use this function in programs to choose actions according
 to the system configuration; look at `system-configuration' instead."
   (interactive "P")
   (let ((version-string
-         (format (if (not (interactive-p))
+         (format (if (not (called-interactively-p 'interactive))
 		     "GNU Emacs %s (%s%s%s)\n of %s on %s"
 		   "GNU Emacs %s (%s%s%s) of %s on %s")
                  emacs-version
@@ -78,7 +77,7 @@ to the system configuration; look at `system-configuration' instead."
                  emacs-build-system)))
     (if here
         (insert version-string)
-      (if (interactive-p)
+      (if (called-interactively-p 'interactive)
           (message "%s" version-string)
         version-string))))
 

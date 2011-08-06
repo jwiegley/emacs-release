@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1999, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-@c   2009  Free Software Foundation, Inc.
+@c   2009, 2010  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 
 @c This node must have no pointers.
@@ -36,7 +36,7 @@ handling of keybindings much more consistent.
 @item
 Temporarily-active regions are not created by giving the variable
 @code{transient-mark-mode} values of the form @code{(only
-. @var{oldvar})}.  We instead use a more more complicated scheme:
+. @var{oldvar})}.  We instead use a more complicated scheme:
 setting @code{transient-mark-mode} to @code{only} enables Transient
 Mark mode for the following command only, during which the value of
 @code{transient-mark-mode} is set to @code{identity}; if it is still

@@ -1,7 +1,7 @@
 This is ../../info/dbus, produced by makeinfo version 4.11 from
 dbus.texi.
 
-Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
+Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -26,12 +26,12 @@ File: dbus,  Node: Top,  Next: Overview,  Prev: (dir),  Up: (dir)
 D-Bus integration in Emacs
 **************************
 
-This manual documents an API for usage of D-Bus in Emacs.(1)  D-Bus is
-a message bus system, a simple way for applications to talk to one
+This manual documents an API for usage of D-Bus in Emacs.  D-Bus is a
+message bus system, a simple way for applications to talk to one
 another.  An overview of D-Bus can be found at
 `http://dbus.freedesktop.org/'.
 
-   Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -56,11 +56,6 @@ another.  An overview of D-Bus can be found at
 * Signals::                     Sending and receiving signals.
 * Errors and Events::           Errors and events.
 * GNU Free Documentation License:: The license for this documentation.
-
-   ---------- Footnotes ----------
-
-   (1) D-Bus is not enabled by default.  You must run `./configure
---with-dbus' in Emacs' top level directory, before you compile Emacs.
 
 
 File: dbus,  Node: Overview,  Next: Inspection,  Prev: Top,  Up: Top
@@ -181,20 +176,27 @@ registered names.  Internally they use the basic interface
      BUS must be either the symbol `:system' or the symbol `:session'.
      SERVICE must be a known service name as string.
 
- -- Function: dbus-ping bus service
+ -- Function: dbus-ping bus service &optional timeout
      Check whether the service name SERVICE is registered at D-Bus BUS.
-     SERVICE might not have been started yet.  The result is either `t'
-     or `nil'.
+     SERVICE might not have been started yet, it is autostarted if
+     possible.  The result is either `t' or `nil'.
 
      BUS must be either the symbol `:system' or the symbol `:session'.
-     SERVICE must be a string.  Example:
+     SERVICE must be a string.  TIMEOUT, a nonnegative integer,
+     specifies the maximum number of milliseconds `dbus-ping' must
+     return.  The default value is 25,000.  Example:
 
           (message
              "%s screensaver on board."
              (cond
-               ((dbus-ping :session "org.gnome.ScreenSaver") "Gnome")
-               ((dbus-ping :session "org.freedesktop.ScreenSaver") "KDE")
+               ((dbus-ping :session "org.gnome.ScreenSaver" 100) "Gnome")
+               ((dbus-ping :session "org.freedesktop.ScreenSaver" 100) "KDE")
                (t "No")))
+
+     If it shall be checked whether SERVICE is already running without
+     autostarting it, one shall apply
+
+          (member service (dbus-list-known-names bus))
 
  -- Function: dbus-get-unique-name bus
      The unique name, under which Emacs is registered at D-Bus BUS, is
@@ -867,7 +869,7 @@ this array.  Example:
        '(:array)                   ;; No actions (empty array of strings).
        '(:array :signature "{sv}") ;; No hints
                                    ;; (empty array of dictionary entries).
-       ':int32 -1)                 ;; Default timeout.
+       :int32 -1)                 ;; Default timeout.
 
      => 3
 
@@ -977,7 +979,7 @@ parameters from the object.
 
      If the parameter `:timeout' is given, the following integer
      TIMEOUT specifies the maximum number of milliseconds the method
-     call must return.  The default value is 25.000.  If the method call
+     call must return.  The default value is 25,000.  If the method call
      doesn't return in time, a D-Bus error is raised (*note Errors and
      Events::).
 
@@ -1079,11 +1081,12 @@ File: dbus,  Node: Asynchronous Methods,  Next: Receiving Method Calls,  Prev: S
      offered by SERVICE.  It must provide METHOD.
 
      HANDLER is a Lisp function, which is called when the corresponding
-     return message has arrived.
+     return message has arrived.  If HANDLER is `nil', no return
+     message will be expected.
 
      If the parameter `:timeout' is given, the following integer
      TIMEOUT specifies the maximum number of milliseconds a reply
-     message must arrive.  The default value is 25.000.  If there is no
+     message must arrive.  The default value is 25,000.  If there is no
      reply message in time, a D-Bus error is raised (*note Errors and
      Events::).
 
@@ -1091,10 +1094,10 @@ File: dbus,  Node: Asynchronous Methods,  Next: Receiving Method Calls,  Prev: S
      are converted into D-Bus types as described in *note Type
      Conversion::.
 
-     The function returns a key into the hash table
-     `dbus-registered-functions-table'.  The corresponding entry in the
-     hash table is removed, when the return message has been arrived,
-     and HANDLER is called.  Example:
+     Unless HANDLER is `nil', the function returns a key into the hash
+     table `dbus-registered-objects-table'.  The corresponding entry in
+     the hash table is removed, when the return message has been
+     arrived, and HANDLER is called.  Example:
 
           (dbus-call-method-asynchronously
             :system "org.freedesktop.Hal"
@@ -1155,6 +1158,9 @@ the application which provides the interface.
      cons cell, HANDLER can return this object directly, instead of
      returning a list containing the object.
 
+     In case HANDLER shall return a reply message with an empty
+     argument list, HANDLER must return the symbol `:ignore'.
+
      The default D-Bus timeout when waiting for a message reply is 25
      seconds.  This value could be even smaller, depending on the
      calling client.  Therefore, HANDLER shall not last longer than
@@ -1185,7 +1191,7 @@ the application which provides the interface.
      If you invoke the method `org.freedesktop.TextEditor.OpenFile'
      from another D-Bus application with a filename as parameter, the
      file is opened in Emacs, and the method returns either TRUE or
-     FALSE, indicating the success if the method.  As test tool one
+     FALSE, indicating the success of the method.  As test tool one
      could use the command line tool `dbus-send' in a shell:
 
           # dbus-send --session --print-reply \
@@ -1219,6 +1225,107 @@ the application which provides the interface.
 
           -| Error org.freedesktop.DBus.Error.Failed:
              Wrong argument list: ("/etc/hosts" "/etc/passwd")
+
+ -- Function: dbus-register-property bus service path interface
+          property access value
+     With this function, an application declares a PROPERTY on the D-Bus
+     BUS.
+
+     BUS is either the symbol `:system' or the symbol `:session'.
+
+     SERVICE is the D-Bus service name of the D-Bus.  It must be a
+     known name.
+
+     PATH is the D-Bus object path SERVICE is registered.
+
+     INTERFACE is the name of the interface used at PATH, PROPERTY is
+     the name of the property of INTERFACE.
+
+     ACCESS indicates, whether the property can be changed by other
+     services via D-Bus.  It must be either the symbol `:read' or
+     `:readwrite'.  VALUE is the initial value of the property, it can
+     be of any valid type (see `dbus-call-method' for details).
+
+     If PROPERTY already exists on PATH, it will be overwritten.  For
+     properties with access type `:read' this is the only way to change
+     their values.  Properties with access type `:readwrite' can be
+     changed by `dbus-set-property'.
+
+     The interface `org.freedesktop.DBus.Properties' is added to PATH,
+     including a default handler for the `Get', `GetAll' and `Set'
+     methods of this interface.  Example:
+
+          (dbus-register-property
+            :session "org.freedesktop.TextEditor" "/org/freedesktop/TextEditor"
+            "org.freedesktop.TextEditor" "name" :read "GNU Emacs")
+
+          => ((:session "org.freedesktop.TextEditor" "name")
+              ("org.freedesktop.TextEditor" "/org/freedesktop/TextEditor"))
+
+          (dbus-register-property
+            :session "org.freedesktop.TextEditor" "/org/freedesktop/TextEditor"
+            "org.freedesktop.TextEditor" "version" :readwrite emacs-version)
+
+          => ((:session "org.freedesktop.TextEditor" "version")
+              ("org.freedesktop.TextEditor" "/org/freedesktop/TextEditor"))
+
+     Other D-Bus applications can read the property via the default
+     methods `org.freedesktop.DBus.Properties.Get' and
+     `org.freedesktop.DBus.Properties.GetAll'.  Testing is also
+     possible via the command line tool `dbus-send' in a shell:
+
+          # dbus-send --session --print-reply \
+              --dest="org.freedesktop.TextEditor" \
+              "/org/freedesktop/TextEditor" \
+              "org.freedesktop.DBus.Properties.GetAll" \
+              string:"org.freedesktop.TextEditor"
+
+          -| method return sender=:1.22 -> dest=:1.23 reply_serial=3
+                array [
+                   dict entry(
+                      string "name"
+                      variant             string "GNU Emacs"
+                   )
+                   dict entry(
+                      string "version"
+                      variant             string "23.1.50.5"
+                   )
+                ]
+
+     It is also possible, to apply the `dbus-get-property',
+     `dbus-get-all-properties' and `dbus-set-property' functions (*note
+     Properties and Annotations::).
+
+          (dbus-set-property
+            :session "org.freedesktop.TextEditor" "/org/freedesktop/TextEditor"
+            "org.freedesktop.TextEditor" "version" "23.1.50")
+
+          => "23.1.50"
+
+          (dbus-get-property
+            :session "org.freedesktop.TextEditor" "/org/freedesktop/TextEditor"
+            "org.freedesktop.TextEditor" "version")
+
+          => "23.1.50"
+
+ -- Function: dbus-unregister-object object
+     Unregister OBJECT from the D-Bus.  OBJECT must be the result of a
+     preceding `dbus-register-method', `dbus-register-property' or
+     `dbus-register-signal' call (*note Signals::).  It returns `t' if
+     OBJECT has been unregistered, `nil' otherwise.
+
+     When OBJECT identifies the last method or property, which is
+     registered for the respective service, Emacs releases its
+     association to the service from D-Bus.
+
+ -- Function: dbus-unregister-service bus service
+     Unregister all objects from D-Bus BUS, registered by Emacs for
+     SERVICE.
+
+     BUS is either the symbol `:system' or the symbol `:session'.
+
+     SERVICE is the D-Bus service name of the D-Bus.  It must be a
+     known name.  Emacs releases its association to SERVICE from D-Bus.
 
 
 File: dbus,  Node: Signals,  Next: Errors and Events,  Prev: Receiving Method Calls,  Up: Top
@@ -1311,11 +1418,6 @@ received by all objects which have registered for such a signal.
      machine, when registered for signal `DeviceAdded', will show you
      which objects the GNU/Linux `hal' daemon adds.
 
- -- Function: dbus-unregister-object object
-     Unregister OBJECT from the D-Bus.  OBJECT must be the result of a
-     preceding `dbus-register-signal' or `dbus-register-method' call.
-     It returns `t' if OBJECT has been unregistered, `nil' otherwise.
-
 
 File: dbus,  Node: Errors and Events,  Next: GNU Free Documentation License,  Prev: Signals,  Up: Top
 
@@ -1336,8 +1438,9 @@ the `dbus-error'.
      `dbus-error' errors are ignored during the FORMS.  These errors
      can be made visible when variable `dbus-debug' is set to `t'.
 
-   Incoming D-Bus messages are handled as Emacs events (see *note Misc
-Events: (elisp)Misc Events.).  The generated event has this form:
+   Incoming D-Bus messages are handled as Emacs events, see *note Misc
+Events: (elisp)Misc Events.  They are retrieved only, when Emacs runs in
+interactive mode.  The generated event has this form:
 
      (dbus-event BUS TYPE SERIAL SERVICE PATH INTERFACE MEMBER HANDLER
              &rest ARGS)
@@ -1909,26 +2012,25 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top910
-Ref: Top-Footnote-12569
-Node: Overview2707
-Node: Inspection5053
-Node: Bus names5590
-Node: Introspection8576
-Ref: Introspection-Footnote-116198
-Ref: Introspection-Footnote-216351
-Node: Nodes and Interfaces16503
-Node: Methods and Signal20766
-Node: Properties and Annotations23753
-Ref: Properties and Annotations-Footnote-129484
-Ref: Properties and Annotations-Footnote-229585
-Node: Arguments and Signatures29676
-Node: Type Conversion31849
-Node: Synchronous Methods38733
-Node: Asynchronous Methods43545
-Node: Receiving Method Calls45256
-Node: Signals49826
-Node: Errors and Events53848
-Node: GNU Free Documentation License58181
+Node: Top916
+Node: Overview2542
+Node: Inspection4888
+Node: Bus names5425
+Node: Introspection8777
+Ref: Introspection-Footnote-116399
+Ref: Introspection-Footnote-216552
+Node: Nodes and Interfaces16704
+Node: Methods and Signal20967
+Node: Properties and Annotations23954
+Ref: Properties and Annotations-Footnote-129685
+Ref: Properties and Annotations-Footnote-229786
+Node: Arguments and Signatures29877
+Node: Type Conversion32050
+Node: Synchronous Methods38933
+Node: Asynchronous Methods43745
+Node: Receiving Method Calls45542
+Node: Signals54387
+Node: Errors and Events58153
+Node: GNU Free Documentation License62547
 
 End Tag Table

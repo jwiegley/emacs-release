@@ -1,7 +1,7 @@
 ;;; calc-help.el --- help display functions for Calc,
 
-;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004, 2005,
+;;   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -110,8 +110,7 @@ C-w  Describe how there is no warranty for Calc."
 (defun calc-describe-bindings ()
   (interactive)
   (describe-bindings)
-  (save-excursion
-    (set-buffer "*Help*")
+  (with-current-buffer "*Help*"
     (let ((inhibit-read-only t))
       (goto-char (point-min))
       (when (search-forward "Major Mode Bindings:" nil t)
@@ -178,8 +177,7 @@ C-w  Describe how there is no warranty for Calc."
       (if (string-match "\\(DEL\\|\\LFD\\|RET\\|SPC\\|TAB\\)" desc)
           (setq desc (replace-match "<\\&>" nil nil desc)))
       (if briefly
-	  (let ((msg (save-excursion
-		       (set-buffer (get-buffer-create "*Calc Summary*"))
+	  (let ((msg (with-current-buffer (get-buffer-create "*Calc Summary*")
 		       (if (= (buffer-size) 0)
 			   (progn
 			     (message "Reading Calc summary from manual...")
@@ -283,7 +281,7 @@ C-w  Describe how there is no warranty for Calc."
 				(beginning-of-line)
 				(princ (buffer-substring pt (point))))
 			      (setq notes (cdr notes)))
-			    (print-help-return-message)))
+			    (help-print-return-message)))
 		      (calc-unread-command (cdr key)))))
 	      (if (or (null defn) (integerp defn))
 		  (message "%s is undefined" desc)
@@ -466,7 +464,7 @@ C-w  Describe how there is no warranty for Calc."
 	      calc-shift-Y-prefix-help
 	      calc-shift-Z-prefix-help
 	      calc-z-prefix-help)))
-    (print-help-return-message)))
+    (help-print-return-message)))
 
 (defun calc-h-prefix-help ()
   (interactive)

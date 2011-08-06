@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1999, 2001, 2002, 2003,
-@c   2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+@c   2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/abbrevs
 @node Abbrevs, Processes, Syntax Tables, Top
@@ -71,11 +71,6 @@ but they are not expanded automatically.
 
 This variable automatically becomes buffer-local when set in any fashion.
 @end defopt
-
-@defvar default-abbrev-mode
-This is the value of @code{abbrev-mode} for buffers that do not
-override it.  It is the same as @code{(default-value 'abbrev-mode)}.
-@end defvar
 
 @node Abbrev Tables, Defining Abbrevs, Abbrev Mode, Abbrevs
 @section Abbrev Tables
@@ -286,7 +281,7 @@ function returns @code{nil} as its value, then @code{expand-abbrev}
 returns @code{nil} even though expansion did occur.
 @end deffn
 
-@deffn abbrev-insert abbrev &optional name start end
+@defun abbrev-insert abbrev &optional name start end
 This function inserts the abbrev expansion of @code{abbrev}, replacing
 the text between @code{start} and @code{end}.  If @code{start} is
 omitted, it defaults to point.  @code{name}, if non-@code{nil}, should
@@ -294,7 +289,7 @@ be the name by which this abbrev was found (a string); it is used to
 figure out whether to adjust the capitalization of the expansion.  The
 function returns @code{abbrev} if the abbrev was successfully
 inserted.
-@end deffn
+@end defun
 
 @deffn Command abbrev-prefix-mark &optional arg
 This command marks the current location of point as the beginning of

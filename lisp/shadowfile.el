@@ -1,7 +1,7 @@
 ;;; shadowfile.el --- automatic file copying
 
 ;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Boris Goldowsky <boris@gnu.org>
 ;; Keywords: comm files
@@ -510,7 +510,7 @@ Pending copies are stored in variable `shadow-files-to-copy', and in
 call it manually."
   (interactive "P")
   (if (not shadow-files-to-copy)
-      (if (interactive-p)
+      (if (called-interactively-p 'interactive)
 	  (message "No files need to be shadowed."))
     (save-excursion
       (map-y-or-n-p (function
@@ -707,8 +707,7 @@ With non-nil argument also saves the buffer."
 
 (defun shadow-save-todo-file ()
   (if (and shadow-todo-buffer (buffer-modified-p shadow-todo-buffer))
-      (save-excursion
-	(set-buffer shadow-todo-buffer)
+      (with-current-buffer shadow-todo-buffer
 	(condition-case nil		; have to continue even in case of
 	    (basic-save-buffer)		; error, otherwise kill-emacs might
 	  (error			; not work!

@@ -2,10 +2,10 @@ This is ../../info/elisp, produced by makeinfo version 4.11 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.1.
+corresponding to Emacs version 23.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -25,6 +25,195 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Reading File Names,  Next: Completion Styles,  Prev: High-Level Completion,  Up: Completion
+
+20.6.5 Reading File Names
+-------------------------
+
+The high-level completion functions `read-file-name',
+`read-directory-name', and `read-shell-command' are designed to read
+file names, directory names, and shell commands respectively.  They
+provide special features, including automatic insertion of the default
+directory.
+
+ -- Function: read-file-name prompt &optional directory default
+          require-match initial predicate
+     This function reads a file name, prompting with PROMPT and
+     providing completion.
+
+     As an exception, this function reads a file name using a graphical
+     file dialog instead of the minibuffer, if (i) it is invoked via a
+     mouse command, and (ii) the selected frame is on a graphical
+     display supporting such dialogs, and (iii) the variable
+     `use-dialog-box' is non-`nil' (*note Dialog Boxes: (emacs)Dialog
+     Boxes.), and (iv) the DIRECTORY argument, described below, does
+     not specify a remote file (*note Remote Files: (emacs)Remote
+     Files.).  The exact behavior when using a graphical file dialog is
+     platform-dependent.  Here, we simply document the behavior when
+     using the minibuffer.
+
+     The optional argument REQUIRE-MATCH has the same meaning as in
+     `completing-read'.  *Note Minibuffer Completion::.
+
+     `read-file-name' uses `minibuffer-local-filename-completion-map'
+     as the keymap if REQUIRE-MATCH is `nil', and uses
+     `minibuffer-local-filename-must-match-map' if REQUIRE-MATCH is
+     non-`nil'.  *Note Completion Commands::.
+
+     The argument DIRECTORY specifies the directory to use for
+     completion of relative file names.  It should be an absolute
+     directory name.  If `insert-default-directory' is non-`nil',
+     DIRECTORY is also inserted in the minibuffer as initial input.  It
+     defaults to the current buffer's value of `default-directory'.
+
+     If you specify INITIAL, that is an initial file name to insert in
+     the buffer (after DIRECTORY, if that is inserted).  In this case,
+     point goes at the beginning of INITIAL.  The default for INITIAL
+     is `nil'--don't insert any file name.  To see what INITIAL does,
+     try the command `C-x C-v'.  *Please note:* we recommend using
+     DEFAULT rather than INITIAL in most cases.
+
+     If DEFAULT is non-`nil', then the function returns DEFAULT if the
+     user exits the minibuffer with the same non-empty contents that
+     `read-file-name' inserted initially.  The initial minibuffer
+     contents are always non-empty if `insert-default-directory' is
+     non-`nil', as it is by default.  DEFAULT is not checked for
+     validity, regardless of the value of REQUIRE-MATCH.  However, if
+     REQUIRE-MATCH is non-`nil', the initial minibuffer contents should
+     be a valid file (or directory) name.  Otherwise `read-file-name'
+     attempts completion if the user exits without any editing, and
+     does not return DEFAULT.  DEFAULT is also available through the
+     history commands.
+
+     If DEFAULT is `nil', `read-file-name' tries to find a substitute
+     default to use in its place, which it treats in exactly the same
+     way as if it had been specified explicitly.  If DEFAULT is `nil',
+     but INITIAL is non-`nil', then the default is the absolute file
+     name obtained from DIRECTORY and INITIAL.  If both DEFAULT and
+     INITIAL are `nil' and the buffer is visiting a file,
+     `read-file-name' uses the absolute file name of that file as
+     default.  If the buffer is not visiting a file, then there is no
+     default.  In that case, if the user types <RET> without any
+     editing, `read-file-name' simply returns the pre-inserted contents
+     of the minibuffer.
+
+     If the user types <RET> in an empty minibuffer, this function
+     returns an empty string, regardless of the value of REQUIRE-MATCH.
+     This is, for instance, how the user can make the current buffer
+     visit no file using `M-x set-visited-file-name'.
+
+     If PREDICATE is non-`nil', it specifies a function of one argument
+     that decides which file names are acceptable completion
+     possibilities.  A file name is an acceptable value if PREDICATE
+     returns non-`nil' for it.
+
+     `read-file-name' does not automatically expand file names.  You
+     must call `expand-file-name' yourself if an absolute file name is
+     required.
+
+     Here is an example:
+
+          (read-file-name "The file is ")
+
+          ;; After evaluation of the preceding expression,
+          ;;   the following appears in the minibuffer:
+
+          ---------- Buffer: Minibuffer ----------
+          The file is /gp/gnu/elisp/-!-
+          ---------- Buffer: Minibuffer ----------
+
+     Typing `manual <TAB>' results in the following:
+
+          ---------- Buffer: Minibuffer ----------
+          The file is /gp/gnu/elisp/manual.texi-!-
+          ---------- Buffer: Minibuffer ----------
+
+     If the user types <RET>, `read-file-name' returns the file name as
+     the string `"/gp/gnu/elisp/manual.texi"'.
+
+ -- Variable: read-file-name-function
+     If non-`nil', this should be a function that accepts the same
+     arguments as `read-file-name'.  When `read-file-name' is called,
+     it calls this function with the supplied arguments instead of
+     doing its usual work.
+
+ -- User Option: read-file-name-completion-ignore-case
+     If this variable is non-`nil', `read-file-name' ignores case when
+     performing completion.
+
+ -- Function: read-directory-name prompt &optional directory default
+          require-match initial
+     This function is like `read-file-name' but allows only directory
+     names as completion possibilities.
+
+     If DEFAULT is `nil' and INITIAL is non-`nil',
+     `read-directory-name' constructs a substitute default by combining
+     DIRECTORY (or the current buffer's default directory if DIRECTORY
+     is `nil') and INITIAL.  If both DEFAULT and INITIAL are `nil',
+     this function uses DIRECTORY as substitute default, or the current
+     buffer's default directory if DIRECTORY is `nil'.
+
+ -- User Option: insert-default-directory
+     This variable is used by `read-file-name', and thus, indirectly,
+     by most commands reading file names.  (This includes all commands
+     that use the code letters `f' or `F' in their interactive form.
+     *Note Code Characters for interactive: Interactive Codes.)  Its
+     value controls whether `read-file-name' starts by placing the name
+     of the default directory in the minibuffer, plus the initial file
+     name if any.  If the value of this variable is `nil', then
+     `read-file-name' does not place any initial input in the
+     minibuffer (unless you specify initial input with the INITIAL
+     argument).  In that case, the default directory is still used for
+     completion of relative file names, but is not displayed.
+
+     If this variable is `nil' and the initial minibuffer contents are
+     empty, the user may have to explicitly fetch the next history
+     element to access a default value.  If the variable is non-`nil',
+     the initial minibuffer contents are always non-empty and the user
+     can always request a default value by immediately typing <RET> in
+     an unedited minibuffer.  (See above.)
+
+     For example:
+
+          ;; Here the minibuffer starts out with the default directory.
+          (let ((insert-default-directory t))
+            (read-file-name "The file is "))
+
+          ---------- Buffer: Minibuffer ----------
+          The file is ~lewis/manual/-!-
+          ---------- Buffer: Minibuffer ----------
+
+          ;; Here the minibuffer is empty and only the prompt
+          ;;   appears on its line.
+          (let ((insert-default-directory nil))
+            (read-file-name "The file is "))
+
+          ---------- Buffer: Minibuffer ----------
+          The file is -!-
+          ---------- Buffer: Minibuffer ----------
+
+ -- Function: read-shell-command prompt &optional initial-contents hist
+          &rest args
+     This function reads a shell command from the minibuffer, prompting
+     with PROMPT and providing intelligent completion.  It completes
+     the first word of the command using candidates that are appropriate
+     for command names, and the rest of the command words as file names.
+
+     This function uses `minibuffer-local-shell-command-map' as the
+     keymap for minibuffer input.  The HIST argument specifies the
+     history list to use; if is omitted or `nil', it defaults to
+     `shell-command-history' (*note shell-command-history: Minibuffer
+     History.).  The optional argument INITIAL-CONTENTS specifies the
+     initial content of the minibuffer (*note Initial Input::).  The
+     rest of ARGS, if present, are used as the DEFAULT and
+     INHERIT-INPUT-METHOD arguments in `read-from-minibuffer' (*note
+     Text from Minibuffer::).
+
+ -- Variable: minibuffer-local-shell-command-map
+     This keymap is used by `read-shell-command' for completing command
+     and file names that are part of a shell command.
 
 
 File: elisp,  Node: Completion Styles,  Next: Programmed Completion,  Prev: Reading File Names,  Up: Completion
@@ -69,12 +258,13 @@ which are represented by symbols.
      returns a non-`nil' value.  A similar procedure is used for
      listing completions, via the ALL-COMPLETIONS functions.
 
-   By default, `completion-styles-alist' contains four pre-defined
+   By default, `completion-styles-alist' contains five pre-defined
 completion styles: `basic', a basic completion style;
 `partial-completion', which does partial completion (completing each
 word in the input separately); `emacs22', which performs completion
-according to the rules used in Emacs 22; and `emacs21', which performs
-completion according to the rules used in Emacs 21.
+according to the rules used in Emacs 22; `emacs21', which performs
+completion according to the rules used in Emacs 21; and `initials',
+which completes acronyms and initialisms.
 
 
 File: elisp,  Node: Programmed Completion,  Prev: Completion Styles,  Up: Completion
@@ -85,7 +275,8 @@ File: elisp,  Node: Programmed Completion,  Prev: Completion Styles,  Up: Comple
 Sometimes it is not possible to create an alist or an obarray
 containing all the intended possible completions.  In such a case, you
 can supply your own function to compute the completion of a given
-string.  This is called "programmed completion".
+string.  This is called "programmed completion".  Emacs uses programmed
+completion when completing file names (*note File Name Completion::).
 
    To use this feature, pass a symbol with a function definition as the
 COLLECTION argument to `completing-read'.  The function
@@ -130,9 +321,6 @@ one differently just because it is also a possible function.  So you
 must arrange for any function you wish to use for completion to be
 encapsulated in a symbol.
 
-   Emacs uses programmed completion when completing file names.  *Note
-File Name Completion::.
-
  -- Function: completion-table-dynamic function
      This function is a convenient way to write a function that can act
      as programmed completion function.  The argument FUNCTION should be
@@ -140,6 +328,18 @@ File Name Completion::.
      of possible completions of it.  You can think of
      `completion-table-dynamic' as a transducer between that interface
      and the interface for programmed completion functions.
+
+ -- Variable: completion-annotate-function
+     The value of this variable, if non-`nil', should be a function for
+     "annotating" the entries in the `*Completions*' buffer.  The
+     function should accept a single argument, the completion string
+     for an entry.  It should return an additional string to display
+     next to that entry in the `*Completions*' buffer, or `nil' if no
+     additional string is to be displayed.
+
+     The function can determine the collection used for the current
+     completion via the variable `minibuffer-completion-table' (*note
+     Completion Commands::).
 
 
 File: elisp,  Node: Yes-or-No Queries,  Next: Multiple Queries,  Prev: Completion,  Up: Minibuffers
@@ -1199,55 +1399,51 @@ from a keyboard macro.
 
    The above method with the additional argument is usually best,
 because it allows callers to say "treat this call as interactive."  But
-you can also do the job in a simpler way by testing
-`called-interactively-p'.
+you can also do the job by testing `called-interactively-p'.
 
- -- Function: called-interactively-p
+ -- Function: called-interactively-p kind
      This function returns `t' when the calling function was called
      using `call-interactively'.
 
-     If the containing function was called by Lisp evaluation (or with
-     `apply' or `funcall'), then it was not called interactively.
+     The argument KIND should be either the symbol `interactive' or the
+     symbol `any'.  If it is `interactive', then
+     `called-interactively-p' returns `t' only if the call was made
+     directly by the user--e.g., if the user typed a key sequence bound
+     to the calling function, but _not_ if the user ran a keyboard
+     macro that called the function (*note Keyboard Macros::).  If KIND
+     is `any', `called-interactively-p' returns `t' for any kind of
+     interactive call, including keyboard macros.
 
-   Here's an example of using `called-interactively-p':
+     If in doubt, use `any'; the only known proper use of `interactive'
+     is if you need to decide whether to display a helpful message
+     while a function is running.
+
+     A function is never considered to be called interactively if it was
+     called via Lisp evaluation (or with `apply' or `funcall').
+
+Here is an example of using `called-interactively-p':
 
      (defun foo ()
        (interactive)
-       (when (called-interactively-p)
-         (message "foo"))
-       'haha)
-          => foo
+       (when (called-interactively-p 'any)
+         (message "Interactive!")
+         'foo-called-interactively))
 
      ;; Type `M-x foo'.
-          -| foo
+          -| Interactive!
 
      (foo)
-          => haha
+          => nil
 
-   Here is another example that contrasts direct and indirect calls to
+Here is another example that contrasts direct and indirect calls to
 `called-interactively-p'.
 
      (defun bar ()
        (interactive)
-       (setq foobar (list (foo) (called-interactively-p))))
-          => bar
+       (message "%s" (list (foo) (called-interactively-p 'any))))
 
      ;; Type `M-x bar'.
-     ;; This does not display a message.
-
-     foobar
-          => (nil t)
-
-   If you want to treat commands run in keyboard macros just like calls
-from Lisp programs, test `interactive-p' instead of
-`called-interactively-p'.
-
- -- Function: interactive-p
-     This function returns `t' if the containing function (the one
-     whose code includes the call to `interactive-p') was called in
-     direct response to user input.  This means that it was called with
-     the function `call-interactively', and that a keyboard macro is
-     not running, and that Emacs is not running in batch mode.
+          -| (nil t)
 
 
 File: elisp,  Node: Command Loop Info,  Next: Adjusting Point,  Prev: Distinguish Interactive,  Up: Command Loop
@@ -1934,7 +2130,7 @@ Emacs sometimes generates "mouse motion" events to describe motion of
 the mouse without any button activity.  Mouse motion events are
 represented by lists that look like this:
 
-     (mouse-movement (POSITION))
+     (mouse-movement POSITION)
 
    The second element of the list describes the current position of the
 mouse, just as in a click event (*note Click Events::).
@@ -2599,10 +2795,8 @@ File: elisp,  Node: Reading One Event,  Next: Event Mod,  Prev: Key Sequence Inp
 21.8.2 Reading One Event
 ------------------------
 
-The lowest level functions for command input are those that read a
-single event.
-
-   None of the three functions below suppresses quitting.
+The lowest level functions for command input are `read-event',
+`read-char', and `read-char-exclusive'.
 
  -- Function: read-event &optional prompt inherit-input-method seconds
      This function reads and returns the next event of command input,
@@ -2684,10 +2878,29 @@ single event.
      `read-char-exclusive' ignores it and reads another event, until it
      gets a character.  The arguments work as in `read-event'.
 
+   None of the above functions suppress quitting.
+
  -- Variable: num-nonmacro-input-events
      This variable holds the total number of input events received so
      far from the terminal--not counting those generated by keyboard
      macros.
+
+   We emphasize that, unlike `read-key-sequence', the functions
+`read-event', `read-char', and `read-char-exclusive' do not perform the
+translations described in *note Translation Keymaps::.  If you wish to
+read a single key taking these translations into account, use the
+function `read-key':
+
+ -- Function: read-key &optional prompt
+     This function reads a single key.  It is "intermediate" between
+     `read-key-sequence' and `read-event'.  Unlike the former, it reads
+     a single key, not a key sequence.  Unlike the latter, it does not
+     return a raw event, but decodes and translates the user input
+     according to `input-decode-map', `local-function-key-map', and
+     `key-translation-map' (*note Translation Keymaps::).
+
+     The argument PROMPT is either a string to be displayed in the echo
+     area as a prompt, or `nil', meaning not to display a prompt.
 
 
 File: elisp,  Node: Event Mod,  Next: Invoking the Input Method,  Prev: Reading One Event,  Up: Reading Input
@@ -5637,9 +5850,13 @@ File: elisp,  Node: Menu Bar,  Next: Tool Bar,  Prev: Menu Example,  Up: Menu Ke
 --------------------
 
 Most window systems allow each frame to have a "menu bar"--a
-permanently displayed menu stretching horizontally across the top of the
-frame.  The items of the menu bar are the subcommands of the fake
-"function key" `menu-bar', as defined in the active keymaps.
+permanently displayed menu stretching horizontally across the top of
+the frame.  (In order for a frame to display a menu bar, its
+`menu-bar-lines' parameter must be greater than zero.  *Note Layout
+Parameters::.)
+
+   The items of the menu bar are the subcommands of the fake "function
+key" `menu-bar', as defined in the active keymaps.
 
    To add an item to the menu bar, invent a fake "function key" of your
 own (let's call it KEY), and make a binding for the key sequence
@@ -5656,13 +5873,6 @@ subcommands, and the minor mode subcommands.
 determining the menu bar contents.  That is, the menu bar is computed
 from the keymaps that would be active if `overriding-local-map' were
 `nil'.  *Note Active Keymaps::.
-
-   In order for a frame to display a menu bar, its `menu-bar-lines'
-parameter must be greater than zero.  Emacs uses just one line for the
-menu bar itself; if you specify more than one line, the other lines
-serve to separate the menu bar from the windows in the frame.  We
-recommend 1 or 2 as the value of `menu-bar-lines'.  *Note Layout
-Parameters::.
 
    Here's an example of setting up a menu bar item:
 
@@ -5689,9 +5899,9 @@ item:
 
      (define-key dired-mode-map [menu-bar edit] 'undefined)
 
-`edit' is the fake function key used by the global map for the `Edit'
-menu bar item.  The main reason to suppress a global menu bar item is
-to regain space for mode-specific items.
+Here, `edit' is the fake function key used by the global map for the
+`Edit' menu bar item.  The main reason to suppress a global menu bar
+item is to regain space for mode-specific items.
 
  -- Variable: menu-bar-final-items
      Normally the menu bar shows global items followed by items defined
@@ -5709,6 +5919,19 @@ to regain space for mode-specific items.
      update submenus whose contents should vary.  Since this hook is
      run frequently, we advise you to ensure that the functions it
      calls do not take much time in the usual case.
+
+   Next to every menu bar item, Emacs displays a key binding that runs
+the same command (if such a key binding exists).  This serves as a
+convenient hint for users who do not know the key binding.  If a
+command has multiple bindings, Emacs normally displays the first one it
+finds.  You can specify one particular key binding by assigning an
+`:advertised-binding' symbol property to the command.  For instance,
+the following tells Emacs to show `C-/' for the `undo' menu item:
+
+     (put 'undo :advertised-binding [?\C-/])
+
+If the `:advertised-binding' property specifies a key binding that the
+command does not actually have, it is ignored.
 
 
 File: elisp,  Node: Tool Bar,  Next: Modifying Menus,  Prev: Menu Bar,  Up: Menu Keymaps
@@ -6380,9 +6603,9 @@ the usual conventions, please make it compatible.
           (put 'funny-mode 'mode-class 'special)
 
      This tells Emacs that new buffers created while the current buffer
-     is in Funny mode should not inherit Funny mode, in case
-     `default-major-mode' is `nil'.  Modes such as Dired, Rmail, and
-     Buffer List use this feature.
+     is in Funny mode should not inherit Funny mode, in case the
+     default value of `major-mode' is `nil'.  Modes such as Dired,
+     Rmail, and Buffer List use this feature.
 
      The `define-derived-mode' macro automatically marks the derived
      mode as special if the parent mode is special.  The special mode
@@ -6451,7 +6674,8 @@ visited.  It also processes local variables specified in the file text.
      specifies a major mode, that mode overrides any mode chosen by
      `set-auto-mode'.  If neither `set-auto-mode' nor
      `hack-local-variables' specify a major mode, the buffer stays in
-     the major mode determined by `default-major-mode' (see below).
+     the major mode determined by the default value of `major-mode'
+     (see below).
 
      `normal-mode' uses `condition-case' around the call to the major
      mode function, so errors are caught and reported as a `File mode
@@ -6475,11 +6699,13 @@ visited.  It also processes local variables specified in the file text.
      For instance, `set-visited-file-name' sets this to `t' to avoid
      killing buffer local variables that the user may have set.
 
- -- User Option: default-major-mode
-     This variable holds the default major mode for new buffers.  The
-     standard value is `fundamental-mode'.
+ -- User Option: major-mode
+     The buffer-local value of this variable holds the major mode
+     currently active.  The default value of this variable holds the
+     default major mode for new buffers.  The standard default value is
+     `fundamental-mode'.
 
-     If the value of `default-major-mode' is `nil', Emacs uses the
+     If the default value of `major-mode' is `nil', Emacs uses the
      (previously) current buffer's major mode as the default major mode
      of a new buffer.  However, if that major mode symbol has a
      `mode-class' property with value `special', then it is not used
@@ -6488,11 +6714,10 @@ visited.  It also processes local variables specified in the file text.
      useful only with text that has been specially prepared.
 
  -- Function: set-buffer-major-mode buffer
-     This function sets the major mode of BUFFER to the value of
-     `default-major-mode'; if that variable is `nil', it uses the
-     current buffer's major mode (if that is suitable).  As an
-     exception, if BUFFER's name is `*scratch*', it sets the mode to
-     `initial-major-mode'.
+     This function sets the major mode of BUFFER to the default value of
+     `major-mode'; if that is `nil', it uses the current buffer's major
+     mode (if that is suitable).  As an exception, if BUFFER's name is
+     `*scratch*', it sets the mode to `initial-major-mode'.
 
      The low-level primitives for creating buffers do not use this
      function, but medium-level commands such as `switch-to-buffer' and
@@ -6594,200 +6819,4 @@ function needs to set the `major-mode' variable.
      definition that is the command to switch to that major mode.  The
      `describe-mode' function uses the documentation string of the
      function as the documentation of the major mode.
-
-
-File: elisp,  Node: Derived Modes,  Next: Generic Modes,  Prev: Mode Help,  Up: Major Modes
-
-23.2.5 Defining Derived Modes
------------------------------
-
-It's often useful to define a new major mode in terms of an existing
-one.  An easy way to do this is to use `define-derived-mode'.
-
- -- Macro: define-derived-mode variant parent name docstring
-          keyword-args... body...
-     This macro defines VARIANT as a major mode command, using NAME as
-     the string form of the mode name.  VARIANT and PARENT should be
-     unquoted symbols.
-
-     The new command VARIANT is defined to call the function PARENT,
-     then override certain aspects of that parent mode:
-
-        * The new mode has its own sparse keymap, named `VARIANT-map'.
-          `define-derived-mode' makes the parent mode's keymap the
-          parent of the new map, unless `VARIANT-map' is already set
-          and already has a parent.
-
-        * The new mode has its own syntax table, kept in the variable
-          `VARIANT-syntax-table', unless you override this using the
-          `:syntax-table' keyword (see below).  `define-derived-mode'
-          makes the parent mode's syntax-table the parent of
-          `VARIANT-syntax-table', unless the latter is already set and
-          already has a parent different from the standard syntax table.
-
-        * The new mode has its own abbrev table, kept in the variable
-          `VARIANT-abbrev-table', unless you override this using the
-          `:abbrev-table' keyword (see below).
-
-        * The new mode has its own mode hook, `VARIANT-hook'.  It runs
-          this hook, after running the hooks of its ancestor modes, with
-          `run-mode-hooks', as the last thing it does. *Note Mode
-          Hooks::.
-
-     In addition, you can specify how to override other aspects of
-     PARENT with BODY.  The command VARIANT evaluates the forms in BODY
-     after setting up all its usual overrides, just before running the
-     mode hooks.
-
-     If PARENT has a non-`nil' `mode-class' symbol property, then
-     `define-derived-mode' sets the `mode-class' property of VARIANT to
-     the same value.  This ensures, for example, that if PARENT is a
-     special mode, then VARIANT is also a special mode (*note Major
-     Mode Conventions::).
-
-     You can also specify `nil' for PARENT.  This gives the new mode no
-     parent.  Then `define-derived-mode' behaves as described above,
-     but, of course, omits all actions connected with PARENT.
-
-     The argument DOCSTRING specifies the documentation string for the
-     new mode.  `define-derived-mode' adds some general information
-     about the mode's hook, followed by the mode's keymap, at the end
-     of this docstring.  If you omit DOCSTRING, `define-derived-mode'
-     generates a documentation string.
-
-     The KEYWORD-ARGS are pairs of keywords and values.  The values are
-     evaluated.  The following keywords are currently supported:
-
-    `:syntax-table'
-          You can use this to explicitly specify a syntax table for the
-          new mode.  If you specify a `nil' value, the new mode uses
-          the same syntax table as PARENT, or the standard syntax table
-          if PARENT is `nil'.  (Note that this does _not_ follow the
-          convention used for non-keyword arguments that a `nil' value
-          is equivalent with not specifying the argument.)
-
-    `:abbrev-table'
-          You can use this to explicitly specify an abbrev table for
-          the new mode.  If you specify a `nil' value, the new mode
-          uses the same abbrev table as PARENT, or
-          `fundamental-mode-abbrev-table' if PARENT is `nil'.  (Again,
-          a `nil' value is _not_ equivalent to not specifying this
-          keyword.)
-
-    `:group'
-          If this is specified, the value should be the customization
-          group for this mode.  (Not all major modes have one.)  Only
-          the (still experimental and unadvertised) command
-          `customize-mode' currently uses this.  `define-derived-mode'
-          does _not_ automatically define the specified customization
-          group.
-
-     Here is a hypothetical example:
-
-          (define-derived-mode hypertext-mode
-            text-mode "Hypertext"
-            "Major mode for hypertext.
-          \\{hypertext-mode-map}"
-            (setq case-fold-search nil))
-
-          (define-key hypertext-mode-map
-            [down-mouse-3] 'do-hyper-link)
-
-     Do not write an `interactive' spec in the definition;
-     `define-derived-mode' does that automatically.
-
-
-File: elisp,  Node: Generic Modes,  Next: Mode Hooks,  Prev: Derived Modes,  Up: Major Modes
-
-23.2.6 Generic Modes
---------------------
-
-"Generic modes" are simple major modes with basic support for comment
-syntax and Font Lock mode.  To define a generic mode, use the macro
-`define-generic-mode'.  See the file `generic-x.el' for some examples
-of the use of `define-generic-mode'.
-
- -- Macro: define-generic-mode mode comment-list keyword-list
-          font-lock-list auto-mode-list function-list &optional
-          docstring
-     This macro defines a generic mode command named MODE (a symbol,
-     not quoted).  The optional argument DOCSTRING is the documentation
-     for the mode command.  If you do not supply it,
-     `define-generic-mode' generates one by default.
-
-     The argument COMMENT-LIST is a list in which each element is
-     either a character, a string of one or two characters, or a cons
-     cell.  A character or a string is set up in the mode's syntax
-     table as a "comment starter."  If the entry is a cons cell, the
-     CAR is set up as a "comment starter" and the CDR as a "comment
-     ender."  (Use `nil' for the latter if you want comments to end at
-     the end of the line.)  Note that the syntax table mechanism has
-     limitations about what comment starters and enders are actually
-     possible.  *Note Syntax Tables::.
-
-     The argument KEYWORD-LIST is a list of keywords to highlight with
-     `font-lock-keyword-face'.  Each keyword should be a string.
-     Meanwhile, FONT-LOCK-LIST is a list of additional expressions to
-     highlight.  Each element of this list should have the same form as
-     an element of `font-lock-keywords'.  *Note Search-based
-     Fontification::.
-
-     The argument AUTO-MODE-LIST is a list of regular expressions to
-     add to the variable `auto-mode-alist'.  They are added by the
-     execution of the `define-generic-mode' form, not by expanding the
-     macro call.
-
-     Finally, FUNCTION-LIST is a list of functions for the mode command
-     to call for additional setup.  It calls these functions just
-     before it runs the mode hook variable `MODE-hook'.
-
-
-File: elisp,  Node: Mode Hooks,  Next: Example Major Modes,  Prev: Generic Modes,  Up: Major Modes
-
-23.2.7 Mode Hooks
------------------
-
-Every major mode function should finish by running its mode hook and
-the mode-independent normal hook `after-change-major-mode-hook'.  It
-does this by calling `run-mode-hooks'.  If the major mode is a derived
-mode, that is if it calls another major mode (the parent mode) in its
-body, it should do this inside `delay-mode-hooks' so that the parent
-won't run these hooks itself.  Instead, the derived mode's call to
-`run-mode-hooks' runs the parent's mode hook too.  *Note Major Mode
-Conventions::.
-
-   Emacs versions before Emacs 22 did not have `delay-mode-hooks'.
-When user-implemented major modes have not been updated to use it, they
-won't entirely follow these conventions: they may run the parent's mode
-hook too early, or fail to run `after-change-major-mode-hook'.  If you
-encounter such a major mode, please correct it to follow these
-conventions.
-
-   When you defined a major mode using `define-derived-mode', it
-automatically makes sure these conventions are followed.  If you define
-a major mode "by hand," not using `define-derived-mode', use the
-following functions to handle these conventions automatically.
-
- -- Function: run-mode-hooks &rest hookvars
-     Major modes should run their mode hook using this function.  It is
-     similar to `run-hooks' (*note Hooks::), but it also runs
-     `after-change-major-mode-hook'.
-
-     When this function is called during the execution of a
-     `delay-mode-hooks' form, it does not run the hooks immediately.
-     Instead, it arranges for the next call to `run-mode-hooks' to run
-     them.
-
- -- Macro: delay-mode-hooks body...
-     When one major mode command calls another, it should do so inside
-     of `delay-mode-hooks'.
-
-     This macro executes BODY, but tells all `run-mode-hooks' calls
-     during the execution of BODY to delay running their hooks.  The
-     hooks will actually run during the next call to `run-mode-hooks'
-     after the end of the `delay-mode-hooks' construct.
-
- -- Variable: after-change-major-mode-hook
-     This is a normal hook run by `run-mode-hooks'.  It is run at the
-     very end of every properly-written major mode function.
 

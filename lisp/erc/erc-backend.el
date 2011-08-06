@@ -1,6 +1,6 @@
 ;;; erc-backend.el --- Backend network communication for ERC
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Filename: erc-backend.el
 ;; Author: Lawrence Mitchell <wence@gmx.li>
@@ -129,6 +129,10 @@ Use `erc-current-nick' to access this.")
 (defvar erc-session-server nil
   "The server name used to connect to for this session.")
 (make-variable-buffer-local 'erc-session-server)
+
+(defvar erc-session-connector nil
+  "The function used to connect to this session (nil for the default).")
+(make-variable-buffer-local 'erc-session-connector)
 
 (defvar erc-session-port nil
   "The port used to connect to.")
@@ -538,8 +542,10 @@ Make sure you are in an ERC buffer when running this."
       (erc-set-active-buffer (current-buffer))
       (setq erc-server-last-sent-time 0)
       (setq erc-server-lines-sent 0)
-      (erc-open erc-session-server erc-session-port erc-server-current-nick
-                erc-session-user-full-name t erc-session-password))))
+      (let ((erc-server-connect-function (or erc-session-connector
+                                             'open-network-stream)))
+        (erc-open erc-session-server erc-session-port erc-server-current-nick
+                  erc-session-user-full-name t erc-session-password)))))
 
 (defun erc-server-filter-function (process string)
   "The process filter for the ERC server."

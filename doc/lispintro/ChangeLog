@@ -1,6 +1,49 @@
-2009-07-29  Chong Yidong  <cyd@stupidchicken.com>
+2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
 
-	* Version 23.1 released.
+	* Version 23.2 released.
+
+2010-02-16  Glenn Morris  <rgm@gnu.org>
+
+	* emacs-lisp-intro.texi: Fix typo in name of `find-tag' command.
+
+2010-02-01  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* emacs-lisp-intro.texi (Text and Auto-fill, Mode Line):
+	Avoid obsolete special default variables like default-major-mode.
+
+2009-12-09  David Robinow  <drobinow@gmail.com>  (tiny change)
+
+	* makefile.w32-in: Use parenthesis for macros for nmake
+	compatibility.
+
+2009-12-03  Glenn Morris  <rgm@gnu.org>
+
+	* emacs-lisp-intro.texi (Free Software and Free Manuals):
+	Update URL, and remove duplicate text.
+
+2009-10-28  Robert J. Chassell  <bob@gnu.org>
+
+	* emacs-lisp-intro.texi: Don't change urlcolor or linkcolor in tex
+	output (not needed and does not work with recent texinfo.tex).
+	Bump edition number.
+
+2009-10-27  Robert J. Chassell  <bob@gnu.org>
+
+	* emacs-lisp-intro.texi: Bump edition number.
+
+2009-10-27  Glenn Morris  <rgm@gnu.org>
+
+	* cons-1.pdf, cons-2.pdf, cons-2a.pdf, cons-3.pdf, cons-4.pdf:
+	* cons-5.pdf, drawers.pdf, lambda-1.pdf, lambda-2.pdf, lambda-3.pdf:
+	New files, generated from .eps versions with epstopdf.
+	* README: Add copyright information for PDF images.
+
+	* Makefile.in (TEXI2PDF): New variable.
+	(emacs-lisp-intro.pdf): New target.
+
+	* makefile.w32-in (texinfodir, TEXI2PDF): New variables.
+	(ENVADD): Add -I$texinfodir.
+	(emacs-lisp-intro.pdf): New target.
 
 2009-07-28  Chong Yidong  <cyd@stupidchicken.com>
 
@@ -18,6 +61,10 @@
 2009-07-06  Glenn Morris  <rgm@gnu.org>
 
 	* emacs-lisp-intro.texi (defvar and asterisk): Minor rephrasing.
+
+2009-06-21  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Branch for 23.1.
 
 2009-06-14  Chong Yidong  <cyd@stupidchicken.com>
 
@@ -336,7 +383,7 @@
 ;; End:
 
     Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-	2008, 2009  Free Software Foundation, Inc.
+	2008, 2009, 2010  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

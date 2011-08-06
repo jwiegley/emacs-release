@@ -4,7 +4,7 @@ calc.texi.
 This file documents Calc, the GNU Emacs calculator.
 
 Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009 Free Software Foundation, Inc.
+2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -553,10 +553,12 @@ are removed or restored.  If it was a "store" operation, you are
 queried whether or not to restore the variable to its original value.
 The `U' key may be pressed any number of times to undo successively
 farther back in time; with a numeric prefix argument it undoes a
-specified number of operations.  The undo history is cleared only by the
-`q' (`calc-quit') command.  (Recall that `C-x * c' is synonymous with
-`calc-quit' while inside the Calculator; this also clears the undo
-history.)
+specified number of operations.  When the Calculator is quit, as with
+the `q' (`calc-quit') command, the undo history will be truncated to
+the length of the customizable variable `calc-undo-length' (*note
+Customizing Calc::), which by default is `100'. (Recall that `C-x * c'
+is synonymous with `calc-quit' while inside the Calculator; this also
+truncates the undo history.)
 
    Currently the mode-setting commands (like `calc-precision') are not
 undoable.  You can undo past a point where you changed a mode, but you
@@ -1249,20 +1251,20 @@ for you.
 
    The Julian day number is based on the Julian cycle, which was
 invented in 1583 by Joseph Justus Scaliger.  Scaliger named it the
-Julian cycle since it is involves the Julian calendar, but some have
+Julian cycle since it involves the Julian calendar, but some have
 suggested that Scaliger named it in honor of his father, Julius Caesar
-Scaliger.  The Julian cycle is based it on three other cycles: the
+Scaliger.  The Julian cycle is based on three other cycles: the
 indiction cycle, the Metonic cycle, and the solar cycle.  The indiction
 cycle is a 15 year cycle originally used by the Romans for tax purposes
 but later used to date medieval documents.  The Metonic cycle is a 19
-year cycle; 19 years is close to being a common multiple of a solar year
-and a lunar month, and so every 19 years the phases of the moon will
-occur on the same days of the year.  The solar cycle is a 28 year
+year cycle; 19 years is close to being a common multiple of a solar
+year and a lunar month, and so every 19 years the phases of the moon
+will occur on the same days of the year.  The solar cycle is a 28 year
 cycle; the Julian calendar repeats itself every 28 years.  The smallest
 time period which contains multiples of all three cycles is the least
-common multiple of 15 years, 19 years and 28 years, which (since
-they're pairwise relatively prime) is 15*19*28 = 7980 years.  This is
-the length of a Julian cycle.  Working backwards, the previous year in
+common multiple of 15 years, 19 years and 28 years, which (since they're
+pairwise relatively prime) is 15*19*28 = 7980 years.  This is the
+length of a Julian cycle.  Working backwards, the previous year in
 which all three cycles began was 4713 BC, and so Scalinger chose that
 year as the beginning of a Julian cycle.  Since at the time there were
 no historical records from before 4713 BC, using this year as a
@@ -1825,10 +1827,23 @@ level N.)
    With a negative argument -N, <TAB> rotates the stack to move the
 object in level N to the deepest place in the stack, and the object in
 level N+1 to the top.  `M-<TAB>' rotates the deepest stack element to
-be in level n, also putting the top stack element in level N+1.
+be in level N, also putting the top stack element in level N+1.
 
    *Note Selecting Subformulas::, for a way to apply these commands to
 any portion of a vector or formula on the stack.
+
+   The command `C-x C-t' (`calc-transpose-lines') will transpose the
+stack object determined by the point with the stack object at the next
+higher level. For example, with `10 20 30 40 50' on the stack and the
+point on the line containing `30', `C-x C-t' creates `10 20 40 30 50'.
+More generally, `C-x C-t' acts on the stack objects determined by the
+current point (and mark) similar to how the text-mode command
+`transpose-lines' acts on lines.  With argument N, `C-x C-t' will move
+the stack object at the level above the current point and move it past
+N other objects; for example, with `10 20 30 40 50' on the stack and
+the point on the line containing `30', `C-u 2 C-x C-t' creates `10 40
+20 30 50'. With an argument of 0, `C-x C-t' will switch the stack
+objects at the levels determined by the point and the mark.
 
 
 File: calc,  Node: Editing Stack Entries,  Next: Trail Commands,  Prev: Stack Manipulation,  Up: Stack and Trail
@@ -2029,15 +2044,15 @@ File: calc,  Node: General Mode Commands,  Next: Precision,  Prev: Mode Settings
 
 You can save all of the current mode settings in your Calc init file
 (the file given by the variable `calc-settings-file', typically
-`~/.calc.el') with the `m m' (`calc-save-modes') command.  This will
-cause Emacs to reestablish these modes each time it starts up.  The
-modes saved in the file include everything controlled by the `m' and
-`d' prefix keys, the current precision and binary word size, whether or
-not the trail is displayed, the current height of the Calc window, and
-more.  The current interface (used when you type `C-x * *') is also
-saved.  If there were already saved mode settings in the file, they are
-replaced.  Otherwise, the new mode information is appended to the end
-of the file.
+`~/.emacs.d/calc.el') with the `m m' (`calc-save-modes') command.  This
+will cause Emacs to reestablish these modes each time it starts up.
+The modes saved in the file include everything controlled by the `m'
+and `d' prefix keys, the current precision and binary word size,
+whether or not the trail is displayed, the current height of the Calc
+window, and more.  The current interface (used when you type `C-x * *')
+is also saved.  If there were already saved mode settings in the file,
+they are replaced.  Otherwise, the new mode information is appended to
+the end of the file.
 
    The `m R' (`calc-mode-record-mode') command tells Calc to record all
 the mode settings (as if by pressing `m m') every time a mode setting
@@ -2920,6 +2935,23 @@ Functions::, for a discussion of word size.)  If the absolute value of
 the word size is `w', all integers are displayed with at least enough
 digits to represent `(2^w)-1' in the current radix.  (Larger integers
 will still be displayed in their entirety.)
+
+   With the binary, octal and hexadecimal display modes, Calc can
+display `w'-bit integers using two's complement notation.  This option
+is selected with the key sequences `C-u d 2', `C-u d 8' and `C-u d 6',
+respectively, and a negative word size might be appropriate (*note
+Binary Functions::). In two's complement notation, the integers in the
+(nearly) symmetric interval from `-2^(w-1)' to `2^(w-1)-1' are
+represented by the integers from `0' to `2^w-1': the integers from `0'
+to `2^(w-1)-1' are represented by themselves and the integers from
+`-2^(w-1)' to `-1' are represented by the integers from `2^(w-1)' to
+`2^w-1' (the integer `k' is represented by `k+2^w').  Calc will display
+a two's complement integer by the radix (either `2', `8' or `16'), two
+`#' symbols, and then its representation (including any leading zeros
+necessary to include all `w' bits).  In a two's complement display
+mode, numbers that are not displayed in two's complement notation
+(i.e., that aren't integers from `-2^(w-1)' to `2^(w-1)-1') will be
+represented using Calc's usual notation (in the appropriate radix).
 
 
 File: calc,  Node: Grouping Digits,  Next: Float Formats,  Prev: Radix Modes,  Up: Display Modes

@@ -10,7 +10,7 @@
 ;;;;;;  ceiling* floor* isqrt lcm gcd cl-progv-before cl-set-frame-visible-p
 ;;;;;;  cl-map-overlays cl-map-intervals cl-map-keymap-recursively
 ;;;;;;  notevery notany every some mapcon mapcan mapl maplist map
-;;;;;;  cl-mapcar-many equalp coerce) "cl-extra" "cl-extra.el" "7988f2bc52c60f3e7cac9970430d1df3")
+;;;;;;  cl-mapcar-many equalp coerce) "cl-extra" "cl-extra.el" "d93072a26c59f663a92b10df8bc28187")
 ;;; Generated autoloads from cl-extra.el
 
 (autoload 'coerce "cl-extra" "\
@@ -273,16 +273,16 @@ Not documented
 
 ;;;***
 
-;;;### (autoloads (compiler-macroexpand define-compiler-macro assert
-;;;;;;  check-type typep cl-struct-setf-expander defstruct define-modify-macro
-;;;;;;  callf2 callf letf* letf rotatef shiftf remf cl-do-pop psetf
-;;;;;;  setf get-setf-method defsetf define-setf-method declare the
-;;;;;;  locally multiple-value-setq multiple-value-bind lexical-let*
-;;;;;;  lexical-let symbol-macrolet macrolet labels flet progv psetq
-;;;;;;  do-all-symbols do-symbols dotimes dolist do* do loop return-from
-;;;;;;  return block etypecase typecase ecase case load-time-value
-;;;;;;  eval-when destructuring-bind function* defmacro* defun* gentemp
-;;;;;;  gensym) "cl-macs" "cl-macs.el" "9e787a584117a8d43201f1aa619fcfb7")
+;;;### (autoloads (defsubst* compiler-macroexpand define-compiler-macro
+;;;;;;  assert check-type typep deftype cl-struct-setf-expander defstruct
+;;;;;;  define-modify-macro callf2 callf letf* letf rotatef shiftf
+;;;;;;  remf cl-do-pop psetf setf get-setf-method defsetf define-setf-method
+;;;;;;  declare the locally multiple-value-setq multiple-value-bind
+;;;;;;  lexical-let* lexical-let symbol-macrolet macrolet labels
+;;;;;;  flet progv psetq do-all-symbols do-symbols dotimes dolist
+;;;;;;  do* do loop return-from return block etypecase typecase ecase
+;;;;;;  case load-time-value eval-when destructuring-bind function*
+;;;;;;  defmacro* defun* gentemp gensym) "cl-macs" "cl-macs.el" "273ba25f4a116c61a464dbe55f1f8c63")
 ;;; Generated autoloads from cl-macs.el
 
 (autoload 'gensym "cl-macs" "\
@@ -672,16 +672,32 @@ from ARGLIST using FUNC: (define-modify-macro incf (&optional (n 1)) +)
 
 (autoload 'defstruct "cl-macs" "\
 Define a struct type.
-This macro defines a new Lisp data type called NAME, which contains data
-stored in SLOTs.  This defines a `make-NAME' constructor, a `copy-NAME'
-copier, a `NAME-p' predicate, and setf-able `NAME-SLOT' accessors.
+This macro defines a new data type called NAME that stores data
+in SLOTs.  It defines a `make-NAME' constructor, a `copy-NAME'
+copier, a `NAME-p' predicate, and slot accessors named `NAME-SLOT'.
+You can use the accessors to set the corresponding slots, via `setf'.
 
-\(fn (NAME OPTIONS...) (SLOT SLOT-OPTS...)...)" nil (quote macro))
+NAME may instead take the form (NAME OPTIONS...), where each
+OPTION is either a single keyword or (KEYWORD VALUE).
+See Info node `(cl)Structures' for a list of valid keywords.
+
+Each SLOT may instead take the form (SLOT SLOT-OPTS...), where
+SLOT-OPTS are keyword-value pairs for that slot.  Currently, only
+one keyword is supported, `:read-only'.  If this has a non-nil
+value, that slot cannot be set via `setf'.
+
+\(fn NAME SLOTS...)" nil (quote macro))
 
 (autoload 'cl-struct-setf-expander "cl-macs" "\
 Not documented
 
 \(fn X NAME ACCESSOR PRED-FORM POS)" nil nil)
+
+(autoload 'deftype "cl-macs" "\
+Define NAME as a new data type.
+The type name can then be used in `typecase', `check-type', etc.
+
+\(fn NAME ARGLIST &rest BODY)" nil (quote macro))
 
 (autoload 'typep "cl-macs" "\
 Check that OBJECT is of type TYPE.
@@ -723,6 +739,14 @@ Not documented
 
 \(fn FORM)" nil nil)
 
+(autoload 'defsubst* "cl-macs" "\
+Define NAME as a function.
+Like `defun', except the function is automatically declared `inline',
+ARGLIST allows full Common Lisp conventions, and BODY is implicitly
+surrounded by (block NAME ...).
+
+\(fn NAME ARGLIST [DOCSTRING] BODY...)" nil (quote macro))
+
 ;;;***
 
 ;;;### (autoloads (tree-equal nsublis sublis nsubst-if-not nsubst-if
@@ -735,7 +759,7 @@ Not documented
 ;;;;;;  find nsubstitute-if-not nsubstitute-if nsubstitute substitute-if-not
 ;;;;;;  substitute-if substitute delete-duplicates remove-duplicates
 ;;;;;;  delete-if-not delete-if delete* remove-if-not remove-if remove*
-;;;;;;  replace fill reduce) "cl-seq" "cl-seq.el" "b6529074e320e8a9f65b2461474d0c6a")
+;;;;;;  replace fill reduce) "cl-seq" "cl-seq.el" "ec3ea1c77742734db8496272fe5721be")
 ;;; Generated autoloads from cl-seq.el
 
 (autoload 'reduce "cl-seq" "\

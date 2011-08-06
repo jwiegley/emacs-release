@@ -1,7 +1,7 @@
 ;;; w32-fns.el --- Lisp routines for Windows NT
 
-;; Copyright (C) 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+;;   2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Geoff Voelker <voelker@cs.washington.edu>
 ;; Keywords: internal
@@ -34,13 +34,6 @@
 (defvar x-alternatives-map
   (let ((map (make-sparse-keymap)))
     ;; Map certain keypad keys into ASCII characters that people usually expect.
-    (define-key map [backspace] [127])
-    (define-key map [delete] [127])
-    (define-key map [tab] [?\t])
-    (define-key map [linefeed] [?\n])
-    (define-key map [clear] [?\C-l])
-    (define-key map [return] [?\C-m])
-    (define-key map [escape] [?\e])
     (define-key map [M-backspace] [?\M-\d])
     (define-key map [M-delete] [?\M-\d])
     (define-key map [M-tab] [?\M-\t])
@@ -170,26 +163,26 @@ You should set this to t when using a non-system shell.\n\n"))))
 
 (add-hook 'after-init-hook 'w32-check-shell-configuration)
 
-;;; Override setting chosen at startup.
+;; Override setting chosen at startup.
 (defun set-default-process-coding-system ()
   ;; Most programs on Windows will accept Unix line endings on input
   ;; (and some programs ported from Unix require it) but most will
   ;; produce DOS line endings on output.
   (setq default-process-coding-system
-	(if default-enable-multibyte-characters
+	(if (default-value 'enable-multibyte-characters)
 	    '(undecided-dos . undecided-unix)
 	  '(raw-text-dos . raw-text-unix)))
   ;; Make cmdproxy default to using DOS line endings for input,
   ;; because some Windows programs (including command.com) require it.
   (add-to-list 'process-coding-system-alist
 	       `("[cC][mM][dD][pP][rR][oO][xX][yY]"
-		 . ,(if default-enable-multibyte-characters
+		 . ,(if (default-value 'enable-multibyte-characters)
 			'(undecided-dos . undecided-dos)
 		      '(raw-text-dos . raw-text-dos))))
   ;; plink needs DOS input when entering the password.
   (add-to-list 'process-coding-system-alist
 	       `("[pP][lL][iI][nN][kK]"
-		 . ,(if default-enable-multibyte-characters
+		 . ,(if (default-value 'enable-multibyte-characters)
 			'(undecided-dos . undecided-dos)
 		      '(raw-text-dos . raw-text-dos)))))
 
@@ -201,8 +194,8 @@ You should set this to t when using a non-system shell.\n\n"))))
 (defvar w32-valid-locales nil
   "List of locale ids known to be supported.")
 
-;;; This is the brute-force version; an efficient version is now
-;;; built-in though.
+;; This is the brute-force version; an efficient version is now
+;; built-in though.
 (if (not (fboundp 'w32-get-valid-locale-ids))
     (defun w32-get-valid-locale-ids ()
       "Return list of all valid Windows locale ids."
@@ -227,11 +220,11 @@ You should set this to t when using a non-system shell.\n\n"))))
 		     (w32-get-locale-info locale)
 		     (w32-get-locale-info locale t))))))
 
-;;; Setup Info-default-directory-list to include the info directory
-;;; near where Emacs executable was installed.  We used to set INFOPATH,
-;;; but when this is set Info-default-directory-list is ignored.  We
-;;; also cannot rely upon what is set in paths.el because they assume
-;;; that configuration during build time is correct for runtime.
+;; Setup Info-default-directory-list to include the info directory
+;; near where Emacs executable was installed.  We used to set INFOPATH,
+;; but when this is set Info-default-directory-list is ignored.  We
+;; also cannot rely upon what is set in paths.el because they assume
+;; that configuration during build time is correct for runtime.
 (defun w32-init-info ()
   (let* ((instdir (file-name-directory invocation-directory))
 	 (dir1 (expand-file-name "../info/" instdir))
@@ -245,20 +238,20 @@ You should set this to t when using a non-system shell.\n\n"))))
 
 (add-hook 'before-init-hook 'w32-init-info)
 
-;;; The variable source-directory is used to initialize Info-directory-list.
-;;; However, the common case is that Emacs is being used from a binary
-;;; distribution, and the value of source-directory is meaningless in that
-;;; case.  Even worse, source-directory can refer to a directory on a drive
-;;; on the build machine that happens to be a removable drive on the user's
-;;; machine.  When this happens, Emacs tries to access the removable drive
-;;; and produces the abort/retry/ignore dialog.  Since we do not use
-;;; source-directory, set it to something that is a reasonable approximation
-;;; on the user's machine.
+;; The variable source-directory is used to initialize Info-directory-list.
+;; However, the common case is that Emacs is being used from a binary
+;; distribution, and the value of source-directory is meaningless in that
+;; case.  Even worse, source-directory can refer to a directory on a drive
+;; on the build machine that happens to be a removable drive on the user's
+;; machine.  When this happens, Emacs tries to access the removable drive
+;; and produces the abort/retry/ignore dialog.  Since we do not use
+;; source-directory, set it to something that is a reasonable approximation
+;; on the user's machine.
 
-;(add-hook 'before-init-hook
-;	  '(lambda ()
-;	     (setq source-directory (file-name-as-directory
-;				     (expand-file-name ".." exec-directory)))))
+;;(add-hook 'before-init-hook
+;;	  (lambda ()
+;;	    (setq source-directory (file-name-as-directory
+;;				     (expand-file-name ".." exec-directory)))))
 
 (defun convert-standard-filename (filename)
   "Convert a standard file's name to something suitable for the current OS.
@@ -294,7 +287,7 @@ shell requires it (see `w32-shell-dos-semantics')."
 
 ;;; Fix interface to (X-specific) mouse.el
 (defun x-set-selection (type data)
-  "Make an X Windows selection of type TYPE and value DATA.
+  "Make an X selection of type TYPE and value DATA.
 The argument TYPE (nil means `PRIMARY') says which selection, and
 DATA specifies the contents.  TYPE must be a symbol.  \(It can also
 be a string, which stands for the symbol with that name, but this
@@ -317,8 +310,7 @@ prefix argument, it uses the text of the region as the selection value.
 
 Note that on MS-Windows, primary and secondary selections set by Emacs
 are not available to other programs."
-  (or type (setq type 'PRIMARY))
-  (put 'x-selections type data))
+  (put 'x-selections (or type 'PRIMARY) data))
 
 (defun x-get-selection (&optional type data-type)
   "Return the value of an X Windows selection.
@@ -333,8 +325,12 @@ all upper-case names.  The most often used ones, in addition to
 
 DATA-TYPE is usually `STRING', but can also be one of the symbols
 in `selection-converter-alist', which see."
-  (or type (setq type 'PRIMARY))
-  (get 'x-selections type))
+  (get 'x-selections (or type 'PRIMARY)))
+
+;; x-selection-owner-p is used in simple.el
+(defun x-selection-owner-p (&optional type)
+  (and (memq type '(nil PRIMARY SECONDARY))
+       (get 'x-selections (or type 'PRIMARY))))
 
 (defun set-w32-system-coding-system (coding-system)
   "Set the coding system used by the Windows system to CODING-SYSTEM.
@@ -357,24 +353,14 @@ This function is provided for backward compatibility, since
 ;; w32-system-coding-system. Use that instead.
 (defvaralias 'w32-system-coding-system 'locale-coding-system)
 
-;;; Set to a system sound if you want a fancy bell.
+;; Set to a system sound if you want a fancy bell.
 (set-message-beep nil)
 
-;;; The "Windows" keys on newer keyboards bring up the Start menu
-;;; whether you want it or not - make Emacs ignore these keystrokes
-;;; rather than beep.
+;; The "Windows" keys on newer keyboards bring up the Start menu
+;; whether you want it or not - make Emacs ignore these keystrokes
+;; rather than beep.
 (global-set-key [lwindow] 'ignore)
 (global-set-key [rwindow] 'ignore)
-
-;; These tell read-char how to convert
-;; these special chars to ASCII.
-(put 'tab 'ascii-character ?\t)
-(put 'linefeed 'ascii-character ?\n)
-(put 'clear 'ascii-character 12)
-(put 'return 'ascii-character 13)
-(put 'escape 'ascii-character ?\e)
-(put 'backspace 'ascii-character 127)
-(put 'delete 'ascii-character 127)
 
 (defun w32-add-charset-info (xlfd-charset windows-charset codepage)
   "Function to add character sets to display with Windows fonts.
@@ -439,13 +425,13 @@ bit output with no translation."
 
 ;;;; Selections and cut buffers
 
-;;; We keep track of the last text selected here, so we can check the
-;;; current selection against it, and avoid passing back our own text
-;;; from x-cut-buffer-or-selection-value.
+;; We keep track of the last text selected here, so we can check the
+;; current selection against it, and avoid passing back our own text
+;; from x-cut-buffer-or-selection-value.
 (defvar x-last-selected-text nil)
 
-;;; It is said that overlarge strings are slow to put into the cut buffer.
-;;; Note this value is overridden below.
+;; It is said that overlarge strings are slow to put into the cut buffer.
+;; Note this value is overridden below.
 (defvar x-cut-buffer-max 20000
   "Max number of characters to put in the cut buffer.")
 
@@ -490,7 +476,7 @@ they were unset."
 
 (defalias 'x-cut-buffer-or-selection-value 'x-get-selection-value)
 
-;;; Arrange for the kill and yank functions to set and check the clipboard.
+;; Arrange for the kill and yank functions to set and check the clipboard.
 (setq interprogram-cut-function 'x-select-text)
 (setq interprogram-paste-function 'x-get-selection-value)
 
@@ -504,7 +490,9 @@ This is required because some Windows build environments, such as MSYS,
 munge command-line arguments that include file names to a horrible mess
 that Emacs is unable to cope with."
   (let ((generated-autoload-file
-	 (expand-file-name (pop command-line-args-left))))
+	 (expand-file-name (pop command-line-args-left)))
+	;; I can only assume the same considerations may apply here...
+	(autoload-make-program (pop command-line-args-left)))
     (batch-update-autoloads)))
 
 (defun w32-append-code-lines (orig extra)

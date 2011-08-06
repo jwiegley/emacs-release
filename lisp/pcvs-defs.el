@@ -1,7 +1,7 @@
 ;;; pcvs-defs.el --- variable definitions for PCL-CVS
 
 ;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
@@ -483,17 +483,17 @@ It is expected to call the function.")
 (defvar cvs-global-menu
   (let ((m (make-sparse-keymap "PCL-CVS")))
     (define-key m [status]
-      '(menu-item "Directory Status" cvs-status
-		  :help "A more verbose status of a workarea"))
+      `(menu-item ,(purecopy "Directory Status") cvs-status
+		  :help ,(purecopy "A more verbose status of a workarea")))
     (define-key m [checkout]
-      '(menu-item "Checkout Module" cvs-checkout
-		  :help "Check out a module from the repository"))
+      `(menu-item ,(purecopy "Checkout Module") cvs-checkout
+		  :help ,(purecopy "Check out a module from the repository")))
     (define-key m [update]
-      '(menu-item "Update Directory" cvs-update
-		  :help "Fetch updates from the repository"))
+      `(menu-item ,(purecopy "Update Directory") cvs-update
+		  :help ,(purecopy "Fetch updates from the repository")))
     (define-key m [examine]
-      '(menu-item "Examine Directory" cvs-examine
-		  :help "Examine the current state of a workarea"))
+      `(menu-item ,(purecopy "Examine Directory") cvs-examine
+		  :help ,(purecopy "Examine the current state of a workarea")))
     (fset 'cvs-global-menu m)))
 
 

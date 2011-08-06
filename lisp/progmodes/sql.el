@@ -1,7 +1,7 @@
 ;;; sql.el --- specialized comint.el for SQL interpreters
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Alex Schroeder <alex@gnu.org>
 ;; Maintainer: Michael Mauger <mmaug@yahoo.com>
@@ -268,31 +268,16 @@ Customizing your password will store it in your ~/.emacs file."
   :group 'SQL)
 
 ;; SQL Product support
-(defcustom sql-product 'ansi
-  "*Select the SQL database product used so that buffers can be
-highlighted properly when you open them."
-  :type '(choice (const :tag "ANSI" ansi)
-		 (const :tag "DB2" db2)
-		 (const :tag "Informix" informix)
-		 (const :tag "Ingres" ingres)
-		 (const :tag "Interbase" interbase)
-		 (const :tag "Linter" linter)
-		 (const :tag "Microsoft" ms)
-		 (const :tag "MySQL" mysql)
-		 (const :tag "Oracle" oracle)
-		 (const :tag "PostGres" postgres)
-		 (const :tag "Solid" solid)
-		 (const :tag "SQLite" sqlite)
-		 (const :tag "Sybase" sybase))
-  :group 'SQL)
 
 (defvar sql-interactive-product nil
   "Product under `sql-interactive-mode'.")
 
 (defvar sql-product-alist
   '((ansi
+     :name "ANSI"
      :font-lock sql-mode-ansi-font-lock-keywords)
     (db2
+     :name "DB2"
      :font-lock sql-mode-db2-font-lock-keywords
      :sqli-login nil
      :sqli-connect sql-connect-db2
@@ -323,6 +308,7 @@ highlighted properly when you open them."
      :sqli-prompt-regexp "^SQL>"
      :sqli-prompt-length 4)
     (ms
+     :name "MS SQLServer"
      :font-lock sql-mode-ms-font-lock-keywords
      :sqli-login (user password server database)
      :sqli-connect sql-connect-ms
@@ -330,6 +316,7 @@ highlighted properly when you open them."
      :sqli-prompt-length 5
      :syntax-alist ((?@ . "w")))
     (mysql
+     :name "MySQL"
      :font-lock sql-mode-mysql-font-lock-keywords
      :sqli-login (user password database server)
      :sqli-connect sql-connect-mysql
@@ -355,6 +342,7 @@ highlighted properly when you open them."
      :sqli-prompt-regexp "^"
      :sqli-prompt-length 0)
     (sqlite
+     :name "SQLite"
      :font-lock sql-mode-sqlite-font-lock-keywords
      :sqli-login (database)
      :sqli-connect sql-connect-sqlite
@@ -408,6 +396,18 @@ following:
                         special character treatment by font-lock and
                         imenu. ")
 
+(defcustom sql-product 'ansi
+  "*Select the SQL database product used so that buffers can be
+highlighted properly when you open them."
+  :type `(choice
+          ,@(mapcar (lambda (prod-info)
+                      `(const :tag
+                              ,(or (plist-get (cdr prod-info) :name)
+                                   (capitalize (symbol-name (car prod-info))))
+                              ,(car prod-info)))
+                    sql-product-alist))
+  :group 'SQL)
+
 ;; misc customization of sql.el behavior
 
 (defcustom sql-electric-stuff nil
@@ -419,7 +419,7 @@ send current input in the SQLi buffer to the process.
 If set to nil, then you must use \\[comint-send-input] in order to send
 current input in the SQLi buffer to the process."
   :type '(choice (const :tag "Nothing" nil)
-		 (const :tag "The semikolon `;'" semicolon)
+		 (const :tag "The semicolon `;'" semicolon)
 		 (const :tag "The string `go' by itself" go))
   :version "20.8"
   :group 'SQL)
@@ -450,9 +450,9 @@ buffer is shown using `display-buffer'."
   "Define interesting points in the SQL buffer for `imenu'.
 
 This is used to set `imenu-generic-expression' when SQL mode is
-entered.  Subsequent changes to sql-imenu-generic-expression will not
-affect existing SQL buffers because imenu-generic-expression is a
-local variable.")
+entered.  Subsequent changes to `sql-imenu-generic-expression' will
+not affect existing SQL buffers because imenu-generic-expression is
+a local variable.")
 
 ;; history file
 
@@ -516,7 +516,7 @@ is changed."
 
 Starts `sql-interactive-mode' after doing some setup.
 
-Under NT, \"sqlplus\" usually starts the sqlplus \"GUI\".  In order to
+On Windows, \"sqlplus\" usually starts the sqlplus \"GUI\".  In order to
 start the sqlplus console, use \"plus33\" or something similar.  You
 will find the file in your Orant\\bin directory.
 
@@ -542,9 +542,7 @@ The program can also specify a TCP connection.  See `make-comint'."
   :group 'SQL)
 
 (defcustom sql-sqlite-options nil
-  "*List of additional options for `sql-sqlite-program'.
-The following list of options is reported to make things work
-on Windows: \"-C\" \"-t\" \"-f\" \"-n\"."
+  "*List of additional options for `sql-sqlite-program'."
   :type '(repeat string)
   :version "20.8"
   :group 'SQL)
@@ -727,7 +725,7 @@ Starts `sql-interactive-mode' after doing some setup."
 (defvar sql-buffer nil
   "Current SQLi buffer.
 
-The global value of sql-buffer is the name of the latest SQLi buffer
+The global value of `sql-buffer' is the name of the latest SQLi buffer
 created.  Any SQL buffer created will make a local copy of this value.
 See `sql-interactive-mode' for more on multiple sessions.  If you want
 to change the SQLi buffer a SQL mode sends its SQL strings to, change
@@ -783,7 +781,7 @@ Based on `comint-mode-map'.")
 (easy-menu-define
  sql-mode-menu sql-mode-map
  "Menu for `sql-mode'."
- '("SQL"
+ `("SQL"
    ["Send Paragraph" sql-send-paragraph (and (buffer-live-p sql-buffer)
 					     (get-buffer-process sql-buffer))]
    ["Send Region" sql-send-region (and (or (and (boundp 'mark-active); Emacs
@@ -804,46 +802,18 @@ Based on `comint-mode-map'.")
     :selected sql-pop-to-buffer-after-send-region]
    ["--" nil nil]
    ("Product"
-    ["ANSI" sql-highlight-ansi-keywords
-     :style radio
-     :selected (eq sql-product 'ansi)]
-    ["DB2" sql-highlight-db2-keywords
-     :style radio
-     :selected (eq sql-product 'db2)]
-    ["Informix" sql-highlight-informix-keywords
-     :style radio
-     :selected (eq sql-product 'informix)]
-    ["Ingres" sql-highlight-ingres-keywords
-     :style radio
-     :selected (eq sql-product 'ingres)]
-    ["Interbase" sql-highlight-interbase-keywords
-     :style radio
-     :selected (eq sql-product 'interbase)]
-    ["Linter" sql-highlight-linter-keywords
-     :style radio
-     :selected (eq sql-product 'linter)]
-    ["MS SQLServer" sql-highlight-ms-keywords
-     :style radio
-     :selected (eq sql-product 'ms)]
-    ["MySQL" sql-highlight-mysql-keywords
-     :style radio
-     :selected (eq sql-product 'mysql)]
-    ["Oracle" sql-highlight-oracle-keywords
-     :style radio
-     :selected (eq sql-product 'oracle)]
-    ["Postgres" sql-highlight-postgres-keywords
-     :style radio
-     :selected (eq sql-product 'postgres)]
-    ["Solid" sql-highlight-solid-keywords
-     :style radio
-     :selected (eq sql-product 'solid)]
-    ["SQLite" sql-highlight-sqlite-keywords
-     :style radio
-     :selected (eq sql-product 'sqlite)]
-    ["Sybase" sql-highlight-sybase-keywords
-     :style radio
-     :selected (eq sql-product 'sybase)]
-    )))
+    ,@(mapcar (lambda (prod-info)
+                (let* ((prod (pop prod-info))
+                       (name (or (plist-get prod-info :name)
+                                 (capitalize (symbol-name prod))))
+                       (cmd (intern (format "sql-highlight-%s-keywords" prod))))
+                  (fset cmd `(lambda () ,(format "Highlight %s SQL keywords." name)
+                               (interactive)
+                               (sql-set-product ',prod)))
+                  (vector name cmd
+                          :style 'radio
+                          :selected `(eq sql-product ',prod))))
+              sql-product-alist))))
 
 ;; easy menu for sql-interactive-mode.
 
@@ -1020,8 +990,8 @@ statement.  The format of variable should be a valid
 This variable is used by `sql-mode' and `sql-interactive-mode'.  The
 regular expressions are created during compilation by calling the
 function `regexp-opt'.  Therefore, take a look at the source before
-you define your own sql-mode-ansi-font-lock-keywords.  You may want to
-add functions and PL/SQL keywords.")
+you define your own `sql-mode-ansi-font-lock-keywords'.  You may want
+to add functions and PL/SQL keywords.")
 
 (defvar sql-mode-oracle-font-lock-keywords
   (let ((oracle-functions (sql-keywords-re
@@ -1236,7 +1206,7 @@ add functions and PL/SQL keywords.")
 This variable is used by `sql-mode' and `sql-interactive-mode'.  The
 regular expressions are created during compilation by calling the
 function `regexp-opt'.  Therefore, take a look at the source before
-you define your own sql-mode-oracle-font-lock-keywords.  You may want
+you define your own `sql-mode-oracle-font-lock-keywords'.  You may want
 to add functions and PL/SQL keywords.")
 
 (defvar sql-mode-postgres-font-lock-keywords
@@ -1324,7 +1294,7 @@ to add functions and PL/SQL keywords.")
 This variable is used by `sql-mode' and `sql-interactive-mode'.  The
 regular expressions are created during compilation by calling the
 function `regexp-opt'.  Therefore, take a look at the source before
-you define your own sql-mode-postgres-font-lock-keywords.")
+you define your own `sql-mode-postgres-font-lock-keywords'.")
 
 (defvar sql-mode-linter-font-lock-keywords
   (let ((linter-keywords (sql-keywords-re
@@ -1510,7 +1480,7 @@ function `regexp-opt'.")
 This variable is used by `sql-mode' and `sql-interactive-mode'.  The
 regular expressions are created during compilation by calling the
 function `regexp-opt'.  Therefore, take a look at the source before
-you define your own sql-mode-ms-font-lock-keywords.")
+you define your own `sql-mode-ms-font-lock-keywords'.")
 
 (defvar sql-mode-sybase-font-lock-keywords nil
   "Sybase SQL keywords used by font-lock.
@@ -1518,7 +1488,7 @@ you define your own sql-mode-ms-font-lock-keywords.")
 This variable is used by `sql-mode' and `sql-interactive-mode'.  The
 regular expressions are created during compilation by calling the
 function `regexp-opt'.  Therefore, take a look at the source before
-you define your own sql-mode-sybase-font-lock-keywords.")
+you define your own `sql-mode-sybase-font-lock-keywords'.")
 
 (defvar sql-mode-informix-font-lock-keywords nil
   "Informix SQL keywords used by font-lock.
@@ -1526,7 +1496,7 @@ you define your own sql-mode-sybase-font-lock-keywords.")
 This variable is used by `sql-mode' and `sql-interactive-mode'.  The
 regular expressions are created during compilation by calling the
 function `regexp-opt'.  Therefore, take a look at the source before
-you define your own sql-mode-informix-font-lock-keywords.")
+you define your own `sql-mode-informix-font-lock-keywords'.")
 
 (defvar sql-mode-interbase-font-lock-keywords nil
   "Interbase SQL keywords used by font-lock.
@@ -1534,7 +1504,7 @@ you define your own sql-mode-informix-font-lock-keywords.")
 This variable is used by `sql-mode' and `sql-interactive-mode'.  The
 regular expressions are created during compilation by calling the
 function `regexp-opt'.  Therefore, take a look at the source before
-you define your own sql-mode-interbase-font-lock-keywords.")
+you define your own `sql-mode-interbase-font-lock-keywords'.")
 
 (defvar sql-mode-ingres-font-lock-keywords nil
   "Ingres SQL keywords used by font-lock.
@@ -1542,7 +1512,7 @@ you define your own sql-mode-interbase-font-lock-keywords.")
 This variable is used by `sql-mode' and `sql-interactive-mode'.  The
 regular expressions are created during compilation by calling the
 function `regexp-opt'.  Therefore, take a look at the source before
-you define your own sql-mode-interbase-font-lock-keywords.")
+you define your own `sql-mode-interbase-font-lock-keywords'.")
 
 (defvar sql-mode-solid-font-lock-keywords nil
   "Solid SQL keywords used by font-lock.
@@ -1550,7 +1520,7 @@ you define your own sql-mode-interbase-font-lock-keywords.")
 This variable is used by `sql-mode' and `sql-interactive-mode'.  The
 regular expressions are created during compilation by calling the
 function `regexp-opt'.  Therefore, take a look at the source before
-you define your own sql-mode-solid-font-lock-keywords.")
+you define your own `sql-mode-solid-font-lock-keywords'.")
 
 (defvar sql-mode-mysql-font-lock-keywords
   (let ((mysql-funcs (sql-keywords-re
@@ -1627,7 +1597,7 @@ you define your own sql-mode-solid-font-lock-keywords.")
 This variable is used by `sql-mode' and `sql-interactive-mode'.  The
 regular expressions are created during compilation by calling the
 function `regexp-opt'.  Therefore, take a look at the source before
-you define your own sql-mode-mysql-font-lock-keywords.")
+you define your own `sql-mode-mysql-font-lock-keywords'.")
 
 (defvar sql-mode-sqlite-font-lock-keywords nil
   "SQLite SQL keywords used by font-lock.
@@ -1635,7 +1605,7 @@ you define your own sql-mode-mysql-font-lock-keywords.")
 This variable is used by `sql-mode' and `sql-interactive-mode'.  The
 regular expressions are created during compilation by calling the
 function `regexp-opt'.  Therefore, take a look at the source before
-you define your own sql-mode-sqlite-font-lock-keywords.")
+you define your own `sql-mode-sqlite-font-lock-keywords'.")
 
 (defvar sql-mode-db2-font-lock-keywords nil
   "DB2 SQL keywords used by font-lock.
@@ -1643,14 +1613,14 @@ you define your own sql-mode-sqlite-font-lock-keywords.")
 This variable is used by `sql-mode' and `sql-interactive-mode'.  The
 regular expressions are created during compilation by calling the
 function `regexp-opt'.  Therefore, take a look at the source before
-you define your own sql-mode-db2-font-lock-keywords.")
+you define your own `sql-mode-db2-font-lock-keywords'.")
 
 (defvar sql-mode-font-lock-keywords nil
   "SQL keywords used by font-lock.
 
 Setting this variable directly no longer has any affect.  Use
 `sql-product' and `sql-add-product-keywords' to control the
-highlighting rules in sql-mode.")
+highlighting rules in SQL mode.")
 
 
 
@@ -1659,7 +1629,7 @@ highlighting rules in sql-mode.")
 (defun sql-product-feature (feature &optional product)
   "Lookup `feature' needed to support the current SQL product.
 
-See \[sql-product-alist] for a list of products and supported features."
+See `sql-product-alist' for a list of products and supported features."
   (plist-get
    (cdr (assoc (or product sql-product)
 	       sql-product-alist))
@@ -1748,10 +1718,8 @@ adds a fontification pattern to fontify identifiers ending in
 ;;; Functions to switch highlighting
 
 (defun sql-highlight-product ()
-  "Turns on the appropriate font highlighting for the SQL product
-selected."
-
-  (when (eq major-mode 'sql-mode)
+  "Turn on the appropriate font highlighting for the SQL product selected."
+  (when (derived-mode-p 'sql-mode)
     ;; Setup font-lock
     (sql-product-font-lock nil t)
 
@@ -1759,9 +1727,13 @@ selected."
     (setq mode-name (concat "SQL[" (prin1-to-string sql-product) "]"))))
 
 (defun sql-set-product (product)
-  "Set `sql-product' to product and enable appropriate
-highlighting."
-  (interactive "SEnter SQL product: ")
+  "Set `sql-product' to product and enable appropriate highlighting."
+  (interactive
+   (list (completing-read "Enter SQL product: "
+                          (mapcar (lambda (info) (symbol-name (car info)))
+                                  sql-product-alist)
+                          nil 'require-match)))
+  (if (stringp product) (setq product (intern product)))
   (when (not (assoc product sql-product-alist))
     (error "SQL product %s is not supported; treated as ANSI" product)
     (setq product 'ansi))
@@ -1769,72 +1741,6 @@ highlighting."
   ;; Save product setting and fontify.
   (setq sql-product product)
   (sql-highlight-product))
-
-(defun sql-highlight-oracle-keywords ()
-  "Highlight Oracle keywords."
-  (interactive)
-  (sql-set-product 'oracle))
-
-(defun sql-highlight-postgres-keywords ()
-  "Highlight Postgres keywords."
-  (interactive)
-  (sql-set-product 'postgres))
-
-(defun sql-highlight-linter-keywords ()
-  "Highlight LINTER keywords."
-  (interactive)
-  (sql-set-product 'linter))
-
-(defun sql-highlight-ms-keywords ()
-  "Highlight Microsoft SQLServer keywords."
-  (interactive)
-  (sql-set-product 'ms))
-
-(defun sql-highlight-ansi-keywords ()
-  "Highlight ANSI SQL keywords."
-  (interactive)
-  (sql-set-product 'ansi))
-
-(defun sql-highlight-sybase-keywords ()
-  "Highlight Sybase SQL keywords."
-  (interactive)
-  (sql-set-product 'sybase))
-
-(defun sql-highlight-informix-keywords ()
-  "Highlight Informix SQL keywords."
-  (interactive)
-  (sql-set-product 'informix))
-
-(defun sql-highlight-interbase-keywords ()
-  "Highlight Interbase SQL keywords."
-  (interactive)
-  (sql-set-product 'interbase))
-
-(defun sql-highlight-ingres-keywords ()
-  "Highlight Ingres SQL keywords."
-  (interactive)
-  (sql-set-product 'ingres))
-
-(defun sql-highlight-solid-keywords ()
-  "Highlight Solid SQL keywords."
-  (interactive)
-  (sql-set-product 'solid))
-
-(defun sql-highlight-mysql-keywords ()
-  "Highlight MySQL SQL keywords."
-  (interactive)
-  (sql-set-product 'mysql))
-
-(defun sql-highlight-sqlite-keywords ()
-  "Highlight SQLite SQL keywords."
-  (interactive)
-  (sql-set-product 'sqlite))
-
-(defun sql-highlight-db2-keywords ()
-  "Highlight DB2 SQL keywords."
-  (interactive)
-  (sql-set-product 'db2))
-
 
 
 ;;; Compatibility functions
@@ -1842,7 +1748,7 @@ highlighting."
 (if (not (fboundp 'comint-line-beginning-position))
     ;; comint-line-beginning-position is defined in Emacs 21
     (defun comint-line-beginning-position ()
-      "Returns the buffer position of the beginning of the line, after any prompt.
+      "Return the buffer position of the beginning of the line, after any prompt.
 The prompt is assumed to be any text at the beginning of the line matching
 the regular expression `comint-prompt-regexp', a buffer local variable."
       (save-excursion (comint-bol nil) (point))))
@@ -1971,14 +1877,14 @@ be in `sql-interactive-mode' and have a process."
     (if (and (buffer-live-p default-buffer)
 	     (get-buffer-process default-buffer))
 	default-buffer
-      (save-excursion
+      (save-current-buffer
 	(let ((buflist (buffer-list))
 	      (found))
 	  (while (not (or (null buflist)
 			  found))
 	    (let ((candidate (car buflist)))
 	      (set-buffer candidate)
-	      (if (and (equal major-mode 'sql-interactive-mode)
+	      (if (and (derived-mode-p 'sql-interactive-mode)
 		       (get-buffer-process candidate))
 		  (setq found candidate))
 	      (setq buflist (cdr buflist))))
@@ -1999,7 +1905,7 @@ using `sql-find-sqli-buffer'.  If `sql-buffer' is set,
       (while (not (null buflist))
 	(let ((candidate (car buflist)))
 	  (set-buffer candidate)
-	  (if (and (equal major-mode 'sql-mode)
+	  (if (and (derived-mode-p 'sql-mode)
 		   (not (buffer-live-p sql-buffer)))
 	      (progn
 		(setq sql-buffer default-sqli-buffer)
@@ -2027,8 +1933,7 @@ If you call it from anywhere else, it sets the global copy of
 	    (read-buffer "New SQLi buffer: " default-buffer t))))
       (if (null (get-buffer-process new-buffer))
 	  (error "Buffer %s has no process" (buffer-name new-buffer)))
-      (if (null (save-excursion
-		  (set-buffer new-buffer)
+      (if (null (with-current-buffer new-buffer
 		  (equal major-mode 'sql-interactive-mode)))
 	  (error "Buffer %s is no SQLi buffer" (buffer-name new-buffer)))
       (if new-buffer
@@ -2065,7 +1970,7 @@ This is used to set `sql-alternate-buffer-name' within
 	    sql-database)))
 
 (defun sql-rename-buffer ()
-  "Renames a SQLi buffer."
+  "Rename a SQLi buffer."
   (interactive)
   (rename-buffer (format "*SQL: %s*" sql-alternate-buffer-name) t))
 
@@ -2098,8 +2003,8 @@ Inserts SELECT or commas if appropriate."
       (insert column)
       (message "%s" column))))
 
-;; On NT, SQL*Plus for Oracle turns on full buffering for stdout if it
-;; is not attached to a character device; therefore placeholder
+;; On Windows, SQL*Plus for Oracle turns on full buffering for stdout
+;; if it is not attached to a character device; therefore placeholder
 ;; replacement by SQL*Plus is fully buffered.  The workaround lets
 ;; Emacs query for the placeholders.
 
@@ -2108,8 +2013,9 @@ Inserts SELECT or commas if appropriate."
 
 (defun sql-query-placeholders-and-send (proc string)
   "Send to PROC input STRING, maybe replacing placeholders.
-Placeholders are words starting with and ampersand like &this.
-This function is used for `comint-input-sender' if using `sql-oracle' on NT."
+Placeholders are words starting with an ampersand like &this.
+This function is used for `comint-input-sender' if using
+`sql-oracle' on Windows."
   (while (string-match "&\\(\\sw+\\)" string)
     (setq string (replace-match
 		  (read-from-minibuffer
@@ -2195,7 +2101,7 @@ Every newline in STRING will be preceded with a space and a backslash."
   "Toggle `sql-pop-to-buffer-after-send-region'.
 
 If given the optional parameter VALUE, sets
-sql-toggle-pop-to-buffer-after-send-region to VALUE."
+`sql-toggle-pop-to-buffer-after-send-region' to VALUE."
   (interactive "P")
   (if value
       (setq sql-pop-to-buffer-after-send-region value)
@@ -2278,8 +2184,8 @@ you must tell Emacs.  Here's how to do that in your `~/.emacs' file:
   "Major mode to use a SQL interpreter interactively.
 
 Do not call this function by yourself.  The environment must be
-initialized by an entry function specific for the SQL interpreter.  See
-`sql-help' for a list of available entry functions.
+initialized by an entry function specific for the SQL interpreter.
+See `sql-help' for a list of available entry functions.
 
 \\[comint-send-input] after the end of the process' output sends the
 text from the end of process to the end of the current line.
@@ -2417,8 +2323,7 @@ Sentinels will always get the two parameters PROCESS and EVENT."
   "Run product interpreter as an inferior process.
 
 If buffer `*SQL*' exists but no process is running, make a new process.
-If buffer exists and a process is running, just switch to buffer
-`*SQL*'.
+If buffer exists and a process is running, just switch to buffer `*SQL*'.
 
 \(Type \\[describe-mode] in the SQL buffer for a list of commands.)"
   (interactive)
@@ -2452,7 +2357,7 @@ the variables `sql-user', `sql-password', and `sql-database' as
 defaults, if set.  Additional command line parameters can be stored in
 the list `sql-oracle-options'.
 
-The buffer is put in sql-interactive-mode, giving commands for sending
+The buffer is put in SQL interactive mode, giving commands for sending
 input.  See `sql-interactive-mode'.
 
 To specify a coding system for converting non-ASCII characters
@@ -2473,21 +2378,18 @@ parameters and command options."
   ;; is meaningless; database without user/password is meaningless,
   ;; because "@param" will ask sqlplus to interpret the script
   ;; "param".
-  (let ((parameter nil))
-    (if (not (string= "" sql-user))
-	(if (not (string= "" sql-password))
-	    (setq parameter (concat sql-user "/" sql-password))
-	  (setq parameter sql-user)))
+  (let ((parameter
+         (if (not (string= "" sql-user))
+             (if (not (string= "" sql-password))
+                 (concat sql-user "/" sql-password)
+               sql-user))))
     (if (and parameter (not (string= "" sql-database)))
 	(setq parameter (concat parameter "@" sql-database)))
-    (if parameter
-	(setq parameter (nconc (list parameter) sql-oracle-options))
-      (setq parameter sql-oracle-options))
-    (if parameter
-	(set-buffer (apply 'make-comint "SQL" sql-oracle-program nil
-			   parameter))
-      (set-buffer (make-comint "SQL" sql-oracle-program nil)))
-    ;; SQL*Plus is buffered on WindowsNT; this handles &placeholders.
+    (setq parameter (if parameter
+                        (nconc (list parameter) sql-oracle-options)
+                      sql-oracle-options))
+    (set-buffer (apply 'make-comint "SQL" sql-oracle-program nil parameter))
+    ;; SQL*Plus is buffered on Windows; this handles &placeholders.
     (if (eq window-system 'w32)
 	(setq comint-input-sender 'sql-query-placeholders-and-send))))
 
@@ -2506,7 +2408,7 @@ the variables `sql-server', `sql-user', `sql-password', and
 `sql-database' as defaults, if set.  Additional command line parameters
 can be stored in the list `sql-sybase-options'.
 
-The buffer is put in sql-interactive-mode, giving commands for sending
+The buffer is put in SQL interactive mode, giving commands for sending
 input.  See `sql-interactive-mode'.
 
 To specify a coding system for converting non-ASCII characters
@@ -2550,7 +2452,7 @@ If buffer exists and a process is running, just switch to buffer
 Interpreter used comes from variable `sql-informix-program'.  Login uses
 the variable `sql-database' as default, if set.
 
-The buffer is put in sql-interactive-mode, giving commands for sending
+The buffer is put in SQL interactive mode, giving commands for sending
 input.  See `sql-interactive-mode'.
 
 To specify a coding system for converting non-ASCII characters
@@ -2568,9 +2470,9 @@ The default comes from `process-coding-system-alist' and
   "Create comint buffer and connect to Informix using the login
 parameters and command options."
   ;; username and password are ignored.
-  (if (string= "" sql-database)
-      (set-buffer (make-comint "SQL" sql-informix-program nil))
-    (set-buffer (make-comint "SQL" sql-informix-program nil sql-database "-"))))
+  (set-buffer (if (string= "" sql-database)
+                  (make-comint "SQL" sql-informix-program nil)
+                (make-comint "SQL" sql-informix-program nil sql-database "-"))))
 
 
 
@@ -2589,7 +2491,7 @@ the variables `sql-user', `sql-password', `sql-database', and
 `sql-server' as defaults, if set.  Additional command line parameters
 can be stored in the list `sql-sqlite-options'.
 
-The buffer is put in sql-interactive-mode, giving commands for sending
+The buffer is put in SQL interactive mode, giving commands for sending
 input.  See `sql-interactive-mode'.
 
 To specify a coding system for converting non-ASCII characters
@@ -2633,7 +2535,7 @@ the variables `sql-user', `sql-password', `sql-database', and
 `sql-server' as defaults, if set.  Additional command line parameters
 can be stored in the list `sql-mysql-options'.
 
-The buffer is put in sql-interactive-mode, giving commands for sending
+The buffer is put in SQL interactive mode, giving commands for sending
 input.  See `sql-interactive-mode'.
 
 To specify a coding system for converting non-ASCII characters
@@ -2680,7 +2582,7 @@ Interpreter used comes from variable `sql-solid-program'.  Login uses
 the variables `sql-user', `sql-password', and `sql-server' as
 defaults, if set.
 
-The buffer is put in sql-interactive-mode, giving commands for sending
+The buffer is put in SQL interactive mode, giving commands for sending
 input.  See `sql-interactive-mode'.
 
 To specify a coding system for converting non-ASCII characters
@@ -2722,7 +2624,7 @@ If buffer exists and a process is running, just switch to buffer
 Interpreter used comes from variable `sql-ingres-program'.  Login uses
 the variable `sql-database' as default, if set.
 
-The buffer is put in sql-interactive-mode, giving commands for sending
+The buffer is put in SQL interactive mode, giving commands for sending
 input.  See `sql-interactive-mode'.
 
 To specify a coding system for converting non-ASCII characters
@@ -2740,9 +2642,9 @@ The default comes from `process-coding-system-alist' and
   "Create comint buffer and connect to Ingres using the login
 parameters and command options."
   ;; username and password are ignored.
-  (if (string= "" sql-database)
-      (set-buffer (make-comint "SQL" sql-ingres-program nil))
-    (set-buffer (make-comint "SQL" sql-ingres-program nil sql-database))))
+  (set-buffer (if (string= "" sql-database)
+                  (make-comint "SQL" sql-ingres-program nil)
+                (make-comint "SQL" sql-ingres-program nil sql-database))))
 
 
 
@@ -2759,7 +2661,7 @@ variables `sql-user', `sql-password', `sql-database', and `sql-server'
 as defaults, if set.  Additional command line parameters can be stored
 in the list `sql-ms-options'.
 
-The buffer is put in sql-interactive-mode, giving commands for sending
+The buffer is put in SQL interactive mode, giving commands for sending
 input.  See `sql-interactive-mode'.
 
 To specify a coding system for converting non-ASCII characters
@@ -2812,7 +2714,7 @@ the variables `sql-database' and `sql-server' as default, if set.
 Additional command line parameters can be stored in the list
 `sql-postgres-options'.
 
-The buffer is put in sql-interactive-mode, giving commands for sending
+The buffer is put in SQL interactive mode, giving commands for sending
 input.  See `sql-interactive-mode'.
 
 To specify a coding system for converting non-ASCII characters
@@ -2863,7 +2765,7 @@ Interpreter used comes from variable `sql-interbase-program'.  Login
 uses the variables `sql-user', `sql-password', and `sql-database' as
 defaults, if set.
 
-The buffer is put in sql-interactive-mode, giving commands for sending
+The buffer is put in SQL interactive mode, giving commands for sending
 input.  See `sql-interactive-mode'.
 
 To specify a coding system for converting non-ASCII characters
@@ -2905,7 +2807,7 @@ If buffer exists and a process is running, just switch to buffer
 Interpreter used comes from variable `sql-db2-program'.  There is not
 automatic login.
 
-The buffer is put in sql-interactive-mode, giving commands for sending
+The buffer is put in SQL interactive mode, giving commands for sending
 input.  See `sql-interactive-mode'.
 
 If you use \\[sql-accumulate-and-indent] to send multiline commands to
@@ -2954,7 +2856,7 @@ local connections, `sql-server' refers to the server name from the
 for this to work).  If `sql-password' is an empty string, inl will use
 an empty password.
 
-The buffer is put in sql-interactive-mode, giving commands for sending
+The buffer is put in SQL interactive mode, giving commands for sending
 input.  See `sql-interactive-mode'.
 
 \(Type \\[describe-mode] in the SQL buffer for a list of commands.)"

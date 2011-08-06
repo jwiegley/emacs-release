@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/searching
 @node Searching and Matching, Syntax Tables, Non-ASCII Characters, Top
@@ -187,9 +187,8 @@ regular expressions, too; thus, @samp{[aB]} would match @samp{a} or
 @code{case-fold-search} to @code{nil}.  Then all letters must match
 exactly, including case.  This is a buffer-local variable; altering the
 variable affects only the current buffer.  (@xref{Intro to
-Buffer-Local}.)  Alternatively, you may change the value of
-@code{default-case-fold-search}, which is the default value of
-@code{case-fold-search} for buffers that do not override it.
+Buffer-Local}.)  Alternatively, you may change the default value of
+@code{case-fold-search}.
 
   Note that the user-level incremental search feature handles case
 distinctions differently.  When the search string contains only lower
@@ -203,12 +202,6 @@ This buffer-local variable determines whether searches should ignore
 case.  If the variable is @code{nil} they do not ignore case; otherwise
 they do ignore case.
 @end defopt
-
-@defvar default-case-fold-search
-The value of this variable is the default value for
-@code{case-fold-search} in buffers that do not override it.  This is the
-same as @code{(default-value 'case-fold-search)}.
-@end defvar
 
 @defopt case-replace
 This variable determines whether the higher level replacement
@@ -546,8 +539,9 @@ matches any digit, as well as @samp{+} and @samp{-}.
 This matches graphic characters---everything except @acronym{ASCII} control
 characters, space, and the delete character.
 @item [:lower:]
-This matches any lower-case letter, as determined by
-the current case table (@pxref{Case Tables}).
+This matches any lower-case letter, as determined by the current case
+table (@pxref{Case Tables}).  If @code{case-fold-search} is
+non-@code{nil}, this also matches any upper-case letter.
 @item [:multibyte:]
 This matches any multibyte character (@pxref{Text Representations}).
 @item [:nonascii:]
@@ -564,8 +558,9 @@ This matches any character that has whitespace syntax
 @item [:unibyte:]
 This matches any unibyte character (@pxref{Text Representations}).
 @item [:upper:]
-This matches any upper-case letter, as determined by
-the current case table (@pxref{Case Tables}).
+This matches any upper-case letter, as determined by the current case
+table (@pxref{Case Tables}).  If @code{case-fold-search} is
+non-@code{nil}, this also matches any lower-case letter.
 @item [:word:]
 This matches any character that has word syntax (@pxref{Syntax Class
 Table}).

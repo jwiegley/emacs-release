@@ -1,6 +1,25 @@
-2009-07-29  Chong Yidong  <cyd@stupidchicken.com>
+2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
 
-	* Version 23.1 released.
+	* Version 23.2 released.
+
+2010-01-11  Glenn Morris  <rgm@gnu.org>
+
+	* Cocoa/Emacs.base/Contents/Info.plist:
+	* Cocoa/Emacs.base/Contents/Resources/English.lproj/InfoPlist.strings:
+	* GNUstep/Emacs.base/Resources/Info-gnustep.plist:
+	Set copyright year to 2010.
+
+2009-09-23  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* README: Note GNUstep support is now Startup 0.23 or later.
+
+2009-09-18  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* README: Note OS X support is now 10.4 or later.
+
+2009-06-21  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Branch for 23.1.
 
 2009-06-05  Adrian Robert  <Adrian.B.Robert@gmail.com>
 
@@ -156,7 +175,7 @@
 ;; add-log-time-zone-rule: t
 ;; End:
 
-    Copyright (C) 2008, 2009  Free Software Foundation, Inc.
+    Copyright (C) 2008, 2009, 2010  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

@@ -2,11 +2,11 @@ This is ../../info/emacs, produced by makeinfo version 4.11 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.1.
+updated for Emacs version 23.2.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1594,6 +1594,9 @@ file `etc/AUTHORS' in the distribution.
    * Mathias Dahl wrote `image-dired.el', a package for viewing image
      files as "thumbnails."
 
+   * Vivek Dasmohapatra wrote `htmlfontify.el', to convert a buffer or
+     source tree to HTML.
+
    * Michael DeCorte wrote `emacs.csh', a C-shell script that starts a
      new Emacs job, or restarts a paused Emacs if one exists.
 
@@ -1610,10 +1613,11 @@ file `etc/AUTHORS' in the distribution.
    * Carsten Dominik wrote RefTeX, a package for setting up labels and
      cross-references in LaTeX documents; and co-wrote IDLWAVE mode
      (q.v.).  He was the main author of Org mode, for maintaining notes,
-     todo lists, and project planning.  Thomas Baumann, Bastien Guerry,
-     Tassilo Horn, Philip Jackson, Tokuya Kameshima, Eric Schulte, Andy
-     Stewart, David O'Toole, John Wiegley, and Piotr Zielinski also
-     wrote various Org mode components.
+     todo lists, and project planning.  Thomas Baumann, Lennart Borgman,
+     Baoqiu Cui, Daniel German, Bastien Guerry, Tassilo Horn, Philip
+     Jackson, Tokuya Kameshima, Ross Patterson, Sebastian Rose, Eric
+     Schulte, Andy Stewart, David O'Toole, John Wiegley, and Piotr
+     Zielinski also wrote various Org mode components.
 
    * Scott Draves wrote `tq.el', help functions for maintaining
      transaction queues between Emacs and its subprocesses.
@@ -1840,7 +1844,7 @@ file `etc/AUTHORS' in the distribution.
      package.
 
    * Taichi Kawabata added support for Devanagari script and the Indian
-     languages.
+     languages, and wrote `ucs-normalize.el' for Unicode normalization.
 
    * Taro Kawagishi implented the MD4 Message Digest Algorithm in Lisp;
      and wrote `ntlm.el' and `sasl-ntlm.el' for NT LanManager
@@ -1871,9 +1875,6 @@ file `etc/AUTHORS' in the distribution.
    * Pavel Kobyakov wrote `flymake.el', a minor mode for performing
      on-the-fly syntax checking.
 
-   * Larry K. Kolodney wrote `cvtmail.c', a program to convert the mail
-     directories used by Gosling Emacs into RMAIL format.
-
    * David M. Koppelman wrote `hi-lock.el', a minor mode for
      interactive automatic highlighting of parts of the buffer text.
 
@@ -1887,8 +1888,7 @@ file `etc/AUTHORS' in the distribution.
      R. Dodd.  He also wrote `ls-lisp.el', a Lisp emulation of the `ls'
      command for platforms which don't have `ls' as a standard program.
 
-   * Geoff Kuenning and Ken Stevens wrote `ispell.el', a spell-checker
-     interface.
+   * Ken Stevens wrote `ispell.el', a spell-checker interface.
 
    * David Ka*gedal wrote `tempo.el', providing support for easy
      insertion of boilerplate text and other common constructions.
@@ -1899,6 +1899,9 @@ file `etc/AUTHORS' in the distribution.
      `cust-print.el', a customizable package for printing lisp objects;
      and `isearch.el', Emacs's incremental search minor mode.  He also
      co-wrote `hideif.el' (q.v.).
+
+   * Karl Landstrom and Daniel Colascione wrote `js.el', a mode for
+     editing JavaScript.
 
    * Vinicius Jose Latorre wrote the Emacs printing facilities, as well
      as `ps-print' (with Jim Thompson, Jacques Duthen, and Kenichi
@@ -1930,9 +1933,11 @@ file `etc/AUTHORS' in the distribution.
      files.
 
    * Juri Linkov wrote `misearch.el', extending isearch to multi-buffer
-     searches.
+     searches; the code in `files-x.el' for handling file- and
+     directory-local variables; and the `info-finder' feature that
+     creates a virtual Info manual of package keywords.
 
-   * Ka'roly Lo"rentey wrote the "multi-terminal" code, which allows
+   * Ka'roly Lo''rentey wrote the "multi-terminal" code, which allows
      Emacs to run on graphical and text-only terminals simultaneously.
 
    * Martin Lorentzon wrote `vc-annotate.el', support for version
@@ -1960,10 +1965,14 @@ file `etc/AUTHORS' in the distribution.
      With Riccardo Murri he wrote `vc-bzr.el', support for the Bazaar
      version control system.
 
-   * Eric Ludlam wrote the Speedbar package.  He also wrote
-     `checkdoc.el', for checking doc strings in Emacs Lisp programs;
-     `dframe.el', providing dedicatd frame support modes; and
-     `ezimage.el', a generalized way to place images over text.
+   * Eric Ludlam wrote the Speedbar package; `checkdoc.el', for checking
+     doc strings in Emacs Lisp programs; `dframe.el', providing
+     dedicated frame support modes; `ezimage.el', a generalized way to
+     place images over text; `chart.el' for drawing bar charts etc; and
+     the EIEIO (Enhanced Implementation of Emacs Interpreted Objects)
+     package.  He was also the main author of the CEDET (Collection of
+     Emacs Development Environment Tools) package.  Portions were also
+     written by Jan Moringen, David Ponce, and Joakim Verona.
 
    * Alan Mackenzie wrote the integrated AWK support in CC Mode, and
      maintained CC Mode from Emacs 22 onwards.
@@ -2046,8 +2055,9 @@ file `etc/AUTHORS' in the distribution.
      system; `reveal.el', a minor mode for automatically revealing
      invisible text; `smerge-mode.el', a minor mode for resolving
      `diff3' conflicts; `diff-mode.el', a mode for viewing and editing
-     context diffs; `css-mode.el' for Cascading Style Sheets; and
-     `bibtex-style.el' for BibTeX Style files.
+     context diffs; `css-mode.el' for Cascading Style Sheets;
+     `bibtex-style.el' for BibTeX Style files; and `mpc.el', a client
+     for the "Music Player Daemon".
 
    * Morioka Tomohiko wrote several packages for MIME support in Gnus
      and elsewhere.
@@ -2200,8 +2210,10 @@ file `etc/AUTHORS' in the distribution.
      editor, and `vt-control.el', providing some control functions for
      the DEC VT line of terminals.
 
-   * Nick Roberts wrote `gdb-ui.el', the graphical user interface to
-     GDB; and `t-mouse.el', mouse support in text terminals.
+   * Nick Roberts wrote `t-mouse.el', for mouse support in text
+     terminals; and `gdb-ui.el', a graphical user interface to GDB.
+     Together with Dmitry Dzhus, he wrote `gdb-mi.el', the successor to
+     `gdb-ui.el'.
 
    * Danny Roozendaal implemented `handwrite.el', which converts text
      into "handwriting."
@@ -2601,7 +2613,7 @@ Key (Character) Index
 * C (Dired):                             Operating on Files.  (line  34)
 * c (Rmail):                             Rmail Reply.         (line 106)
 * C-/:                                   Undo.                (line  21)
-* C-<SPC> C-<SPC>:                       Persistent Mark.     (line  56)
+* C-<SPC> C-<SPC>:                       Persistent Mark.     (line  54)
 * C-<TAB>:                               File Name Cache.     (line   6)
 * C-@:                                   Setting Mark.        (line  28)
 * C-\:                                   Select Input Method. (line  28)
@@ -2616,12 +2628,16 @@ Key (Character) Index
                                                               (line  34)
 * C-BREAK (MS-DOS):                      MS-DOS Keyboard.     (line  12)
 * C-c ' (Picture mode):                  Insert in Picture.   (line   6)
+* C-c , <SPC>:                           Semantic.            (line  36)
+* C-c , J:                               Semantic.            (line  32)
+* C-c , j:                               Semantic.            (line  28)
+* C-c , l:                               Semantic.            (line  44)
 * C-c . (C mode):                        Custom C Indent.     (line  26)
 * C-c . (Picture mode):                  Insert in Picture.   (line   6)
-* C-c . (Shell mode):                    Shell Ring.          (line  23)
+* C-c . (Shell mode):                    Shell Ring.          (line  21)
 * C-c / (Picture mode):                  Insert in Picture.   (line   6)
-* C-c / (SGML mode):                     HTML Mode.           (line  60)
-* C-c 8 (SGML mode):                     HTML Mode.           (line  65)
+* C-c / (SGML mode):                     HTML Mode.           (line  52)
+* C-c 8 (SGML mode):                     HTML Mode.           (line  57)
 * C-c ; (Fortran mode):                  Fortran Comments.    (line  80)
 * C-c < (GUD):                           Commands of GUD.     (line  80)
 * C-c < (Picture mode):                  Insert in Picture.   (line   6)
@@ -2629,7 +2645,7 @@ Key (Character) Index
 * C-c <DELETE> (C Mode):                 Hungry Delete.       (line  20)
 * C-c > (GUD):                           Commands of GUD.     (line  85)
 * C-c > (Picture mode):                  Insert in Picture.   (line   6)
-* C-c ? (SGML mode):                     HTML Mode.           (line  56)
+* C-c ? (SGML mode):                     HTML Mode.           (line  48)
 * C-c @ (Outline minor mode):            Outline Mode.        (line  30)
 * C-c @ C-h:                             Hideshow.            (line  16)
 * C-c @ C-l:                             Hideshow.            (line  16)
@@ -2648,19 +2664,20 @@ Key (Character) Index
 * C-c C-\ (Shell mode):                  Shell Mode.          (line  78)
 * C-c C-a (C mode):                      Electric C.          (line  29)
 * C-c C-a (F90 mode):                    Fortran Motion.      (line  31)
-* C-c C-a (Mail mode):                   Mail Aliases.        (line  81)
+* C-c C-a (Message mode):                Mail Misc.           (line   6)
 * C-c C-a (Outline mode):                Outline Visibility.  (line  80)
-* C-c C-a (SGML mode):                   HTML Mode.           (line  35)
+* C-c C-a (SGML mode):                   HTML Mode.           (line  27)
 * C-c C-a (Shell mode):                  Shell Mode.          (line  43)
+* C-c C-b (Message mode):                Header Editing.      (line  43)
 * C-c C-b (Outline mode):                Outline Motion.      (line  36)
 * C-c C-b (Picture mode):                Insert in Picture.   (line  48)
-* C-c C-b (SGML mode):                   HTML Mode.           (line  44)
+* C-c C-b (SGML mode):                   HTML Mode.           (line  36)
 * C-c C-b (Shell mode):                  Shell Mode.          (line 111)
 * C-c C-b (TeX mode):                    TeX Print.           (line  46)
 * C-c C-c (C mode):                      Multi-Line Comments. (line  14)
 * C-c C-c (Edit Abbrevs):                Editing Abbrevs.     (line  42)
 * C-c C-c (Edit Tab Stops):              Tab Stops.           (line  10)
-* C-c C-c (Mail mode):                   Mail Sending.        (line  16)
+* C-c C-c (Message mode):                Mail Sending.        (line  16)
 * C-c C-c (Outline mode):                Outline Visibility.  (line  58)
 * C-c C-c (Shell mode):                  Shell Mode.          (line  68)
 * C-c C-c (TeX mode):                    TeX Print.           (line 148)
@@ -2669,7 +2686,7 @@ Key (Character) Index
 * C-c C-d (GUD):                         Commands of GUD.     (line  68)
 * C-c C-d (Outline mode):                Outline Visibility.  (line  63)
 * C-c C-d (Picture mode):                Basic Picture.       (line  43)
-* C-c C-d (SGML mode):                   HTML Mode.           (line  50)
+* C-c C-d (SGML mode):                   HTML Mode.           (line  42)
 * C-c C-e (C mode):                      Other C Commands.    (line  45)
 * C-c C-e (F90 mode):                    Fortran Motion.      (line  23)
 * C-c C-e (LaTeX mode):                  LaTeX Editing.       (line  28)
@@ -2678,19 +2695,17 @@ Key (Character) Index
 * C-c C-f (GUD):                         Commands of GUD.     (line  97)
 * C-c C-f (Outline mode):                Outline Motion.      (line  36)
 * C-c C-f (Picture mode):                Insert in Picture.   (line  48)
-* C-c C-f (SGML mode):                   HTML Mode.           (line  39)
+* C-c C-f (SGML mode):                   HTML Mode.           (line  31)
 * C-c C-f (Shell mode):                  Shell Mode.          (line 105)
 * C-c C-f (TeX mode):                    TeX Print.           (line 109)
-* C-c C-f C-a (Mail mode):               Header Editing.      (line  44)
-* C-c C-f C-b (Mail mode):               Header Editing.      (line  44)
-* C-c C-f C-c (Mail mode):               Header Editing.      (line  44)
-* C-c C-f C-f (Mail mode):               Header Editing.      (line  44)
-* C-c C-f C-l (Mail mode):               Header Editing.      (line  44)
-* C-c C-f C-r (Mail mode):               Header Editing.      (line  44)
-* C-c C-f C-s (Mail mode):               Header Editing.      (line  44)
-* C-c C-f C-t (Mail mode):               Header Editing.      (line  44)
+* C-c C-f C-b (Message mode):            Header Editing.      (line  38)
+* C-c C-f C-c (Message mode):            Header Editing.      (line  38)
+* C-c C-f C-f (Message mode):            Header Editing.      (line  38)
+* C-c C-f C-r (Message mode):            Header Editing.      (line  38)
+* C-c C-f C-s (Message mode):            Header Editing.      (line  38)
+* C-c C-f C-t (Message mode):            Header Editing.      (line  38)
+* C-c C-f C-w (Message mode):            Header Editing.      (line  38)
 * C-c C-i (GUD):                         Commands of GUD.     (line  52)
-* C-c C-i (Mail mode):                   Mail Mode Misc.      (line  52)
 * C-c C-i (Outline mode):                Outline Visibility.  (line  76)
 * C-c C-j (Term mode):                   Term Mode.           (line  13)
 * C-c C-k (Outline mode):                Outline Visibility.  (line  70)
@@ -2702,14 +2717,14 @@ Key (Character) Index
 * C-c C-l (Calendar mode):               General Calendar.    (line  27)
 * C-c C-l (GUD):                         Commands of GUD.     (line  35)
 * C-c C-l (Outline mode):                Outline Visibility.  (line  70)
-* C-c C-l (Shell mode):                  Shell Ring.          (line  26)
+* C-c C-l (Shell mode):                  Shell Ring.          (line  24)
 * C-c C-l (TeX mode):                    TeX Print.           (line  77)
 * C-c C-n (C mode):                      Motion in C.         (line  35)
 * C-c C-n (Fortran mode):                Fortran Motion.      (line  13)
 * C-c C-n (GUD):                         Commands of GUD.     (line  47)
 * C-c C-n (Outline mode):                Outline Motion.      (line  29)
 * C-c C-n (Rmail):                       Rmail Motion.        (line  83)
-* C-c C-n (SGML mode):                   HTML Mode.           (line  19)
+* C-c C-n (SGML mode):                   HTML Mode.           (line  11)
 * C-c C-n (Shell mode):                  Shell History Copying.
                                                               (line   9)
 * C-c C-o (LaTeX mode):                  LaTeX Editing.       (line  17)
@@ -2724,40 +2739,38 @@ Key (Character) Index
                                                               (line   6)
 * C-c C-p (TeX mode):                    TeX Print.           (line  46)
 * C-c C-q (C mode):                      C Indent.            (line   9)
-* C-c C-q (Mail mode):                   Citing Mail.         (line  43)
+* C-c C-q (Message mode):                Citing Mail.         (line  24)
 * C-c C-q (Outline mode):                Outline Visibility.  (line  88)
 * C-c C-q (Term mode):                   Paging in Term.      (line   9)
 * C-c C-q (TeX mode):                    TeX Print.           (line  46)
 * C-c C-r (Fortran mode):                Fortran Columns.     (line  33)
 * C-c C-r (GUD):                         Commands of GUD.     (line  62)
-* C-c C-r (Mail mode):                   Citing Mail.         (line  38)
 * C-c C-r (Shell mode):                  Shell Mode.          (line  96)
 * C-c C-r (TeX mode):                    TeX Print.           (line  87)
 * C-c C-s (C mode):                      Other C Commands.    (line  76)
 * C-c C-s (GUD):                         Commands of GUD.     (line  41)
-* C-c C-s (Mail mode):                   Mail Sending.        (line  16)
+* C-c C-s (Message mode):                Mail Sending.        (line  16)
 * C-c C-s (Outline mode):                Outline Visibility.  (line  63)
 * C-c C-s (Shell mode):                  Shell Mode.          (line  89)
 * C-c C-t (GUD):                         Commands of GUD.     (line  74)
-* C-c C-t (Mail mode):                   Mail Mode Misc.      (line  21)
 * C-c C-t (Outline mode):                Outline Visibility.  (line  80)
-* C-c C-t (SGML mode):                   HTML Mode.           (line  23)
+* C-c C-t (SGML mode):                   HTML Mode.           (line  15)
 * C-c C-u (C mode):                      Motion in C.         (line  20)
 * C-c C-u (GUD):                         Commands of GUD.     (line  90)
 * C-c C-u (Outline mode):                Outline Motion.      (line  36)
 * C-c C-u (Shell mode):                  Shell Mode.          (line  60)
-* C-c C-v (SGML mode):                   HTML Mode.           (line  70)
+* C-c C-v (SGML mode):                   HTML Mode.           (line  62)
 * C-c C-v (TeX mode):                    TeX Print.           (line  46)
 * C-c C-w (Fortran mode):                Fortran Columns.     (line  52)
-* C-c C-w (Mail mode):                   Mail Mode Misc.      (line  24)
+* C-c C-w (Message mode):                Mail Signature.      (line  20)
 * C-c C-w (Picture mode):                Rectangles in Picture.
                                                               (line  27)
 * C-c C-w (Shell mode):                  Shell Mode.          (line  65)
 * C-c C-x:                               Foldout.             (line  39)
 * C-c C-x (Picture mode):                Rectangles in Picture.
                                                               (line  38)
-* C-c C-x (Shell mode):                  Shell Ring.          (line  20)
-* C-c C-y (Mail mode):                   Citing Mail.         (line  20)
+* C-c C-x (Shell mode):                  Shell Ring.          (line  18)
+* C-c C-y (Message mode):                Citing Mail.         (line  13)
 * C-c C-y (Picture mode):                Rectangles in Picture.
                                                               (line  38)
 * C-c C-z:                               Foldout.             (line  16)
@@ -2765,7 +2778,7 @@ Key (Character) Index
 * C-c RET (Shell mode):                  Shell History Copying.
                                                               (line  12)
 * C-c TAB (Picture mode):                Tabs in Picture.     (line  25)
-* C-c TAB (SGML mode):                   HTML Mode.           (line  74)
+* C-c TAB (SGML mode):                   HTML Mode.           (line  66)
 * C-c TAB (TeX mode):                    TeX Print.           (line 138)
 * C-c { (TeX mode):                      TeX Editing.         (line  51)
 * C-c } (TeX mode):                      TeX Editing.         (line  51)
@@ -2826,7 +2839,7 @@ Key (Character) Index
 * C-j (TeX mode):                        TeX Editing.         (line  58)
 * C-k:                                   Killing by Lines.    (line  12)
 * C-k (Gnus):                            Summary of Gnus.     (line  40)
-* C-l:                                   Scrolling.           (line  37)
+* C-l:                                   Scrolling.           (line  40)
 * C-M-%:                                 Query Replace.       (line  24)
 * C-M-.:                                 Find Tag.            (line  76)
 * C-M-/:                                 Dynamic Abbrevs.     (line  12)
@@ -2847,7 +2860,7 @@ Key (Character) Index
 * C-M-j:                                 Multi-Line Comments. (line   6)
 * C-M-j (Fortran mode):                  ForIndent Commands.  (line  25)
 * C-M-k:                                 Expressions.         (line  54)
-* C-M-l:                                 Scrolling.           (line  98)
+* C-M-l:                                 Scrolling.           (line 117)
 * C-M-l (Rmail):                         Rmail Make Summary.  (line  41)
 * C-M-l (Shell mode):                    Shell Mode.          (line  96)
 * C-M-n:                                 Moving by Parens.    (line  31)
@@ -2891,7 +2904,7 @@ Key (Character) Index
 * C-o:                                   Blank Lines.         (line  16)
 * C-o (Dired):                           Dired Visiting.      (line  27)
 * C-o (Occur mode):                      Other Repeating Search.
-                                                              (line  20)
+                                                              (line  32)
 * C-o (Rmail):                           Rmail Output.        (line  20)
 * C-p:                                   Moving Point.        (line  16)
 * C-p (Calendar mode):                   Calendar Unit Motion.
@@ -2912,15 +2925,15 @@ Key (Character) Index
 * C-u C-/:                               Undo.                (line  52)
 * C-u C-c C-w (Fortran mode):            Fortran Columns.     (line  57)
 * C-u C-SPC:                             Mark Ring.           (line  27)
-* C-u C-x C-x:                           Persistent Mark.     (line  62)
-* C-u C-x v =:                           Old Revisions.       (line  39)
+* C-u C-x C-x:                           Persistent Mark.     (line  60)
+* C-u C-x v =:                           Old Revisions.       (line  41)
 * C-u M-;:                               Comment Commands.    (line  59)
 * C-u TAB:                               Multi-line Indent.   (line  39)
-* C-v:                                   Scrolling.           (line  62)
+* C-v:                                   Scrolling.           (line  81)
 * C-v (Calendar mode):                   Scroll Calendar.     (line  34)
 * C-w:                                   Other Kill Commands. (line   6)
 * C-x #:                                 Invoking emacsclient.
-                                                              (line  30)
+                                                              (line  31)
 * C-x $:                                 Selective Display.   (line   6)
 * C-x (:                                 Basic Keyboard Macro.
                                                               (line  87)
@@ -2937,7 +2950,7 @@ Key (Character) Index
 * C-x 4 .:                               Find Tag.            (line  56)
 * C-x 4 0:                               Change Window.       (line  43)
 * C-x 4 a:                               Change Log Commands. (line   6)
-* C-x 4 b:                               Select Buffer.       (line  65)
+* C-x 4 b:                               Select Buffer.       (line  66)
 * C-x 4 b (Iswitchb mode):               Iswitchb.            (line   6)
 * C-x 4 c:                               Indirect Buffers.    (line  19)
 * C-x 4 C-o (Iswitchb mode):             Iswitchb.            (line   6)
@@ -2950,7 +2963,7 @@ Key (Character) Index
 * C-x 5 0:                               Frame Commands.      (line  13)
 * C-x 5 1:                               Frame Commands.      (line  22)
 * C-x 5 2:                               Creating Frames.     (line  18)
-* C-x 5 b:                               Select Buffer.       (line  73)
+* C-x 5 b:                               Select Buffer.       (line  74)
 * C-x 5 b (Iswitchb mode):               Iswitchb.            (line   6)
 * C-x 5 d:                               Dired Enter.         (line  29)
 * C-x 5 f:                               Visiting.            (line 161)
@@ -2964,18 +2977,19 @@ Key (Character) Index
 * C-x 6 d:                               Two-Column.          (line  65)
 * C-x 6 RET:                             Two-Column.          (line  55)
 * C-x 6 s:                               Two-Column.          (line  22)
-* C-x 8:                                 Unibyte Mode.        (line  61)
+* C-x 8:                                 Unibyte Mode.        (line  67)
+* C-x 8 RET:                             Inserting Text.      (line  59)
 * C-x ;:                                 Options for Comments.
                                                               (line   6)
 * C-x <:                                 Horizontal Scrolling.
-                                                              (line  36)
-* C-x <LEFT>:                            Select Buffer.       (line  59)
+                                                              (line  39)
+* C-x <LEFT>:                            Select Buffer.       (line  60)
 * C-x <RET> F:                           File Name Coding.    (line  13)
-* C-x <RIGHT>:                           Select Buffer.       (line  59)
+* C-x <RIGHT>:                           Select Buffer.       (line  60)
 * C-x = <1>:                             International Chars. (line  35)
 * C-x =:                                 Position Info.       (line  54)
 * C-x >:                                 Horizontal Scrolling.
-                                                              (line  36)
+                                                              (line  39)
 * C-x [:                                 Pages.               (line  28)
 * C-x [ (Calendar mode):                 Calendar Unit Motion.
                                                               (line  43)
@@ -3003,7 +3017,7 @@ Key (Character) Index
 * C-x C-a C-j (GUD):                     Commands of GUD.     (line 104)
 * C-x C-a C-w (GUD):                     Watch Expressions.   (line   6)
 * C-x C-b:                               List Buffers.        (line   9)
-* C-x C-c:                               Exiting.             (line  14)
+* C-x C-c:                               Exiting.             (line  13)
 * C-x C-d:                               Directories.         (line  26)
 * C-x C-e:                               Lisp Eval.           (line  58)
 * C-x C-f:                               Visiting.            (line  52)
@@ -3030,7 +3044,7 @@ Key (Character) Index
 * C-x C-k SPC:                           Keyboard Macro Step-Edit.
                                                               (line   6)
 * C-x C-l:                               Case.                (line  47)
-* C-x C-n:                               Moving Point.        (line 100)
+* C-x C-n:                               Moving Point.        (line 104)
 * C-x C-o:                               Blank Lines.         (line  16)
 * C-x C-p:                               Pages.               (line  34)
 * C-x C-q:                               Misc Buffer.         (line  18)
@@ -3055,7 +3069,7 @@ Key (Character) Index
 * C-x i:                                 Misc File Ops.       (line  22)
 * C-x k:                                 Kill Buffer.         (line  21)
 * C-x l:                                 Pages.               (line  49)
-* C-x m:                                 Sending Mail.        (line  27)
+* C-x m:                                 Sending Mail.        (line   6)
 * C-x n d:                               Narrowing.           (line  41)
 * C-x n n:                               Narrowing.           (line  36)
 * C-x n p:                               Narrowing.           (line  41)
@@ -3100,24 +3114,24 @@ Key (Character) Index
                                                               (line  37)
 * C-x TAB (Enriched mode):               Format Indentation.  (line  15)
 * C-x u:                                 Undo.                (line  21)
-* C-x v =:                               Old Revisions.       (line  32)
+* C-x v =:                               Old Revisions.       (line  35)
 * C-x v a:                               Change Logs and VC.  (line  11)
 * C-x v b:                               Local Version Control.
                                                               (line  74)
 * C-x v c:                               VC Undo.             (line  25)
 * C-x v d:                               VC Directory Mode.   (line   6)
-* C-x v g:                               Old Revisions.       (line  73)
+* C-x v g:                               Old Revisions.       (line  81)
 * C-x v h:                               Version Headers.     (line  29)
 * C-x v i:                               Registering.         (line   6)
-* C-x v l:                               VC Status.           (line   9)
+* C-x v l:                               VC Change Log.       (line  13)
 * C-x v m:                               Merging.             (line  16)
 * C-x v r:                               Making Revision Tags.
                                                               (line  13)
 * C-x v s:                               Making Revision Tags.
                                                               (line   9)
 * C-x v u:                               VC Undo.             (line  14)
-* C-x v v:                               Basic VC Editing.    (line  22)
-* C-x v ~:                               Old Revisions.       (line  25)
+* C-x v v:                               Basic VC Editing.    (line  23)
+* C-x v ~:                               Old Revisions.       (line  28)
 * C-x w b:                               Highlight Interactively.
                                                               (line  54)
 * C-x w h:                               Highlight Interactively.
@@ -3131,10 +3145,10 @@ Key (Character) Index
 * C-x z:                                 Repeating.           (line  12)
 * C-x }:                                 Change Window.       (line  51)
 * C-y:                                   Kill Ring.           (line  15)
-* C-z:                                   Exiting.             (line  49)
+* C-z:                                   Exiting.             (line  48)
 * C-z (X windows):                       Frame Commands.      (line   9)
 * d (Calendar mode):                     Displaying the Diary.
-                                                              (line  35)
+                                                              (line  36)
 * D (Dired):                             Operating on Files.  (line  48)
 * d (Dired):                             Dired Deletion.      (line  22)
 * D (GDB breakpoints buffer):            Breakpoints Buffer.  (line  19)
@@ -3144,7 +3158,7 @@ Key (Character) Index
 * DEL (Dired):                           Dired Deletion.      (line  28)
 * DEL (Gnus):                            Summary of Gnus.     (line  66)
 * DEL (MS-DOS):                          MS-DOS Keyboard.     (line   6)
-* DEL (programming modes):               Program Modes.       (line  32)
+* DEL (programming modes):               Program Modes.       (line  33)
 * DEL (Rmail):                           Rmail Scrolling.     (line  23)
 * DOWN:                                  Moving Point.        (line  16)
 * e (Dired):                             Dired Visiting.      (line  18)
@@ -3193,7 +3207,7 @@ Key (Character) Index
 * INSERT:                                Minor Modes.         (line  65)
 * j (Dired):                             Dired Navigation.    (line  16)
 * j (Rmail):                             Rmail Motion.        (line  90)
-* k (Dired):                             Dired Updating.      (line  43)
+* k (Dired):                             Dired Updating.      (line  51)
 * k (Rmail):                             Rmail Labels.        (line  34)
 * l (Dired):                             Dired Updating.      (line  34)
 * L (Dired):                             Operating on Files.  (line 110)
@@ -3202,7 +3216,7 @@ Key (Character) Index
 * l (Rmail):                             Rmail Make Summary.  (line  41)
 * LEFT:                                  Moving Point.        (line  16)
 * m (Calendar mode):                     Displaying the Diary.
-                                                              (line  49)
+                                                              (line  51)
 * M (Calendar mode):                     Lunar Phases.        (line  19)
 * M (Dired):                             Operating on Files.  (line  76)
 * m (Dired):                             Marks vs Flags.      (line  17)
@@ -3261,7 +3275,7 @@ Key (Character) Index
 * M-g n:                                 Compilation Mode.    (line  56)
 * M-h:                                   Paragraphs.          (line  36)
 * M-i <1>:                               Tab Stops.           (line   6)
-* M-i:                                   Indentation.         (line  68)
+* M-i:                                   Indentation.         (line  72)
 * M-j:                                   Multi-Line Comments. (line   6)
 * M-j b (Enriched mode):                 Format Justification.
                                                               (line  48)
@@ -3307,21 +3321,19 @@ Key (Character) Index
 * M-s (Gnus Summary mode):               Summary of Gnus.     (line  90)
 * M-s (minibuffer history):              Minibuffer History.  (line  51)
 * M-s (Rmail):                           Rmail Motion.        (line  68)
-* M-s (Shell mode):                      Shell Ring.          (line  14)
 * M-s o:                                 Other Repeating Search.
-                                                              (line  31)
+                                                              (line  43)
 * M-s w:                                 Word Search.         (line  26)
 * M-SPC:                                 Deletion.            (line  35)
 * M-t:                                   Transpose.           (line  31)
 * M-TAB:                                 Symbol Completion.   (line  10)
 * M-TAB (customization buffer):          Changing a Variable. (line  49)
 * M-TAB (Incremental search):            Special Isearch.     (line  40)
-* M-TAB (Mail mode):                     Header Editing.      (line  52)
 * M-TAB (Picture mode):                  Tabs in Picture.     (line   6)
 * M-TAB (Text mode):                     Text Mode.           (line  36)
 * M-TAB, (MS-Windows):                   Windows Keyboard.    (line  45)
 * M-u:                                   Case.                (line  24)
-* M-v:                                   Scrolling.           (line  62)
+* M-v:                                   Scrolling.           (line  81)
 * M-v (Calendar mode):                   Scroll Calendar.     (line  34)
 * M-w:                                   Other Kill Commands. (line  39)
 * M-x:                                   M-x.                 (line  17)
@@ -3331,7 +3343,7 @@ Key (Character) Index
 * M-{ (Calendar mode):                   Calendar Unit Motion.
                                                               (line  43)
 * M-{ (Dired):                           Marks vs Flags.      (line  72)
-* M-|:                                   Single Shell.        (line  30)
+* M-|:                                   Single Shell.        (line  35)
 * M-}:                                   Paragraphs.          (line   6)
 * M-} (Calendar mode):                   Calendar Unit Motion.
                                                               (line  43)
@@ -3349,21 +3361,21 @@ Key (Character) Index
 * Mouse-3 (mode line):                   Mode Line Mouse.     (line  26)
 * n (Gnus):                              Summary of Gnus.     (line  72)
 * n (Rmail):                             Rmail Motion.        (line  55)
-* next:                                  Scrolling.           (line  62)
+* next:                                  Scrolling.           (line  81)
 * o (Calendar mode):                     Specified Dates.     (line  34)
 * O (Dired):                             Operating on Files.  (line  85)
 * o (Dired):                             Dired Visiting.      (line  21)
 * o (Occur mode):                        Other Repeating Search.
-                                                              (line  20)
+                                                              (line  32)
 * o (Rmail):                             Rmail Output.        (line  20)
 * p (Calendar mode):                     To Other Calendar.   (line  11)
 * P (Dired):                             Operating on Files.  (line  99)
 * p (Gnus):                              Summary of Gnus.     (line  76)
 * p (Rmail):                             Rmail Motion.        (line  55)
 * p d (Calendar mode):                   General Calendar.    (line  21)
-* PageDown:                              Scrolling.           (line  62)
-* PageUp:                                Scrolling.           (line  62)
-* prior:                                 Scrolling.           (line  62)
+* PageDown:                              Scrolling.           (line  81)
+* PageUp:                                Scrolling.           (line  81)
+* prior:                                 Scrolling.           (line  81)
 * q (Calendar mode):                     General Calendar.    (line  36)
 * Q (Dired):                             Operating on Files.  (line 127)
 * q (Gnus Group mode):                   Summary of Gnus.     (line  18)
@@ -3377,13 +3389,13 @@ Key (Character) Index
 * RET (GDB breakpoints buffer):          Breakpoints Buffer.  (line  22)
 * RET (GDB speedbar):                    Watch Expressions.   (line  28)
 * RET (Occur mode):                      Other Repeating Search.
-                                                              (line  20)
+                                                              (line  32)
 * RET (Shell mode):                      Shell Mode.          (line  13)
 * RIGHT:                                 Moving Point.        (line  16)
 * s (Calendar mode):                     Displaying the Diary.
-                                                              (line  60)
+                                                              (line  62)
 * S (Calendar mode):                     Sunrise/Sunset.      (line  25)
-* s (Dired):                             Dired Updating.      (line  59)
+* s (Dired):                             Dired Updating.      (line  67)
 * S (Dired):                             Operating on Files.  (line  70)
 * s (Gnus Summary mode):                 Summary of Gnus.     (line  85)
 * s (Rmail):                             Rmail Basics.        (line  28)
@@ -3407,6 +3419,7 @@ Key (Character) Index
 * TAB (completion):                      Completion Example.  (line   6)
 * TAB (customization buffer):            Changing a Variable. (line 103)
 * TAB (GUD):                             Commands of GUD.     (line 113)
+* TAB (Message mode):                    Header Editing.      (line  46)
 * TAB (programming modes):               Basic Indent.        (line  16)
 * TAB (Shell mode):                      Shell Mode.          (line  20)
 * TAB (Text mode):                       Text Mode.           (line  15)
@@ -3446,19 +3459,19 @@ Command-Line Options Index
 * --border-width:                        Borders X.           (line  20)
 * --color:                               Colors.              (line  51)
 * --cursor-color:                        Colors.              (line  37)
-* --daemon:                              Initial Options.     (line  98)
-* --debug-init:                          Initial Options.     (line 116)
+* --daemon:                              Initial Options.     (line 100)
+* --debug-init:                          Initial Options.     (line 118)
 * --directory:                           Action Arguments.    (line  49)
 * --display:                             Initial Options.     (line  25)
 * --eval:                                Action Arguments.    (line  59)
 * --execute:                             Action Arguments.    (line  60)
 * --file:                                Action Arguments.    (line   9)
 * --find-file:                           Action Arguments.    (line  10)
-* --font:                                Font X.              (line  12)
+* --font:                                Font X.              (line  11)
 * --foreground-color:                    Colors.              (line  23)
-* --fullheight:                          Window Size X.       (line  22)
+* --fullheight:                          Window Size X.       (line  28)
 * --fullscreen:                          Window Size X.       (line  18)
-* --fullwidth:                           Window Size X.       (line  26)
+* --fullwidth:                           Window Size X.       (line  32)
 * --funcall:                             Action Arguments.    (line  53)
 * --geometry:                            Window Size X.       (line  11)
 * --help:                                Action Arguments.    (line  71)
@@ -3468,47 +3481,45 @@ Command-Line Options Index
 * --kill:                                Action Arguments.    (line  68)
 * --line-spacing:                        Misc X.              (line  12)
 * --load:                                Action Arguments.    (line  38)
+* --maximized:                           Window Size X.       (line  23)
 * --mouse-color:                         Colors.              (line  42)
-* --multibyte:                           Initial Options.     (line 130)
-* --name:                                Resources.           (line  63)
+* --name:                                Resources.           (line  70)
 * --no-bitmap-icon:                      Icons X.             (line  12)
 * --no-blinking-cursor:                  Misc X.              (line  16)
-* --no-desktop:                          Initial Options.     (line 109)
+* --no-desktop:                          Initial Options.     (line 111)
 * --no-init-file:                        Initial Options.     (line  75)
-* --no-multibyte:                        Initial Options.     (line 121)
 * --no-site-file:                        Initial Options.     (line  82)
 * --no-splash:                           Initial Options.     (line  87)
-* --no-unibyte:                          Initial Options.     (line 131)
 * --no-window-system:                    Initial Options.     (line  30)
 * --quick:                               Initial Options.     (line  93)
 * --reverse-video:                       Colors.              (line  48)
 * --script:                              Initial Options.     (line  61)
 * --terminal:                            Initial Options.     (line  20)
 * --title:                               Title X.             (line  17)
-* --unibyte:                             Initial Options.     (line 120)
-* --user:                                Initial Options.     (line 113)
+* --user:                                Initial Options.     (line 115)
 * --version:                             Action Arguments.    (line  75)
 * --vertical-scroll-bars:                Misc X.              (line   8)
 * --visit:                               Action Arguments.    (line  11)
-* --xrm:                                 Resources.           (line  80)
+* --xrm:                                 Resources.           (line  87)
 * -bd:                                   Colors.              (line  32)
 * -bg:                                   Colors.              (line  28)
 * -bw:                                   Borders X.           (line  19)
 * -cr:                                   Colors.              (line  36)
 * -D:                                    Misc X.              (line  19)
 * -d:                                    Initial Options.     (line  24)
-* -daemon:                               Initial Options.     (line  97)
+* -daemon:                               Initial Options.     (line  99)
 * -f:                                    Action Arguments.    (line  52)
 * -fg:                                   Colors.              (line  22)
-* -fh:                                   Window Size X.       (line  21)
-* -fn:                                   Font X.              (line  11)
+* -fh:                                   Window Size X.       (line  27)
+* -fn:                                   Font X.              (line  10)
 * -fs:                                   Window Size X.       (line  17)
-* -fw:                                   Window Size X.       (line  25)
+* -fw:                                   Window Size X.       (line  31)
 * -g:                                    Window Size X.       (line  10)
 * -ib:                                   Borders X.           (line  14)
 * -L:                                    Action Arguments.    (line  48)
 * -l:                                    Action Arguments.    (line  37)
 * -lsp:                                  Misc X.              (line  11)
+* -mm:                                   Window Size X.       (line  22)
 * -ms:                                   Colors.              (line  41)
 * -nbc:                                  Misc X.              (line  15)
 * -nbi:                                  Icons X.             (line  11)
@@ -3519,7 +3530,7 @@ Command-Line Options Index
 * -rv:                                   Colors.              (line  47)
 * -T:                                    Title X.             (line  16)
 * -t:                                    Initial Options.     (line  19)
-* -u:                                    Initial Options.     (line 112)
+* -u:                                    Initial Options.     (line 114)
 * -vb:                                   Misc X.              (line   7)
 
 
@@ -3543,6 +3554,11 @@ Command and Function Index
 * abort-recursive-edit:                  Quitting.            (line  70)
 * add-change-log-entry-other-window:     Change Log Commands. (line   6)
 * add-change-log-entry-other-window, in Diff mode: Diff Mode. (line 106)
+* add-dir-local-variable:                Directory Variables. (line  47)
+* add-file-local-variable:               Specifying File Variables.
+                                                              (line  72)
+* add-file-local-variable-prop-line:     Specifying File Variables.
+                                                              (line  18)
 * add-global-abbrev:                     Defining Abbrevs.    (line  31)
 * add-hook:                              Hooks.               (line  37)
 * add-mode-abbrev:                       Defining Abbrevs.    (line  43)
@@ -3611,7 +3627,7 @@ Command and Function Index
 * c-beginning-of-defun:                  Motion in C.         (line  11)
 * c-beginning-of-statement:              Motion in C.         (line  40)
 * c-context-line-break:                  Other C Commands.    (line  19)
-* c-electric-backspace:                  Program Modes.       (line  32)
+* c-electric-backspace:                  Program Modes.       (line  33)
 * c-end-of-defun:                        Motion in C.         (line  11)
 * c-end-of-statement:                    Motion in C.         (line  49)
 * c-fill-paragraph:                      Other C Commands.    (line  39)
@@ -3626,7 +3642,6 @@ Command and Function Index
 * c-mark-function:                       Moving by Defuns.    (line  32)
 * c-set-style:                           Custom C Indent.     (line  26)
 * c-show-syntactic-information:          Other C Commands.    (line  76)
-* c-subword-mode:                        Other C Commands.    (line   8)
 * c-toggle-auto-newline:                 Electric C.          (line  29)
 * c-toggle-electric-state:               Electric C.          (line  19)
 * c-toggle-hungry-state:                 Hungry Delete.       (line  30)
@@ -3736,18 +3751,17 @@ Command and Function Index
 * comint-delete-output:                  Shell Mode.          (line  83)
 * comint-dynamic-complete:               Shell Mode.          (line  20)
 * comint-dynamic-list-filename...:       Shell Mode.          (line  32)
-* comint-dynamic-list-input-ring:        Shell Ring.          (line  26)
-* comint-get-next-from-history:          Shell Ring.          (line  20)
-* comint-input-previous-argument:        Shell Ring.          (line  23)
+* comint-dynamic-list-input-ring:        Shell Ring.          (line  24)
+* comint-get-next-from-history:          Shell Ring.          (line  18)
+* comint-history-isearch-backward-regexp: Shell Ring.         (line  14)
+* comint-input-previous-argument:        Shell Ring.          (line  21)
 * comint-interrupt-subjob:               Shell Mode.          (line  68)
 * comint-kill-input:                     Shell Mode.          (line  60)
 * comint-magic-space:                    History References.  (line  17)
 * comint-next-input:                     Shell Ring.          (line  10)
-* comint-next-matching-input:            Shell Ring.          (line  14)
 * comint-next-prompt:                    Shell History Copying.
                                                               (line   9)
 * comint-previous-input:                 Shell Ring.          (line   6)
-* comint-previous-matching-input:        Shell Ring.          (line  14)
 * comint-previous-prompt:                Shell History Copying.
                                                               (line   6)
 * comint-quit-subjob:                    Shell Mode.          (line  78)
@@ -3774,10 +3788,16 @@ Command and Function Index
 * compile (MS-DOS):                      MS-DOS Processes.    (line   6)
 * compile-goto-error:                    Compilation Mode.    (line  48)
 * complete-symbol:                       Symbol Completion.   (line  25)
-* compose-mail:                          Sending Mail.        (line  27)
+* compose-mail:                          Sending Mail.        (line   6)
 * compose-mail-other-frame:              Sending Mail.        (line  27)
 * compose-mail-other-window:             Sending Mail.        (line  27)
+* copy-dir-locals-to-file-locals:        Specifying File Variables.
+                                                              (line  72)
+* copy-dir-locals-to-file-locals-prop-line: Specifying File Variables.
+                                                              (line  18)
+* copy-directory:                        Misc File Ops.       (line  78)
 * copy-file:                             Misc File Ops.       (line  78)
+* copy-file-locals-to-dir-locals:        Directory Variables. (line  47)
 * copy-rectangle-to-register:            RegRect.             (line  10)
 * copy-to-buffer:                        Accumulating Text.   (line   6)
 * copy-to-register:                      RegText.             (line  23)
@@ -3809,19 +3829,22 @@ Command and Function Index
 * dabbrev-completion:                    Dynamic Abbrevs.     (line  12)
 * dabbrev-expand:                        Dynamic Abbrevs.     (line  12)
 * dbx:                                   Starting GUD.        (line  20)
-* debug_print:                           Checklist.           (line 222)
+* debug_print:                           Checklist.           (line 220)
 * decipher:                              Amusements.          (line  20)
 * default-value:                         Locals.              (line  70)
 * define-abbrevs:                        Saving Abbrevs.      (line  49)
 * define-global-abbrev:                  Defining Abbrevs.    (line  56)
-* define-key:                            Local Keymaps.       (line  39)
-* define-mail-abbrev:                    Mail Aliases.        (line  74)
-* define-mail-alias:                     Mail Aliases.        (line  46)
+* define-key:                            Init Rebinding.      (line  78)
 * define-mode-abbrev:                    Defining Abbrevs.    (line  56)
 * delete-backward-char:                  Deletion.            (line   6)
 * delete-blank-lines:                    Blank Lines.         (line  16)
 * delete-char:                           Deletion.            (line   6)
+* delete-dir-local-variable:             Directory Variables. (line  47)
 * delete-file:                           Misc File Ops.       (line  40)
+* delete-file-local-variable:            Specifying File Variables.
+                                                              (line  72)
+* delete-file-local-variable-prop-line:  Specifying File Variables.
+                                                              (line  18)
 * delete-frame:                          Frame Commands.      (line  13)
 * delete-horizontal-space:               Deletion.            (line  35)
 * delete-indentation:                    Indentation Commands.
@@ -3836,7 +3859,7 @@ Command and Function Index
 * delete-window:                         Change Window.       (line  35)
 * describe-bindings:                     Misc Help.           (line  42)
 * describe-categories:                   Regexp Backslash.    (line 140)
-* describe-character-set:                Charsets.            (line  28)
+* describe-character-set:                Charsets.            (line  24)
 * describe-coding-system:                Coding Systems.      (line  42)
 * describe-copying:                      Help Files.          (line  13)
 * describe-distribution:                 Help Files.          (line  13)
@@ -3861,15 +3884,15 @@ Command and Function Index
 * desktop-save:                          Saving Emacs Sessions.
                                                               (line  11)
 * diary:                                 Displaying the Diary.
-                                                              (line  71)
+                                                              (line  65)
 * diary-anniversary <1>:                 Sexp Diary Entries.  (line  16)
 * diary-anniversary:                     Special Diary Entries.
                                                               (line  35)
 * diary-astro-day-number:                Sexp Diary Entries.  (line 116)
 * diary-bahai-date:                      Sexp Diary Entries.  (line 116)
-* diary-bahai-insert-entry:              Non-Gregorian Diary. (line  70)
-* diary-bahai-insert-monthly-entry:      Non-Gregorian Diary. (line  70)
-* diary-bahai-insert-yearly-entry:       Non-Gregorian Diary. (line  70)
+* diary-bahai-insert-entry:              Non-Gregorian Diary. (line  72)
+* diary-bahai-insert-monthly-entry:      Non-Gregorian Diary. (line  72)
+* diary-bahai-insert-yearly-entry:       Non-Gregorian Diary. (line  72)
 * diary-bahai-list-entries:              Non-Gregorian Diary. (line  13)
 * diary-bahai-mark-entries:              Non-Gregorian Diary. (line  13)
 * diary-block:                           Special Diary Entries.
@@ -3882,15 +3905,15 @@ Command and Function Index
 * diary-date:                            Sexp Diary Entries.  (line  53)
 * diary-day-of-year:                     Sexp Diary Entries.  (line 116)
 * diary-ethiopic-date:                   Sexp Diary Entries.  (line 116)
-* diary-fancy-display:                   Fancy Diary Display. (line   6)
+* diary-fancy-display:                   Diary Display.       (line   6)
 * diary-float <1>:                       Sexp Diary Entries.  (line  65)
 * diary-float:                           Special Diary Entries.
                                                               (line  86)
 * diary-french-date:                     Sexp Diary Entries.  (line 116)
 * diary-hebrew-date:                     Sexp Diary Entries.  (line 116)
-* diary-hebrew-insert-entry:             Non-Gregorian Diary. (line  70)
-* diary-hebrew-insert-monthly-entry:     Non-Gregorian Diary. (line  70)
-* diary-hebrew-insert-yearly-entry:      Non-Gregorian Diary. (line  70)
+* diary-hebrew-insert-entry:             Non-Gregorian Diary. (line  72)
+* diary-hebrew-insert-monthly-entry:     Non-Gregorian Diary. (line  72)
+* diary-hebrew-insert-yearly-entry:      Non-Gregorian Diary. (line  72)
 * diary-hebrew-list-entries:             Non-Gregorian Diary. (line  13)
 * diary-hebrew-mark-entries:             Non-Gregorian Diary. (line  13)
 * diary-hebrew-omer:                     Sexp Diary Entries.  (line 176)
@@ -3898,7 +3921,7 @@ Command and Function Index
 * diary-hebrew-rosh-hodesh:              Sexp Diary Entries.  (line 176)
 * diary-hebrew-sabbath-candles:          Sexp Diary Entries.  (line 176)
 * diary-hebrew-yahrzeit:                 Sexp Diary Entries.  (line 176)
-* diary-include-other-diary-files:       Fancy Diary Display. (line  50)
+* diary-include-other-diary-files:       Fancy Diary Display. (line  28)
 * diary-insert-anniversary-entry:        Special Diary Entries.
                                                               (line  29)
 * diary-insert-block-entry:              Special Diary Entries.
@@ -3910,30 +3933,30 @@ Command and Function Index
 * diary-insert-weekly-entry:             Adding to Diary.     (line  32)
 * diary-insert-yearly-entry:             Adding to Diary.     (line  32)
 * diary-islamic-date:                    Sexp Diary Entries.  (line 116)
-* diary-islamic-insert-entry:            Non-Gregorian Diary. (line  70)
-* diary-islamic-insert-monthly-entry:    Non-Gregorian Diary. (line  70)
-* diary-islamic-insert-yearly-entry:     Non-Gregorian Diary. (line  70)
+* diary-islamic-insert-entry:            Non-Gregorian Diary. (line  72)
+* diary-islamic-insert-monthly-entry:    Non-Gregorian Diary. (line  72)
+* diary-islamic-insert-yearly-entry:     Non-Gregorian Diary. (line  72)
 * diary-islamic-list-entries:            Non-Gregorian Diary. (line  13)
 * diary-islamic-mark-entries:            Non-Gregorian Diary. (line  13)
 * diary-iso-date:                        Sexp Diary Entries.  (line 116)
 * diary-julian-date:                     Sexp Diary Entries.  (line 116)
 * diary-lunar-phases:                    Sexp Diary Entries.  (line 116)
 * diary-mail-entries:                    Displaying the Diary.
-                                                              (line  81)
+                                                              (line  73)
 * diary-mark-entries:                    Displaying the Diary.
-                                                              (line  49)
-* diary-mark-included-diary-files:       Fancy Diary Display. (line  50)
+                                                              (line  51)
+* diary-mark-included-diary-files:       Fancy Diary Display. (line  28)
 * diary-mayan-date:                      Sexp Diary Entries.  (line 116)
 * diary-persian-date:                    Sexp Diary Entries.  (line 116)
-* diary-print-entries:                   Diary Customizing.   (line  24)
+* diary-print-entries:                   Diary Display.       (line  37)
 * diary-remind:                          Sexp Diary Entries.  (line  48)
 * diary-show-all-entries:                Displaying the Diary.
-                                                              (line  60)
-* diary-simple-display:                  Fancy Diary Display. (line   6)
-* diary-sort-entries:                    Fancy Diary Display. (line  32)
+                                                              (line  62)
+* diary-simple-display:                  Diary Display.       (line   6)
+* diary-sort-entries:                    Fancy Diary Display. (line  11)
 * diary-sunrise-sunset:                  Sexp Diary Entries.  (line 116)
 * diary-view-entries:                    Displaying the Diary.
-                                                              (line  35)
+                                                              (line  36)
 * diff:                                  Comparing Files.     (line   6)
 * diff-add-change-log-entries-other-window: Diff Mode.        (line 106)
 * diff-apply-hunk:                       Diff Mode.           (line  56)
@@ -3956,14 +3979,14 @@ Command and Function Index
 * diff-split-hunk:                       Diff Mode.           (line  83)
 * diff-unified->context:                 Diff Mode.           (line  91)
 * digit-argument:                        Arguments.           (line  15)
-* dir-locals-set-class-variables:        Directory Variables. (line  47)
-* dir-locals-set-directory-class:        Directory Variables. (line  47)
+* dir-locals-set-class-variables:        Directory Variables. (line  54)
+* dir-locals-set-directory-class:        Directory Variables. (line  54)
 * dired:                                 Dired Enter.         (line   6)
 * dired-at-point:                        FFAP.                (line   6)
 * dired-backup-diff:                     Comparison in Dired. (line  18)
 * dired-change-marks:                    Marks vs Flags.      (line  81)
 * dired-clean-directory:                 Flagging Many Files. (line  38)
-* dired-compare-directories:             Misc Dired Features. (line  35)
+* dired-compare-directories:             Misc Dired Features. (line  39)
 * dired-copy-filename-as-kill:           Misc Dired Features. (line  18)
 * dired-create-directory:                Misc Dired Features. (line   6)
 * dired-diff:                            Comparison in Dired. (line  11)
@@ -3981,7 +4004,7 @@ Command and Function Index
 * dired-do-hardlink:                     Operating on Files.  (line  64)
 * dired-do-hardlink-regexp:              Transforming File Names.
                                                               (line  34)
-* dired-do-kill-lines:                   Dired Updating.      (line  43)
+* dired-do-kill-lines:                   Dired Updating.      (line  51)
 * dired-do-load:                         Operating on Files.  (line 110)
 * dired-do-print:                        Operating on Files.  (line  99)
 * dired-do-query-replace-regexp:         Operating on Files.  (line 127)
@@ -4028,7 +4051,7 @@ Command and Function Index
 * dired-prev-dirline:                    Subdirectory Motion. (line  30)
 * dired-prev-marked-file:                Marks vs Flags.      (line  72)
 * dired-prev-subdir:                     Subdirectory Motion. (line  19)
-* dired-sort-toggle-or-edit:             Dired Updating.      (line  59)
+* dired-sort-toggle-or-edit:             Dired Updating.      (line  67)
 * dired-toggle-marks:                    Marks vs Flags.      (line  76)
 * dired-tree-down:                       Subdirectory Motion. (line  26)
 * dired-tree-up:                         Subdirectory Motion. (line  23)
@@ -4052,17 +4075,17 @@ Command and Function Index
 * do-auto-save:                          Auto Save Control.   (line  37)
 * doc-view-clear-cache:                  Conversion.          (line   6)
 * doc-view-enlarge:                      Document View.       (line  28)
-* doc-view-first-page:                   Navigation.          (line  18)
-* doc-view-goto-page:                    Navigation.          (line  18)
+* doc-view-first-page:                   Navigation.          (line  25)
+* doc-view-goto-page:                    Navigation.          (line  25)
 * doc-view-kill-proc:                    Conversion.          (line  10)
 * doc-view-kill-proc-and-buffer:         Conversion.          (line  10)
-* doc-view-last-page:                    Navigation.          (line  18)
+* doc-view-last-page:                    Navigation.          (line  25)
 * doc-view-mode:                         Document View.       (line   6)
-* doc-view-next-page:                    Navigation.          (line   9)
-* doc-view-previous-page:                Navigation.          (line   9)
+* doc-view-next-page:                    Navigation.          (line  16)
+* doc-view-previous-page:                Navigation.          (line  16)
 * doc-view-reset-slice:                  Slicing.             (line  22)
-* doc-view-scroll-down-or-previous-page: Navigation.          (line  13)
-* doc-view-scroll-up-or-next-page:       Navigation.          (line  13)
+* doc-view-scroll-down-or-previous-page: Navigation.          (line  20)
+* doc-view-scroll-up-or-next-page:       Navigation.          (line  20)
 * doc-view-search:                       Searching.           (line  10)
 * doc-view-search-backward:              Searching.           (line  10)
 * doc-view-set-slice:                    Slicing.             (line  10)
@@ -4079,7 +4102,7 @@ Command and Function Index
 * edit-abbrevs:                          Editing Abbrevs.     (line  42)
 * edit-kbd-macro:                        Edit Keyboard Macro. (line  22)
 * edit-tab-stops <1>:                    Tab Stops.           (line  10)
-* edit-tab-stops:                        Indentation.         (line  68)
+* edit-tab-stops:                        Indentation.         (line  72)
 * edit-tab-stops-note-changes:           Tab Stops.           (line  10)
 * edt-emulation-off:                     Emulation.           (line  18)
 * edt-emulation-on:                      Emulation.           (line  18)
@@ -4114,7 +4137,6 @@ Command and Function Index
 * exit-calendar:                         General Calendar.    (line  36)
 * exit-recursive-edit:                   Recursive Edit.      (line  12)
 * expand-abbrev:                         Expanding Abbrevs.   (line  26)
-* expand-mail-aliases:                   Mail Aliases.        (line  62)
 * expand-region-abbrevs:                 Expanding Abbrevs.   (line  59)
 * f90-beginning-of-block:                Fortran Motion.      (line  44)
 * f90-end-of-block:                      Fortran Motion.      (line  36)
@@ -4158,7 +4180,7 @@ Command and Function Index
 * find-file-other-window:                Visiting.            (line 153)
 * find-file-read-only:                   Visiting.            (line 149)
 * find-file-read-only-other-frame:       Creating Frames.     (line  43)
-* find-grep:                             Grep Searching.      (line  50)
+* find-grep:                             Grep Searching.      (line  53)
 * find-grep-dired:                       Dired and Find.      (line  17)
 * find-name-dired:                       Dired and Find.      (line   9)
 * find-tag:                              Find Tag.            (line  35)
@@ -4219,8 +4241,8 @@ Command and Function Index
 * global-cwarn-mode:                     Other C Commands.    (line  82)
 * global-font-lock-mode:                 Font Lock.           (line  20)
 * global-hl-line-mode:                   Cursor Display.      (line  34)
-* global-set-key:                        Rebinding.           (line  12)
-* global-unset-key:                      Rebinding.           (line  12)
+* global-set-key:                        Rebinding.           (line  16)
+* global-unset-key:                      Rebinding.           (line  16)
 * global-visual-line-mode:               Visual Line Mode.    (line  13)
 * gnus:                                  Gnus.                (line  12)
 * gnus-group-exit:                       Summary of Gnus.     (line  18)
@@ -4243,12 +4265,14 @@ Command and Function Index
 * gomoku:                                Amusements.          (line   6)
 * goto-address-mode:                     Goto Address mode.   (line   6)
 * goto-char:                             Moving Point.        (line  16)
-* goto-line <1>:                         Select Buffer.       (line  90)
+* goto-followup-to:                      Header Editing.      (line  38)
+* goto-line <1>:                         Select Buffer.       (line  91)
 * goto-line:                             Moving Point.        (line  16)
+* goto-reply-to:                         Header Editing.      (line  38)
 * gpm-mouse-mode:                        Text-Only Mouse.     (line  16)
-* grep:                                  Grep Searching.      (line  26)
+* grep:                                  Grep Searching.      (line  29)
 * grep (MS-DOS):                         MS-DOS Processes.    (line   6)
-* grep-find:                             Grep Searching.      (line  50)
+* grep-find:                             Grep Searching.      (line  53)
 * gud-cont:                              Commands of GUD.     (line  63)
 * gud-def:                               GUD Customization.   (line  18)
 * gud-down:                              Commands of GUD.     (line  86)
@@ -4304,13 +4328,12 @@ Command and Function Index
 * hs-show-block:                         Hideshow.            (line  16)
 * hs-show-region:                        Hideshow.            (line  16)
 * html-mode:                             HTML Mode.           (line   6)
+* htmlfontify-buffer:                    Printing.            (line  11)
 * icalendar-export-file, icalendar-export-region: Importing Diary.
                                                               (line  37)
 * icalendar-import-buffer:               Importing Diary.     (line  20)
 * icalendar-import-file:                 Importing Diary.     (line  27)
 * icomplete-mode:                        Completion Options.  (line  49)
-* iconify-or-deiconify-frame <1>:        Frame Commands.      (line   9)
-* iconify-or-deiconify-frame:            Exiting.             (line  49)
 * ielm:                                  Lisp Interaction.    (line  27)
 * image-dired-display-thumbs:            Image-Dired.         (line  10)
 * image-mode:                            File Conveniences.   (line  20)
@@ -4357,7 +4380,7 @@ Command and Function Index
 * ispell-buffer:                         Spelling.            (line  56)
 * ispell-complete-word:                  Spelling.            (line 133)
 * ispell-kill-ispell:                    Spelling.            (line 142)
-* ispell-message:                        Mail Mode Misc.      (line  45)
+* ispell-message:                        Mail Misc.           (line  30)
 * ispell-region:                         Spelling.            (line  56)
 * ispell-word:                           Spelling.            (line  49)
 * iswitchb-mode:                         Iswitchb.            (line   6)
@@ -4375,7 +4398,7 @@ Command and Function Index
 * kill-buffer:                           Kill Buffer.         (line  21)
 * kill-buffer-and-window:                Change Window.       (line  43)
 * kill-compilation:                      Compilation.         (line  72)
-* kill-emacs:                            Exiting.             (line  39)
+* kill-emacs:                            Exiting.             (line  38)
 * kill-line:                             Killing by Lines.    (line  12)
 * kill-local-variable:                   Locals.              (line  51)
 * kill-matching-buffers:                 Kill Buffer.         (line  34)
@@ -4415,7 +4438,7 @@ Command and Function Index
 * kmacro-step-edit-macro:                Keyboard Macro Step-Edit.
                                                               (line   6)
 * latex-mode:                            TeX Mode.            (line   6)
-* lgrep:                                 Grep Searching.      (line  56)
+* lgrep:                                 Grep Searching.      (line  59)
 * life:                                  Amusements.          (line  30)
 * line-number-mode:                      Optional Mode Line.  (line  18)
 * linum-mode:                            Minor Modes.         (line  59)
@@ -4426,8 +4449,8 @@ Command and Function Index
 * list-abbrevs:                          Editing Abbrevs.     (line  13)
 * list-bookmarks:                        Bookmarks.           (line  22)
 * list-buffers:                          List Buffers.        (line   9)
-* list-character-sets:                   Charsets.            (line  35)
-* list-charset-chars:                    Charsets.            (line  28)
+* list-character-sets:                   Charsets.            (line  31)
+* list-charset-chars:                    Charsets.            (line  24)
 * list-coding-systems:                   Coding Systems.      (line  50)
 * list-colors-display:                   Colors.              (line   6)
 * list-command-history:                  Repetition.          (line  12)
@@ -4443,8 +4466,8 @@ Command and Function Index
 * load-file:                             Lisp Libraries.      (line  16)
 * load-library:                          Lisp Libraries.      (line  22)
 * load-theme:                            Custom Themes.       (line  47)
-* local-set-key:                         Rebinding.           (line  12)
-* local-unset-key:                       Rebinding.           (line  12)
+* local-set-key:                         Rebinding.           (line  16)
+* local-unset-key:                       Rebinding.           (line  16)
 * locate:                                Dired and Find.      (line  38)
 * locate-with-filter:                    Dired and Find.      (line  38)
 * log-edit-insert-changelog:             Log Buffer.          (line  19)
@@ -4453,32 +4476,18 @@ Command and Function Index
 * longlines-auto-wrap:                   Longlines.           (line  29)
 * longlines-mode:                        Longlines.           (line  19)
 * longlines-show-hard-newlines:          Longlines.           (line  42)
-* lpr-buffer:                            Printing.            (line  26)
-* lpr-region:                            Printing.            (line  26)
+* lpr-buffer:                            Printing.            (line  31)
+* lpr-region:                            Printing.            (line  31)
 * lunar-phases:                          Lunar Phases.        (line  23)
-* mail-abbrev-insert-alias:              Mail Aliases.        (line  81)
-* mail-attach-file:                      Mail Mode Misc.      (line  52)
-* mail-bcc:                              Header Editing.      (line  44)
-* mail-cc:                               Header Editing.      (line  44)
-* mail-complete:                         Header Editing.      (line  52)
-* mail-fcc:                              Header Editing.      (line  44)
-* mail-fill-yanked-message:              Citing Mail.         (line  43)
-* mail-mail-followup-to:                 Header Editing.      (line  44)
-* mail-mail-reply-to:                    Header Editing.      (line  44)
-* mail-reply-to:                         Header Editing.      (line  44)
-* mail-send:                             Mail Sending.        (line  16)
-* mail-send-and-exit:                    Mail Sending.        (line  16)
-* mail-signature:                        Mail Mode Misc.      (line  24)
-* mail-subject:                          Header Editing.      (line  44)
-* mail-text:                             Mail Mode Misc.      (line  21)
-* mail-to:                               Header Editing.      (line  44)
-* mail-yank-original:                    Citing Mail.         (line  20)
-* mail-yank-region:                      Citing Mail.         (line  38)
+* mail-abbrev-insert-alias:              Mail Aliases.        (line  44)
+* mail-attach-file:                      Mail Misc.           (line   6)
+* mail-fill-yanked-message:              Citing Mail.         (line  24)
+* mail-text:                             Header Editing.      (line  43)
 * make-frame-command:                    Creating Frames.     (line  18)
 * make-frame-on-display:                 Multiple Displays.   (line  11)
 * make-indirect-buffer:                  Indirect Buffers.    (line  10)
 * make-local-variable:                   Locals.              (line  22)
-* make-symbolic-link:                    Misc File Ops.       (line  81)
+* make-symbolic-link:                    Misc File Ops.       (line  82)
 * make-variable-buffer-local:            Locals.              (line  27)
 * Man-fontify-manpage:                   Man Page.            (line  42)
 * manual-entry:                          Man Page.            (line  12)
@@ -4492,6 +4501,17 @@ Command and Function Index
 * mark-word:                             Marking Objects.     (line  33)
 * menu-bar-mode:                         Menu Bars.           (line   6)
 * menu-bar-open:                         Menu Bar.            (line  10)
+* message-goto-bcc:                      Header Editing.      (line  38)
+* message-goto-cc:                       Header Editing.      (line  38)
+* message-goto-fcc:                      Header Editing.      (line  38)
+* message-goto-subject:                  Header Editing.      (line  38)
+* message-goto-to:                       Header Editing.      (line  38)
+* message-insert-signature:              Mail Signature.      (line  20)
+* message-send:                          Mail Sending.        (line  16)
+* message-send-and-exit:                 Mail Sending.        (line  22)
+* message-tab:                           Header Editing.      (line  46)
+* message-yank-original:                 Citing Mail.         (line  13)
+* message-yank-prefix:                   Citing Mail.         (line  13)
 * minibuffer-complete:                   Completion Commands. (line  10)
 * minibuffer-complete-word:              Completion Commands. (line  56)
 * mode, thumbs:                          File Conveniences.   (line  28)
@@ -4499,7 +4519,7 @@ Command and Function Index
 * mode4350:                              MS-DOS Display.      (line  43)
 * modify-face:                           Face Customization.  (line  55)
 * morse-region:                          Amusements.          (line  32)
-* mouse-avoidance-mode:                  Mouse Avoidance.     (line  32)
+* mouse-avoidance-mode:                  Mouse Avoidance.     (line  39)
 * mouse-buffer-menu:                     Buffer Menus.        (line  16)
 * mouse-choose-completion:               Completion Commands. (line  66)
 * mouse-save-then-kill:                  Mouse Commands.      (line  61)
@@ -4526,7 +4546,7 @@ Command and Function Index
 * narrow-to-region:                      Narrowing.           (line  36)
 * negative-argument:                     Arguments.           (line  15)
 * newline-and-indent:                    Basic Indent.        (line  30)
-* next-buffer:                           Select Buffer.       (line  59)
+* next-buffer:                           Select Buffer.       (line  60)
 * next-completion:                       Completion Commands. (line  85)
 * next-error:                            Compilation Mode.    (line  56)
 * next-error-follow-minor-mode:          Compilation Mode.    (line 110)
@@ -4535,17 +4555,18 @@ Command and Function Index
 * next-logical-line:                     Visual Line Mode.    (line  23)
 * next-matching-history-element:         Minibuffer History.  (line  51)
 * normal-erase-is-backspace-mode:        DEL Does Not Delete. (line  34)
-* normal-mode:                           Choosing Modes.      (line 121)
+* normal-mode:                           Choosing Modes.      (line 132)
 * not-modified:                          Save Commands.       (line  78)
 * nroff-mode:                            Nroff Mode.          (line   6)
 * number-to-register:                    RegNumbers.          (line  11)
-* nxml-mode:                             HTML Mode.           (line  77)
+* nxml-mode <1>:                         HTML Mode.           (line  69)
+* nxml-mode:                             Text.                (line  22)
 * occur:                                 Other Repeating Search.
                                                               (line  12)
-* open-dribble-file:                     Checklist.           (line  80)
+* open-dribble-file:                     Checklist.           (line  78)
 * open-line:                             Blank Lines.         (line  16)
 * open-rectangle:                        Rectangles.          (line  91)
-* open-termscript:                       Checklist.           (line  89)
+* open-termscript:                       Checklist.           (line  87)
 * other-frame:                           Frame Commands.      (line  17)
 * other-window:                          Other Window.        (line  20)
 * outline-backward-same-level:           Outline Motion.      (line  36)
@@ -4600,15 +4621,15 @@ Command and Function Index
 * prefer-coding-system:                  Recognize Coding.    (line  31)
 * prepend-to-buffer:                     Accumulating Text.   (line   6)
 * prepend-to-register:                   RegText.             (line  31)
-* previous-buffer:                       Select Buffer.       (line  59)
+* previous-buffer:                       Select Buffer.       (line  60)
 * previous-completion:                   Completion Commands. (line  90)
 * previous-history-element:              Minibuffer History.  (line  29)
 * previous-line:                         Moving Point.        (line  16)
 * previous-logical-line:                 Visual Line Mode.    (line  23)
 * previous-matching-history-element:     Minibuffer History.  (line  51)
-* print-buffer:                          Printing.            (line  26)
+* print-buffer:                          Printing.            (line  31)
 * print-buffer (MS-DOS):                 Windows Printing.    (line  66)
-* print-region:                          Printing.            (line  26)
+* print-region:                          Printing.            (line  31)
 * print-region (MS-DOS):                 Windows Printing.    (line  66)
 * ps-despool:                            PostScript.          (line  71)
 * ps-print-buffer:                       PostScript.          (line  43)
@@ -4631,7 +4652,7 @@ Command and Function Index
 * re-search-backward:                    Regexp Search.       (line  57)
 * re-search-forward:                     Regexp Search.       (line  57)
 * read-abbrev-file:                      Saving Abbrevs.      (line  30)
-* recenter-top-bottom:                   Scrolling.           (line  37)
+* recenter-top-bottom:                   Scrolling.           (line  40)
 * recentf-edit-list:                     File Conveniences.   (line  10)
 * recentf-mode:                          File Conveniences.   (line  10)
 * recentf-save-list:                     File Conveniences.   (line  10)
@@ -4650,13 +4671,13 @@ Command and Function Index
 * replace-regexp:                        Regexp Replace.      (line   6)
 * replace-string:                        Unconditional Replace.
                                                               (line   6)
-* report-emacs-bug:                      Checklist.           (line  27)
-* reposition-window:                     Scrolling.           (line  98)
+* report-emacs-bug:                      Checklist.           (line  25)
+* reposition-window:                     Scrolling.           (line 117)
 * reveal-mode:                           Outline Visibility.  (line  97)
 * revert-buffer:                         Reverting.           (line   6)
 * revert-buffer (Dired):                 Dired Updating.      (line  29)
 * revert-buffer-with-coding-system:      Text Coding.         (line  67)
-* rgrep:                                 Grep Searching.      (line  56)
+* rgrep:                                 Grep Searching.      (line  59)
 * rmail:                                 Rmail.               (line   6)
 * rmail-add-label:                       Rmail Labels.        (line  34)
 * rmail-beginning-of-message:            Rmail Scrolling.     (line  27)
@@ -4717,17 +4738,17 @@ Command and Function Index
 * rot13-other-window:                    Rmail Rot13.         (line  12)
 * run-lisp:                              External Lisp.       (line  12)
 * save-buffer:                           Save Commands.       (line  26)
-* save-buffers-kill-terminal:            Exiting.             (line  14)
+* save-buffers-kill-terminal:            Exiting.             (line  13)
 * save-some-buffers:                     Save Commands.       (line  42)
 * scroll-all-mode:                       Emulation.           (line  10)
 * scroll-bar-mode:                       Scroll Bars.         (line  30)
-* scroll-down:                           Scrolling.           (line  62)
+* scroll-down:                           Scrolling.           (line  81)
 * scroll-left:                           Horizontal Scrolling.
-                                                              (line  36)
+                                                              (line  39)
 * scroll-other-window:                   Other Window.        (line  34)
 * scroll-right:                          Horizontal Scrolling.
-                                                              (line  36)
-* scroll-up:                             Scrolling.           (line  62)
+                                                              (line  39)
+* scroll-up:                             Scrolling.           (line  81)
 * sdb:                                   Starting GUD.        (line  31)
 * search-backward:                       Nonincremental Search.
                                                               (line  26)
@@ -4738,14 +4759,14 @@ Command and Function Index
 * send-invisible:                        Shell Mode.          (line 119)
 * serial-term:                           Serial Terminal.     (line   6)
 * server-edit:                           Invoking emacsclient.
-                                                              (line  30)
+                                                              (line  31)
 * server-start:                          Emacs Server.        (line  19)
 * set-buffer-file-coding-system:         Text Coding.         (line  23)
 * set-buffer-process-coding-system:      Communication Coding.
                                                               (line  44)
 * set-face-background:                   Faces.               (line  34)
 * set-face-foreground:                   Faces.               (line  34)
-* set-file-modes:                        Misc File Ops.       (line  92)
+* set-file-modes:                        Misc File Ops.       (line  93)
 * set-file-name-coding-system:           File Name Coding.    (line  13)
 * set-fill-column:                       Fill Commands.       (line  51)
 * set-fill-prefix:                       Fill Prefix.         (line  27)
@@ -4753,7 +4774,7 @@ Command and Function Index
 * set-frame-name:                        Non-Window Terminals.
                                                               (line  19)
 * set-fringe-style:                      Fringes.             (line  24)
-* set-goal-column:                       Moving Point.        (line 100)
+* set-goal-column:                       Moving Point.        (line 104)
 * set-input-method:                      Select Input Method. (line  22)
 * set-justification-center:              Format Justification.
                                                               (line  51)
@@ -4783,23 +4804,23 @@ Command and Function Index
 * set-visited-file-name:                 Save Commands.       (line  91)
 * setenv:                                Environment.         (line  19)
 * setq-default:                          Locals.              (line  57)
-* sgml-attributes:                       HTML Mode.           (line  35)
-* sgml-close-tag:                        HTML Mode.           (line  60)
-* sgml-delete-tag:                       HTML Mode.           (line  50)
+* sgml-attributes:                       HTML Mode.           (line  27)
+* sgml-close-tag:                        HTML Mode.           (line  52)
+* sgml-delete-tag:                       HTML Mode.           (line  42)
 * sgml-mode:                             HTML Mode.           (line   6)
-* sgml-name-8bit-mode:                   HTML Mode.           (line  65)
-* sgml-name-char:                        HTML Mode.           (line  19)
-* sgml-skip-tag-backward:                HTML Mode.           (line  44)
-* sgml-skip-tag-forward:                 HTML Mode.           (line  39)
-* sgml-tag:                              HTML Mode.           (line  23)
-* sgml-tag-help:                         HTML Mode.           (line  56)
-* sgml-tags-invisible:                   HTML Mode.           (line  74)
-* sgml-validate:                         HTML Mode.           (line  70)
+* sgml-name-8bit-mode:                   HTML Mode.           (line  57)
+* sgml-name-char:                        HTML Mode.           (line  11)
+* sgml-skip-tag-backward:                HTML Mode.           (line  36)
+* sgml-skip-tag-forward:                 HTML Mode.           (line  31)
+* sgml-tag:                              HTML Mode.           (line  15)
+* sgml-tag-help:                         HTML Mode.           (line  48)
+* sgml-tags-invisible:                   HTML Mode.           (line  66)
+* sgml-validate:                         HTML Mode.           (line  62)
 * shadow-initialize:                     File Shadowing.      (line   6)
 * shell:                                 Interactive Shell.   (line   6)
 * shell-backward-command:                Shell Mode.          (line 111)
 * shell-command:                         Single Shell.        (line   6)
-* shell-command-on-region:               Single Shell.        (line  30)
+* shell-command-on-region:               Single Shell.        (line  35)
 * shell-forward-command:                 Shell Mode.          (line 105)
 * shell-pushd-dextract:                  Shell Options.       (line  47)
 * shell-pushd-dunique:                   Shell Options.       (line  47)
@@ -4827,19 +4848,21 @@ Command and Function Index
 * split-window-horizontally:             Split Window.        (line  23)
 * split-window-vertically:               Split Window.        (line  17)
 * spook:                                 Mail Amusements.     (line   6)
-* standard-display-8bit:                 Unibyte Mode.        (line  33)
+* standard-display-8bit:                 Unibyte Mode.        (line  39)
 * string-insert-rectangle:               Rectangles.          (line 109)
 * string-rectangle:                      Rectangles.          (line 103)
 * studlify-region:                       Amusements.          (line  41)
-* substitute-key-definition:             Init Examples.       (line 131)
+* substitute-key-definition:             Init Examples.       (line 132)
+* subword-mode:                          Other C Commands.    (line   8)
 * sunrise-sunset:                        Sunrise/Sunset.      (line  25)
-* suspend-emacs:                         Exiting.             (line  49)
+* suspend-frame <1>:                     Frame Commands.      (line   9)
+* suspend-frame:                         Exiting.             (line  48)
 * switch-to-buffer:                      Select Buffer.       (line  28)
-* switch-to-buffer-other-frame:          Select Buffer.       (line  73)
-* switch-to-buffer-other-window:         Select Buffer.       (line  65)
+* switch-to-buffer-other-frame:          Select Buffer.       (line  74)
+* switch-to-buffer-other-window:         Select Buffer.       (line  66)
 * switch-to-completions:                 Completion Commands. (line  71)
 * tab-to-tab-stop <1>:                   Tab Stops.           (line   6)
-* tab-to-tab-stop:                       Indentation.         (line  68)
+* tab-to-tab-stop:                       Indentation.         (line  72)
 * tabify:                                Just Spaces.         (line  18)
 * table-backward-cell:                   Cell Commands.       (line   6)
 * table-capture:                         Table Conversion.    (line   6)
@@ -4904,6 +4927,8 @@ Command and Function Index
 * text-scale-increase:                   Temporary Face Changes.
                                                               (line  20)
 * text-scale-mode:                       Temporary Face Changes.
+                                                              (line  29)
+* text-scale-set:                        Temporary Face Changes.
                                                               (line  25)
 * thumbs-mode:                           File Conveniences.   (line  28)
 * time-stamp:                            Time Stamps.         (line  17)
@@ -4915,8 +4940,8 @@ Command and Function Index
 * timeclock-when-to-leave:               Time Intervals.      (line   9)
 * timeclock-workday-remaining:           Time Intervals.      (line   9)
 * tmm-menubar:                           Menu Bar.            (line  10)
-* toggle-debug-on-error:                 Checklist.           (line 162)
-* toggle-enable-multibyte-characters:    Enabling Multibyte.  (line  58)
+* toggle-debug-on-error:                 Checklist.           (line 160)
+* toggle-enable-multibyte-characters:    Enabling Multibyte.  (line  48)
 * toggle-gdb-all-registers:              Other GDB-UI Buffers.
                                                               (line  31)
 * toggle-input-method:                   Select Input Method. (line  28)
@@ -4932,7 +4957,7 @@ Command and Function Index
 * transpose-lines:                       Transpose.           (line  31)
 * transpose-sexps:                       Expressions.         (line  58)
 * transpose-words:                       Transpose.           (line  31)
-* tty-suppress-bold-inverse-default-colors: Display Custom.   (line  50)
+* tty-suppress-bold-inverse-default-colors: Display Custom.   (line  57)
 * turn-on-flyspell:                      Spelling.            (line 174)
 * turn-on-font-lock:                     Font Lock.           (line  30)
 * ucs-insert:                            Inserting Text.      (line  59)
@@ -4951,22 +4976,23 @@ Command and Function Index
 * upcase-region:                         Case.                (line  47)
 * upcase-word:                           Case.                (line  24)
 * variable-pitch-mode:                   Temporary Face Changes.
-                                                              (line  29)
-* vc-annotate:                           Old Revisions.       (line  73)
+                                                              (line  33)
+* vc-annotate:                           Old Revisions.       (line  81)
 * vc-create-tag:                         Making Revision Tags.
                                                               (line   9)
-* vc-diff:                               Old Revisions.       (line  32)
+* vc-diff:                               Old Revisions.       (line  35)
 * vc-dir:                                VC Directory Mode.   (line   6)
 * vc-insert-headers:                     Version Headers.     (line  29)
 * vc-merge:                              Merging.             (line  16)
-* vc-next-action:                        Basic VC Editing.    (line  22)
-* vc-print-log:                          VC Status.           (line   9)
+* vc-next-action:                        Basic VC Editing.    (line  23)
+* vc-print-log:                          VC Change Log.       (line  13)
+* vc-print-root-log:                     VC Change Log.       (line  23)
 * vc-register:                           Registering.         (line   6)
 * vc-rename-file:                        Renaming and VC.     (line   6)
 * vc-retrieve-tag:                       Making Revision Tags.
                                                               (line  13)
 * vc-revert-buffer:                      VC Undo.             (line  14)
-* vc-revision-other-window:              Old Revisions.       (line  25)
+* vc-revision-other-window:              Old Revisions.       (line  28)
 * vc-rollback:                           VC Undo.             (line  25)
 * vc-switch-backend:                     Local Version Control.
                                                               (line  74)
@@ -5016,11 +5042,11 @@ Command and Function Index
 * write-file:                            Save Commands.       (line  99)
 * write-region:                          Misc File Ops.       (line  33)
 * xdb:                                   Starting GUD.        (line  26)
-* xml-mode:                              HTML Mode.           (line   6)
 * yank:                                  Kill Ring.           (line  15)
 * yank-pop:                              Earlier Kills.       (line   6)
 * yank-rectangle:                        Rectangles.          (line  75)
 * yow:                                   Amusements.          (line   6)
 * zap-to-char:                           Other Kill Commands. (line  49)
 * zone:                                  Amusements.          (line  54)
+* zrgrep:                                Grep Searching.      (line  59)
 

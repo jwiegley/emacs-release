@@ -1,7 +1,7 @@
 ;;; gnus-picon.el --- displaying pretty icons in Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news xpm annotation glyph faces
@@ -90,12 +90,14 @@ added right to the textual representation."
   :group 'gnus-picon)
 ;; backward-compatibility alias
 (put 'gnus-picon-xbm-face 'face-alias 'gnus-picon-xbm)
+(put 'gnus-picon-xbm-face 'obsolete-face "22.1")
 
 (defface gnus-picon '((t (:foreground "black" :background "white")))
   "Face to show picon in."
   :group 'gnus-picon)
 ;; backward-compatibility alias
 (put 'gnus-picon-face 'face-alias 'gnus-picon)
+(put 'gnus-picon-face 'obsolete-face "22.1")
 
 ;;; Internal variables:
 

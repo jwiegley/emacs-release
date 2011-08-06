@@ -1,8 +1,8 @@
 ;;; etags.el --- etags facility for Emacs
 
 ;; Copyright (C) 1985, 1986, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1998,
-;;               2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
-;;	Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+;;   Free Software Foundation, Inc.
 
 ;; Author: Roland McGrath <roland@gnu.org>
 ;; Maintainer: FSF
@@ -39,7 +39,7 @@ To switch to a new tags table, setting this variable is sufficient.
 If you set this variable, do not also set `tags-table-list'.
 Use the `etags' program to make a tags table file.")
 ;; Make M-x set-variable tags-file-name like M-x visit-tags-table.
-;;;###autoload (put 'tags-file-name 'variable-interactive "fVisit tags table: ")
+;;;###autoload (put 'tags-file-name 'variable-interactive (purecopy "fVisit tags table: "))
 
 (defgroup etags nil "Tags tables."
   :group 'tools)
@@ -67,7 +67,7 @@ Use the `etags' program to make a tags table file."
   :type '(repeat file))
 
 ;;;###autoload
-(defcustom tags-compression-info-list '("" ".Z" ".bz2" ".gz" ".tgz")
+(defcustom tags-compression-info-list (purecopy '("" ".Z" ".bz2" ".gz" ".tgz"))
   "*List of extensions tried by etags when jka-compr is used.
 An empty string means search the non-compressed file.
 These extensions will be tried only if jka-compr was activated
@@ -1331,7 +1331,8 @@ hits the start of file."
 	offset found pat)
     (if (eq (car tag-info) t)
 	;; Direct file tag.
-	(cond (line (goto-line line))
+	(cond (line (progn (goto-char (point-min))
+			   (forward-line (1- line))))
 	      (startpos (goto-char startpos))
 	      (t (error "etags.el BUG: bogus direct file tag")))
       ;; This constant is 1/2 the initial search window.
@@ -1349,7 +1350,8 @@ hits the start of file."
       ;; If no char pos was given, try the given line number.
       (or startpos
 	  (if line
-	      (setq startpos (progn (goto-line line)
+	      (setq startpos (progn (goto-char (point-min))
+				    (forward-line (1- line))
 				    (point)))))
       (or startpos
 	  (setq startpos (point-min)))
@@ -1400,7 +1402,8 @@ hits the start of file."
 				      (tag-find-file-of-tag (button-get button 'file-path))
 				      (widen)
 				      (funcall goto-func tag-info)))
-			  'face 'tags-tag-face
+			  'follow-link t
+			  'face tags-tag-face
 			  'type 'button))
       (terpri)
       (forward-line 1))
@@ -1434,6 +1437,7 @@ hits the start of file."
 								    (button-get button 'item)))
 					  'item sn
 					  'face tags-tag-face
+					  'follow-link t
 					  'type 'button)
                              (terpri))))))
         (when (symbolp symbs)
@@ -1489,7 +1493,8 @@ hits the start of file."
 					      (tag-find-file-of-tag (button-get button 'file-path))
 					      (widen)
 					      (funcall goto-func tag-info)))
-				  'face 'tags-tag-face
+				  'follow-link t
+				  'face tags-tag-face
 				  'type 'button)))
 	  (princ (format "- %s" file-label))
 	  (with-current-buffer standard-output
@@ -1500,9 +1505,9 @@ hits the start of file."
 					;; Get the local value in the tags table
 					;; buffer before switching buffers.
 					(goto-char (point-min)))
-			      'face 'tags-tag-face
-			      'type 'button))
-	  ))
+			      'follow-link t
+			      'face tags-tag-face
+			      'type 'button))))
       (terpri)
       (forward-line 1))
     (message nil))
@@ -1931,6 +1936,7 @@ directory specification."
 
 (define-button-type 'tags-select-tags-table
   'action 'select-tags-table-select
+  'follow-link t
   'help-echo "RET, t or mouse-2: select tags table")
 
 ;; XXX If a file is in multiple tables, selection may get the wrong one.
@@ -2021,7 +2027,6 @@ see the doc of that variable if you want to add names to the list."
   (interactive)
   (quit-window t (selected-window)))
 
-;; Note, there is another definition of this function in bindings.el.
 ;;;###autoload
 (defun complete-tag ()
   "Perform tags completion on the text around point.
@@ -2041,28 +2046,13 @@ for \\[find-tag] (which see)."
 			      (get major-mode 'find-tag-default-function)
 			      'find-tag-default)))
         (comp-table (tags-lazy-completion-table))
-	beg
-	completion)
+	beg)
     (or pattern
 	(error "Nothing to complete"))
     (search-backward pattern)
     (setq beg (point))
     (forward-char (length pattern))
-    (setq completion (try-completion pattern comp-table))
-    (cond ((eq completion t))
-	  ((null completion)
-	   (message "Can't find completion for \"%s\"" pattern)
-	   (ding))
-	  ((not (string= pattern completion))
-	   (delete-region beg (point))
-	   (insert completion))
-	  (t
-	   (message "Making completion list...")
-	   (with-output-to-temp-buffer "*Completions*"
-	     (display-completion-list
-	      (all-completions pattern comp-table nil)
-	      pattern))
-	   (message "Making completion list...%s" "done")))))
+    (completion-in-region beg (point) comp-table)))
 
 (dolist (x '("^No tags table in use; use .* to select one$"
 	     "^There is no default tag$"

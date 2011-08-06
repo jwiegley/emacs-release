@@ -4,7 +4,7 @@ calc.texi.
 This file documents Calc, the GNU Emacs calculator.
 
 Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009 Free Software Foundation, Inc.
+2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -46,7 +46,7 @@ tutorial.)
    This file documents Calc, the GNU Emacs calculator.
 
    Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009 Free Software Foundation, Inc.
+2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -3956,19 +3956,19 @@ you can use to define your own algebraic manipulations.
 
    Suppose we want to simplify this trigonometric formula:
 
-     1:  1 / cos(x) - sin(x) tan(x)
+     1:  2 / cos(x)^2 - 2 tan(x)^2
          .
 
-         ' 1/cos(x) - sin(x) tan(x) <RET>   s 1
+         ' 2/cos(x)^2 - 2tan(x)^2 <RET>   s 1
 
 If we were simplifying this by hand, we'd probably replace the `tan'
-with a `sin/cos' first, then combine over a common denominator.  There
-is no Calc command to do the former; the `a n' algebra command will do
-the latter but we'll do both with rewrite rules just for practice.
+with a `sin/cos' first, then combine over a common denominator.  The `I
+a s' command will do the former and the `a n' algebra command will do
+the latter, but we'll do both with rewrite rules just for practice.
 
    Rewrite rules are written with the `:=' symbol.
 
-     1:  1 / cos(x) - sin(x)^2 / cos(x)
+     1:  2 / cos(x)^2 - 2 sin(x)^2 / cos(x)^2
          .
 
          a r tan(a) := sin(a)/cos(a) <RET>
@@ -3993,7 +3993,7 @@ this in with the rest of the original formula.
 
    To merge over a common denominator, we can use another simple rule:
 
-     1:  (1 - sin(x)^2) / cos(x)
+     1:  (2 - 2 sin(x)^2) / cos(x)^2
          .
 
          a r a/x + b/x := (a+b)/x <RET>
@@ -4006,12 +4006,12 @@ of the denominators.
 
    Second, meta-variable names are independent from variables in the
 target formula.  Notice that the meta-variable `x' here matches the
-subformula `cos(x)'; Calc never confuses the two meanings of `x'.
+subformula `cos(x)^2'; Calc never confuses the two meanings of `x'.
 
    And third, rewrite patterns know a little bit about the algebraic
 properties of formulas.  The pattern called for a sum of two quotients;
 Calc was able to match a difference of two quotients by matching `a =
-1', `b = -sin(x)^2', and `x = cos(x)'.
+2', `b = -2 sin(x)^2', and `x = cos(x)^2'.
 
    We could just as easily have written `a/x - b/x := (a-b)/x' for the
 rule.  It would have worked just the same in all cases.  (If we really
@@ -4022,12 +4022,12 @@ some examples of this.)
    One more rewrite will complete the job.  We want to use the identity
 `sin(x)^2 + cos(x)^2 = 1', but of course we must first rearrange the
 identity in a way that matches our formula.  The obvious rule would be
-`1 - sin(x)^2 := cos(x)^2', but a little thought shows that the rule
-`sin(x)^2 := 1 - cos(x)^2' will also work.  The latter rule has a more
-general pattern so it will work in many other situations, too.
+`2 - 2 sin(x)^2 := 2 cos(x)^2', but a little thought shows that the
+rule `sin(x)^2 := 1 - cos(x)^2' will also work.  The latter rule has a
+more general pattern so it will work in many other situations, too.
 
-     1:  (1 + cos(x)^2 - 1) / cos(x)           1:  cos(x)
-         .                                         .
+     1:  (2 + 2 cos(x)^2 - 2) / cos(x)^2           1:  2
+         .                                            .
 
          a r sin(x)^2 := 1 - cos(x)^2 <RET>          a s
 
@@ -4044,7 +4044,7 @@ retype it.
      ' a/x + b/x := (a+b)/x <RET>         s t merge <RET>
      ' sin(x)^2 := 1 - cos(x)^2 <RET>     s t sinsqr <RET>
 
-     1:  1 / cos(x) - sin(x) tan(x)     1:  cos(x)
+     1:  2 / cos(x)^2 - 2 tan(x)^2      1:  2
          .                                  .
 
          r 1                a r tsc <RET>  a r merge <RET>  a r sinsqr <RET>  a s
@@ -5985,7 +5985,7 @@ File: calc,  Node: Types Answer 2,  Next: Types Answer 3,  Prev: Types Answer 1,
 
    `exp(inf) = inf'.  It's tempting to say that the exponential of
 infinity must be "bigger" than "regular" infinity, but as far as Calc
-is concerned all infinities are as just as big.  In other words, as `x'
+is concerned all infinities are the same size.  In other words, as `x'
 goes to infinity, `e^x' also goes to infinity, but the fact the `e^x'
 grows much faster than `x' is not relevant here.
 

@@ -1,7 +1,7 @@
 ;;; mailabbrev.el --- abbrev-expansion of mail aliases
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1993, 1996, 1997, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com; now jwz@jwz.org>
@@ -569,27 +569,12 @@ of a mail alias.  The value is set up, buffer-local, when first needed.")
   ;; Based on lisp.el:lisp-complete-symbol
   (interactive)
   (mail-abbrev-make-syntax-table)
-  (let* ((end (point))
-	 (beg (with-syntax-table mail-abbrev-syntax-table
-                (save-excursion
-                  (backward-word 1)
-                  (point))))
-         (alias (buffer-substring beg end))
-	 (completion (try-completion alias mail-abbrevs)))
-    (cond ((eq completion t)
-	   (message "%s" alias))	; confirm
-	  ((null completion)
-	   (error "[Can't complete \"%s\"]" alias)) ; (message ...) (ding)
-	  ((not (string= completion alias))
-	   (delete-region beg end)
-	   (insert completion))
-	  (t (with-output-to-temp-buffer "*Completions*"
-	       (display-completion-list
-		(prog2
-		    (message "Making completion list...")
-		    (all-completions alias mail-abbrevs)
-		  (message "Making completion list...done"))
-		alias))))))
+  (let ((end (point))
+        (beg (with-syntax-table mail-abbrev-syntax-table
+               (save-excursion
+                 (backward-word 1)
+                 (point)))))
+    (completion-in-region beg end mail-abbrevs)))
 
 (defun mail-abbrev-next-line (&optional arg)
   "Expand a mail abbrev before point, then move vertically down ARG lines.

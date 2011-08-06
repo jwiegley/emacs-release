@@ -1,7 +1,7 @@
 ;;; shadow.el --- locate Emacs Lisp file shadowings
 
-;; Copyright (C) 1995, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1995, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+;;   2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Terry Jones <terry@santafe.edu>
 ;; Keywords: lisp
@@ -40,12 +40,11 @@
 ;; The `list-load-path-shadows' function was run when you installed
 ;; this version of emacs. To run it by hand in emacs:
 ;;
-;;     M-x load-library RET shadow RET
 ;;     M-x list-load-path-shadows
 ;;
 ;; or run it non-interactively via:
 ;;
-;;     emacs -batch -l shadow.el -f list-load-path-shadows
+;;     emacs -batch -f list-load-path-shadows
 ;;
 ;; Thanks to Francesco Potorti` <pot@cnuce.cnr.it> for suggestions,
 ;; rewritings & speedups.
@@ -58,7 +57,7 @@
   :group 'lisp)
 
 (defcustom shadows-compare-text-p nil
-  "*If non-nil, then shadowing files are reported only if their text differs.
+  "If non-nil, then shadowing files are reported only if their text differs.
 This is slower, but filters out some innocuous shadowing."
   :type 'boolean
   :group 'lisp-shadow)
@@ -73,9 +72,6 @@ the file in position 2i+1.  Emacs Lisp file suffixes \(.el and .elc\)
 are stripped from the file names in the list.
 
 See the documentation for `list-load-path-shadows' for further information."
-
-  (or path (setq path load-path))
-
   (let (true-names			; List of dirs considered.
 	shadows				; List of shadowings, to be returned.
 	files				; File names ever seen, with dirs.
@@ -84,11 +80,8 @@ See the documentation for `list-load-path-shadows' for further information."
 	orig-dir			; Where the file was first seen.
 	files-seen-this-dir		; Files seen so far in this dir.
 	file)				; The current file.
-
-
-    (while path
-
-      (setq dir (directory-file-name (file-truename (or (car path) "."))))
+    (dolist (pp (or path load-path))
+      (setq dir (directory-file-name (file-truename (or pp "."))))
       (if (member dir true-names)
 	  ;; We have already considered this PATH redundant directory.
 	  ;; Show the redundancy if we are interactive, unless the PATH
@@ -96,12 +89,12 @@ See the documentation for `list-load-path-shadows' for further information."
 	  ;; result of the current working directory, and are therefore
 	  ;; not always redundant).
 	  (or noninteractive
-	      (and (car path)
-		   (not (string= (car path) "."))
-		   (message "Ignoring redundant directory %s" (car path))))
+	      (and pp
+		   (not (string= pp "."))
+		   (message "Ignoring redundant directory %s" pp)))
 
 	(setq true-names (append true-names (list dir)))
-	(setq dir (directory-file-name (or (car path) ".")))
+	(setq dir (directory-file-name (or pp ".")))
 	(setq curr-files (if (file-accessible-directory-p dir)
 			     (directory-files dir nil ".\\.elc?\\(\\.gz\\)?$" t)))
 	(and curr-files
@@ -110,9 +103,8 @@ See the documentation for `list-load-path-shadows' for further information."
 
 	(setq files-seen-this-dir nil)
 
-	(while curr-files
+	(dolist (file curr-files)
 
-	  (setq file (car curr-files))
 	  (if (string-match "\\.gz$" file)
 	      (setq file (substring file 0 -3)))
 	  (setq file (substring
@@ -142,11 +134,7 @@ See the documentation for `list-load-path-shadows' for further information."
 			    (append shadows (list base1 base2)))))
 
 	      ;; Not seen before, add it to the list of seen files.
-	      (setq files (cons (cons file dir) files))))
-
-	  (setq curr-files (cdr curr-files))))
-	(setq path (cdr path)))
-
+	      (setq files (cons (cons file dir) files)))))))
     ;; Return the list of shadowings.
     shadows))
 
@@ -165,8 +153,12 @@ See the documentation for `list-load-path-shadows' for further information."
 		      (eq 0 (call-process "cmp" nil nil nil "-s" f1 f2))))))))
 
 ;;;###autoload
-(defun list-load-path-shadows ()
+(defun list-load-path-shadows (&optional stringp)
   "Display a list of Emacs Lisp files that shadow other files.
+
+If STRINGP is non-nil, returns any shadows as a string.
+Otherwise, if interactive shows any shadows in a `*Shadows*' buffer;
+else prints messages listing any shadows.
 
 This function lists potential load path problems.  Directories in
 the `load-path' variable are searched, in order, for Emacs Lisp
@@ -200,20 +192,17 @@ shadowings.  Because a .el file may exist without a corresponding .elc
 XXX.elc in an early directory \(that does not contain XXX.el\) is
 considered to shadow a later file XXX.el, and vice-versa.
 
-When run interactively, the shadowings \(if any\) are displayed in a
-buffer called `*Shadows*'.  Shadowings are located by calling the
-\(non-interactive\) companion function, `find-emacs-lisp-shadows'."
-
+Shadowings are located by calling the (non-interactive) companion
+function, `find-emacs-lisp-shadows'."
   (interactive)
   (let* ((path (copy-sequence load-path))
 	(tem path)
 	toplevs)
     ;; If we can find simple.el in two places,
-    (while tem
-      (if (or (file-exists-p (expand-file-name "simple.el" (car tem)))
-	      (file-exists-p (expand-file-name "simple.el.gz" (car tem))))
-	  (setq toplevs (cons (car tem) toplevs)))
-      (setq tem (cdr tem)))
+    (dolist (tt tem)
+      (if (or (file-exists-p (expand-file-name "simple.el" tt))
+	      (file-exists-p (expand-file-name "simple.el.gz" tt)))
+	  (setq toplevs (cons tt toplevs))))
     (if (> (length toplevs) 1)
 	;; Cut off our copy of load-path right before
 	;; the last directory which has simple.el in it.
@@ -233,29 +222,40 @@ buffer called `*Shadows*'.  Shadowings are located by calling the
 	   (msg (format "%s Emacs Lisp load-path shadowing%s found"
 			(if (zerop n) "No" (concat "\n" (number-to-string n)))
 			(if (= n 1) " was" "s were"))))
-      (if (interactive-p)
-	  (save-excursion
-	    ;; We are interactive.
-	    ;; Create the *Shadows* buffer and display shadowings there.
-	    (let ((output-buffer (get-buffer-create "*Shadows*")))
-	      (display-buffer output-buffer)
-	      (set-buffer output-buffer)
-	      (erase-buffer)
-	      (while shadows
-		(insert (format "%s hides %s\n" (car shadows)
-				(car (cdr shadows))))
-		(setq shadows (cdr (cdr shadows))))
-	      (insert msg "\n")))
-	;; We are non-interactive, print shadows via message.
-	(when shadows
-	  (message "This site has duplicate Lisp libraries with the same name.
+      (with-temp-buffer
+	(while shadows
+	  (insert (format "%s hides %s\n" (car shadows)
+			  (car (cdr shadows))))
+	  (setq shadows (cdr (cdr shadows))))
+	(if stringp
+	    (buffer-string)
+	  (if (called-interactively-p 'interactive)
+	      ;; We are interactive.
+	      ;; Create the *Shadows* buffer and display shadowings there.
+	      (let ((string (buffer-string)))
+		(with-current-buffer (get-buffer-create "*Shadows*")
+                  (fundamental-mode)    ;run after-change-major-mode-hook.
+		  (display-buffer (current-buffer))
+		  (setq buffer-undo-list t
+			buffer-read-only nil)
+		  (erase-buffer)
+		  (insert string)
+		  (insert msg "\n")
+		  (setq buffer-read-only t)))
+	    ;; We are non-interactive, print shadows via message.
+	    (unless (zerop n)
+	      (message "This site has duplicate Lisp libraries with the same name.
 If a locally-installed Lisp library overrides a library in the Emacs release,
 that can cause trouble, and you should probably remove the locally-installed
 version unless you know what you are doing.\n")
-	  (while shadows
-	    (message "%s hides %s" (car shadows) (car (cdr shadows)))
-	    (setq shadows (cdr (cdr shadows))))
-	  (message "%s" msg))))))
+	      (goto-char (point-min))
+	      ;; Mimic the previous behavior of using lots of messages.
+	      ;; I think one single message would look better...
+	      (while (not (eobp))
+		(message "%s" (buffer-substring (line-beginning-position)
+						(line-end-position)))
+		(forward-line 1))
+	      (message "%s" msg))))))))
 
 (provide 'shadow)
 

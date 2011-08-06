@@ -1,6 +1,6 @@
 ;;; cal-tex.el --- calendar functions for printing calendars with LaTeX
 
-;; Copyright (C) 1995, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 1995, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Steve Fisk <fisk@bowdoin.edu>
@@ -134,7 +134,7 @@ At present, this only affects `cal-tex-cursor-day'."
 
 (defcustom cal-tex-daily-end 20
   "The last hour of the daily LaTeX calendar page.
-At present, this only affects `cal-tex-cursor-day'"
+At present, this only affects `cal-tex-cursor-day'."
   :type 'integer
   :group 'calendar-tex)
 
@@ -439,13 +439,13 @@ Optional EVENT indicates a buffer position to use instead of point."
          (end-year year)
          (cal-tex-which-days '(0 1 2 3 4 5 6))
          (d1 (calendar-absolute-from-gregorian (list month 1 year)))
-         (d2 (calendar-absolute-from-gregorian
-              (list end-month
-                    (calendar-last-day-of-month end-month end-year)
-                    end-year)))
-         (diary-list (progn
-                       (calendar-increment-month end-month end-year (1- n))
-                       (if cal-tex-diary (cal-tex-list-diary-entries d1 d2))))
+         (d2 (progn
+               (calendar-increment-month end-month end-year (1- n))
+               (calendar-absolute-from-gregorian
+                (list end-month
+                      (calendar-last-day-of-month end-month end-year)
+                      end-year))))
+         (diary-list (if cal-tex-diary (cal-tex-list-diary-entries d1 d2)))
          (holidays (if cal-tex-holidays (cal-tex-list-holidays d1 d2)))
          other-month other-year small-months-at-start)
     (cal-tex-insert-preamble (cal-tex-number-weeks month year 1) t "12pt")
@@ -508,13 +508,13 @@ indicates a buffer position to use instead of point."
          (end-month month)
          (end-year year)
          (d1 (calendar-absolute-from-gregorian (list month 1 year)))
-         (d2 (calendar-absolute-from-gregorian
-              (list end-month
-                    (calendar-last-day-of-month end-month end-year)
-                    end-year)))
-         (diary-list (progn
-                       (calendar-increment-month end-month end-year (1- n))
-                       (if cal-tex-diary (cal-tex-list-diary-entries d1 d2))))
+         (d2 (progn
+               (calendar-increment-month end-month end-year (1- n))
+               (calendar-absolute-from-gregorian
+                (list end-month
+                      (calendar-last-day-of-month end-month end-year)
+                      end-year))))
+         (diary-list (if cal-tex-diary (cal-tex-list-diary-entries d1 d2)))
          (holidays (if cal-tex-holidays (cal-tex-list-holidays d1 d2)))
          other-month other-year)
     (cal-tex-insert-preamble (cal-tex-number-weeks month year n) nil "12pt")
@@ -654,7 +654,7 @@ in the calendar starting in MONTH YEAR."
 
 (defun cal-tex-number-weeks (month year n)
   "Determine the number of weeks in a range of dates.
-Compute the number of  weeks in the calendar starting with MONTH and YEAR,
+Compute the number of weeks in the calendar starting with MONTH and YEAR,
 and lasting N months, including only the days in WHICH-DAYS.  As it stands,
 this is only an upper bound."
   (let ((d (list month 1 year)))
@@ -683,7 +683,7 @@ this is only an upper bound."
 (defun cal-tex-cursor-week (&optional n event)
   "Make a LaTeX calendar buffer for a two-page one-week calendar.
 It applies to the week that point is in.  The optional prefix
-argument N specifies the number of weeks (default 1).  The calendar
+argument N specifies number of weeks (default 1).  The calendar
 shows holidays if `cal-tex-holidays' is non-nil (note that diary
 entries are not shown).  The calendar shows the hours 8-12am, 1-5pm."
   (interactive (list (prefix-numeric-value current-prefix-arg)
@@ -1778,7 +1778,7 @@ Add trailing COMMENT if present."
   (cal-tex-comment "end framebox"))
 
 
-(defun cal-tex-b-makebox ( width position )
+(defun cal-tex-b-makebox (width position)
   "Insert makebox with parameters WIDTH and POSITION (clr)."
   (insert "\\makebox[" width "][" position "]{" )
   (cal-tex-comment))

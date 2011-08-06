@@ -1,7 +1,7 @@
 ;;; bs.el --- menu for selecting and displaying buffers
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
+;;   2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 ;; Author: Olaf Sylvester <Olaf.Sylvester@netsurf.de>
 ;; Maintainer: Olaf Sylvester <Olaf.Sylvester@netsurf.de>
 ;; Keywords: convenience
@@ -575,10 +575,11 @@ a special function.  SORT-DESCRIPTION is an element of `bs-sort-functions'."
   "Redisplay whole Buffer Selection Menu.
 If KEEP-LINE-P is non-nil the point will stay on current line.
 SORT-DESCRIPTION is an element of `bs-sort-functions'."
-  (let ((line (1+ (count-lines 1 (point)))))
+  (let ((line (count-lines 1 (point))))
     (bs-show-in-buffer (bs-buffer-list nil sort-description))
     (when keep-line-p
-      (goto-line line))
+      (goto-char (point-min))
+      (forward-line line))
     (beginning-of-line)))
 
 (defun bs--goto-current-buffer ()
@@ -664,6 +665,7 @@ to show always.
 	font-lock-global-modes '(not bs-mode)
 	font-lock-defaults '(bs-mode-font-lock-keywords t)
 	font-lock-verbose nil)
+  (set (make-local-variable 'revert-buffer-function) 'bs-refresh)
   (add-hook 'window-size-change-functions 'bs--track-window-changes)
   (add-hook 'kill-buffer-hook 'bs--remove-hooks nil t)
   (add-hook 'change-major-mode-hook 'bs--remove-hooks nil t))
@@ -696,8 +698,9 @@ Refresh whole Buffer Selection Menu."
   (call-interactively 'bs-set-configuration)
   (bs--redisplay t))
 
-(defun bs-refresh ()
-  "Refresh whole Buffer Selection Menu."
+(defun bs-refresh (&rest ignored)
+  "Refresh whole Buffer Selection Menu.
+Arguments are IGNORED (for `revert-buffer')."
   (interactive)
   (bs--redisplay t))
 
@@ -1326,13 +1329,12 @@ ALL-BUFFERS is the list of buffers appearing in Buffer Selection Menu."
 (defun bs--get-file-name (start-buffer all-buffers)
   "Return string for column 'File' in Buffer Selection Menu.
 This is the variable `buffer-file-name' of current buffer.
-If current mode is `dired-mode' or `shell-mode' it returns the
-default directory.
+If not visiting a file, `list-buffers-directory' is returned instead.
 START-BUFFER is the buffer where we started buffer selection.
 ALL-BUFFERS is the list of buffers appearing in Buffer Selection Menu."
-  (propertize (if (member major-mode '(shell-mode dired-mode))
-                  default-directory
-                (or buffer-file-name ""))
+  (propertize (or buffer-file-name
+		  (bound-and-true-p list-buffers-directory)
+		  "")
               'mouse-face 'highlight
               'help-echo "mouse-2: select this buffer, mouse-3: select in other frame"))
 

@@ -1,6 +1,6 @@
 /* GNU Emacs routines to deal with syntax tables; also word and list parsing.
    Copyright (C) 1985, 1987, 1993, 1994, 1995, 1997, 1998, 1999, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -21,6 +21,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 #include <ctype.h>
+#include <setjmp.h>
 #include "lisp.h"
 #include "commands.h"
 #include "buffer.h"
@@ -341,7 +342,7 @@ dec_bytepos (bytepos)
   return bytepos;
 }
 
-/* Return a defun-start position before before POS and not too far before.
+/* Return a defun-start position before POS and not too far before.
    It should be the last one before POS, or nearly the last.
 
    When open_paren_in_column_0_is_defun_start is nonzero,
@@ -851,8 +852,8 @@ static Lisp_Object Vsyntax_code_object;
 
 DEFUN ("char-syntax", Fchar_syntax, Schar_syntax, 1, 1, 0,
        doc: /* Return the syntax code of CHARACTER, described by a character.
-For example, if CHARACTER is a word constituent,
-the character `w' is returned.
+For example, if CHARACTER is a word constituent, the
+character `w' (119) is returned.
 The characters that correspond to various syntax codes
 are listed in the documentation of `modify-syntax-entry'.  */)
      (character)
@@ -910,8 +911,7 @@ text property.  */)
   if (*p)
     {
       int len;
-      int character = (STRING_CHAR_AND_LENGTH
-		       (p, SBYTES (string) - 1, len));
+      int character = STRING_CHAR_AND_LENGTH (p, len);
       XSETINT (match, character);
       if (XFASTINT (match) == ' ')
 	match = Qnil;
@@ -1555,14 +1555,14 @@ skip_chars (forwardp, string, lim, handle_iso_classes)
 	  bzero (fastmap + 0200, 0200);
 	  /* We are sure that this loop stops.  */
 	  for (i = 0200; ! fastmap2[i]; i++);
-	  c = unibyte_char_to_multibyte (i);
+	  c = BYTE8_TO_CHAR (i);
 	  fastmap[CHAR_LEADING_CODE (c)] = 1;
 	  range_start_byte = i;
 	  range_start_char = c;
 	  char_ranges = (int *) alloca (sizeof (int) * 128 * 2);
 	  for (i = 129; i < 0400; i++)
 	    {
-	      c = unibyte_char_to_multibyte (i);
+	      c = BYTE8_TO_CHAR (i);
 	      fastmap[CHAR_LEADING_CODE (c)] = 1;
 	      if (i - range_start_byte != c - range_start_char)
 		{
@@ -1587,12 +1587,12 @@ skip_chars (forwardp, string, lim, handle_iso_classes)
 	  unsigned char leading_code;
 
 	  leading_code = str[i_byte];
-	  c = STRING_CHAR_AND_LENGTH (str + i_byte, size_byte-i_byte, len);
+	  c = STRING_CHAR_AND_LENGTH (str + i_byte, len);
 	  i_byte += len;
 
 	  if (handle_iso_classes && c == '['
 	      && i_byte < size_byte
-	      && STRING_CHAR (str + i_byte, size_byte - i_byte) == ':')
+	      && STRING_CHAR (str + i_byte) == ':')
 	    {
 	      const unsigned char *class_beg = str + i_byte + 1;
 	      const unsigned char *class_end = class_beg;
@@ -1632,8 +1632,7 @@ skip_chars (forwardp, string, lim, handle_iso_classes)
 		break;
 
 	      leading_code = str[i_byte];
-	      c = STRING_CHAR_AND_LENGTH (str + i_byte,
-					  size_byte - i_byte, len);
+	      c = STRING_CHAR_AND_LENGTH (str + i_byte, len);
 	      i_byte += len;
 	    }
 	  /* Treat `-' as range character only if another character
@@ -1649,15 +1648,14 @@ skip_chars (forwardp, string, lim, handle_iso_classes)
 
 	      /* Get the end of the range.  */
 	      leading_code2 = str[i_byte];
-	      c2 = STRING_CHAR_AND_LENGTH (str + i_byte,
-					   size_byte - i_byte, len);
+	      c2 = STRING_CHAR_AND_LENGTH (str + i_byte, len);
 	      i_byte += len;
 
 	      if (c2 == '\\'
 		  && i_byte < size_byte)
 		{
 		  leading_code2 = str[i_byte];
-		  c2 =STRING_CHAR_AND_LENGTH (str + i_byte, size_byte-i_byte, len);
+		  c2 =STRING_CHAR_AND_LENGTH (str + i_byte, len);
 		  i_byte += len;
 		}
 
@@ -1749,6 +1747,12 @@ skip_chars (forwardp, string, lim, handle_iso_classes)
       }
 
     immediate_quit = 1;
+    /* This code may look up syntax tables using macros that rely on the
+       gl_state object.  To make sure this object is not out of date,
+       let's initialize it manually.
+       We ignore syntax-table text-properties for now, since that's
+       what we've done in the past.  */
+    SETUP_SYNTAX_TABLE (BEGV, 0);
     if (forwardp)
       {
 	if (multibyte)
@@ -1763,7 +1767,7 @@ skip_chars (forwardp, string, lim, handle_iso_classes)
 		  p = GAP_END_ADDR;
 		  stop = endp;
 		}
-	      c = STRING_CHAR_AND_LENGTH (p, MAX_MULTIBYTE_LENGTH, nbytes);
+	      c = STRING_CHAR_AND_LENGTH (p, nbytes);
 	      if (! NILP (iso_classes) && in_classes (c, iso_classes))
 		{
 		  if (negate)
@@ -1834,7 +1838,7 @@ skip_chars (forwardp, string, lim, handle_iso_classes)
 		}
 	      prev_p = p;
 	      while (--p >= stop && ! CHAR_HEAD_P (*p));
-	      c = STRING_CHAR (p, MAX_MULTIBYTE_LENGTH);
+	      c = STRING_CHAR (p);
 
 	      if (! NILP (iso_classes) && in_classes (c, iso_classes))
 		{
@@ -1988,7 +1992,7 @@ skip_syntaxes (forwardp, string, lim)
 		    p = GAP_END_ADDR;
 		    stop = endp;
 		  }
-		c = STRING_CHAR_AND_LENGTH (p, MAX_MULTIBYTE_LENGTH, nbytes);
+		c = STRING_CHAR_AND_LENGTH (p, nbytes);
 		if (! fastmap[(int) SYNTAX (c)])
 		  break;
 		p += nbytes, pos++, pos_byte += nbytes;
@@ -2031,7 +2035,7 @@ skip_syntaxes (forwardp, string, lim)
 		UPDATE_SYNTAX_TABLE_BACKWARD (pos - 1);
 		prev_p = p;
 		while (--p >= stop && ! CHAR_HEAD_P (*p));
-		c = STRING_CHAR (p, MAX_MULTIBYTE_LENGTH);
+		c = STRING_CHAR (p);
 		if (! fastmap[(int) SYNTAX (c)])
 		  break;
 		pos--, pos_byte -= prev_p - p;
@@ -2074,7 +2078,7 @@ in_classes (c, iso_classes)
 {
   int fits_class = 0;
 
-  while (! NILP (iso_classes))
+  while (CONSP (iso_classes))
     {
       Lisp_Object elt;
       elt = XCAR (iso_classes);
@@ -3331,13 +3335,13 @@ init_syntax_once ()
   Lisp_Object temp;
 
   /* This has to be done here, before we call Fmake_char_table.  */
-  Qsyntax_table = intern ("syntax-table");
+  Qsyntax_table = intern_c_string ("syntax-table");
   staticpro (&Qsyntax_table);
 
-  /* Intern this now in case it isn't already done.
+  /* Intern_C_String this now in case it isn't already done.
      Setting this variable twice is harmless.
      But don't staticpro it here--that is done in alloc.c.  */
-  Qchar_table_extra_slots = intern ("char-table-extra-slots");
+  Qchar_table_extra_slots = intern_c_string ("char-table-extra-slots");
 
   /* Create objects which can be shared among syntax tables.  */
   Vsyntax_code_object = Fmake_vector (make_number (Smax), Qnil);
@@ -3417,7 +3421,7 @@ init_syntax_once ()
 void
 syms_of_syntax ()
 {
-  Qsyntax_table_p = intern ("syntax-table-p");
+  Qsyntax_table_p = intern_c_string ("syntax-table-p");
   staticpro (&Qsyntax_table_p);
 
   staticpro (&Vsyntax_code_object);
@@ -3430,12 +3434,12 @@ syms_of_syntax ()
   /* Defined in regex.c */
   staticpro (&re_match_object);
 
-  Qscan_error = intern ("scan-error");
+  Qscan_error = intern_c_string ("scan-error");
   staticpro (&Qscan_error);
   Fput (Qscan_error, Qerror_conditions,
-	Fcons (Qscan_error, Fcons (Qerror, Qnil)));
+	pure_cons (Qscan_error, pure_cons (Qerror, Qnil)));
   Fput (Qscan_error, Qerror_message,
-	build_string ("Scan error"));
+	make_pure_c_string ("Scan error"));
 
   DEFVAR_BOOL ("parse-sexp-ignore-comments", &parse_sexp_ignore_comments,
 	       doc: /* Non-nil means `forward-sexp', etc., should treat comments as whitespace.  */);

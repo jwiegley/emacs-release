@@ -1,6 +1,6 @@
 ;;; inf-lisp.el --- an inferior-lisp mode
 
-;; Copyright (C) 1988, 1993, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 1988, 1993, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;; Free Software Foundation, Inc.
 
 ;; Author: Olin Shivers <shivers@cs.cmu.edu>
@@ -72,7 +72,7 @@
 
 ;;;###autoload
 (defcustom inferior-lisp-filter-regexp
-  "\\`\\s *\\(:\\(\\w\\|\\s_\\)\\)?\\s *\\'"
+  (purecopy "\\`\\s *\\(:\\(\\w\\|\\s_\\)\\)?\\s *\\'")
   "*What not to save on inferior Lisp's input history.
 Input matching this regexp is not saved on the input history in Inferior Lisp
 mode.  Default is whitespace followed by 0 or 1 single-letter colon-keyword
@@ -141,13 +141,13 @@ mode.  Default is whitespace followed by 0 or 1 single-letter colon-keyword
     'lisp-show-variable-documentation))
 
 ;;;###autoload
-(defcustom inferior-lisp-program "lisp"
+(defcustom inferior-lisp-program (purecopy "lisp")
   "*Program name for invoking an inferior Lisp in Inferior Lisp mode."
   :type 'string
   :group 'inferior-lisp)
 
 ;;;###autoload
-(defcustom inferior-lisp-load-command "(load \"%s\")\n"
+(defcustom inferior-lisp-load-command (purecopy "(load \"%s\")\n")
   "*Format-string for building a Lisp expression to load a file.
 This format string should use `%s' to substitute a file name
 and should result in a Lisp expression that will command the inferior Lisp
@@ -159,7 +159,7 @@ but it works only in Common Lisp."
   :group 'inferior-lisp)
 
 ;;;###autoload
-(defcustom inferior-lisp-prompt "^[^> \n]*>+:? *"
+(defcustom inferior-lisp-prompt (purecopy "^[^> \n]*>+:? *")
   "Regexp to recognize prompts in the Inferior Lisp mode.
 Defaults to \"^[^> \\n]*>+:? *\", which works pretty good for Lucid, kcl,
 and franz.  This variable is used to initialize `comint-prompt-regexp' in the
@@ -214,7 +214,7 @@ buffer with \\[set-variable].")
 
 ;;;###autoload
 (defvar inferior-lisp-mode-hook '()
-  "*Hook for customising Inferior Lisp mode.")
+  "*Hook for customizing Inferior Lisp mode.")
 
 (put 'inferior-lisp-mode 'mode-class 'special)
 
@@ -308,7 +308,7 @@ of `inferior-lisp-program').  Runs the hooks from
 	(inferior-lisp-mode)))
   (setq inferior-lisp-buffer "*inferior-lisp*")
   (pop-to-buffer "*inferior-lisp*"))
-;;;###autoload (add-hook 'same-window-buffer-names "*inferior-lisp*")
+;;;###autoload (add-hook 'same-window-buffer-names (purecopy "*inferior-lisp*"))
 
 ;;;###autoload
 (defalias 'run-lisp 'inferior-lisp)

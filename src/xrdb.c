@@ -1,6 +1,6 @@
 /* Deal with the X Resource Manager.
    Copyright (C) 1990, 1993, 1994, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 Author: Joseph Arceneaux
 Created: 4/90
@@ -31,6 +31,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <epaths.h>
 
 #include <stdio.h>
+#include <setjmp.h>
 
 #if 1 /* I'd really appreciate it if this code could go away...  -JimB */
 /* This avoids lossage in the `dual-universe' headers on AT&T SysV
@@ -692,6 +693,10 @@ x_get_string_resource (rdb, name, class)
      char *name, *class;
 {
   XrmValue value;
+
+  if (inhibit_x_resources)
+    /* --quick was passed, so this is a no-op.  */
+    return NULL;
 
   if (x_get_resource (rdb, name, class, x_rm_string, &value))
     return (char *) value.addr;

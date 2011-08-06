@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1985, 1986, 1988, 1990, 1991, 1992, 1993,
 ;;   1994, 1995, 1996, 1997, 1998, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Maintainer: Robert J. Chassell <bug-texinfo@gnu.org>
 ;; Keywords: maint, tex, docs
@@ -38,7 +38,7 @@ If optional argument HERE is non-nil, insert info at point."
          (format "Version of \`texinfmt.el\': %s" texinfmt-version)))
     (if here
         (insert version-string)
-      (if (interactive-p)
+      (if (called-interactively-p 'interactive)
           (message "%s" version-string)
         version-string))))
 
@@ -171,7 +171,8 @@ and don't split the file if large.  You can use `Info-tagify' and
             (message (setq lastmessage "Splitting Info file..."))
             (Info-split))))
     (message (concat lastmessage
-                     (if (interactive-p) "done.  Now save it." "done.")))))
+                     (if (called-interactively-p 'interactive)
+			 "done.  Now save it." "done.")))))
 
 (defvar texinfo-region-buffer-name "*Info Region*"
   "*Name of the temporary buffer used by \\[texinfo-format-region].")

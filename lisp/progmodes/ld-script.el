@@ -1,6 +1,6 @@
 ;;; ld-script.el --- GNU linker script editing mode for Emacs
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;; Free Software Foundation, Inc.
 
 ;; Author: Masatake YAMATO<jet@gyve.org>
@@ -162,11 +162,12 @@
 ;; eCos uses "ld" and "ldi".
 ;; Netbsd uses "ldscript.*".
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.ld[si]?\\>" . ld-script-mode))
-(add-to-list 'auto-mode-alist '("ld\\.?script\\>" . ld-script-mode))
+(add-to-list 'auto-mode-alist (purecopy '("\\.ld[si]?\\>" . ld-script-mode)))
+;;;###autoload
+(add-to-list 'auto-mode-alist (purecopy '("ld\\.?script\\>" . ld-script-mode)))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.x[bdsru]?[cn]?\\'" . ld-script-mode))
+(add-to-list 'auto-mode-alist (purecopy '("\\.x[bdsru]?[cn]?\\'" . ld-script-mode)))
 
 ;;;###autoload
 (define-derived-mode ld-script-mode nil "LD-Script"

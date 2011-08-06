@@ -1,7 +1,7 @@
 ;;; wid-edit.el --- Functions for creating and using widgets -*-byte-compile-dynamic: t;-*-
 ;;
 ;; Copyright (C) 1996, 1997, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Maintainer: FSF
@@ -104,8 +104,8 @@ This exists as a variable so it can be set locally in certain buffers.")
   "Face used for documentation text."
   :group 'widget-documentation
   :group 'widget-faces)
-;; backward compatibility alias
-(put 'widget-documentation-face 'face-alias 'widget-documentation)
+(define-obsolete-face-alias 'widget-documentation-face
+  'widget-documentation "22.1")
 
 (defvar widget-button-face 'widget-button
   "Face used for buttons in widgets.
@@ -114,8 +114,7 @@ This exists as a variable so it can be set locally in certain buffers.")
 (defface widget-button '((t (:weight bold)))
   "Face used for widget buttons."
   :group 'widget-faces)
-;; backward compatibility alias
-(put 'widget-button-face 'face-alias 'widget-button)
+(define-obsolete-face-alias 'widget-button-face 'widget-button "22.1")
 
 (defcustom widget-mouse-face 'highlight
   "Face used for widget buttons when the mouse is above them."
@@ -138,8 +137,7 @@ This exists as a variable so it can be set locally in certain buffers.")
 			 :slant italic))
   "Face used for editable fields."
   :group 'widget-faces)
-;; backward-compatibility alias
-(put 'widget-field-face 'face-alias 'widget-field)
+(define-obsolete-face-alias 'widget-field-face 'widget-field "22.1")
 
 (defface widget-single-line-field '((((type tty))
 				     :background "green3"
@@ -154,8 +152,8 @@ This exists as a variable so it can be set locally in certain buffers.")
 				     :slant italic))
   "Face used for editable fields spanning only a single line."
   :group 'widget-faces)
-;; backward-compatibility alias
-(put 'widget-single-line-field-face 'face-alias 'widget-single-line-field)
+(define-obsolete-face-alias 'widget-single-line-field-face
+  'widget-single-line-field "22.1")
 
 ;;; This causes display-table to be loaded, and not usefully.
 ;;;(defvar widget-single-line-display-table
@@ -455,8 +453,8 @@ new value.")
   '((t :inherit shadow))
   "Face used for inactive widgets."
   :group 'widget-faces)
-;; backward-compatibility alias
-(put 'widget-inactive-face 'face-alias 'widget-inactive)
+(define-obsolete-face-alias 'widget-inactive-face
+  'widget-inactive "22.1")
 
 (defun widget-specify-inactive (widget from to)
   "Make WIDGET inactive for user modifications."
@@ -859,14 +857,16 @@ button end points."
 ;; This alias exists only so that one can choose in doc-strings (e.g.
 ;; Custom-mode) which key-binding of widget-keymap one wants to refer to.
 ;; http://lists.gnu.org/archive/html/emacs-devel/2008-11/msg00480.html
-(defalias 'advertised-widget-backward 'widget-backward)
+(define-obsolete-function-alias 'advertised-widget-backward
+  'widget-backward "23.2")
 
 ;;;###autoload
 (defvar widget-keymap
   (let ((map (make-sparse-keymap)))
     (define-key map "\t" 'widget-forward)
     (define-key map "\e\t" 'widget-backward)
-    (define-key map [(shift tab)] 'advertised-widget-backward)
+    (define-key map [(shift tab)] 'widget-backward)
+    (put 'widget-backward :advertised-binding [(shift tab)])
     (define-key map [backtab] 'widget-backward)
     (define-key map [down-mouse-2] 'widget-button-click)
     (define-key map [down-mouse-1] 'widget-button-click)
@@ -875,7 +875,8 @@ button end points."
     (define-key map [(control ?m)] 'widget-button-press)
     map)
   "Keymap containing useful binding for buffers containing widgets.
-Recommended as a parent keymap for modes using widgets.")
+Recommended as a parent keymap for modes using widgets.
+Note that such modes will need to require wid-edit.")
 
 (defvar widget-global-map global-map
   "Keymap used for events a widget does not handle itself.")
@@ -920,8 +921,8 @@ Recommended as a parent keymap for modes using widgets.")
      (:weight bold :underline t)))
   "Face used for pressed buttons."
   :group 'widget-faces)
-;; backward-compatibility alias
-(put 'widget-button-pressed-face 'face-alias 'widget-button-pressed)
+(define-obsolete-face-alias 'widget-button-pressed-face
+  'widget-button-pressed "22.1")
 
 (defvar widget-button-click-moves-point nil
   "If non-nil, `widget-button-click' moves point to a button after invoking it.
@@ -1160,11 +1161,9 @@ the field."
 When not inside a field, move to the previous button or field."
   (interactive)
   (let ((field (widget-field-find (point))))
-    (if field
-	(save-restriction
-	  (widget-narrow-to-field)
-	  (widget-apply field :complete))
-	  (error "Not in an editable field"))))
+    (when field
+      (widget-apply field :complete))
+    (error "Not in an editable field")))
 
 ;;; Setting up the buffer.
 
@@ -1256,6 +1255,19 @@ When not inside a field, move to the previous button or field."
               (1- (overlay-end overlay))
             (overlay-end overlay)))
       (cdr overlay))))
+
+(defun widget-field-text-end (widget)
+  (let ((to   (widget-field-end widget))
+	(size (widget-get widget :size)))
+    (if (or (null size) (zerop size))
+        to
+      (let ((from (widget-field-start widget)))
+        (if (and from to)
+            (with-current-buffer (widget-field-buffer widget)
+              (while (and (> to from)
+                          (eq (char-after (1- to)) ?\s))
+                (setq to (1- to)))
+              to))))))
 
 (defun widget-field-find (pos)
   "Return the field at POS.
@@ -1935,7 +1947,7 @@ the earlier input."
 (defun widget-field-value-get (widget)
   "Return current text in editing field."
   (let ((from (widget-field-start widget))
-	(to (widget-field-end widget))
+	(to (widget-field-text-end widget))
 	(buffer (widget-field-buffer widget))
 	(size (widget-get widget :size))
 	(secret (widget-get widget :secret))
@@ -1943,11 +1955,6 @@ the earlier input."
     (if (and from to)
 	(progn
 	  (set-buffer buffer)
-	  (while (and size
-		      (not (zerop size))
-		      (> to from)
-		      (eq (char-after (1- to)) ?\s))
-	    (setq to (1- to)))
 	  (let ((result (buffer-substring-no-properties from to)))
 	    (when secret
 	      (let ((index 0))
@@ -3029,35 +3036,13 @@ as the value."
 Completions are taken from the :completion-alist property of the
 widget.  If that isn't a list, it's evalled and expected to yield a list."
   (interactive)
-  (let* ((prefix (buffer-substring-no-properties (widget-field-start widget)
-						 (point)))
-	 (completion-ignore-case (widget-get widget :completion-ignore-case))
+  (let* ((completion-ignore-case (widget-get widget :completion-ignore-case))
 	 (alist (widget-get widget :completion-alist))
 	 (_ (unless (listp alist)
-	      (setq alist (eval alist))))
-	 (completion (try-completion prefix alist)))
-    (cond ((eq completion t)
-	   (when completion-ignore-case
-	     ;; Replace field with completion in case its case is different.
-	     (delete-region (widget-field-start widget)
-			    (widget-field-end widget))
-	     (insert-and-inherit (car (assoc-string prefix alist t))))
-	   (message "Only match"))
-	  ((null completion)
-	   (error "No match"))
-	  ((not (eq t (compare-strings prefix nil nil completion nil nil
-				       completion-ignore-case)))
-	   (when completion-ignore-case
-	     ;; Replace field with completion in case its case is different.
-	     (delete-region (widget-field-start widget)
-			    (widget-field-end widget))
-	     (insert-and-inherit completion)))
-	  (t
-	   (message "Making completion list...")
-	   (with-output-to-temp-buffer "*Completions*"
-	     (display-completion-list
-	      (all-completions prefix alist nil)))
-	   (message "Making completion list...done")))))
+	      (setq alist (eval alist)))))
+    (completion-in-region (widget-field-start widget)
+                          (max (point) (widget-field-text-end widget))
+                          alist)))
 
 (define-widget 'regexp 'string
   "A regular expression."
@@ -3096,29 +3081,9 @@ It reads a file name from an editable text field."
 (defun widget-file-complete ()
   "Perform completion on file name preceding point."
   (interactive)
-  (let* ((end (point))
-	 (beg (widget-field-start widget))
-	 (pattern (buffer-substring beg end))
-	 (name-part (file-name-nondirectory pattern))
-	 ;; I think defaulting to root is right
-	 ;; because these really should be absolute file names.
-	 (directory (or (file-name-directory pattern) "/"))
-	 (completion (file-name-completion name-part directory)))
-    (cond ((eq completion t))
-	  ((null completion)
-	   (message "Can't find completion for \"%s\"" pattern)
-	   (ding))
-	  ((not (string= name-part completion))
-	   (delete-region beg end)
-	   (insert (expand-file-name completion directory)))
-	  (t
-	   (message "Making completion list...")
-	   (with-output-to-temp-buffer "*Completions*"
-	     (display-completion-list
-	      (sort (file-name-all-completions name-part directory)
-		    'string<)
-	      name-part))
-	   (message "Making completion list...%s" "done")))))
+  (completion-in-region (widget-field-start widget)
+                        (max (point) (widget-field-text-end widget))
+                        'completion-file-name-table))
 
 (defun widget-file-prompt-value (widget prompt value unbound)
   ;; Read file from minibuffer.
@@ -3738,23 +3703,10 @@ example:
 (defun widget-color-complete (widget)
   "Complete the color in WIDGET."
   (require 'facemenu)			; for facemenu-color-alist
-  (let* ((prefix (buffer-substring-no-properties (widget-field-start widget)
-						 (point)))
-	 (list (or facemenu-color-alist
-		   (sort (defined-colors) 'string-lessp)))
-	 (completion (try-completion prefix list)))
-    (cond ((eq completion t)
-	   (message "Exact match."))
-	  ((null completion)
-	   (error "Can't find completion for \"%s\"" prefix))
-	  ((not (string-equal prefix completion))
-	   (insert-and-inherit (substring completion (length prefix))))
-	  (t
-	   (message "Making completion list...")
-	   (with-output-to-temp-buffer "*Completions*"
-	     (display-completion-list (all-completions prefix list nil)
-				      prefix))
-	   (message "Making completion list...done")))))
+  (completion-in-region (widget-field-start widget)
+                        (max (point) (widget-field-text-end widget))
+                        (or facemenu-color-alist
+                            (sort (defined-colors) 'string-lessp))))
 
 (defun widget-color-sample-face-get (widget)
   (let* ((value (condition-case nil

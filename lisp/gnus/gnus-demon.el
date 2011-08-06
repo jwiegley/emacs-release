@@ -1,7 +1,7 @@
 ;;; gnus-demon.el --- daemonic Gnus behavior
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -261,7 +261,7 @@ time Emacs has been idle for IDLE `gnus-demon-timestep's."
   "Add daemonic nntp server disconnection to Gnus.
 If no commands have gone out via nntp during the last five
 minutes, the connection is closed."
-  (gnus-demon-add-handler 'gnus-demon-nntp-close-connections 5 nil))
+  (gnus-demon-add-handler 'gnus-demon-nntp-close-connection 5 nil))
 
 (defun gnus-demon-nntp-close-connection ()
   (save-window-excursion

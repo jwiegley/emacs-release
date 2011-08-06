@@ -1,7 +1,7 @@
 ;; erc.el --- An Emacs Internet Relay Chat client
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Alexander L. Belikoff (alexander@belikoff.net)
 ;; Contributors: Sergey Berezin (sergey.berezin@cs.cmu.edu),
@@ -2358,8 +2358,7 @@ If `erc-insert-this' is still t, STRING gets inserted into the buffer.
 Afterwards, `erc-insert-modify' and `erc-insert-post-hook' get called.
 If STRING is nil, the function does nothing."
   (when string
-    (save-excursion
-      (set-buffer (or buffer (process-buffer erc-server-process)))
+    (with-current-buffer (or buffer (process-buffer erc-server-process))
       (let ((insert-position (or (marker-position erc-insert-marker)
 				 (point-max))))
 	(let ((string string) ;; FIXME! Can this be removed?
@@ -3095,7 +3094,7 @@ to send.
 If only one word is given, display the mode of that target.
 
 A list of valid mode strings for Freenode may be found at
-`http://freenode.net/using_the_network.shtml'."
+URL `http://freenode.net/using_the_network.shtml'."
   (cond
    ((string-match "^\\s-\\(.*\\)$" line)
     (let ((s (match-string 1 line)))
@@ -4513,8 +4512,7 @@ If non-nil, return from being away."
 	    ;; away must be set to NIL BEFORE sending anything to prevent
 	    ;; an infinite recursion
 	    (setq erc-away nil)
-	    (save-excursion
-	      (set-buffer (erc-active-buffer))
+	    (with-current-buffer (erc-active-buffer)
 	      (when erc-public-away-p
 		(erc-send-action
 		 (erc-default-target)
@@ -5656,11 +5654,13 @@ user input."
   "Determine the connection and authentication parameters.
 Sets the buffer local variables:
 
+- `erc-session-connector'
 - `erc-session-server'
 - `erc-session-port'
 - `erc-session-full-name'
 - `erc-server-current-nick'"
-  (setq erc-session-server (erc-compute-server server)
+  (setq erc-session-connector erc-server-connect-function
+        erc-session-server (erc-compute-server server)
 	erc-session-port (or port erc-default-port)
 	erc-session-user-full-name (erc-compute-full-name name))
   (erc-set-current-nick (erc-compute-nick nick)))

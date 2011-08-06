@@ -1,7 +1,7 @@
 ;;; ediff-ptch.el --- Ediff's  patch support
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
@@ -126,8 +126,8 @@ patch.  So, don't change these variables, unless the default doesn't work."
 (defcustom ediff-context-diff-label-regexp
   (concat "\\(" 	; context diff 2-liner
 	  "^\\*\\*\\* +\\([^ \t]+\\)[^*]+[\t ]*\n--- +\\([^ \t]+\\)"
-	  "\\|" 	; GNU unified format diff 2-liner
-	  "^--- +\\([^ \t]+\\)[\t ]+.*\n\\+\\+\\+ +\\([^ \t]+\\)"
+	  "\\|" 	; unified format diff 2-liner
+	  "^--- +\\([^ \t]+\\).*\n\\+\\+\\+ +\\([^ \t]+\\)"
 	  "\\)")
   "Regexp matching filename 2-liners at the start of each context diff.
 You probably don't want to change that, unless you are using an obscure patch

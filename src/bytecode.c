@@ -1,6 +1,6 @@
 /* Execution of byte code produced by bytecomp.el.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -34,6 +34,7 @@ by Hallvard:
  */
 
 #include <config.h>
+#include <setjmp.h>
 #include "lisp.h"
 #include "buffer.h"
 #include "character.h"
@@ -392,6 +393,7 @@ unmark_byte_stack ()
 	Fsignal (Qquit, Qnil);				\
 	AFTER_POTENTIAL_GC ();				\
       }							\
+    ELSE_PENDING_SIGNALS				\
   } while (0)
 
 
@@ -1678,7 +1680,7 @@ If the third argument is incorrect, Emacs may crash.  */)
 void
 syms_of_bytecode ()
 {
-  Qbytecode = intern ("byte-code");
+  Qbytecode = intern_c_string ("byte-code");
   staticpro (&Qbytecode);
 
   defsubr (&Sbyte_code);
@@ -1701,7 +1703,7 @@ integer, it is incremented each time that symbol's function is called.  */);
 
   byte_metering_on = 0;
   Vbyte_code_meter = Fmake_vector (make_number (256), make_number (0));
-  Qbyte_code_meter = intern ("byte-code-meter");
+  Qbyte_code_meter = intern_c_string ("byte-code-meter");
   staticpro (&Qbyte_code_meter);
   {
     int i = 256;

@@ -1,7 +1,7 @@
 ;;; sb-image --- Image management for speedbar
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: file, tags, tools
@@ -85,8 +85,7 @@ If we have an image associated with it, use that image."
 See `speedbar-expand-image-button-alist' for details."
   (interactive)
   (with-output-to-temp-buffer "*Speedbar Images*"
-    (save-excursion
-      (set-buffer "*Speedbar Images*")
+    (with-current-buffer "*Speedbar Images*"
       (goto-char (point-max))
       (insert "Speedbar image cache.\n\n")
       (let ((start (point)) (end nil))

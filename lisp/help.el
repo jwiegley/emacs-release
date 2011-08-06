@@ -1,7 +1,7 @@
 ;;; help.el --- help commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1993, 1994, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: help, internal
@@ -42,7 +42,7 @@
 ;; invoking `with-output-to-temp-buffer'.  If and only if `help-window'
 ;; is eq to t, `help-mode-finish' (called by `temp-buffer-setup-hook')
 ;; sets `help-window' to the window selected by `display-buffer'.
-;; Exiting `with-help-window' and calling `print-help-return-message'
+;; Exiting `with-help-window' and calling `help-print-return-message'
 ;; reset `help-window' to nil.
 (defvar help-window nil
   "Window chosen for displaying help.")
@@ -137,7 +137,8 @@ This is a list
  (WINDOW . quit-window)    do quit-window, then select WINDOW.
  (WINDOW BUF START POINT)  display BUF at START, POINT, then select WINDOW.")
 
-(defun print-help-return-message (&optional function)
+(define-obsolete-function-alias 'print-help-return-message 'help-print-return-message "23.2")
+(defun help-print-return-message (&optional function)
   "Display or return message saying how to restore windows after help command.
 This function assumes that `standard-output' is the help buffer.
 It computes a message, and applies the optional argument FUNCTION to it.
@@ -201,7 +202,10 @@ specifies what to do when the user exits the help buffer."
 (defalias 'help-for-help 'help-for-help-internal)
 ;; It can't find this, but nobody will look.
 (make-help-screen help-for-help-internal
-  "Type a help option: [abcCdefFgiIkKlLmnprstvw.] C-[cdefmnoptw] or ?"
+  (purecopy "Type a help option: [abcCdefFgiIkKlLmnprstvw.] C-[cdefmnoptw] or ?")
+  ;; Don't purecopy this one, because it's not evaluated (it's
+  ;; directly used as a docstring in a function definition, so it'll
+  ;; be moved to the DOC file anyway: no need for purecopying it).
   "You have typed %THIS-KEY%, the help character.  Type a Help option:
 \(Use SPC or DEL to scroll through this text.  Type \\<help-map>\\[help-quit] to exit the Help command.)
 
@@ -319,7 +323,8 @@ If that doesn't give a function, return nil."
   (interactive)
   (describe-copying)
   (let (case-fold-search)
-    (search-forward "NO WARRANTY")
+    (search-forward "Disclaimer of Warranty")
+    (forward-line 0)
     (recenter 0)))
 
 (defun describe-prefix-bindings ()
@@ -457,7 +462,8 @@ is specified by the variable `message-log-max'."
 
 To record all your input on a file, use `open-dribble-file'."
   (interactive)
-  (help-setup-xref (list #'view-lossage) (interactive-p))
+  (help-setup-xref (list #'view-lossage)
+		   (called-interactively-p 'interactive))
   (with-help-window (help-buffer)
     (princ (mapconcat (lambda (key)
 			(if (or (integerp key) (symbolp key) (listp key))
@@ -488,7 +494,8 @@ to display (default, the current buffer).  BUFFER can be a buffer
 or a buffer name."
   (interactive)
   (or buffer (setq buffer (current-buffer)))
-  (help-setup-xref (list #'describe-bindings prefix buffer) (interactive-p))
+  (help-setup-xref (list #'describe-bindings prefix buffer)
+		   (called-interactively-p 'interactive))
   (with-current-buffer buffer
     (describe-bindings-internal nil prefix)))
 
@@ -501,7 +508,6 @@ The optional argument MENUS, if non-nil, says to mention menu bindings.
 \(Ordinarily these are omitted from the output.)
 The optional argument PREFIX, if non-nil, should be a key sequence;
 then we display only bindings that start with that prefix."
-  (interactive)
   (let ((buf (current-buffer)))
     (with-help-window "*Help*"
       (with-current-buffer standard-output
@@ -717,7 +723,8 @@ temporarily enables it to allow getting help on disabled items and buttons."
     (if (or (null defn) (integerp defn) (equal defn 'undefined))
 	(message "%s%s is undefined"
 		 (help-key-description key untranslated) mouse-msg)
-      (help-setup-xref (list #'describe-function defn) (interactive-p))
+      (help-setup-xref (list #'describe-function defn)
+		       (called-interactively-p 'interactive))
       ;; Don't bother user with strings from (e.g.) the select-paste menu.
       (when (stringp (aref key (1- (length key))))
 	(aset key (1- (length key)) "(any string)"))
@@ -794,7 +801,7 @@ whose documentation describes the minor mode."
   (interactive "@")
   (unless buffer (setq buffer (current-buffer)))
   (help-setup-xref (list #'describe-mode buffer)
-		   (interactive-p))
+		   (called-interactively-p 'interactive))
   ;; For the sake of help-do-xref and help-xref-go-back,
   ;; don't switch buffers before calling `help-buffer'.
   (with-help-window (help-buffer)
@@ -1039,10 +1046,9 @@ scroll the \"other\" window."
 Select WINDOW according to the value of `help-window-select'.
 Display message telling how to scroll and eventually quit WINDOW.
 
-Optional argument REUSE non-nil means WINDOW has been reused \(by
-`display-buffer'\) for displaying help.  Optional argument
-KEEP-FRAME non-nil means that quitting must no delete the frame
-of WINDOW."
+Optional argument REUSE non-nil means WINDOW has been reused by
+`display-buffer'.  Optional argument KEEP-FRAME non-nil means
+that quitting should not delete WINDOW's frame."
   (let ((number-of-windows
 	 (length (window-list (window-frame window) 'no-mini window))))
     (cond
@@ -1073,7 +1079,7 @@ of WINDOW."
 	  (help-window-display-message
 	   (if reuse
 	       ;; Offer `display-buffer' for consistency with
-	       ;; `print-help-return-message'.  This is hardly TRT when
+	       ;; `help-print-return-message'.  This is hardly TRT when
 	       ;; the other window and the selected window display the
 	       ;; same buffer but has been handled this way ever since.
 	       "Type \\[display-buffer] RET to restore the other window"
@@ -1202,7 +1208,7 @@ window itself is specified by the variable `help-window'."
 ;; (4) A marker (`help-window-point-marker') to move point in the help
 ;; window to an arbitrary buffer position.
 
-;; Note: It's usually always wrong to use `print-help-return-message' in
+;; Note: It's usually always wrong to use `help-print-return-message' in
 ;; the body of `with-help-window'.
 (defmacro with-help-window (buffer-name &rest body)
   "Display buffer BUFFER-NAME in a help window evaluating BODY.

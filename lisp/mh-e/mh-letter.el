@@ -1,7 +1,7 @@
 ;;; mh-letter.el --- MH-Letter mode
 
 ;; Copyright (C) 1993, 1995, 1997,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
@@ -277,7 +277,7 @@ searching for `mh-mail-header-separator' in the buffer."
 ;; Shush compiler.
 (defvar font-lock-defaults)             ; XEmacs
 
-;; Ensure new buffers won't get this mode if default-major-mode is nil.
+;; Ensure new buffers won't get this mode if default major-mode is nil.
 (put 'mh-letter-mode 'mode-class 'special)
 
 ;;;###mh-autoload
@@ -706,9 +706,9 @@ the supercite flavors, the hook `mail-citation-hook' is ignored
 and `mh-ins-buf-prefix' is not inserted."
   (interactive)
   (if (and mh-sent-from-folder
-           (save-excursion (set-buffer mh-sent-from-folder) mh-show-buffer)
-           (save-excursion (set-buffer mh-sent-from-folder)
-                           (get-buffer mh-show-buffer))
+           (with-current-buffer mh-sent-from-folder mh-show-buffer)
+           (with-current-buffer mh-sent-from-folder
+             (get-buffer mh-show-buffer))
            mh-sent-from-msg)
       (let ((to-point (point))
             (to-buffer (current-buffer)))

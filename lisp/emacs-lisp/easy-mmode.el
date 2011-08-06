@@ -1,7 +1,7 @@
 ;;; easy-mmode.el --- easy definition for major and minor modes
 
-;; Copyright (C) 1997, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1997, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Georges Brun-Cottan <Georges.Brun-Cottan@inria.fr>
 ;; Maintainer: Stefan Monnier <monnier@gnu.org>
@@ -158,7 +158,7 @@ For example, you could write
       (setq body (cdr body))
       (case keyw
 	(:init-value (setq init-value (pop body)))
-	(:lighter (setq lighter (pop body)))
+	(:lighter (setq lighter (purecopy (pop body))))
 	(:global (setq globalp (pop body)))
 	(:extra-args (setq extra-args (pop body)))
 	(:set (setq set (list :set (pop body))))
@@ -234,7 +234,7 @@ With zero or negative ARG turn mode off.
            ,@body
            ;; The on/off hooks are here for backward compatibility only.
            (run-hooks ',hook (if ,mode ',hook-on ',hook-off))
-           (if (called-interactively-p)
+           (if (called-interactively-p 'any)
                (progn
                  ,(if globalp `(customize-mark-as-set ',mode))
                  ;; Avoid overwriting a message shown by the body,
@@ -263,8 +263,7 @@ With zero or negative ARG turn mode off.
 
        (add-minor-mode ',mode ',lighter
 		       ,(if keymap keymap-sym
-			  `(if (boundp ',keymap-sym)
-			       (symbol-value ',keymap-sym)))))))
+			  `(if (boundp ',keymap-sym) ,keymap-sym))))))
 
 ;;;
 ;;; make global minor mode
@@ -327,9 +326,13 @@ call another major mode in their body."
        (make-variable-buffer-local ',MODE-major-mode)
        ;; The actual global minor-mode
        (define-minor-mode ,global-mode
+	 ;; Very short lines to avoid too long lines in the generated
+	 ;; doc string.
 	 ,(format "Toggle %s in every possible buffer.
-With prefix ARG, turn %s on if and only if ARG is positive.
-%s is enabled in all buffers where `%s' would do it.
+With prefix ARG, turn %s on if and only if
+ARG is positive.
+%s is enabled in all buffers where
+\`%s' would do it.
 See `%s' for more information on %s."
 		  pretty-name pretty-global-name pretty-name turn-on
 		  mode pretty-name)
@@ -453,6 +456,9 @@ Valid keywords and arguments are:
 
 ;;;###autoload
 (defmacro easy-mmode-defmap (m bs doc &rest args)
+  "Define a constant M whose value is the result of `easy-mmode-define-keymap'.
+The M, BS, and ARGS arguments are as per that function.  DOC is
+the constant's documentation."
   `(defconst ,m
      (easy-mmode-define-keymap ,bs nil (if (boundp ',m) ,m) ,(cons 'list args))
      ,doc))
@@ -531,7 +537,7 @@ BODY is executed after moving to the destination location."
                     (error "No next %s" ,name))
                 (goto-char (match-beginning 0))
                 (when (and (eq (current-buffer) (window-buffer (selected-window)))
-                           (interactive-p))
+                           (called-interactively-p 'interactive))
                   (let ((endpt (or (save-excursion
                                      ,(if endfun `(,endfun)
                                         `(re-search-forward ,re nil t 2)))

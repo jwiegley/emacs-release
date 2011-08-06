@@ -1,6 +1,287 @@
-2009-07-29  Chong Yidong  <cyd@stupidchicken.com>
+2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
 
-	* Version 23.1 released.
+	* Version 23.2 released.
+
+2010-04-27  Chong Yidong  <cyd@stupidchicken.com>
+
+	* PROBLEMS: Document gcc-4.5 bug (Bug#6031).
+
+2010-04-23  Kenichi Handa  <handa@m17n.org>
+
+	* HELLO: Adjust Burmese for Unicode 5.2 encoding.
+
+2010-04-04  Francesc Rocher  <rocher@member.fsf.org>
+
+	* MORE.STUFF: Add a new entry for QWE.
+
+2010-03-28  Chong Yidong  <cyd@stupidchicken.com>
+
+	* images/icons/hicolor/scalable/apps/emacs.svg: Put preamble after
+	svg tag (Bug#5790).
+
+2010-03-27  Eli Zaretskii  <eliz@gnu.org>
+
+	* PROBLEMS: Mention problems on MS-Windows with incompatible
+	regex.h headers.
+
+2010-03-15  Francesc Rocher  <rocher@member.fsf.org>
+
+	* MORE.STUFF: Remove CEDET entry, now distributed as part of
+	Emacs.
+
+2010-03-06  Glenn Morris  <rgm@gnu.org>
+
+	* srecode/default.srt (COPYRIGHT): Update template copyright to GPLv3+.
+
+2010-03-05  Glenn Morris  <rgm@gnu.org>
+
+	* refcards/orgcard.tex: Use pdflayout.sty.
+	* refcards/Makefile (orgcard.pdf): Special rule no longer needed.
+
+2010-03-02  Glenn Morris  <rgm@gnu.org>
+
+	* refcards/Makefile: For cs- and sk-, use pdfcsplain if available.
+	(pl-refcard.pdf): Let presence of pdfmex be another test for the
+	required TeX files.  Pass explicit output-format to tex command.
+	(orgcard.pdf): Use ps2pdf, since pdftex tends to produce a
+	portrait layout rather than the desired landscape.
+
+2010-03-01  Glenn Morris  <rgm@gnu.org>
+
+	* refcards/pl-refcard.tex: Double forward-slashes in URL for Mex.
+
+	* refcards/de-refcard.tex: Fix paren typo.
+
+	* refcards/ru-refcard.tex: Rename \year command to \cyear, since
+	the former seems to be already used in some TeX installations.
+
+	* refcards/calccard.tex, refcards/cs-dired-ref.tex:
+	* refcards/cs-refcard.tex, refcards/cs-survival.tex:
+	* refcards/de-refcard.tex, refcards/dired-ref.tex:
+	* refcards/fr-dired-ref.tex, refcards/fr-refcard.tex:
+	* refcards/fr-survival.tex, refcards/orgcard.pdf:
+	* refcards/orgcard.tex, refcards/pl-refcard.tex:
+	* refcards/pt-br-refcard.tex, refcards/refcard.tex:
+	* refcards/ru-refcard.tex, refcards/sk-dired-ref.tex:
+	* refcards/sk-refcard.tex, refcards/sk-survival.tex:
+	* refcards/survival.tex, refcards/vipcard.tex:
+	* refcards/viperCard.tex: Update short copyright year to 2010.
+
+2010-02-26  Glenn Morris  <rgm@gnu.org>
+
+	* tutorials/TUTORIAL.es, tutorials/TUTORIAL.pt_BR:
+	Fix some keybinding typos.
+
+2010-02-14  Chong Yidong  <cyd@stupidchicken.com>
+
+	* images/custom/down-pushed.xpm, images/custom/down.xpm:
+	* images/custom/right-pushed.xpm:
+	* images/custom/right-pushed.xpm: Increase height by four
+	pixels, to improve text alignment.
+
+2010-01-16  Mario Lang  <mlang@delysid.org>
+
+	* srecode/doc-cpp.srt, srecode/doc-default.srt:
+	* srecode/doc-java.srt: Remove duplicated words.
+
+2010-01-14  Nick Roberts  <nickrob@snap.net.nz>
+
+	* images/gud/recstart.xpm, images/gud/recstop.xpm:
+	* images/gud/rcont.xpm, images/gud/rnext.xpm:
+	* images/gud/rfinish.xpm, images/gud/rnexti.xpm:
+	* images/gud/rstep.xpm, images/gud/rstepi.xpm:
+	New icons for reverse debugging.
+
+2010-01-14  Juanma Barranquero  <lekktu@gmail.com>
+
+	* srecode/doc-cpp.srt (function-comment, variable-same-line-comment)
+	(group-comment-start, group-comment-end):
+	* srecode/doc-default.srt (section-comment, function-comment)
+	(variable-same-line-comment, group-comment-start, group-comment-end):
+	* srecode/doc-java.srt (function-comment, variable-same-line-comment)
+	(group-comment-start, gropu-comment-end):
+	Fix typos in template docstrings.
+
+2010-01-14  Kenichi Handa  <handa@m17n.org>
+
+	* NEWS: Describe the change of auto-composition-mode.
+
+2010-01-12  Glenn Morris  <rgm@gnu.org>
+
+	* CONTRIBUTE, NEWS: Use bug-gnu-emacs rather than emacs-pretest-bug
+	for bug reports for development versions.
+
+2010-01-01  Juanma Barranquero  <lekktu@gmail.com>
+
+	* NEWS: Fix typos.
+
+2009-12-15  Glenn Morris  <rgm@gnu.org>
+
+	* CONTRIBUTE (Coding Standards): Update URL.
+	(Getting the Source Code): Other VCSs are available.
+
+	* ORDERS: Update some URLs.
+
+	* edt-user.el: New file, split out from edt-user.doc.
+	* edt-user.doc: Split into edt-user.el and ../doc/misc/edt.texi,
+	and remove.
+
+2009-12-09  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: Point to the external counterparts of su and sudo.
+
+2009-12-01  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* images/mpc/add.xpm, images/mpc/ffwd.xpm, images/mpc/next.xpm:
+	* images/mpc/pause.xpm, images/mpc/play.xpm, images/mpc/prev.xpm:
+	* images/mpc/rewind.xpm, images/mpc/stop.xpm:
+	New images.
+
+2009-11-27  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: New functions eshell/su and eshell/sudo.
+
+2009-11-26  Kevin Ryde  <user42@zip.com.au>
+
+	* MORE.STUFF: emacswiki ElispArea url "wiki.pl" -> "wiki".
+	Aubrey Jaffer's texinfo R5RS moved to
+	http://groups.csail.mit.edu/mac/ftpdir/scm/r5rs.info.tar.gz
+	(per http://people.csail.mit.edu/jaffer/Scheme.html).
+
+2009-11-26  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* PROBLEMS: Mention Metacity hang on Emacs resize.
+
+2009-11-20  Ken Brown  <kbrown@cornell.edu>  (tiny change)
+
+	* PROBLEMS: Add workaround for Cygwin crash and remove fixed
+	rebasing problem.
+
+2009-11-17  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* NEWS: Mention dynamic font changes (font-use-system-font).
+
+2009-11-15  Carsten Dominik  <dominik@u016822.science.uva.nl>
+
+	* refcards/orgcard.tex: Push version number to 6.33a.
+
+2009-11-13  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* refcards/orgcard.tex: Document the new archiving keys.
+
+2009-11-08  Chong Yidong  <cyd@stupidchicken.com>
+
+	* compilation.txt: Add one more error message for msft (Bug#4100).
+
+2009-10-09  Karl Fogel  <karl.fogel@red-bean.com>
+
+	* NEWS: Document bookmark.el (rev 1.114) format upgrade.  (Bug#3375)
+
+2009-10-04  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: New function copy-directory.
+
+2009-10-03  Chong Yidong  <cyd@stupidchicken.com>
+
+	* srecode: New directory for SRecode template files.
+
+2009-10-01  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: delete-directory has an optional parameter RECURSIVE.
+
+2009-10-01  Carsten Dominik  <dominik@u016822.science.uva.nl>
+
+	* refcards/orgcard.tex: New version number.
+
+2009-09-28  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: Mention Tramp connection methods "imap" and "imaps".
+
+2009-09-27  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* NEWS: Mention new library imap-hash.el
+
+2009-09-22  Juanma Barranquero  <lekktu@gmail.com>
+
+	* NEWS: Mention new variable `help-downcase-arguments'
+	and new default for arguments in *Help* buffers.
+
+2009-09-15  Juanma Barranquero  <lekktu@gmail.com>
+
+	* NEWS: Mention new behavior of -Q and new variable
+	`inhibit-x-resources'.
+
+2009-09-13  Chong Yidong  <cyd@stupidchicken.com>
+
+	* PROBLEMS: Document Athena/Lucid internationalization
+	problem (Bug#4333).
+
+2009-09-02  Carsten Dominik  <dominik@u016822.science.uva.nl>
+
+	* refcards/orgcard.tex: Document new effort setting commands.
+	Document the new keys for agenda time motion.
+	Document the `E' key in the agenda.
+
+2009-08-29  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* NEWS: Declare unibyte sessions obsolete.
+
+2009-08-28  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: Mention Tramp connection method "rsyncc" and variable
+	`process-file-side-effects'.
+
+2009-08-13  Kenichi Handa  <handa@m17n.org>
+
+	* NEWS: Mention the new coding systme `utf-8-hfs' and many
+	functions for Unicode normalization.
+
+2009-08-09  CHENG Gao  <chenggao@gmail.com>
+
+	* MORE.STUFF: Update Etags and Ispell URLs.
+
+2009-08-08  Dmitry Dzhus  <dima@sphinx.net.ru>
+
+	* images/gud/all.xpm, images/gud/thread.xpm: New icons for
+	gdb-mi.el
+
+2009-08-07  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* e/eterm-color.ti (msgr, u6, u7): New capabilities.
+
+2009-08-02  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: Autorevert Tail mode works now for remote files.
+
+2009-07-26  Kevin Ryde  <user42@zip.com.au>
+
+	* compilation.txt: Add Perl-Glib sample message.
+
+2009-07-23  Ken Raeburn  <raeburn@raeburn.org>
+
+	* NEWS: `load-in-progress' corruption fixed.
+
+2009-07-21  Glenn Morris  <rgm@gnu.org>
+
+	* refcards/cs-dired-ref.tex, refcards/dired-ref.tex:
+	* refcards/fr-dired-ref.tex, refcards/sk-dired-ref.tex:
+	* refcards/cs-refcard.tex, refcards/de-refcard.tex:
+	* refcards/fr-refcard.tex, refcards/pl-refcard.tex:
+	* refcards/pt-br-refcard.tex, refcards/refcard.tex:
+	* refcards/ru-refcard.tex, refcards/sk-refcard.tex:
+	* refcards/cs-survival.tex, refcards/fr-survival.tex:
+	* refcards/sk-survival.tex, refcards/survival.tex:
+	Remove version numbers that don't mean much.  Instead, just use Emacs
+	version and date.  Use FSF URL rather than postal address.
+
+	* refcards/vipcard.tex (versionnumber, version): Remove.
+	(versionemacs, versionvip): New.
+	(copyrightnotice): Use FSF URL rather than postal address.
+
+	* refcards/viperCard.tex (versionnumber): Rename to versionviper.
+	(versionemacs, versionxemacs): New.
+	(version): Remove.
+	(copyrightnotice): Use FSF URL rather than postal address.
 
 2009-07-16  Glenn Morris  <rgm@gnu.org>
 
@@ -26,14 +307,18 @@
 
 	* refcards/calccard.tex (emacsversionnumber): Just use major version.
 
-2009-07-10  Kevin Ryde  <user42@zip.com.au>
-
-	* compilation.txt: Fix names of some elements.
+	* refcards/Makefile (gnus-booklet.pdf): Use jobname rather than
+	clobbering gnus-refcard.pdf.
+	(clean): Remove .aux files.
+	(gnus-logo.pdf): Remove rule, since this file is distributed.
 
 2009-07-10  Kenichi Handa  <handa@m17n.org>
 
-	* PROBLEMS: Show the workaround for single<->double width problem
-	of font selection in CJK environment.
+	* tutorials/TUTORIAL.ja: Reflect the latest change of TUTORIAL.
+
+2009-07-10  Kevin Ryde  <user42@zip.com.au>
+
+	* compilation.txt: Fix names of some elements.
 
 2009-07-08  Glenn Morris  <rgm@gnu.org>
 
@@ -60,9 +345,27 @@
 	Say a little more about completion.
 	(Conclusion): Don't mention C-z again here.
 
+2009-07-01  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* NEWS: Mention maximized.
+
+2009-06-30  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: Add "synce" connection method of Tramp.
+
+2009-06-24  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: Add new connection methods of Tramp.
+
 2009-06-24  Kenichi Handa  <handa@m17n.org>
 
-	* charsets/stdenc.map, charsets/symbol.map: Re-generate.
+	* charsets/stdenc.map: Re-generated.
+
+	* charsets/symbol.map: Re-generated.
+
+2009-06-21  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Branch for 23.1.
 
 2009-06-15  Alan Mackenzie  <acm@muc.de>
 
@@ -77,7 +380,7 @@
 
 2009-06-12  Kenichi Handa  <handa@m17n.org>
 
-	* HELLO: Use "/" instead of "," to seperate independent words.
+	* HELLO: Use "/" instead of "," to separate independent words.
 
 	* charsets/*.map: All re-generated.
 
@@ -115,8 +418,8 @@
 
 2009-05-15  Sven Joachim  <svenjoac@gmx.de>
 
-        * refcards/de-refcard.tex: Merge changes from refcard.tex.
-        Change `Paragraph' to `Absatz'.
+	* refcards/de-refcard.tex: Merge changes from refcard.tex.
+	Change `Paragraph' to `Absatz'.
 
 2009-04-09  Glenn Morris  <rgm@gnu.org>
 
@@ -2325,7 +2628,7 @@
 	* images/gud/ni.xpm, images/gud/ni.xpm
 	* images/gud/s.xpm, images/gud/s.xpm
 	* images/gud/si.xpm, images/gud/si.xpm: Rename to
-	next.*, nexti.*, step.*, and stepi.* , respectively, as the
+	next.*, nexti.*, step.*, and stepi.*, respectively, as the
 	file-name no longer clashes on 8+3 filesystems.
 
 2005-10-14  Bill Wohler  <wohler@newt.com>
@@ -4627,7 +4930,7 @@
 ;; End:
 
     Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2001
-	2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+	2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 	Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.

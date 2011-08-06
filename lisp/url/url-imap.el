@@ -1,6 +1,6 @@
 ;;; url-imap.el --- IMAP retrieval routines
 
-;; Copyright (C) 1999, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Simon Josefsson <jas@pdc.kth.se>
 ;; Keywords: comm, data, processes
@@ -52,8 +52,7 @@
 (defun url-imap (url)
   (unless (vectorp url)
     (signal 'wrong-type-error (list "Need a pre-parsed URL." url)))
-  (save-excursion
-    (set-buffer (generate-new-buffer " *url-imap*"))
+  (with-current-buffer (generate-new-buffer " *url-imap*")
     (mm-disable-multibyte)
     (let* ((host (url-host url))
 	   (port (url-port url))

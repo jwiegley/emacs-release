@@ -1,7 +1,7 @@
 ;;; em-prompt.el --- command prompts
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -46,9 +46,9 @@ as is common with most shells."
 (defcustom eshell-prompt-function
   (function
    (lambda ()
-     (concat (eshell/pwd)
+     (concat (abbreviate-file-name (eshell/pwd))
 	     (if (= (user-uid) 0) " # " " $ "))))
-  "*A function that returns the Eshell prompt string.
+  "A function that returns the Eshell prompt string.
 Make sure to update `eshell-prompt-regexp' so that it will match your
 prompt."
   :type 'function
@@ -76,8 +76,7 @@ re-entered for it to take effect."
 For highlighting other kinds of strings -- similar to shell mode's
 behavior -- simply use an output filer which changes text properties."
   :group 'eshell-prompt)
-;; backward-compatibility alias
-(put 'eshell-prompt-face 'face-alias 'eshell-prompt)
+(define-obsolete-face-alias 'eshell-prompt-face 'eshell-prompt "22.1")
 
 (defcustom eshell-before-prompt-hook nil
   "*A list of functions to call before outputting the prompt."

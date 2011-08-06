@@ -1,6 +1,6 @@
 /* Input event support for Emacs on the Microsoft W32 API.
    Copyright (C) 1992, 1993, 1995, 2001, 2002, 2003, 2004, 2005, 2006,
-                 2007, 2008, 2009  Free Software Foundation, Inc.
+                 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -30,6 +30,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <stdlib.h>
 #include <stdio.h>
 #include <windows.h>
+#include <setjmp.h>
 
 #ifndef MOUSE_MOVED
 #define MOUSE_MOVED   1
@@ -79,6 +80,9 @@ extern unsigned int w32_key_to_modifier (int key);
 #define EVENT_QUEUE_SIZE 50
 static INPUT_RECORD event_queue[EVENT_QUEUE_SIZE];
 static INPUT_RECORD *queue_ptr = event_queue, *queue_end = event_queue;
+
+/* Temporarily store lead byte of DBCS input sequences.  */
+static char dbcs_lead = 0;
 
 static int
 fill_queue (BOOL block)
@@ -252,13 +256,15 @@ w32_kbd_patch_key (KEY_EVENT_RECORD *event)
 			  keystate, buf, 128, 0);
       if (isdead > 0)
 	{
-          char cp[20];
-          int cpId;
+	  char cp[20];
+	  int cpId;
 
-          GetLocaleInfo (GetThreadLocale (),
+	  event->uChar.UnicodeChar = buf[isdead - 1];
+
+	  GetLocaleInfo (GetThreadLocale (),
 			 LOCALE_IDEFAULTANSICODEPAGE, cp, 20);
-          cpId = atoi (cp);
-          isdead = WideCharToMultiByte (cpId, 0, buf, isdead,
+	  cpId = atoi (cp);
+	  isdead = WideCharToMultiByte (cpId, 0, buf, isdead,
 					ansi_code, 4, NULL, NULL);
 	}
       else
@@ -424,8 +430,6 @@ key_event (KEY_EVENT_RECORD *event, struct input_event *emacs_ev, int *isdead)
 
   if (lispy_function_keys[event->wVirtualKeyCode] == 0)
     {
-      emacs_ev->kind = ASCII_KEYSTROKE_EVENT;
-
       if (!NILP (Vw32_recognize_altgr)
 	  && (event->dwControlKeyState & LEFT_CTRL_PRESSED)
 	  && (event->dwControlKeyState & RIGHT_ALT_PRESSED))
@@ -460,9 +464,65 @@ key_event (KEY_EVENT_RECORD *event, struct input_event *emacs_ev, int *isdead)
 	  else if (event->uChar.AsciiChar == 0)
 	    w32_kbd_patch_key (event);
 	}
+
       if (event->uChar.AsciiChar == 0)
-	return 0;
-      emacs_ev->code = event->uChar.AsciiChar;
+	{
+	  emacs_ev->kind = NO_EVENT;
+	  return 0;
+	}
+      else if (event->uChar.AsciiChar > 0)
+	{
+	  emacs_ev->kind = ASCII_KEYSTROKE_EVENT;
+	  emacs_ev->code = event->uChar.AsciiChar;
+	}
+      else if (event->uChar.UnicodeChar > 0)
+	{
+	  emacs_ev->kind = MULTIBYTE_CHAR_KEYSTROKE_EVENT;
+	  emacs_ev->code = event->uChar.UnicodeChar;
+	}
+      else
+	{
+	  /* Fallback for non-Unicode versions of Windows.  */
+	  wchar_t code;
+	  char dbcs[2];
+          char cp[20];
+          int cpId;
+
+	  /* Get the codepage to interpret this key with.  */
+          GetLocaleInfo (GetThreadLocale (),
+			 LOCALE_IDEFAULTANSICODEPAGE, cp, 20);
+          cpId = atoi (cp);
+
+	  dbcs[0] = dbcs_lead;
+	  dbcs[1] = event->uChar.AsciiChar;
+	  if (dbcs_lead)
+	    {
+	      dbcs_lead = 0;
+	      if (!MultiByteToWideChar (cpId, 0, dbcs, 2, &code, 1))
+		{
+		  /* Garbage  */
+		  DebPrint (("Invalid DBCS sequence: %d %d\n",
+			     dbcs[0], dbcs[1]));
+		  emacs_ev->kind = NO_EVENT;
+		}
+	    }
+	  else if (IsDBCSLeadByteEx (cpId, dbcs[1]))
+	    {
+	      dbcs_lead = dbcs[1];
+	      emacs_ev->kind = NO_EVENT;
+	    }
+	  else
+	    {
+	      if (!MultiByteToWideChar (cpId, 0, &dbcs[1], 1, &code, 1))
+		{
+		  /* Garbage  */
+		  DebPrint (("Invalid character: %d\n", dbcs[1]));
+		  emacs_ev->kind = NO_EVENT;
+		}
+	    }
+	  emacs_ev->kind = MULTIBYTE_CHAR_KEYSTROKE_EVENT;
+	  emacs_ev->code = code;
+	}
     }
   else
     {

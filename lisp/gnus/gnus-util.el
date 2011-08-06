@@ -1,7 +1,7 @@
 ;;; gnus-util.el --- utility functions for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -38,6 +38,12 @@
   (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
 (eval-when-compile
   (require 'cl))
+
+(eval-when-compile
+  (unless (fboundp 'with-no-warnings)
+    (defmacro with-no-warnings (&rest body)
+      `(progn ,@body))))
+
 ;; Fixme: this should be a gnus variable, not nnmail-.
 (defvar nnmail-pathname-coding-system)
 (defvar nnmail-active-file-coding-system)
@@ -285,6 +291,15 @@ Symbols are also allowed; their print names are used instead."
 	(and (= (car fdate) (car date))
 	     (> (nth 1 fdate) (nth 1 date))))))
 
+(eval-and-compile
+  (if (and (fboundp 'float-time)
+	   (subrp (symbol-function 'float-time)))
+      (defalias 'gnus-float-time 'float-time)
+    (defun gnus-float-time (&optional time)
+      "Convert time value TIME to a floating point number.
+TIME defaults to the current time."
+      (with-no-warnings (time-to-seconds (or time (current-time)))))))
+
 ;;; Keymap macros.
 
 (defmacro gnus-local-set-keys (&rest plist)
@@ -443,8 +458,8 @@ respectively.")
 Returns \"  ?  \" if there's bad input or if an other error occurs.
 Input should look like this: \"Sun, 14 Oct 2001 13:34:39 +0200\"."
   (condition-case ()
-      (let* ((messy-date (time-to-seconds (safe-date-to-time messy-date)))
-	     (now (time-to-seconds (current-time)))
+      (let* ((messy-date (gnus-float-time (safe-date-to-time messy-date)))
+	     (now (gnus-float-time))
 	     ;;If we don't find something suitable we'll use this one
 	     (my-format "%b %d '%y"))
 	(let* ((difference (- now messy-date))
@@ -953,6 +968,29 @@ If there's no subdirectory, delete DIRECTORY as well."
 			(lambda (overlay)
 			  (overlay-get overlay 'face))
 			(overlays-at pos)))))))
+
+(if (fboundp 'invisible-p)
+    (defalias 'gnus-invisible-p 'invisible-p)
+  ;; for Emacs < 22.2, and XEmacs.
+  (defun gnus-invisible-p (pos)
+    "Return non-nil if the character after POS is currently invisible."
+    (let ((prop (get-char-property pos 'invisible)))
+      (if (eq buffer-invisibility-spec t)
+	  prop
+	(or (memq prop buffer-invisibility-spec)
+	    (assq prop buffer-invisibility-spec))))))
+
+;; Note: the optional 2nd argument has a different meaning between
+;; Emacs and XEmacs.
+;; (next-char-property-change POSITION &optional LIMIT)
+;; (next-extent-change        POS      &optional OBJECT)
+(defalias 'gnus-next-char-property-change
+  (if (fboundp 'next-extent-change)
+      'next-extent-change 'next-char-property-change))
+
+(defalias 'gnus-previous-char-property-change
+  (if (fboundp 'previous-extent-change)
+      'previous-extent-change 'previous-char-property-change))
 
 ;;; Protected and atomic operations.  dmoore@ucsd.edu 21.11.1996
 ;; The primary idea here is to try to protect internal datastructures

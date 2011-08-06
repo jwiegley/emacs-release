@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 1999, 2000,
-@c   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+@c   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Frames, International, Windows, Top
 @chapter Frames and Graphical Displays
@@ -39,6 +39,7 @@ so that you can use many of the features described in this chapter.
 * Mode Line Mouse::     Mouse clicks on the mode line.
 * Creating Frames::     Creating additional Emacs frames with various contents.
 * Frame Commands::      Iconifying, deleting, and switching frames.
+* Fonts::               Changing the frame font.
 * Speedbar::            How to make and use a speedbar frame.
 * Multiple Displays::   How one Emacs job can talk to several displays.
 * Special Buffer Frames::  You can make certain buffers have their own frames.
@@ -50,7 +51,7 @@ so that you can use many of the features described in this chapter.
 * Tool Bars::           Enabling and disabling the tool bar.
 * Dialog Boxes::        Controlling use of dialog boxes.
 * Tooltips::            Displaying information at the current mouse position.
-* Mouse Avoidance::     Moving the mouse pointer out of the way.
+* Mouse Avoidance::     Preventing the mouse pointer from obscuring text.
 * Non-Window Terminals::  Multiple frames on terminals that show only one.
 * Text-Only Mouse::     Using the mouse in text-only terminals.
 @end menu
@@ -251,14 +252,34 @@ contents of the primary selection are lost.
 such as @kbd{M-w} (@code{kill-ring-save}), that text is also saved in
 the primary selection.  @xref{Killing}.
 
+@vindex select-active-regions
+  If you set the region using the keyboard---for instance, by typing
+@kbd{C-@key{SPC}} and moving point away from the mark---the text in
+the region is not normally saved to the primary selection.  However,
+if you change the variable @code{select-active-regions} to @code{t},
+the region is saved to the primary selection whenever you activate the
+mark.  Each change to the region also updates the primary selection.
+
+@vindex yank-pop-change-selection
+  If you change @code{yank-pop-change-selection} to @code{t}, rotating
+the kill ring with @kbd{M-y} (@code{yank-pop}) also saves the new yank
+to the primary selection (@pxref{Yanking}).
+
+@vindex save-interprogram-paste-before-kill
+  If you change @code{save-interprogram-paste-before-kill} to
+@code{t}, each kill command first saves the existing selection onto
+the kill ring.  This prevents you from losing the existing selection,
+at the risk of large memory consumption if other applications generate
+large selections.
+
 @cindex cut buffer
 @vindex x-cut-buffer-max
   Whenever Emacs saves some text to the primary selection, it may also
 save it to the @dfn{cut buffer}.  The cut buffer is an obsolete
 predecessor to the primary selection; most modern applications do not
-make use of it.  Because saving text to the cut buffer is slow and
-inefficient, Emacs only does it if the text is shorter than the value
-of @code{x-cut-buffer-max} (the default is 20000 characters).
+use it.  Saving text to the cut buffer is slow and inefficient, so
+Emacs only does it if the text is shorter than the value of
+@code{x-cut-buffer-max} (20000 characters by default).
 
   You can yank the primary selection into Emacs using the usual yank
 commands, such as @kbd{C-y} (@code{yank}) and @kbd{Mouse-2}
@@ -551,25 +572,19 @@ only the initial frame.  @xref{Initial Parameters,,, elisp, The Emacs
 Lisp Reference Manual}, for more information.
 
 @cindex font (default)
-  For instance, one way to specify the principal font for all your
-Emacs frames is to modify @code{default-frame-alist} to specify the
-@code{font} parameter (@pxref{Font X}):
+  Here is an example of using @code{default-frame-alist} to specify
+the default foreground color and font:
 
 @example
 (add-to-list 'default-frame-alist '(font . "10x20"))
-@end example
-
-@noindent
-Here's a similar example for specifying a foreground color:
-
-@example
 (add-to-list 'default-frame-alist '(foreground-color . "blue"))
 @end example
 
 @noindent
 By putting such customizations in your init file, you can control the
-appearance of all the frames Emacs creates, including the initial one.
-@xref{Init File}.
+appearance of all the frames Emacs creates, including the initial one
+(@pxref{Init File}).  @xref{Fonts}, for other ways to set the default
+font.
 
 @node Frame Commands
 @section Frame Commands
@@ -579,9 +594,9 @@ appearance of all the frames Emacs creates, including the initial one.
 @table @kbd
 @item C-z
 @kindex C-z @r{(X windows)}
-@findex iconify-or-deiconify-frame
-Iconify (``minimize'') the selected Emacs frame
-(@code{iconify-or-deiconify-frame}).  @xref{Exiting}.
+@findex suspend-frame
+Minimize (or ``iconify) the selected Emacs frame
+(@code{suspend-frame}).  @xref{Exiting}.
 
 @item C-x 5 0
 @kindex C-x 5 0
@@ -602,22 +617,300 @@ terminal.
 Delete all frames except the selected one.
 @end table
 
+  The @kbd{C-x 5 0} (@code{delete-frame}) command will never delete
+the last frame, to prevent you from losing the ability to interact
+with the Emacs process.  Note that when Emacs is run as a daemon
+(@pxref{Emacs Server}), there is always a ``virtual frame'' that
+remains after all the ordinary, interactive frames are deleted.  In
+this case, @kbd{C-x 5 0} can delete the last interactive frame; you
+can use @command{emacsclient} to reconnect to the Emacs session.
+
 @vindex focus-follows-mouse
-  To make the command @kbd{C-x 5 o} work properly, you should tell
-Emacs how the system (or the window manager) handles focus-switching
-between windows.  There are two possibilities: either simply moving
-the mouse onto a window selects it (gives it focus), or you have to
-click on it to do so.  On X, this focus policy also affects whether
-the focus is given to a frame that Emacs raises.  Unfortunately there
-is no way Emacs can find out automatically which way the system
-handles this, so you have to explicitly say, by setting the variable
-@code{focus-follows-mouse}.  If just moving the mouse onto a window
-selects it, that variable should be @code{t}; if a click is necessary,
-the variable should be @code{nil}.  The default is @code{t}.
+  On X, you may have to tell Emacs how the system (or the window
+manager) handles focus-switching between windows, in order for the
+command @kbd{C-x 5 o} (@code{other-frame}) to work properly.
+Unfortunately, there is no way for Emacs to detect this automatically,
+so you should set the variable @code{focus-follows-mouse}.  If simply
+moving the mouse onto a window selects it and gives it focus, the
+variable should be @code{t}; if you have to click on the window to
+select it, the variable should be @code{nil}.  The default is
+@code{t}.
 
   The window manager that is part of MS-Windows always gives focus to
 a frame that raises, so this variable has no effect in the native
 MS-Windows build of Emacs.
+
+@node Fonts
+@section Fonts
+@cindex fonts
+
+  By default, Emacs displays text in X using a 12-point monospace
+font.  There are several different ways to specify a different font:
+
+@itemize
+@item
+Click on @samp{Set Default Font} in the @samp{Options} menu.  To save
+this for future sessions, click on @samp{Save Options} in the
+@samp{Options} menu.
+
+@item
+Add a line to your init file (@pxref{Init File}), modifying the
+variable @code{default-frame-alist} to specify the @code{font}
+parameter (@pxref{Creating Frames}), like this:
+
+@smallexample
+(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono-12"))
+@end smallexample
+
+@cindex X defaults file
+@cindex X resources file
+@item
+Add an @samp{emacs.font} X resource setting to your X resource file,
+like this:
+
+@smallexample
+emacs.font: DejaVu Sans Mono-12
+@end smallexample
+
+@noindent
+You must restart X, or use the @command{xrdb} command, for the X
+resources file to take effect.  @xref{Resources}.  When specifying a
+font in your X resources file, you should not quote it.
+
+@item
+If you are running Emacs on the GNOME desktop, you can tell Emacs to
+use the default system font by setting the variable
+@code{font-use-system-font} to @code{t} (the default is @code{nil}).
+For this to work, Emacs must be compiled with Gconf support; this is
+done automatically if the libraries are present at compile time.
+
+@item
+Use the command line option @samp{-fn} (or @samp{--font}).  @xref{Font
+X}.
+@end itemize
+
+@cindex fontconfig
+  On X, there are four different ways to express a ``font name''.  The
+first is to use a @dfn{Fontconfig pattern}.  Fontconfig patterns have
+the following form:
+
+@smallexample
+@var{fontname}[-@var{fontsize}][:@var{name1}=@var{values1}][:@var{name2}=@var{values2}]...
+@end smallexample
+
+@noindent
+Within this format, any of the elements in braces may be omitted.
+Here, @var{fontname} is the @dfn{family name} of the font, such as
+@samp{Monospace} or @samp{DejaVu Serif}; @var{fontsize} is the
+@dfn{point size} of the font (one @dfn{printer's point} is about 1/72
+of an inch); and the @samp{@var{name}=@var{values}} entries specify
+settings such as the slant and weight of the font.  Each @var{values}
+may be a single value, or a list of values separated by commas.  In
+addition, some property values are valid with only one kind of
+property name, in which case the @samp{@var{name}=} part may be
+omitted.
+
+Here is a list of common font properties:
+
+@table @samp
+@item slant
+One of @samp{italic}, @samp{oblique} or @samp{roman}.
+
+@item weight
+One of @samp{light}, @samp{medium}, @samp{demibold}, @samp{bold} or
+@samp{black}.
+
+@item style
+Some fonts define special styles which are a combination of slant and
+weight.  For instance, @samp{Dejavu Sans} defines the @samp{book}
+style, which overrides the slant and weight properties.
+
+@item width
+One of @samp{condensed}, @samp{normal}, or @samp{expanded}.
+
+@item spacing
+One of @samp{monospace}, @samp{proportional}, @samp{dual-width}, or
+@samp{charcell}.
+@end table
+
+@noindent
+Here are some examples of Fontconfig patterns:
+
+@smallexample
+Monospace
+Monospace-12
+Monospace-12:bold
+DejaVu Sans Mono:bold:italic
+Monospace-12:weight=bold:slant=italic
+@end smallexample
+
+See the Fontconfig manual for a more detailed description of
+Fontconfig patterns.  This manual is located in the file
+@file{fontconfig-user.html}, distributed with Fontconfig.  It is also
+available online at @url{http://fontconfig.org/fontconfig-user.html}.
+In particular, that manual describes additional font properties that
+influence how the font is hinted, antialiased, or scaled.
+
+  The second way to specify a font is to use a @dfn{GTK font
+description}.  These have the syntax
+
+@smallexample
+@var{fontname} [@var{properties}] [@var{fontsize}]
+@end smallexample
+
+@noindent
+where @var{fontname} is the family name, @var{properties} is a list of
+property values separated by spaces, and @var{fontsize} is the point
+size.  The properties that you may specify are as follows:
+
+@table @samp
+@item style
+One of @samp{roman}, @samp{italic} or @samp{oblique}.  If omitted, the
+@samp{roman} style is used.
+@item weight
+One of @samp{medium}, @samp{ultra-light}, @samp{light},
+@samp{semi-bold}, or @samp{bold}.  If omitted, @samp{medium} weight is
+used.
+@end table
+
+@noindent
+Here are some examples of GTK font descriptions:
+
+@smallexample
+Monospace 12
+Monospace Bold Italic 12
+@end smallexample
+
+@cindex XLFD
+@cindex X Logical Font Description
+  The third way to specify a font is to use an @dfn{XLFD} (@dfn{X
+Logical Font Description}).  This is the traditional method for
+specifying fonts under X.  Each XLFD consists of fourteen words or
+numbers, separated by dashes, like this:
+
+@smallexample
+-misc-fixed-medium-r-semicondensed--13-*-*-*-c-60-iso8859-1
+@end smallexample
+
+@noindent
+A wildcard character (@samp{*}) in an XLFD matches any sequence of
+characters (including none), and @samp{?} matches any single
+character.  However, matching is implementation-dependent, and can be
+inaccurate when wildcards match dashes in a long name.  For reliable
+results, supply all 14 dashes and use wildcards only within a field.
+Case is insignificant in an XLFD.  The syntax for an XLFD is as
+follows:
+
+@smallexample
+-@var{maker}-@var{family}-@var{weight}-@var{slant}-@var{widthtype}-@var{style}@dots{}
+@dots{}-@var{pixels}-@var{height}-@var{horiz}-@var{vert}-@var{spacing}-@var{width}-@var{registry}-@var{encoding}
+@end smallexample
+
+@noindent
+The entries have the following meanings:
+
+@table @var
+@item maker
+The name of the font manufacturer.
+@item family
+The name of the font family (e.g. @samp{courier}).
+@item weight
+The font weight---normally either @samp{bold}, @samp{medium} or
+@samp{light}.  Some font names support other values.
+@item slant
+The font slant---normally @samp{r} (roman), @samp{i} (italic),
+@samp{o} (oblique), @samp{ri} (reverse italic), or @samp{ot} (other).
+Some font names support other values.
+@item widthtype
+The font width---normally @samp{condensed}, @samp{extended},
+@samp{semicondensed} or @samp{normal} (some font names support other
+values).
+@item style
+An optional additional style name.  Usually it is empty---most long
+font names have two hyphens in a row at this point.
+@item pixels
+The font height, in pixels.
+@item height
+The font height on the screen, measured in tenths of a printer's
+point.  This is the point size of the font, times ten.  For a given
+vertical resolution, @var{height} and @var{pixels} are proportional;
+therefore, it is common to specify just one of them and use @samp{*}
+for the other.
+@item horiz
+The horizontal resolution, in pixels per inch, of the screen for which
+the font is intended.
+@item vert
+The vertical resolution, in pixels per inch, of the screen for which
+the font is intended.  Normally the resolution of the fonts on your
+system is the right value for your screen; therefore, you normally
+specify @samp{*} for this and @var{horiz}.
+@item spacing
+This is @samp{m} (monospace), @samp{p} (proportional) or @samp{c}
+(character cell).
+@item width
+The average character width, in pixels, multiplied by ten.
+@item registry
+@itemx encoding
+The X font character set that the font depicts.  (X font character
+sets are not the same as Emacs character sets, but they are similar.)
+You can use the @command{xfontsel} program to check which choices you
+have.  Normally you should use @samp{iso8859} for @var{registry} and
+@samp{1} for @var{encoding}.
+@end table
+
+  The fourth and final method of specifying a font is to use a ``font
+nickname''.  Certain fonts have shorter nicknames, which you can use
+instead of a normal font specification.  For instance, @samp{6x13} is
+equivalent to
+
+@smallexample
+-misc-fixed-medium-r-semicondensed--13-*-*-*-c-60-iso8859-1
+@end smallexample
+
+@cindex client-side fonts
+@cindex server-side fonts
+  On X, Emacs recognizes two types of fonts: @dfn{client-side} fonts,
+which are provided by the Xft and Fontconfig libraries, and
+@dfn{server-side} fonts, which are provided by the X server itself.
+Most client-side fonts support advanced font features such as
+antialiasing and subpixel hinting, while server-side fonts do not.
+Fontconfig and GTK patterns match only client-side fonts.
+
+@cindex listing system fonts
+  You will probably want to use a fixed-width default font---that is,
+a font in which all characters have the same width.  For Xft and
+Fontconfig fonts, you can use the @command{fc-list} command to list
+the available fixed-width fonts, like this:
+
+@example
+fc-list :spacing=mono fc-list :spacing=charcell
+@end example
+
+@noindent
+For server-side X fonts, you can use the @command{xlsfonts} program to
+list the available fixed-width fonts, like this:
+
+@example
+xlsfonts -fn '*x*' | egrep "^[0-9]+x[0-9]+"
+xlsfonts -fn '*-*-*-*-*-*-*-*-*-*-*-m*'
+xlsfonts -fn '*-*-*-*-*-*-*-*-*-*-*-c*'
+@end example
+
+@noindent
+Any font with @samp{m} or @samp{c} in the @var{spacing} field of the
+XLFD is a fixed-width font.  To see what a particular font looks like,
+use the @command{xfd} command.  For example:
+
+@example
+xfd -fn 6x13
+@end example
+
+@noindent
+displays the entire font @samp{6x13}.
+
+  While running Emacs, you can also set the font of a specific kind of
+text (@pxref{Faces}), or a particular frame (@pxref{Frame
+Parameters}).
 
 @node Speedbar
 @section Speedbar Frames
@@ -931,7 +1224,7 @@ menu-bar-mode} or by customizing the variable @code{menu-bar-mode}.
 With no argument, this command toggles Menu Bar mode, a
 minor mode.  With an argument, the command turns Menu Bar mode on if the
 argument is positive, off if the argument is not positive.  You can use
-the X resource @samp{menuBarLines} to control the initial setting of
+the X resource @samp{menuBar} to control the initial setting of
 Menu Bar mode.  @xref{Resources}.
 
 @kindex C-Mouse-3 @r{(when menu bar is disabled)}
@@ -1046,12 +1339,20 @@ customizing the windows that display tooltips.
 @cindex avoiding mouse in the way of your typing
 @cindex mouse avoidance
 
+  On graphical terminals, the mouse pointer may obscure the text in
+the Emacs frame.  Emacs provides two methods to avoid this problem.
+
+@vindex make-pointer-invisible
+  Firstly, Emacs hides the mouse pointer each time you type a
+self-inserting character, if the pointer lies inside an Emacs frame;
+moving the mouse pointer makes it visible again.  To disable this
+feature, set the variable @code{make-pointer-invisible} to @code{nil}.
+
 @vindex mouse-avoidance-mode
-Mouse Avoidance mode keeps the mouse pointer away from point, to avoid
-obscuring text you want to edit.  Whenever it moves the mouse, it also
-raises the frame.  To use Mouse Avoidance mode, customize the variable
-@code{mouse-avoidance-mode}.  You can set this to various values to
-move the mouse in several ways:
+  Secondly, you can use Mouse Avoidance mode, a minor mode, to keep
+the mouse pointer away from point.  To use Mouse Avoidance mode,
+customize the variable @code{mouse-avoidance-mode}.  You can set this
+to various values to move the mouse in several ways:
 
 @table @code
 @item banish
@@ -1072,7 +1373,8 @@ As @code{animate}, but changes the shape of the mouse pointer too.
 
 @findex mouse-avoidance-mode
 You can also use the command @kbd{M-x mouse-avoidance-mode} to enable
-the mode.
+the mode.  Whenever Mouse Avoidance mode moves the mouse, it also
+raises the frame.
 
 @node Non-Window Terminals
 @section Non-Window Terminals

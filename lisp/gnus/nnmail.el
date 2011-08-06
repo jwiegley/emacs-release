@@ -1,7 +1,7 @@
 ;;; nnmail.el --- mail support functions for the Gnus mail backends
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news, mail
@@ -242,9 +242,8 @@ If non-nil, also update the cache when copy or move articles."
   :group 'nnmail
   :type 'boolean)
 
-(make-obsolete-variable 'nnmail-spool-file
-			"This option is obsolete in Gnus 5.9.  \
-Use `mail-sources' instead.")
+(make-obsolete-variable 'nnmail-spool-file 'mail-sources
+			"Gnus 5.9 (Emacs 22.1)")
 ;; revision 5.29 / p0-85 / Gnus 5.9
 ;; Variable removed in No Gnus v0.7
 
@@ -1318,7 +1317,7 @@ Eudora has a broken References line, but an OK In-Reply-To."
       (replace-match "\\1" t))))
 
 (defalias 'nnmail-fix-eudora-headers 'nnmail-ignore-broken-references)
-(make-obsolete 'nnmail-fix-eudora-headers 'nnmail-ignore-broken-references)
+(make-obsolete 'nnmail-fix-eudora-headers 'nnmail-ignore-broken-references "Emacs 23.1")
 
 (custom-add-option 'nnmail-prepare-incoming-header-hook
 		   'nnmail-ignore-broken-references)

@@ -1,7 +1,7 @@
 ;;; esh-arg.el --- argument processing
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -53,7 +53,7 @@ yield the values intended."
 	(goto-char (match-end 0))
 	(let ((str (match-string 0)))
 	  (if (> (length str) 0)
-	      (add-text-properties 0 1 '(number t) str))
+	      (add-text-properties 0 (length str) '(number t) str))
 	  str))))
 
    ;; parse any non-special characters, based on the current context

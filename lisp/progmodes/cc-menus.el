@@ -1,7 +1,7 @@
 ;;; cc-menus.el --- imenu support for CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    1998- Martin Stjernholm
@@ -149,22 +149,46 @@ A sample value might look like: `\\(_P\\|_PROTO\\)'.")
 (defvar cc-imenu-java-generic-expression
   `((nil
      ,(concat
-       "[" c-alpha "_][\]\[." c-alnum "_]+[ \t\n\r]+" ; type spec
-       "\\([" c-alpha "_][" c-alnum "_]+\\)" ; method name
+       "[" c-alpha "_][\]\[." c-alnum "_<> ]+[ \t\n\r]+" ; type spec
+       "\\([" c-alpha "_][" c-alnum "_]*\\)" ; method name
        "[ \t\n\r]*"
-       ;; An argument list that is either empty or contains at least
-       ;; two identifiers with only space between them.  This avoids
-       ;; matching e.g. "else if (foo)".
-       (concat "([ \t\n\r]*"
-	       "\\([\]\[.," c-alnum "_]+"
-	       "[ \t\n\r]+"
-	       "[\]\[.," c-alnum "_]"
-	       "[\]\[.," c-alnum "_ \t\n\r]*"
-	       "\\)?)")
-       "[.," c-alnum "_ \t\n\r]*"
-       "{"
-       ) 1))
-  "Imenu generic expression for Java mode.  See `imenu-generic-expression'.")
+       ;; An argument list htat is either empty or contains any number
+       ;; of arguments.  An argument is any number of annotations
+       ;; followed by a type spec followed by a word.  A word is an
+       ;; identifier.  A type spec is an identifier, possibly followed
+       ;; by < typespec > possibly followed by [].
+       (concat "("
+               "\\("
+               "[ \t\n\r]*"
+               "\\("
+               "@"
+               "[" c-alpha "_]"
+               "[" c-alnum "._]""*"
+               "[ \t\n\r]+"
+               "\\)*"
+               "\\("
+               "[" c-alpha "_]"
+               "[\]\[" c-alnum "_.]*"
+               "\\("
+
+               "<"
+               "[ \t\n\r]*"
+               "[\]\[.," c-alnum "_<> \t\n\r]*"
+               ">"
+               "\\)?"
+               "\\(\\[\\]\\)?"
+               "[ \t\n\r]+"
+               "\\)"
+               "[" c-alpha "_]"
+               "[" c-alnum "_]*"
+               "[ \t\n\r,]*"
+               "\\)*"
+               ")"
+               "[.," c-alnum " \t\n\r]*"
+               "{"
+               )) 1))
+  "Imenu generic expression for Java mode.  See
+`imenu-generic-expression'.")
 
 ;;                        *Warning for cc-mode developers*
 ;;

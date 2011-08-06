@@ -1,7 +1,7 @@
 ;;; env.el --- functions to manipulate environment variables
 
 ;; Copyright (C) 1991, 1994, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: processes, unix
@@ -203,7 +203,7 @@ in the environment list of the selected frame."
 					   (frame-parameters frame))))))
     (if (and enable-multibyte-characters value)
 	(setq value (decode-coding-string value locale-coding-system)))
-    (when (interactive-p)
+    (when (called-interactively-p 'interactive)
       (message "%s" (if value value "Not set")))
     value))
 

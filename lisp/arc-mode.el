@@ -1,10 +1,10 @@
 ;;; arc-mode.el --- simple editing of archives
 
-;; Copyright (C) 1995, 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1995, 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006,
+;;   2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Morten Welinder <terra@gnu.org>
-;; Keywords: archives msdog editing major-mode
+;; Keywords: files archives msdog editing major-mode
 ;; Favourite-brand-of-beer: None, I hate beer.
 
 ;; This file is part of GNU Emacs.
@@ -638,7 +638,7 @@ archive.
   ;; mode on and off.  You can corrupt things that way.
   (if (zerop (buffer-size))
       ;; At present we cannot create archives from scratch
-      (funcall default-major-mode)
+      (funcall (or (default-value 'major-mode) 'fundamental-mode))
     (if (and (not force) archive-files) nil
       (let* ((type (archive-find-type))
 	     (typename (capitalize (symbol-name type))))
@@ -698,7 +698,7 @@ archive.
 	    (or file-name-coding-system
 		default-file-name-coding-system
 		locale-coding-system))
-      (if default-enable-multibyte-characters
+      (if (default-value 'enable-multibyte-characters)
 	  (set-buffer-multibyte 'to))
       (archive-summarize nil)
       (setq buffer-read-only t))))
@@ -716,7 +716,7 @@ archive.
   ;; The funny [] here make it unlikely that the .elc file will be treated
   ;; as an archive by other software.
   (let (case-fold-search)
-    (cond ((looking-at "[P]K\003\004") 'zip)
+    (cond ((looking-at "\\(PK00\\)?[P]K\003\004") 'zip)
 	  ((looking-at "..-l[hz][0-9ds]-") 'lzh)
 	  ((looking-at "....................[\334]\247\304\375") 'zoo)
 	  ((and (looking-at "\C-z")	; signature too simple, IMHO
@@ -818,15 +818,27 @@ If FNAME is something our underlying filesystem can't grok, or if another
 file by that name already exists in DIR, a unique new name is generated
 using `make-temp-file', and the generated name is returned."
   (let ((fullname (expand-file-name fname dir))
-	(alien (string-match file-name-invalid-regexp fname)))
-    (if (or alien (file-exists-p fullname))
-	(make-temp-file
+	(alien (string-match file-name-invalid-regexp fname))
+	(tmpfile
 	 (expand-file-name
 	  (if (if (fboundp 'msdos-long-file-names)
 		  (not (msdos-long-file-names)))
 	      "am"
 	    "arc-mode.")
-	  dir))
+	  dir)))
+    (if (or alien (file-exists-p fullname))
+	(progn
+	  ;; Maked sure all the leading directories in
+	  ;; archive-local-name exist under archive-tmpdir, so that
+	  ;; the directory structure recorded in the archive is
+	  ;; reconstructed in the temporary directory.
+	  (make-directory (file-name-directory tmpfile) t)
+	  (make-temp-file tmpfile))
+      ;; Maked sure all the leading directories in `fullname' exist
+      ;; under archive-tmpdir.  This is necessary for nested archives
+      ;; (`archive-extract' sets `archive-remote' to t in case
+      ;; an archive occurs inside another archive).
+      (make-directory (file-name-directory fullname) t)
       fullname)))
 
 (defun archive-maybe-copy (archive)
@@ -843,11 +855,6 @@ using `make-temp-file', and the generated name is returned."
 		   archive)))
 	  (setq archive-local-name
 		(archive-unique-fname archive-name archive-tmpdir))
-	  ;; Maked sure all the leading directories in
-	  ;; archive-local-name exist under archive-tmpdir, so that
-	  ;; the directory structure recorded in the archive is
-	  ;; reconstructed in the temporary directory.
-	  (make-directory (file-name-directory archive-local-name) t)
 	  (save-restriction
 	    (widen)
 	    (write-region start (point-max) archive-local-name nil 'nomessage))
@@ -1780,9 +1787,16 @@ This doesn't recover lost files, it just undoes changes in the buffer itself."
     (apply 'vector (nreverse files))))
 
 (defun archive-zip-extract (archive name)
-  (if (equal (car archive-zip-extract) "pkzip")
+  (if (member-ignore-case (car archive-zip-extract) '("pkunzip" "pkzip"))
       (archive-*-extract archive name archive-zip-extract)
-    (archive-extract-by-stdout archive name archive-zip-extract)))
+    (archive-extract-by-stdout
+     archive
+     ;; unzip expands wildcards in NAME, so we need to quote it.
+     ;; FIXME: Does pkunzip need similar treatment?
+     (if (equal (car archive-zip-extract) "unzip")
+	 (shell-quote-argument name)
+       name)
+     archive-zip-extract)))
 
 (defun archive-zip-write-file-member (archive descr)
   (archive-*-write-file-member
@@ -1902,7 +1916,7 @@ This doesn't recover lost files, it just undoes changes in the buffer itself."
                                  ;; Ratio ; Date'
                                  " +\\([0-9%]+\\) +\\([-0-9]+\\)"
                                  ;; Time ; Attr.
-                                 " +\\([0-9:]+\\) +......"
+                                 " +\\([0-9:]+\\) +[^ \n]\\{6,10\\}"
                                  ;; CRC; Meth ; Var.
                                  " +[0-9A-F]+ +[^ \n]+ +[0-9.]+\n"))
         (goto-char (match-end 0))

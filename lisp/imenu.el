@@ -1,7 +1,7 @@
 ;;; imenu.el --- framework for mode-specific buffer indexes
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Ake Stenhoff <etxaksf@aom.ericsson.se>
 ;;         Lars Lindberg <lli@sypro.cap.se>
@@ -198,6 +198,7 @@ For example, see the value of `fortran-imenu-generic-expression' used by
 `fortran-mode' with `imenu-syntax-alist' set locally to give the
 characters which normally have \"symbol\" syntax \"word\" syntax
 during matching.")
+;;;###autoload(put 'imenu-generic-expression 'risky-local-variable t)
 
 ;;;###autoload
 (make-variable-buffer-local 'imenu-generic-expression)
@@ -297,9 +298,9 @@ The function in this variable is called when selecting a normal index-item.")
 ;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; FIXME: This is the only imenu-example-* definition that's actually used,
-;; and it seems to only be used by cperl-mode.el.  We should just move it to
-;; cperl-mode.el and remove the rest.
+;; FIXME: This was the only imenu-example-* definition actually used,
+;; by cperl-mode.el.  Now cperl-mode has its own copy, so these can
+;; all be removed.
 (defun imenu-example--name-and-position ()
   "Return the current/previous sexp and its (beginning) location.
 Don't move point."
@@ -310,6 +311,8 @@ Don't move point."
 	  (end (progn (forward-sexp) (point))))
       (cons (buffer-substring beg end)
 	    beg))))
+(make-obsolete 'imenu-example--name-and-position
+	       "use your own function instead." "23.2")
 
 ;;;
 ;;; Lisp
@@ -328,6 +331,7 @@ Don't move point."
 		     (end (progn (forward-sexp -1) (point))))
 		 (buffer-substring beg end)))
 	   (error nil)))))
+(make-obsolete 'imenu-example--lisp-extract-index-name "your own" "23.2")
 
 (defun imenu-example--create-lisp-index ()
   ;; Example of a candidate for `imenu-create-index-function'.
@@ -379,6 +383,7 @@ Don't move point."
 	 (push (cons "Syntax-unknown" index-unknown-alist)
 	       index-alist))
     index-alist))
+(make-obsolete 'imenu-example--create-lisp-index "your own" "23.2")
 
 ;; Regular expression to find C functions
 (defvar imenu-example--function-name-regexp-c
@@ -410,7 +415,7 @@ Don't move point."
 	    (push (imenu-example--name-and-position) index-alist))))
     (imenu-progress-message prev-pos 100)
     (nreverse index-alist)))
-
+(make-obsolete 'imenu-example--create-c-index "your own" "23.2")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -440,6 +445,7 @@ if it is a sub-alist.
 
 There is one simple element with negative POSITION; selecting that
 element recalculates the buffer's index alist.")
+;;;###autoload(put 'imenu--index-alist 'risky-local-variable t)
 
 (make-variable-buffer-local 'imenu--index-alist)
 
@@ -590,7 +596,7 @@ See `imenu--index-alist' for the format of the index alist."
 ;;; Find all markers in alist and makes
 ;;; them point nowhere.
 ;;; The top-level call uses nil as the argument;
-;;; non-nil arguments are in recursivecalls.
+;;; non-nil arguments are in recursive calls.
 (defvar imenu--cleanup-seen)
 
 (defun imenu--cleanup (&optional alist)
@@ -678,12 +684,15 @@ The alternate method, which is the one most often used, is to call
   ;; in these major modes.  But save that change for later.
   (cond ((and imenu-prev-index-position-function
 	      imenu-extract-index-name-function)
-	 (let ((index-alist '())
+	 (let ((index-alist '()) (pos (point))
 	       prev-pos name)
 	   (goto-char (point-max))
 	   (imenu-progress-message prev-pos 0 t)
 	   ;; Search for the function
 	   (while (funcall imenu-prev-index-position-function)
+             (when (= pos (point))
+               (error "Infinite loop at %s:%d: imenu-prev-index-position-function does not move point" (buffer-name) pos))
+             (setq pos (point))
 	     (imenu-progress-message prev-pos nil t)
 	     (save-excursion
 	       (setq name (funcall imenu-extract-index-name-function)))

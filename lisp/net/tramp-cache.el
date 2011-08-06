@@ -1,7 +1,7 @@
 ;;; tramp-cache.el --- file information caching for Tramp
 
-;; Copyright (C) 2000, 2005, 2006, 2007, 2008,
-;;   2009 Free Software Foundation, Inc.
+;; Copyright (C) 2000, 2005, 2006, 2007, 2008, 2009,
+;;   2010 Free Software Foundation, Inc.
 
 ;; Author: Daniel Pittman <daniel@inanna.danann.net>
 ;;         Michael Albinus <michael.albinus@gmx.de>
@@ -62,12 +62,20 @@
   (autoload 'tramp-file-name-host "tramp")
   (autoload 'tramp-file-name-localname "tramp")
   (autoload 'tramp-run-real-handler "tramp")
+  (autoload 'tramp-time-less-p "tramp")
   (autoload 'time-stamp-string "time-stamp"))
 
 ;;; -- Cache --
 
 (defvar tramp-cache-data (make-hash-table :test 'equal)
   "Hash table for remote files properties.")
+
+(defvar tramp-cache-inhibit-cache nil
+  "Inhibit cache read access, when `t'.
+`nil' means to accept cache entries unconditionally.  If the
+value is a timestamp (as returned by `current-time'), cache
+entries are not used when they have been written before this
+time.")
 
 (defcustom tramp-persistency-file-name
   (cond
@@ -103,9 +111,21 @@ Returns DEFAULT if not set."
   (let* ((hash (or (gethash vec tramp-cache-data)
 		   (puthash vec (make-hash-table :test 'equal)
 			    tramp-cache-data)))
-	 (value (if (hash-table-p hash)
-		    (gethash property hash default)
-		  default)))
+	 (value (when (hash-table-p hash) (gethash property hash))))
+    (if
+	;; We take the value only if there is any, and
+	;; `tramp-cache-inhibit-cache' indicates that it is still
+	;; valid.  Otherwise, DEFAULT is set.
+	(and (consp value)
+	     (or (null tramp-cache-inhibit-cache)
+		 (and (consp tramp-cache-inhibit-cache)
+		      (tramp-time-less-p
+		       tramp-cache-inhibit-cache (car value)))))
+	(setq value (cdr value))
+      (setq value default))
+
+    (if (consp tramp-cache-inhibit-cache)
+	(tramp-message vec 1 "%s %s %s" file property value))
     (tramp-message vec 8 "%s %s %s" file property value)
     value))
 
@@ -118,7 +138,8 @@ Returns VALUE."
   (let ((hash (or (gethash vec tramp-cache-data)
 		  (puthash vec (make-hash-table :test 'equal)
 			   tramp-cache-data))))
-    (puthash property value hash)
+    ;; We put the timestamp there.
+    (puthash property (cons (current-time) value) hash)
     (tramp-message vec 8 "%s %s %s" file property value)
     value))
 
@@ -182,8 +203,8 @@ If the value is not set for the connection, returns DEFAULT."
     (aset key 3 nil))
   (let* ((hash (gethash key tramp-cache-data))
 	 (value (if (hash-table-p hash)
-		   (gethash property hash default)
-		 default)))
+		    (gethash property hash default)
+		  default)))
     (tramp-message key 7 "%s %s" property value)
     value))
 
@@ -217,6 +238,15 @@ KEY identifies the connection, it is either a process or a vector."
   (when (vectorp key)
     (setq key (copy-sequence key))
     (aset key 3 nil))
+  (tramp-message
+   key 7 "%s %s" key
+   (let ((hash (gethash key tramp-cache-data))
+	 properties)
+     (if (hash-table-p hash)
+	 (maphash
+	  (lambda (x y) (add-to-list 'properties x 'append))
+	  (gethash key tramp-cache-data)))
+     properties))
   (setq tramp-cache-data-changed t)
   (remhash key tramp-cache-data))
 
@@ -265,7 +295,8 @@ KEY identifies the connection, it is either a process or a vector."
 	      (if (and (vectorp key) (not (tramp-file-name-localname key)))
 		  (progn
 		    (remhash "process-name" value)
-		    (remhash "process-buffer" value))
+		    (remhash "process-buffer" value)
+		    (remhash "first-password-request" value))
 		(remhash key cache)))
 	   cache)
 	  ;; Dump it.

@@ -1,6 +1,6 @@
 /* Window definitions for GNU Emacs.
    Copyright (C) 1985, 1986, 1993, 1995, 1997, 1998, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -400,18 +400,32 @@ struct window
   (FRAME_INTERNAL_BORDER_WIDTH (WINDOW_XFRAME (W)) \
    + WINDOW_RIGHT_EDGE_COL (W) * WINDOW_FRAME_COLUMN_WIDTH (W))
 
+/* 1 if W is a menu bar window.  */
+
+#define WINDOW_MENU_BAR_P(W) \
+  (WINDOWP (WINDOW_XFRAME (W)->menu_bar_window) \
+   && (W) == XWINDOW (WINDOW_XFRAME (W)->menu_bar_window))
+
+/* 1 if W is a tool bar window.  */
+
+#define WINDOW_TOOL_BAR_P(W) \
+  (WINDOWP (WINDOW_XFRAME (W)->tool_bar_window) \
+   && (W) == XWINDOW (WINDOW_XFRAME (W)->tool_bar_window))
+
 /* Return the frame y-position at which window W starts.
    This includes a header line, if any.  */
 
 #define WINDOW_TOP_EDGE_Y(W) \
-  (FRAME_INTERNAL_BORDER_WIDTH (WINDOW_XFRAME (W)) \
+  (((WINDOW_MENU_BAR_P (W) || WINDOW_TOOL_BAR_P (W)) \
+    ? 0 : FRAME_INTERNAL_BORDER_WIDTH (WINDOW_XFRAME (W))) \
    + WINDOW_TOP_EDGE_LINE (W) * WINDOW_FRAME_LINE_HEIGHT (W))
 
 /* Return the frame y-position before which window W ends.
    This includes a mode line, if any.  */
 
 #define WINDOW_BOTTOM_EDGE_Y(W) \
-  (FRAME_INTERNAL_BORDER_WIDTH (WINDOW_XFRAME (W)) \
+  (((WINDOW_MENU_BAR_P (W) || WINDOW_TOOL_BAR_P (W)) \
+    ? 0 : FRAME_INTERNAL_BORDER_WIDTH (WINDOW_XFRAME (W))) \
    + WINDOW_BOTTOM_EDGE_LINE (W) * WINDOW_FRAME_LINE_HEIGHT (W))
 
 

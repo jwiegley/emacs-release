@@ -1,7 +1,7 @@
 ;;; rmailout.el --- "RMAIL" mail reader for Emacs: output message to a file
 
 ;; Copyright (C) 1985, 1987, 1993, 1994, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail
@@ -46,6 +46,7 @@ a file name as a string."
 			       (string :tag "File Name")
 			       sexp)))
   :group 'rmail-output)
+;;;###autoload(put 'rmail-output-file-alist 'risky-local-variable t)
 
 (defcustom rmail-fields-not-to-output nil
   "Regexp describing fields to exclude when outputting a message to a file.

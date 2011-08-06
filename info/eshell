@@ -4,7 +4,7 @@ eshell.texi.
 This manual is for Eshell, the Emacs shell.
 
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009 Free Software Foundation, Inc.
+2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -38,7 +38,7 @@ handling the sort of tasks accomplished by those tools.
    This manual is for Eshell, the Emacs shell.
 
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009 Free Software Foundation, Inc.
+2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -330,6 +330,17 @@ Eshell knows a few built-in variables:
      This variable always contains the previous working directory (the
      current working directory from before the last `cd' command).
 
+`$_'
+     It refers to the last argument of the last command.
+
+`$$'
+     This is the result of the last command.  In case of an external
+     command, it is `t' or `nil'.
+
+`$?'
+     This variable contains the exit code of the last command (0 or 1
+     for Lisp functions, based on successful completion).
+
 
 
 File: eshell,  Node: Scripts,  Next: Built-ins,  Prev: History,  Up: Commands
@@ -343,7 +354,17 @@ File: eshell,  Node: Built-ins,  Prev: Scripts,  Up: Commands
 3.6 Built-in commands
 =====================
 
-Here is a list of built-in commands that Eshell knows about:
+Several commands are built-in in Eshell.  In order to call the external
+variant of a built-in command `foo', you could call `*foo'.  Usually,
+this should not be necessary.  You can check what will be applied by
+the `which' command:
+
+     ~ $ which ls
+     eshell/ls is a compiled Lisp function in `em-ls.el'
+     ~ $ which *ls
+     /bin/ls
+
+   Some of the built-in commands have a special behaviour in Eshell:
 
 `cd'
      This command changes the current working directory.  Usually, it is
@@ -364,6 +385,35 @@ Here is a list of built-in commands that Eshell knows about:
      that directory.
 
      With `cd -42', you can access the directory stack by number.
+
+`history'
+     The `history' command shows all commands kept in the history ring
+     as numbered list.  If the history ring contains
+     `eshell-history-size' commands, those numbers change after every
+     command invocation, therefore the `history' command shall be
+     applied before using the expansion mechanism with history numbers.
+
+     The n-th entry of the history ring can be applied with the `!n'
+     command.  If `n' is negative, the entry is counted from the end of
+     the history ring.
+
+     `!foo' expands to the last command beginning with `foo', and
+     `!?foo' to the last command containing `foo'.  The n-th argument
+     of the last command beginning with `foo' is accessible by `!foo:n'.
+
+`su'
+`sudo'
+     `su' and `sudo' work as expected: they apply the following
+     commands (`su'), or the command being an argument (`sudo') under
+     the permissions of somebody else.
+
+     This does not work only on the local host, but even on a remote
+     one, when `default-directory' is a remote file name.  The necessary
+     proxy configuration of Tramp is performed automatically, *note
+     Multi-hops: (tramp)Multi-hops.  Example:
+
+          ~ $ cd /ssh:otherhost:/etc
+          /ssh:user@otherhost:/etc $ sudo find-file shadow
 
 
 
@@ -1411,9 +1461,15 @@ Function and Variable Index
  [index ]
 * Menu:
 
+* $$:                                    History.              (line 19)
 * $+:                                    History.              (line  9)
 * $-:                                    History.              (line 12)
-* cd:                                    Built-ins.            (line  9)
+* $?:                                    History.              (line 23)
+* $_:                                    History.              (line 16)
+* cd:                                    Built-ins.            (line 19)
+* history:                               Built-ins.            (line 39)
+* su:                                    Built-ins.            (line 54)
+* sudo:                                  Built-ins.            (line 55)
 
 
 File: eshell,  Node: Key Index,  Prev: Function and Variable Index,  Up: Top
@@ -1426,44 +1482,44 @@ Key Index
 
 
 Tag Table:
-Node: Top1023
-Node: What is Eshell?2724
-Ref: What is Eshell?-Footnote-15373
-Ref: What is Eshell?-Footnote-25463
-Node: Contributors to Eshell5656
-Node: Command basics6810
-Node: Commands verbs7366
-Node: Command arguments9130
-Node: Commands10381
-Node: Invocation10764
-Ref: Invocation-Footnote-111390
-Node: Completion11483
-Node: Aliases11599
-Node: History11706
-Node: Scripts12067
-Node: Built-ins12173
-Node: Arguments13042
-Node: The Parser13233
-Node: Variables13333
-Node: Substitution13452
-Node: Globbing13575
-Node: Predicates13691
-Node: Input/Output13790
-Node: Process control13910
-Node: Extension modules14044
-Node: Writing a module14349
-Node: Module testing14480
-Node: Directory handling14634
-Node: Key rebinding14793
-Node: Smart scrolling14943
-Node: Terminal emulation15097
-Node: Built-in UNIX commands15266
-Node: Extras and Goodies15419
-Node: Bugs and ideas15564
-Node: Known problems16159
-Node: GNU Free Documentation License31308
-Node: Concept Index56485
-Node: Function and Variable Index57665
-Node: Key Index58065
+Node: Top1029
+Node: What is Eshell?2736
+Ref: What is Eshell?-Footnote-15385
+Ref: What is Eshell?-Footnote-25475
+Node: Contributors to Eshell5668
+Node: Command basics6822
+Node: Commands verbs7378
+Node: Command arguments9142
+Node: Commands10393
+Node: Invocation10776
+Ref: Invocation-Footnote-111402
+Node: Completion11495
+Node: Aliases11611
+Node: History11718
+Node: Scripts12385
+Node: Built-ins12491
+Node: Arguments14967
+Node: The Parser15158
+Node: Variables15258
+Node: Substitution15377
+Node: Globbing15500
+Node: Predicates15616
+Node: Input/Output15715
+Node: Process control15835
+Node: Extension modules15969
+Node: Writing a module16274
+Node: Module testing16405
+Node: Directory handling16559
+Node: Key rebinding16718
+Node: Smart scrolling16868
+Node: Terminal emulation17022
+Node: Built-in UNIX commands17191
+Node: Extras and Goodies17344
+Node: Bugs and ideas17489
+Node: Known problems18084
+Node: GNU Free Documentation License33233
+Node: Concept Index58410
+Node: Function and Variable Index59590
+Node: Key Index60428
 
 End Tag Table

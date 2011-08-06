@@ -2,11 +2,11 @@ This is ../../info/emacs, produced by makeinfo version 4.11 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.1.
+updated for Emacs version 23.2.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,6 +25,263 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Emacs: (emacs).	The extensible self-documenting text editor.
 END-INFO-DIR-ENTRY
+
+
+File: emacs,  Node: Other GDB-UI Buffers,  Next: Watch Expressions,  Prev: Stack Buffer,  Up: GDB Graphical Interface
+
+31.6.5.5 Other Buffers
+......................
+
+Input/Output Buffer
+     If the variable `gdb-use-separate-io-buffer' is non-`nil', the
+     program being debugged takes its input and displays its output
+     here.  Otherwise it uses the GUD buffer for that.  To toggle
+     whether GUD mode uses this buffer, do `M-x
+     gdb-use-separate-io-buffer'.  This takes effect when you next
+     restart the program you are debugging.
+
+     The history and replay commands from Shell mode are available here,
+     as are the commands to send signals to the debugged program.
+     *Note Shell Mode::.
+
+Locals Buffer
+     The locals buffer displays the values of local variables of the
+     current frame for simple data types (*note Frame Info: (gdb)Frame
+     Info.).  Press <RET> or click `Mouse-2' on the value if you want
+     to edit it.
+
+     Arrays and structures display their type only.  With GDB 6.4 or
+     later, move point to their name and press <RET>, or alternatively
+     click `Mouse-2' there, to examine their values.  With earlier
+     versions of GDB, use `Mouse-2' or <RET> on the type description
+     (`[struct/union]' or `[array]').  *Note Watch Expressions::.
+
+Registers Buffer
+     The registers buffer displays the values held by the registers
+     (*note Registers: (gdb)Registers.).  Press <RET> or click
+     `Mouse-2' on a register if you want to edit its value.  With GDB
+     6.4 or later, recently changed register values display with
+     `font-lock-warning-face'.  With earlier versions of GDB, you can
+     press <SPC> to toggle the display of floating point registers
+     (`toggle-gdb-all-registers').
+
+Assembler Buffer
+     The assembler buffer displays the current frame as machine code.
+     An arrow points to the current instruction, and you can set and
+     remove breakpoints as in a source buffer.  Breakpoint icons also
+     appear in the fringe or margin.
+
+Threads Buffer
+     The threads buffer displays a summary of all threads currently in
+     your program (*note Threads: (gdb)Threads.).  Move point to any
+     thread in the list and press <RET> to select it
+     (`gdb-threads-select') and display the associated source in the
+     primary source buffer.  Alternatively, click `Mouse-2' on a thread
+     to select it.  If the locals buffer is visible, its contents
+     update to display the variables that are local in the new thread.
+
+     When there is more than one main thread and the threads buffer is
+     present, Emacs displays the selected thread number in the mode
+     line of many of the GDB-UI Buffers.
+
+Memory Buffer
+     The memory buffer lets you examine sections of program memory
+     (*note Memory: (gdb)Memory.).  Click `Mouse-1' on the appropriate
+     part of the header line to change the starting address or number
+     of data items that the buffer displays.  Alternatively, use `S' or
+     `N' respectively.  Click `Mouse-3' on the header line to select
+     the display format or unit size for these data items.
+
+   When `gdb-many-windows' is non-`nil', the threads buffer shares its
+window with the breakpoints buffer, and the locals buffer with the
+registers buffer.  To switch from one to the other click with `Mouse-1'
+on the relevant button in the header line.
+
+
+File: emacs,  Node: Watch Expressions,  Next: Reverse Debugging,  Prev: Other GDB-UI Buffers,  Up: GDB Graphical Interface
+
+31.6.5.6 Watch Expressions
+..........................
+
+If you want to see how a variable changes each time your program stops,
+move point into the variable name and click on the watch icon in the
+tool bar (`gud-watch') or type `C-x C-a C-w'.  If you specify a prefix
+argument, you can enter the variable name in the minibuffer.
+
+   Each watch expression is displayed in the speedbar.  Complex data
+types, such as arrays, structures and unions are represented in a tree
+format.  Leaves and simple data types show the name of the expression
+and its value and, when the speedbar frame is selected, display the
+type as a tooltip.  Higher levels show the name, type and address value
+for pointers and just the name and type otherwise.  Root expressions
+also display the frame address as a tooltip to help identify the frame
+in which they were defined.
+
+   To expand or contract a complex data type, click `Mouse-2' or press
+<SPC> on the tag to the left of the expression.  Emacs asks for
+confirmation before expanding the expression if its number of immediate
+children exceeds the value of the variable `gdb-max-children'.
+
+   To delete a complex watch expression, move point to the root
+expression in the speedbar and type `D' (`gdb-var-delete').
+
+   To edit a variable with a simple data type, or a simple element of a
+complex data type, move point there in the speedbar and type <RET>
+(`gdb-edit-value').  Or you can click `Mouse-2' on a value to edit it.
+Either way, this reads the new value using the minibuffer.
+
+   If you set the variable `gdb-show-changed-values' to non-`nil' (the
+default value), Emacs uses `font-lock-warning-face' to highlight values
+that have recently changed and `shadow' face to make variables which
+have gone out of scope less noticeable.  When a variable goes out of
+scope you can't edit its value.
+
+   If the variable `gdb-delete-out-of-scope' is non-`nil' (the default
+value), Emacs automatically deletes watch expressions which go out of
+scope.  Sometimes, when re-entering the same function, it may be useful
+to set this value to `nil' so that you don't need to recreate the watch
+expression.
+
+   If the variable `gdb-use-colon-colon-notation' is non-`nil', Emacs
+uses the `FUNCTION::VARIABLE' format.  This allows the user to display
+watch expressions which share the same variable name.  The default
+value is `nil'.
+
+   To automatically raise the speedbar every time the display of watch
+expressions updates, set `gdb-speedbar-auto-raise' to non-`nil'.  This
+can be useful if you are debugging with a full screen Emacs frame.
+
+
+File: emacs,  Node: Reverse Debugging,  Prev: Watch Expressions,  Up: GDB Graphical Interface
+
+31.6.5.7 Reverse Debugging
+..........................
+
+The GDB tool bar shares many buttons with the other GUD debuggers for
+tasks like stepping and printing expressions.  It also has a further
+set of buttons that allow reverse debugging (*note Process Record and
+Replay: (gdb)Process Record and Replay.).  This is useful when it takes
+a long time to reproduce the conditions where your program fails or for
+transient problems, like race conditions in multi-threaded programs,
+where a failure might otherwise be hard to reproduce.
+
+   To use reverse debugging, set a breakpoint slightly before the
+location of interest and run your program to that point.  Enable
+process recording by clicking on the record button.  At this point, a
+new set of buttons appear.  These buttons allow program execution in
+the reverse direction.  Run your program over the code where the
+problem occurs, and then use the new set of buttons to retrace your
+steps, examine values, and analyze the problem.  When analysis is
+complete, turn off process recording by clicking on the record button
+again.
+
+
+File: emacs,  Node: Executing Lisp,  Next: Lisp Libraries,  Prev: Debuggers,  Up: Building
+
+31.7 Executing Lisp Expressions
+===============================
+
+Emacs has several different major modes for Lisp and Scheme.  They are
+the same in terms of editing commands, but differ in the commands for
+executing Lisp expressions.  Each mode has its own purpose.
+
+Emacs-Lisp mode
+     The mode for editing source files of programs to run in Emacs Lisp.
+     This mode defines `C-M-x' to evaluate the current defun.  *Note
+     Lisp Libraries::.
+
+Lisp Interaction mode
+     The mode for an interactive session with Emacs Lisp.  It defines
+     `C-j' to evaluate the sexp before point and insert its value in the
+     buffer.  *Note Lisp Interaction::.
+
+Lisp mode
+     The mode for editing source files of programs that run in Lisps
+     other than Emacs Lisp.  This mode defines `C-M-x' to send the
+     current defun to an inferior Lisp process.  *Note External Lisp::.
+
+Inferior Lisp mode
+     The mode for an interactive session with an inferior Lisp process.
+     This mode combines the special features of Lisp mode and Shell mode
+     (*note Shell Mode::).
+
+Scheme mode
+     Like Lisp mode but for Scheme programs.
+
+Inferior Scheme mode
+     The mode for an interactive session with an inferior Scheme
+     process.
+
+   Most editing commands for working with Lisp programs are in fact
+available globally.  *Note Programs::.
+
+
+File: emacs,  Node: Lisp Libraries,  Next: Lisp Eval,  Prev: Executing Lisp,  Up: Building
+
+31.8 Libraries of Lisp Code for Emacs
+=====================================
+
+Lisp code for Emacs editing commands is stored in files whose names
+conventionally end in `.el'.  This ending tells Emacs to edit them in
+Emacs-Lisp mode (*note Executing Lisp::).
+
+   Emacs Lisp code can be compiled into byte-code, which loads faster,
+takes up less space, and executes faster.  *Note Byte Compilation:
+(elisp)Byte Compilation.  By convention, the compiled code for a
+library goes in a separate file whose name ends in `.elc'.  Thus, the
+compiled code for `foo.el' goes in `foo.elc'.
+
+   To execute a file of Emacs Lisp code, use `M-x load-file'.  This
+command reads a file name using the minibuffer and then executes the
+contents of that file as Lisp code.  It is not necessary to visit the
+file first; in any case, this command reads the file as found on disk,
+not text in an Emacs buffer.
+
+   Once a file of Lisp code is installed in the Emacs Lisp library
+directories, users can load it using `M-x load-library'.  Programs can
+load it by calling `load', a more primitive function that is similar
+but accepts some additional arguments.
+
+   `M-x load-library' differs from `M-x load-file' in that it searches
+a sequence of directories and tries three file names in each directory.
+Suppose your argument is LIB; the three names are `LIB.elc', `LIB.el',
+and lastly just `LIB'.  If `LIB.elc' exists, it is by convention the
+result of compiling `LIB.el'; it is better to load the compiled file,
+since it will load and run faster.
+
+   If `load-library' finds that `LIB.el' is newer than `LIB.elc' file,
+it issues a warning, because it's likely that somebody made changes to
+the `.el' file and forgot to recompile it.  Nonetheless, it loads
+`LIB.elc'.  This is because people often leave unfinished edits the
+source file, and don't recompile it until they think it is ready to use.
+
+   The variable `load-path' specifies the sequence of directories
+searched by `M-x load-library'.  Its value should be a list of strings
+that are directory names; in addition, `nil' in this list stands for
+the current default directory.  (Generally, it is not a good idea to
+put `nil' in the list; if you find yourself wishing that `nil' were in
+the list, most likely what you really want is to do `M-x load-file'
+this once.)
+
+   The default value of `load-path' is a list of directories where the
+Lisp code for Emacs itself is stored.  If you have libraries of your
+own, put them in a single directory and add that directory to
+`load-path', by adding a line like this to your init file (*note Init
+File::):
+
+     (add-to-list 'load-path "/path/to/lisp/libraries")
+
+   Some commands are "autoloaded": when you run them, Emacs will
+automatically load the associated library first.  For instance, the
+`compile' and `compilation-mode' commands (*note Compilation::) are
+autoloaded; if you call either command, Emacs automatically loads the
+`compile' library.  In contrast, the command `recompile' is not
+autoloaded, so it is unavailable until you load the `compile' library.
+
+   By default, Emacs refuses to load compiled Lisp files which were
+compiled with XEmacs, a modified versions of Emacs--they can cause
+Emacs to crash.  Set the variable `load-dangerous-libraries' to `t' if
+you want to try loading them.
 
 
 File: emacs,  Node: Lisp Eval,  Next: Lisp Interaction,  Prev: Lisp Libraries,  Up: Building
@@ -207,6 +464,7 @@ This chapter describes Emacs features for maintaining large programs.
 * Change Log::	        Maintaining a change history for your program.
 * Tags::	        Go directly to any function in your program in one
 			  command.  Tags remembers which file it is in.
+* EDE::                 An integrated development environment for Emacs.
 
 * Emerge::              A convenient way of merging two versions of a program.
 
@@ -390,7 +648,7 @@ in" or "commit" the file; this records the changes in the repository,
 along with a log entry for those changes.
 
    A copy of a file stored in a repository is called a "revision".  The
-history of a file is a sequence of revisions.  Each revisions is named
+history of a file is a sequence of revisions.  Each revision is named
 by a "revision ID".  The format of the revision ID depends on the
 version control system; in the simplest case, it is just an integer.
 
@@ -563,9 +821,10 @@ buffer, and some files in it are marked, the VC fileset consists of the
 marked files (*note VC Directory Mode::).
 
    The principal VC command is an all-purpose command, `C-x v v'
-(`vc-next-action'), that performs either locking, merging or a check-in
-(depending on the situation) on the current VC fileset.  You can use
-`C-x v v' in a file-visiting buffer or in a VC Directory buffer.
+(`vc-next-action'), that performs either registration, locking, merging
+or a check-in (depending on the situation) on the current VC fileset.
+You can use `C-x v v' in a file-visiting buffer or in a VC Directory
+buffer.
 
 `C-x v v'
      Perform the appropriate next version control operation on the VC
@@ -617,35 +876,43 @@ to `:' as soon as you save any changes (*note VC Mode Line::).
 
    Here is what `C-x v v' does when using a merging-based system:
 
-   * If the work file is the same as in the repository, it does nothing.
+   * If the work file is in a directory that is not controlled by any
+     version control system, prompt for a repository type.  Then,
+     create a version control repository of that type and register the
+     file with it.
+
+   * If the work file is in a directory that is controlled by a version
+     control system but not registered with it, register the file.
+
+   * If the work file is the same as in the repository, do nothing.
 
    * If you have not changed the work file, but some other user has
-     checked in changes to the repository, `C-x v v' merges those
-     changes into the work file.
+     checked in changes to the repository, merge those changes into the
+     work file.
 
-   * If you have made modifications to the work file, `C-x v v'
-     attempts to check in your changes.  To do this, Emacs first reads
-     the log entry for the new revision (*note Log Buffer::).  If some
-     other user has checked in changes to the repository since you last
-     checked it out, the checkin fails.  In that case, type `C-x v v'
-     again to merge those changes into your own work file; this puts
-     the work file into a "conflicted" state.  Type `C-x v v' to clear
-     the "conflicted" state; VC then regards the file as up-to-date and
+   * If you have made modifications to the work file, attempts to check
+     in your changes.  To do this, Emacs first reads the log entry for
+     the new revision (*note Log Buffer::).  If some other user has
+     checked in changes to the repository since you last checked it
+     out, the checkin fails.  In that case, type `C-x v v' again to
+     merge those changes into your own work file; this puts the work
+     file into a "conflicted" state.  Type `C-x v v' to clear the
+     "conflicted" state; VC then regards the file as up-to-date and
      modified, and you can try to check it in again.
 
      To pick up any recent changes from the repository _without_ trying
      to commit your own changes, type `C-x v m <RET>'.  *Note Merging::.
 
    These rules also apply when you use RCS in its "non-locking" mode,
-except that changes will not be automatically merged from the
-repository.  Nothing informs you if another user has checked in changes
-in the same file since you began editing it; when you check in your
-revision, his changes are removed (however, they remain in the
-repository and are thus not irrevocably lost).  Therefore, you must
-verify that the current revision is unchanged before checking in your
-changes.  In addition, locking is possible with RCS even in this mode:
-`C-x v v' with an unmodified file locks the file, just as it does with
-RCS in its normal locking mode (*note VC With A Locking VCS::).
+except that changes are not automatically merged from the repository.
+Nothing informs you if another user has checked in changes in the same
+file since you began editing it; when you check in your revision, his
+changes are removed (however, they remain in the repository and are
+thus not irrevocably lost).  Therefore, you must verify that the
+current revision is unchanged before checking in your changes.  In
+addition, locking is possible with RCS even in this mode: `C-x v v'
+with an unmodified file locks the file, just as it does with RCS in its
+normal locking mode (*note VC With A Locking VCS::).
 
 
 File: emacs,  Node: VC With A Locking VCS,  Next: Advanced C-x v v,  Prev: VC With A Merging VCS,  Up: Basic VC Editing
@@ -656,22 +923,20 @@ File: emacs,  Node: VC With A Locking VCS,  Next: Advanced C-x v v,  Prev: VC Wi
 Under a locking-based version control system (such as SCCS, and RCS in
 its default mode), `C-x v v' does the following:
 
-   * If the file is not locked, `C-x v v' locks it, and makes it
-     writable so that you can change it.
+   * If the file is not locked, lock it and make it writable, so that
+     you can change it.
 
-   * If the file is locked by you, and contains changes, `C-x v v'
-     checks in the changes.  In order to do this, it first reads the log
-     entry for the new revision.  *Note Log Buffer::.
+   * If the file is locked by you, and contains changes, check in the
+     changes.  In order to do this, Emacs first reads the log entry for
+     the new revision.  *Note Log Buffer::.
 
    * If the file is locked by you, but you have not changed it since you
-     locked it, `C-x v v' releases the lock and makes the file
-     read-only again.
+     locked it, release the lock and makes the file read-only again.
 
-   * If the file is locked by some other user, `C-x v v' asks you
-     whether you want to "steal the lock" from that user.  If you say
-     yes, the file becomes locked by you, but a message is sent to the
-     person who had formerly locked the file, to inform him of what has
-     happened.
+   * If the file is locked by some other user, ask whether you want to
+     "steal the lock" from that user.  If you say yes, the file becomes
+     locked by you, but a message is sent to the person who had formerly
+     locked the file, to inform him of what has happened.
 
    These rules also apply when you use CVS in locking mode, except that
 there is no such thing as stealing a lock.
@@ -772,21 +1037,24 @@ File: emacs,  Node: Old Revisions,  Next: Secondary VC Commands,  Prev: Basic VC
 One of the convenient features of version control is the ability to
 examine any revision of a file, or compare two revisions.
 
-`C-x v ~ REVISION <RET>'
-     Examine revision REVISION of the visited file, in a buffer of its
-     own.
+`C-x v ~'
+     Prompt for a revision of the current file, and visit it in a
+     buffer of its own (`vc-revision-other-window').
 
 `C-x v ='
-     Compare the buffer contents associated with the current fileset
-     with the working revision(s) from which you started editing.
+     Compare the files in the current fileset with the working
+     revision(s) you started from (`vc-diff').  With a prefix argument,
+     prompt for two revisions of the current fileset and compare them.
+     You can call this command from a Dired buffer (*note Dired::).
 
-`C-u C-x v = <RET> OLDVERS <RET> NEWVERS <RET>'
-     Compare the specified two repository revisions of the current
-     fileset.
+`C-x v D'
+     Compare the entire tree corresponding to the current fileset with
+     the tree you started from (`vc-root-diff').  With a prefix
+     argument, prompt for two revisions and compare their trees.
 
 `C-x v g'
      Display an annotated version of the file: for each line, show the
-     latest revision in which it was modified.
+     latest revision in which it was modified (`vc-annotate').
 
    To examine an old revision, visit the work file and type `C-x v ~
 REVISION <RET>' (`vc-revision-other-window').  Here, REVISION is either
@@ -795,12 +1063,11 @@ branch (*note Tags::).  This command puts the text of the old revision
 in a file named `FILENAME.~REVISION~', and visits it in its own buffer
 in a separate window.
 
-   `C-x v =' (`vc-diff') compares the current buffer contents of each
-file in the current VC fileset (saving them if necessary) with the
-repository revision from which you started editing.  Note that the
-latter may or may not be the latest revision of the file(s).  The diff
-is displayed in a special buffer in another window.  *Note Comparing
-Files::.
+   `C-x v =' (`vc-diff') compares each file in the current VC fileset
+(saving them if necessary) with the repository revision(s) from which
+you started editing.  Note that the latter may or may not be the latest
+revision of the file(s).  The diff is displayed in a special buffer in
+another window.  *Note Comparing Files::.
 
    To compare two arbitrary revisions of the current VC fileset, call
 `vc-diff' with a prefix argument: `C-u C-x v ='.  This prompts for two
@@ -812,6 +1079,12 @@ system is file-based (e.g. CVS) rather than changeset-based
 (Subversion, GNU Arch, git, Mercurial), supplying a revision ID for a
 multi-file fileset (as opposed to a symbolic tag name) is unlikely to
 return diffs that are connected in any meaningful way.
+
+   The command `C-x v D' (`vc-root-diff') is similar to `C-x v =', but
+it compares the entire tree associated with the current VC fileset with
+the tree you started with.  This means all the files controlled by the
+current version control repository, even those that are not part of the
+current VC fileset.
 
    If you invoke `C-x v =' or `C-u C-x v =' from a buffer that is
 neither visiting a version-controlled file nor a VC directory buffer,
@@ -910,11 +1183,11 @@ This section explains the secondary commands of VC.
 * Menu:
 
 * Registering::         Putting a file under version control.
-* VC Status::           Viewing the VC status of files.
+* VC Change Log::       Viewing the VC Change Log.
 * VC Undo::             Canceling changes before or after check-in.
 
 
-File: emacs,  Node: Registering,  Next: VC Status,  Up: Secondary VC Commands
+File: emacs,  Node: Registering,  Next: VC Change Log,  Up: Secondary VC Commands
 
 32.1.5.1 Registering a File for Version Control
 ...............................................
@@ -956,20 +1229,33 @@ comment to describe the purpose of this source file.  Reading the
 initial comment works like reading a log entry (*note Log Buffer::).
 
 
-File: emacs,  Node: VC Status,  Next: VC Undo,  Prev: Registering,  Up: Secondary VC Commands
+File: emacs,  Node: VC Change Log,  Next: VC Undo,  Prev: Registering,  Up: Secondary VC Commands
 
-32.1.5.2 VC Status Commands
-...........................
+32.1.5.2 VC Change Log
+......................
 
 `C-x v l'
-     Display revision control state and change history.
+     Display revision control state and change history (`vc-print-log').
 
-   To view the detailed revision control status and history of a file,
-type `C-x v l' (`vc-print-log').  This pops up a special buffer named
-`*vc-change-log*', in a new window, that displays the history of
-changes to the current file, including the text of the log entries.
-The point is centered at the revision of the file that is currently
-being visited.
+`C-x v L'
+     Display the change history for the current repository
+     (`vc-print-root-log').
+
+   The command `C-x v l' (`vc-print-log') displays a buffer named
+`*vc-change-log*' in a new window.  This buffer lists the changes to
+the current file, including the associated log entries.  (These are the
+log entries associated with the version control system, i.e. the ones
+you enter via the `*VC-Log*' buffer.  *Note Log Buffer::.)  Point is
+centered at the revision of the file currently being visited.  With a
+prefix argument, the command prompts for the revision to center on, and
+the maximum number of revisions to display.  You can call this command
+from a Dired buffer (*note Dired::).
+
+   Type `C-x v L' (`vc-print-root-log') to display a `*vc-change-log*'
+buffer showing the history of the version-controlled directory tree as
+a whole.  With a prefix argument, the command prompts for the maximum
+number of revisions to display.  RCS, SCCS, and CVS do not support this
+feature.
 
    In the `*vc-change-log*' buffer, you can use the following keys to
 move between the logs of revisions and of files, to view past
@@ -1023,8 +1309,16 @@ diffs:
      the revision indicated on the current line did when it was
      committed.
 
+   Because fetching many log entries can be slow, the `*vc-change-log*'
+buffer displays no more than 2000 revisions by default.  The variable
+`vc-log-show-limit' specifies this limit; if you set the value to zero,
+that removes the limit.  You can also increase the number of revisions
+shown in an existing `*vc-change-log*' buffer by clicking on the `Show
+2X entries' or `Show unlimited entries' buttons at the end of the
+buffer.  However, RCS, SCCS, and CVS do not support this feature.
+
 
-File: emacs,  Node: VC Undo,  Prev: VC Status,  Up: Secondary VC Commands
+File: emacs,  Node: VC Undo,  Prev: VC Change Log,  Up: Secondary VC Commands
 
 32.1.5.3 Undoing Version Control Actions
 ........................................
@@ -1185,9 +1479,12 @@ directory buffer will be used.
 
    `M-s a C-M-s' does an incremental search on the marked files.
 
-   Commands are also accessible from the VC-dir menu.  Note that some VC
-backends use the VC-dir menu to make available extra backend specific
-commands.
+   Commands are also accessible from the VC-dir menu.  Note that some
+VC backends use the VC-dir menu to make available extra,
+backend-specific, commands.  For example, Git and Bazaar allow you to
+manipulate "stashes" and "shelves".  (These provide a mechanism to
+temporarily store uncommitted changes somewhere out of the way, and
+bring them back at a later time.)
 
    Normal VC commands with the `C-x v' prefix work in VC directory
 buffers.  Some single-key shortcuts are available as well; `=', `+',
@@ -2178,7 +2475,7 @@ of the change log file.  Here is an example:
 Of course, you should substitute the proper years and copyright holder.
 
 
-File: emacs,  Node: Tags,  Next: Emerge,  Prev: Change Log,  Up: Maintaining
+File: emacs,  Node: Tags,  Next: EDE,  Prev: Change Log,  Up: Maintaining
 
 32.3 Tags Tables
 ================
@@ -2818,7 +3115,7 @@ with `M-x tags-apropos' by customizing the variable
 name in the buffer.  *Note Symbol Completion::.
 
 
-File: emacs,  Node: Emerge,  Prev: Tags,  Up: Maintaining
+File: emacs,  Node: Emerge,  Prev: EDE,  Up: Maintaining
 
 32.4 Merging Files with Emerge
 ==============================
@@ -3198,6 +3495,55 @@ doing other things with Emacs until Emerge is ready to accept commands.
 `emerge-startup-hook'.  *Note Hooks::.
 
 
+File: emacs,  Node: EDE,  Next: Emerge,  Prev: Tags,  Up: Maintaining
+
+32.5 Emacs Development Environment
+==================================
+
+EDE ("Emacs Development Environment") is a package that simplifies the
+task of creating, building, and debugging large programs with Emacs.
+It provides some of the features of an IDE, or "Integrated Development
+Environment", in Emacs.
+
+   This section provides a brief description of EDE usage.  For full
+details, see *note EDE: (ede)Top.
+
+   EDE is implemented as a global minor mode (*note Minor Modes::).  To
+enable it, type `M-x global-ede-mode' or click on the `Project Support
+(EDE)' item in the `Tools' menu.  You can also enable EDE each time you
+start Emacs, by adding the following line to your initialization file:
+
+     (global-ede-mode t)
+
+Activating EDE adds a menu named `Development' to the menu bar.  Many
+EDE commands, including the ones described below, can be invoked from
+this menu.
+
+   EDE organizes files into "projects", which correspond to directory
+trees.  The "project root" is the topmost directory of a project.  To
+define a new project, visit a file in the desired project root and type
+`M-x ede-new'.  This command prompts for a "project type", which refers
+to the underlying method that EDE will use to manage the project (*note
+EDE: (ede)Creating a Project.).  The most common project types are
+`Make', which uses Makefiles, and `Automake', which uses GNU Automake
+(*note Automake: (automake)Top.).  In both cases, EDE also creates a
+file named `Project.ede', which stores information about the project.
+
+   A project may contain one or more "targets".  A target can be an
+object file, executable program, or some other type of file, which is
+"built" from one or more of the files in the project.
+
+   To add a new "target" to a project, type `C-c . t' (`M-x
+ede-new-target').  This command also asks if you wish to "add" the
+current file to that target, which means that the target is to be built
+from that file.  After you have defined a target, you can add more
+files to it by typing `C-c . a' (`ede-add-file').
+
+   To build a target, type `C-c . c' (`ede-compile-target').  To build
+all the targets in the project, type `C-c . C' (`ede-compile-project').
+EDE uses the file types to guess how the target should be built.
+
+
 File: emacs,  Node: Abbrevs,  Next: Picture Mode,  Prev: Maintaining,  Up: Top
 
 33 Abbrevs
@@ -3491,13 +3837,13 @@ that, when executed, define the same abbrevs that you currently have.
 then reads the file, defining abbrevs according to the contents of the
 file.  The function `quietly-read-abbrev-file' is similar except that
 it does not display a message in the echo area; you cannot invoke it
-interactively, and it is used primarily in the `.emacs' file.  If
-either of these functions is called with `nil' as the argument, it uses
-the file name specified in the variable `abbrev-file-name', which is by
-default `"~/.abbrev_defs"'.  That file is your standard abbrev
-definition file, and Emacs loads abbrevs from it automatically when it
-starts up.  (As an exception, Emacs does not load the abbrev file when
-it is started in batch mode.  *Note Initial Options::, for a
+interactively, and it is used primarily in your init file (*note Init
+File::).  If either of these functions is called with `nil' as the
+argument, it uses the file given by the variable `abbrev-file-name',
+which is `~/.emacs.d/abbrev_defs' by default.  This is your standard
+abbrev definition file, and Emacs loads abbrevs from it automatically
+when it starts up.  (As an exception, Emacs does not load the abbrev
+file when it is started in batch mode.  *Note Initial Options::, for a
 description of batch mode.)
 
    Emacs will offer to save abbrevs automatically if you have changed
@@ -3864,62 +4210,62 @@ File: emacs,  Node: Sending Mail,  Next: Rmail,  Prev: Picture Mode,  Up: Top
 35 Sending Mail
 ***************
 
-To send a message in Emacs, you start by typing a command (`C-x m') to
-select and initialize the `*mail*' buffer.  Then you edit the text and
-headers of the message in this buffer, and type another command (`C-c
-C-s' or `C-c C-c') to send the message.
+To send an "e-mail" message in Emacs, type `C-x m'.  This selects and
+initializes a buffer named `*mail*', where you can edit the text and
+headers of the message.  Finally, type `C-c C-s' or `C-c C-c' to send
+the message.
 
 `C-x m'
-     Begin composing a message to send (`compose-mail').
+     Begin composing mail (`compose-mail').
 
 `C-x 4 m'
-     Likewise, but display the message in another window
-     (`compose-mail-other-window').
+     Likewise, in another window (`compose-mail-other-window').
 
 `C-x 5 m'
-     Likewise, but make a new frame (`compose-mail-other-frame').
+     Likewise, but in a new frame (`compose-mail-other-frame').
 
 `C-c C-s'
-     In Mail mode, send the message (`mail-send').
+     In the mail buffer, send the message (`message-send').
 
 `C-c C-c'
-     Send the message and bury the mail buffer (`mail-send-and-exit').
+     In the mail buffer, send the message and bury the buffer
+     (`message-send-and-exit').
 
-   The command `C-x m' (`compose-mail') selects a buffer named `*mail*'
-and initializes it with the skeleton of an outgoing message.  `C-x 4 m'
-(`compose-mail-other-window') selects the `*mail*' buffer in a
-different window, leaving the previous current buffer visible.  `C-x 5
-m' (`compose-mail-other-frame') creates a new frame to select the
-`*mail*' buffer.
+The command `C-x 4 m' (`compose-mail-other-window') does the same as
+`C-x m', except it displays the mail buffer in a different window.  The
+command `C-x 5 m' (`compose-mail-other-frame') creates a new frame for
+the mail buffer.
 
-   Because the mail-composition buffer is an ordinary Emacs buffer, you
-can switch to other buffers while in the middle of composing mail, and
-switch back later (or never).  If you use the `C-x m' command again
-when you have been composing another message but have not sent it, you
-are asked to confirm before the old message is erased.  If you answer
-`n', the `*mail*' buffer remains selected with its old contents, so you
-can finish the old message and send it.  `C-u C-x m' is another way to
-do this.  Sending the message marks the `*mail*' buffer "unmodified,"
-which avoids the need for confirmation when `C-x m' is next used.
+   Because the mail buffer is an ordinary Emacs buffer, you can switch
+to other buffers while in the middle of composing mail, and switch back
+later (or never).  If you type `C-x m' again when you have been
+composing another message but have not sent it, Emacs asks for
+confirmation before erasing the old message.  If you answer `n', Emacs
+selects the mail buffer with its old contents, so you can finish the
+old message and send it.  `C-u C-x m' is another way to do this.
+Sending the message marks the mail buffer "unmodified," which avoids
+the need for confirmation when `C-x m' is next used.
 
-   If you are composing a message in the `*mail*' buffer and want to
-send another message before finishing the first, rename the `*mail*'
-buffer using `M-x rename-uniquely' (*note Misc Buffer::).  Then you can
-use `C-x m' or its variants described above to make a new `*mail*'
-buffer.  Once you've done that, you can work with each mail buffer
-independently.
+   If you want to send another message before finishing the current
+message, use the command `M-x rename-uniquely' to rename the current
+mail buffer (*note Misc Buffer::).  Then you can use `C-x m' to make a
+new mail buffer, and work with each mail buffer independently.
 
-   The variable `mail-default-directory' controls the default directory
-for mail buffers, and also says where to put their auto-save files.
+   Before using Emacs to send mail, you may need to customize the
+variable `send-mail-function' if your system is not set up to deliver
+mail directly via SMTP (*note Mail Sending::).  In addition, you may
+need to customize `user-mail-address' if the system cannot receive mail
+via SMTP (*note Mail Headers::).
 
 * Menu:
 
-* Format: Mail Format.	     Format of the mail being composed.
-* Headers: Mail Headers.     Details of some standard mail header fields.
-* Aliases: Mail Aliases.     Abbreviating and grouping mail addresses.
-* Mode: Mail Mode.	     Special commands for editing mail being composed.
-* Amuse: Mail Amusements.    Distracting the NSA; adding fortune messages.
-* Methods: Mail Methods.     Using alternative mail-composition methods.
+* Format: Mail Format.	      Format of a mail message.
+* Headers: Mail Headers.      Details of some standard mail header fields.
+* Aliases: Mail Aliases.      Abbreviating and grouping mail addresses.
+* Commands: Mail Commands.    Special commands for editing mail being composed.
+* Signature: Mail Signature.  Adding a signature to every message.
+* Amuse: Mail Amusements.     Distracting the NSA; adding fortune messages.
+* Methods: Mail Methods.      Using alternative mail-composition methods.
 
 
 File: emacs,  Node: Mail Format,  Next: Mail Headers,  Up: Sending Mail
@@ -3927,32 +4273,34 @@ File: emacs,  Node: Mail Format,  Next: Mail Headers,  Up: Sending Mail
 35.1 The Format of the Mail Buffer
 ==================================
 
-In addition to the "text" or "body", a message has "header fields"
-which say who sent it, when, to whom, why, and so on.  Some header
-fields, such as `Date' and `Message-Id', are created automatically when
-you send the message.  Others, such as the recipient names, must be
-specified by you in order to send the message properly.
+An email message must contain certain pieces of information, called
+"headers", which specify the message's sender, recipient(s), and so on.
 
-   In the mail buffer, you can insert and edit header fields using
-ordinary editing commands.  Mail mode provides commands to help you
-edit some header fields, and some are automatically preinitialized in
-the buffer, when appropriate.
+   At the top of the mail buffer is a set of "header fields", where you
+can enter this information.  You can insert and edit header fields
+using ordinary editing commands.  *Note Header Editing::, for commands
+specific to editing header fields.
+
+   Some header fields are automatically pre-initialized in the buffer,
+when appropriate; other headers, such as `Date' and `Message-Id', are
+normally omitted from the mail buffer and created automatically when
+the message is sent.
 
    The line in the buffer that says
 
      --text follows this line--
 
-is a special delimiter that separates the headers you have specified
-from the text.  Whatever follows this line is the text of the message;
-the headers precede it.  The delimiter line itself does not appear in
-the message actually sent.  The text used for the delimiter line is
-controlled by the variable `mail-header-separator'.
+separates the header fields from the "body" (or "text") of the message.
+Everything above this line is treated as part of the headers;
+everything below it is treated as the body.  The delimiter line itself
+does not appear in the message actually sent.  The text used for the
+delimiter line is controlled by the variable `mail-header-separator'.
 
    Here is an example of what the headers and text in the mail buffer
 might look like.
 
-     To: gnu@gnu.org
-     CC: lungfish@spam.org, byob@spam.org
+     To: gnu@example.org
+     CC: lungfish@example.com, byob@example.net
      Subject: The Emacs Manual
      --text follows this line--
      Please ignore this message.
@@ -3968,79 +4316,49 @@ beginning of a line, terminated by a colon.  Upper and lower case are
 equivalent in field names (and in mailing addresses also).  After the
 colon and optional whitespace comes the contents of the field.
 
-   You can use any name you like for a header field, but normally people
-use only standard field names with accepted meanings.  Here is a table
-of fields commonly used in outgoing messages.  Emacs preinitializes some
-of these when you start to compose a mail, depending on various options
-you can set.  You can delete or alter any header field before you send
-the message, if you wish.
+   You can use any name you like for a header field, but normally
+people use only standard field names with accepted meanings.  Here is a
+table of commonly-used fields.  Emacs pre-initializes some of these,
+depending on various options you can set.  You can delete or alter any
+header field before you send the message, if you wish.
+
+`From'
+     The address of the sender (you).  This should be a valid mailing
+     address, as replies will normally go there.  Emacs initializes this
+     field using the variables `user-full-name' and
+     `user-mail-address'; see below.
 
 `To'
-     This field contains the mailing addresses to which the message is
-     addressed.  If you list more than one address, use commas, not
-     spaces, to separate them.
+     The mailing address(es) to which the message is addressed.  To list
+     more than one address, use commas (not spaces) to separate them.
 
 `Subject'
-     The contents of the `Subject' field should be a piece of text that
-     says what the message is about.  The reason `Subject' fields are
-     useful is that most mail-reading programs can provide a summary of
-     messages, listing the subject of each message but not its text.
+     A piece of text saying what the message is about.  Most
+     mail-reading programs can display a summary of messages, listing
+     the subject of each message but not its text.
 
 `CC'
-     This field contains additional mailing addresses to send the
-     message to, like `To' except that these readers should not regard
-     the message as directed at them.
+     Additional mailing address(es) to send the message to.  This is
+     like `To', except that these readers should not regard the message
+     as directed at them.
 
 `BCC'
-     This field contains additional mailing addresses to send the
-     message to, which should not appear in the header of the message
-     actually sent.  Copies sent this way are called "blind carbon
-     copies".
-
-     To send a blind carbon copy of every outgoing message to yourself,
-     set the variable `mail-self-blind' to `t'.  To send a blind carbon
-     copy of every message to some other ADDRESS, set the variable
-     `mail-default-headers' to `"Bcc: ADDRESS\n"'.
+     Additional mailing address(es) to send the message to, which should
+     not appear in the header of the message actually sent.  "BCC"
+     stands for "blind carbon copies".
 
 `FCC'
-     This field contains the name of one file and directs Emacs to
-     append a copy of the message to that file when you send the
-     message.  Emacs writes the message in mbox format, unless the file
-     is in Babyl format (used by Rmail before Emacs 23), in which case
-     Emacs writes Babyl.  If an Rmail buffer is visiting the file,
+     The name of one file, to which a copy of the sent message should be
+     appended.  Emacs writes the message in mbox format, unless the
+     file is in Babyl format (used by Rmail before Emacs 23), in which
+     case Emacs writes Babyl.  If an Rmail buffer is visiting the file,
      Emacs updates it accordingly.  To specify more than one file, use
      several `FCC' fields, with one file name in each field.
 
-     To put a fixed file name in the `FCC' field each time you start
-     editing an outgoing message, set the variable
-     `mail-archive-file-name' to that file name.  Unless you remove the
-     `FCC' field before sending, the message will be written into that
-     file when it is sent.
-
-`From'
-     Use the `From' field to say who you are.  You might need to change
-     this if the account you are using to send the mail is not your
-     own.  The contents of the `From' field should be a valid mailing
-     address, since replies will normally go there.
-
-     Emacs initializes this field (unless the variable
-     `mail-setup-with-from' is `nil') using `user-mail-address' as the
-     default.  If there is no `From' field when you send a mail, Emacs
-     adds one.
-
 `Reply-to'
-     Use this field to direct replies to a different address.  Most
-     mail-reading programs (including Rmail) automatically send replies
-     to the `Reply-to' address in preference to the `From' address.  By
-     adding a `Reply-to' field to your header, you can work around any
-     problems your `From' address may cause for replies.
-
-     To put a fixed `Reply-to' address into every outgoing message, set
-     the variable `mail-default-reply-to' to that address (as a string).
-     Then Emacs initializes the message with a `Reply-to' field as
-     specified.  When you first compose a mail, if
-     `mail-default-reply-to' is `nil', Emacs initializes it from the
-     environment variable `REPLYTO'.
+     An address to which replies should be sent, instead of `From'.
+     You can use this header if, for some reason, your `From' address
+     is unable to receive replies.
 
 `Mail-reply-to'
      This field takes precedence over `Reply-to'.  It is used because
@@ -4054,353 +4372,301 @@ the message, if you wish.
      to the list, and that you do not need an extra copy sent directly
      to you.
 
-     The variable `mail-mailing-lists' holds a list of mailing list
-     addresses that you are subscribed to.  If it is non-`nil', Emacs
-     inserts an appropriate `Mail-followup-to' header when sending mail
-     to a mailing list.
-
 `In-reply-to'
-     This field contains a piece of text describing the message you are
-     replying to.  Some mail systems can use this information to
-     correlate related pieces of mail.  Normally this field is filled
-     in by Rmail when you reply to a message in Rmail, and you never
-     need to think about it (*note Rmail::).
+     A piece of text describing the message you are replying to.  Some
+     mail systems can use this information to correlate related pieces
+     of mail.  Normally, you never need to think about this, because it
+     is filled in automatically when you reply to a message in Rmail
+     (or any other mail program built into Emacs).
 
 `References'
-     This field lists the Message-Ids of related previous messages (a
-     Message-Id is a unique identifier generated when a message is
-     sent).  Rmail sets up this field automatically when you reply to a
-     message.
+     The Message-Ids of previous related messages (a Message-Id is a
+     unique identifier generated when a message is sent).  Like
+     `In-reply-to', this is normally set up automatically for you.
 
-   The `To', `CC', and `BCC' header fields can appear any number of
-times, and each such header field can contain multiple addresses,
-separated by commas.  This way, you can specify any number of places to
-send the message.  These fields can also have continuation lines: one
-or more lines starting with whitespace, following the starting line of
-the field, are considered part of the field.  Here's an example of a
-`To' field with a continuation line:
+The `To', `CC', and `BCC' fields can appear any number of times, and
+each such header field can contain multiple addresses, separated by
+commas.  This way, you can specify any number of places to send the
+message.  These fields can also have continuation lines: one or more
+lines starting with whitespace, following the starting line of the
+field, are considered part of the field.  Here's an example of a `To'
+field with a continuation line:
 
-     To: foo@here.net, this@there.net,
-       me@gnu.cambridge.mass.usa.earth.spiral3281
+     To: foo@example.net, this@example.net,
+       bob@example.com
 
-   When you send the message, if you didn't write a `From' field
-yourself, Emacs puts in one for you, using `user-mail-address'.  The
-variable `mail-from-style' controls the format:
+   The default contents of the `From' header field are computed from
+the variables `user-full-name' and `user-mail-address'.  On some
+operating systems, Emacs initializes these two variables using
+environment variables (*note General Variables::).  If this information
+is unavailable or wrong, you can customize the variables yourself
+(*note Easy Customization::).
+
+   The value of the variable `mail-from-style' specifies how to format
+the address in the `From' field:
 
 `nil'
-     Use just the email address, as in `king@grassland.com'.
+     Use just the address, as in `king@grassland.com'.
 
 `parens'
-     Use both email address and full name, as in:
+     Use both address and full name, as in:
      `king@grassland.com (Elvis Parsley)'.
 
 `angles'
-     Use both email address and full name, as in:
+     Use both address and full name, as in:
      `Elvis Parsley <king@grassland.com>'.
 
-`system-default'
-     Allow the system to insert the `From' field.
+any other value
+     Use `angles' for most addresses.  However, if the address must be
+     "quoted" to remain syntactically-valid under the `angles' format
+     but not under the `parens' format, use `parens' instead.  This is
+     the default.
 
-   You can direct Emacs to insert certain default headers into the
-outgoing message by setting the variable `mail-default-headers' to a
-string.  Then `C-x m' inserts this string into the message headers.  If
-the default header fields are not appropriate for a particular message,
-edit them as necessary before sending the message.
+   You can direct Emacs to insert certain default headers into the mail
+buffer by setting the variable `mail-default-headers' to a string.
+Then `C-x m' inserts this string into the message headers.  For
+example, here is how to add a `Reply-to' and `FCC' header to each
+message:
+
+     (setq mail-default-headers
+           "Reply-to: foo@example.com\nFCC: ~/Mail/sent")
+
+If the default header fields are not appropriate for a particular
+message, edit them as necessary before sending the message.
 
 
-File: emacs,  Node: Mail Aliases,  Next: Mail Mode,  Prev: Mail Headers,  Up: Sending Mail
+File: emacs,  Node: Mail Aliases,  Next: Mail Commands,  Prev: Mail Headers,  Up: Sending Mail
 
 35.3 Mail Aliases
 =================
 
-You can define "mail aliases" in a file named `~/.mailrc'.  These are
-short mnemonic names which stand for mail addresses or groups of mail
-addresses.  Like many other mail programs, Emacs expands aliases when
-they occur in the `To', `From', `CC', `BCC', and `Reply-to' fields,
-plus their `Resent-' variants.
+You can define "mail aliases", which are short mnemonic names that
+stand for mail addresses or groups of mail addresses.  By default, mail
+aliases are defined in the file `~/.mailrc'.  You can specify a
+different file name to use, by setting the variable
+`mail-personal-alias-file'.
 
-   To define an alias in `~/.mailrc', write a line in the following
+   To define an alias in `.mailrc', write a line in the following
 format:
 
-     alias SHORTADDRESS FULLADDRESSES
+     alias NICK FULLADDRESSES
 
-Here FULLADDRESSES stands for one or more mail addresses for
-SHORTADDRESS to expand into.  Separate multiple addresses with spaces;
-if an address contains a space, quote the whole address with a pair of
-double quotes.
-
-   For instance, to make `maingnu' stand for `gnu@gnu.org' plus a local
-address of your own, put in this line:
+This means that NICK should expand into FULLADDRESSES, where
+FULLADDRESSES can be either a single address, or multiple addresses
+separated with spaces.  For instance, to make `maingnu' stand for
+`gnu@gnu.org' plus a local address of your own, put in this line:
 
      alias maingnu gnu@gnu.org local-gnu
 
-Addresses specified in this way should use double quotes around an
-entire address when the address contains spaces.  But you need not
-include double quotes around parts of the address, such as the person's
-full name.  Emacs puts them in if they are needed.  For example,
+If an address contains a space, quote the whole address with a pair of
+double quotes, like this:
 
      alias jsmith "John Q. Smith <none@example.com>"
 
-is correct in `.mailrc'.  Emacs will insert the address as `"John Q.
-Smith" <none@example.com>'.
+Note that you need not include double quotes around individual parts of
+the address, such as the person's full name.  Emacs puts them in if
+they are needed.  For instance, it inserts the above address as `"John
+Q. Smith" <none@example.com>'.
 
-   Emacs also recognizes "include" commands in `.mailrc' files.  They
-look like this:
+   Emacs also recognizes "include" commands in `.mailrc'.  They look
+like this:
 
      source FILENAME
 
-The file `~/.mailrc' is used primarily by other mail-reading programs;
-it can contain various other commands.  Emacs ignores everything in it
-except for alias definitions and include commands.
+The `.mailrc' file is not unique to Emacs; many other mail-reading
+programs use it for mail aliases, and it can contain various other
+commands.  However, Emacs ignores everything except alias definitions
+and include commands.
 
-   Another way to define a mail alias, within Emacs alone, is with the
-`define-mail-alias' command.  It prompts for the alias and then the
-full address.  You can use it to define aliases in your `.emacs' file,
-like this:
+   Mail aliases expand as abbrevs--that is to say, as soon as you type
+a word-separator character after an alias (*note Abbrevs::).  This
+expansion takes place only within the `To', `From', `CC', `BCC', and
+`Reply-to' header fields (plus their `Resent-' variants); it does not
+take place in other header fields, such as `Subject'.
 
-     (define-mail-alias "maingnu" "gnu@gnu.org")
-
-   `define-mail-alias' records aliases by adding them to a variable
-named `mail-aliases'.  If you are comfortable with manipulating Lisp
-lists, you can set `mail-aliases' directly.  The initial value of
-`mail-aliases' is `t', which means that Emacs should read `.mailrc' to
-get the proper value.
-
-   You can specify a different file name to use instead of `~/.mailrc'
-by setting the variable `mail-personal-alias-file'.
-
-   Normally, Emacs expands aliases when you send the message.  You do
-not need to expand mail aliases before sending the message, but you can
-expand them if you want to see where the mail will actually go.  To do
-this, use the command `M-x expand-mail-aliases'; it expands all mail
-aliases currently present in the mail headers that hold addresses.
-
-   If you like, you can have mail aliases expand as abbrevs, as soon as
-you type them in (*note Abbrevs::).  To enable this feature, execute the
-following:
-
-     (add-hook 'mail-mode-hook 'mail-abbrevs-setup)
-
-This can go in your `.emacs' file.  *Note Hooks::.  If you use this
-feature, you must use `define-mail-abbrev' instead of
-`define-mail-alias'; the latter does not work with this package.  Note
-that the mail abbreviation package uses the variable `mail-abbrevs'
-instead of `mail-aliases', and that all alias names are converted to
-lower case.
-
-   The mail abbreviation package also provides the `C-c C-a'
-(`mail-abbrev-insert-alias') command, which reads an alias name (with
-completion) and inserts its definition at point.  This is useful when
-editing the message text itself or a header field such as `Subject' in
-which Emacs does not normally expand aliases.
-
-   Note that abbrevs expand only if you insert a word-separator
-character afterward.  However, you can rebind `C-n' and `M->' to cause
-expansion as well.  Here's how to do that:
-
-     (add-hook 'mail-mode-hook
-         (lambda ()
-           (define-key
-             mail-mode-map [remap next-line] 'mail-abbrev-next-line)
-           (define-key
-             mail-mode-map [remap end-of-buffer] 'mail-abbrev-end-of-buffer)))
+   You can also insert an aliased address directly, using the command
+`M-x mail-abbrev-insert-alias'.  This reads an alias name, with
+completion, and inserts its definition at point.
 
 
-File: emacs,  Node: Mail Mode,  Next: Mail Amusements,  Prev: Mail Aliases,  Up: Sending Mail
+File: emacs,  Node: Mail Commands,  Next: Mail Signature,  Prev: Mail Aliases,  Up: Sending Mail
 
-35.4 Mail Mode
-==============
+35.4 Mail Commands
+==================
 
-The major mode used in the mail buffer is Mail mode, which is much like
-Text mode except that various special commands are provided on the
-`C-c' prefix.  These commands all have to do specifically with editing
-or sending the message.
+The default major mode for the `*mail*' buffer is called Message mode.
+It behaves like Text mode in many ways, but provides several additional
+commands on the `C-c' prefix, which make editing a message more
+convenient.
 
-   Mail mode is normally used in buffers set up automatically by the
-`mail' command and related commands.  However, you can also switch to
-Mail mode in a file-visiting buffer.  This is a useful thing to do if
-you have saved the text of a draft message in a file.
+   In this section, we will describe some of the most commonly-used
+commands available in Message mode.  Message mode also has its own
+manual, where its features are described in greater detail.  *Note
+Message: (message)Top.
 
 * Menu:
 
 * Mail Sending::        Commands to send the message.
 * Header Editing::      Commands to move to header fields and edit them.
-* Citing Mail::         Copying all or part of a message you are replying to.
-* Mail Mode Misc::      Spell checking, signatures, etc.
+* Citing Mail::         Quoting a message you are replying to.
+* Mail Misc::           Attachments, spell checking, etc.
 
 
-File: emacs,  Node: Mail Sending,  Next: Header Editing,  Up: Mail Mode
+File: emacs,  Node: Mail Sending,  Next: Header Editing,  Up: Mail Commands
 
 35.4.1 Mail Sending
 -------------------
 
-Mail mode has two commands for sending the message you have been
-editing:
-
-`C-c C-s'
-     Send the message, and leave the mail buffer selected (`mail-send').
+There are two commands to send a message you have been editing:
 
 `C-c C-c'
-     Send the message, and select some other buffer
-     (`mail-send-and-exit').
+     Send the message, and deselect the mail buffer
+     (`message-send-and-exit').
 
-   `C-c C-s' (`mail-send') sends the message and marks the mail buffer
-unmodified, but leaves that buffer selected so that you can modify the
-message (perhaps with new recipients) and send it again.  `C-c C-c'
-(`mail-send-and-exit') sends and then deletes the window or switches to
-another buffer.  It puts the mail buffer at the lowest priority for
-reselection by default, since you are finished with using it.  This is
-the usual way to send the message.  Sending a message runs the hook
-`mail-send-hook'.
+`C-c C-s'
+     Send the message, and leave the mail buffer selected
+     (`message-send').
+
+   If you want to send a message and be done with it, type `C-c C-c'
+(`mail-send-and-exit').  This sends the message and then either deletes
+the window or switches to another buffer.  It also "buries" the mail
+buffer, putting it at the lowest priority for reselection.  This is the
+usual command for sending a message.
+
+   The command `C-c C-s' (`message-send') sends the message and marks
+the mail buffer unmodified, but leaves the buffer selected.  Use this
+command if you want to modify the message (perhaps with new recipients)
+and send it again.
+
+   Sending a message runs the hook `message-send-hook'.
 
    In a file-visiting buffer, sending the message does not clear the
 modified flag, because only saving the file should do that.  Also, you
 don't get a warning if you try to send the same message twice.
 
-   When you send a message that contains non-ASCII characters, they need
+   When you send a message containing non-ASCII characters, they need
 to be encoded with a coding system (*note Coding Systems::).  Usually
 the coding system is specified automatically by your chosen language
-environment (*note Language Environments::).  You can explicitly specify
-the coding system for outgoing mail by setting the variable
-`sendmail-coding-system' (*note Recognize Coding::).
-
-   If the coding system thus determined does not handle the characters
-in a particular message, Emacs asks you to select the coding system to
-use, showing a list of possible coding systems.
+environment (*note Language Environments::).  You can explicitly
+specify the coding system for outgoing mail by setting the variable
+`sendmail-coding-system' (*note Recognize Coding::).  If the coding
+system thus determined does not handle the characters in a particular
+message, Emacs asks you to select the coding system to use, showing a
+list of possible coding systems.
 
    The variable `send-mail-function' controls how the default mail user
-agent sends mail.  It should be set to a function.  In most cases, the
-default is `sendmail-send-it', which delivers mail using the Sendmail
-installation on the local host.  On Mac OS X and MS-Windows, however,
-the default is normally `mailclient-send-it', which passes the mail
-buffer on to the system's designated mail client (see `mailclient.el').
-To send mail through an SMTP server, set `send-mail-function' to
-`smtpmail-send-it' and set up the Emacs SMTP library (*note Emacs SMTP
-Library: (smtpmail)Top.).  Another option is `feedmail-send-it' (see the
-commentary section of the `feedmail.el' package).
+agent sends mail.  Its value should be a function, which can be one of
+the following:
+
+`sendmail-send-it'
+     Send mail using the system's default `sendmail' (or
+     `sendmail'-compatible) program.  This is the default on Unix and
+     GNU, and works provided the system is a valid "mail host" (that
+     is, provided it can deliver mail via SMTP).
+
+`mailclient-send-it'
+     Pass the mail buffer on to the system's designated mail client (see
+     `mailclient.el').  This is the default on Mac OS X and MS-Windows.
+
+`smtpmail-send-it'
+     Send mail through an external mail host (e.g., your Internet
+     service provider's SMTP server).  You will need to tell Emacs how
+     to contact the SMTP server, by customizing the variables
+     `smtpmail-smtp-server' and `smtpmail-auth-credentials'.  *Note
+     Emacs SMTP Library: (smtpmail)Top.
+
+`feedmail-send-it'
+     This is similar to `sendmail-send-it', but allows you to queue
+     messages for later sending.  See the commentary section in the file
+     `feedmail.el' for more information.
 
 
-File: emacs,  Node: Header Editing,  Next: Citing Mail,  Prev: Mail Sending,  Up: Mail Mode
+File: emacs,  Node: Header Editing,  Next: Citing Mail,  Prev: Mail Sending,  Up: Mail Commands
 
 35.4.2 Mail Header Editing
 --------------------------
 
-Mail mode provides special commands to move to particular header fields
-and to complete addresses in headers.
+Message mode provides the following special commands to move to
+particular header fields and to complete addresses in headers.
 
 `C-c C-f C-t'
-     Move to the `To' header field, creating one if there is none
-     (`mail-to').
+     Move to the `To' header (`message-goto-to').
 
 `C-c C-f C-s'
-     Move to the `Subject' header field, creating one if there is none
-     (`mail-subject').
+     Move to the `Subject' header (`message-goto-subject').
 
 `C-c C-f C-c'
-     Move to the `CC' header field, creating one if there is none
-     (`mail-cc').
+     Move to the `CC' header (`message-goto-cc').
 
 `C-c C-f C-b'
-     Move to the `BCC' header field, creating one if there is none
-     (`mail-bcc').
+     Move to the `BCC' header (`message-goto-bcc').
 
 `C-c C-f C-r'
-     Move to the `Reply-To' header field, creating one if there is none
-     (`mail-reply-to').
-
-`C-c C-f C-a'
-     Move to the `Mail-Reply-To' header field, creating one if there is
-     none (`mail-mail-reply-to').
-
-`C-c C-f C-l'
-     Move to the `Mail-Followup-To' header field, creating one if there
-     is none (`mail-mail-followup-to').
+     Move to the `Reply-To' header (`message-goto-reply-to').
 
 `C-c C-f C-f'
+     Move to the `Mail-Followup-To' header field
+     (`message-goto-followup-to').
+
+`C-c C-f C-w'
      Add a new `FCC' header field, with file-name completion
-     (`mail-fcc').
+     (`message-goto-fcc').
 
-`M-<TAB>'
-     Complete a mailing address (`mail-complete').
+`C-c C-b'
+     Move to the start of the message body (`message-goto-body').
 
-   There are several commands to move point to particular header fields,
-all based on the prefix `C-c C-f' (`C-f' is for "field").  They are
-listed in the table above.  If the field in question does not exist,
-these commands create one (the exception is `mail-fcc', which creates a
-new field each time).  We provide special motion commands for these
-particular fields because they are the fields users most often want to
-edit.
+`<TAB>'
+     Complete a mailing address (`message-tab').
 
-   While editing a header field that contains mailing addresses, such
-as `To:', `CC:' and `BCC:', you can complete a mailing address by
-typing `M-<TAB>' (`mail-complete').  It inserts the full name
-corresponding to the address, if it can determine the full name.  The
-variable `mail-complete-style' controls whether to insert the full
-name, and what style to use, as in `mail-from-style' (*note Mail
-Headers::).  (If your window manager defines `M-<TAB>' to switch
-windows, you can type `<ESC> <TAB>' or `C-M-i'.)
+   The commands to move point to particular header fields are all based
+on the prefix `C-c C-f' (`C-f' is for "field").  If the field in
+question does not exist, the command creates one (the exception is
+`mail-fcc', which creates a new field each time).
 
-   For completion purposes, the valid mailing addresses are taken to be
-the local users' names plus your personal mail aliases (*note Mail
-Aliases::).  You can specify additional sources of valid addresses;
-browse the customization group `mailalias' to see the variables for
-customizing this feature (*note Customization Groups::).
+   The command `C-c C-b' (`message-goto-body') moves point to just
+after the header separator line--that is, to the beginning of the body.
 
-   If you type `M-<TAB>' in the body of the message, or on a
-unrecognized header, `mail-complete' invokes the function specified by
-`mail-complete-function'.  By default, this is `ispell-complete-word',
-as in Text mode.
+   While editing a header field that contains addresses, such as `To:',
+`CC:' and `BCC:', you can complete an address by typing <TAB>
+(`message-tab').  This attempts to insert the full name corresponding
+to the address based on a couple of methods, including EUDC, a library
+that recognizes a number of directory server protocols (*note EUDC:
+(eudc)Top.).  Failing that, it attempts to expand the address as a mail
+alias (*note Mail Aliases::).  If point is on a header field that does
+not take addresses, or if it is in the message body, then <TAB> just
+inserts a tab character.
 
 
-File: emacs,  Node: Citing Mail,  Next: Mail Mode Misc,  Prev: Header Editing,  Up: Mail Mode
+File: emacs,  Node: Citing Mail,  Next: Mail Misc,  Prev: Header Editing,  Up: Mail Commands
 
 35.4.3 Citing Mail
 ------------------
 
-Mail mode also has commands for yanking or "citing" all or part of a
-message that you are replying to.  These commands are active only when
-you started sending a message using an Rmail command.
-
 `C-c C-y'
-     Yank the selected message from Rmail (`mail-yank-original').
-
-`C-c C-r'
-     Yank the region from the Rmail buffer (`mail-yank-region').
+     Yank the selected message from Rmail (`message-yank-original').
 
 `C-c C-q'
      Fill each paragraph cited from another message
-     (`mail-fill-yanked-message').
+     (`message-fill-yanked-message').
 
-   When mail sending is invoked from the Rmail mail reader using an
-Rmail command, `C-c C-y' can be used inside the mail buffer to insert
-the text of the message you are replying to.  Normally it indents each
-line of that message three spaces and eliminates most header fields (as
-specified by the variable `mail-yank-ignored-headers').  A numeric
-argument specifies the number of spaces to indent (the variable
-`mail-indentation-spaces' specifies the default number).  An argument
-of just `C-u' says not to indent at all and not to eliminate anything.
-`C-c C-y' always uses the current message from the Rmail buffer, so you
-can insert several old messages by selecting one in Rmail, switching to
-`*mail*' and yanking it, then switching back to Rmail to select another.
+   You can use the command `C-c C-y' (`message-yank-original') to
+"cite" a message that you are replying to.  This inserts the text of
+that message into the mail buffer.  This command is active only when
+the mail buffer is invoked from a mail program running in Emacs, such
+as Rmail.
 
-   You can specify the text for `C-c C-y' to insert at the beginning of
-each line: set `mail-yank-prefix' to the desired string.  (A value of
-`nil' means to use indentation; this is the default.)  However, `C-u
-C-c C-y' never adds anything at the beginning of the inserted lines,
-regardless of the value of `mail-yank-prefix'.
+   By default, Emacs inserts the string `>' in front of each line of
+the cited text; this prefix string is specified by the variable
+`message-yank-prefix'.  If you call `message-yank-original' with a
+prefix argument, the citation prefix is not inserted.
 
-   To yank just a part of an incoming message, set the region in Rmail
-to the part you want; then go to the `*Mail*' message and type `C-c
-C-r' (`mail-yank-region').  Each line that is copied is indented or
-prefixed according to `mail-yank-prefix'.
-
-   After using `C-c C-y' or `C-c C-r', you can type `C-c C-q'
-(`mail-fill-yanked-message') to fill the paragraphs of the yanked old
-message or messages.  One use of `C-c C-q' fills all such paragraphs,
-each one individually.  To fill a single paragraph of the quoted
-message, use `M-q'.  If filling does not automatically handle the type
-of citation prefix you use, try setting the fill prefix explicitly.
-*Note Filling::.
+   After using `C-c C-y', you can type `C-c C-q'
+(`message-fill-yanked-message') to fill the paragraphs of the cited
+message.  One use of `C-c C-q' fills all such paragraphs, each one
+individually.  To fill a single paragraph of the quoted message, use
+`M-q'.  If filling does not automatically handle the type of citation
+prefix you use, try setting the fill prefix explicitly.  *Note
+Filling::.
 
    You can customize mail citation through the hook
 `mail-citation-hook'.  For example, you can use the Supercite package,
@@ -4408,86 +4674,94 @@ which provides more flexible citation (*note Introduction:
 (sc)Introduction.).
 
 
-File: emacs,  Node: Mail Mode Misc,  Prev: Citing Mail,  Up: Mail Mode
+File: emacs,  Node: Mail Misc,  Prev: Citing Mail,  Up: Mail Commands
 
-35.4.4 Mail Mode Miscellany
----------------------------
+35.4.4 Mail Miscellany
+----------------------
 
-`C-c C-t'
-     Move to the beginning of the message body text (`mail-text').
+You can "attach" a file to an outgoing message by typing `C-c C-a'
+(`mml-attach-file') in the mail buffer.  Attaching is done using the
+MIME (Multipurpose Internet Mail Extensions) standard.
 
-`C-c C-w'
-     Insert a signature at the end of the message text
-     (`mail-signature').
+   The `mml-attach-file' command prompts for the name of the file, and
+for the attachment's "content type", "description", and "disposition".
+The content type is normally detected automatically; just type <RET> to
+accept the default.  The description is a single line of text that the
+recipient will see next to the attachment; you may also choose to leave
+this empty.  The disposition is either `inline' (the default), which
+means the recipient will see a link to the attachment within the
+message body, or `attachment', which means the link will be separate
+from the body.
 
-`C-c C-i FILE <RET>'
-     Insert the contents of FILE at the end of the message text
-     (`mail-attach-file').
+   The actual contents of the attached file are not inserted into the
+mail buffer.  Instead, some placeholder text is inserted into the mail
+buffer, like this:
 
-`M-x ispell-message'
-     Perform spelling correction on the message text, but not on
-     citations from other messages, or the message headers.
+     <#part type="text/plain" filename="~/foo.txt" disposition=inline>
+     <#/part>
 
-   `C-c C-t' (`mail-text') moves point to just after the header
-separator line--that is, to the beginning of the message body text.
+When you type `C-c C-c' or `C-c C-s' to send the message, the attached
+file will be delivered with it.
 
-   `C-c C-w' (`mail-signature') adds a standard piece of text (your
-"mail signature") at the end of the message to say more about who you
-are.  For example, it may contain telephone numbers, or your physical
-location.  The text comes from the variable `mail-signature'.  It can
-be a fixed string, or a Lisp expression that returns a string.  If it
-is `t' or `nil', the function inserts the contents of the file
-`mail-signature-file'.  By default, this is the file `~/.signature' in
-your home directory.
-
-   If the variable `mail-signature' has a non-`nil' value, starting a
-mail automatically inserts your signature.  Otherwise, you must
-explicitly use the command `mail-signature'.  If you want to omit your
-signature from a particular message, just delete it from the buffer
-before you send the message.
-
-   Convention says that the start of your signature should be marked by
-a line whose contents are `-- '.  If your signature comes from a file,
-this prefix is added for you, but in all other cases you must add it
-yourself.  The remainder of your signature should be no more than four
-lines.
-
-   You can do spelling correction on the message text you have written
-with the command `M-x ispell-message'.  If you have yanked an incoming
-message into the outgoing draft, this command skips what was yanked,
-but it checks the text that you yourself inserted.  (It looks for
+   While composing a message, you can do spelling correction on the
+message text by typing `M-x ispell-message'.  If you have yanked an
+incoming message into the outgoing draft, this command skips what was
+yanked, but it checks the text that you yourself inserted (it looks for
 indentation or `mail-yank-prefix' to distinguish the cited lines from
-your input.)  *Note Spelling::.
+your input).  *Note Spelling::.
 
-   To include a file in the outgoing message, you can use `C-x i', the
-usual command to insert a file in the current buffer.  But it is often
-more convenient to use a special command, `C-c C-i'
-(`mail-attach-file').  This command inserts the file contents at the
-end of the buffer, after your signature (if any), with a delimiter line
-that includes the file name.  Note that this is not a MIME attachment.
-
-   Turning on Mail mode (which `C-x m' does automatically) runs the
-normal hooks `text-mode-hook' and `mail-mode-hook'.  Initializing a new
-outgoing message runs the normal hook `mail-setup-hook'; if you want to
-add special fields to your mail header or make other changes to the
-appearance of the mail buffer, use that hook.  *Note Hooks::.
+   Turning on Message mode (which `C-x m' does automatically) runs the
+normal hooks `text-mode-hook' and `message-mode-hook'.  Initializing a
+new outgoing message runs the normal hook `message-setup-hook'; you can
+use this hook if you want to make changes to the appearance of the mail
+buffer.  *Note Hooks::.
 
    The main difference between these hooks is just when they are
-invoked.  Whenever you type `M-x mail', `mail-mode-hook' runs as soon
-as the `*mail*' buffer is created.  Then the `mail-setup' function
+invoked.  Whenever you type `C-x m', `message-mode-hook' runs as soon
+as the mail buffer is created.  Then the `message-setup' function
 inserts the default contents of the buffer.  After these default
-contents are inserted, `mail-setup-hook' runs.
+contents are inserted, `message-setup-hook' runs.
 
-   If you use `M-x mail' to continue an existing composition,
-`mail-mode-hook' runs immediately after switching to the `*mail*'
+   If you use `C-x m' to continue an existing composition,
+`message-mode-hook' runs immediately after switching to the mail
 buffer.  If the buffer is unmodified, or if you decide to erase it and
-start again, `mail-setup-hook' runs after the default contents are
+start again, `message-setup-hook' runs after the default contents are
 inserted.
 
 
-File: emacs,  Node: Mail Amusements,  Next: Mail Methods,  Prev: Mail Mode,  Up: Sending Mail
+File: emacs,  Node: Mail Signature,  Next: Mail Amusements,  Prev: Mail Commands,  Up: Sending Mail
 
-35.5 Mail Amusements
+35.5 Mail Signature
+===================
+
+You can add a standard piece of text--your "mail signature"--to the end
+of every message.  This signature may contain information such as your
+telephone number or your physical location.  The variable
+`mail-signature' determines how Emacs handles the mail signature.
+
+   The default value of `mail-signature' is `t'; this means to look for
+your mail signature in the file `~/.signature'.  If this file exists,
+its contents are automatically inserted into the end of the mail
+buffer.  You can change the signature file via the variable
+`mail-signature-file'.
+
+   If you change `mail-signature' to a string, that specifies the text
+of the signature directly.
+
+   If you change `mail-signature' to `nil', Emacs will not insert your
+mail signature automatically.  You can insert your mail signature by
+typing `C-c C-w' (`message-insert-signature') in the mail buffer.
+Emacs will look for your signature in the signature file.
+
+   By convention, a mail signature should be marked by a line whose
+contents are `-- '.  If your signature lacks this prefix, it is added
+for you.  The remainder of your signature should be no more than four
+lines.
+
+
+File: emacs,  Node: Mail Amusements,  Next: Mail Methods,  Prev: Mail Signature,  Up: Sending Mail
+
+35.6 Mail Amusements
 ====================
 
 `M-x spook' adds a line of randomly chosen keywords to an outgoing mail
@@ -4519,24 +4793,26 @@ this.
 
 File: emacs,  Node: Mail Methods,  Prev: Mail Amusements,  Up: Sending Mail
 
-35.6 Mail-Composition Methods
+35.7 Mail-Composition Methods
 =============================
 
 In this chapter we have described the usual Emacs mode for editing and
-sending mail--Mail mode.  Emacs has alternative facilities for editing
-and sending mail, including MH-E and Message mode, not documented in
-this manual.  *Note MH-E: (mh-e)Top.  *Note Message: (message)Top.  You
-can choose any of them as your preferred method.  The commands `C-x m',
-`C-x 4 m' and `C-x 5 m' use whichever agent you have specified, as do
-various other Emacs commands and facilities that send mail.
+sending mail--Message mode.  This is only one of several available
+modes.  Prior to Emacs 23.2, the default mode was Mail mode, which is
+similar to Message mode in many respects but lacks features such as
+MIME support.  Another available mode is MH-E (*note MH-E: (mh-e)Top.).
 
-   To specify your mail-composition method, customize the variable
-`mail-user-agent'.  Currently legitimate values include
-`sendmail-user-agent' (Mail mode), `mh-e-user-agent',
-`message-user-agent' and `gnus-user-agent'.
+   You can choose any of these "mail user agents" as your preferred
+method for editing and sending mail.  The commands `C-x m', `C-x 4 m'
+and `C-x 5 m' use whichever agent you have specified; so do various
+other parts of Emacs that send mail, such as the bug reporter (*note
+Bugs::).  To specify a mail user agent, customize the variable
+`mail-user-agent'.  Currently, legitimate values include
+`message-user-agent' (Message mode) `sendmail-user-agent' (Mail mode),
+`gnus-user-agent', and `mh-e-user-agent'.
 
    If you select a different mail-composition method, the information
-in this chapter about the `*mail*' buffer and Mail mode does not apply;
+in this chapter about the mail buffer and Message mode does not apply;
 the other methods use a different format of text in a different buffer,
 and their commands are different as well.
 
@@ -5153,10 +5429,10 @@ File: emacs,  Node: Rmail Reply,  Next: Rmail Summary,  Prev: Rmail Attributes, 
 36.10 Sending Replies
 =====================
 
-Rmail has several commands that use Mail mode to send outgoing mail.
-*Note Sending Mail::, for information on using Mail mode, including
-certain features meant to work with Rmail.  What this section documents
-are the special commands of Rmail for entering Mail mode.  Note that the
+Rmail has several commands to send outgoing mail.  *Note Sending
+Mail::, for information on using Message mode, including certain
+features meant to work with Rmail.  What this section documents are the
+special commands of Rmail for entering the mail buffer.  Note that the
 usual keys for sending mail--`C-x m', `C-x 4 m', and `C-x 5 m'--also
 work normally in Rmail mode.
 
@@ -5206,10 +5482,10 @@ reply only to the sender of the original message.
    Once the `*mail*' buffer has been initialized, editing and sending
 the mail goes as usual (*note Sending Mail::).  You can edit the
 presupplied header fields if they are not what you want.  You can also
-use the commands of Mail mode (*note Mail Mode::), including `C-c C-y'
-which yanks in the message that you are replying to.  You can also
-switch to the Rmail buffer, select a different message there, switch
-back, and yank the new current message.
+use commands such as `C-c C-y', which yanks in the message that you are
+replying to (*note Mail Commands::).  You can also switch to the Rmail
+buffer, select a different message there, switch back, and yank the new
+current message.
 
    Sometimes a message does not reach its destination.  Mailers usually
 send the failed message back to you, enclosed in a "failure message".
@@ -5982,7 +6258,7 @@ incremental search in the Dired buffer, looking for matches only
 amongst the file names and ignoring the rest of the text in the buffer.
 `M-s f M-C-s' (`dired-isearch-filenames-regexp') does the same, using a
 regular expression search.  If you change the variable
-DIRED-ISEARCH-FILENAMES to `t', then the usual search commands also
+`dired-isearch-filenames' to `t', then the usual search commands also
 limit themselves to the file names; for instance, `C-s' behaves like
 `M-s f C-s'.  If the value is `dwim', then search commands match the
 file names only when point was on a file name initially.  *Note
@@ -6583,301 +6859,4 @@ Files::).
      compare a file with any one of its backups.
 
      The backup file is the first file given to `diff'.
-
-
-File: emacs,  Node: Subdirectories in Dired,  Next: Subdir Switches,  Prev: Comparison in Dired,  Up: Dired
-
-37.11 Subdirectories in Dired
-=============================
-
-A Dired buffer displays just one directory in the normal case; but you
-can optionally include its subdirectories as well.
-
-   The simplest way to include multiple directories in one Dired buffer
-is to specify the options `-lR' for running `ls'.  (If you give a
-numeric argument when you run Dired, then you can specify these options
-in the minibuffer.)  That produces a recursive directory listing showing
-all subdirectories at all levels.
-
-   More often, you will want to show only specific subdirectories.  You
-can do this with the `i' command:
-
-`i'
-     Insert the contents of a subdirectory later in the buffer.
-
-   Use the `i' (`dired-maybe-insert-subdir') command on a line that
-describes a file which is a directory.  It inserts the contents of that
-directory into the same Dired buffer, and moves there.  Inserted
-subdirectory contents follow the top-level directory of the Dired
-buffer, just as they do in `ls -lR' output.
-
-   If the subdirectory's contents are already present in the buffer, the
-`i' command just moves to it.
-
-   In either case, `i' sets the Emacs mark before moving, so `C-u
-C-<SPC>' takes you back to the old position in the buffer (the line
-describing that subdirectory).  You can also use `^' to return to the
-parent directory in the same Dired buffer.
-
-   Use the `l' command (`dired-do-redisplay') to update the
-subdirectory's contents.  Use `C-u k' on the subdirectory header line
-to delete the subdirectory (*note Dired Updating::).  You can also hide
-and show inserted subdirectories (*note Hiding Subdirectories::).
-
-
-File: emacs,  Node: Subdir Switches,  Next: Subdirectory Motion,  Prev: Subdirectories in Dired,  Up: Dired
-
-37.12 Subdirectory Switches in Dired
-====================================
-
-You can insert subdirectories with specified `ls' switches in Dired
-buffers using `C-u i'.  You can change the `ls' switches of an already
-inserted subdirectory using `C-u l'.
-
-   Dired preserves the switches if you revert the buffer.  Deleting a
-subdirectory forgets about its switches.
-
-   Using `dired-undo' (usually bound to `C-_' and `C-x u') to reinsert
-or delete subdirectories that were inserted with explicit switches can
-bypass Dired's machinery for remembering (or forgetting) switches.
-Deleting a subdirectory using `dired-undo' does not forget its
-switches.  When later reinserted using `i', it will be reinserted using
-its old switches.  Using `dired-undo' to reinsert a subdirectory that
-was deleted using the regular Dired commands (not `dired-undo') will
-originally insert it with its old switches.  Reverting the buffer,
-however, will relist it using the buffer's default switches.  If any of
-this yields problems, you can easily correct the situation using `C-u
-i' or `C-u l'.
-
-   Dired does not remember the `R' switch.  Inserting a subdirectory
-with switches that include the `R' switch is equivalent to inserting
-each of its subdirectories using all remaining switches.  For instance,
-updating or killing a subdirectory that was inserted with the `R'
-switch will not update or kill its subdirectories.
-
-   The buffer's default switches do not affect subdirectories that were
-inserted using explicitly specified switches.  In particular, commands
-such as `s' that change the buffer's switches do not affect such
-subdirectories.  (They do, however, affect subdirectories without
-explicitly assigned switches.)
-
-   You can make Dired forget about all subdirectory switches and relist
-all subdirectories with the buffer's default switches using `M-x
-dired-reset-subdir-switches'.  This also reverts the Dired buffer.
-
-
-File: emacs,  Node: Subdirectory Motion,  Next: Hiding Subdirectories,  Prev: Subdir Switches,  Up: Dired
-
-37.13 Moving Over Subdirectories
-================================
-
-When a Dired buffer lists subdirectories, you can use the page motion
-commands `C-x [' and `C-x ]' to move by entire directories (*note
-Pages::).
-
-   The following commands move across, up and down in the tree of
-directories within one Dired buffer.  They move to "directory header
-lines", which are the lines that give a directory's name, at the
-beginning of the directory's contents.
-
-`C-M-n'
-     Go to next subdirectory header line, regardless of level
-     (`dired-next-subdir').
-
-`C-M-p'
-     Go to previous subdirectory header line, regardless of level
-     (`dired-prev-subdir').
-
-`C-M-u'
-     Go up to the parent directory's header line (`dired-tree-up').
-
-`C-M-d'
-     Go down in the directory tree, to the first subdirectory's header
-     line (`dired-tree-down').
-
-`<'
-     Move up to the previous directory-file line (`dired-prev-dirline').
-     These lines are the ones that describe a directory as a file in its
-     parent directory.
-
-`>'
-     Move down to the next directory-file line (`dired-prev-dirline').
-
-
-File: emacs,  Node: Hiding Subdirectories,  Next: Dired Updating,  Prev: Subdirectory Motion,  Up: Dired
-
-37.14 Hiding Subdirectories
-===========================
-
-"Hiding" a subdirectory means to make it invisible, except for its
-header line.
-
-`$'
-     Hide or show the subdirectory that point is in, and move point to
-     the next subdirectory (`dired-hide-subdir').  This is a toggle.  A
-     numeric argument serves as a repeat count.
-
-`M-$'
-     Hide all subdirectories in this Dired buffer, leaving only their
-     header lines (`dired-hide-all').  Or, if any subdirectory is
-     currently hidden, make all subdirectories visible again.  You can
-     use this command to get an overview in very deep directory trees
-     or to move quickly to subdirectories far away.
-
-   Ordinary Dired commands never consider files inside a hidden
-subdirectory.  For example, the commands to operate on marked files
-ignore files in hidden directories even if they are marked.  Thus you
-can use hiding to temporarily exclude subdirectories from operations
-without having to remove the Dired marks on files in those
-subdirectories.
-
-   *Note Dired Updating::, for how to insert or delete a subdirectory
-listing.
-
-
-File: emacs,  Node: Dired Updating,  Next: Dired and Find,  Prev: Hiding Subdirectories,  Up: Dired
-
-37.15 Updating the Dired Buffer
-===============================
-
-This section describes commands to update the Dired buffer to reflect
-outside (non-Dired) changes in the directories and files, and to delete
-part of the Dired buffer.
-
-`g'
-     Update the entire contents of the Dired buffer (`revert-buffer').
-
-`l'
-     Update the specified files (`dired-do-redisplay').  You specify the
-     files for `l' in the same way as for file operations.
-
-`k'
-     Delete the specified _file lines_--not the files, just the lines
-     (`dired-do-kill-lines').
-
-`s'
-     Toggle between alphabetical order and date/time order
-     (`dired-sort-toggle-or-edit').
-
-`C-u s SWITCHES <RET>'
-     Refresh the Dired buffer using SWITCHES as
-     `dired-listing-switches'.
-
-   Type `g' (`revert-buffer') to update the contents of the Dired
-buffer, based on changes in the files and directories listed.  This
-preserves all marks except for those on files that have vanished.
-Hidden subdirectories are updated but remain hidden.
-
-   To update only some of the files, type `l' (`dired-do-redisplay').
-Like the Dired file-operating commands, this command operates on the
-next N files (or previous -N files), or on the marked files if any, or
-on the current file.  Updating the files means reading their current
-status, then updating their lines in the buffer to indicate that status.
-
-   If you use `l' on a subdirectory header line, it updates the
-contents of the corresponding subdirectory.
-
-   To delete the specified _file lines_ from the buffer--not delete the
-files--type `k' (`dired-do-kill-lines').  Like the file-operating
-commands, this command operates on the next N files, or on the marked
-files if any; but it does not operate on the current file as a last
-resort.
-
-   If you use `k' with a numeric prefix argument to kill the line for a
-file that is a directory, which you have inserted in the Dired buffer
-as a subdirectory, it deletes that subdirectory from the buffer as
-well.  Typing `C-u k' on the header line for a subdirectory also
-deletes the subdirectory from the Dired buffer.
-
-   The `g' command brings back any individual lines that you have
-killed in this way, but not subdirectories--you must use `i' to
-reinsert a subdirectory.
-
-   The files in a Dired buffers are normally listed in alphabetical
-order by file names.  Alternatively Dired can sort them by date/time.
-The Dired command `s' (`dired-sort-toggle-or-edit') switches between
-these two sorting modes.  The mode line in a Dired buffer indicates
-which way it is currently sorted--by name, or by date.
-
-   `C-u s SWITCHES <RET>' lets you specify a new value for
-`dired-listing-switches'.
-
-
-File: emacs,  Node: Dired and Find,  Next: Wdired,  Prev: Dired Updating,  Up: Dired
-
-37.16 Dired and `find'
-======================
-
-You can select a set of files for display in a Dired buffer more
-flexibly by using the `find' utility to choose the files.
-
-   To search for files with names matching a wildcard pattern use `M-x
-find-name-dired'.  It reads arguments DIRECTORY and PATTERN, and
-chooses all the files in DIRECTORY or its subdirectories whose
-individual names match PATTERN.
-
-   The files thus chosen are displayed in a Dired buffer, in which the
-ordinary Dired commands are available.
-
-   If you want to test the contents of files, rather than their names,
-use `M-x find-grep-dired'.  This command reads two minibuffer
-arguments, DIRECTORY and REGEXP; it chooses all the files in DIRECTORY
-or its subdirectories that contain a match for REGEXP.  It works by
-running the programs `find' and `grep'.  See also `M-x grep-find', in
-*note Grep Searching::.  Remember to write the regular expression for
-`grep', not for Emacs.  (An alternative method of showing files whose
-contents match a given regexp is the `% g REGEXP' command, see *note
-Marks vs Flags::.)
-
-   The most general command in this series is `M-x find-dired', which
-lets you specify any condition that `find' can test.  It takes two
-minibuffer arguments, DIRECTORY and FIND-ARGS; it runs `find' in
-DIRECTORY, passing FIND-ARGS to tell `find' what condition to test.  To
-use this command, you need to know how to use `find'.
-
-   The format of listing produced by these commands is controlled by the
-variable `find-ls-option', whose default value specifies using options
-`-ld' for `ls'.  If your listings are corrupted, you may need to change
-the value of this variable.
-
-   The command `M-x locate' provides a similar interface to the
-`locate' program.  `M-x locate-with-filter' is similar, but keeps only
-files whose names match a given regular expression.
-
-   These buffers don't work entirely like ordinary Dired buffers: file
-operations work, but do not always automatically update the buffer.
-Reverting the buffer with `g' deletes all inserted subdirectories, and
-erases all flags and marks.
-
-
-File: emacs,  Node: Wdired,  Next: Image-Dired,  Prev: Dired and Find,  Up: Dired
-
-37.17 Editing the Dired Buffer
-==============================
-
-Wdired is a special mode that allows you to perform file operations by
-editing the Dired buffer directly (the "W" in "Wdired" stands for
-"writable.")  To enter Wdired mode, type `C-x C-q'
-(`dired-toggle-read-only') while in a Dired buffer.  Alternatively, use
-the `Immediate / Edit File Names' menu item.
-
-   While in Wdired mode, you can rename files by editing the file names
-displayed in the Dired buffer.  All the ordinary Emacs editing
-commands, including rectangle operations and `query-replace', are
-available for this.  Once you are done editing, type `C-c C-c'
-(`wdired-finish-edit').  This applies your changes and switches back to
-ordinary Dired mode.
-
-   Apart from simply renaming files, you can move a file to another
-directory by typing in the new file name (either absolute or relative).
-To mark a file for deletion, delete the entire file name.  To change
-the target of a symbolic link, edit the link target name which appears
-next to the link name.
-
-   The rest of the text in the buffer, such as the file sizes and
-modification dates, is marked read-only, so you can't edit it.
-However, if you set `wdired-allow-to-change-permissions' to `t', you
-can edit the file permissions.  For example, you can change
-`-rw-r--r--' to `-rw-rw-rw-' to make a file world-writable.  These
-changes also take effect when you type `C-c C-c'.
 

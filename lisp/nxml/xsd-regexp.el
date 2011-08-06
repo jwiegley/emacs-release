@@ -1,6 +1,6 @@
 ;;; xsd-regexp.el --- translate W3C XML Schema regexps to Emacs regexps
 
-;; Copyright (C) 2003, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: James Clark
 ;; Keywords: XML, regexp
@@ -710,8 +710,7 @@ whose value is a range-list."
   "Use a UnicodeData file to generate code to initialize Unicode categories.
 Code is inserted into the current buffer."
   (interactive "fUnicodeData file: ")
-  (save-excursion
-    (set-buffer (find-file-noselect file))
+  (with-current-buffer (find-file-noselect file)
     (goto-char (point-min))
     (mapc (lambda (x) (put x 'xsdre-ranges nil)) xsdre-gen-categories)
     (while (re-search-forward "^\\([0-9A-Fa-f]*\\);[^;]*;\\([A-Z][a-z]\\);"

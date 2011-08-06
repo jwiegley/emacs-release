@@ -1,7 +1,7 @@
 ;;; ediff-init.el --- Macros, variables, and defsubsts used by Ediff
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
@@ -727,7 +727,9 @@ work."
   :type 'symbol
   :group 'ediff)
 
-(defcustom ediff-coding-system-for-write 'emacs-internal
+(defcustom ediff-coding-system-for-write (if (featurep 'xemacs)
+					     'escape-quoted
+					   'emacs-internal)
   "The coding system for write to use when writing out difference regions
 to temp files in buffer jobs and when Ediff needs to find fine differences."
   :type 'symbol
@@ -1546,8 +1548,12 @@ This default should work without changes."
 
 (defun ediff-event-key (event-or-key)
   (if (featurep 'xemacs)
-      (if (eventp event-or-key) (event-key event-or-key) event-or-key)
+      ;;(if (eventp event-or-key) (event-key event-or-key) event-or-key)
+      (if (eventp event-or-key) (event-to-character event-or-key t t) event-or-key)
     event-or-key))
+
+(defun ediff-last-command-char ()
+  (ediff-event-key last-command-event))
 
 
 (defsubst ediff-frame-iconified-p (frame)

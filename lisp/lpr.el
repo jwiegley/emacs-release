@@ -1,7 +1,7 @@
 ;;; lpr.el --- print Emacs buffer on line printer
 
 ;; Copyright (C) 1985, 1988, 1992, 1994, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: unix
@@ -31,7 +31,7 @@
 
 ;;;###autoload
 (defvar lpr-windows-system
-  (memq system-type '(emx win32 w32 mswindows ms-dos windows-nt)))
+  (memq system-type '(ms-dos windows-nt)))
 
 ;;;###autoload
 (defvar lpr-lp-system
@@ -45,7 +45,7 @@
 
 ;;;###autoload
 (defcustom printer-name
-  (and (memq system-type '(emx ms-dos)) "PRN")
+  (and (eq system-type 'ms-dos) "PRN")
   "The name of a local printer to which data is sent for printing.
 \(Note that PostScript files are sent to `ps-printer-name', which see.\)
 
@@ -97,13 +97,14 @@ This switch is used in conjunction with `printer-name'."
 
 ;;;###autoload
 (defcustom lpr-command
+ (purecopy
   (cond
    (lpr-windows-system
     "")
    (lpr-lp-system
     "lp")
    (t
-    "lpr"))
+    "lpr")))
   "Name of program for printing a file.
 
 On MS-DOS and MS-Windows systems, if the value is an empty string then

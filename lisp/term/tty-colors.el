@@ -1,7 +1,7 @@
 ;;; tty-colors.el --- color support for character terminals
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Eli Zaretskii
 ;; Maintainer: FSF
@@ -62,8 +62,6 @@
 
 ;;; Code:
 
-(defvar msdos-color-values)
-
 ;; The following list is taken from rgb.txt distributed with X.
 ;;
 ;; WARNING: Some colors, such as "lightred", do not appear in this
@@ -88,7 +86,7 @@
 ;; from the standard 8-bit X definitions (so the upper and lower bytes
 ;; of each value are actually identical).
 ;;
-(defvar color-name-rgb-alist
+(defconst color-name-rgb-alist
   '(("snow"		65535 64250 64250)
     ("ghostwhite"	63736 63736 65535)
     ("whitesmoke"	62965 62965 62965)
@@ -748,7 +746,7 @@
     ("lightgreen"	37008 61166 37008))
   "An alist of X color names and associated 16-bit RGB values.")
 
-(defvar tty-standard-colors
+(defconst tty-standard-colors
   '(("black"	0     0     0     0)
     ("red"	1 65535     0     0)
     ("green"	2     0 65535     0)
@@ -760,7 +758,7 @@
   "An alist of 8 standard tty colors, their indices and RGB values.")
 
 ;; This is used by term.c
-(defvar tty-color-mode-alist
+(defconst tty-color-mode-alist
   '((never . -1)
     (no . -1)
     (default . 0)

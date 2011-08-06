@@ -1,7 +1,7 @@
 ;;; gomoku.el --- Gomoku game between you and Emacs
 
 ;; Copyright (C) 1988, 1994, 1996, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Philippe Schnoebelen <phs@lsv.ens-cachan.fr>
 ;; Maintainer: FSF
@@ -151,8 +151,8 @@ One useful value to include is `turn-on-font-lock' to highlight the pieces."
 
   (define-key gomoku-mode-map [remap previous-line] 'gomoku-move-up)
   (define-key gomoku-mode-map [remap next-line] 'gomoku-move-down)
-  (define-key gomoku-mode-map [remap beginning-of-line] 'gomoku-beginning-of-line)
-  (define-key gomoku-mode-map [remap end-of-line] 'gomoku-end-of-line)
+  (define-key gomoku-mode-map [remap move-beginning-of-line] 'gomoku-beginning-of-line)
+  (define-key gomoku-mode-map [remap move-end-of-line] 'gomoku-end-of-line)
   (define-key gomoku-mode-map [remap undo] 'gomoku-human-takes-back)
   (define-key gomoku-mode-map [remap advertised-undo] 'gomoku-human-takes-back))
 
@@ -730,12 +730,12 @@ that DVAL has been added on SQUARE."
 (defun gomoku (&optional n m)
   "Start a Gomoku game between you and Emacs.
 
-If a game is in progress, this command allow you to resume it.
+If a game is in progress, this command allows you to resume it.
 If optional arguments N and M are given, an N by M board is used.
 If prefix arg is given for N, M is prompted for.
 
 You and Emacs play in turn by marking a free square.  You mark it with X
-and Emacs marks it with O. The winner is the first to get five contiguous
+and Emacs marks it with O.  The winner is the first to get five contiguous
 marks horizontally, vertically or in diagonal.
 
 You play by moving the cursor over the square you choose and hitting
@@ -939,6 +939,7 @@ If the game is finished, this command requests for another game."
 	       "Your move?"))
   ;; This may seem silly, but if one omits the following line (or a similar
   ;; one), the cursor may very well go to some place where POINT is not.
+  ;; FIXME: this can't be right!!  --Stef
   (save-excursion (set-buffer (other-buffer))))
 
 (defun gomoku-prompt-for-other-game ()
@@ -989,7 +990,8 @@ If the game is finished, this command requests for another game."
 (defun gomoku-goto-xy (x y)
   "Move point to square at X, Y coords."
   (let ((inhibit-point-motion-hooks t))
-    (goto-line (+ 1 gomoku-y-offset (* gomoku-square-height (1- y)))))
+    (goto-char (point-min))
+    (forward-line (+ gomoku-y-offset (* gomoku-square-height (1- y)))))
   (move-to-column (+ gomoku-x-offset (* gomoku-square-width (1- x)))))
 
 (defun gomoku-plot-square (square value)

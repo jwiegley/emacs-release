@@ -1,5 +1,5 @@
 /* machine description file for AMD x86-64.
-   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
      Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -106,7 +106,12 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #undef START_FILES
 #undef LIB_STANDARD
 
-#else /* !__OpenBSD__ && !__FreeBSD__ && !__NetBSD__ && !SOLARIS2 */
+#elif defined(__APPLE__)
+
+/* LIB_STANDARD and START_FILES set correctly in s/darwin.h */
+
+#else /* !__OpenBSD__ && !__FreeBSD__ && !__NetBSD__ && !SOLARIS2
+         && !__APPLE__ */
 /* The duplicate -lgcc is intentional in the definition of LIB_STANDARD.
    The reason is that some functions in libgcc.a call functions from libc.a,
    and some libc.a functions need functions from libgcc.a.  Since most

@@ -2,10 +2,10 @@ This is ../../info/elisp, produced by makeinfo version 4.11 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.1.
+corresponding to Emacs version 23.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -25,6 +25,147 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: POSIX Regexps,  Next: Match Data,  Prev: Regexp Search,  Up: Searching and Matching
+
+34.5 POSIX Regular Expression Searching
+=======================================
+
+The usual regular expression functions do backtracking when necessary
+to handle the `\|' and repetition constructs, but they continue this
+only until they find _some_ match.  Then they succeed and report the
+first match found.
+
+   This section describes alternative search functions which perform the
+full backtracking specified by the POSIX standard for regular expression
+matching.  They continue backtracking until they have tried all
+possibilities and found all matches, so they can report the longest
+match, as required by POSIX.  This is much slower, so use these
+functions only when you really need the longest match.
+
+   The POSIX search and match functions do not properly support the
+non-greedy repetition operators (*note non-greedy: Regexp Special.).
+This is because POSIX backtracking conflicts with the semantics of
+non-greedy repetition.
+
+ -- Command: posix-search-forward regexp &optional limit noerror repeat
+     This is like `re-search-forward' except that it performs the full
+     backtracking specified by the POSIX standard for regular expression
+     matching.
+
+ -- Command: posix-search-backward regexp &optional limit noerror repeat
+     This is like `re-search-backward' except that it performs the full
+     backtracking specified by the POSIX standard for regular expression
+     matching.
+
+ -- Function: posix-looking-at regexp
+     This is like `looking-at' except that it performs the full
+     backtracking specified by the POSIX standard for regular expression
+     matching.
+
+ -- Function: posix-string-match regexp string &optional start
+     This is like `string-match' except that it performs the full
+     backtracking specified by the POSIX standard for regular expression
+     matching.
+
+
+File: elisp,  Node: Match Data,  Next: Search and Replace,  Prev: POSIX Regexps,  Up: Searching and Matching
+
+34.6 The Match Data
+===================
+
+Emacs keeps track of the start and end positions of the segments of
+text found during a search; this is called the "match data".  Thanks to
+the match data, you can search for a complex pattern, such as a date in
+a mail message, and then extract parts of the match under control of
+the pattern.
+
+   Because the match data normally describe the most recent search only,
+you must be careful not to do another search inadvertently between the
+search you wish to refer back to and the use of the match data.  If you
+can't avoid another intervening search, you must save and restore the
+match data around it, to prevent it from being overwritten.
+
+* Menu:
+
+* Replacing Match::	  Replacing a substring that was matched.
+* Simple Match Data::     Accessing single items of match data,
+			    such as where a particular subexpression started.
+* Entire Match Data::     Accessing the entire match data at once, as a list.
+* Saving Match Data::     Saving and restoring the match data.
+
+
+File: elisp,  Node: Replacing Match,  Next: Simple Match Data,  Up: Match Data
+
+34.6.1 Replacing the Text that Matched
+--------------------------------------
+
+This function replaces all or part of the text matched by the last
+search.  It works by means of the match data.
+
+ -- Function: replace-match replacement &optional fixedcase literal
+          string subexp
+     This function replaces the text in the buffer (or in STRING) that
+     was matched by the last search.  It replaces that text with
+     REPLACEMENT.
+
+     If you did the last search in a buffer, you should specify `nil'
+     for STRING and make sure that the current buffer when you call
+     `replace-match' is the one in which you did the searching or
+     matching.  Then `replace-match' does the replacement by editing
+     the buffer; it leaves point at the end of the replacement text, and
+     returns `t'.
+
+     If you did the search in a string, pass the same string as STRING.
+     Then `replace-match' does the replacement by constructing and
+     returning a new string.
+
+     If FIXEDCASE is non-`nil', then `replace-match' uses the
+     replacement text without case conversion; otherwise, it converts
+     the replacement text depending upon the capitalization of the text
+     to be replaced.  If the original text is all upper case, this
+     converts the replacement text to upper case.  If all words of the
+     original text are capitalized, this capitalizes all the words of
+     the replacement text.  If all the words are one-letter and they
+     are all upper case, they are treated as capitalized words rather
+     than all-upper-case words.
+
+     If LITERAL is non-`nil', then REPLACEMENT is inserted exactly as
+     it is, the only alterations being case changes as needed.  If it
+     is `nil' (the default), then the character `\' is treated
+     specially.  If a `\' appears in REPLACEMENT, then it must be part
+     of one of the following sequences:
+
+    `\&'
+          `\&' stands for the entire text being replaced.
+
+    `\N'
+          `\N', where N is a digit, stands for the text that matched
+          the Nth subexpression in the original regexp.  Subexpressions
+          are those expressions grouped inside `\(...\)'.  If the Nth
+          subexpression never matched, an empty string is substituted.
+
+    `\\'
+          `\\' stands for a single `\' in the replacement text.
+
+     These substitutions occur after case conversion, if any, so the
+     strings they substitute are never case-converted.
+
+     If SUBEXP is non-`nil', that says to replace just subexpression
+     number SUBEXP of the regexp that was matched, not the entire
+     match.  For example, after matching `foo \(ba*r\)', calling
+     `replace-match' with 1 as SUBEXP means to replace just the text
+     that matched `\(ba*r\)'.
+
+ -- Function: match-substitute-replacement replacement &optional
+          fixedcase literal string subexp
+     This function returns the text that would be inserted into the
+     buffer by `replace-match', but without modifying the buffer.  It is
+     useful if you want to present the user with actual replacement
+     result, with constructs like `\N' or `\&' substituted with matched
+     groups.  Arguments REPLACEMENT and optional FIXEDCASE, LITERAL,
+     STRING and SUBEXP have the same meaning as for `replace-match'.
 
 
 File: elisp,  Node: Simple Match Data,  Next: Entire Match Data,  Prev: Replacing Match,  Up: Match Data
@@ -1559,10 +1700,6 @@ Abbrev mode is a minor mode controlled by the variable `abbrev-mode'.
      This variable automatically becomes buffer-local when set in any
      fashion.
 
- -- Variable: default-abbrev-mode
-     This is the value of `abbrev-mode' for buffers that do not
-     override it.  It is the same as `(default-value 'abbrev-mode)'.
-
 
 File: elisp,  Node: Abbrev Tables,  Next: Defining Abbrevs,  Prev: Abbrev Mode,  Up: Abbrevs
 
@@ -1760,7 +1897,7 @@ communication.
      returns `nil' as its value, then `expand-abbrev' returns `nil'
      even though expansion did occur.
 
- -- abbrev-insert: abbrev &optional name start end
+ -- Function: abbrev-insert abbrev &optional name start end
      This function inserts the abbrev expansion of `abbrev', replacing
      the text between `start' and `end'.  If `start' is omitted, it
      defaults to point.  `name', if non-`nil', should be the name by
@@ -2350,6 +2487,18 @@ much like text written into a file.  *Note Coding Systems::.
      `file-relative-name' is useful for constructing such relative file
      names.
 
+ -- Variable: process-file-side-effects
+     This variable indicates, whether a call of `process-file' changes
+     remote files.
+
+     Per default, this variable is always set to `t', meaning that a
+     call of `process-file' could potentially change any file on a
+     remote host.  When set to `nil', a file handler could optimize its
+     behaviour with respect to remote file attributes caching.
+
+     This variable should never be changed by `setq'.  Instead of, it
+     shall be set only by let-binding.
+
  -- Function: call-process-region start end program &optional delete
           destination display &rest args
      This function sends the text from START to END as standard input
@@ -2515,12 +2664,10 @@ delay.
      does nothing and returns `nil'.
 
  -- Function: start-process-shell-command name buffer-or-name command
-          &rest command-args
      This function is like `start-process' except that it uses a shell
      to execute the specified command.  The argument COMMAND is a shell
-     command name, and COMMAND-ARGS are the arguments for the shell
-     command.  The variable `shell-file-name' specifies which shell to
-     use.
+     command name.  The variable `shell-file-name' specifies which
+     shell to use.
 
      The point of running a program through the shell, rather than
      directly with `start-process', is so that you can employ shell
@@ -2531,7 +2678,7 @@ delay.
      meanings.  *Note Shell Arguments::.
 
  -- Function: start-file-process-shell-command name buffer-or-name
-          command &rest command-args
+          command
      This function is like `start-process-shell-command', but uses
      `start-file-process' internally.  By this, COMMAND can be executed
      also on remote hosts, depending on `default-directory'.
@@ -3029,6 +3176,13 @@ its output is inserted in the associated buffer.  The position to insert
 the output is determined by the `process-mark', which is then updated
 to point to the end of the text just inserted.  Usually, but not
 always, the `process-mark' is at the end of the buffer.
+
+   Killing the associated buffer of a process also kills the process.
+Emacs asks for confirmation first, if the process's
+`process-query-on-exit-flag' is non-`nil' (*note Query Before Exit::).
+This confirmation is done by the function
+`process-kill-buffer-query-function', which is run from
+`kill-buffer-query-functions' (*note Killing Buffers::).
 
  -- Function: process-buffer process
      This function returns the associated buffer of the process PROCESS.
@@ -3831,8 +3985,9 @@ on the arguments you give it.
     :type TYPE
           Specify the communication type.  A value of `nil' specifies a
           stream connection (the default); `datagram' specifies a
-          datagram connection.  Both connections and servers can be of
-          either type.
+          datagram connection; `seqpacket' specifies a "sequenced
+          packet stream" connection.  Both connections and servers can
+          be of these types.
 
     :server SERVER-FLAG
           If SERVER-FLAG is non-`nil', create a server.  Otherwise,
@@ -3931,13 +4086,6 @@ on the arguments you give it.
 
     :filter FILTER
           Initialize the process filter to FILTER.
-
-    :filter-multibyte BOOL
-          If BOOL is non-`nil', strings given to the process filter are
-          multibyte, otherwise they are unibyte.  If you don't specify
-          this keyword at all, the default is that the strings are
-          multibyte if `default-enable-multibyte-characters' is
-          non-`nil'.
 
     :sentinel SENTINEL
           Initialize the process sentinel to SENTINEL.
@@ -4889,10 +5037,6 @@ for this; *note Display Tables::).
      `truncate-partial-width-windows' takes precedence in
      "partial-width" windows (i.e., windows that do not occupy the
      entire frame width).
-
- -- User Option: default-truncate-lines
-     This variable is the default value for `truncate-lines', for
-     buffers that do not have buffer-local values for it.
 
  -- User Option: truncate-partial-width-windows
      This variable controls line truncation in "partial-width" windows.
@@ -5913,6 +6057,13 @@ the buffer's contents.
      Therefore, `(remove-overlays)' removes all the overlays in the
      current buffer.
 
+ -- Function: copy-overlay overlay
+     This function returns a copy of OVERLAY.  The copy has the same
+     endpoints and properties as OVERLAY.  However, the marker
+     insertion type for the start of the overlay and for the end of the
+     overlay are set to their default values (*note Marker Insertion
+     Types::).
+
    Here are some examples:
 
      ;; Create an overlay.
@@ -6378,7 +6529,7 @@ text.
 
    On graphical terminals, you can specify the line spacing for all
 lines in a frame, using the `line-spacing' frame parameter (*note
-Layout Parameters::).  However, if the variable `default-line-spacing'
+Layout Parameters::).  However, if the default value of `line-spacing'
 is non-`nil', it overrides the frame's `line-spacing' parameter.  An
 integer value specifies the number of pixels put below lines.  A
 floating point number specifies the spacing relative to the frame's
@@ -6619,12 +6770,18 @@ attribute is ignored.
      `semi-expanded', `expanded', `extra-expanded', or `ultra-expanded'.
 
 `:height'
-     Font height--either an integer in units of 1/10 point, or a
-     floating point number specifying the amount by which to scale the
-     height of any underlying face, or a function that is called with
-     one argument (the height of the underlying face) and returns the
-     height of the new face.  If the function is passed an integer
-     argument, it must return an integer.
+     The height of the font.  In the simplest case, this is an integer
+     in units of 1/10 point.
+
+     The value can also be a floating point number or a function, which
+     specifies the height relative to an "underlying face" (i.e., a
+     face that has a lower priority in the list described in *note
+     Displaying Faces::).  If the value is a floating point number,
+     that specifies the amount by which to scale the height of the
+     underlying face.  If the value is a function, that function is
+     called with one argument, the height of the underlying face, and
+     returns the height of the new face.  If the function is passed an
+     integer argument, it must return an integer.
 
      The height of the default face must be specified using an integer;
      floating point and function values are not allowed.
@@ -6741,8 +6898,9 @@ attribute is ignored.
      The name of a face from which to inherit attributes, or a list of
      face names.  Attributes from inherited faces are merged into the
      face like an underlying face would be, with higher priority than
-     underlying faces.  If a list of faces is used, attributes from
-     faces earlier in the list override those from later faces.
+     underlying faces (*note Displaying Faces::).  If a list of faces
+     is used, attributes from faces earlier in the list override those
+     from later faces.
 
    For compatibility with Emacs 20, you can also specify values for two
 "fake" face attributes: `:bold' and `:italic'.  Their values must be
@@ -6770,178 +6928,4 @@ to setting `:slant' to `normal'.
      This returns `t' if OBJECT is a valid bitmap specification,
      suitable for use with `:stipple' (see above).  It returns `nil'
      otherwise.
-
-
-File: elisp,  Node: Attribute Functions,  Next: Displaying Faces,  Prev: Face Attributes,  Up: Faces
-
-38.12.3 Face Attribute Functions
---------------------------------
-
-This section describes the functions for accessing and modifying the
-attributes of an existing face.
-
- -- Function: set-face-attribute face frame &rest arguments
-     This function sets one or more attributes of FACE for FRAME.  The
-     attributes you specify this way override whatever the `defface'
-     says.
-
-     The extra arguments ARGUMENTS specify the attributes to set, and
-     the values for them.  They should consist of alternating attribute
-     names (such as `:family' or `:underline') and corresponding values.
-     Thus,
-
-          (set-face-attribute 'foo nil
-                              :width 'extended
-                              :weight 'bold
-                              :underline "red")
-
-     sets the attributes `:width', `:weight' and `:underline' to the
-     corresponding values.
-
-     If FRAME is `t', this function sets the default attributes for new
-     frames.  Default attribute values specified this way override the
-     `defface' for newly created frames.
-
-     If FRAME is `nil', this function sets the attributes for all
-     existing frames, and the default for new frames.
-
- -- Function: face-attribute face attribute &optional frame inherit
-     This returns the value of the ATTRIBUTE attribute of FACE on
-     FRAME.  If FRAME is `nil', that means the selected frame (*note
-     Input Focus::).
-
-     If FRAME is `t', this returns whatever new-frames default value
-     you previously specified with `set-face-attribute' for the
-     ATTRIBUTE attribute of FACE.  If you have not specified one, it
-     returns `nil'.
-
-     If INHERIT is `nil', only attributes directly defined by FACE are
-     considered, so the return value may be `unspecified', or a
-     relative value.  If INHERIT is non-`nil', FACE's definition of
-     ATTRIBUTE is merged with the faces specified by its `:inherit'
-     attribute; however the return value may still be `unspecified' or
-     relative.  If INHERIT is a face or a list of faces, then the
-     result is further merged with that face (or faces), until it
-     becomes specified and absolute.
-
-     To ensure that the return value is always specified and absolute,
-     use a value of `default' for INHERIT; this will resolve any
-     unspecified or relative values by merging with the `default' face
-     (which is always completely specified).
-
-     For example,
-
-          (face-attribute 'bold :weight)
-               => bold
-
- -- Function: face-attribute-relative-p attribute value
-     This function returns non-`nil' if VALUE, when used as the value
-     of the face attribute ATTRIBUTE, is relative.  This means it would
-     modify, rather than completely override, any value that comes from
-     a subsequent face in the face list or that is inherited from
-     another face.
-
-     `unspecified' is a relative value for all attributes.  For
-     `:height', floating point and function values are also relative.
-
-     For example:
-
-          (face-attribute-relative-p :height 2.0)
-               => t
-
- -- Function: face-all-attributes face &optional frame
-     This function returns an alist of attributes of FACE.  The
-     elements of the result are name-value pairs of the form
-     `(ATTR-NAME . ATTR-VALUE)'.  Optional argument FRAME specifies the
-     frame whose definition of FACE to return; if omitted or `nil', the
-     returned value describes the default attributes of FACE for newly
-     created frames.
-
- -- Function: merge-face-attribute attribute value1 value2
-     If VALUE1 is a relative value for the face attribute ATTRIBUTE,
-     returns it merged with the underlying value VALUE2; otherwise, if
-     VALUE1 is an absolute value for the face attribute ATTRIBUTE,
-     returns VALUE1 unchanged.
-
-   The following functions provide compatibility with Emacs 20 and
-below.  They work by calling `set-face-attribute'.  Values of `t' and
-`nil' for their FRAME argument are handled just like
-`set-face-attribute' and `face-attribute'.
-
- -- Function: set-face-foreground face color &optional frame
- -- Function: set-face-background face color &optional frame
-     These functions set the `:foreground' attribute (or `:background'
-     attribute, respectively) of FACE to COLOR.
-
- -- Function: set-face-stipple face pattern &optional frame
-     This function sets the `:stipple' attribute of FACE to PATTERN.
-
- -- Function: set-face-font face font &optional frame
-     This function sets the `:font' attribute of FACE to FONT.
-
- -- Function: set-face-bold-p face bold-p &optional frame
-     This function sets the `:weight' attribute of FACE to NORMAL if
-     BOLD-P is `nil', and to BOLD otherwise.
-
- -- Function: set-face-italic-p face italic-p &optional frame
-     This function sets the `:slant' attribute of FACE to NORMAL if
-     ITALIC-P is `nil', and to ITALIC otherwise.
-
- -- Function: set-face-underline-p face underline &optional frame
-     This function sets the `:underline' attribute of FACE to UNDERLINE.
-
- -- Function: set-face-inverse-video-p face inverse-video-p &optional
-          frame
-     This function sets the `:inverse-video' attribute of FACE to
-     INVERSE-VIDEO-P.
-
- -- Function: invert-face face &optional frame
-     This function swaps the foreground and background colors of face
-     FACE.
-
-   The following functions examine the attributes of a face.  If you
-don't specify FRAME, they refer to the selected frame; `t' refers to
-the default data for new frames.  They return the symbol `unspecified'
-if the face doesn't define any value for that attribute.
-
- -- Function: face-foreground face &optional frame inherit
- -- Function: face-background face &optional frame inherit
-     These functions return the foreground color (or background color,
-     respectively) of face FACE, as a string.
-
-     If INHERIT is `nil', only a color directly defined by the face is
-     returned.  If INHERIT is non-`nil', any faces specified by its
-     `:inherit' attribute are considered as well, and if INHERIT is a
-     face or a list of faces, then they are also considered, until a
-     specified color is found.  To ensure that the return value is
-     always specified, use a value of `default' for INHERIT.
-
- -- Function: face-stipple face &optional frame inherit
-     This function returns the name of the background stipple pattern
-     of face FACE, or `nil' if it doesn't have one.
-
-     If INHERIT is `nil', only a stipple directly defined by the face
-     is returned.  If INHERIT is non-`nil', any faces specified by its
-     `:inherit' attribute are considered as well, and if INHERIT is a
-     face or a list of faces, then they are also considered, until a
-     specified stipple is found.  To ensure that the return value is
-     always specified, use a value of `default' for INHERIT.
-
- -- Function: face-font face &optional frame
-     This function returns the name of the font of face FACE.
-
- -- Function: face-bold-p face &optional frame
-     This function returns a non-`nil' value if the `:weight' attribute
-     of FACE is bolder than normal (i.e., one of `semi-bold', `bold',
-     `extra-bold', or `ultra-bold').  Otherwise, it returns `nil'.
-
- -- Function: face-italic-p face &optional frame
-     This function returns a non-`nil' value if the `:slant' attribute
-     of FACE is `italic' or `oblique', and `nil' otherwise.
-
- -- Function: face-underline-p face &optional frame
-     This function returns the `:underline' attribute of face FACE.
-
- -- Function: face-inverse-video-p face &optional frame
-     This function returns the `:inverse-video' attribute of face FACE.
 

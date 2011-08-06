@@ -1,7 +1,7 @@
 ;;; esh-test.el --- Eshell test suite
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009  Free Software Foundation, Inc.
+;;   2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -45,8 +45,7 @@
     (((class color) (background dark)) (:foreground "Green" :bold t)))
   "*The face used to highlight OK result strings."
   :group 'eshell-test)
-;; backward-compatibility alias
-(put 'eshell-test-ok-face 'face-alias 'eshell-test-ok)
+(define-obsolete-face-alias 'eshell-test-ok-face 'eshell-test-ok "22.1")
 
 (defface eshell-test-failed
   '((((class color) (background light)) (:foreground "OrangeRed" :bold t))
@@ -54,8 +53,7 @@
     (t (:bold t)))
   "*The face used to highlight FAILED result strings."
   :group 'eshell-test)
-;; backward-compatibility alias
-(put 'eshell-test-failed-face 'face-alias 'eshell-test-failed)
+(define-obsolete-face-alias 'eshell-test-failed-face 'eshell-test-failed "22.1")
 
 (defcustom eshell-show-usage-metrics nil
   "*If non-nil, display different usage metrics for each Eshell command."

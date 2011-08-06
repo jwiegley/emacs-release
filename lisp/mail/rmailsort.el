@@ -1,7 +1,7 @@
 ;;; rmailsort.el --- Rmail: sort messages
 
 ;; Copyright (C) 1990, 1993, 1994, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Masanobu UMEDA <umerin@mse.kyutech.ac.jp>
 ;; Maintainer: FSF
@@ -249,6 +249,10 @@ Numeric keys are sorted numerically, all others as strings."
   (timezone-make-date-sortable date "GMT" "GMT"))
 
 (provide 'rmailsort)
+
+;; Local Variables:
+;; generated-autoload-file: "rmail.el"
+;; End:
 
 ;; arch-tag: 665da245-f6a7-4115-ad8c-ba19216988d5
 ;;; rmailsort.el ends here

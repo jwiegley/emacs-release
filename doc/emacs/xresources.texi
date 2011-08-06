@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1987, 1993, 1994, 1995, 1997, 2001, 2002, 2003,
-@c   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+@c   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node X Resources, Antinews, Emacs Invocation, Top
 @appendix X Options and Resources
@@ -107,11 +107,19 @@ emacs.borderWidth: 4
 @end ifnottex
 
   The order in which the lines appear in the file does not matter.
-Also, command-line options always override the X resources file.
+One way to experiment with the effect of different resource settings
+is to use the @code{editres} program.  See the @code{editres} man page
+for more details.
+
+  Emacs does not process X resources at all if you set the variable
+@code{inhibit-x-resources} to a non-@code{nil} value, or if you
+specify the @samp{-Q} (or @samp{--quick}) command-line argument
+(@pxref{Initial Options}).  (The @samp{-Q} argument automatically sets
+@code{inhibit-x-resources} to @code{t}.)
 
 @ifnottex
-  The following X command-line options affect how X resources are
-processed:
+  In addition, you can use the following command-line options to
+override the X resources file:
 
 @table @samp
 @item -name @var{name}
@@ -150,10 +158,6 @@ other resource specifications.
 @end table
 @end ifnottex
 
-  One way to experiment with the effect of different resource settings
-is to use the @code{editres} program.  See the @code{editres} man page
-for more details.
-
 @node Table of Resources
 @appendixsec Table of X Resources for Emacs
 
@@ -189,7 +193,7 @@ Specifies whether to make the cursor blink. The default is @samp{on}.  Use
 @end ifnottex
 
 @item @code{font} (class @code{Font})
-Font name for the @code{default} font.  @xref{Font X}.  You can also
+Font name for the @code{default} font.  @xref{Fonts}.  You can also
 specify a fontset name (@pxref{Fontsets}).
 
 @item @code{fontBackend} (class @code{FontBackend})
@@ -217,8 +221,8 @@ all frames.
 @ifnottex
 @item @code{fullscreen} (class @code{Fullscreen})
 The desired fullscreen size.  The value can be one of @code{fullboth},
-@code{fullwidth} or @code{fullheight}, which correspond to
-the command-line options @samp{-fs}, @samp{-fw}, and @samp{-fh}
+@code{maximized}, @code{fullwidth} or @code{fullheight}, which correspond to
+the command-line options @samp{-fs}, @samp{-mm}, @samp{-fw}, and @samp{-fh}
 (@pxref{Window Size X}).
 
 Note that this applies to the initial frame only.
@@ -303,12 +307,14 @@ Name to display in the title bar of the initial Emacs frame.
 @item @code{toolBar} (class @code{ToolBar})
 @cindex tool bar
 Number of lines to reserve for the tool bar.  A zero value suppresses
-the tool bar.  If the value is non-zero and
-@code{auto-resize-tool-bars} is non-@code{nil}, the tool bar's size
-will be changed automatically so that all tool bar items are visible.
+the tool bar.  For the Emacs tool bar (i.e. not Gtk+), if the value is 
+non-zero and @code{auto-resize-tool-bars} is non-@code{nil}, the tool bar's
+size will be changed automatically so that all tool bar items are visible.
   If the value of @code{auto-resize-tool-bars} is @code{grow-only},
 the tool bar expands automatically, but does not contract automatically.
 To contract the tool bar, you must redraw the frame by entering @kbd{C-l}.
+For the Gtk+ tool bar, any non-zero value means on and
+@code{auto-resize-tool-bars} has no effect.
 
 @item @code{useXIM} (class @code{UseXIM})
 @cindex XIM

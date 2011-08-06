@@ -1,7 +1,7 @@
 ;;; ielm.el --- interaction mode for Emacs Lisp
 
 ;; Copyright (C) 1994, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: David Smith <maa036@lancaster.ac.uk>
 ;; Maintainer: FSF
@@ -172,7 +172,7 @@ This variable is buffer-local.")
     (define-key map "\C-m" 'ielm-return)
     (define-key map "\C-j" 'ielm-send-input)
     (define-key map "\e\C-x" 'eval-defun)         ; for consistency with
-    (define-key map "\e\t" 'lisp-complete-symbol) ; lisp-interaction-mode
+    (define-key map "\e\t" 'completion-at-point)  ; lisp-interaction-mode
     ;; These bindings are from `lisp-mode-shared-map' -- can you inherit
     ;; from more than one keymap??
     (define-key map "\e\C-q" 'indent-sexp)
@@ -493,6 +493,8 @@ Customized bindings may be defined in `ielm-map', which currently contains:
   (set (make-local-variable 'indent-line-function) 'ielm-indent-line)
   (set (make-local-variable 'ielm-working-buffer) (current-buffer))
   (set (make-local-variable 'fill-paragraph-function) 'lisp-fill-paragraph)
+  (add-hook 'completion-at-point-functions
+            'lisp-completion-at-point nil 'local)
 
   ;; Value holders
   (set (make-local-variable '*) nil)
@@ -541,7 +543,7 @@ Customized bindings may be defined in `ielm-map', which currently contains:
 
 ;;; User command
 
-;;;###autoload (add-hook 'same-window-buffer-names "*ielm*")
+;;;###autoload (add-hook 'same-window-buffer-names (purecopy "*ielm*"))
 
 ;;;###autoload
 (defun ielm nil

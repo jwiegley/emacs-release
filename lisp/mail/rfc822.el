@@ -1,7 +1,7 @@
 ;;; rfc822.el --- hairy rfc822 parser for mail and news and suchlike
 
 ;; Copyright (C) 1986, 1987, 1990, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Richard Mlynarik <mly@eddie.mit.edu>
 ;; Maintainer: FSF
@@ -278,44 +278,48 @@
       (list (substring header-text (match-beginning 1) (match-end 1)))
     (let ((buf (generate-new-buffer " rfc822")))
       (unwind-protect
-	(save-excursion
-	  (set-buffer buf)
-	  (make-local-variable 'case-fold-search)
-	  (setq case-fold-search nil)	;For speed(?)
-	  (insert header-text)
-	  ;; unfold continuation lines
-	  (goto-char (point-min))
+          (with-current-buffer buf
+            (make-local-variable 'case-fold-search)
+            (setq case-fold-search nil)	;For speed(?)
+            (insert header-text)
+            ;; unfold continuation lines
+            (goto-char (point-min))
 
-	  (while (re-search-forward "\\([^\\]\\(\\\\\\\\\\)*\\)\n[ \t]" nil t)
-	    (replace-match "\\1 " t))
+            (while (re-search-forward "\\([^\\]\\(\\\\\\\\\\)*\\)\n[ \t]"
+                                      nil t)
+              (replace-match "\\1 " t))
 
-	  (goto-char (point-min))
-	  (let ((list ())
-		tem
-		;; This is for rfc822-bad-address.  Give it a non-nil
-		;; initial value to prevent rfc822-bad-address from
-		;; raising a wrong-type-argument error
-		(rfc822-address-start (point)))
-	    (catch 'address ; this is for rfc822-bad-address
-	      (rfc822-nuke-whitespace)
-	      (while (not (eobp))
-		(setq rfc822-address-start (point))
-		(setq tem
-		      (cond ((rfc822-looking-at ?\,)
-			     nil)
-			    ((looking-at "[][\000-\037@;:\\.>)]")
-			     (forward-char)
-			     (rfc822-bad-address
-			       (format "Strange character \\%c found"
-				       (preceding-char))))
-			    (t
-			     (rfc822-addresses-1 t))))
-		(cond ((null tem))
-		      ((stringp tem)
-		       (setq list (cons tem list)))
-		      (t
-		       (setq list (nconc (nreverse tem) list)))))
-	      (nreverse list))))
+            (goto-char (point-min))
+	    ;; Give `rfc822-address-start' a non-nil initial value to
+	    ;; prevent `rfc822-bad-address' from raising a
+	    ;; `wrong-type-argument' error.
+            (let* ((rfc822-address-start (point))
+		   list tem
+		   (err
+		    (catch 'address
+		      ;; Note that `rfc822-nuke-whitespace' and
+		      ;; `rfc822-looking-at' can throw.
+		      (rfc822-nuke-whitespace)
+		      (while (not (eobp))
+			(setq rfc822-address-start (point))
+			(setq tem
+			      (cond ((rfc822-looking-at ?\,)
+				     nil)
+				    ((looking-at "[][\000-\037@;:\\.>)]")
+				     (forward-char)
+				     (catch 'address ; For rfc822-bad-address
+				       (rfc822-bad-address
+					(format "Strange character \\%c found"
+						(preceding-char)))))
+				    (t
+				     (rfc822-addresses-1 t))))
+			(cond ((null tem))
+			      ((stringp tem)
+			       (setq list (cons tem list)))
+			      (t
+			       (setq list (nconc (nreverse tem) list)))))
+		      nil)))
+	      (nreverse (append (if err (list err)) list))))
 	(and buf (kill-buffer buf))))))
 
 (provide 'rfc822)

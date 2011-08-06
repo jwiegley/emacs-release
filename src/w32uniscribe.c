@@ -1,5 +1,5 @@
 /* Font backend for the Microsoft W32 Uniscribe API.
-   Copyright (C) 2008, 2009 Free Software Foundation, Inc.
+   Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -22,11 +22,12 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
    Windows 2000, though most users of older systems will have it
    since it installs with Internet Explorer 5.0 and other software.
    We only enable the feature if it is available, so there is no chance
-   of calling non-existant functions.  */
+   of calling non-existent functions.  */
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x500
 #include <windows.h>
 #include <usp10.h>
+#include <setjmp.h>
 
 #include "lisp.h"
 #include "w32term.h"
@@ -78,7 +79,7 @@ uniscribe_list (frame, font_spec)
      Lisp_Object frame, font_spec;
 {
   Lisp_Object fonts = w32font_list_internal (frame, font_spec, 1);
-  font_add_log ("uniscribe-list", font_spec, fonts);
+  FONT_ADD_LOG ("uniscribe-list", font_spec, fonts);
   return fonts;
 }
 
@@ -87,7 +88,7 @@ uniscribe_match (frame, font_spec)
      Lisp_Object frame, font_spec;
 {
   Lisp_Object entity = w32font_match_internal (frame, font_spec, 1);
-  font_add_log ("uniscribe-match", font_spec, entity);
+  FONT_ADD_LOG ("uniscribe-match", font_spec, entity);
   return entity;
 }
 
@@ -665,7 +666,7 @@ int uniscribe_check_otf (font, otf_spec)
   struct gcpro gcpro1;
 
   /* Check the spec is in the right format.  */
-  if (!CONSP (otf_spec) || Flength (otf_spec) < 3)
+  if (!CONSP (otf_spec) || XINT (Flength (otf_spec)) < 3)
     return 0;
 
   /* Break otf_spec into its components.  */

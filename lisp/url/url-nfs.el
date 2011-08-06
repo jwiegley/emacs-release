@@ -1,7 +1,7 @@
 ;;; url-nfs.el --- NFS URL interface
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes
 
@@ -42,8 +42,7 @@
 Each can be used any number of times.")
 
 (defun url-nfs-unescape (format host port user pass file)
-  (save-excursion
-    (set-buffer (get-buffer-create " *nfs-parse*"))
+  (with-current-buffer (get-buffer-create " *nfs-parse*")
     (erase-buffer)
     (insert format)
     (goto-char (point-min))

@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 2000, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Minibuffer, M-x, Basic, Top
 @chapter The Minibuffer
@@ -456,12 +456,13 @@ default value is @code{nil}).
 using the variable @code{completion-styles}.  Its value should be a
 list of symbols, each representing a @dfn{completion style}; valid
 style symbols are @code{basic}, @code{partial-completion},
-@code{emacs22}, and @code{emacs21}.  When completing, Emacs attempts
-to use the first completion style in the list; if this does not return
-any completion alternatives, it tries the next completion style in the
-list, and so on.  The completion rules described in @ref{Completion
-Commands} correspond to the default value of @code{completion-styles},
-which is @code{(basic partial-completion emacs22)}.
+@code{emacs22}, @code{emacs21}, and @code{initials}.  When completing,
+Emacs attempts to use the first completion style in the list; if this
+does not return any completion alternatives, it tries the next
+completion style in the list, and so on.  The completion rules
+described in @ref{Completion Commands} correspond to the default value
+of @code{completion-styles}, which is @code{(basic partial-completion
+emacs22)}.
 
 @cindex Icomplete mode
 @findex icomplete-mode
@@ -600,7 +601,7 @@ repetition.  If you type just @key{RET}, that repeats the command
 unchanged.  You can also change the command by editing the Lisp
 expression before you execute it.  The repeated command is added to
 the front of the command history unless it is identical to the most
-recently item.
+recent item.
 
   Once inside the minibuffer for @kbd{C-x @key{ESC} @key{ESC}}, you can
 use the minibuffer history commands (@kbd{M-p}, @kbd{M-n}, @kbd{M-r},

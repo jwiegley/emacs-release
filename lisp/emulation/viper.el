@@ -4,7 +4,7 @@
 ;;		 Viper Is also a Package for Emacs Rebels.
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 ;; Keywords: emulations
@@ -14,7 +14,7 @@
 ;; filed in the Emacs bug reporting system against this file, a copy
 ;; of the bug report be sent to the maintainer's email address.
 
-(defconst viper-version "3.14 of November 22, 2008"
+(defconst viper-version "3.14.1 of August 15, 2009"
   "The current version of Viper")
 
 ;; This file is part of GNU Emacs.
@@ -647,10 +647,9 @@ This startup message appears whenever you load Viper, unless you type `y' now."
 ;; Remove local value in all existing buffers
 ;; This doesn't delocalize vars (which would have been desirable)
 (defun viper-delocalize-var (symbol)
-  (mapcar (lambda (buf) (save-excursion
-			  (set-buffer buf)
-			  (kill-local-variable symbol)))
-	  (buffer-list)))
+  (dolist (buf (buffer-list))
+    (with-current-buffer buf
+      (kill-local-variable symbol))))
 
 
 (defun viper-go-away ()
@@ -678,8 +677,9 @@ It also can't undo some Viper settings."
    global-mode-string
    (delq 'viper-mode-string global-mode-string))
 
-  (setq default-major-mode
-	(viper-standard-value 'default-major-mode viper-saved-non-viper-variables))
+  (setq-default major-mode
+                (viper-standard-value 'default-major-mode
+                                      viper-saved-non-viper-variables))
 
   (if (featurep 'emacs)
       (setq-default
@@ -834,8 +834,8 @@ It also can't undo some Viper settings."
   ;; in Fundamental Mode and Vi state.
   ;; When viper-mode is executed in such a case, it will set the major mode
   ;; back to fundamental-mode.
-  (if (eq default-major-mode 'fundamental-mode)
-      (setq default-major-mode 'viper-mode))
+  (if (eq (default-value 'major-mode) 'fundamental-mode)
+      (setq-default major-mode 'viper-mode))
 
   (add-hook 'change-major-mode-hook 'viper-major-mode-change-sentinel)
   (add-hook 'find-file-hooks 'set-viper-state-in-major-mode)
@@ -866,25 +866,17 @@ It also can't undo some Viper settings."
 	       ))
 
   ;; Tell vc-diff to put *vc* in Vi mode
-  (if (featurep 'vc)
-      (defadvice vc-diff (after viper-vc-ad activate)
-	"Force Vi state in VC diff buffer."
-	(viper-change-state-to-vi))
-    (eval-after-load
-     "vc"
-     '(defadvice vc-diff (after viper-vc-ad activate)
-	"Force Vi state in VC diff buffer."
-	(viper-change-state-to-vi))))
+  (eval-after-load
+      "vc"
+    '(defadvice vc-diff (after viper-vc-ad activate)
+       "Force Vi state in VC diff buffer."
+       (viper-change-state-to-vi)))
 
   (eval-after-load
    "emerge"
    '(defadvice emerge-quit (after viper-emerge-advice activate)
       "Run `viper-change-state-to-vi' after quitting emerge."
       (viper-change-state-to-vi)))
-  ;; In case Emerge was loaded before Viper.
-  (defadvice emerge-quit (after viper-emerge-advice activate)
-    "Run `viper-change-state-to-vi' after quitting emerge."
-    (viper-change-state-to-vi))
 
   ;; passwd.el sets up its own buffer, which turns up in Vi mode,
   ;; thus overriding the local map.  We don't need Vi mode here.
@@ -896,7 +888,11 @@ It also can't undo some Viper settings."
 
   (defadvice self-insert-command (around viper-self-insert-ad activate)
     "Ignore all self-inserting keys in the vi-state."
-    (if (and (eq viper-current-state 'vi-state) (interactive-p))
+    (if (and (eq viper-current-state 'vi-state)
+	     ;; Do not use called-interactively-p here. XEmacs does not have it
+	     ;; and interactive-p is just fine.
+	     ;; (called-interactively-p 'interactive))
+	     (interactive-p))
 	(beep 1)
       ad-do-it
       ))
@@ -942,10 +938,6 @@ It also can't undo some Viper settings."
    '(defadvice rmail-cease-edit (after viper-rmail-advice activate)
       "Switch to Emacs state when done editing message."
       (viper-change-state-to-emacs)))
-  ;; In case RMAIL was loaded before Viper.
-  (defadvice rmail-cease-edit (after viper-rmail-advice activate)
-    "Switch to emacs state when done editing message."
-    (viper-change-state-to-emacs))
 
   ;; ISO accents
   ;; Need to do it after loading iso-acc, or else this loading will wipe out
@@ -1214,7 +1206,7 @@ These two lines must come in the order given.
 (if (null viper-saved-non-viper-variables)
     (setq viper-saved-non-viper-variables
 	  (list
-	   (cons 'default-major-mode (list default-major-mode))
+	   (cons 'default-major-mode (list (default-value 'major-mode)))
 	   (cons 'next-line-add-newlines (list next-line-add-newlines))
 	   (cons 'require-final-newline (list require-final-newline))
 	   (cons 'scroll-step (list scroll-step))

@@ -1,6 +1,6 @@
 /* Caching facts about regions of the buffer, for optimization.
    Copyright (C) 1985, 1986, 1987, 1988, 1989, 1993, 1995, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -20,6 +20,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 #include <stdio.h>
+#include <setjmp.h>
 
 #include "lisp.h"
 #include "buffer.h"

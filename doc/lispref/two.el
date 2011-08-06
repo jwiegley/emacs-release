@@ -1,6 +1,6 @@
 ;; Auxiliary functions for preparing a two volume manual.
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; --rjc 30mar92
@@ -54,8 +54,8 @@ Then run texindex on that file and save."
 
 (defun volume-header-toc-markup ()
   "Insert Volume I and Volume II text into .toc file.
-NOTE: this auxilary function is file specific.
-This is for the *Elisp Ref Manual*"
+NOTE: this auxiliary function is file specific.
+This is for the *Elisp Ref Manual*."
   (interactive)
   (goto-char (point-min))
   (insert "\\unnumbchapentry {Volume 1}{}\n\\unnumbchapentry {}{}\n")

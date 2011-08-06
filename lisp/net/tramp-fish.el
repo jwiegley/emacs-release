@@ -1,6 +1,6 @@
 ;;; tramp-fish.el --- Tramp access functions for FISH protocol
 
-;; Copyright (C) 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Michael Albinus <michael.albinus@gmx.de>
 ;; Keywords: comm, processes
@@ -209,7 +209,7 @@ Used instead of analyzing error codes of commands.")
     (directory-files-and-attributes . tramp-fish-handle-directory-files-and-attributes)
     ;; `dired-call-process' performed by default handler
     ;; `dired-compress-file' performed by default handler
-    ;; `dired-uncache' performed by default handler
+    (dired-uncache . tramp-handle-dired-uncache)
     (expand-file-name . tramp-fish-handle-expand-file-name)
     ;; `file-accessible-directory-p' performed by default handler
     (file-attributes . tramp-fish-handle-file-attributes)
@@ -312,10 +312,19 @@ pass to the OPERATION."
   (tramp-fish-do-copy-or-rename-file
    'copy filename newname ok-if-already-exists keep-date preserve-uid-gid))
 
-(defun tramp-fish-handle-delete-directory (directory)
+(defun tramp-fish-handle-delete-directory (directory &optional recursive)
   "Like `delete-directory' for Tramp files."
   (when (file-exists-p directory)
-    (with-parsed-tramp-file-name
+    (if recursive
+	(mapc
+	 (lambda (file)
+	   (if (file-directory-p file)
+	       (tramp-compat-delete-directory file recursive)
+	     (delete-file file)))
+	 ;; We do not want to delete "." and "..".
+	 (directory-files
+	  directory 'full "^\\([^.]\\|\\.\\([^.]\\|\\..\\)\\).*")))
+     (with-parsed-tramp-file-name
 	(directory-file-name (expand-file-name directory)) nil
       (tramp-flush-directory-property v localname)
       (tramp-fish-send-command-and-check v (format "#RMD %s" localname)))))
@@ -1102,7 +1111,7 @@ connection if a previous connection has died for some reason."
       (when (and p (processp p))
 	(delete-process p))
       (setenv "TERM" tramp-terminal-type)
-      (setenv "PS1" "$ ")
+      (setenv "PS1" tramp-initial-end-of-output)
       (tramp-message
        vec 3 "Opening connection for %s@%s using %s..."
        tramp-current-user tramp-current-host tramp-current-method)

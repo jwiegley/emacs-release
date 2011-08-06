@@ -1,7 +1,7 @@
 This is ../../info/mairix-el, produced by makeinfo version 4.11 from
 mairix-el.texi.
 
-Copyright (C) 2008, 2009 Free Software Foundation, Inc.
+Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -35,7 +35,7 @@ the currently displayed mail, save regularly used searches in your
 `.emacs' for future use and lets you call mairix for updating the
 database.
 
-   Copyright (C) 2008, 2009 Free Software Foundation, Inc.
+   Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -316,12 +316,12 @@ do the following:
 
 
 Tag Table:
-Node: Top928
-Node: About mairix and mairix.el2545
-Node: Configuring mairix4661
-Node: Setting up mairix.el6656
-Node: Using mairix.el7612
-Node: Extending mairix.el12725
+Node: Top934
+Node: About mairix and mairix.el2557
+Node: Configuring mairix4673
+Node: Setting up mairix.el6668
+Node: Using mairix.el7624
+Node: Extending mairix.el12737
 
 End Tag Table
 

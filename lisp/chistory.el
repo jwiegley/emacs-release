@@ -1,7 +1,7 @@
 ;;; chistory.el --- list command history
 
 ;; Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: K. Shane Hartman
 ;; Maintainer: FSF
@@ -116,8 +116,7 @@ The buffer is left in Command History mode."
 	  (prin1 (car history))
 	  (terpri))
 	(setq history (cdr history))))
-    (save-excursion
-      (set-buffer "*Command History*")
+    (with-current-buffer "*Command History*"
       (goto-char (point-min))
       (if (eobp)
 	  (error "No command history")

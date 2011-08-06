@@ -1,6 +1,6 @@
 /* Interface definitions for display code.
    Copyright (C) 1985, 1993, 1994, 1997, 1998, 1999, 2000, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008, 2009
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -173,10 +173,10 @@ extern int trace_redisplay_p;
 struct text_pos
 {
   /* Character position.  */
-  int charpos;
+  EMACS_INT charpos;
 
   /* Corresponding byte position.  */
-  int bytepos;
+  EMACS_INT bytepos;
 };
 
 /* Access character and byte position of POS in a functional form.  */
@@ -311,7 +311,7 @@ struct glyph
      buffer, this is a position in that buffer.  A value of -1
      together with a null object means glyph is a truncation glyph at
      the start of a row.  */
-  int charpos;
+  EMACS_INT charpos;
 
   /* Lisp object source of this glyph.  Currently either a buffer or
      a string, if the glyph was produced from characters which came from
@@ -1811,7 +1811,6 @@ enum display_element_type
 
 enum prop_idx
 {
-  AUTO_COMPOSED_PROP_IDX,
   FONTIFIED_PROP_IDX,
   FACE_PROP_IDX,
   INVISIBLE_PROP_IDX,
@@ -1901,11 +1900,11 @@ struct it
 
   /* The next position at which to check for face changes, invisible
      text, overlay strings, end of text etc., which see.  */
-  int stop_charpos;
+  EMACS_INT stop_charpos;
 
   /* Maximum string or buffer position + 1.  ZV when iterating over
      current_buffer.  */
-  int end_charpos;
+  EMACS_INT end_charpos;
 
   /* C string to iterate over.  Non-null means get characters from
      this string, otherwise characters are read from current_buffer
@@ -1918,10 +1917,10 @@ struct it
 
   /* Start and end of a visible region; -1 if the region is not
      visible in the window.  */
-  int region_beg_charpos, region_end_charpos;
+  EMACS_INT region_beg_charpos, region_end_charpos;
 
   /* Position at which redisplay end trigger functions should be run.  */
-  int redisplay_end_trigger_charpos;
+  EMACS_INT redisplay_end_trigger_charpos;
 
   /* 1 means multibyte characters are enabled.  */
   unsigned multibyte_p : 1;
@@ -2007,8 +2006,8 @@ struct it
   {
     Lisp_Object string;
     int string_nchars;
-    int end_charpos;
-    int stop_charpos;
+    EMACS_INT end_charpos;
+    EMACS_INT stop_charpos;
     struct composition_it cmp_it;
     int face_id;
 
@@ -2258,8 +2257,8 @@ struct it
       && ((IT)->c == '\n'				\
 	  || ((IT)->c == '\r' && (IT)->selective)))
 
-/* Call produce_glyphs or produce_glyphs_hook, if set.  Shortcut to
-   avoid the function call overhead.  */
+/* Call produce_glyphs or FRAME_RIF->produce_glyphs, if set.  Shortcut
+   to avoid the function call overhead.  */
 
 #define PRODUCE_GLYPHS(IT)                              \
   do {                                                  \
@@ -3123,7 +3122,8 @@ enum resource_types
   RES_TYPE_FLOAT,
   RES_TYPE_BOOLEAN,
   RES_TYPE_STRING,
-  RES_TYPE_SYMBOL
+  RES_TYPE_SYMBOL,
+  RES_TYPE_BOOLEAN_NUMBER
 };
 
 extern Lisp_Object x_get_arg P_ ((Display_Info *, Lisp_Object,

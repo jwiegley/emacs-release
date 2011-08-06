@@ -286,7 +286,12 @@
 
 (defconst feedmail-patch-level "8")
 
-(eval-when-compile (require 'smtpmail))
+(require 'mail-utils)		     ; pick up mail-strip-quoted-names
+
+(eval-when-compile
+  (require 'smtpmail)
+  (require 'cl))
+
 (autoload 'mail-do-fcc "sendmail")
 
 (defgroup feedmail nil
@@ -481,11 +486,10 @@ header is fiddled after the From: header is fiddled."
 (defcustom feedmail-force-binary-write t
   "*If non-nil, force writing file as binary (this applies to queues and Fcc:).
 On systems where there is a difference between binary and text files,
-feedmail will temporarily manipulate the values of `buffer-file-type'
-and/or `default-buffer-file-type' to make the writing as binary.  If
-nil, writing will be in text mode.  On systems where there is no
-distinction or where it is controlled by other variables or other
-means, this option has no effect."
+feedmail will temporarily manipulate the value of `buffer-file-type'
+to make the writing as binary.  If nil, writing will be in text mode.
+On systems where there is no distinction or where it is controlled by other
+variables or other means, this option has no effect."
   :group 'feedmail-misc
   :type 'boolean
   )
@@ -1522,6 +1526,9 @@ bail out with an appropriate answer to the global confirmation prompt."
   (interactive "p")
   (let ((feedmail-queue-runner-confirm-global t)) (feedmail-run-the-queue arg)))
 
+;; letf fools the byte-compiler.
+(defvar file-name-buffer-file-type-alist)
+
 ;;;###autoload
 (defun feedmail-run-the-queue (&optional arg)
   "Visit each message in the feedmail queue directory and send it out.
@@ -1601,9 +1608,9 @@ backup file names and the like)."
 			   (not
 			    (let ((mail-header-separator feedmail-queue-alternative-mail-header-separator))
 			      (feedmail-find-eoh t)))))
-		  (let ((file-name-buffer-file-type-alist nil) (default-buffer-file-type nil))
-		    (erase-buffer) (insert-file-contents maybe-file))
-		)
+		  (letf ((file-name-buffer-file-type-alist nil)
+                         ((default-value 'buffer-file-type) nil))
+		    (erase-buffer) (insert-file-contents maybe-file)))
 	      ;; if M-H-S not found and (a-M-H-S is non-nil and is found)
 	      ;; temporarily set M-H-S to the value of a-M-H-S
 	      (if (and (not (feedmail-find-eoh t))
@@ -1626,8 +1633,7 @@ backup file names and the like)."
 		      (if (and already-buffer (not (file-exists-p maybe-file)))
 			  ;; we have gotten rid of the file associated with the
 			  ;; buffer, so update the buffer's notion of that
-			  (save-excursion
-			    (set-buffer already-buffer)
+			  (with-current-buffer already-buffer
 			    (setq buffer-file-name nil)))))
 		(error (setq messages-skipped (1+ messages-skipped))))
 	      (kill-buffer blobby-buffer)
@@ -1799,7 +1805,8 @@ see the variable feedmail-prompt-before-queue-user-alist.
 ")
     (and (stringp feedmail-prompt-before-queue-help-supplement)
 	 (princ feedmail-prompt-before-queue-help-supplement))
-    (save-excursion (set-buffer standard-output) (if (fboundp 'help-mode) (help-mode)))))
+    (with-current-buffer standard-output
+      (if (fboundp 'help-mode) (help-mode)))))
 
 (defun feedmail-look-at-queue-directory (queue-directory)
   "Find out some things about a queue directory.
@@ -1913,7 +1920,8 @@ mapped to mostly alphanumerics for safety."
 	(setq filename buffer-file-name)
       (setq filename (feedmail-create-queue-filename queue-directory)))
     ;; make binary file on DOS/Win95/WinNT, etc
-    (let ((buffer-file-type feedmail-force-binary-write)) (write-file filename))
+    (let ((buffer-file-type feedmail-force-binary-write))
+      (write-file filename))
     ;; convenient for moving from draft to q, for example
     (if (and previous-buffer-file-name (or (not is-fqm) (not is-in-this-dir))
 	     (y-or-n-p (format "FQM: Was previously %s; delete that? " previous-buffer-file-name)))
@@ -1947,6 +1955,7 @@ mapped to mostly alphanumerics for safety."
      (feedmail-rfc822-time-zone time)
      )))
 
+(declare-function expand-mail-aliases "mailalias" (beg end &optional exclude))
 
 (defun feedmail-send-it-immediately ()
   "Handle immediate sending, including during a queue run."
@@ -1967,7 +1976,7 @@ mapped to mostly alphanumerics for safety."
 	 (mail-header-separator mail-header-separator)
 	 )
     (unwind-protect
-	(save-excursion
+	(save-current-buffer
 	  (set-buffer feedmail-error-buffer) (erase-buffer)
 	  (set-buffer feedmail-prepped-text-buffer) (erase-buffer)
 
@@ -2072,21 +2081,21 @@ mapped to mostly alphanumerics for safety."
 		  (if (and (not feedmail-queue-runner-is-active) (setq also-file (buffer-file-name feedmail-raw-text-buffer)))
 		      (progn		; if a file but not running the queue, offer to delete it
 			(setq also-file (expand-file-name also-file))
-			(if (or feedmail-queue-auto-file-nuke
-				(y-or-n-p (format "FQM: Delete message file %s? " also-file)))
-			    (save-excursion
-			      ;; if we delete the affiliated file, get rid
-			      ;; of the file name association and make sure we
-			      ;; don't annoy people with a prompt on exit
-			      (delete-file also-file)
-			      (set-buffer feedmail-raw-text-buffer)
-			      (setq buffer-offer-save nil)
-			      (setq buffer-file-name nil)
-			      )
-			  )))
+			(when (or feedmail-queue-auto-file-nuke
+                                  (y-or-n-p
+                                   (format "FQM: Delete message file %s? "
+                                           also-file)))
+                          ;; if we delete the affiliated file, get rid
+                          ;; of the file name association and make sure we
+                          ;; don't annoy people with a prompt on exit
+                          (delete-file also-file)
+                          (with-current-buffer feedmail-raw-text-buffer
+                            (setq buffer-offer-save nil)
+                            (setq buffer-file-name nil)))))
 		  (goto-char (point-min))
 		  ;; re-insert and handle any Fcc fields (and, optionally, any Bcc).
-		  (if fcc (let ((default-buffer-file-type feedmail-force-binary-write))
+		  (if fcc (letf (((default-value 'buffer-file-type)
+                                  feedmail-force-binary-write))
 			    (insert fcc)
 			    (if (not feedmail-nuke-bcc-in-fcc)
 				(progn (if bcc-holder (insert bcc-holder))
@@ -2193,18 +2202,19 @@ fiddle-plex, as described in the documentation for the variable
 	(mapcar
 	 '(lambda (feedmail-spray-this-address)
 	    (let ((spray-buffer (get-buffer-create " *FQM Outgoing Email Spray*")))
-	      (save-excursion
-		(set-buffer spray-buffer)
+	      (with-current-buffer spray-buffer
 		(erase-buffer)
 		;; not life's most efficient methodology, but spraying isn't
 		;; an every-5-minutes event either
 		(insert-buffer-substring feedmail-prepped-text-buffer)
-		;; There's a good case to me made that each separate transmission of
-		;; a message in the spray should have a distinct Message-Id:.  There
-		;; is also a less compelling argument in the other direction.  I think
-		;; they technically should have distinct Message-Id:s, but I doubt that
-		;; anyone cares, practically.  If someone complains about it, I'll add
-		;; it.
+		;; There's a good case to me made that each separate
+		;; transmission of a message in the spray should
+		;; have a distinct Message-Id:.  There is also a less
+		;; compelling argument in the other direction.
+		;; I think they technically should have distinct
+		;; Message-Id:s, but I doubt that anyone cares,
+		;; practically.  If someone complains about it, I'll
+		;; add it.
 		(feedmail-fiddle-list-of-spray-fiddle-plexes feedmail-spray-address-fiddle-plex-list)
 		;; this (let ) is just in case some buffer eater
 		;; is cheating and using the global variable name instead
@@ -2578,7 +2588,6 @@ Resent-To:, Resent-Cc:, and Resent-Bcc:."
     ))
 
 
-(require 'mail-utils)			; pick up mail-strip-quoted-names
 (defun feedmail-deduce-address-list (message-buffer header-start header-end addr-regexp address-list)
   "Get address list with all comments and other excitement trimmed.
 Addresses are collected only from headers whose names match the fourth
@@ -2589,8 +2598,8 @@ been weeded out."
 	(this-line)
 	(this-line-end))
     (unwind-protect
-	(save-excursion
-	  (set-buffer (get-buffer-create " *FQM scratch*")) (erase-buffer)
+	(with-current-buffer (get-buffer-create " *FQM scratch*")
+          (erase-buffer)
 	  (insert-buffer-substring message-buffer header-start header-end)
 	  (goto-char (point-min))
 	  (let ((case-fold-search t))

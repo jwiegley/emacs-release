@@ -1,15 +1,124 @@
-2009-07-29  Chong Yidong  <cyd@stupidchicken.com>
+2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
 
-	* Version 23.1 released.
+	* Version 23.2 released.
+
+2010-05-05  Christoph  <cschol2112@googlemail.com>  (tiny change)
+
+	* makefile.w32-in (OTHER_PLATFORM_SUPPORT): Use parenthesis
+	for macros for nmake compatibility.
+
+2010-04-03  Juanma Barranquero  <lekktu@gmail.com>
+
+	Add stubs for Windows, required after CVE-2010-0825 change.
+	* ntlib.c (getgid, getegid, setegid): New stubs.
+	* ntlib.h (getgid, getegid, setegid): Declare them.
+
+2010-04-02  Dan Rosenberg  <dan.j.rosenberg@gmail.com>  (tiny change)
+
+	* movemail.c (main): Check return values of setuid.  Avoid
+	possibility of symlink attack when movemail is setgid mail
+	(CVE-2010-0825).
+
+2010-03-19  Tetsurou Okazaki  <okazaki@be.to>  (tiny change)
+
+	* Makefile.in (uninstall): Handle the case where archlibdir does
+	not exist.  (Bug#5720)
+
+2010-02-20  Kevin Ryde  <user42@zip.com.au>
+
+	* etags.c (Scheme_functions): Don't loop past a null character
+	(Bug#5601).
+
+2010-01-29  Kester Habermann  <kester@linuxtag.org>  (tiny change)
+
+	* etags.c (Fortran_functions): Handle recursive keyword
+	(Bug#5484).
+
+2010-01-11  Glenn Morris  <rgm@gnu.org>
+
+	* ebrowse.c (version):
+	* etags.c (print_version):
+	* rcs2log (Copyright): Set copyright year to 2010.
+
+2009-12-09  David Robinow  <drobinow@gmail.com>  (tiny change)
+
+	* makefile.w32-in: Use parenthesis for macros for nmake
+	compatibility.
+
+2009-11-23  Tobias Ringström  <tobias@ringis.se>  (tiny change)
+
+	* etags.c (absolute_filename): Use memmove if we have it for
+	overlapping copy.
+
+2009-11-04  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* make-docfile.c (scan_lisp_file): Also look for `defvaralias'.
+
+2009-10-15  Juanma Barranquero  <lekktu@gmail.com>
+
+	* .gitignore: Add echolisp.tmp.
+
+2009-10-15  Glenn Morris  <rgm@gnu.org>
+
+	* emacsclient.c (print_help_and_exit): Fix bug report instructions.
+
+	* makefile.w32-in (echolisp): New rule.
+	(clean): Delete echolisp.tmp.
+
+2009-09-27  Eli Zaretskii  <eliz@gnu.org>
+
+	* makefile.w32-in (OTHER_PLATFORM_SUPPORT): Add term/internal.elc,
+	term/pc-win.elc, emacs-lisp/easymenu.elc, and term/ns-win.elc, to
+	be consistent with src/Makefile.in.
+
+2009-09-11  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* update-game-score.c (main): Sort scores before trimming them,
+	reported by Jason Feng <jfeng@ozbert.com> (bug#4397).
+
+2009-09-09  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in ($(DESTDIR)${archlibdir}): Set umask to world-readable
+	before creating directories and game score files.
+
+2009-08-19  Glenn Morris  <rgm@gnu.org>
+
+	* cvtmail.c: Remove file.
+	* Makefile.in (UTILITIES): Remove cvtmail.
+	(cvtmail${EXEEXT}): Remove.
 
 2009-07-08  E. Jay Berkenbilt  <ejb@ql.org>  (tiny change)
 
 	* b2m.c (main): Ensure that each message ends in two newlines.
 
+2009-07-03  Jason Rumney  <jasonr@gnu.org>
+
+	* emacsclient.c (w32_set_user_model_id): Use standard types.
+
 2009-07-03  Eli Zaretskii  <eliz@gnu.org>
 
-	* makefile.w32-in (WINNT_SUPPORT): Add term/common-win.elc, like
+	* makefile.w32-in (WINNT_SUPPORT): Add common-win.elc, like
 	src/Makefile.in did.
+
+2009-06-30  Jason Rumney  <jasonr@gnu.org>
+
+	* emacsclient.c (w32_give_focus): Use GetModuleHandle for library
+	that is already loaded.
+	(w32_set_user_model_id): New function.
+	(main): Use it to associate emacsclient with emacs (bug#1849).
+
+2009-06-29  Jim Meyering  <meyering@redhat.com>
+
+	Remove useless if-before-free test.
+	* make-docfile.c (scan_lisp_file): Remove useless test.
+
+2009-06-23  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* Makefile.in (movemail.o): Don't pass -Demacs, unused.
+
+2009-06-21  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Branch for 23.1.
 
 2006-06-09  Adrian Robert  <Adrian.B.Robert@gmail.com>
 
@@ -223,7 +332,7 @@
 	* Makefile.in (INSTALLABLES): Add LIB_SRC_EXTRA_INSTALLABLES.
 	Do not special case for NS_IMPL_COCOA.
 
-2008-07-16  Adrian Robert  <Adrian.B.Robert@gmail.com>
+2008-08-06  Adrian Robert  <Adrian.B.Robert@gmail.com>
 
 	* Makefile.in (CFLAGS): Drop -universal under NS_IMPL_COCOA.
 	(.m.o): Dispense with GNUstep-specific flags.
@@ -1002,7 +1111,7 @@
 	* etags.c (TEX_mode): Check getc returns EOF.
 	File ended without newline causes infinite loop.
 
-2002-07-30  Adrian Aichner  <adrian@xemacs.org>  (tiny change)
+2006-07-30  Adrian Aichner  <adrian@xemacs.org>  (tiny change)
 
 	* etags.c: It's XEmacs, not Xemacs: change all the occurrences.
 
@@ -1060,7 +1169,7 @@
 	[WINDOWSNT] <top level>: Don't redeclare malloc.
 	(main) [DOS_NT]: Switch stdin to binary mode, if it is not a
 	terminal device.
-	(main): Initialize bp, to avoid compiler warnings
+	(main): Initialize bp, to avoid compiler warnings.
 
 	* makefile.w32-in: Delete traces of leditcfns.c.
 
@@ -2925,7 +3034,7 @@
 
 	* etags.c (print_help): Change email address to send bugs to.
 
-1999-11-01  Francesco Potortì  <pot@gnu.org>>
+1999-11-01  Francesco Potortì  <pot@gnu.org>
 
 	* etags.c: Add suffix psw for PSWrap.
 	(L_getit): Generalize a "cp!=' '" into "!isspace(*cp)".
@@ -3770,7 +3879,7 @@
 	(<stdlib.h>, <string.h>) [STDC_HEADERS]: New #include's.
 	(Prolog_functions): prolog_skip_comment was called with wrong
 	number of arguments.
-	(xrealloc): fatal was called with wrong number of arguments
+	(xrealloc): fatal was called with wrong number of arguments.
 
 1996-11-08  Francesco Potortì  <F.Potorti@cnuce.cnr.it>
 
@@ -3854,7 +3963,7 @@
 	(xmalloc, fatal, error): New functions.
 	(delete_socket, handle_signals): New functions.
 	(progname, socket_name): New variables.
-	 [HAVE_SOCKETS] (main): Call handle_signals; set the new variables.
+	[HAVE_SOCKETS] (main): Call handle_signals; set the new variables.
 
 1996-09-01  Richard Stallman  <rms@ethanol.gnu.ai.mit.edu>
 
@@ -4007,7 +4116,7 @@
 1996-05-03  Andrew Innes  <andrewi@harlequin.co.uk>
 
 	* makefile.nt (LOCAL_FLAGS): Include path to NT shadow includes.
-	(movemail.exe, fakemail.exe): Now built under Win32.o
+	(movemail.exe, fakemail.exe): Now built under Win32.o.
 
 	* ntlib.c: Include ntlib.h.
 	(nt_sleep): Rename to sleep.
@@ -4627,9 +4736,9 @@
 1995-01-12  Francesco Potortì  (pot@cnuce.cnr.it)
 
 	* etags.c (FILEPOS, GET_CHARNO, GET_FILEPOS, max, LINENO): Deleted.
-	(append_to_tagfile, typedefs, typedefs_and_cplusplus,
-	 constantypedefs, update, vgrind_style, no_warnings,
-	 cxref_style, cplusplus, noindentypedefs): Were int, now logical.
+	(append_to_tagfile, typedefs, typedefs_and_cplusplus)
+	(constantypedefs, update, vgrind_style, no_warnings)
+	(cxref_style, cplusplus, noindentypedefs): Were int, now logical.
 	(permit_duplicates): Was a var, now a #define.
 	(filename_lb): Was global, now local to main.
 	(main): Open the tag file when in cxref mode.
@@ -4648,8 +4757,8 @@
 	(TOKEN_SAVED_P, SAVE_TOKEN, RESTORE_TOKEN): Deleted.
 	(C_entries): nameb and savenameb deleted.  Use dinamic allocation.
 	(pfcnt): Deleted.  Users updated.
-	(getit, Asm_labels, Pascal_functions, L_getit, get_scheme,
-	 TEX_getit, prolog_getit): Use dinamic allocation for storing
+	(getit, Asm_labels, Pascal_functions, L_getit, get_scheme)
+	(TEX_getit, prolog_getit): Use dinamic allocation for storing
 	the tag instead of a fixed size buffer.
 
 1995-01-10  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
@@ -5798,7 +5907,7 @@
 
 	* Makefile.in (install): Get the scripts from ${srcdir},
 	unlike the executables.
-	(ALL_CFLAGS): Add -I../src
+	(ALL_CFLAGS): Add -I../src.
 
 1993-05-27  Jim Blandy  (jimb@geech.gnu.ai.mit.edu)
 
@@ -6574,8 +6683,8 @@
 1990-01-19  David Lawrence  (tale@cocoa-puffs)
 
 	* timer.c, getdate.y (new files) and Makefile:
-	  Sub-process support for run-at-time in timer.el.
-	  Doesn't yet work correctly for USG.
+	Sub-process support for run-at-time in timer.el.
+	Doesn't yet work correctly for USG.
 
 1990-01-10  Jim Kingdon  (kingdon@pogo)
 
@@ -6701,7 +6810,7 @@
 
 1989-02-15  Richard Stallman  (rms@sugar-bombs.ai.mit.edu)
 
-	* etags.c: Prolog support from Sunichirou Sugou
+	* etags.c: Prolog support from Sunichirou Sugou.
 
 1989-02-03  Richard Stallman  (rms@sugar-bombs.ai.mit.edu)
 
@@ -6725,7 +6834,7 @@
 1988-12-31  Richard Mlynarik  (mly@rice-chex.ai.mit.edu)
 
 	* env.c: Add decl for my-index
-	* etags.c (file-entries): .oak => scheme
+	* etags.c (file-entries): .oak => scheme.
 
 1988-12-30  Richard Stallman  (rms@sugar-bombs.ai.mit.edu)
 
@@ -6893,7 +7002,7 @@
 
     Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995,
 	1996, 1997, 1998, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-	2007, 2008, 2009 Free Software Foundation, Inc.
+	2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

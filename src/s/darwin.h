@@ -1,6 +1,6 @@
 /* System description header file for Darwin (Mac OS X).
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-                 2008, 2009 Free Software Foundation, Inc.
+                 2008, 2009, 2010 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -90,6 +90,24 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
  */
 
 #define HAVE_PTYS
+/* Run only once.  We need a `for'-loop because the code uses
+   `continue'.  */
+#define PTY_ITERATION	for (i = 0; i < 1; i++)
+#define PTY_NAME_SPRINTF	/* none */
+#define PTY_TTY_NAME_SPRINTF	/* none */
+/* Note that openpty may fork via grantpt on Mac OS X 10.4/Darwin 8.
+   But we don't have to block SIGCHLD because it is blocked in the
+   implementation of grantpt.  */
+#define PTY_OPEN						\
+  do								\
+    {								\
+      int slave;						\
+      if (openpty (&fd, &slave, pty_name, NULL, NULL) == -1)	\
+	fd = -1;						\
+      else							\
+	emacs_close (slave);					\
+    }								\
+  while (0)
 
 /**
  * PTYs only work correctly on Darwin 7 or higher.  So make the
@@ -171,6 +189,9 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #define malloc unexec_malloc
 #define realloc unexec_realloc
 #define free unexec_free
+/* Don't use posix_memalign because it is not compatible with
+   unexmacosx.c.  */
+#undef HAVE_POSIX_MEMALIGN
 #endif
 
 /* The ncurses library has been moved out of the System framework in

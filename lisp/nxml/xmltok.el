@@ -1,6 +1,6 @@
 ;;; xmltok.el --- XML tokenization
 
-;; Copyright (C) 2003, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: James Clark
 ;; Keywords: XML
@@ -1759,8 +1759,7 @@ Processing instruction does not start with a name"
 	(setcdr name-def 'not-well-formed) ; avoid infinite expansion loops
 	(setq buf (get-buffer-create
 		   (format " *Entity %s*" (car name-def))))
-	(save-excursion
-	  (set-buffer buf)
+	(with-current-buffer buf
 	  (erase-buffer)
 	  (insert def)
 	  (goto-char (point-min))

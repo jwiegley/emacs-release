@@ -1,6 +1,6 @@
 ;;; xesam.el --- Xesam interface to search engines.
 
-;; Copyright (C) 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Michael Albinus <michael.albinus@gmx.de>
 ;; Keywords: tools, hypermedia
@@ -502,7 +502,7 @@ engine specific, widget :notify function to visualize xesam:url."
 		       'face 'xesam-mode-line
 		       'help-echo (when xesam-debug xesam-xml-string)))))))
 
-  (when (not (interactive-p))
+  (when (not (called-interactively-p 'interactive))
     ;; Initialize buffer.
     (setq buffer-read-only t)
     (let ((inhibit-read-only t))

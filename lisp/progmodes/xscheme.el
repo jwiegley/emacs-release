@@ -1,7 +1,7 @@
 ;;; xscheme.el --- run MIT Scheme under Emacs
 
 ;; Copyright (C) 1986, 1987, 1989, 1990, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: languages, lisp
@@ -134,7 +134,7 @@ has finished evaluating will signal an error."
 
 (defcustom xscheme-startup-message
   "This is the Scheme process buffer.
-Type \\[advertised-xscheme-send-previous-expression] to evaluate the expression before point.
+Type \\[xscheme-send-previous-expression] to evaluate the expression before point.
 Type \\[xscheme-send-control-g-interrupt] to abort evaluation.
 Type \\[describe-mode] for more information.
 
@@ -158,7 +158,8 @@ When called, the current buffer will be the Scheme process-buffer."
 
 (defun xscheme-evaluation-commands (keymap)
   (define-key keymap "\e\C-x" 'xscheme-send-definition)
-  (define-key keymap "\C-x\C-e" 'advertised-xscheme-send-previous-expression)
+  (define-key keymap "\C-x\C-e" 'xscheme-send-previous-expression)
+  (put 'xscheme-send-previous-expression :advertised-binding "\C-x\C-e")
   (define-key keymap "\eo" 'xscheme-send-buffer)
   (define-key keymap "\ez" 'xscheme-send-definition)
   (define-key keymap "\e\C-m" 'xscheme-send-previous-expression)
@@ -263,8 +264,8 @@ With argument, asks for a command line."
     (setq-default xscheme-buffer-name buffer-name)
     (setq-default xscheme-process-name process-name)
     (setq-default xscheme-runlight-string
-		  (save-excursion (set-buffer buffer-name)
-				  xscheme-runlight-string))
+		  (with-current-buffer buffer-name
+                    xscheme-runlight-string))
     (setq-default xscheme-runlight
 		  (if (eq (process-status process-name) 'run)
 		      default-xscheme-runlight
@@ -282,8 +283,8 @@ With argument, asks for a command line."
     (make-local-variable 'xscheme-process-name)
     (setq xscheme-process-name process-name)
     (make-local-variable 'xscheme-runlight)
-    (setq xscheme-runlight (save-excursion (set-buffer buffer-name)
-					   xscheme-runlight))))
+    (setq xscheme-runlight (with-current-buffer buffer-name
+                             xscheme-runlight))))
 
 (defun local-clear-scheme-interaction-buffer ()
   "Make the current buffer use the default scheme interaction buffer."
@@ -304,8 +305,7 @@ With argument, asks for a command line."
 	  ((not process)
 	   (error "Buffer `%s' is not a scheme interaction buffer" buffer-name))
 	  (t
-	   (save-excursion
-	     (set-buffer buffer)
+	   (with-current-buffer buffer
 	     (if (not (xscheme-process-buffer-current-p))
 		 (error "Buffer `%s' is not a scheme interaction buffer"
 			buffer-name)))
@@ -317,7 +317,7 @@ With argument, asks for a command line."
   "Major mode for interacting with an inferior MIT Scheme process.
 Like  scheme-mode  except that:
 
-\\[advertised-xscheme-send-previous-expression] sends the expression before point to the Scheme process as input
+\\[xscheme-send-previous-expression] sends the expression before point to the Scheme process as input
 \\[xscheme-yank-pop] yanks an expression previously sent to Scheme
 \\[xscheme-yank-push] yanks an expression more recently sent to Scheme
 
@@ -468,15 +468,14 @@ with no args, if that value is non-nil.
       (scheme-interaction-mode-commands scheme-interaction-mode-map)))
 
 (defun xscheme-enter-interaction-mode ()
-  (save-excursion
-    (set-buffer (xscheme-process-buffer))
+  (with-current-buffer (xscheme-process-buffer)
     (if (not (eq major-mode 'scheme-interaction-mode))
 	(if (eq major-mode 'scheme-debugger-mode)
 	    (scheme-interaction-mode-initialize)
 	    (scheme-interaction-mode t)))))
 
-(fset 'advertised-xscheme-send-previous-expression
-      'xscheme-send-previous-expression)
+(define-obsolete-function-alias 'advertised-xscheme-send-previous-expression
+  'xscheme-send-previous-expression "23.2")
 
 ;;;; Debugger Mode
 
@@ -518,8 +517,7 @@ Commands:
   (xscheme-send-char last-command-event))
 
 (defun xscheme-enter-debugger-mode (prompt-string)
-  (save-excursion
-    (set-buffer (xscheme-process-buffer))
+  (with-current-buffer (xscheme-process-buffer)
     (if (not (eq major-mode 'scheme-debugger-mode))
 	(progn
 	  (if (not (eq major-mode 'scheme-interaction-mode))
@@ -529,8 +527,7 @@ Commands:
 (defun xscheme-debugger-mode-p ()
   (let ((buffer (xscheme-process-buffer)))
     (and buffer
-	 (save-excursion
-	   (set-buffer buffer)
+	 (with-current-buffer buffer
 	   (eq major-mode 'scheme-debugger-mode)))))
 
 ;;;; Evaluation Commands
@@ -764,13 +761,11 @@ Control returns to the top level rep loop."
   (let ((inhibit-quit t))
     (cond ((not xscheme-control-g-synchronization-p)
 	   (interrupt-process xscheme-process-name))
-	  ((save-excursion
-	     (set-buffer xscheme-buffer-name)
+	  ((with-current-buffer xscheme-buffer-name
 	     xscheme-control-g-disabled-p)
 	   (message "Relax..."))
 	  (t
-	   (save-excursion
-	     (set-buffer xscheme-buffer-name)
+	   (with-current-buffer xscheme-buffer-name
 	     (setq xscheme-control-g-disabled-p t))
 	   (message xscheme-control-g-message-string)
 	   (interrupt-process xscheme-process-name)
@@ -806,8 +801,7 @@ Control returns to the top level rep loop."
 (defun xscheme-start-process (command-line the-process the-buffer)
   (let ((buffer (get-buffer-create the-buffer)))
     (let ((process (get-buffer-process buffer)))
-      (save-excursion
-	(set-buffer buffer)
+      (with-current-buffer buffer
 	(if (and process (memq (process-status process) '(run stop)))
 	    (set-marker (process-mark process) (point-max))
 	    (progn (if process (delete-process process))
@@ -943,8 +937,7 @@ the remaining input.")
 (defun xscheme-process-sentinel (proc reason)
   (let* ((buffer (process-buffer proc))
 	 (name (buffer-name buffer)))
-    (save-excursion
-      (set-buffer buffer)
+    (with-current-buffer buffer
       (xscheme-process-filter-initialize (eq reason 'run))
       (if (not (eq reason 'run))
 	  (progn
@@ -982,8 +975,7 @@ the remaining input.")
 	(call-noexcursion nil))
     (while xscheme-filter-input
       (setq call-noexcursion nil)
-      (save-excursion
-	(set-buffer (process-buffer proc))
+      (with-current-buffer (process-buffer proc)
 	(cond ((eq xscheme-process-filter-state 'idle)
 	       (let ((start (string-match "\e" xscheme-filter-input)))
 		 (if start
@@ -1192,8 +1184,7 @@ the remaining input.")
       string))
 
 (defun xscheme-cd (directory-string)
-  (save-excursion
-    (set-buffer (xscheme-process-buffer))
+  (with-current-buffer (xscheme-process-buffer)
     (cd directory-string)))
 
 (defun xscheme-prompt-for-confirmation (prompt-string)

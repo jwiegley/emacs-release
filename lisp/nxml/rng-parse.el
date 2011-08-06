@@ -1,6 +1,6 @@
 ;;; rng-parse.el --- parse an XML file and validate it against a schema
 
-;; Copyright (C) 2003, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: James Clark
 ;; Keywords: XML, RelaxNG
@@ -40,8 +40,7 @@ The returned list has the same form as that returned by
 for validation, such as returned by the function `rng-c-load-schema'.
 If the XML document is invalid with respect to schema, an error will
 be signaled in the same way as when it is not well-formed."
-  (save-excursion
-    (set-buffer (nxml-parse-find-file file))
+  (with-current-buffer (nxml-parse-find-file file)
     (unwind-protect
 	(let ((nxml-parse-file-name file)
 	      (nxml-validate-function 'rng-parse-do-validate)

@@ -1,7 +1,8 @@
 This is ../../info/rcirc, produced by makeinfo version 4.11 from
 rcirc.texi.
 
-Copyright (C) 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -33,7 +34,8 @@ communicate with each other in real-time.  Communication occurs both in
 topic channels which are collections of many users, or privately, with
 just one other user.
 
-   Copyright (C) 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1492,29 +1494,29 @@ Index
 
 
 Tag Table:
-Node: Top922
-Node: Basics2667
-Node: Internet Relay Chat2928
-Node: Getting started with rcirc4444
-Node: Reference7321
-Node: rcirc commands7658
-Node: Useful IRC commands10520
-Node: Configuration11247
-Node: Fighting Information Overload16155
-Node: Channels16650
-Node: People18221
-Node: Keywords19827
-Node: Notices20327
-Node: Hacking and Tweaking21220
-Node: Skipping /away messages using handlers21685
-Node: Using fly spell mode22432
-Node: Scrolling conservatively22853
-Node: Changing the time stamp format23525
-Node: Defining a new command23901
-Node: Reconnecting after you have lost the connection24721
-Node: GNU Free Documentation License26586
-Node: Key Index51764
-Node: Variable Index53145
-Node: Index54649
+Node: Top928
+Node: Basics2679
+Node: Internet Relay Chat2940
+Node: Getting started with rcirc4456
+Node: Reference7333
+Node: rcirc commands7670
+Node: Useful IRC commands10532
+Node: Configuration11259
+Node: Fighting Information Overload16167
+Node: Channels16662
+Node: People18233
+Node: Keywords19839
+Node: Notices20339
+Node: Hacking and Tweaking21232
+Node: Skipping /away messages using handlers21697
+Node: Using fly spell mode22444
+Node: Scrolling conservatively22865
+Node: Changing the time stamp format23537
+Node: Defining a new command23913
+Node: Reconnecting after you have lost the connection24733
+Node: GNU Free Documentation License26598
+Node: Key Index51776
+Node: Variable Index53157
+Node: Index54661
 
 End Tag Table

@@ -1,6 +1,6 @@
 ;;; url-ldap.el --- LDAP Uniform Resource Locator retrieval code
 
-;; Copyright (C) 1998, 1999, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 1998, 1999, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes
 
@@ -121,8 +121,7 @@ URL can be a URL string, or a URL vector of the type returned by
       (setq url (url-generic-parse-url (url-unhex-string url)))
     (if (not (vectorp url))
         (error "Argument is not a valid URL")))
-  (save-excursion
-    (set-buffer (generate-new-buffer " *url-ldap*"))
+  (with-current-buffer (generate-new-buffer " *url-ldap*")
     (setq url-current-object url)
     (insert "Content-type: text/html\r\n\r\n")
     (if (not (fboundp 'ldap-search-internal))

@@ -1,6 +1,6 @@
 /* Machine description file for intel 386.
    Copyright (C) 1987, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-                 2008, 2009  Free Software Foundation, Inc.
+                 2008, 2009, 2010  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -101,13 +101,6 @@ NOTE-END */
 #define ULIMIT_BREAK_VALUE (32*1024*1024)
 
 #define SEGMENT_MASK ((SEGMENT_SIZE)-1)
-#endif
-
-#if defined (DARWIN_OS)
-#ifdef _LP64
-/* For Intel Mac, with CC='gcc -arch x86_64'.  */
-#define NO_ARG_ARRAY
-#endif
 #endif
 
 /* arch-tag: 746338f0-cb7b-4f49-a98c-cb50817cf2ec

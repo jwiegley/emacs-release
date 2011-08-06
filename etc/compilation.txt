@@ -269,6 +269,7 @@ made it more strict about the error message that follows.
 
 keyboard handler.c(537) : warning C4005: 'min' : macro redefinition
 d:\tmp\test.c(23) : error C2143: syntax error : missing ';' before 'if'
+d:\tmp\test.c(1145) : see declaration of 'nsRefPtr'
 
 
 * Open Watcom
@@ -300,11 +301,15 @@ PCC-02151: line 21 column 40 file /usr/src/sb/ODBI_BHP.hpp:
 
 symbol: perl
 
+The second sample, from the Perl-Glib module, is a Glib message put
+through Perl warn() to get "at FILENAME line N".
+
 syntax error at automake line 922, near "':'"
 Died at test.pl line 27.
 store::odrecall('File_A', 'x2') called at store.pm line 90
 	(in cleanup) something bad at foo.pl line 3 during global destruction.
 
+GLib-GObject-WARNING **: /build/buildd/glib2.0-2.14.5/gobject/gsignal.c:1741: instance `0x8206790' has no handler with id `1234' at t-compilation-perl-gtk.pl line 3.
 
 * PHP
 
@@ -461,7 +466,7 @@ Compilation segmentation fault at Thu Jul 13 10:55:49
 Compilation finished at Thu Jul 21 15:02:15
 
 
-Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009
+Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
 Free Software Foundation, Inc.
 
 COPYING PERMISSIONS:

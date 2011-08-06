@@ -2,10 +2,10 @@ This is ../../info/elisp, produced by makeinfo version 4.11 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.1.
+corresponding to Emacs version 23.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -25,6 +25,202 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Derived Modes,  Next: Generic Modes,  Prev: Mode Help,  Up: Major Modes
+
+23.2.5 Defining Derived Modes
+-----------------------------
+
+It's often useful to define a new major mode in terms of an existing
+one.  An easy way to do this is to use `define-derived-mode'.
+
+ -- Macro: define-derived-mode variant parent name docstring
+          keyword-args... body...
+     This macro defines VARIANT as a major mode command, using NAME as
+     the string form of the mode name.  VARIANT and PARENT should be
+     unquoted symbols.
+
+     The new command VARIANT is defined to call the function PARENT,
+     then override certain aspects of that parent mode:
+
+        * The new mode has its own sparse keymap, named `VARIANT-map'.
+          `define-derived-mode' makes the parent mode's keymap the
+          parent of the new map, unless `VARIANT-map' is already set
+          and already has a parent.
+
+        * The new mode has its own syntax table, kept in the variable
+          `VARIANT-syntax-table', unless you override this using the
+          `:syntax-table' keyword (see below).  `define-derived-mode'
+          makes the parent mode's syntax-table the parent of
+          `VARIANT-syntax-table', unless the latter is already set and
+          already has a parent different from the standard syntax table.
+
+        * The new mode has its own abbrev table, kept in the variable
+          `VARIANT-abbrev-table', unless you override this using the
+          `:abbrev-table' keyword (see below).
+
+        * The new mode has its own mode hook, `VARIANT-hook'.  It runs
+          this hook, after running the hooks of its ancestor modes, with
+          `run-mode-hooks', as the last thing it does. *Note Mode
+          Hooks::.
+
+     In addition, you can specify how to override other aspects of
+     PARENT with BODY.  The command VARIANT evaluates the forms in BODY
+     after setting up all its usual overrides, just before running the
+     mode hooks.
+
+     If PARENT has a non-`nil' `mode-class' symbol property, then
+     `define-derived-mode' sets the `mode-class' property of VARIANT to
+     the same value.  This ensures, for example, that if PARENT is a
+     special mode, then VARIANT is also a special mode (*note Major
+     Mode Conventions::).
+
+     You can also specify `nil' for PARENT.  This gives the new mode no
+     parent.  Then `define-derived-mode' behaves as described above,
+     but, of course, omits all actions connected with PARENT.
+
+     The argument DOCSTRING specifies the documentation string for the
+     new mode.  `define-derived-mode' adds some general information
+     about the mode's hook, followed by the mode's keymap, at the end
+     of this docstring.  If you omit DOCSTRING, `define-derived-mode'
+     generates a documentation string.
+
+     The KEYWORD-ARGS are pairs of keywords and values.  The values are
+     evaluated.  The following keywords are currently supported:
+
+    `:syntax-table'
+          You can use this to explicitly specify a syntax table for the
+          new mode.  If you specify a `nil' value, the new mode uses
+          the same syntax table as PARENT, or the standard syntax table
+          if PARENT is `nil'.  (Note that this does _not_ follow the
+          convention used for non-keyword arguments that a `nil' value
+          is equivalent with not specifying the argument.)
+
+    `:abbrev-table'
+          You can use this to explicitly specify an abbrev table for
+          the new mode.  If you specify a `nil' value, the new mode
+          uses the same abbrev table as PARENT, or
+          `fundamental-mode-abbrev-table' if PARENT is `nil'.  (Again,
+          a `nil' value is _not_ equivalent to not specifying this
+          keyword.)
+
+    `:group'
+          If this is specified, the value should be the customization
+          group for this mode.  (Not all major modes have one.)  Only
+          the (still experimental and unadvertised) command
+          `customize-mode' currently uses this.  `define-derived-mode'
+          does _not_ automatically define the specified customization
+          group.
+
+     Here is a hypothetical example:
+
+          (define-derived-mode hypertext-mode
+            text-mode "Hypertext"
+            "Major mode for hypertext.
+          \\{hypertext-mode-map}"
+            (setq case-fold-search nil))
+
+          (define-key hypertext-mode-map
+            [down-mouse-3] 'do-hyper-link)
+
+     Do not write an `interactive' spec in the definition;
+     `define-derived-mode' does that automatically.
+
+
+File: elisp,  Node: Generic Modes,  Next: Mode Hooks,  Prev: Derived Modes,  Up: Major Modes
+
+23.2.6 Generic Modes
+--------------------
+
+"Generic modes" are simple major modes with basic support for comment
+syntax and Font Lock mode.  To define a generic mode, use the macro
+`define-generic-mode'.  See the file `generic-x.el' for some examples
+of the use of `define-generic-mode'.
+
+ -- Macro: define-generic-mode mode comment-list keyword-list
+          font-lock-list auto-mode-list function-list &optional
+          docstring
+     This macro defines a generic mode command named MODE (a symbol,
+     not quoted).  The optional argument DOCSTRING is the documentation
+     for the mode command.  If you do not supply it,
+     `define-generic-mode' generates one by default.
+
+     The argument COMMENT-LIST is a list in which each element is
+     either a character, a string of one or two characters, or a cons
+     cell.  A character or a string is set up in the mode's syntax
+     table as a "comment starter."  If the entry is a cons cell, the
+     CAR is set up as a "comment starter" and the CDR as a "comment
+     ender."  (Use `nil' for the latter if you want comments to end at
+     the end of the line.)  Note that the syntax table mechanism has
+     limitations about what comment starters and enders are actually
+     possible.  *Note Syntax Tables::.
+
+     The argument KEYWORD-LIST is a list of keywords to highlight with
+     `font-lock-keyword-face'.  Each keyword should be a string.
+     Meanwhile, FONT-LOCK-LIST is a list of additional expressions to
+     highlight.  Each element of this list should have the same form as
+     an element of `font-lock-keywords'.  *Note Search-based
+     Fontification::.
+
+     The argument AUTO-MODE-LIST is a list of regular expressions to
+     add to the variable `auto-mode-alist'.  They are added by the
+     execution of the `define-generic-mode' form, not by expanding the
+     macro call.
+
+     Finally, FUNCTION-LIST is a list of functions for the mode command
+     to call for additional setup.  It calls these functions just
+     before it runs the mode hook variable `MODE-hook'.
+
+
+File: elisp,  Node: Mode Hooks,  Next: Example Major Modes,  Prev: Generic Modes,  Up: Major Modes
+
+23.2.7 Mode Hooks
+-----------------
+
+Every major mode function should finish by running its mode hook and
+the mode-independent normal hook `after-change-major-mode-hook'.  It
+does this by calling `run-mode-hooks'.  If the major mode is a derived
+mode, that is if it calls another major mode (the parent mode) in its
+body, it should do this inside `delay-mode-hooks' so that the parent
+won't run these hooks itself.  Instead, the derived mode's call to
+`run-mode-hooks' runs the parent's mode hook too.  *Note Major Mode
+Conventions::.
+
+   Emacs versions before Emacs 22 did not have `delay-mode-hooks'.
+When user-implemented major modes have not been updated to use it, they
+won't entirely follow these conventions: they may run the parent's mode
+hook too early, or fail to run `after-change-major-mode-hook'.  If you
+encounter such a major mode, please correct it to follow these
+conventions.
+
+   When you defined a major mode using `define-derived-mode', it
+automatically makes sure these conventions are followed.  If you define
+a major mode "by hand," not using `define-derived-mode', use the
+following functions to handle these conventions automatically.
+
+ -- Function: run-mode-hooks &rest hookvars
+     Major modes should run their mode hook using this function.  It is
+     similar to `run-hooks' (*note Hooks::), but it also runs
+     `after-change-major-mode-hook'.
+
+     When this function is called during the execution of a
+     `delay-mode-hooks' form, it does not run the hooks immediately.
+     Instead, it arranges for the next call to `run-mode-hooks' to run
+     them.
+
+ -- Macro: delay-mode-hooks body...
+     When one major mode command calls another, it should do so inside
+     of `delay-mode-hooks'.
+
+     This macro executes BODY, but tells all `run-mode-hooks' calls
+     during the execution of BODY to delay running their hooks.  The
+     hooks will actually run during the next call to `run-mode-hooks'
+     after the end of the `delay-mode-hooks' construct.
+
+ -- Variable: after-change-major-mode-hook
+     This is a normal hook run by `run-mode-hooks'.  It is run at the
+     very end of every properly-written major mode function.
 
 
 File: elisp,  Node: Example Major Modes,  Prev: Mode Hooks,  Up: Major Modes
@@ -125,8 +321,8 @@ correspondingly more complicated.  Here are excerpts from
            ;;   part of symbol names but not words.
            ;;   (The digit `0' is `48' in the ASCII character set.)
            (while (< i ?0)
-     	(modify-syntax-entry i "_   " table)
-     	(setq i (1+ i)))
+             (modify-syntax-entry i "_   " table)
+             (setq i (1+ i)))
            ;; ... similar code follows for other character ranges.
            ;; Then set the syntax codes for characters that are special in Lisp.
            (modify-syntax-entry ?  "    " table)
@@ -876,31 +1072,23 @@ line to use them.
      but that is obsolete, since the variable is included in the mode
      line from `mode-line-format'.
 
-   The variable `default-mode-line-format' is where `mode-line-format'
-usually gets its value:
+   Here is a simplified version of the default value of
+`mode-line-format'.  The real default value also specifies addition of
+text properties.
 
- -- Variable: default-mode-line-format
-     This variable holds the default `mode-line-format' for buffers
-     that do not override it.  This is the same as `(default-value
-     'mode-line-format)'.
-
-     Here is a simplified version of the default value of
-     `default-mode-line-format'.  The real default value also specifies
-     addition of text properties.
-
-          ("-"
-           mode-line-mule-info
-           mode-line-modified
-           mode-line-frame-identification
-           mode-line-buffer-identification
-           "   "
-           mode-line-position
-           (vc-mode vc-mode)
-           "   "
-           mode-line-modes
-           (which-func-mode ("" which-func-format "--"))
-           (global-mode-string ("--" global-mode-string))
-           "-%-")
+     ("-"
+      mode-line-mule-info
+      mode-line-modified
+      mode-line-frame-identification
+      mode-line-buffer-identification
+      "   "
+      mode-line-position
+      (vc-mode vc-mode)
+      "   "
+      mode-line-modes
+      (which-func-mode ("" which-func-format "--"))
+      (global-mode-string ("--" global-mode-string))
+      "-%-")
 
 
 File: elisp,  Node: %-Constructs,  Next: Properties in Mode,  Prev: Mode Line Variables,  Up: Mode Line Format
@@ -1068,14 +1256,8 @@ mode-line feature, except that it's controlled by different variables.
      This variable, local in every buffer, specifies how to display the
      header line, for windows displaying the buffer.  The format of the
      value is the same as for `mode-line-format' (*note Mode Line
-     Data::).
-
- -- Variable: default-header-line-format
-     This variable holds the default `header-line-format' for buffers
-     that do not override it.  This is the same as `(default-value
-     'header-line-format)'.
-
-     It is normally `nil', so that ordinary buffers have no header line.
+     Data::).  It is normally `nil', so that ordinary buffers have no
+     header line.
 
    A window that is just one line tall never displays a header line.  A
 window that is two lines tall cannot display both a mode line and a
@@ -3747,13 +3929,20 @@ parent directories.
        4. The time of last access, as a list of two integers.  The
           first integer has the high-order 16 bits of time, the second
           has the low 16 bits.  (This is similar to the value of
-          `current-time'; see *note Time of Day::.)
+          `current-time'; see *note Time of Day::.)  Note that on some
+          FAT-based filesystems, only the date of last access is
+          recorded, so this time will always hold the midnight of the
+          day of last access.
 
        5. The time of last modification as a list of two integers (as
-          above).  
+          above).  This is the last time when the file's contents were
+          modified.
 
        6. The time of last status change as a list of two integers (as
-          above).
+          above).  This is the time of the last change to the file's
+          access mode bits, its owner and group, and other information
+          recorded in the filesystem for the file, beyond the file's
+          contents.
 
        7. The size of the file in bytes.  If the size is too large to
           fit in a Lisp integer, this is a floating point number.
@@ -3766,10 +3955,14 @@ parent directories.
 
       10. The file's inode number.  If possible, this is an integer.
           If the inode number is too large to be represented as an
-          integer in Emacs Lisp, then the value has the form `(HIGH .
-          LOW)', where LOW holds the low 16 bits.
+          integer in Emacs Lisp, but still fits into a 32-bit integer,
+          then the value has the form `(HIGH . LOW)', where LOW holds
+          the low 16 bits.  If the inode is wider than 32 bits, the
+          value is of the form `(HIGH MIDDLE . LOW)', where `high' holds
+          the high 24 bits, MIDDLE the next 24 bits, and LOW the low 16
+          bits.
 
-      11. The file system number of the file system that the file is in.
+      11. The filesystem number of the device that the file is on.
           Depending on the magnitude of the value, this can be either
           an integer or a cons cell, in the same manner as the inode
           number.  This element and the file's inode number together
@@ -3781,11 +3974,12 @@ parent directories.
 
           (file-attributes "files.texi" 'string)
                =>  (nil 1 "lh" "users"
-                    (8489 20284)
-                    (8489 20284)
-                    (8489 20285)
-                    14906 "-rw-rw-rw-"
-                    nil 129500 -32252)
+                    (19145 42977)
+                    (19141 59576)
+                    (18340 17300)
+                    122295 "-rw-rw-rw-"
+                    nil  (5888 2 . 43978)
+                    (15479 . 46724))
 
      and here is how the result is interpreted:
 
@@ -3802,18 +3996,19 @@ parent directories.
     `"users"'
           is in the group with name "users".
 
-    `(8489 20284)'
-          was last accessed on Aug 19 00:09.
+    `(19145 42977)'
+          was last accessed on Oct 5 2009, at 10:01:37.
 
-    `(8489 20284)'
-          was last modified on Aug 19 00:09.
+    `(19141 59576)'
+          last had its contents modified on Oct 2 2009, at 13:49:12.
 
-    `(8489 20285)'
-          last had its inode changed on Aug 19 00:09.
+    `(18340 17300)'
+          last had its status changed on Feb 2 2008, at 12:19:00.
 
-    `14906'
-          is 14906 bytes long.  (It may not contain 14906 characters,
-          though, if some of the bytes belong to multibyte sequences.)
+    `122295'
+          is 122295 bytes long.  (It may not contain 122295 characters,
+          though, if some of the bytes belong to multibyte sequences,
+          and also if the end-of-line format is CR-LF.)
 
     `"-rw-rw-rw-"'
           has a mode of read and write access for the owner, group, and
@@ -3822,11 +4017,11 @@ parent directories.
     `nil'
           would retain the same GID if it were recreated.
 
-    `129500'
-          has an inode number of 129500.
+    `(5888 2 . 43978)'
+          has an inode number of 6473924464520138.
 
-    `-32252'
-          is on file system number -32252.
+    `(15479 . 46724)'
+          is on the file-system device whose number is 1014478468.
 
    On MS-DOS, there is no such thing as an "executable" file mode bit.
 So Emacs considers a file executable if its name ends in one of the
@@ -4372,9 +4567,13 @@ abbreviation instead.
 
  -- Function: abbreviate-file-name filename
      This function applies abbreviations from `directory-abbrev-alist'
-     to its argument, and substitutes `~' for the user's home
-     directory.  You can use it for directory names and for file names,
-     because it recognizes abbreviations even as part of the name.
+     to its argument, and also substitutes `~' for the user's home
+     directory if the argument names a file in the home directory or
+     one of its subdirectories.  (If the home directory is a root
+     directory, it is not replaced with `~', because this does not make
+     the result shorter on many systems.)  You can use it for directory
+     names and for file names, because it recognizes abbreviations even
+     as part of the name.
 
 
 File: elisp,  Node: File Name Expansion,  Next: Unique File Names,  Prev: Directory Names,  Up: File Names
@@ -4822,8 +5021,8 @@ depending on the options passed to the `ls' command.
 
 File: elisp,  Node: Create/Delete Dirs,  Next: Magic File Names,  Prev: Contents of Directories,  Up: Files
 
-25.10 Creating and Deleting Directories
-=======================================
+25.10 Creating, Copying and Deleting Directories
+================================================
 
 Most Emacs Lisp file-manipulation functions get errors when used on
 files that are directories.  For example, you cannot delete a directory
@@ -4838,11 +5037,28 @@ directories.
 
      `mkdir' is an alias for this.
 
- -- Command: delete-directory dirname
+ -- Command: copy-directory dirname newname &optional keep-time parents
+     This command copies the directory named DIRNAME to NEWNAME.  If
+     NEWNAME names an existing directory, DIRNAME will be copied to a
+     subdirectory there.
+
+     It always sets the file modes of the copied files to match the
+     corresponding original file.
+
+     The third arg KEEP-TIME non-`nil' means to preserve the
+     modification time of the copied files.  A prefix arg makes
+     KEEP-TIME non-`nil'.
+
+     Noninteractively, the last argument PARENTS says whether to create
+     parent directories if they don't exist.  Interactively, this
+     happens by default.
+
+ -- Command: delete-directory dirname &optional recursive
      This command deletes the directory named DIRNAME.  The function
      `delete-file' does not work for files that are directories; you
-     must use `delete-directory' for them.  If the directory contains
-     any files, `delete-directory' signals an error.
+     must use `delete-directory' for them.  If RECURSIVE is `nil', and
+     the directory contains any files, `delete-directory' signals an
+     error.
 
      `delete-directory' only follows symbolic links at the level of
      parent directories.
@@ -4908,7 +5124,7 @@ first, before handlers for jobs such as remote file access.
 handle:
 
 `access-file', `add-name-to-file', `byte-compiler-base-file-name',
-`copy-file', `delete-directory', `delete-file',
+`copy-directory', `copy-file', `delete-directory', `delete-file',
 `diff-latest-backup-file', `directory-file-name', `directory-files',
 `directory-files-and-attributes', `dired-compress-file',
 `dired-uncache',
@@ -5136,7 +5352,8 @@ DOC-STRING
 
 REGEXP
      A regular expression which is used to recognize files represented
-     in this format.
+     in this format.  If `nil', the format is never applied
+     automatically.
 
 FROM-FN
      A shell command or function to decode data in this format (to
@@ -5901,6 +6118,10 @@ and the variables that control them.
      updates this variable, so that the substantial decrease in size is
      forgotten.
 
+     If it is -2, that means this buffer should disregard changes in
+     buffer size; in particular, it should not shut off auto-saving
+     temporarily due to changes in buffer size.
+
  -- Variable: auto-save-list-file-name
      This variable (if non-`nil') specifies a file for recording the
      names of all the auto-save files.  Each time Emacs does
@@ -6509,161 +6730,4 @@ file formerly visited.
      `buffer-chars-modified-tick' calls, you can tell whether a
      character change occurred in that buffer in between the calls.  If
      BUFFER is `nil' (or omitted), the current buffer is used.
-
-
-File: elisp,  Node: Modification Time,  Next: Read Only Buffers,  Prev: Buffer Modification,  Up: Buffers
-
-27.6 Buffer Modification Time
-=============================
-
-Suppose that you visit a file and make changes in its buffer, and
-meanwhile the file itself is changed on disk.  At this point, saving the
-buffer would overwrite the changes in the file.  Occasionally this may
-be what you want, but usually it would lose valuable information.  Emacs
-therefore checks the file's modification time using the functions
-described below before saving the file.  (*Note File Attributes::, for
-how to examine a file's modification time.)
-
- -- Function: verify-visited-file-modtime buffer
-     This function compares what BUFFER has recorded for the
-     modification time of its visited file against the actual
-     modification time of the file as recorded by the operating system.
-     The two should be the same unless some other process has written
-     the file since Emacs visited or saved it.
-
-     The function returns `t' if the last actual modification time and
-     Emacs's recorded modification time are the same, `nil' otherwise.
-     It also returns `t' if the buffer has no recorded last
-     modification time, that is if `visited-file-modtime' would return
-     zero.
-
-     It always returns `t' for buffers that are not visiting a file,
-     even if `visited-file-modtime' returns a non-zero value.  For
-     instance, it always returns `t' for dired buffers.  It returns `t'
-     for buffers that are visiting a file that does not exist and never
-     existed, but `nil' for file-visiting buffers whose file has been
-     deleted.
-
- -- Function: clear-visited-file-modtime
-     This function clears out the record of the last modification time
-     of the file being visited by the current buffer.  As a result, the
-     next attempt to save this buffer will not complain of a
-     discrepancy in file modification times.
-
-     This function is called in `set-visited-file-name' and other
-     exceptional places where the usual test to avoid overwriting a
-     changed file should not be done.
-
- -- Function: visited-file-modtime
-     This function returns the current buffer's recorded last file
-     modification time, as a list of the form `(HIGH LOW)'.  (This is
-     the same format that `file-attributes' uses to return time values;
-     see *note File Attributes::.)
-
-     If the buffer has no recorded last modification time, this function
-     returns zero.  This case occurs, for instance, if the buffer is not
-     visiting a file or if the time has been explicitly cleared by
-     `clear-visited-file-modtime'.  Note, however, that
-     `visited-file-modtime' returns a list for some non-file buffers
-     too.  For instance, in a Dired buffer listing a directory, it
-     returns the last modification time of that directory, as recorded
-     by Dired.
-
-     For a new buffer visiting a not yet existing file, HIGH is -1 and
-     LOW is 65535, that is, 2**16 - 1.
-
- -- Function: set-visited-file-modtime &optional time
-     This function updates the buffer's record of the last modification
-     time of the visited file, to the value specified by TIME if TIME
-     is not `nil', and otherwise to the last modification time of the
-     visited file.
-
-     If TIME is neither `nil' nor zero, it should have the form `(HIGH
-     . LOW)' or `(HIGH LOW)', in either case containing two integers,
-     each of which holds 16 bits of the time.
-
-     This function is useful if the buffer was not read from the file
-     normally, or if the file itself has been changed for some known
-     benign reason.
-
- -- Function: ask-user-about-supersession-threat filename
-     This function is used to ask a user how to proceed after an
-     attempt to modify an buffer visiting file FILENAME when the file
-     is newer than the buffer text.  Emacs detects this because the
-     modification time of the file on disk is newer than the last
-     save-time of the buffer.  This means some other program has
-     probably altered the file.
-
-     Depending on the user's answer, the function may return normally,
-     in which case the modification of the buffer proceeds, or it may
-     signal a `file-supersession' error with data `(FILENAME)', in which
-     case the proposed buffer modification is not allowed.
-
-     This function is called automatically by Emacs on the proper
-     occasions.  It exists so you can customize Emacs by redefining it.
-     See the file `userlock.el' for the standard definition.
-
-     See also the file locking mechanism in *note File Locks::.
-
-
-File: elisp,  Node: Read Only Buffers,  Next: The Buffer List,  Prev: Modification Time,  Up: Buffers
-
-27.7 Read-Only Buffers
-======================
-
-If a buffer is "read-only", then you cannot change its contents,
-although you may change your view of the contents by scrolling and
-narrowing.
-
-   Read-only buffers are used in two kinds of situations:
-
-   * A buffer visiting a write-protected file is normally read-only.
-
-     Here, the purpose is to inform the user that editing the buffer
-     with the aim of saving it in the file may be futile or
-     undesirable.  The user who wants to change the buffer text despite
-     this can do so after clearing the read-only flag with `C-x C-q'.
-
-   * Modes such as Dired and Rmail make buffers read-only when altering
-     the contents with the usual editing commands would probably be a
-     mistake.
-
-     The special commands of these modes bind `buffer-read-only' to
-     `nil' (with `let') or bind `inhibit-read-only' to `t' around the
-     places where they themselves change the text.
-
- -- Variable: buffer-read-only
-     This buffer-local variable specifies whether the buffer is
-     read-only.  The buffer is read-only if this variable is non-`nil'.
-
- -- Variable: inhibit-read-only
-     If this variable is non-`nil', then read-only buffers and,
-     depending on the actual value, some or all read-only characters
-     may be modified.  Read-only characters in a buffer are those that
-     have non-`nil' `read-only' properties (either text properties or
-     overlay properties).  *Note Special Properties::, for more
-     information about text properties.  *Note Overlays::, for more
-     information about overlays and their properties.
-
-     If `inhibit-read-only' is `t', all `read-only' character
-     properties have no effect.  If `inhibit-read-only' is a list, then
-     `read-only' character properties have no effect if they are members
-     of the list (comparison is done with `eq').
-
- -- Command: toggle-read-only &optional arg
-     This command toggles whether the current buffer is read-only.  It
-     is intended for interactive use; do not use it in programs.  At
-     any given point in a program, you should know whether you want the
-     read-only flag on or off; so you can set `buffer-read-only'
-     explicitly to the proper value, `t' or `nil'.
-
-     If ARG is non-`nil', it should be a raw prefix argument.
-     `toggle-read-only' sets `buffer-read-only' to `t' if the numeric
-     value of that prefix argument is positive and to `nil' otherwise.
-     *Note Prefix Command Arguments::.
-
- -- Function: barf-if-buffer-read-only
-     This function signals a `buffer-read-only' error if the current
-     buffer is read-only.  *Note Using Interactive::, for another way to
-     signal an error if the current buffer is read-only.
 

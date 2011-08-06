@@ -1,7 +1,7 @@
 ;;; lisp-mnt.el --- utility functions for Emacs Lisp maintainers
 
 ;; Copyright (C) 1992, 1994, 1997, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: FSF
@@ -445,16 +445,20 @@ This can be found in an RCS or SCCS header."
 	    (match-string-no-properties 1)))))))
 
 (defun lm-keywords (&optional file)
-  "Return the keywords given in file FILE, or current buffer if FILE is nil."
+  "Return the keywords given in file FILE, or current buffer if FILE is nil.
+The return is a `downcase'-ed string, or nil if no keywords
+header.  Multi-line keywords are joined up with a space between
+each line."
   (lm-with-file file
-    (let ((keywords (lm-header "keywords")))
-      (and keywords (downcase keywords)))))
+    (let ((keywords (lm-header-multiline "keywords")))
+      (and keywords
+	   (mapconcat 'downcase keywords " ")))))
 
 (defun lm-keywords-list (&optional file)
   "Return list of keywords given in file FILE."
   (let ((keywords (lm-keywords file)))
     (if keywords
-	(split-string keywords ",?[ \t]"))))
+	(split-string keywords "[, \t\n]+" t))))
 
 (defvar finder-known-keywords)
 (defun lm-keywords-finder-p (&optional file)
@@ -583,7 +587,7 @@ which do not include a recognizable synopsis."
       (let ((must-kill (and file (not (get-file-buffer file)))))
         (when file (find-file file))
         (prog1
-            (if (interactive-p)
+            (if (called-interactively-p 'interactive)
                 (message "%s" (lm-summary))
               (lm-summary))
           (when must-kill (kill-buffer (current-buffer))))))))

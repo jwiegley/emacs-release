@@ -2,7 +2,7 @@ This is ../../info/gnus, produced by makeinfo version 4.11 from
 gnus.texi.
 
 Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -20,6 +20,34 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
 END-INFO-DIR-ENTRY
+
+
+File: gnus,  Node: Directory Groups,  Next: Anything Groups,  Up: Other Sources
+
+6.6.1 Directory Groups
+----------------------
+
+If you have a directory that has lots of articles in separate files in
+it, you might treat it as a newsgroup.  The files have to have numerical
+names, of course.
+
+   This might be an opportune moment to mention `ange-ftp' (and its
+successor `efs'), that most wonderful of all wonderful Emacs packages.
+When I wrote `nndir', I didn't think much about it--a back end to read
+directories.  Big deal.
+
+   `ange-ftp' changes that picture dramatically.  For instance, if you
+enter the `ange-ftp' file name `/ftp.hpc.uh.edu:/pub/emacs/ding-list/'
+as the directory name, `ange-ftp' or `efs' will actually allow you to
+read this directory over at `sina' as a newsgroup.  Distributed news
+ahoy!
+
+   `nndir' will use NOV files if they are present.
+
+   `nndir' is a "read-only" back end--you can't delete or expire
+articles with this method.  You can use `nnmh' or `nnml' for whatever
+you use `nndir' for, so you could switch to any of those methods if you
+feel the need to have a non-read-only `nndir'.
 
 
 File: gnus,  Node: Anything Groups,  Next: Document Groups,  Prev: Directory Groups,  Up: Other Sources
@@ -2847,7 +2875,7 @@ to be valid syntactically, if not semantically.
      some reason or other.
 
 `eval'
-     The value of this entry will be `eval'el.  This element will be
+     The value of this entry will be `eval'ed.  This element will be
      ignored when handling global score files.
 
 `read-only'
@@ -2870,7 +2898,7 @@ to be valid syntactically, if not semantically.
 
      When you enter the group the first time, you will only see the new
      threads.  You then raise the score of the threads that you find
-     interesting (with `I T' or `I S'), and ignore (`C y') the rest.
+     interesting (with `I T' or `I S'), and ignore (`c y') the rest.
      Next time you enter the group, you will see new articles in the
      interesting threads, plus any new threads.
 
@@ -7329,6 +7357,15 @@ File: gnus,  Node: Various Various,  Prev: Other modes,  Up: Various
 
      IMAP users might want to allow `/' in group names though.
 
+`gnus-safe-html-newsgroups'
+     Groups in which links in html articles are considered all safe.
+     The value may be a regexp matching those groups, a list of group
+     names, or `nil'.  This overrides `mm-w3m-safe-url-regexp'.  The
+     default value is `"\\`nnrss[+:]"'.  This is effective only when
+     emacs-w3m renders html articles, i.e., in the case
+     `mm-text-html-renderer' is set to `w3m'.  *Note Display
+     Customization: (emacs-mime)Display Customization.
+
 
 
 File: gnus,  Node: The End,  Next: Appendices,  Prev: Various,  Up: Top
@@ -7390,45 +7427,6 @@ whatever packages the Gnus XEmacs package requires.  The current
 requirements are `gnus', `mail-lib', `xemacs-base', `eterm',
 `sh-script', `net-utils', `os-utils', `dired', `mh-e', `sieve',
 `ps-print', `W3', `pgg', `mailcrypt', `ecrypto', and `sasl'.
-
-
-File: gnus,  Node: History,  Next: On Writing Manuals,  Prev: XEmacs,  Up: Appendices
-
-10.2 History
-============
-
-GNUS was written by Masanobu UMEDA.  When autumn crept up in '94, Lars
-Magne Ingebrigtsen grew bored and decided to rewrite Gnus.
-
-   If you want to investigate the person responsible for this outrage,
-you can point your (feh!) web browser to `http://quimby.gnus.org/'.
-This is also the primary distribution point for the new and spiffy
-versions of Gnus, and is known as The Site That Destroys Newsrcs And
-Drives People Mad.
-
-   During the first extended alpha period of development, the new Gnus
-was called "(ding) Gnus".  "(ding)" is, of course, short for "ding is
-not Gnus", which is a total and utter lie, but who cares?  (Besides,
-the "Gnus" in this abbreviation should probably be pronounced "news" as
-UMEDA intended, which makes it a more appropriate name, don't you
-think?)
-
-   In any case, after spending all that energy on coming up with a new
-and spunky name, we decided that the name was _too_ spunky, so we
-renamed it back again to "Gnus".  But in mixed case.  "Gnus" vs.
-"GNUS".  New vs. old.
-
-* Menu:
-
-* Gnus Versions::               What Gnus versions have been released.
-* Other Gnus Versions::         Other Gnus versions that also have been released.
-* Why?::                        What's the point of Gnus?
-* Compatibility::               Just how compatible is Gnus with GNUS?
-* Conformity::                  Gnus tries to conform to all standards.
-* Emacsen::                     Gnus can be run on a few modern Emacsen.
-* Gnus Development::            How Gnus is developed.
-* Contributors::                Oodles of people.
-* New Features::                Pointers to some of the new stuff in Gnus.
 
 
 

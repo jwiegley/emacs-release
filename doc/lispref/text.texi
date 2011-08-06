@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2000, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/text
 @node Text, Non-ASCII Characters, Markers, Top
@@ -1629,15 +1629,9 @@ As a practical matter, if you are writing text for other people to
 read, you should set @code{fill-column} to no more than 70.  Otherwise
 the line will be too long for people to read comfortably, and this can
 make the text seem clumsy.
+
+The default value for @code{fill-column} is 70.
 @end defopt
-
-@defvar default-fill-column
-The value of this variable is the default value for @code{fill-column} in
-buffers that do not override it.  This is the same as
-@code{(default-value 'fill-column)}.
-
-The default value for @code{default-fill-column} is 70.
-@end defvar
 
 @deffn Command set-left-margin from to margin
 This sets the @code{left-margin} property on the text from @var{from} to
@@ -3172,9 +3166,20 @@ Consecutive characters with the same @code{field} property constitute a
 @item cursor
 @kindex cursor @r{(text property)}
 Normally, the cursor is displayed at the end of any overlay and text
-property strings present at the current window position.  You can
+property strings present at the current buffer position.  You can
 place the cursor on any desired character of these strings by giving
-that character a non-@code{nil} @var{cursor} text property.
+that character a non-@code{nil} @code{cursor} text property.  In
+addition, if the value of the @code{cursor} property of an overlay
+string is an integer number, it specifies the number of buffer's
+character positions associated with the overlay string; this way,
+Emacs will display the cursor on the character with that property
+regardless of whether the current buffer position is actually covered
+by the overlay.  Specifically, if the value of the @code{cursor}
+property of a character is the number @var{n}, the cursor will be
+displayed on this character for any buffer position in the range
+@code{[@var{ovpos}..@var{ovpos}+@var{n}]}, where @var{ovpos} is the
+starting buffer position covered by the overlay (@pxref{Managing
+Overlays}).
 
 @item pointer
 @kindex pointer @r{(text property)}
@@ -3519,13 +3524,12 @@ following command:
 (defun dired-mouse-find-file-other-window (event)
   "In Dired, visit the file or directory name you click on."
   (interactive "e")
-  (let (window pos file)
-    (save-excursion
-      (setq window (posn-window (event-end event))
-            pos (posn-point (event-end event)))
-      (if (not (windowp window))
-          (error "No file chosen"))
-      (set-buffer (window-buffer window))
+  (let ((window (posn-window (event-end event)))
+        (pos (posn-point (event-end event)))
+        file)
+    (if (not (windowp window))
+        (error "No file chosen"))
+    (with-current-buffer (window-buffer window)
       (goto-char pos)
       (setq file (dired-get-file-for-visit)))
     (if (file-directory-p file)

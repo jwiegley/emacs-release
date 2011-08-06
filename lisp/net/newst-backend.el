@@ -1,13 +1,13 @@
 ;;; newst-backend.el --- Retrieval backend for newsticker.
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author:      Ulf Jasper <ulf.jasper@web.de>
 ;; Filename:    newst-backend.el
 ;; URL:         http://www.nongnu.org/newsticker
 ;; Keywords:    News, RSS, Atom
-;; Time-stamp:  "23. Januar 2009, 19:39:22 (ulf)"
+;; Time-stamp:  "6. Dezember 2009, 19:15:32 (ulf)"
 
 ;; ======================================================================
 
@@ -79,13 +79,11 @@ considered to be running if the newsticker timer list is not empty."
     nil
     3600)
     ("Freshmeat.net"
-    "http://freshmeat.net/backend/fm.rdf")
+    "http://freshmeat.net/index.atom")
     ("Kuro5hin.org"
     "http://www.kuro5hin.org/backend.rdf")
     ("LWN (Linux Weekly News)"
     "http://lwn.net/headlines/rss")
-    ("NewsForge"
-    "http://newsforge.com/index.rss")
     ("NY Times: Technology"
     "http://partners.userland.com/nytRss/technology.xml")
     ("NY Times"
@@ -423,7 +421,7 @@ headline after it has been retrieved for the first time."
   "Name of the newsticker cache file."
   :type 'string
   :group 'newsticker-miscellaneous)
-(make-obsolete 'newsticker-cache-filename 'newsticker-dir)
+(make-obsolete 'newsticker-cache-filename 'newsticker-dir "23.1")
 
 (defcustom newsticker-dir
   (locate-user-emacs-file "newsticker/" ".newsticker/")
@@ -444,10 +442,15 @@ buffers *newsticker-wget-<feed>* will not be closed."
 ;; ======================================================================
 ;;; Compatibility section, XEmacs, Emacs
 ;; ======================================================================
+
+;; FIXME It is bad practice to define compat functions with such generic names.
+
+;; This is not needed in Emacs >= 22.1.
 (unless (fboundp 'time-add)
   (require 'time-date);;FIXME
   (defun time-add (t1 t2)
-    (seconds-to-time (+ (time-to-seconds t1) (time-to-seconds t2)))))
+    (with-no-warnings ; don't warn about obsolete time-to-seconds in 23.2
+      (seconds-to-time (+ (time-to-seconds t1) (time-to-seconds t2))))))
 
 (unless (fboundp 'match-string-no-properties)
   (defalias 'match-string-no-properties 'match-string))
@@ -714,6 +717,7 @@ If URL is nil it is searched at point."
 (defun newsticker-customize ()
   "Open the newsticker customization group."
   (interactive)
+  (delete-other-windows)
   (customize-group "newsticker"))
 
 ;; ======================================================================
@@ -723,8 +727,7 @@ If URL is nil it is searched at point."
   "Get news for the site FEED-NAME by calling FUNCTION.
 See `newsticker-get-news'."
   (let ((buffername (concat " *newsticker-funcall-" feed-name "*")))
-    (save-excursion
-      (set-buffer (get-buffer-create buffername))
+    (with-current-buffer (get-buffer-create buffername)
       (erase-buffer)
       (insert (string-to-multibyte (funcall function feed-name)))
       (newsticker--sentinel-work nil t feed-name function
@@ -774,8 +777,7 @@ from."
 WGET-ARGUMENTS is a list of arguments for wget.
 See `newsticker-get-news'."
   (let ((buffername (concat " *newsticker-wget-" feed-name "*")))
-    (save-excursion
-      (set-buffer (get-buffer-create buffername))
+    (with-current-buffer (get-buffer-create buffername)
       (erase-buffer)
       ;; throw an error if there is an old wget-process around
       (if (get-process feed-name)
@@ -1130,7 +1132,7 @@ system time at which the data have been retrieved.  TOPNODE
 contains the feed data as returned by the xml parser.
 
 For the Atom 1.0 specification see
-http://www.atompub.org/2005/08/17/draft-ietf-atompub-format-11.html"
+URL `http://www.atompub.org/2005/08/17/draft-ietf-atompub-format-11.html'"
   (newsticker--debug-msg "Parsing Atom 1.0 feed %s" name)
   (let (new-feed new-item)
     (setq new-feed (newsticker--parse-generic-feed
@@ -1184,8 +1186,8 @@ http://www.atompub.org/2005/08/17/draft-ietf-atompub-format-11.html"
 Return value as well as arguments NAME, TIME, and TOPNODE are the
 same as in `newsticker--parse-atom-1.0'.
 
-For the RSS 0.91 specification see http://backend.userland.com/rss091 or
-http://my.netscape.com/publish/formats/rss-spec-0.91.html."
+For the RSS 0.91 specification see URL `http://backend.userland.com/rss091'
+or URL `http://my.netscape.com/publish/formats/rss-spec-0.91.html'."
   (newsticker--debug-msg "Parsing RSS 0.91 feed %s" name)
   (let* ((channelnode (car (xml-get-children topnode 'channel)))
          (pub-date (newsticker--decode-rfc822-date
@@ -1238,7 +1240,7 @@ http://my.netscape.com/publish/formats/rss-spec-0.91.html."
 Return value as well as arguments NAME, TIME, and TOPNODE are the
 same as in `newsticker--parse-atom-1.0'.
 
-For the RSS 0.92 specification see http://backend.userland.com/rss092."
+For the RSS 0.92 specification see URL `http://backend.userland.com/rss092'."
   (newsticker--debug-msg "Parsing RSS 0.92 feed %s" name)
   (let* ((channelnode (car (xml-get-children topnode 'channel)))
          (pub-date (newsticker--decode-rfc822-date
@@ -1291,7 +1293,7 @@ For the RSS 0.92 specification see http://backend.userland.com/rss092."
 Return value as well as arguments NAME, TIME, and TOPNODE are the
 same as in `newsticker--parse-atom-1.0'.
 
-For the RSS 1.0 specification see http://web.resource.org/rss/1.0/spec."
+For the RSS 1.0 specification see URL `http://web.resource.org/rss/1.0/spec'."
   (newsticker--debug-msg "Parsing RSS 1.0 feed %s" name)
   (let* ((channelnode (car (xml-get-children topnode 'channel)))
          is-new-feed has-new-items)
@@ -1342,7 +1344,7 @@ For the RSS 1.0 specification see http://web.resource.org/rss/1.0/spec."
 Return value as well as arguments NAME, TIME, and TOPNODE are the
 same as in `newsticker--parse-atom-1.0'.
 
-For the RSS 2.0 specification see http://blogs.law.harvard.edu/tech/rss."
+For the RSS 2.0 specification see URL `http://blogs.law.harvard.edu/tech/rss'."
   (newsticker--debug-msg "Parsing RSS 2.0 feed %s" name)
   (let* ((channelnode (car (xml-get-children topnode 'channel)))
          is-new-feed has-new-items)
@@ -1406,9 +1408,9 @@ description, link, and extra elements resp."
         (position 0)
         (something-was-added nil))
     ;; decode numeric entities
-    (setq title (newsticker--decode-numeric-entities title))
-    (setq desc  (newsticker--decode-numeric-entities desc))
-    (setq link  (newsticker--decode-numeric-entities link))
+    (setq title (xml-substitute-numeric-entities title))
+    (setq desc  (xml-substitute-numeric-entities desc))
+    (setq link  (xml-substitute-numeric-entities link))
     ;; remove whitespace from title, desc, and link
     (setq title (newsticker--remove-whitespace title))
     (setq desc (newsticker--remove-whitespace desc))
@@ -1460,10 +1462,10 @@ argument, which is one of the items in ITEMLIST."
             (when (or (> (length title) 0)
                       (> (length desc) 0))
               ;; decode numeric entities
-              (setq title (newsticker--decode-numeric-entities title))
+              (setq title (xml-substitute-numeric-entities title))
               (when desc
-                (setq desc  (newsticker--decode-numeric-entities desc)))
-              (setq link (newsticker--decode-numeric-entities link))
+                (setq desc  (xml-substitute-numeric-entities desc)))
+              (setq link (xml-substitute-numeric-entities link))
               ;; remove whitespace from title, desc, and link
               (setq title (newsticker--remove-whitespace title))
               (setq desc (newsticker--remove-whitespace desc))
@@ -1515,24 +1517,6 @@ argument, which is one of the items in ITEMLIST."
 ;; ======================================================================
 ;;; Misc
 ;; ======================================================================
-(defun newsticker--decode-numeric-entities (string)
-  "Decode SGML numeric entities by their respective utf characters.
-This function replaces numeric entities in the input STRING and
-returns the modified string.  For example \"&#42;\" gets replaced
-by \"*\"."
-  (if (and string (stringp string))
-      (let ((start 0))
-        (while (string-match "&#\\([0-9]+\\);" string start)
-          (condition-case nil
-              (setq string (replace-match
-                            (string (read (substring string
-                                                     (match-beginning 1)
-                                                     (match-end 1))))
-                            nil nil string))
-            (error nil))
-          (setq start (1+ (match-beginning 0))))
-        string)
-    nil))
 
 (defun newsticker--remove-whitespace (string)
   "Remove leading and trailing whitespace from STRING."
@@ -1753,8 +1737,7 @@ If the image has been downloaded in the last 24h do nothing."
                         feed-name)))
              (wget-arguments (or (car (cdr (cdr (cdr (cdr item)))))
                                  newsticker-wget-arguments)))
-        (save-excursion
-          (set-buffer (get-buffer-create buffername))
+        (with-current-buffer (get-buffer-create buffername)
           (erase-buffer)
           ;; throw an error if there is an old wget-process around
           (if (get-process feed-name)
@@ -1782,8 +1765,7 @@ If the image has been downloaded in the last 24h do nothing."
                  feed-name)
         (throw 'oops nil))
       (let (image-name)
-        (save-excursion
-          (set-buffer (process-buffer process))
+        (with-current-buffer (process-buffer process)
           (setq image-name (concat (newsticker--images-dir) feed-name))
           (set-buffer-file-coding-system 'no-conversion)
           ;; make sure the cache dir exists
@@ -2174,8 +2156,8 @@ FEED is a symbol!"
                                                   (read (current-buffer))))
           (error
            (message "Error while reading newsticker cache file %s!"
-                    file-name))
-          (setq newsticker--cache nil))))))
+                    file-name)
+           (setq newsticker--cache nil)))))))
 
 ;; ======================================================================
 ;;; Statistics
@@ -2368,7 +2350,7 @@ This function is suited for adding it to `newsticker-new-item-functions'."
           "</title><description>" (format "Or maybe it is %d" (random 10000))
           "</description></item></channel></rss>"))
 
-(provide 'newsticker-backend)
+(provide 'newst-backend)
 
 ;; arch-tag: 0e37b658-56e9-49ab-90f9-f2df57e1a659
 ;;; newst-backend.el ends here

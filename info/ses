@@ -2,8 +2,8 @@ This is ../../info/ses, produced by makeinfo version 4.11 from ses.texi.
 
 This file documents SES: the Simple Emacs Spreadsheet.
 
-   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -36,8 +36,8 @@ SES: Simple Emacs Spreadsheet
 
    This file documents SES: the Simple Emacs Spreadsheet.
 
-   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1459,32 +1459,32 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top988
-Node: Sales Pitch2610
-Node: The Basics3424
-Node: Formulas4739
-Node: Resizing6143
-Node: Printer functions7280
-Node: Clearing cells9031
-Node: Copy/cut/paste9359
-Node: Customizing SES11573
-Node: Advanced Features12936
-Node: The print area13810
-Node: Ranges in formulas14490
-Node: Sorting by column16004
-Node: Standard formula functions16926
-Node: More on cell printing17599
-Node: Import and export19605
-Node: Virus protection20212
-Node: Spreadsheets with details and summary21610
-Node: For Gurus22796
-Node: Deferred updates23053
-Node: Nonrelocatable references24572
-Node: The data area25472
-Node: Buffer-local variables in spreadsheets26691
-Node: Uses of defadvice in SES28137
-Node: Index28955
-Node: Acknowledgements37291
-Node: GNU Free Documentation License38459
+Node: Top994
+Node: Sales Pitch2622
+Node: The Basics3436
+Node: Formulas4751
+Node: Resizing6155
+Node: Printer functions7292
+Node: Clearing cells9043
+Node: Copy/cut/paste9371
+Node: Customizing SES11585
+Node: Advanced Features12948
+Node: The print area13822
+Node: Ranges in formulas14502
+Node: Sorting by column16016
+Node: Standard formula functions16938
+Node: More on cell printing17611
+Node: Import and export19617
+Node: Virus protection20224
+Node: Spreadsheets with details and summary21622
+Node: For Gurus22808
+Node: Deferred updates23065
+Node: Nonrelocatable references24584
+Node: The data area25484
+Node: Buffer-local variables in spreadsheets26703
+Node: Uses of defadvice in SES28149
+Node: Index28967
+Node: Acknowledgements37303
+Node: GNU Free Documentation License38471
 
 End Tag Table

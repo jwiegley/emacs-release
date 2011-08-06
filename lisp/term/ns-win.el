@@ -1,6 +1,6 @@
 ;;; ns-win.el --- lisp side of interface with NeXT/Open/GNUstep/MacOS X window system
 
-;; Copyright (C) 1993, 1994, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 1993, 1994, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Authors: Carl Edman
@@ -99,6 +99,7 @@
   (setq initial-frame-alist (cons (cons 'name (pop ns-invocation-args))
                                   initial-frame-alist)))
 
+;; Set (but not used?) in frame.el.
 (defvar x-display-name nil
   "The name of the window display on which Emacs was started.
 On X, the display name of individual X frames is recorded in the
@@ -186,33 +187,13 @@ The properties returned may include `top', `left', `height', and `width'."
 ;;;; Keyboard mapping.
 
 ;; These tell read-char how to convert these special chars to ASCII.
-;;TODO: all terms have these, and at least the return mapping is necessary
-;;      for tramp to recognize the enter key.
-;;      Perhaps they should be moved into common code somewhere
-;;      (when a window system is active).
-;;      Remove if no problems for some time after 2008-08-06.
-(put 'backspace 'ascii-character 127)
-(put 'delete 'ascii-character 127)
-(put 'tab 'ascii-character ?\t)
 (put 'S-tab 'ascii-character (logior 16 ?\t))
-(put 'linefeed 'ascii-character ?\n)
-(put 'clear 'ascii-character 12)
-(put 'return 'ascii-character 13)
-(put 'escape 'ascii-character ?\e)
-
 
 (defvar ns-alternatives-map
   (let ((map (make-sparse-keymap)))
     ;; Map certain keypad keys into ASCII characters
     ;; that people usually expect.
-    (define-key map [backspace] [?\d])
-    (define-key map [delete] [?\d])
-    (define-key map [tab] [?\t])
     (define-key map [S-tab] [25])
-    (define-key map [linefeed] [?\n])
-    (define-key map [clear] [?\C-l])
-    (define-key map [return] [?\C-m])
-    (define-key map [escape] [?\e])
     (define-key map [M-backspace] [?\M-\d])
     (define-key map [M-delete] [?\M-\d])
     (define-key map [M-tab] [?\M-\t])
@@ -310,7 +291,7 @@ The properties returned may include `top', `left', `height', and `width'."
 (defalias 'do-applescript 'ns-do-applescript)
 
 (defun x-setup-function-keys (frame)
-  "Set up function keys on the graphical frame FRAME."
+  "Set up `function-key-map' on the graphical frame FRAME."
   (unless (terminal-parameter frame 'x-setup-function-keys)
     (with-selected-frame frame
       (setq interprogram-cut-function 'x-select-text
@@ -417,14 +398,6 @@ The properties returned may include `top', `left', `height', and `width'."
              )))
     (set-terminal-parameter frame 'x-setup-function-keys t)))
 
-
-
-;; Must come after keybindings.
-
-;; (fmakunbound 'clipboard-yank)
-;; (fmakunbound 'clipboard-kill-ring-save)
-;; (fmakunbound 'clipboard-kill-region)
-;; (fmakunbound 'menu-bar-enable-clipboard)
 
 ;; Add a couple of menus and rearrange some others; easiest just to redo toplvl
 ;; Note keymap defns must be given last-to-first
@@ -724,23 +697,27 @@ Lines are highlighted according to `ns-input-line'."
     (if ns-select-overlay
         (setq ns-select-overlay (delete-overlay ns-select-overlay)))
     (deactivate-mark)
-    (goto-line (if (consp ns-input-line)
-                   (min (car ns-input-line) (cdr ns-input-line))
-                 ns-input-line)))
+    (goto-char (point-min))
+    (forward-line (1- (if (consp ns-input-line)
+                          (min (car ns-input-line) (cdr ns-input-line))
+                        ns-input-line))))
    (ns-input-line
     (if (not ns-select-overlay)
-        (overlay-put (setq ns-select-overlay (make-overlay (point-min) (point-min)))
+        (overlay-put (setq ns-select-overlay (make-overlay (point-min)
+                                                           (point-min)))
                      'face 'highlight))
     (let ((beg (save-excursion
-                 (goto-line (if (consp ns-input-line)
-                                (min (car ns-input-line) (cdr ns-input-line))
-                              ns-input-line))
-                 (point)))
+                 (goto-char (point-min))
+                 (line-beginning-position
+                  (if (consp ns-input-line)
+                      (min (car ns-input-line) (cdr ns-input-line))
+                    ns-input-line))))
           (end (save-excursion
-                 (goto-line (+ 1 (if (consp ns-input-line)
-                                     (max (car ns-input-line) (cdr ns-input-line))
-                                   ns-input-line)))
-                 (point))))
+                 (goto-char (point-min))
+                 (line-beginning-position
+                  (1+ (if (consp ns-input-line)
+                          (max (car ns-input-line) (cdr ns-input-line))
+                        ns-input-line))))))
       (move-overlay ns-select-overlay beg end)
       (deactivate-mark)
       (goto-char beg)))
@@ -911,7 +888,7 @@ unless the current buffer is a scratch buffer."
 (defun ns-print-buffer ()
   "Interactive front-end to `print-buffer': asks for user confirmation first."
   (interactive)
-  (if (and (interactive-p)
+  (if (and (called-interactively-p 'interactive)
            (or (listp last-nonmenu-event)
                (and (char-or-string-p (event-basic-type last-command-event))
                     (memq 'super (event-modifiers last-command-event)))))
@@ -932,7 +909,7 @@ unless the current buffer is a scratch buffer."
 
 ;; Set to use font panel instead
 (declare-function ns-popup-font-panel "nsfns.m" (&optional frame))
-(defalias 'generate-fontset-menu 'ns-popup-font-panel "Pop up the font panel.
+(defalias 'x-select-font 'ns-popup-font-panel "Pop up the font panel.
 This function has been overloaded in Nextstep.")
 (defalias 'mouse-set-font 'ns-popup-font-panel "Pop up the font panel.
 This function has been overloaded in Nextstep.")
@@ -980,6 +957,46 @@ See the documentation of `create-fontset-from-fontset-spec' for the format.")
 		'initialization
 		(format "Creation of the standard fontset failed: %s" err)
 		:error)))))
+
+(defvar ns-reg-to-script)               ; nsfont.m
+
+;; This maps font registries (not exposed by NS APIs for font selection) to
+;; unicode scripts (which can be mapped to unicode character ranges which are).
+;; See ../international/fontset.el
+(setq ns-reg-to-script
+      '(("iso8859-1" . latin)
+	("iso8859-2" . latin)
+	("iso8859-3" . latin)
+	("iso8859-4" . latin)
+	("iso8859-5" . cyrillic)
+	("microsoft-cp1251" . cyrillic)
+	("koi8-r" . cyrillic)
+	("iso8859-6" . arabic)
+	("iso8859-7" . greek)
+	("iso8859-8" . hebrew)
+	("iso8859-9" . latin)
+	("iso8859-10" . latin)
+	("iso8859-11" . thai)
+	("tis620" . thai)
+	("iso8859-13" . latin)
+	("iso8859-14" . latin)
+	("iso8859-15" . latin)
+	("iso8859-16" . latin)
+	("viscii1.1-1" . latin)
+	("jisx0201" . kana)
+	("jisx0208" . han)
+	("jisx0212" . han)
+	("jisx0213" . han)
+	("gb2312.1980" . han)
+	("gb18030" . han)
+	("gbk-0" . han)
+	("big5" . han)
+	("cns11643" . han)
+	("sisheng_cwnn" . bopomofo)
+	("ksc5601.1987" . hangul)
+	("ethiopic-unicode" . ethiopic)
+	("is13194-devanagari" . indian-is13194)
+	("iso10646.indian-1" . devanagari)))
 
 
 ;;;; Pasteboard support.
@@ -1052,14 +1069,6 @@ On Nextstep, put TEXT in the pasteboard; PUSH is ignored."
   (interactive)
   (insert (ns-get-cut-buffer-internal 'SECONDARY)))
 
-;; PENDING: not sure what to do here.. for now interprog- are set in
-;; init-fn-keys, and unsure whether these x- settings have an effect.
-;;(setq interprogram-cut-function 'x-select-text
-;;      interprogram-paste-function 'x-cut-buffer-or-selection-value)
-;; These only needed if above not working.
-
-(set-face-background 'region "ns_selection_color")
-
 
 
 ;;;; Scrollbar handling.
@@ -1076,8 +1085,7 @@ On Nextstep, put TEXT in the pasteboard; PUSH is ignored."
   (let* ((pos (event-end event))
          (window (nth 0 pos))
          (scale (nth 2 pos)))
-    (save-excursion
-      (set-buffer (window-buffer window))
+    (with-current-buffer (window-buffer window)
       (cond
        ((eq (car scale) (cdr scale))
 	(goto-char (point-max)))
@@ -1131,8 +1139,6 @@ For X, the list comes from the `rgb.txt' file,v 10.41 94/02/20.
 For Nextstep, this is a list of non-PANTONE colors returned by
 the operating system.")
 
-;; The argument FRAME specifies which frame to try.
-;; The value may be different for frames on different Nextstep displays.
 (defun xw-defined-colors (&optional frame)
   "Internal function called by `defined-colors'."
   (or frame (setq frame (selected-frame)))
@@ -1162,8 +1168,7 @@ the operating system.")
      ((eq window-pos 'vertical-line)
       'default)
      ((consp window-pos)
-      (save-excursion
-        (set-buffer buffer)
+      (with-current-buffer buffer
         (let ((p (car (compute-motion (window-start window)
                                       (cons (nth 0 edges) (nth 1 edges))
                                       (window-end window)
@@ -1250,7 +1255,6 @@ the operating system.")
 
   ;; FIXME: This will surely lead to "MODIFIED OUTSIDE CUSTOM" warnings.
   (menu-bar-mode (if (get-lisp-resource nil "Menus") 1 -1))
-  (mouse-wheel-mode 1)
 
   (setq ns-initialized t))
 

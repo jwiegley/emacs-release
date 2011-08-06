@@ -1,7 +1,7 @@
 ;;; jka-cmpr-hook.el --- preloaded code to enable jka-compr.el
 
 ;; Copyright (C) 1993, 1994, 1995, 1997, 1999, 2000, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: jka@ece.cmu.edu (Jay K. Adams)
 ;; Maintainer: FSF
@@ -71,10 +71,11 @@ Otherwise, it is nil.")
 
 
 (defun jka-compr-build-file-regexp ()
+  (purecopy
   (mapconcat
    'jka-compr-info-regexp
    jka-compr-compression-info-list
-   "\\|"))
+   "\\|")))
 
 ;; Functions for accessing the return value of jka-compr-get-compression-info
 (defun jka-compr-info-regexp               (info)  (aref info 0))
@@ -195,6 +196,7 @@ options through Custom does this automatically."
   ;; compr-message  compr-prog  compr-args
   ;; uncomp-message uncomp-prog uncomp-args
   ;; can-append strip-extension-flag file-magic-bytes]
+  (mapcar 'purecopy
   '(["\\.Z\\(~\\|\\.~[0-9]+~\\)?\\'"
      "compressing"    "compress"     ("-c")
      ;; gzip is more common than uncompress. It can only read, not write.
@@ -219,13 +221,17 @@ options through Custom does this automatically."
      "compressing"        "gzip"         ("-c" "-q")
      "uncompressing"      "gzip"         ("-c" "-q" "-d")
      t t "\037\213"]
+    ["\\.xz\\(~\\|\\.~[0-9]+~\\)?\\'"
+     "XZ compressing"     "xz"           ("-c" "-q")
+     "XZ uncompressing"   "xz"           ("-c" "-q" "-d")
+     t t "\3757zXZ\0"]
     ;; dzip is gzip with random access.  Its compression program can't
     ;; read/write stdin/out, so .dz files can only be viewed without
     ;; saving, having their contents decompressed with gzip.
     ["\\.dz\\'"
      nil              nil            nil
      "uncompressing"      "gzip"         ("-c" "-q" "-d")
-     nil t "\037\213"])
+     nil t "\037\213"]))
 
   "List of vectors that describe available compression techniques.
 Each element, which describes a compression technique, is a vector of
@@ -286,7 +292,7 @@ variables.  Setting this through Custom does that automatically."
   :group 'jka-compr)
 
 (defcustom jka-compr-mode-alist-additions
-  (list (cons "\\.tgz\\'" 'tar-mode) (cons "\\.tbz2?\\'" 'tar-mode))
+  (list (cons (purecopy "\\.tgz\\'") 'tar-mode) (cons (purecopy "\\.tbz2?\\'") 'tar-mode))
   "List of pairs added to `auto-mode-alist' when installing jka-compr.
 Uninstalling jka-compr removes all pairs from `auto-mode-alist' that
 installing added.
@@ -299,7 +305,7 @@ variables.  Setting this through Custom does that automatically."
   :set 'jka-compr-set
   :group 'jka-compr)
 
-(defcustom jka-compr-load-suffixes '(".gz")
+(defcustom jka-compr-load-suffixes (list (purecopy ".gz"))
   "List of compression related suffixes to try when loading files.
 Enabling Auto Compression mode appends this list to `load-file-rep-suffixes',
 which see.  Disabling Auto Compression mode removes all suffixes

@@ -1,7 +1,7 @@
 ;;; calc-yank.el --- kill-ring functionality for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -444,14 +444,12 @@ With prefix arg, also delete the region."
 		(setq top (point))
 		(calc-cursor-stack-index 0)
 		(setq bot (point))))
-	 (save-excursion
-	   (set-buffer newbuf)
+	 (with-current-buffer newbuf
 	   (if (consp nn)
 	       (kill-region (region-beginning) (region-end)))
 	   (push-mark (point) t)
 	   (if (and overwrite-mode (not (consp nn)))
-	       (calc-overwrite-string (save-excursion
-					(set-buffer oldbuf)
+	       (calc-overwrite-string (with-current-buffer oldbuf
 					(buffer-substring top bot))
 				      eat-lnums)
 	     (or (bolp) (setq eat-lnums nil))

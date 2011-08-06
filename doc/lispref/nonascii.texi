@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1998, 1999, 2001, 2002, 2003, 2004,
-@c   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+@c   2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/characters
 @node Non-ASCII Characters, Searching and Matching, Text, Top
@@ -37,7 +37,7 @@ how they are stored in strings and buffers.
 
   Emacs buffers and strings support a large repertoire of characters
 from many different scripts, allowing users to type and display text
-in most any known written language.
+in almost any known written language.
 
 @cindex character codepoint
 @cindex codespace
@@ -46,12 +46,12 @@ in most any known written language.
 follows the @dfn{Unicode Standard}.  The Unicode Standard assigns a
 unique number, called a @dfn{codepoint}, to each and every character.
 The range of codepoints defined by Unicode, or the Unicode
-@dfn{codespace}, is @code{0..10FFFF} (in hex), inclusive.  Emacs
-extends this range with codepoints in the range @code{110000..3FFFFF},
-which it uses for representing characters that are not unified with
-Unicode and raw 8-bit bytes that cannot be interpreted as characters
-(the latter occupy the range @code{3FFF80..3FFFFF}).  Thus, a
-character codepoint in Emacs is a 22-bit integer number.
+@dfn{codespace}, is @code{0..#x10FFFF} (in hexadecimal notation),
+inclusive.  Emacs extends this range with codepoints in the range
+@code{#x110000..#x3FFFFF}, which it uses for representing characters
+that are not unified with Unicode and @dfn{raw 8-bit bytes} that
+cannot be interpreted as characters.  Thus, a character codepoint in
+Emacs is a 22-bit integer number.
 
 @cindex internal representation of characters
 @cindex characters, representation in buffers and strings
@@ -95,22 +95,13 @@ strings except for manipulating encoded text or binary non-text data.
 The representation for a string is determined and recorded in the string
 when the string is constructed.
 
-@defopt enable-multibyte-characters
+@defvar enable-multibyte-characters
 This variable specifies the current buffer's text representation.
 If it is non-@code{nil}, the buffer contains multibyte text; otherwise,
 it contains unibyte encoded text or binary non-text data.
 
 You cannot set this variable directly; instead, use the function
 @code{set-buffer-multibyte} to change a buffer's representation.
-@end defopt
-
-@defvar default-enable-multibyte-characters
-This variable's value is entirely equivalent to @code{(default-value
-'enable-multibyte-characters)}, and setting this variable changes that
-default value.  Setting the local binding of
-@code{enable-multibyte-characters} in a specific buffer is not allowed,
-but changing the default value is supported, and it is a reasonable
-thing to do, because it has no effect on existing buffers.
 
 The @samp{--unibyte} command line option does its job by setting the
 default value to @code{nil} early in startup.
@@ -198,8 +189,8 @@ of characters as @var{string}.  If @var{string} is a multibyte string,
 it is returned unchanged.  The function assumes that @var{string}
 includes only @acronym{ASCII} characters and raw 8-bit bytes; the
 latter are converted to their multibyte representation corresponding
-to the codepoints in the @code{3FFF80..3FFFFF} area (@pxref{Text
-Representations, codepoints}).
+to the codepoints @code{#x3FFF80} through @code{#x3FFFFF}, inclusive
+(@pxref{Text Representations, codepoints}).
 @end defun
 
 @defun string-to-unibyte string
@@ -280,15 +271,19 @@ contains no text properties.
 
   The unibyte and multibyte text representations use different
 character codes.  The valid character codes for unibyte representation
-range from 0 to 255---the values that can fit in one byte.  The valid
-character codes for multibyte representation range from 0 to 4194303
-(#x3FFFFF).  In this code space, values 0 through 127 are for
-@acronym{ASCII} charcters, and values 129 through 4194175 (#x3FFF7F)
-are for non-@acronym{ASCII} characters.  Values 0 through 1114111
-(#10FFFF) correspond to Unicode characters of the same codepoint;
-values 1114112 (#110000) through 4194175 (#x3FFF7F) represent
-characters that are not unified with Unicode; and values 4194176
-(#x3FFF80) through 4194303 (#x3FFFFF) represent eight-bit raw bytes.
+range from 0 to @code{#xFF} (255)---the values that can fit in one
+byte.  The valid character codes for multibyte representation range
+from 0 to @code{#x3FFFFF}.  In this code space, values 0 through
+@code{#x7F} (127) are for @acronym{ASCII} characters, and values
+@code{#x80} (128) through @code{#x3FFF7F} (4194175) are for
+non-@acronym{ASCII} characters.
+
+  Emacs character codes are a superset of the Unicode standard.
+Values 0 through @code{#x10FFFF} (1114111) correspond to Unicode
+characters of the same codepoint; values @code{#x110000} (1114112)
+through @code{#x3FFF7F} (4194175) represent characters that are not
+unified with Unicode; and values @code{#x3FFF80} (4194176) through
+@code{#x3FFFFF} (4194303) represent eight-bit raw bytes.
 
 @defun characterp charcode
 This returns @code{t} if @var{charcode} is a valid character, and
@@ -549,7 +544,7 @@ and strings.
 @cindex @code{eight-bit}, a charset
   Emacs defines several special character sets.  The character set
 @code{unicode} includes all the characters whose Emacs code points are
-in the range @code{0..10FFFF}.  The character set @code{emacs}
+in the range @code{0..#x10FFFF}.  The character set @code{emacs}
 includes all @acronym{ASCII} and non-@acronym{ASCII} characters.
 Finally, the @code{eight-bit} charset includes the 8-bit raw bytes;
 Emacs uses it to represent raw bytes encountered in text.
@@ -637,12 +632,12 @@ that fits the second argument of @code{decode-char} above.  If
   The following function comes in handy for applying a certain
 function to all or part of the characters in a charset:
 
-@defun map-charset-chars function charset &optional arg from to
+@defun map-charset-chars function charset &optional arg from-code to-code
 Call @var{function} for characters in @var{charset}.  @var{function}
 is called with two arguments.  The first one is a cons cell
 @code{(@var{from} .  @var{to})}, where @var{from} and @var{to}
 indicate a range of characters contained in charset.  The second
-argument is the optional argument @var{arg}.
+argument passed to @var{function} is @var{arg}.
 
 By default, the range of codepoints passed to @var{function} includes
 all the characters in @var{charset}, but optional arguments
@@ -760,7 +755,7 @@ This variable automatically becomes buffer-local when set.
 
 @defun make-translation-table-from-vector vec
 This function returns a translation table made from @var{vec} that is
-an array of 256 elements to map byte values 0 through 255 to
+an array of 256 elements to map bytes (values 0 through #xFF) to
 characters.  Elements may be @code{nil} for untranslated bytes.  The
 returned table has a translation table for reverse mapping in the
 first extra slot, and the value @code{1} in the second extra slot.
@@ -1052,7 +1047,7 @@ decoding, the end-of-line format of the text is auto-detected, and the
 eol conversion is set to match it (e.g., DOS-style CRLF format will
 imply @code{dos} eol conversion).  For encoding, the eol conversion is
 taken from the appropriate default coding system (e.g.,
-@code{default-buffer-file-coding-system} for
+default value of @code{buffer-file-coding-system} for
 @code{buffer-file-coding-system}), or from the default eol conversion
 appropriate for the underlying platform.
 @end defun
@@ -1212,8 +1207,8 @@ coding system to try; if that can handle the text,
 also be a list of coding systems; then the function tries each of them
 one by one.  After trying all of them, it next tries the current
 buffer's value of @code{buffer-file-coding-system} (if it is not
-@code{undecided}), then the value of
-@code{default-buffer-file-coding-system} and finally the user's most
+@code{undecided}), then the default value of
+@code{buffer-file-coding-system} and finally the user's most
 preferred coding system, which the user can set using the command
 @code{prefer-coding-system} (@pxref{Recognize Coding,, Recognizing
 Coding Systems, emacs, The GNU Emacs Manual}).
@@ -1240,8 +1235,9 @@ possible candidates.
 
 @vindex select-safe-coding-system-accept-default-p
 If the variable @code{select-safe-coding-system-accept-default-p} is
-non-@code{nil}, its value overrides the value of
-@var{accept-default-p}.
+non-@code{nil}, it should be a function taking a single argument.
+It is used in place of @var{accept-default-p}, overriding any
+value supplied for this argument.
 
 As a final step, before returning the chosen coding system,
 @code{select-safe-coding-system} checks whether that coding system is
@@ -1570,10 +1566,10 @@ in this section.
 text.  They logically consist of a series of byte values; that is, a
 series of @acronym{ASCII} and eight-bit characters.  In unibyte
 buffers and strings, these characters have codes in the range 0
-through 255.  In a multibyte buffer or string, eight-bit characters
-have character codes higher than 255 (@pxref{Text Representations}),
-but Emacs transparently converts them to their single-byte values when
-you encode or decode such text.
+through #xFF (255).  In a multibyte buffer or string, eight-bit
+characters have character codes higher than #xFF (@pxref{Text
+Representations}), but Emacs transparently converts them to their
+single-byte values when you encode or decode such text.
 
   The usual way to read a file into a buffer as a sequence of bytes, so
 you can decode the contents explicitly, is with
@@ -1758,6 +1754,13 @@ Otherwise, @code{undecided-dos} is used.
 
 Normally this variable is set by visiting a file; it is set to
 @code{nil} if the file was visited without any actual conversion.
+
+Its default value is used to decide how to handle files for which
+@code{file-name-buffer-file-type-alist} says nothing about the type:
+If the default value is non-@code{nil}, then these files are treated as
+binary: the coding system @code{no-conversion} is used.  Otherwise,
+nothing special is done for them---the coding system is deduced solely
+from the file contents, in the usual Emacs fashion.
 @end defvar
 
 @defopt file-name-buffer-file-type-alist
@@ -1774,17 +1777,7 @@ which coding system to use when reading a file.  For a text file,
 is used.
 
 If no element in this alist matches a given file name, then
-@code{default-buffer-file-type} says how to treat the file.
-@end defopt
-
-@defopt default-buffer-file-type
-This variable says how to handle files for which
-@code{file-name-buffer-file-type-alist} says nothing about the type.
-
-If this variable is non-@code{nil}, then these files are treated as
-binary: the coding system @code{no-conversion} is used.  Otherwise,
-nothing special is done for them---the coding system is deduced solely
-from the file contents, in the usual Emacs fashion.
+the default value of @code{buffer-file-type} says how to treat the file.
 @end defopt
 
 @node Input Methods

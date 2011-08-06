@@ -1,7 +1,7 @@
 ;;; facemenu.el --- create a face menu for interactively adding fonts to text
 
 ;; Copyright (C) 1994, 1995, 1996, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Boris Goldowsky <boris@gnu.org>
 ;; Keywords: faces
@@ -99,11 +99,12 @@
   :prefix "facemenu-")
 
 (defcustom facemenu-keybindings
+  (mapcar 'purecopy
   '((default     . "d")
     (bold        . "b")
     (italic      . "i")
     (bold-italic . "l") ; {bold} intersect {italic} = {l}
-    (underline   . "u"))
+    (underline   . "u")))
   "Alist of interesting faces and keybindings.
 Each element is itself a list: the car is the name of the face,
 the next element is the key to use as a keyboard equivalent of the menu item;
@@ -163,7 +164,7 @@ it will remove any faces not explicitly in the list."
 
 (defvar facemenu-face-menu
   (let ((map (make-sparse-keymap "Face")))
-    (define-key map "o" (cons "Other..." 'facemenu-set-face))
+    (define-key map "o" (cons (purecopy "Other...") 'facemenu-set-face))
     map)
   "Menu keymap for faces.")
 (defalias 'facemenu-face-menu facemenu-face-menu)
@@ -171,7 +172,7 @@ it will remove any faces not explicitly in the list."
 
 (defvar facemenu-foreground-menu
   (let ((map (make-sparse-keymap "Foreground Color")))
-    (define-key map "o" (cons "Other..." 'facemenu-set-foreground))
+    (define-key map "o" (cons (purecopy "Other...") 'facemenu-set-foreground))
     map)
   "Menu keymap for foreground colors.")
 (defalias 'facemenu-foreground-menu facemenu-foreground-menu)
@@ -179,7 +180,7 @@ it will remove any faces not explicitly in the list."
 
 (defvar facemenu-background-menu
   (let ((map (make-sparse-keymap "Background Color")))
-    (define-key map "o" (cons "Other..." 'facemenu-set-background))
+    (define-key map "o" (cons (purecopy "Other...") 'facemenu-set-background))
     map)
   "Menu keymap for background colors.")
 (defalias 'facemenu-background-menu facemenu-background-menu)
@@ -187,7 +188,10 @@ it will remove any faces not explicitly in the list."
 
 ;;; Condition for enabling menu items that set faces.
 (defun facemenu-enable-faces-p ()
-  (not (and font-lock-mode font-lock-defaults)))
+  ;; Enable the facemenu if facemenu-add-face-function is defined
+  ;; (e.g. in Tex-mode and SGML mode), or if font-lock is off.
+  (or (not (and font-lock-mode font-lock-defaults))
+      facemenu-add-face-function))
 
 (defvar facemenu-special-menu
   (let ((map (make-sparse-keymap "Special")))
@@ -460,11 +464,17 @@ These special properties include `invisible', `intangible' and `read-only'."
 (defun facemenu-read-color (&optional prompt)
   "Read a color using the minibuffer."
   (let* ((completion-ignore-case t)
-	 (require-match (not (eq window-system 'ns)))
-	 (col (completing-read (or prompt "Color: ")
-			       (or facemenu-color-alist
-				   (defined-colors))
-			       nil require-match)))
+	 (color-list (or facemenu-color-alist (defined-colors)))
+	 (completer
+	  (lambda (string pred all-completions)
+	    (if all-completions
+		(or (all-completions string color-list pred)
+		    (if (color-defined-p string)
+			(list string)))
+	      (or (try-completion string color-list pred)
+		  (if (color-defined-p string)
+		      string)))))
+	 (col (completing-read (or prompt "Color: ") completer nil t)))
     (if (equal "" col)
 	nil
       col)))
@@ -484,8 +494,7 @@ argument BUFFER-NAME is nil, it defaults to *Colors*."
 	(if lc
 	    (setcdr lc nil)))))
   (with-help-window (or buffer-name "*Colors*")
-    (save-excursion
-      (set-buffer standard-output)
+    (with-current-buffer standard-output
       (setq truncate-lines t)
       (if temp-buffer-show-function
 	  (list-colors-print list)
@@ -493,7 +502,11 @@ argument BUFFER-NAME is nil, it defaults to *Colors*."
 	;; to get the right value of window-width in list-colors-print
 	;; after the buffer is displayed.
 	(add-hook 'temp-buffer-show-hook
-		  (lambda () (list-colors-print list)) nil t)))))
+		  (lambda ()
+		    (set-buffer-modified-p
+		     (prog1 (buffer-modified-p)
+		       (list-colors-print list))))
+		  nil t)))))
 
 (defun list-colors-print (list)
   (dolist (color list)
@@ -661,11 +674,11 @@ This is called whenever you create a new face, and at other times."
 	    symbol (intern name)))
     (setq menu 'facemenu-face-menu)
     (setq docstring
-	  (format "Select face `%s' for subsequent insertion.
+	  (purecopy (format "Select face `%s' for subsequent insertion.
 If the mark is active and there is no prefix argument,
 apply face `%s' to the region instead.
 This command was defined by `facemenu-add-new-face'."
-		  name name))
+		  name name)))
     (cond ((facemenu-iterate ; check if equivalent face is already in the menu
 	    (lambda (m) (and (listp m)
 			     (symbolp (car m))

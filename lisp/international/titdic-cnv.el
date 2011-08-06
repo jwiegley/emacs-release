@@ -1,9 +1,9 @@
 ;;; titdic-cnv.el --- convert cxterm dictionary (TIT format) to Quail package -*- coding:iso-2022-7bit; -*-
 
 ;; Copyright (C) 1997, 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009
+;;   2005, 2006, 2007, 2008, 2009, 2010
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 ;; Copyright (C) 2003
@@ -775,8 +775,7 @@ To get complete usage, invoke \"emacs -batch -f batch-titdic-convert -h\"."
    (\",\" . quail-prev-translation-block))
   nil nil)\n\n")
     (insert "(quail-define-rules\n")
-    (save-excursion
-      (set-buffer dicbuf)
+    (with-current-buffer dicbuf
       ;; Handle double CR line ends, which result when checking out of
       ;; CVS on MS-Windows.
       (goto-char (point-min))
@@ -931,8 +930,7 @@ method `chinese-tonepy' with which you must specify tones by digits
 
 (defun ziranma-converter (dicbuf name title)
   (let (dic)
-    (save-excursion
-      (set-buffer dicbuf)
+    (with-current-buffer dicbuf
       (goto-char (point-min))
       (search-forward "\n%keyname end")
       (forward-line 1)
@@ -1052,8 +1050,7 @@ To input symbols and punctuations, type `/' followed by one of `a' to
   (let (dicbuf-start dicbuf-end key-start key (pos (point)))
     ;; Find the dictionary, which starts below a horizontal rule and
     ;; ends at the second to last line in the HTML file.
-    (save-excursion
-      (set-buffer dicbuf)
+    (with-current-buffer dicbuf
       (goto-char (point-min))
       (re-search-forward "^#<hr>")
       (forward-line 1)

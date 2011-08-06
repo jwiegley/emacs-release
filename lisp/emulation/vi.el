@@ -79,8 +79,7 @@
     (if (null mode-cmd)
 	(with-output-to-temp-buffer "*Help*"
 	  (princ (substitute-command-keys "Possible major modes to switch to: \\{vi-tilde-map}"))
-	  (save-excursion
-	    (set-buffer standard-output)
+	  (with-current-buffer standard-output
 	    (help-mode)))
       (setq prefix-arg arg)		; prefix arg will be passed down
       (command-execute mode-cmd nil)	; may need to save mode-line-format etc
@@ -499,8 +498,7 @@ set sw=n     M-x set-variable vi-shift-width n "
 ;;  (cond ((string-match "s"))))
   (with-output-to-temp-buffer "*Help*"
     (princ (documentation 'vi-ex-cmd))
-    (save-excursion
-      (set-buffer standard-output)
+    (with-current-buffer standard-output
       (help-mode))))
 
 (defun vi-undefined ()
@@ -639,7 +637,7 @@ insert state."
    (if (null (vi-raw-numeric-prefix arg))
        (with-no-warnings
 	 (end-of-buffer))
-     (goto-line (vi-prefix-numeric-value arg))))
+     (with-no-warnings (goto-line (vi-prefix-numeric-value arg)))))
 
 (defun vi-beginning-of-buffer ()
   "Move point to the beginning of current buffer."

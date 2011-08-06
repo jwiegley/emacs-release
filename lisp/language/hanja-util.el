@@ -1,6 +1,6 @@
 ;;; hanja-util.el --- Korean Hanja util module  -*- coding: utf-8 -*-
 
-;; Copyright (C) 2008, 2009  Free Software Foundation, Inc.
+;; Copyright (C) 2008, 2009, 2010  Free Software Foundation, Inc.
 
 ;; Author: Jihyun Cho <jihyun.jo@gmail.com>
 ;; Keywords: multilingual, input method, Korean, Hanja
@@ -39,7 +39,7 @@ character.  This variable is initialized by `hanja-init-load'.")
 (defun hanja-init-load ()
   "Initialize `hanja-table' (which see)."
   (when (not hanja-table)
-    (message "Hanja table loading..")
+    (message "Hanja table loading...")
     (setq hanja-table (make-char-table nil))
     (mapc
      (lambda (x) (aset hanja-table (car x) (cdr x)))

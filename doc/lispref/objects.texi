@@ -1,7 +1,8 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+@c   Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/objects
 @node Lisp Data Types, Numbers, Introduction, Top
@@ -164,24 +165,24 @@ latter are unique to Emacs Lisp.
 @node Integer Type
 @subsection Integer Type
 
-  The range of values for integers in Emacs Lisp is @minus{}268435456 to
-268435455 (29 bits; i.e.,
+  The range of values for integers in Emacs Lisp is @minus{}536870912 to
+536870911 (30 bits; i.e.,
 @ifnottex
--2**28
+-2**29
 @end ifnottex
 @tex
-@math{-2^{28}}
+@math{-2^{29}}
 @end tex
 to
 @ifnottex
-2**28 - 1)
+2**29 - 1)
 @end ifnottex
 @tex
-@math{2^{28}-1})
+@math{2^{29}-1})
 @end tex
 on most machines.  (Some machines may provide a wider range.)  It is
 important to note that the Emacs Lisp arithmetic functions do not check
-for overflow.  Thus @code{(1+ 268435455)} is @minus{}268435456 on most
+for overflow.  Thus @code{(1+ 536870911)} is @minus{}536870912 on most
 machines.
 
   The read syntax for integers is a sequence of (base ten) digits with an
@@ -195,9 +196,16 @@ leading @samp{+} or a final @samp{.}.
 1                ; @r{The integer 1.}
 1.               ; @r{Also the integer 1.}
 +1               ; @r{Also the integer 1.}
-536870913        ; @r{Also the integer 1 on a 29-bit implementation.}
+1073741825       ; @r{Also the integer 1 on a 30-bit implementation.}
 @end group
 @end example
+
+@noindent
+As a special exception, if a sequence of digits specifies an integer
+too large or too small to be a valid integer object, the Lisp reader
+reads it as a floating-point number (@pxref{Floating Point Type}).
+For instance, on most machines @code{536870912} is read as the
+floating-point number @code{536870912.0}.
 
   @xref{Numbers}, for more information.
 
@@ -471,8 +479,8 @@ possible a wide range of basic character codes.
 bit attached to an @acronym{ASCII} character indicates a meta
 character; thus, the meta characters that can fit in a string have
 codes in the range from 128 to 255, and are the meta versions of the
-ordinary @acronym{ASCII} characters.  (In Emacs versions 18 and older,
-this convention was used for characters outside of strings as well.)
+ordinary @acronym{ASCII} characters.  @xref{Strings of Events}, for
+details about @key{META}-handling in strings.
 
   The read syntax for meta characters uses @samp{\M-}.  For example,
 @samp{?\M-A} stands for @kbd{M-A}.  You can use @samp{\M-} together with
@@ -1218,13 +1226,17 @@ only the first 3 bits are used:
 
     A hash table is a very fast kind of lookup table, somewhat like an
 alist in that it maps keys to corresponding values, but much faster.
-Hash tables have no read syntax, and print using hash notation.
-@xref{Hash Tables}, for functions that operate on hash tables.
+The printed representation of a hash table specifies its properties
+and contents, like this:
 
 @example
 (make-hash-table)
-     @result{} #<hash-table 'eql nil 0/65 0x83af980>
+     @result{} #s(hash-table size 65 test eql rehash-size 1.5
+                             rehash-threshold 0.8 data ())
 @end example
+
+@noindent
+@xref{Hash Tables}, for more information about hash tables.
 
 @node Function Type
 @subsection Function Type

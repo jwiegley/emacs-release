@@ -1,7 +1,7 @@
 ;;; gnus-msg.el --- mail and post interface for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Masanobu UMEDA <umerin@flab.flab.fujitsu.junet>
 ;;	Lars Magne Ingebrigtsen <larsi@gnus.org>
@@ -149,7 +149,7 @@ See Info node `(gnus)Posting Styles'."
   :type 'boolean)
 
 (make-obsolete-variable 'gnus-inews-mark-gcc-as-read
-			'gnus-gcc-mark-as-read)
+			'gnus-gcc-mark-as-read "Emacs 22.1")
 
 (defcustom gnus-gcc-externalize-attachments nil
   "Should local-file attachments be included as external parts in Gcc copies?

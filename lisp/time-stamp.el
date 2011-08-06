@@ -1,7 +1,7 @@
 ;;; time-stamp.el --- Maintain last change time stamps in files edited by Emacs
 
 ;; Copyright (C) 1989, 1993, 1994, 1995, 1997, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -660,8 +660,7 @@ The new forms being recommended now will continue to work then.")
 Suggests replacing OLD-FORM with NEW-FORM."
   (cond
    (time-stamp-conversion-warn
-    (save-excursion
-      (set-buffer (get-buffer-create "*Time-stamp-compatibility*"))
+    (with-current-buffer (get-buffer-create "*Time-stamp-compatibility*")
       (goto-char (point-max))
       (if (bobp)
 	  (progn
@@ -704,73 +703,6 @@ around literals."
 	     (setq insert-sep-p nil)))
       (setq list (cdr list)))
     return-string))
-
-;;; Some functions used in time-stamp-format
-
-;;; These functions have been obsolete since 1995
-;;; and will be removed in Emacs 23.
-;;; Meanwhile, discourage other packages from using them.
-(dolist (function '(time-stamp-month-dd-yyyy time-stamp-dd/mm/yyyy
-		    time-stamp-mon-dd-yyyy   time-stamp-dd-mon-yy
-		    time-stamp-yy/mm/dd      time-stamp-yyyy/mm/dd
-		    time-stamp-yyyy-mm-dd    time-stamp-yymmdd
-		    time-stamp-hh:mm:ss      time-stamp-hhmm))
-  (make-obsolete function
-		 "use `time-stamp-string' or `format-time-string' instead."
-		 "20.1"))
-
-;;; pretty form, suitable for a title page
-
-(defun time-stamp-month-dd-yyyy ()
-  "Return the current date as a string in \"Month DD, YYYY\" form."
-  (format-time-string "%B %e, %Y"))
-
-(defun time-stamp-dd/mm/yyyy ()
-  "Return the current date as a string in \"DD/MM/YYYY\" form."
-  (format-time-string "%d/%m/%Y"))
-
-;;; same as __DATE__ in ANSI C
-
-(defun time-stamp-mon-dd-yyyy ()
-  "Return the current date as a string in \"Mon DD YYYY\" form.
-The first character of DD is space if the value is less than 10."
-  (format-time-string "%b %d %Y"))
-
-;;; RFC 822 date
-
-(defun time-stamp-dd-mon-yy ()
-  "Return the current date as a string in \"DD Mon YY\" form."
-  (format-time-string "%d %b %y"))
-
-;;; RCS 3 date
-
-(defun time-stamp-yy/mm/dd ()
-  "Return the current date as a string in \"YY/MM/DD\" form."
-  (format-time-string "%y/%m/%d"))
-
-;;; RCS 5 date
-
-(defun time-stamp-yyyy/mm/dd ()
-  "Return the current date as a string in \"YYYY/MM/DD\" form."
-  (format-time-string "%Y/%m/%d"))
-
-;;; ISO 8601 date
-
-(defun time-stamp-yyyy-mm-dd ()
-  "Return the current date as a string in \"YYYY-MM-DD\" form."
-  (format-time-string "%Y-%m-%d"))
-
-(defun time-stamp-yymmdd ()
-  "Return the current date as a string in \"YYMMDD\" form."
-  (format-time-string "%y%m%d"))
-
-(defun time-stamp-hh:mm:ss ()
-  "Return the current time as a string in \"HH:MM:SS\" form."
-  (format-time-string "%T"))
-
-(defun time-stamp-hhmm ()
-  "Return the current time as a string in \"HHMM\" form."
-  (format-time-string "%H%M"))
 
 (provide 'time-stamp)
 

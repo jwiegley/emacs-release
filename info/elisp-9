@@ -2,10 +2,10 @@ This is ../../info/elisp, produced by makeinfo version 4.11 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.1.
+corresponding to Emacs version 23.2.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010  Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -25,6 +25,180 @@ INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Attribute Functions,  Next: Displaying Faces,  Prev: Face Attributes,  Up: Faces
+
+38.12.3 Face Attribute Functions
+--------------------------------
+
+This section describes the functions for accessing and modifying the
+attributes of an existing face.
+
+ -- Function: set-face-attribute face frame &rest arguments
+     This function sets one or more attributes of FACE for FRAME.  The
+     attributes you specify this way override whatever the `defface'
+     says.
+
+     The extra arguments ARGUMENTS specify the attributes to set, and
+     the values for them.  They should consist of alternating attribute
+     names (such as `:family' or `:underline') and corresponding values.
+     Thus,
+
+          (set-face-attribute 'foo nil
+                              :width 'extended
+                              :weight 'bold
+                              :underline "red")
+
+     sets the attributes `:width', `:weight' and `:underline' to the
+     corresponding values.
+
+     If FRAME is `t', this function sets the default attributes for new
+     frames.  Default attribute values specified this way override the
+     `defface' for newly created frames.
+
+     If FRAME is `nil', this function sets the attributes for all
+     existing frames, and the default for new frames.
+
+ -- Function: face-attribute face attribute &optional frame inherit
+     This returns the value of the ATTRIBUTE attribute of FACE on
+     FRAME.  If FRAME is `nil', that means the selected frame (*note
+     Input Focus::).
+
+     If FRAME is `t', this returns whatever new-frames default value
+     you previously specified with `set-face-attribute' for the
+     ATTRIBUTE attribute of FACE.  If you have not specified one, it
+     returns `nil'.
+
+     If INHERIT is `nil', only attributes directly defined by FACE are
+     considered, so the return value may be `unspecified', or a
+     relative value.  If INHERIT is non-`nil', FACE's definition of
+     ATTRIBUTE is merged with the faces specified by its `:inherit'
+     attribute; however the return value may still be `unspecified' or
+     relative.  If INHERIT is a face or a list of faces, then the
+     result is further merged with that face (or faces), until it
+     becomes specified and absolute.
+
+     To ensure that the return value is always specified and absolute,
+     use a value of `default' for INHERIT; this will resolve any
+     unspecified or relative values by merging with the `default' face
+     (which is always completely specified).
+
+     For example,
+
+          (face-attribute 'bold :weight)
+               => bold
+
+ -- Function: face-attribute-relative-p attribute value
+     This function returns non-`nil' if VALUE, when used as the value
+     of the face attribute ATTRIBUTE, is relative.  This means it would
+     modify, rather than completely override, any value that comes from
+     a subsequent face in the face list or that is inherited from
+     another face.
+
+     `unspecified' is a relative value for all attributes.  For
+     `:height', floating point and function values are also relative.
+
+     For example:
+
+          (face-attribute-relative-p :height 2.0)
+               => t
+
+ -- Function: face-all-attributes face &optional frame
+     This function returns an alist of attributes of FACE.  The
+     elements of the result are name-value pairs of the form
+     `(ATTR-NAME . ATTR-VALUE)'.  Optional argument FRAME specifies the
+     frame whose definition of FACE to return; if omitted or `nil', the
+     returned value describes the default attributes of FACE for newly
+     created frames.
+
+ -- Function: merge-face-attribute attribute value1 value2
+     If VALUE1 is a relative value for the face attribute ATTRIBUTE,
+     returns it merged with the underlying value VALUE2; otherwise, if
+     VALUE1 is an absolute value for the face attribute ATTRIBUTE,
+     returns VALUE1 unchanged.
+
+   The following functions provide compatibility with Emacs 20 and
+below.  They work by calling `set-face-attribute'.  Values of `t' and
+`nil' for their FRAME argument are handled just like
+`set-face-attribute' and `face-attribute'.
+
+ -- Function: set-face-foreground face color &optional frame
+ -- Function: set-face-background face color &optional frame
+     These functions set the `:foreground' attribute (or `:background'
+     attribute, respectively) of FACE to COLOR.
+
+ -- Function: set-face-stipple face pattern &optional frame
+     This function sets the `:stipple' attribute of FACE to PATTERN.
+
+ -- Function: set-face-font face font &optional frame
+     This function sets the `:font' attribute of FACE to FONT.
+
+ -- Function: set-face-bold-p face bold-p &optional frame
+     This function sets the `:weight' attribute of FACE to NORMAL if
+     BOLD-P is `nil', and to BOLD otherwise.
+
+ -- Function: set-face-italic-p face italic-p &optional frame
+     This function sets the `:slant' attribute of FACE to NORMAL if
+     ITALIC-P is `nil', and to ITALIC otherwise.
+
+ -- Function: set-face-underline-p face underline &optional frame
+     This function sets the `:underline' attribute of FACE to UNDERLINE.
+
+ -- Function: set-face-inverse-video-p face inverse-video-p &optional
+          frame
+     This function sets the `:inverse-video' attribute of FACE to
+     INVERSE-VIDEO-P.
+
+ -- Function: invert-face face &optional frame
+     This function swaps the foreground and background colors of face
+     FACE.
+
+   The following functions examine the attributes of a face.  If you
+don't specify FRAME, they refer to the selected frame; `t' refers to
+the default data for new frames.  They return the symbol `unspecified'
+if the face doesn't define any value for that attribute.
+
+ -- Function: face-foreground face &optional frame inherit
+ -- Function: face-background face &optional frame inherit
+     These functions return the foreground color (or background color,
+     respectively) of face FACE, as a string.
+
+     If INHERIT is `nil', only a color directly defined by the face is
+     returned.  If INHERIT is non-`nil', any faces specified by its
+     `:inherit' attribute are considered as well, and if INHERIT is a
+     face or a list of faces, then they are also considered, until a
+     specified color is found.  To ensure that the return value is
+     always specified, use a value of `default' for INHERIT.
+
+ -- Function: face-stipple face &optional frame inherit
+     This function returns the name of the background stipple pattern
+     of face FACE, or `nil' if it doesn't have one.
+
+     If INHERIT is `nil', only a stipple directly defined by the face
+     is returned.  If INHERIT is non-`nil', any faces specified by its
+     `:inherit' attribute are considered as well, and if INHERIT is a
+     face or a list of faces, then they are also considered, until a
+     specified stipple is found.  To ensure that the return value is
+     always specified, use a value of `default' for INHERIT.
+
+ -- Function: face-font face &optional frame
+     This function returns the name of the font of face FACE.
+
+ -- Function: face-bold-p face &optional frame
+     This function returns a non-`nil' value if the `:weight' attribute
+     of FACE is bolder than normal (i.e., one of `semi-bold', `bold',
+     `extra-bold', or `ultra-bold').  Otherwise, it returns `nil'.
+
+ -- Function: face-italic-p face &optional frame
+     This function returns a non-`nil' value if the `:slant' attribute
+     of FACE is `italic' or `oblique', and `nil' otherwise.
+
+ -- Function: face-underline-p face &optional frame
+     This function returns the `:underline' attribute of face FACE.
+
+ -- Function: face-inverse-video-p face &optional frame
+     This function returns the `:inverse-video' attribute of face FACE.
 
 
 File: elisp,  Node: Displaying Faces,  Next: Face Remapping,  Prev: Attribute Functions,  Up: Faces
@@ -234,6 +408,13 @@ makes `modeline' an alias for the `mode-line' face.
 
      (put 'modeline 'face-alias 'mode-line)
 
+ -- Function: define-obsolete-face-alias obsolete-face current-face
+          &optional when
+     This function defines a face alias and marks it as obsolete,
+     indicating that it may be removed in future.  The optional string
+     WHEN indicates when the face was made obsolete (for example, a
+     release number).
+
 
 File: elisp,  Node: Auto Faces,  Next: Font Selection,  Prev: Face Functions,  Up: Faces
 
@@ -246,23 +427,26 @@ Font-Lock.
 
  -- Variable: fontification-functions
      This variable holds a list of functions that are called by Emacs
-     redisplay as needed to assign faces automatically to text in the
-     buffer.
+     redisplay as needed, just before doing redisplay.  They are called
+     even when Font Lock Mode isn't enabled.  When Font Lock Mode is
+     enabled, this variable usually holds just one function,
+     `jit-lock-function'.
 
      The functions are called in the order listed, with one argument, a
-     buffer position POS.  Each function should attempt to assign faces
-     to the text in the current buffer starting at POS.
+     buffer position POS.  Collectively they should attempt to assign
+     faces to the text in the current buffer starting at POS.
 
-     Each function should record the faces they assign by setting the
-     `face' property.  It should also add a non-`nil' `fontified'
-     property for all the text it has assigned faces to.  That property
-     tells redisplay that faces have been assigned to that text already.
+     The functions should record the faces they assign by setting the
+     `face' property.  They should also add a non-`nil' `fontified'
+     property to all the text they have assigned faces to.  That
+     property tells redisplay that faces have been assigned to that text
+     already.
 
-     It is probably a good idea for each function to do nothing if the
+     It is probably a good idea for the functions to do nothing if the
      character after POS already has a non-`nil' `fontified' property,
      but this is not required.  If one function overrides the
-     assignments made by a previous one, the properties as they are
-     after the last function finishes are the ones that really matter.
+     assignments made by a previous one, the properties after the last
+     function finishes are the ones that really matter.
 
      For efficiency, we recommend writing these functions so that they
      usually assign faces to around 400 to 600 characters at each call.
@@ -527,7 +711,7 @@ GB2312 characters has a wild card `*' in the FAMILY field.
      CHARACTER may be a charset.  In that case, use FONT-SPEC for all
      character in the charsets.
 
-     CHARACTER may be a script anme.  In that case, use FONT-SPEC for
+     CHARACTER may be a script name.  In that case, use FONT-SPEC for
      all character in the charsets.
 
      FONT-SPEC may be a cons; `(FAMILY . REGISTRY)', where FAMILY is a
@@ -626,6 +810,24 @@ specifications in a font spec.
 
     `:script'
           The script that the font must support (a symbol).
+
+    `:otf'
+          The font must be an OpenType font that supports these OpenType
+          features, provided Emacs is compiled with support for
+          `libotf' (a library for performing complex text layout in
+          certain scripts).  The value must be a list of the form
+
+               `(SCRIPT-TAG LANGSYS-TAG GSUB GPOS)'
+
+          where SCRIPT-TAG is the OpenType script tag symbol;
+          LANGSYS-TAG is the OpenType language system tag symbol, or
+          `nil' to use the default language system; `gsub' is a list of
+          OpenType GSUB feature tag symbols, or `nil' if none is
+          required; and `gpos' is a list of OpenType GPOS feature tag
+          symbols, or `nil' if none is required.  If `gsub' or `gpos'
+          is a list, a `nil' element in that list means that the font
+          must not match any of the remaining tag symbols.  The `gpos'
+          element may be omitted.
 
  -- Function: font-put font-spec property value
      Set the font property PROPERTY in the font-spec FONT-SPEC to VALUE.
@@ -814,10 +1016,6 @@ buffer boundaries, overlay arrow, etc.
      left fringe, and no arrow bitmaps, use `((top .  left) (bottom .
      left))'.
 
- -- Variable: default-indicate-buffer-boundaries
-     The value of this variable is the default value for
-     `indicate-buffer-boundaries' in buffers that do not override it.
-
  -- Variable: fringe-indicator-alist
      This buffer-local variable specifies the mapping from logical
      fringe indicators to the actual bitmaps displayed in the window
@@ -858,14 +1056,10 @@ buffer boundaries, overlay arrow, etc.
 
      When `fringe-indicator-alist' has a buffer-local value, and there
      is no bitmap defined for a logical indicator, or the bitmap is
-     `t', the corresponding value from the (non-local)
-     `default-fringe-indicator-alist' is used.
+     `t', the corresponding value from the default value of
+     `fringe-indicator-alist' is used.
 
      To completely hide a specific indicator, set the bitmap to `nil'.
-
- -- Variable: default-fringe-indicator-alist
-     The value of this variable is the default value for
-     `fringe-indicator-alist' in buffers that do not override it.
 
    Standard fringe bitmaps for indicators:
      left-arrow right-arrow up-arrow down-arrow
@@ -913,11 +1107,7 @@ Logical cursor types:
 
      When `fringe-cursor-alist' has a buffer-local value, and there is
      no bitmap defined for a cursor type, the corresponding value from
-     the (non-local) `default-fringes-indicator-alist' is used.
-
- -- Variable: default-fringes-cursor-alist
-     The value of this variable is the default value for
-     `fringe-cursor-alist' in buffers that do not override it.
+     the default value of `fringes-indicator-alist' is used.
 
    Standard bitmaps for displaying the cursor in right fringe:
      filled-rectangle hollow-rectangle filled-square hollow-square
@@ -2874,10 +3064,6 @@ redisplay of the mode line using the new values, call the function
      followed by the character: `^A'.  If it is `nil', they are
      displayed as a backslash followed by three octal digits: `\001'.
 
- -- Variable: default-ctl-arrow
-     The value of this variable is the default value for `ctl-arrow' in
-     buffers that do not override it.  *Note Default Value::.
-
  -- User Option: tab-width
      The value of this buffer-local variable is the spacing between tab
      stops used for displaying tab characters in Emacs buffers.  The
@@ -4137,11 +4323,12 @@ zone.
      the end.
 
      The argument TIME-VALUE, if given, specifies a time to format
-     instead of the current time.  The argument should be a list whose
-     first two elements are integers.  Thus, you can use times obtained
-     from `current-time' (see below) and from `file-attributes' (*note
-     Definition of file-attributes::).  TIME-VALUE can also be a cons
-     of two integers, but this is considered obsolete.
+     instead of the current time.  This argument should have the same
+     form as the times obtained from `current-time' (see below) and from
+     `file-attributes' (*note Definition of file-attributes::).  It
+     should be a list whose first two elements are integers; a third
+     (microsecond) element, if present, is ignored.  TIME-VALUE can
+     also be a cons of two integers, but this usage is obsolete.
 
           (current-time-string)
                => "Wed Oct 14 22:21:05 1987"
@@ -4194,7 +4381,7 @@ zone.
      specifies a time to convert instead of the current time.  The
      argument should have the same form as for `current-time-string'
      (see above).  Thus, it accepts the output of `current-time' and
-     `file-attributes'.
+     `file-attributes' (*note Definition of file-attributes::).
 
      _Warning_: Since the result is floating point, it may not be
      exact.  Do not use this function if precise time stamps are
@@ -4968,7 +5155,8 @@ than optimal.  To fix the problem, set `baud-rate'.
      Control characters in STRING have terminal-dependent effects.
      This function operates only on text terminals.  TERMINAL may be a
      terminal object, a frame, or `nil' for the selected frame's
-     terminal.
+     terminal.  In batch mode, STRING is sent to `stdout' when TERMINAL
+     is `nil'.
 
      One use of this function is to define function keys on terminals
      that have downloadable function key definitions.  For example,
@@ -5161,7 +5349,7 @@ Emacs is restarted by the session manager.
      (add-hook 'emacs-save-session-functions 'save-yourself-test)
 
      (defun save-yourself-test ()
-       (insert "(save-excursion
+       (insert "(save-current-buffer
        (switch-to-buffer \"*scratch*\")
        (insert \"I am restored\"))")
        nil)
@@ -5174,7 +5362,7 @@ Appendix A Emacs 22 Antinews
 
 For those users who live backwards in time, here is information about
 downgrading to Emacs version 22.3.  We hope you will enjoy the greater
-simplicity that results from the absence of many Emacs 23.1 features.
+simplicity that results from the absence of many Emacs 23.2 features.
 
 A.1 Old Lisp Features in Emacs 22
 =================================
@@ -5193,7 +5381,7 @@ A.1 Old Lisp Features in Emacs 22
 
    * Temporarily-active regions are not created by giving the variable
      `transient-mark-mode' values of the form `(only . OLDVAR)'.  We
-     instead use a more more complicated scheme: setting
+     instead use a more complicated scheme: setting
      `transient-mark-mode' to `only' enables Transient Mark mode for
      the following command only, during which the value of
      `transient-mark-mode' is set to `identity'; if it is still
@@ -6522,205 +6710,4 @@ all.
 * Documentation Tips::        Writing readable documentation strings.
 * Comment Tips::	      Conventions for writing comments.
 * Library Headers::           Standard headers for library packages.
-
-
-File: elisp,  Node: Coding Conventions,  Next: Key Binding Conventions,  Up: Tips
-
-D.1 Emacs Lisp Coding Conventions
-=================================
-
-Here are conventions that you should follow when writing Emacs Lisp
-code intended for widespread use:
-
-   * Simply loading a package should not change Emacs's editing
-     behavior.  Include a command or commands to enable and disable the
-     feature, or to invoke it.
-
-     This convention is mandatory for any file that includes custom
-     definitions.  If fixing such a file to follow this convention
-     requires an incompatible change, go ahead and make the
-     incompatible change; don't postpone it.
-
-   * You should choose a short word to distinguish your program from
-     other Lisp programs.  The names of all global variables,
-     constants, and functions in your program should begin with that
-     chosen prefix.  Separate the prefix from the rest of the name with
-     a hyphen, `-'.  This practice helps avoid name conflicts, since
-     all global variables in Emacs Lisp share the same name space, and
-     all functions share another name space(1)
-
-     Occasionally, for a command name intended for users to use, it is
-     more convenient if some words come before the package's name
-     prefix.  And constructs that define functions, variables, etc.,
-     work better if they start with `defun' or `defvar', so put the
-     name prefix later on in the name.
-
-     This recommendation applies even to names for traditional Lisp
-     primitives that are not primitives in Emacs Lisp--such as
-     `copy-list'.  Believe it or not, there is more than one plausible
-     way to define `copy-list'.  Play it safe; append your name prefix
-     to produce a name like `foo-copy-list' or `mylib-copy-list'
-     instead.
-
-     If you write a function that you think ought to be added to Emacs
-     under a certain name, such as `twiddle-files', don't call it by
-     that name in your program.  Call it `mylib-twiddle-files' in your
-     program, and send mail to `bug-gnu-emacs@gnu.org' suggesting we add
-     it to Emacs.  If and when we do, we can change the name easily
-     enough.
-
-     If one prefix is insufficient, your package can use two or three
-     alternative common prefixes, so long as they make sense.
-
-   * Put a call to `provide' at the end of each separate Lisp file.
-     *Note Named Features::.
-
-   * If a file requires certain other Lisp programs to be loaded
-     beforehand, then the comments at the beginning of the file should
-     say so.  Also, use `require' to make sure they are loaded.  x*Note
-     Named Features::.
-
-   * If a file FOO uses a macro defined in another file BAR, but does
-     not use any functions or variables defined in BAR, then FOO should
-     contain the following expression:
-
-          (eval-when-compile (require 'BAR))
-
-     This tells Emacs to load BAR just before byte-compiling FOO, so
-     that the macro definition is available during compilation.  Using
-     `eval-when-compile' avoids loading BAR when the compiled version
-     of FOO is _used_.  It should be called before the first use of the
-     macro in the file.  *Note Compiling Macros::.
-
-   * Please don't require the `cl' package of Common Lisp extensions at
-     run time.  Use of this package is optional, and it is not part of
-     the standard Emacs namespace.  If your package loads `cl' at run
-     time, that could cause name clashes for users who don't use that
-     package.
-
-     However, there is no problem with using the `cl' package at
-     compile time, with `(eval-when-compile (require 'cl))'.  That's
-     sufficient for using the macros in the `cl' package, because the
-     compiler expands them before generating the byte-code.
-
-   * When defining a major mode, please follow the major mode
-     conventions.  *Note Major Mode Conventions::.
-
-   * When defining a minor mode, please follow the minor mode
-     conventions.  *Note Minor Mode Conventions::.
-
-   * If the purpose of a function is to tell you whether a certain
-     condition is true or false, give the function a name that ends in
-     `p' (which stands for "predicate").  If the name is one word, add
-     just `p'; if the name is multiple words, add `-p'.  Examples are
-     `framep' and `frame-live-p'.
-
-   * If the purpose of a variable is to store a single function, give
-     it a name that ends in `-function'.  If the purpose of a variable
-     is to store a list of functions (i.e., the variable is a hook),
-     please follow the naming conventions for hooks.  *Note Hooks::.
-
-   * If loading the file adds functions to hooks, define a function
-     `FEATURE-unload-hook', where FEATURE is the name of the feature
-     the package provides, and make it undo any such changes.  Using
-     `unload-feature' to unload the file will run this function.  *Note
-     Unloading::.
-
-   * It is a bad idea to define aliases for the Emacs primitives.
-     Normally you should use the standard names instead.  The case
-     where an alias may be useful is where it facilitates backwards
-     compatibility or portability.
-
-   * If a package needs to define an alias or a new function for
-     compatibility with some other version of Emacs, name it with the
-     package prefix, not with the raw name with which it occurs in the
-     other version.  Here is an example from Gnus, which provides many
-     examples of such compatibility issues.
-
-          (defalias 'gnus-point-at-bol
-            (if (fboundp 'point-at-bol)
-                'point-at-bol
-              'line-beginning-position))
-
-   * Redefining or advising an Emacs primitive is a bad idea.  It may do
-     the right thing for a particular program, but there is no telling
-     what other programs might break as a result.
-
-   * It is likewise a bad idea for one Lisp package to advise a
-     function in another Lisp package (*note Advising Functions::).
-
-   * Avoid using `eval-after-load' in libraries and packages (*note
-     Hooks for Loading::).  This feature is meant for personal
-     customizations; using it in a Lisp program is unclean, because it
-     modifies the behavior of another Lisp file in a way that's not
-     visible in that file.  This is an obstacle for debugging, much
-     like advising a function in the other package.
-
-   * If a file does replace any of the standard functions or library
-     programs of Emacs, prominent comments at the beginning of the file
-     should say which functions are replaced, and how the behavior of
-     the replacements differs from that of the originals.
-
-   * Constructs that define a function or variable should be macros,
-     not functions, and their names should start with `def'.
-
-   * A macro that defines a function or variable should have a name that
-     starts with `define-'.  The macro should receive the name to be
-     defined as the first argument.  That will help various tools find
-     the definition automatically.  Avoid constructing the names in the
-     macro itself, since that would confuse these tools.
-
-   * Please keep the names of your Emacs Lisp source files to 13
-     characters or less.  This way, if the files are compiled, the
-     compiled files' names will be 14 characters or less, which is
-     short enough to fit on all kinds of Unix systems.
-
-   * In some other systems there is a convention of choosing variable
-     names that begin and end with `*'.  We don't use that convention
-     in Emacs Lisp, so please don't use it in your programs.  (Emacs
-     uses such names only for special-purpose buffers.)  The users will
-     find Emacs more coherent if all libraries use the same conventions.
-
-   * If your program contains non-ASCII characters in string or
-     character constants, you should make sure Emacs always decodes
-     these characters the same way, regardless of the user's settings.
-     The easiest way to do this is to use the coding system
-     `utf-8-emacs' (*note Coding System Basics::), and specify that
-     coding in the `-*-' line or the local variables list.  *Note Local
-     Variables in Files: (emacs)File variables.
-
-          ;; XXX.el  -*- coding: utf-8-emacs; -*-
-
-   * Indent each function with `C-M-q' (`indent-sexp') using the
-     default indentation parameters.
-
-   * Don't make a habit of putting close-parentheses on lines by
-     themselves; Lisp programmers find this disconcerting.
-
-   * Please put a copyright notice and copying permission notice on the
-     file if you distribute copies.  Use a notice like this one:
-
-          ;; Copyright (C) YEAR NAME
-
-          ;; This program is free software: you can redistribute it and/or
-          ;; modify it under the terms of the GNU General Public License as
-          ;; published by the Free Software Foundation, either version 3 of
-          ;; the License, or (at your option) any later version.
-
-          ;; This program is distributed in the hope that it will be useful,
-          ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-          ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-          ;; GNU General Public License for more details.
-
-          ;; You should have received a copy of the GNU General Public License
-          ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-     If you have signed papers to assign the copyright to the
-     Foundation, then use `Free Software Foundation, Inc.' as NAME.
-     Otherwise, use your name.  *Note Library Headers::.
-
-   ---------- Footnotes ----------
-
-   (1) The benefits of a Common Lisp-style package system are
-considered not to outweigh the costs.
 

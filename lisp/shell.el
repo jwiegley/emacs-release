@@ -1,7 +1,7 @@
 ;;; shell.el --- specialized comint.el for running the shell
 
 ;; Copyright (C) 1988, 1993, 1994, 1995, 1996, 1997, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: Olin Shivers <shivers@cs.cmu.edu>
 ;;	Simon Marshall <simon@gnu.org>
@@ -115,7 +115,7 @@
   :group 'shell)
 
 ;;;###autoload
-(defcustom shell-dumb-shell-regexp "cmd\\(proxy\\)?\\.exe"
+(defcustom shell-dumb-shell-regexp (purecopy "cmd\\(proxy\\)?\\.exe")
   "Regexp to match shells that don't save their command history, and
 don't handle the backslash as a quote character.  For shells that
 match this regexp, Emacs will write out the command history when the
@@ -355,7 +355,7 @@ Thus, this does not include the shell's current directory.")
 	 'complete-expand)))
 
 (defcustom shell-mode-hook '()
-  "Hook for customising Shell mode."
+  "Hook for customizing Shell mode."
   :type 'hook
   :group 'shell)
 
@@ -440,10 +440,9 @@ buffer."
   (make-local-variable 'shell-last-dir)
   (setq shell-last-dir nil)
   (setq comint-input-autoexpand shell-input-autoexpand)
+  (shell-dirtrack-mode 1)
   ;; This is not really correct, since the shell buffer does not really
   ;; edit this directory.  But it is useful in the buffer list and menus.
-  (make-local-variable 'list-buffers-directory)
-  (shell-dirtrack-mode 1)
   (setq list-buffers-directory (expand-file-name default-directory))
   ;; shell-dependent assignments.
   (when (ring-empty-p comint-input-ring)
@@ -555,6 +554,7 @@ Otherwise, one argument `-i' is passed to the shell.
 		      (read-file-name
 		       "Default directory: " default-directory default-directory
 		       t nil 'file-directory-p))))))))
+  (require 'ansi-color)
   (setq buffer (get-buffer-create (or buffer "*shell*")))
   ;; Pop to buffer, so that the buffer's window will be correctly set
   ;; when we call comint (so that comint sets the COLUMNS env var properly).
@@ -576,7 +576,7 @@ Otherwise, one argument `-i' is passed to the shell.
   buffer)
 
 ;; Don't do this when shell.el is loaded, only while dumping.
-;;;###autoload (add-hook 'same-window-buffer-names "*shell*")
+;;;###autoload (add-hook 'same-window-buffer-names (purecopy "*shell*"))
 
 ;;; Directory tracking
 ;;

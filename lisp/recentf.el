@@ -1,7 +1,7 @@
 ;;; recentf.el --- setup a menu of recently opened files
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: David Ponce <david@dponce.com>
 ;; Created: July 19 1999
@@ -26,10 +26,13 @@
 
 ;; This package maintains a menu for visiting files that were operated
 ;; on recently.  When enabled a new "Open Recent" sub menu is
-;; displayed in the "Files" menu.  The recent files list is
+;; displayed in the "File" menu.  The recent files list is
 ;; automatically saved across Emacs sessions.  You can customize the
 ;; number of recent files displayed, the location of the menu and
 ;; others options (see the source code for details).
+
+;; To enable this package, add the following to your .emacs:
+;; (recentf-mode 1)
 
 ;;; History:
 ;;
@@ -1307,13 +1310,20 @@ empty `file-name-history' with the recent list."
 That is, remove duplicates, non-kept, and excluded files."
   (interactive)
   (message "Cleaning up the recentf list...")
-  (let ((n 0) newlist)
+  (let ((n 0)
+	(ht (make-hash-table
+	     :size recentf-max-saved-items
+	     :test 'equal))
+	newlist key)
     (dolist (f recentf-list)
-      (setq f (recentf-expand-file-name f))
+      (setq f (recentf-expand-file-name f)
+	    key (if recentf-case-fold-search (downcase f) f))
       (if (and (recentf-include-p f)
                (recentf-keep-p f)
-               (not (recentf-string-member f newlist)))
-          (push f newlist)
+               (not (gethash key ht)))
+	  (progn
+	    (push f newlist)
+	    (puthash key t ht))
         (setq n (1+ n))
         (message "File %s removed from the recentf list" f)))
     (message "Cleaning up the recentf list...done (%d removed)" n)
@@ -1347,9 +1357,15 @@ that were operated on recently."
       (dolist (hook recentf-used-hooks)
         (apply hook-setup hook)))
     (run-hooks 'recentf-mode-hook)
-    (when (interactive-p)
+    (when (called-interactively-p 'interactive)
       (message "Recentf mode %sabled" (if recentf-mode "en" "dis"))))
   recentf-mode)
+
+(defun recentf-unload-function ()
+  "Unload the recentf library."
+  (recentf-mode -1)
+  ;; continue standard unloading
+  nil)
 
 (provide 'recentf)
 
