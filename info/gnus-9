@@ -1,4 +1,4 @@
-This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.3 from gnus.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -791,7 +791,8 @@ manipulate mails stored on the IMAP server.  This is the kind of usage
 explained in this section.
 
    A server configuration in `~/.gnus' with a few IMAP servers might
-look something like this:
+look something like the following. (Note that for SSL, you need
+external programs and libraries, see below.)
 
      (setq gnus-secondary-select-methods
            '((nnimap "simpleserver") ; no special configuration
@@ -872,7 +873,8 @@ server:
           `starttls'.
 
         * "ssl:" Connect through SSL.  Requires OpenSSL (the program
-          `openssl') or SSLeay (`s_client').
+          `openssl') or SSLeay (`s_client') as well as the external
+          library `ssl.el'.
 
         * "shell:" Use a shell command to start an IMAP connection.
 
@@ -889,7 +891,8 @@ server:
      SSLeay, 0.9.x, are known to have serious bugs making it useless.
      Earlier versions, especially 0.8.x, of SSLeay are known to work.
      The variable `imap-ssl-program' contains parameters to pass to
-     OpenSSL/SSLeay.
+     OpenSSL/SSLeay.  You also need `ssl.el' (from the W3 distribution,
+     for instance).
 
      For IMAP connections using the `shell' stream, the variable
      `imap-shell-program' specifies what program to call.

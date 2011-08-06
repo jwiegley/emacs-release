@@ -29,7 +29,7 @@ engine) or retrievable from general Usenet archive services.
 
 You might find bug-fixes or enhancements in these places.
 
- * Ada: <URL:http://www.ada-france.org/ada-mode>
+ * Ada: <URL:http://libre.act-europe.fr/adamode/>
 
  * Autorevert, CWarn and Follow:
    <URL:http://www.andersl.com/emacs/>
@@ -54,11 +54,11 @@ You might find bug-fixes or enhancements in these places.
 
  * EShell: <URL:http://www.gci-net.com/users/j/johnw/emacs.html>
 
+ * Etags: <URL:ftp://pot.potorti.it/pub/software/unix/etags.tar.gz>
+
  * EUDC: <URL:http://lspwww.epfl.ch/%7Efigueire/Software/eudc/>
 
  * Expand: <URL:http://w3.teaser.fr/%7Eflepied/expand.el.gz>
-
- * Etags: <URL:ftp://fly.cnuce.cnr.it/pub/>
 
  * Find Func:
    <URL:http://www.kurims.kyoto-u.ac.jp/%7Epetersen/emacs/find-func.el>
@@ -96,7 +96,7 @@ You might find bug-fixes or enhancements in these places.
 
  * Sregex: <URL:http://www.zanshin.com/%7Ebobg/sregex.html>
 
- * Webjump: <URL:http://nwv.www.media.mit.edu/people/nwv/projects/webjump>
+ * Webjump: <URL:http://www.neilvandyke.org/webjump/>
 
  * Whitespace; <URL:http://www.dsmit.com/lisp/>
 
@@ -107,7 +107,7 @@ You might find bug-fixes or enhancements in these places.
    * Scheme: <URL:ftp://ftp-swiss.ai.mit.edu/pub/scm/r5rs.info.tar.gz>
    * LaTeX: <URL:ftp://ctan.tug.org/tex-archive/info/latex2e-help-texinfo/
        latex2e.texi> (or CTAN mirrors)
-   * Perl: <URL:ftp://ftp.cpan.org/CPAN/doc/manual/texinfo/perl5/> (or
+   * Perl: <URL:ftp://ftp.cpan.org/pub/CPAN/doc/manual/texinfo/perl5/> (or
    CPAN mirrors)
 
 * Packages and add-ons not bundled with Emacs
@@ -141,7 +141,7 @@ Several are for Debian GNU/Linux in particular.
  * Dismal: spreadsheet:
    <URL:http://www.psychology.nottingham.ac.uk/staff/ritter/papers/dismal/
    dismal.html>
-	  
+
  * EDB: database:
    <URL:http://sdg.lcs.mit.edu/%7Emernst/software/edb-mrp.tar.gz>
    Not maintained?
@@ -185,12 +185,18 @@ Several are for Debian GNU/Linux in particular.
    <URL:ftp://ftp.m17n.org/pub/mule/Mule-UCS/>
    Extended coding systems for Mule, specifically for reading and
    writing UTF-8 encoded Unicode.  This does more than the built-in
-   utf-8 coding system.
+   utf-8 coding system, specifically covering a lot of Far Eastern
+   characters.  (See the entry in PROBLEMS concerning slow startup of
+   Mule-UCS.)
 
- * Mailcrypt:
-   <URL:http://www.pobox.com/%7Elbudney/linux/software/mailcrypt.html>
-   PGP and GPG support.  PGP isn't free software, but GPG, the GNU
-   Privacy Guard, is a free replacement <URL:http://www.gnupg.org/>.
+   Alternatively, various additions and patches for Emacs 21.2 which
+   use and improve the Unicode support are currently available under
+   <URL:ftp://dlpx1.dl.ac.uk/fx/emacs/Mule>.
+
+ * Mailcrypt: PGP and GPG support
+   <URL:http://mailcrypt.sourceforge.net/>
+   PGP isn't free software, but GPG, the GNU Privacy Guard, is a free
+   replacement <URL:http://www.gnupg.org/>.
 
  * Pointers to MIME packages:
    <URL:http://bmrc.berkeley.edu/%7Etrey/emacs/mime.html>
@@ -217,7 +223,7 @@ Several are for Debian GNU/Linux in particular.
    <URL:news://sunsite.auc.dk/emacs.w3> and a W3 development mail
    list/newsgroup <URL:news://sunsite.auc.dk/emacs.w3.dev>.
 
- * X-Symbol: <URL:http://www.fmi.uni-passau.de/~wedler/x-symbol/emacs.html>
+ * X-Symbol: <URL:http://x-symbol.sourceforge.net/>
    Quasi-WYSIWYG editing of TeX & al.  (It will be improved to take
    better advantage of Emacs 21 features.)
 

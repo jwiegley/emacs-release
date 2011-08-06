@@ -1,8 +1,7 @@
-This is ../info/emacs, produced by makeinfo version 4.0f from
-emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.3 from emacs.texi.
 
    This is the Fourteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 21.2.
+for Emacs version 21.3.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -164,6 +163,7 @@ Concept Index
 * changing file owner (in Dired):        Operating on Files.
 * changing file permissions (in Dired):  Operating on Files.
 * character set (keyboard):              User Input.
+* character set of character at point:   Position Info.
 * characters (in text) <1>:              Text Display.
 * characters (in text):                  Text Characters.
 * characters which belong to a specific language: Regexps.
@@ -426,6 +426,7 @@ Concept Index
 * Font Lock mode:                        Font Lock.
 * font name (X Window System):           Font X.
 * font names (Mac OS):                   Mac Font Specs.
+* font of character at point:            Position Info.
 * fonts and faces:                       Face Customization.
 * fonts for PostScript printing:         PostScript Variables.
 * fonts for various scripts:             Language Environments.
@@ -535,6 +536,7 @@ Concept Index
 * init file, default name under MS-DOS:  MS-DOS File Names.
 * init file, not loading:                Initial Options.
 * initial options (command line):        Command Arguments.
+* initial version number to register:    Registering.
 * initial-frame-alist:                   Creating Frames.
 * input event:                           User Input.
 * input method, during incremental search: Incremental Search.
@@ -969,8 +971,8 @@ Concept Index
 * s-region package:                      Emulation.
 * saved echo area messages:              Echo Area.
 * Saveplace:                             Saving Emacs Sessions.
+* saving file name in a register:        RegFiles.
 * saving files:                          Visiting.
-* saving fuile name in a register:       RegFiles.
 * saving keyboard macros:                Save Kbd Macro.
 * saving number in a register:           RegNumbers.
 * saving option value:                   Changing an Option.
@@ -1043,6 +1045,7 @@ Concept Index
 * sorting:                               Sorting.
 * sorting Dired buffer:                  Dired Updating.
 * Spanish:                               International.
+* specific version control system:       Advanced C-x C-q.
 * specify default font from the command line: Font X.
 * speedbar:                              Speedbar.
 * spell-checking the active region:      Spelling.
@@ -1158,6 +1161,7 @@ Concept Index
 * vc-resolve-conflicts:                  Merging.
 * version backups:                       Version Backups.
 * version control:                       Version Control.
+* version number to check in/out:        Advanced C-x C-q.
 * VERSION_CONTROL environment variable:  Backup Names.
 * VHDL mode:                             Program Modes.
 * vi:                                    Emulation.

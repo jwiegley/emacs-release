@@ -1,8 +1,7 @@
-This is ../info/emacs, produced by makeinfo version 4.0f from
-emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.3 from emacs.texi.
 
    This is the Fourteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 21.2.
+for Emacs version 21.3.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -137,6 +136,9 @@ character A with a grave accent in a buffer whose coding system is
 iso-2022-7bit(1):
 
      Char: A` (04300, 2240, 0x8c0, ext ESC , A @) (latin-iso8859-1 64)
+
+In addition, `C-u C-x =' shows the font used to display the character
+(if the terminal supports more than one font).
 
    ---------- Footnotes ----------
 

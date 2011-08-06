@@ -1,4 +1,4 @@
-This is ../info/efaq, produced by makeinfo version 4.0f from faq.texi.
+This is ../info/efaq, produced by makeinfo version 4.2 from faq.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -731,12 +731,12 @@ Windows (3.X, 9X, ME, NT, and 2000) and supports long file names under
 Windows 9X, Windows ME, and Windows 2000.  More information is available
 from
 
-   `http://www.simtel.net/pub/gnu/djgpp/v2gnu/emacs.README'
+   `http://www.simtel.net/pub/djgpp/v2gnu/emacs.README'
 
    The binary itself is available in the files `em*.zip' in the
 directory
 
-   `http://www.simtel.net/pub/gnu/djgpp/v2gnu/'
+   `http://www.simtel.net/pub/djgpp/v2gnu/'
 
    If you prefer to compile Emacs for yourself, you can do so with the
 current distribution directly.  You will need a 386 (or better)
@@ -752,7 +752,7 @@ _Compiler_
      You can get the latest release of DJGPP by retrieving all of the
      files in
 
-     `http://www.simtel.net/pub/gnu/djgpp/v2*'
+     `http://www.simtel.net/pub/djgpp/v2*'
 
 _Unpacking program_
      The easiest way is to use `djtar' which comes with DJGPP v2.x,
@@ -771,11 +771,11 @@ _Unpacking program_
 _make, mv, sed, and rm_
      All of these utilities are available at
 
-     `http://www.simtel.net/pub/gnu/djgpp/v2gnu'
+     `http://www.simtel.net/pub/djgpp/v2gnu'
 
      16-bit utilities can be found in GNUish, at
 
-     `http://www.simtel.net/pub/gnu/gnuish'
+     `http://www.simtel.net/pub/gnuish/'
 
      (`mv' and `rm' are in the Fileutils package, `sed' and `make' are
      each one in a separate package named after them.)
@@ -1063,7 +1063,7 @@ Latest version
      4.3
 
 Distribution
-     `ftp://archive.cis.ohio-state.edu/pub/emacs-lisp/modes/vip-mode.tar.Z'
+     `ftp://archive.cis.ohio-state.edu/pub/emacs-lisp/old-archive/modes/vip-mode.tar.Z'
 
 
 File: efaq,  Node: AUC-TeX,  Next: BBDB,  Prev: VIPER,  Up: Major packages and programs
@@ -1102,7 +1102,7 @@ Latest version
      2.00
 
 Distribution
-     `http://www.netcom.com/~simmonmt/bbdb/index.html'
+     `http://bbdb.sf.net/'
 
 Mailing lists
      Subscription requests to <info-bbdb-request@xemacs.org>

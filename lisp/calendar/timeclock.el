@@ -124,11 +124,11 @@ If this variable is nil, no questions will be asked."
   "*A function used to determine the length of today's workday.
 The first time that a user clocks in each day, this function will be
 called to determine what the length of the current workday is.  If
-nil, or equal to `timeclock-workday', nothing special will be done.
-If it is a quantity different from `timeclock-workday', however, a
-record will be output to the timelog file to note the fact that that
-day has a different length from the norm."
-  :type '(choice (const nil) (function-item timeclock-workday) function)
+the return value is nil, or equal to `timeclock-workday', nothing special
+will be done.  If it is a quantity different from `timeclock-workday', 
+however, a record will be output to the timelog file to note the fact that
+that day has a different length from the norm."
+  :type '(choice (const nil) function)
   :group 'timeclock)
 
 (defcustom timeclock-ask-before-exiting t
@@ -458,7 +458,7 @@ as with time remaining, where negative time really means overtime)."
 	    (% (truncate (/ (abs seconds) 60)) 60))))
 
 (defsubst timeclock-workday-remaining (&optional today-only)
-  "Return a the number of seconds until the workday is complete.
+  "Return the number of seconds until the workday is complete.
 The amount returned is relative to the value of `timeclock-workday'.
 If TODAY-ONLY is non-nil, the value returned will be relative only to
 the time worked today, and not to past time.  This argument only makes
@@ -491,7 +491,7 @@ See `timeclock-relative' for more information about the meaning of
       string)))
 
 (defsubst timeclock-workday-elapsed ()
-  "Return a the number of seconds worked so far today.
+  "Return the number of seconds worked so far today.
 If RELATIVE is non-nil, the amount returned will be relative to past
 time worked.  The default is to return only the time that has elapsed
 so far today."

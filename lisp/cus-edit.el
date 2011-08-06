@@ -672,22 +672,20 @@ when the action is chosen.")
   (interactive)
   (let ((children custom-options))
     (mapc (lambda (widget)
-	    (and (default-boundp (widget-value widget))
-		 (if (memq (widget-get widget :custom-state)
-			   '(modified changed))
-		     (widget-apply widget :custom-reset-current))))
-	    children)))
+	    (if (memq (widget-get widget :custom-state)
+		      '(modified changed))
+		(widget-apply widget :custom-reset-current)))
+	  children)))
 
 (defun Custom-reset-saved (&rest ignore)
   "Reset all modified or set group members to their saved value."
   (interactive)
   (let ((children custom-options))
     (mapc (lambda (widget)
-	    (and (get (widget-value widget) 'saved-value)
-		 (if (memq (widget-get widget :custom-state)
-			   '(modified set changed rogue))
-		     (widget-apply widget :custom-reset-saved))))
-	    children)))
+	    (if (memq (widget-get widget :custom-state)
+		      '(modified set changed rogue))
+		(widget-apply widget :custom-reset-saved)))
+	  children)))
 
 (defun Custom-reset-standard (&rest ignore)
   "Erase all customization (either current or saved) for the group members.
@@ -3694,7 +3692,8 @@ or (if there were none) at the end of the buffer."
   "Ignoring WIDGET, create a menu entry for customization group SYMBOL."
   `( ,(custom-unlispify-menu-entry symbol t)
      :filter (lambda (&rest junk)
-	       (cdr (custom-menu-create ',symbol)))))
+	       (let ((menu (custom-menu-create ',symbol)))
+		 (if (consp menu) (cdr menu) menu)))))
 
 ;;;###autoload
 (defun custom-menu-create (symbol)

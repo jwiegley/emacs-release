@@ -1,8 +1,7 @@
-This is ../info/emacs, produced by makeinfo version 4.0f from
-emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.3 from emacs.texi.
 
    This is the Fourteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 21.2.
+for Emacs version 21.3.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -725,7 +724,8 @@ written substantial portions.
      asynchronous subprocesses on VMS.
 
    * Marko Rahamaa wrote `latin-3.el', code which sets up
-     case-conversion and syntax tables for the ISO Latin-3 charact set.
+     case-conversion and syntax tables for the ISO Latin-3 character
+     set.
 
    * Ashwin Ram wrote `refer.el', commands to look up references in
      bibliography files by keyword.
@@ -945,7 +945,7 @@ written substantial portions.
      Postscript.
 
    * Tom Tromey and Chris Lindblad wrote `tcl.el', a major mode for
-     editing Tcl/Tk source files and running a Tcl interpeter as an
+     editing Tcl/Tk source files and running a Tcl interpreter as an
      Emacs subprocess.
 
    * Daiki Ueno wrote `starttls.el', support for Transport Layer

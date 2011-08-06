@@ -314,9 +314,11 @@ This variable is buffer-local."
 ;; ssh-add prints a prompt like `Enter passphrase: '.
 ;; Some implementations of passwd use "Password (again)" as the 2nd prompt.
 (defcustom comint-password-prompt-regexp
-  "\\(\\([Oo]ld \\|[Nn]ew \\|Kerberos \\|'s \\|login \\|CVS \\|^\\)\
-[Pp]assword\\( (again)\\)?\\|pass phrase\\|Enter passphrase\\)\
-\\( for [^@ \t\n]+@[^@ \t\n]+\\)?:\\s *\\'"
+  "\\(\\([Oo]ld \\|[Nn]ew \\|'s \\|login \\|\
+Kerberos \\|CVS \\|UNIX \\| SMB \\|^\\)\
+[Pp]assword\\( (again)\\)?\\|\
+pass phrase\\|\\(Enter\\|Repeat\\) passphrase\\)\
+\\( for [^:]+\\)?:\\s *\\'"
   "*Regexp matching prompts for passwords in the inferior process.
 This is used by `comint-watch-for-password-prompt'."
   :type 'regexp
@@ -2157,7 +2159,7 @@ If N is negative, find the previous or Nth previous match."
   "Move to end of Nth next prompt in the buffer.
 If `comint-use-prompt-regexp-instead-of-fields' is nil, then this means
 the beginning of the Nth next `input' field, otherwise, it means the Nth
-occurance of text matching `comint-prompt-regexp'."
+occurrence of text matching `comint-prompt-regexp'."
   (interactive "p")
   (if comint-use-prompt-regexp-instead-of-fields
       ;; Use comint-prompt-regexp
@@ -2194,7 +2196,7 @@ occurance of text matching `comint-prompt-regexp'."
   "Move to end of Nth previous prompt in the buffer.
 If `comint-use-prompt-regexp-instead-of-fields' is nil, then this means
 the beginning of the Nth previous `input' field, otherwise, it means the Nth
-occurance of text matching `comint-prompt-regexp'."
+occurrence of text matching `comint-prompt-regexp'."
   (interactive "p")
   (comint-next-prompt (- n)))
 
@@ -2245,7 +2247,7 @@ occurance of text matching `comint-prompt-regexp'."
 ;; your cursor over a string that's a filename and have it taken as default.
 ;;
 ;; If the command is given in a file buffer whose major mode is in
-;; SOURCE-MODES, then the the filename is the default file, and the
+;; SOURCE-MODES, then the filename is the default file, and the
 ;; file's directory is the default directory.
 ;;
 ;; If the buffer isn't a source file buffer (e.g., it's the process buffer),

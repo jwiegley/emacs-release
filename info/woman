@@ -1,4 +1,4 @@
-This is ../info/woman, produced by makeinfo version 4.0 from woman.texi.
+This is ../info/woman, produced by makeinfo version 4.2 from woman.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -34,7 +34,7 @@ WoMan: Browse Unix Manual Pages "Wo (without) Man"
 **************************************************
 
      Software Version 0.54 (beta)
-     Manual Last Updated Time-stamp: <2001-03-05 17:10:30 eliz>
+     Manual Last Updated Time-stamp: <2002-12-04 09:12:13 pavel>
      
      Francis J. Wright <F.J.Wright@qmw.ac.uk>
      School of Mathematical Sciences (http://centaur.maths.qmw.ac.uk/)
@@ -96,7 +96,7 @@ This browser works quite well on simple well-written man files.  It
 works less well on idiosyncratic files that "break the rules" or use
 the more obscure `ROFF' requests directly.  Current test results are
 available in the file `woman.status'
-(http://centaur.maths.qmw.ac.uk/Emacs/WoMan/woman.status).
+(http://centaur.maths.qmw.ac.uk/Emacs/WoMan/files/woman.status).
 
 WoMan supports the use of compressed man files via
 `auto-compression-mode' by turning it on if necessary.  But you may
@@ -1572,39 +1572,39 @@ Concept Index
 
 Tag Table:
 Node: Top1247
-Node: Introduction2336
-Node: Background4830
-Node: Installation12687
-Node: Autoloading14972
-Node: Search Path15568
-Node: Auto Bindings16637
-Node: Auto Customization17855
-Node: Command Line18404
-Node: Finding19779
-Node: Topic21333
-Node: Cache25672
-Node: Word at point27368
-Node: Filename28432
-Node: Automatic30674
-Node: Browsing32229
-Node: Fonts33451
-Node: Navigation34099
-Node: References34969
-Node: Changing36351
-Node: Convenience38351
-Node: Imenu39082
-Node: Customization39867
-Node: Interface Options42038
-Node: Formatting Options50976
-Node: Faces52526
-Node: Special symbols53798
-Node: Log55017
-Node: Technical56129
-Node: Bugs56836
-Node: Acknowledgements57791
-Node: Command Index59692
-Node: Variable Index61134
-Node: Keystroke Index63228
-Node: Concept Index64523
+Node: Introduction2337
+Node: Background4837
+Node: Installation12694
+Node: Autoloading14979
+Node: Search Path15575
+Node: Auto Bindings16644
+Node: Auto Customization17862
+Node: Command Line18411
+Node: Finding19786
+Node: Topic21340
+Node: Cache25679
+Node: Word at point27375
+Node: Filename28439
+Node: Automatic30681
+Node: Browsing32236
+Node: Fonts33458
+Node: Navigation34106
+Node: References34976
+Node: Changing36358
+Node: Convenience38358
+Node: Imenu39089
+Node: Customization39874
+Node: Interface Options42045
+Node: Formatting Options50983
+Node: Faces52533
+Node: Special symbols53805
+Node: Log55024
+Node: Technical56136
+Node: Bugs56843
+Node: Acknowledgements57798
+Node: Command Index59699
+Node: Variable Index61141
+Node: Keystroke Index63235
+Node: Concept Index64530
 
 End Tag Table

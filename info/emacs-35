@@ -1,8 +1,7 @@
-This is ../info/emacs, produced by makeinfo version 4.0f from
-emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.3 from emacs.texi.
 
    This is the Fourteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 21.2.
+for Emacs version 21.3.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -279,6 +278,7 @@ Variable Index
 * isearch-lazy-highlight:                Incremental Search.
 * isearch-lazy-highlight-face:           Incremental Search.
 * isearch-mode-map:                      Incremental Search.
+* ispell-complete-word-dict:             Spelling.
 * ispell-dictionary:                     Spelling.
 * jdb-mode-hook:                         GUD Customization.
 * kept-new-versions:                     Backup Deletion.

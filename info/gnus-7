@@ -1,4 +1,4 @@
-This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.3 from gnus.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -1159,6 +1159,9 @@ default values.
      some reason or other, Gnus let you treat it similar to a POP server
      and fetches articles from a given IMAP mailbox.  *Note IMAP::, for
      more information.
+
+     Note that for SSL support you may need external programs and
+     libraries, *Note IMAP::.
 
      Keywords:
 

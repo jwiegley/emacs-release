@@ -299,7 +299,7 @@
               (reftex-parse-bibtex-entry nil start (point)))
           nil)))))
 
-;; Parse the thebibliography environment
+;; Parse the bibliography environment
 (defun reftex-extract-bib-entries-from-thebibliography (files)
   ;; Extract bib-entries from the \begin{thebibliography} environment.
   ;; Parsing is not as good as for the BibTeX database stuff.
@@ -528,7 +528,7 @@
   "Make a citation using BibTeX database files.
 After prompting for a regular expression, scans the buffers with
 bibtex entries (taken from the \\bibliography command) and offers the
-matching entries for selection.  The selected entry is formated according
+matching entries for selection.  The selected entry is formatted according
 to `reftex-cite-format' and inserted into the buffer.
 
 If NO-INSERT is non-nil, nothing is inserted, only the selected key returned.

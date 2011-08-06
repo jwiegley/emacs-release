@@ -4,7 +4,7 @@
 ;; Author: Chris Chase <chase@att.com>
 ;; Maintainer: John-David Smith <jdsmith@astro.cornell.edu>
 ;; Version: 4.7
-;; Date: $Date: 2001/12/01 13:14:33 $
+;; Date: $Date: 2002/12/04 08:22:26 $
 ;; Keywords: processes
 
 ;; This file is part of GNU Emacs.
@@ -54,7 +54,7 @@
 ;;   The newest version of this file can be found on the maintainers
 ;;   web site.
 ;; 
-;;     http://www.strw.leidenuniv.el/~dominik/Tools/idlwave
+;;     http://www.idlwave.org/
 ;; 
 ;; DOCUMENTATION
 ;; =============
@@ -69,7 +69,7 @@
 ;;
 ;; I don't plan on implementing directory tracking by watching the IDL
 ;; commands entered at the prompt, since too often an IDL procedure
-;; will change the current directory. If you want the the idl process
+;; will change the current directory. If you want the idl process
 ;; buffer to match the IDL current working just execute `M-x
 ;; idlwave-shell-resync-dirs' (bound to "\C-c\C-d\C-w" by default.)
 ;;
@@ -387,7 +387,7 @@ t          Glyph when possible, otherwise face (same effect as 'glyph)."
 	  (const :tag "Glyph or face." t)))
 
 (defvar idlwave-shell-use-breakpoint-glyph t
-  "Obsolete variable.   See `idlwave-shell-mark-breakpoints.")
+  "Obsolete variable.  See `idlwave-shell-mark-breakpoints.")
 
 (defcustom idlwave-shell-breakpoint-face 'idlwave-shell-bp-face
   "*The face for breakpoint lines in the source code.
@@ -665,7 +665,7 @@ IDL has currently stepped.")
    Info documentation for this package is available.  Use \\[idlwave-info]
    to display (complain to your sysadmin if that does not work).
    For Postscript and HTML versions of the documentation, check IDLWAVE's
-   homepage at `http://www.strw.leidenuniv.nl/~dominik/Tools/idlwave'.
+   homepage at `http://www.idlwave.org/'.
    IDLWAVE has customize support - see the group `idlwave'.
 
 7. Keybindings
@@ -2375,7 +2375,7 @@ The breakpoint will be placed at the beginning of the statement on the
 line specified by BP or at the next IDL statement if that line is not
 a statement.
 Determines IDL's internal representation for the breakpoint which may
-have occured at a different line then used with the breakpoint
+have occurred at a different line then used with the breakpoint
 command."
   
   ;; Get and save the old breakpoints

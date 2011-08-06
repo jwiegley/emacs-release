@@ -75,6 +75,11 @@ Alpha (DEC) running OSF/1 or GNU/Linux (alpha-dec-osf1, alpha-dec-linux-gnu)
 
       configure --x-includes=/usr/include --x-libraries=/usr/shlib
 
+  DEC C compiler version 5.9 (DEC C V5.9-005 on Digital UNIX V4.0f)
+  is reported to produce bogus binaries of Emacs 21.2 when the
+  command-line switches "-O4 -arch ev6 -tune ev6" are used.  Using
+  just -O4 produces a good executable.
+
   For 4.0 revision 564, and 4.0A and 4.0B, Emacs 20 seems to work
   with no special configuration options.  However, if you use GCC as
   your compiler, you will need version 2.8.1 or later, as older
@@ -747,6 +752,20 @@ Iris 4D (mips-sgi-irix[456].*)
   could also try reinstalling the same version of GCC, and telling us
   whether that fixes the problem.
 
+  Building Emacs 21.1 and 21.2 on versions of Irix before 6.5.10,
+  especially when Emacs is built with GCC, was reported to have subtle
+  problems such as being unable to print to stdout under the -batch
+  command-line option.  Building with the native compiler or upgrading
+  the OS to a newer version solves these problems.  There's evidence
+  that these problems are actually related to the runtime libraries
+  (before IRIX 6.5.10, the IRIX runtimes were based on the MIPSpro 7.2
+  compilers), so installing patches for the runtime from
+  http://www.sgi.com/support/patch_intro.html could solve the problem
+  even without upgrading the OS.  The dump process is the crucial
+  step that needs the upgraded runtime, so a workaround is to dump
+  Emacs on a machine with a newer OS, then copy the binary to the
+  older OS.
+
   The 19.26 pretest was reported to work on IRIX 4.0.5 and 5.2.
   19.23 was reported to work on IRIX 5.2, but you may need to install
   the "compiler_dev.hdr.internal" subsystem in order to compile unexelfsgi.c.
@@ -1031,6 +1050,11 @@ Sun 3, Sun 4 (sparc), Sun 386 (m68k-sun-sunos, sparc-sun-sunos, i386-sun-sunos,
   release was reported to work without problems.  It worked OK on
   another system with Solaris 8 using apparently the same 5.0 compiler
   and the default CFLAGS.
+
+  Emacs 21.1 and 21.2 built with Sun's ProWorks PC3.0.1 compiler on
+  Intel/Solaris 8 was reported to abort and dump core during startup.
+  Using GCC or a newer SUN compiler (Sun WokShop 6 update 2 C 5.3
+  2001/05/15) solves the problem.
 
   Emacs 20.5 and later work on SPARC GNU/Linux with the 32-bit ABI.
   As of release 2.95, GCC doesn't work properly with the 64-bit ABI

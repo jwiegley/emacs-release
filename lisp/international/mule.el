@@ -306,7 +306,7 @@ Currently the only supported coded character set is `ucs' (ISO/IEC
 10646: Universal Multi-Octet Coded Character Set).
 
 Optional argument RESTRICTION specifies a way to map the pair of CCS
-and CODE-POINT to a character.   Currently not supported and just ignored."
+and CODE-POINT to a character.  Currently not supported and just ignored."
   (cond ((eq ccs 'ucs)
 	 (cond ((< code-point 160)
 		code-point)
@@ -330,7 +330,9 @@ and CODE-POINT to a character.   Currently not supported and just ignored."
   "Return code-point in coded character set CCS that corresponds to CHAR.
 Return nil if CHAR is not included in CCS.
 Currently the only supported coded character set is `ucs' (ISO/IEC
-10646: Universal Multi-Octet Coded Character Set).
+10646: Universal Multi-Octet Coded Character Set), and CHAR is first
+translated through the translation-table named
+`utf-translation-table-for-encode'.
 
 CHAR should be in one of these charsets:
   ascii, latin-iso8859-1, mule-unicode-0100-24ff, mule-unicode-2500-33ff,
@@ -342,21 +344,27 @@ code-point in CCS.  Currently not supported and just ignored."
   (let* ((split (split-char char))
 	 (charset (car split)))
     (cond ((eq ccs 'ucs)
-	   (cond ((eq charset 'ascii)
-		  char)
-		 ((eq charset 'latin-iso8859-1)
-		  (+ (nth 1 split) 128))
-		 ((eq charset 'mule-unicode-0100-24ff)
-		  (+ #x0100 (+ (* (- (nth 1 split) 32) 96)
-			       (- (nth 2 split) 32))))
-		 ((eq charset 'mule-unicode-2500-33ff)
-		  (+ #x2500 (+ (* (- (nth 1 split) 32) 96)
-			       (- (nth 2 split) 32))))
-		 ((eq charset 'mule-unicode-e000-ffff)
-		  (+ #xe000 (+ (* (- (nth 1 split) 32) 96)
-			       (- (nth 2 split) 32))))
-		 ((eq charset 'eight-bit-control)
-		  char))))))
+	   (let* ((table (get 'utf-translation-table-for-encode
+			      'translation-table))
+		  (trans (aref table char)))
+	     (if trans
+		 (setq split (split-char trans)
+		       charset (car split)))
+	     (cond ((eq charset 'ascii)
+		    char)
+		   ((eq charset 'latin-iso8859-1)
+		    (+ (nth 1 split) 128))
+		   ((eq charset 'mule-unicode-0100-24ff)
+		    (+ #x0100 (+ (* (- (nth 1 split) 32) 96)
+				 (- (nth 2 split) 32))))
+		   ((eq charset 'mule-unicode-2500-33ff)
+		    (+ #x2500 (+ (* (- (nth 1 split) 32) 96)
+				 (- (nth 2 split) 32))))
+		   ((eq charset 'mule-unicode-e000-ffff)
+		    (+ #xe000 (+ (* (- (nth 1 split) 32) 96)
+				 (- (nth 2 split) 32))))
+		   ((eq charset 'eight-bit-control)
+		    char)))))))
 
 
 ;; Coding system stuff
@@ -1234,7 +1242,7 @@ For a list of possible values of CODING-SYSTEM, use \\[list-coding-systems]."
 (defalias 'set-clipboard-coding-system 'set-selection-coding-system)
 
 (defun set-selection-coding-system (coding-system)
-  "Make CODING-SYSTEM used for communicating with other X clients .
+  "Make CODING-SYSTEM used for communicating with other X clients.
 When sending or receiving text via cut_buffer, selection, and clipboard,
 the text is encoded or decoded by CODING-SYSTEM."
   (interactive "zCoding system for X selection: ")

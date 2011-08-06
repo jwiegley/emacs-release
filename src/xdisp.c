@@ -1,5 +1,5 @@
 /* Display generation from window structure and buffer text.
-   Copyright (C) 1985, 86, 87, 88, 93, 94, 95, 97, 98, 99, 2000, 2001
+   Copyright (C) 1985, 86, 87, 88, 93, 94, 95, 97, 98, 99, 2000, 2001, 2002
    Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -33,7 +33,7 @@ Boston, MA 02111-1307, USA.  */
    you as part of the interpreter's command loop or as the result of
    calling Lisp functions like `sit-for'.  The C function `redisplay'
    in xdisp.c is the only entry into the inner redisplay code.  (Or,
-   let's say almost---see the the description of direct update
+   let's say almost---see the description of direct update
    operations, below.).
 
    The following diagram shows how redisplay code is invoked.  As you
@@ -88,7 +88,7 @@ Boston, MA 02111-1307, USA.  */
 
    Direct operations.
 
-   You will find a lot of of redisplay optimizations when you start
+   You will find a lot of redisplay optimizations when you start
    looking at the innards of redisplay.  The overall goal of all these
    optimizations is to make redisplay fast because it is done
    frequently.
@@ -228,6 +228,8 @@ Lisp_Object Qfontified;
 Lisp_Object Qgrow_only;
 Lisp_Object Qinhibit_eval_during_redisplay;
 Lisp_Object Qbuffer_position, Qposition, Qobject;
+
+Lisp_Object Qrisky_local_variable;
 
 /* Functions called to fontify regions of text.  */
 
@@ -733,7 +735,8 @@ static int try_window_id P_ ((struct window *));
 static int display_line P_ ((struct it *));
 static int display_mode_lines P_ ((struct window *));
 static int display_mode_line P_ ((struct window *, enum face_id, Lisp_Object));
-static int display_mode_element P_ ((struct it *, int, int, int, Lisp_Object));
+static int display_mode_element P_ ((struct it *, int, int, int, Lisp_Object,
+				     int));
 static char *decode_mode_spec P_ ((struct window *, int, int, int, int *));
 static void display_menu_bar P_ ((struct window *));
 static int display_count_lines P_ ((int, int, int, int, int *));
@@ -2494,7 +2497,7 @@ face_before_or_after_it_pos (it, before_p)
 	 suitable for unibyte text if current_buffer is unibyte.  */
       if (it->multibyte_p)
 	{
-	  int c = FETCH_MULTIBYTE_CHAR (CHARPOS (pos));
+	  int c = FETCH_MULTIBYTE_CHAR (BYTEPOS (pos));
 	  struct face *face = FACE_FROM_ID (it->f, face_id);
 	  face_id = FACE_FOR_CHAR (it->f, face, c);
 	}
@@ -3823,14 +3826,14 @@ forward_to_next_line_start (it, skipped_p)
        n += STRINGP (it->string) ? 0 : 1)
     {
       if (!get_next_display_element (it))
-	break;
+	return 0;
       newline_found_p = it->what == IT_CHARACTER && it->c == '\n';
       set_iterator_to_next (it, 0);
     }
 
   /* If we didn't find a newline near enough, see if we can use a
      short-cut.  */
-  if (n == MAX_NEWLINE_DISTANCE)
+  if (!newline_found_p)
     {
       int start = IT_CHARPOS (*it);
       int limit = find_next_newline_no_quit (start, 1);
@@ -4212,14 +4215,22 @@ get_next_display_element (it)
 	     the translation.  This could easily be changed but I
 	     don't believe that it is worth doing.
 
-	     Non-printable multibyte characters are also translated
-	     octal form.  */
+	     If it->multibyte_p is nonzero, eight-bit characters and
+	     non-printable multibyte characters are also translated to
+	     octal form.
+
+	     If it->multibyte_p is zero, eight-bit characters that
+	     don't have corresponding multibyte char code are also
+	     translated to octal form.  */
 	  else if ((it->c < ' '
 		    && (it->area != TEXT_AREA
 			|| (it->c != '\n' && it->c != '\t')))
-		   || (it->c >= 127
-		       && it->len == 1)
-		   || !CHAR_PRINTABLE_P (it->c))
+		   || (it->multibyte_p
+		       ? ((it->c >= 127
+			   && it->len == 1)
+			  || !CHAR_PRINTABLE_P (it->c))
+		       : (it->c >= 127
+			  && it->c == unibyte_char_to_multibyte (it->c))))
 	    {
 	      /* IT->c is a control character which must be displayed
 		 either as '\003' or as `^C' where the '\\' and '^'
@@ -5672,7 +5683,7 @@ message_dolog (m, nbytes, nlflag, multibyte)
 	  
 	  /* Convert a multibyte string to single-byte
 	     for the *Message* buffer.  */
-	  for (i = 0; i < nbytes; i += nbytes)
+	  for (i = 0; i < nbytes; i += char_bytes)
 	    {
 	      c = string_char_and_length (m + i, nbytes - i, &char_bytes);
 	      work[0] = (SINGLE_BYTE_CHAR_P (c)
@@ -6021,6 +6032,8 @@ message_with_string (m, string, log)
      Lisp_Object string;
      int log;
 {
+  CHECK_STRING (string, 0);
+
   if (noninteractive)
     {
       if (m)
@@ -7242,7 +7255,7 @@ x_consider_frame_title (frame)
       frame_title_ptr = frame_title_buf;
       init_iterator (&it, XWINDOW (f->selected_window), -1, -1,
 		     NULL, DEFAULT_FACE_ID);
-      display_mode_element (&it, 0, -1, -1, fmt);
+      display_mode_element (&it, 0, -1, -1, fmt, 0);
       len = frame_title_ptr - frame_title_buf;
       frame_title_ptr = NULL;
       set_buffer_internal (obuf);
@@ -8354,6 +8367,14 @@ reconsider_clip_changes (w, b)
     }
 }
 
+
+#define STOP_POLLING					\
+do { if (! polling_stopped_here) stop_polling ();	\
+       polling_stopped_here = 1; } while (0)
+
+#define RESUME_POLLING					\
+do { if (polling_stopped_here) start_polling ();	\
+       polling_stopped_here = 0; } while (0)
 
 /* If PRESERVE_ECHO_AREA is nonzero, it means this redisplay is not in
    response to any user action; therefore, we should preserve the echo
@@ -8373,6 +8394,7 @@ redisplay_internal (preserve_echo_area)
   int number_of_visible_frames;
   int count;
   struct frame *sf = SELECTED_FRAME ();
+  int polling_stopped_here = 0;
 
   /* Non-zero means redisplay has to consider all windows on all
      frames.  Zero means, only selected_window is considered.  */
@@ -8848,7 +8870,7 @@ redisplay_internal (preserve_echo_area)
 		     error.  */
 		  if (interrupt_input)
 		    unrequest_sigio ();
-		  stop_polling ();
+		  STOP_POLLING;
 
 		  /* Update the display.  */
 		  set_window_update_flags (XWINDOW (f->root_window), 1);
@@ -8899,7 +8921,7 @@ redisplay_internal (preserve_echo_area)
 	 which can cause an apparent I/O error.  */
       if (interrupt_input)
 	unrequest_sigio ();
-      stop_polling ();
+      STOP_POLLING;
 
       if (FRAME_VISIBLE_P (sf) && !FRAME_OBSCURED_P (sf))
 	{
@@ -8974,7 +8996,7 @@ redisplay_internal (preserve_echo_area)
      But it is much hairier to try to do anything about that.  */
   if (interrupt_input)
     request_sigio ();
-  start_polling ();
+  RESUME_POLLING;
 
   /* If a frame has become visible which was not before, redisplay
      again, so that we display it.  Expose events for such a frame
@@ -9016,6 +9038,7 @@ redisplay_internal (preserve_echo_area)
  end_of_redisplay:;
 
   unbind_to (count, Qnil);
+  RESUME_POLLING;
 }
 
 
@@ -11201,16 +11224,20 @@ sync_frame_with_window_matrix_rows (w)
 
   /* If W is a full-width window, glyph pointers in W's current matrix
      have, by definition, to be the same as glyph pointers in the
-     corresponding frame matrix.  */
+     corresponding frame matrix.  Note that frame matrices have no
+     marginal areas (see build_frame_matrix).  */
   window_row = w->current_matrix->rows;
   window_row_end = window_row + w->current_matrix->nrows;
   frame_row = f->current_matrix->rows + XFASTINT (w->top);
   while (window_row < window_row_end)
     {
-      int area;
-      
-      for (area = LEFT_MARGIN_AREA; area <= LAST_AREA; ++area)
-	frame_row->glyphs[area] = window_row->glyphs[area];
+      struct glyph *start = window_row->glyphs[LEFT_MARGIN_AREA];
+      struct glyph *end = window_row->glyphs[LAST_AREA];
+
+      frame_row->glyphs[LEFT_MARGIN_AREA] = start;
+      frame_row->glyphs[TEXT_AREA] = start;
+      frame_row->glyphs[RIGHT_MARGIN_AREA] = end;
+      frame_row->glyphs[LAST_AREA] = end;
 
       /* Disable frame rows whose corresponding window rows have
 	 been disabled in try_window_id.  */
@@ -12237,6 +12264,16 @@ glyphs in short form, otherwise show glyphs in long form.")
   fprintf (stderr, "=============================================\n");
   dump_glyph_matrix (w->current_matrix,
 		     NILP (glyphs) ? 0 : XINT (glyphs));
+  return Qnil;
+}
+
+
+DEFUN ("dump-frame-glyph-matrix", Fdump_frame_glyph_matrix,
+       Sdump_frame_glyph_matrix, 0, 0, "", doc: /* */)
+     ()
+{
+  struct frame *f = XFRAME (selected_frame);
+  dump_glyph_matrix (f->current_matrix, 1);
   return Qnil;
 }
 
@@ -13451,7 +13488,7 @@ display_mode_line (w, face_id, format)
      kboard-local variables in the mode_line_format will get the right
      values.  */
   push_frame_kboard (it.f);
-  display_mode_element (&it, 0, 0, 0, format);
+  display_mode_element (&it, 0, 0, 0, format, 0);
   pop_frame_kboard ();
 
   /* Fill up with spaces.  */
@@ -13490,16 +13527,19 @@ display_mode_line (w, face_id, format)
    FIELD_WIDTH is the number of characters the display of ELT should
    occupy in the mode line, and PRECISION is the maximum number of
    characters to display from ELT's representation.  See
-   display_string for details.  *
+   display_string for details.
+
+   RISKY non-zero means ELT's contents are risky to use.
 
    Returns the hpos of the end of the text generated by ELT.  */
 
 static int
-display_mode_element (it, depth, field_width, precision, elt)
+display_mode_element (it, depth, field_width, precision, elt, risky)
      struct it *it;
      int depth;
      int field_width, precision;
      Lisp_Object elt;
+     int risky;
 {
   int n = 0, field, prec;
 
@@ -13517,6 +13557,25 @@ display_mode_element (it, depth, field_width, precision, elt)
 	unsigned char c;
 	unsigned char *this = XSTRING (elt)->data;
 	unsigned char *lisp_string = this;
+
+	/* Remove text properties from mode-line elements whose values
+	   come from variables not marked as risky.  */
+	if (risky)
+	  {
+	    Lisp_Object props;
+
+	    props = Ftext_properties_at (make_number (0), elt);
+	    if (!NILP (props))
+	      {
+		elt = Fcopy_sequence (elt);
+		Fset_text_properties (make_number (0), Flength (elt),
+				      Qnil, elt);
+	      }
+	    /* We've copied ELT, so we need to update this and
+	       lisp_string.  */
+	    this = XSTRING (elt)->data;
+	    lisp_string = this;
+	  }
 
 	while ((precision <= 0 || n < precision)
 	       && *this
@@ -13570,7 +13629,7 @@ display_mode_element (it, depth, field_width, precision, elt)
 		
 		if (c == 'M')
 		  n += display_mode_element (it, depth, field, prec,
-					     Vglobal_mode_string);
+					     Vglobal_mode_string, risky);
 		else if (c != 0)
 		  {
 		    int multibyte;
@@ -13627,6 +13686,12 @@ display_mode_element (it, depth, field_width, precision, elt)
 	 literally.  */
       {
 	register Lisp_Object tem;
+
+	/* If the variable is not marked as risky to set
+	   then its contents are risky to use.  */
+	if (NILP (Fget (elt, Qrisky_local_variable)))
+	  risky = 1;
+
 	tem = Fboundp (elt);
 	if (!NILP (tem))
 	  {
@@ -13665,18 +13730,25 @@ display_mode_element (it, depth, field_width, precision, elt)
 	   If first element is a symbol, process the cadr or caddr recursively
 	   according to whether the symbol's value is non-nil or nil.  */
 	car = XCAR (elt);
-	if (EQ (car, QCeval) && CONSP (XCDR (elt)))
+	if (EQ (car, QCeval))
 	  {
 	    /* An element of the form (:eval FORM) means evaluate FORM
 	       and use the result as mode line elements.  */
-	    struct gcpro gcpro1;
-	    Lisp_Object spec;
 
-	    spec = safe_eval (XCAR (XCDR (elt)));
-	    GCPRO1 (spec);
-	    n += display_mode_element (it, depth, field_width - n,
-				       precision - n, spec);
-	    UNGCPRO;
+	    if (risky)
+	      break;
+
+	    if (CONSP (XCDR (elt)))
+	      {
+		struct gcpro gcpro1;
+		Lisp_Object spec;
+
+		spec = safe_eval (XCAR (XCDR (elt)));
+		GCPRO1 (spec);
+		n += display_mode_element (it, depth, field_width - n,
+					   precision - n, spec, risky);
+		UNGCPRO;
+	      }
 	  }
 	else if (SYMBOLP (car))
 	  {
@@ -13741,7 +13813,7 @@ display_mode_element (it, depth, field_width, precision, elt)
 		   && (precision <= 0 || n < precision))
 	      {
 		n += display_mode_element (it, depth, field_width - n,
-					   precision - n, XCAR (elt));
+					   precision - n, XCAR (elt), risky);
 		elt = XCDR (elt);
 	      }
 	  }
@@ -14675,6 +14747,7 @@ syms_of_xdisp ()
   staticpro (&Qinhibit_redisplay);
 
 #if GLYPH_DEBUG
+  defsubr (&Sdump_frame_glyph_matrix);
   defsubr (&Sdump_glyph_matrix);
   defsubr (&Sdump_glyph_row);
   defsubr (&Sdump_tool_bar_row);
@@ -14757,6 +14830,8 @@ syms_of_xdisp ()
   staticpro (&Qbuffer_position);
   Qobject = intern ("object");
   staticpro (&Qobject);
+  Qrisky_local_variable = intern ("risky-local-variable");
+  staticpro (&Qrisky_local_variable);
 
   last_arrow_position = Qnil;
   last_arrow_string = Qnil;

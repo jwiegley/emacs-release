@@ -47,7 +47,7 @@ menus, turn this variable off, otherwise it is probably better to keep it on."
 (defmacro easy-menu-define (symbol maps doc menu)
   "Define a menu bar submenu in maps MAPS, according to MENU.
 The menu keymap is stored in symbol SYMBOL, both as its value
-and as its function definition.   DOC is used as the doc string for SYMBOL.
+and as its function definition.  DOC is used as the doc string for SYMBOL.
 
 The first element of MENU must be a string.  It is the menu bar item name.
 It may be followed by the following keyword argument pairs
@@ -184,11 +184,17 @@ In Emacs a menu filter must return a menu (a keymap), in XEmacs a filter must
 return a menu items list (without menu name and keywords).
 This function returns the right thing in the two cases.
 If NAME is provided, it is used for the keymap."
- (when (and (not (keymapp menu)) (consp menu))
+ (cond
+  ((and (not (keymapp menu)) (consp menu))
    ;; If it's a cons but not a keymap, then it can't be right
    ;; unless it's an XEmacs menu.
    (setq menu (easy-menu-create-menu (or name "") menu)))
- (easy-menu-get-map menu nil))		; Get past indirections.
+  ((vectorp menu)
+   ;; It's just a menu entry.
+   (setq menu (cdr (easy-menu-convert-item menu)))))
+ (if (keymapp menu)
+     (easy-menu-get-map menu nil)		; Get past indirections.
+   menu))
 
 ;;;###autoload
 (defun easy-menu-create-menu (menu-name menu-items)
@@ -448,7 +454,7 @@ to implement dynamic menus."
 
 (defun easy-menu-add (menu &optional map)
   "Maybe precalculate equivalent key bindings.
-Do it if `easy-menu-precalculate-equivalent-keybindings' is on,"
+Do it only if `easy-menu-precalculate-equivalent-keybindings' is on."
   (when easy-menu-precalculate-equivalent-keybindings
     (if (and (symbolp menu) (not (keymapp menu)) (boundp menu))
 	(setq menu (symbol-value menu)))
@@ -514,11 +520,9 @@ NAME should be a string, the name of the element to be removed."
   "In menu MENU try to look for menu item with name NAME.
 If a menu item is found, return (NAME . item), otherwise return nil.
 If item is an old format item, a new format item is returned."
-  (let ((item (lookup-key menu (vector (intern name))))
+  (let ((item (lookup-key menu (vector (intern name))))b
 	ret enable cache label)
     (cond
-     ((or (keymapp item) (eq (car-safe item) 'menu-item))
-      (cons name item))			; Keymap or new menu format
      ((stringp (car-safe item))
       ;; This is the old menu format. Convert it to new format.
       (setq label (car item))
@@ -532,7 +536,9 @@ If item is an old format item, a new format item is returned."
       (and (symbolp item) (setq enable (get item 'menu-enable))	; Got enable
 	   (setq ret (cons :enable (cons enable ret))))
       (if cache (setq ret (cons cache ret)))
-      (cons name (cons 'menu-enable (cons label (cons item ret))))))))
+      (cons name (cons 'menu-enable (cons label (cons item ret)))))
+     (item ; (or (symbolp item) (keymapp item) (eq (car-safe item) 'menu-item))
+      (cons name item)))))
 
 (defun easy-menu-get-map-look-for-name (name submap)
   (while (and submap (not (or (equal (car-safe (cdr-safe (car submap))) name)

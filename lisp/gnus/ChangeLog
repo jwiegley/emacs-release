@@ -1,3 +1,66 @@
+2003-01-27  Juanma Barranquero  <lektu@terra.es>
+
+	* imap.el (imap-mailbox-status): Fix typo.
+
+2002-10-29  Dave Love  <fx@gnu.org>
+
+	* rfc2047.el (ietf-drums): Don't require.
+	(message-posting-charset): defvar when compiling.
+	(rfc2047-header-encoding-alist): Add `address-mime' part.
+	(rfc2047-charset-encoding-alist): Use B for iso-8859-7,
+	iso-8859-8.  Doc fix.
+	(rfc2047-q-encoding-alist): Augment header list.
+	(rfc2047-encoding-type, rfc2047-syntax-table): New.
+	(rfc2047-encode-message-header): Account for address-mime method.
+	(rfc2047-dissect-region): Rewritten for RFC2822 rules.  Now just
+	return list of strings.
+	(rfc2047-encode-region): Change test for need to encode word.
+	Change rfc2047-encode call.
+	(rfc2047-encode): Remove CHARSET arg and decide encoding from
+	region contents.
+
+2002-10-21  Juanma Barranquero  <lektu@terra.es>
+
+	* gnus-cus.el (gnus-group-customize): Fix typo.
+
+	* gnus-nocem.el (gnus-nocem-liberal-fetch): Likewise.
+
+	* gnus-util.el (gnus-parse-netrc): Likewise.
+
+	* nnlistserv.el (nnlistserv-kk-create-mapping): Likewise.
+
+	* nnweb.el (nnweb-dejanews-create-mapping)
+	(nnweb-reference-create-mapping, nnweb-altavista-create-mapping)
+	(nnweb-google-create-mapping): Likewise.
+
+2002-09-06  Juanma Barranquero  <lektu@terra.es>
+
+	* gnus-int.el (gnus-status-message): Fix spacing.
+
+2002-08-30  Juanma Barranquero  <lektu@terra.es>
+
+	* imap.el (imap-stream-alist, imap-authenticator-alist): Fix typos.
+
+2002-07-03  Juanma Barranquero  <lektu@terra.es>
+
+	* gnus-sum.el (gnus-summary-highlight): Fix typo.
+
+2002-06-12  Juanma Barranquero  <lektu@terra.es>
+
+	* pop3.el (pop3-open-server): Fix typo.
+
+2002-06-12  ShengHuo ZHU  <zsh@cs.rochester.edu>
+
+	* pop3.el (pop3-munge-message-separator): Work if no date.
+	Trivial patch from Marius Vollmer <mvo@zagadka.ping.de>.
+
+	* pop3.el (pop3-munge-message-separator): Only use valid date.
+	Trivial patch from Michael Welsh Duggan <md5i@cs.cmu.edu>.
+
+2002-06-12  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* pop3.el (pop3-md5): Don't hardcode point-min == 1.
+
 2002-02-21  ShengHuo ZHU  <zsh@cs.rochester.edu>
 
 	* gnus-art.el (gnus-article-edit-done): Widen the article buffer.
@@ -17,13 +80,13 @@
 
 2002-02-07  ShengHuo ZHU  <zsh@cs.rochester.edu>
 
-	* gnus-art.el (article-wash-html): Bind url-gateway-unplugged. 
+	* gnus-art.el (article-wash-html): Bind url-gateway-unplugged.
 	* mm-view.el (mm-w3-prepare-buffer): Ditto.
 	(mm-inline-text): Ditto.
 	Suggested by  Dave Love <fx@gnu.org>.
 
 	* mml.el (mml-preview): Disable local map.
-	
+
 	* mml.el (mml-preview): Bind `q'.
 	From: Karl Kleinpaste <karl@charcoal.com>
 
@@ -46,7 +109,7 @@
 
 	* gnus-start.el (gnus-read-init-file): Don't force coding system
 	for ~/.gnus.  From Dave Love <fx@gnu.org>.
-	
+
 2002-01-03  ShengHuo ZHU  <zsh@cs.rochester.edu>
 
 	* mm-util.el (mm-charset-to-coding-system): Don't setq charset.
@@ -112,12 +175,12 @@
 
 	* mm-util.el (mm-iso-8859-15-compatible): Fix doc.
 	(mm-hack-charsets): Fix doc.
-	
+
 	* mm-util.el (mm-iso-8859-15-compatible): Add inconvertible chars.
 	(mm-iso-8859-x-to-15-table): Ditto.
 	(mm-iso-8859-x-to-15-region): Ditto.
 	(mm-find-mime-charset-region): Ditto.
-	
+
 	* gnus-sum.el (gnus-summary-limit-to-subject): An exclusion version.
 	(gnus-summary-limit-to-author): Ditto.
 	(gnus-summary-limit-to-extra): Ditto.

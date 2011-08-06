@@ -1,6 +1,6 @@
 /* 16-bit Windows Selection processing for emacs on MS-Windows
    Copyright (C) 1996, 1997 Free Software Foundation.
-   
+
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
@@ -40,6 +40,7 @@ Boston, MA 02111-1307, USA.  */
 #include "buffer.h"
 #include "charset.h"
 #include "coding.h"
+#include "composite.h"
 
 /* If ever some function outside this file will need to call any
    clipboard-related function, the following prototypes and constants
@@ -168,7 +169,7 @@ unsigned
 empty_clipboard ()
 {
   __dpmi_regs regs;
-  
+
   /* Calls Int 2Fh/AX=1702h
      Return Values   AX == 0: Error occurred
 			<> 0: OK, Clipboard emptied */
@@ -399,7 +400,7 @@ get_clipboard_data (Format, Data, Size, Raw)
 	 the next loop by an additional test.  */
       register unsigned char *lcdp =
 	last_clipboard_text == NULL ? &null_char : last_clipboard_text;
-	
+
       /* Copy data from low memory, remove CR
 	 characters before LF if needed.  */
       _farsetsel (_dos_ds);
@@ -492,14 +493,14 @@ DEFUN ("w16-set-clipboard-data", Fw16_set_clipboard_data, Sw16_set_clipboard_dat
   int no_crlf_conversion;
 
   CHECK_STRING (string, 0);
-  
+
   if (NILP (frame))
     frame = Fselected_frame ();
 
   CHECK_LIVE_FRAME (frame, 0);
   if ( !FRAME_MSDOS_P (XFRAME (frame)))
     goto done;
-  
+
   BLOCK_INPUT;
 
   nbytes = STRING_BYTES (XSTRING (string));
@@ -543,7 +544,7 @@ DEFUN ("w16-set-clipboard-data", Fw16_set_clipboard_data, Sw16_set_clipboard_dat
 
   if (!open_clipboard ())
     goto error;
-  
+
   ok = empty_clipboard ()
     && ((put_status
 	 = set_clipboard_data (CF_OEMTEXT, src, nbytes, no_crlf_conversion))
@@ -552,11 +553,11 @@ DEFUN ("w16-set-clipboard-data", Fw16_set_clipboard_data, Sw16_set_clipboard_dat
   if (!no_crlf_conversion)
     Vlast_coding_system_used = Qraw_text;
   close_clipboard ();
-  
+
   if (ok) goto unblock;
 
  error:
-  
+
   ok = 0;
 
  unblock:
@@ -585,7 +586,7 @@ DEFUN ("w16-set-clipboard-data", Fw16_set_clipboard_data, Sw16_set_clipboard_dat
 	}
       sit_for (2, 0, 0, 1, 1);
     }
-  
+
  done:
 
   return (ok && put_status == 0 ? string : Qnil);
@@ -608,9 +609,9 @@ DEFUN ("w16-get-clipboard-data", Fw16_get_clipboard_data, Sw16_get_clipboard_dat
   CHECK_LIVE_FRAME (frame, 0);
   if ( !FRAME_MSDOS_P (XFRAME (frame)))
     goto done;
-  
+
   BLOCK_INPUT;
-  
+
   if (!open_clipboard ())
     goto unblock;
 
@@ -660,6 +661,9 @@ DEFUN ("w16-get-clipboard-data", Fw16_get_clipboard_data, Sw16_get_clipboard_dat
       coding.dst_multibyte = 1;
       Vnext_selection_coding_system = Qnil;
       coding.mode |= CODING_MODE_LAST_BLOCK;
+      /* We explicitely disable composition handling because selection
+	 data should not contain any composition sequence.  */
+      coding.composing = COMPOSITION_DISABLED;
       truelen = get_clipboard_data (CF_OEMTEXT, htext, data_size, 1);
       bufsize = decoding_buffer_size (&coding, truelen);
       buf = (unsigned char *) xmalloc (bufsize);
@@ -682,9 +686,9 @@ DEFUN ("w16-get-clipboard-data", Fw16_get_clipboard_data, Sw16_get_clipboard_dat
 
  unblock:
   UNBLOCK_INPUT;
-  
+
  done:
-  
+
   return (ret);
 }
 
@@ -733,7 +737,7 @@ and t is the same as `SECONDARY'.")
   return Qnil;
 }
 
-void 
+void
 syms_of_win16select ()
 {
   defsubr (&Sw16_set_clipboard_data);
@@ -744,14 +748,14 @@ syms_of_win16select ()
     "Coding system for communicating with other X clients.\n\
 When sending or receiving text via cut_buffer, selection, and clipboard,\n\
 the text is encoded or decoded by this coding system.\n\
-A default value is `iso-latin-1-dos'");
-  Vselection_coding_system=intern ("iso-latin-1-dos");
+The default value is `iso-latin-1-dos'.");
+  Vselection_coding_system = intern ("iso-latin-1-dos");
 
   DEFVAR_LISP ("next-selection-coding-system", &Vnext_selection_coding_system,
     "Coding system for the next communication with other X clients.\n\
 Usually, `selection-coding-system' is used for communicating with\n\
-other X clients.   But, if this variable is set, it is used for the\n\
-next communication only.   After the communication, this variable is\n\
+other X clients.  But, if this variable is set, it is used for the\n\
+next communication only.  After the communication, this variable is\n\
 set to nil.");
   Vnext_selection_coding_system = Qnil;
 

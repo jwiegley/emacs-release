@@ -1,6 +1,6 @@
 /* Selection processing for Emacs on the Microsoft W32 API.
    Copyright (C) 1993, 1994 Free Software Foundation.
-   
+
 This file is part of GNU Emacs.
 
 GNU Emacs is free software; you can redistribute it and/or modify
@@ -30,6 +30,7 @@ Boston, MA 02111-1307, USA.  */
 #include "buffer.h"
 #include "charset.h"
 #include "coding.h"
+#include "composite.h"
 
 Lisp_Object QCLIPBOARD;
 
@@ -56,16 +57,16 @@ DEFUN ("w32-open-clipboard", Fw32_open_clipboard, Sw32_open_clipboard, 0, 1, 0,
      Lisp_Object frame;
 {
   BOOL ok = FALSE;
-  
+
   if (!NILP (frame))
     CHECK_LIVE_FRAME (frame, 0);
-  
+
   BLOCK_INPUT;
-  
+
   ok = OpenClipboard ((!NILP (frame) && FRAME_W32_P (XFRAME (frame))) ? FRAME_W32_WINDOW (XFRAME (frame)) : NULL);
-  
+
   UNBLOCK_INPUT;
-  
+
   return (ok ? frame : Qnil);
 }
 
@@ -74,13 +75,13 @@ DEFUN ("w32-empty-clipboard", Fw32_empty_clipboard, Sw32_empty_clipboard, 0, 0, 
      ()
 {
   BOOL ok = FALSE;
-  
+
   BLOCK_INPUT;
-  
+
   ok = EmptyClipboard ();
-  
+
   UNBLOCK_INPUT;
-  
+
   return (ok ? Qt : Qnil);
 }
 
@@ -89,13 +90,13 @@ DEFUN ("w32-close-clipboard", Fw32_close_clipboard, Sw32_close_clipboard, 0, 0, 
      ()
 {
   BOOL ok = FALSE;
-  
+
   BLOCK_INPUT;
-  
+
   ok = CloseClipboard ();
-  
+
   UNBLOCK_INPUT;
-  
+
   return (ok ? Qt : Qnil);
 }
 
@@ -114,10 +115,10 @@ DEFUN ("w32-set-clipboard-data", Fw32_set_clipboard_data, Sw32_set_clipboard_dat
   unsigned char *dst;
 
   CHECK_STRING (string, 0);
-  
+
   if (!NILP (frame))
     CHECK_LIVE_FRAME (frame, 0);
-  
+
   BLOCK_INPUT;
 
   nbytes = STRING_BYTES (XSTRING (string)) + 1;
@@ -154,7 +155,7 @@ DEFUN ("w32-set-clipboard-data", Fw32_set_clipboard_data, Sw32_set_clipboard_dat
 
 	if ((dst = (unsigned char *) GlobalLock (htext)) == NULL)
 	  goto error;
-    
+
 	/* convert to CRLF line endings expected by clipboard */
 	while (1)
 	  {
@@ -171,12 +172,12 @@ DEFUN ("w32-set-clipboard-data", Fw32_set_clipboard_data, Sw32_set_clipboard_dat
 		next[-1] = '\r';
 		next[0] = '\n';
 		dst = next + 1;
-	      }	    
+	      }
 	    else
 	      /* copied remaining partial line -> now finished */
 	      break;
 	  }
-    
+
 	GlobalUnlock (htext);
 
 	Vlast_coding_system_used = Qraw_text;
@@ -225,18 +226,18 @@ DEFUN ("w32-set-clipboard-data", Fw32_set_clipboard_data, Sw32_set_clipboard_dat
 	if (htext2 != NULL) htext = htext2;
       }
   }
-  
+
   if (!OpenClipboard ((!NILP (frame) && FRAME_W32_P (XFRAME (frame))) ? FRAME_W32_WINDOW (XFRAME (frame)) : NULL))
     goto error;
 
   ok = EmptyClipboard () && SetClipboardData (CF_TEXT, htext);
-  
+
   CloseClipboard ();
-  
+
   if (ok) goto done;
 
  error:
-  
+
   ok = FALSE;
   if (htext) GlobalFree (htext);
   if (last_clipboard_text)
@@ -244,7 +245,7 @@ DEFUN ("w32-set-clipboard-data", Fw32_set_clipboard_data, Sw32_set_clipboard_dat
 
  done:
   UNBLOCK_INPUT;
-  
+
   return (ok ? string : Qnil);
 }
 
@@ -255,15 +256,15 @@ DEFUN ("w32-get-clipboard-data", Fw32_get_clipboard_data, Sw32_get_clipboard_dat
 {
   HANDLE htext;
   Lisp_Object ret = Qnil;
-  
+
   if (!NILP (frame))
     CHECK_LIVE_FRAME (frame, 0);
-  
+
   BLOCK_INPUT;
-  
+
   if (!OpenClipboard ((!NILP (frame) && FRAME_W32_P (XFRAME (frame))) ? FRAME_W32_WINDOW (XFRAME (frame)) : NULL))
     goto done;
-  
+
   if ((htext = GetClipboardData (CF_TEXT)) == NULL)
     goto closeclip;
 
@@ -273,10 +274,10 @@ DEFUN ("w32-get-clipboard-data", Fw32_get_clipboard_data, Sw32_get_clipboard_dat
     int nbytes;
     int truelen;
     int require_decoding = 0;
-    
+
     if ((src = (unsigned char *) GlobalLock (htext)) == NULL)
       goto closeclip;
-    
+
     nbytes = strlen (src);
 
     /* If the text in clipboard is identical to what we put there
@@ -310,7 +311,7 @@ DEFUN ("w32-get-clipboard-data", Fw32_get_clipboard_data, Sw32_get_clipboard_dat
 	      }
 	  }
       }
-    
+
     if (require_decoding)
       {
 	int bufsize;
@@ -325,6 +326,10 @@ DEFUN ("w32-get-clipboard-data", Fw32_get_clipboard_data, Sw32_get_clipboard_dat
 	coding.dst_multibyte = 1;
 	Vnext_selection_coding_system = Qnil;
 	coding.mode |= CODING_MODE_LAST_BLOCK;
+	/* We explicitely disable composition handling because
+	   selection data should not contain any composition
+	   sequence.  */
+	coding.composing = COMPOSITION_DISABLED;
 	bufsize = decoding_buffer_size (&coding, nbytes);
 	buf = (unsigned char *) xmalloc (bufsize);
 	decode_coding (&coding, src, buf, nbytes, bufsize);
@@ -384,10 +389,10 @@ DEFUN ("w32-get-clipboard-data", Fw32_get_clipboard_data, Sw32_get_clipboard_dat
 
  closeclip:
   CloseClipboard ();
-  
+
  done:
   UNBLOCK_INPUT;
-  
+
   return (ret);
 }
 
@@ -429,7 +434,7 @@ and t is the same as `SECONDARY'.")
   return Qnil;
 }
 
-void 
+void
 syms_of_w32select ()
 {
 #if 0
@@ -445,14 +450,14 @@ syms_of_w32select ()
     "Coding system for communicating with other X clients.\n\
 When sending or receiving text via cut_buffer, selection, and clipboard,\n\
 the text is encoded or decoded by this coding system.\n\
-A default value is `compound-text'");
-  Vselection_coding_system=intern ("iso-latin-1-dos");
+The default value is `iso-latin-1-dos'.");
+  Vselection_coding_system = intern ("iso-latin-1-dos");
 
   DEFVAR_LISP ("next-selection-coding-system", &Vnext_selection_coding_system,
     "Coding system for the next communication with other X clients.\n\
 Usually, `selection-coding-system' is used for communicating with\n\
-other X clients.   But, if this variable is set, it is used for the\n\
-next communication only.   After the communication, this variable is\n\
+other X clients.  But, if this variable is set, it is used for the\n\
+next communication only.  After the communication, this variable is\n\
 set to nil.");
   Vnext_selection_coding_system = Qnil;
 

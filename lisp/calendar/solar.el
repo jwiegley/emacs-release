@@ -73,8 +73,8 @@
   "*The pseudo-pattern that governs the way a time of day is formatted.
 
 A pseudo-pattern is a list of expressions that can involve the keywords
-`12-hours', `24-hours', and `minutes',  all numbers in string form,
-and `am-pm' and `time-zone',  both alphabetic strings.
+`12-hours', `24-hours', and `minutes', all numbers in string form,
+and `am-pm' and `time-zone', both alphabetic strings.
 
 For example, the form
 
@@ -418,7 +418,7 @@ local date.  The second component of date should be an integer."
 Corresponding value is nil if there is no sunrise/sunset."
   (let* (; first, get the exact moment of local noon.
          (exact-local-noon (solar-exact-local-noon date))
-         ; get the the time from the 2000 epoch.
+         ; get the time from the 2000 epoch.
          (t0 (solar-julian-ut-centuries (car exact-local-noon)))
          ; store the sidereal time at Greenwich at midnight of UT time.
          ; find if summer or winter slightly above the equator

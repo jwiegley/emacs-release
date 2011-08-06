@@ -1,4 +1,4 @@
-This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.3 from gnus.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -155,8 +155,8 @@ bindings have been kept.  More key bindings have been added, of course,
 but only in one or two obscure cases have old bindings been changed.
 
    Our motto is:
-                         In a cloud bones of steel.
 
+                         In a cloud bones of steel.
 
    All commands have kept their names.  Some internal functions have
 changed their names.

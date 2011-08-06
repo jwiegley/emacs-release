@@ -1,4 +1,4 @@
-This is ../info/gnus, produced by makeinfo version 4.0 from gnus.texi.
+This is ../info/gnus, produced by makeinfo version 4.3 from gnus.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -232,14 +232,14 @@ Installation
      mailing list is mainly for developers and testers.
 
      Gnus has a home World Wide Web page at
-     `http://www.ifi.uio.no/~larsi/ding.html'.
+     `http://www.gnus.org/'.
 
      Gnus has a write up in the X Applications FAQ at
      `http://www.ee.ryerson.ca:8080/~elf/xapps/Q-III.html'.
 
      The Gnus manual is also available on the World Wide Web. The
      canonical source is in Norway at
-     `http://www.ifi.uio.no/~larsi/ding-manual/gnus_toc.html'.
+     `http://www.gnus.org/manual/gnus_toc.html'.
 
      There are three mirrors in the United States:
        1. `http://www.miranova.com/gnus-man/'

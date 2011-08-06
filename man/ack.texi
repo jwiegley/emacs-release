@@ -896,7 +896,7 @@ asynchronous subprocesses on VMS.
 
 @item
 Marko Rahamaa wrote @file{latin-3.el}, code which sets up
-case-conversion and syntax tables for the ISO Latin-3 charact set.
+case-conversion and syntax tables for the ISO Latin-3 character set.
 
 @item
 Ashwin Ram wrote @file{refer.el}, commands to look up references in
@@ -1177,7 +1177,7 @@ Emacs text to Postscript.
 
 @item
 Tom Tromey and Chris Lindblad wrote @file{tcl.el}, a major mode for
-editing Tcl/Tk source files and running a Tcl interpeter as an Emacs
+editing Tcl/Tk source files and running a Tcl interpreter as an Emacs
 subprocess.
 
 @item

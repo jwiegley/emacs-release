@@ -678,6 +678,7 @@ parenthesized expressions in REGEXP for the components (in that order)."
 	  "^Data connection \\|"
 	  "^local:\\|^Trying\\|^125 \\|^550-\\|^221 .*oodbye\\|"
           "^500 .*AUTH \\(KERBEROS\\|GSSAPI\\)\\|^KERBEROS\\|"
+	  "^530 Please login with USER and PASS\\|" ; non kerberised vsFTPd
 	  "^22[789] .*[Pp]assive\\|^200 EPRT\\|^500 .*EPRT")
   "*Regular expression matching ftp messages that can be ignored."
   :group 'ange-ftp
@@ -2310,7 +2311,7 @@ and NOWAIT."
   "^[A-Z0-9._][A-Z0-9._][A-Z0-9._][A-Z0-9._]:$")
 
 (defun ange-ftp-guess-host-type (host user)
-  "Guess at the the host type of HOST.
+  "Guess at the host type of HOST.
 Works by doing a pwd and examining the directory syntax."
   (let ((host-type (ange-ftp-host-type host))
 	(key (concat host "/" user "/~")))
@@ -2441,7 +2442,7 @@ which can parse the output from a DIR listing for a host of type TYPE.")
   "Normal hook run after parsing the text of an ftp directory listing.")
 
 (defun ange-ftp-ls (file lsargs parse &optional no-error wildcard)
-  "Return the output of an `DIR' or `ls' command done over ftp.
+  "Return the output of a `DIR' or `ls' command done over ftp.
 FILE is the full name of the remote file, LSARGS is any args to pass to the
 `ls' command, and PARSE specifies that the output should be parsed and stored
 away in the internal cache."
@@ -3017,7 +3018,8 @@ logged in as user USER and cd'd to directory DIR."
 			(rest (substring name (match-end 0)))
 			(dir (ange-ftp-expand-dir host user tilda)))
 		   (if dir
-		       (setq name (concat dir rest))
+		       (setq name (if (string-equal dir "/")
+				      rest (concat dir rest)))
 		     (error "User \"%s\" is not known"
 			    (substring tilda 1)))))
 
@@ -3159,12 +3161,12 @@ system TYPE.")
 	       (coding-system-used last-coding-system-used))
 	  (unwind-protect
 	      (progn
-		(let ((executing-kbd-macro t)
-		      (filename (buffer-file-name))
+		(let ((filename (buffer-file-name))
 		      (mod-p (buffer-modified-p)))
 		  (unwind-protect
 		      (progn
-			(ange-ftp-real-write-region start end temp nil visit)
+			(ange-ftp-real-write-region start end temp nil
+						    (or visit 'quiet))
 			(setq coding-system-used last-coding-system-used))
 		    ;; cleanup forms
 		    (setq coding-system-used last-coding-system-used)

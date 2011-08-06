@@ -1,6 +1,67 @@
 This file describes various problems that have been encountered
 in compiling, installing and running GNU Emacs.
 
+* Characters from the mule-unicode charsets aren't displayed under X.
+
+XFree86 4 contains many fonts in iso10646-1 encoding which have
+minimal character repertoires (whereas the encoding is meant to be a
+reasonable indication of the repertoire).  Emacs may choose one of
+these to display characters from the mule-unicode charsets and then
+typically won't be able to find the glyphs to display many characters.
+(Check with C-u C-x = .)  To avoid this, you may need to use a fontset
+which sets the font for the mule-unicode sets explicitly.  E.g. to use
+GNU unifont, include in the fontset spec:
+
+mule-unicode-2500-33ff:-gnu-unifont-*-iso10646-1,\
+mule-unicode-e000-ffff:-gnu-unifont-*-iso10646-1,\
+mule-unicode-0100-24ff:-gnu-unifont-*-iso10646-1
+
+* Mule-UCS loads very slowly.
+
+Changes to Emacs internals interact badly with Mule-UCS's `un-define'
+library, which is the usual interface to Mule-UCS.  Apply the
+following patch to Mule-UCS 0.84 and rebuild it.  That will help,
+though loading will still be slower than in Emacs 20.  (Some
+distributions, such as Debian, may already have applied such a patch.)
+
+--- lisp/un-define.el	6 Mar 2001 22:41:38 -0000	1.30
++++ lisp/un-define.el	19 Apr 2002 18:34:26 -0000
+@@ -610,13 +624,21 @@ by calling post-read-conversion and pre-
+ 
+  (mapcar
+   (lambda (x)
+-    (mapcar
+-     (lambda (y)
+-       (mucs-define-coding-system
+-	(nth 0 y) (nth 1 y) (nth 2 y)
+-	(nth 3 y) (nth 4 y) (nth 5 y) (nth 6 y))
+-       (coding-system-put (car y) 'alias-coding-systems (list (car x))))
+-     (cdr x)))
++    (if (fboundp 'register-char-codings)
++	;; Mule 5, where we don't need the eol-type specified and
++	;; register-char-codings may be very slow for these coding
++	;; system definitions.
++	(let ((y (cadr x)))
++	  (mucs-define-coding-system
++	   (car x) (nth 1 y) (nth 2 y)
++	   (nth 3 y) (nth 4 y) (nth 5 y)))
++      (mapcar
++       (lambda (y)
++	 (mucs-define-coding-system
++	  (nth 0 y) (nth 1 y) (nth 2 y)
++	  (nth 3 y) (nth 4 y) (nth 5 y) (nth 6 y))
++	 (coding-system-put (car y) 'alias-coding-systems (list (car x)))))
++      (cdr x)))
+   `((utf-8
+      (utf-8-unix
+       ?u "UTF-8 coding system"
+
+Note that Emacs 21 has native support for (non-CJK) Unicode, so you
+may not need Mule-UCS to edit Western utf-8 text, for instance.  There
+are various enhancements at <URL:ftp://dlpx1.dl.ac.uk/fx/emacs/Mule>
+which improve Emacs 21's handling of non-ASCII text, including dealing
+with CJK Unicode.
+
 * Building Emacs with GCC 2.9x fails in the `src' directory.
 
 This may happen if you use a development version of GNU `cpp' from one
@@ -115,7 +176,9 @@ should now succeed.
 * JPEG images aren't displayed.
 
 This has been reported when Emacs is built with jpeg-6a library.
-Upgrading to jpeg-6b solves the problem.
+Upgrading to jpeg-6b solves the problem.  Configure checks for the
+correct version, but this problem could occur if a binary built
+against a shared libjpeg is run on a system with an older version.
 
 * Building `ctags' for MS-Windows with the MinGW port of GCC fails.
 
@@ -146,14 +209,32 @@ patch to assert.h should solve this:
 
 * Improving performance with slow X connections
 
-If you don't need X Input Methods (XIM) for entering text in some
-language you use, you can improve performance on WAN links by
-configuring Emacs with option `--without-xim'.  Configuring Emacs
-without XIM does not affect the use of Emacs' own input methods, which
-are part of the Leim package.
+There are several ways to improve this performance, any subset of which can
+be carried out at the same time:
 
-If the connection is very slow, you might also want to consider
-switching off scroll bars, menu bar, and tool bar.
+1) If you don't need X Input Methods (XIM) for entering text in some
+   language you use, you can improve performance on WAN links by
+   configuring Emacs with option `--without-xim'.  Configuring Emacs
+   without XIM does not affect the use of Emacs' own input methods, which
+   are part of the Leim package.
+
+2) If the connection is very slow, you might also want to consider
+   switching off scroll bars, menu bar, and tool bar.
+
+3) Use ssh to forward the X connection, and enable compression on this
+   forwarded X connection (ssh -XC remotehostname emacs ...).
+
+4) Use lbxproxy on the remote end of the connection.  This is an interface
+   to the low bandwidth X extension in most modern X servers, which
+   improves performance dramatically, at the slight expense of correctness
+   of the X protocol.  lbxproxy acheives the performance gain by grouping
+   several X requests in one TCP packet and sending them off together,
+   instead of requiring a round-trip for each X request in a seperate
+   packet.  The switches that seem to work best for emacs are:
+    -noatomsfile  -nowinattr  -cheaterrors -cheatevents
+   Note that the -nograbcmap option is known to cause problems.
+   For more about lbxproxy, see:
+   http://www.xfree86.org/4.2.0/lbxproxy.1.html
 
 * Getting a Meta key on the FreeBSD console
 
@@ -382,14 +463,13 @@ ought to recognize the Windows language-change event and set up the
 appropriate keyboard encoding automatically, but it doesn't do that
 yet.)
 
-Multilingual text put into the Windows clipboard by other Windows
-applications cannot be safely pasted into Emacs (as of v21.2).  This
-is because Windows uses Unicode to represent multilingual text, but
-Emacs does not yet support Unicode well enough to decode it.  This
-means that Emacs can only interchange non-ASCII text with other
-Windows programs if the characters are in the system codepage.
-Reportedly, a partial solution is to install the Mule-UCS package and
-set selection-coding-system to utf-16-le-dos.
+Windows uses UTF-16 encoding to deal with multilingual text (text not
+encodable in the `system codepage') in the clipboard.  To deal with
+this, load the library `utf-16' and use `set-selection-coding-system'
+to set the clipboard coding system to `utf-16-le-dos'.  This won't
+cope with Far Eastern (`CJK') text; if necessary, install the Mule-UCS
+package (see etc/MORE.STUFF), whose `utf-16-le-dos' coding system does
+encode a lot of CJK characters.
 
 The %h format specifier for format-time-string does not work on Windows.
 The %b format specifier does not produce abbreviated month names with
@@ -489,6 +569,9 @@ src/s/hpux10.h.
 
 * Crashes when displaying GIF images in Emacs built with version
 libungif-4.1.0 are resolved by using version libungif-4.1.0b1.
+Configure checks for the correct version, but this problem could occur
+if a binary built against a shared libungif is run on a system with an
+older version.
 
 * Font Lock displays portions of the bufefr in incorrect faces.
 
@@ -515,14 +598,15 @@ in a Lisp string you could precede the paren with a backslash.
 * When running on KDE, colors or fonts are not as specified for Emacs,
 or messed up.
 
-For examlpe, you could see background you set for Emacs only in the
+For example, you could see background you set for Emacs only in the
 empty portions of the Emacs display, while characters have some other
 background.
 
 This happens because KDE's defaults apply its color and font
 definitions even to applications that weren't compiled for KDE.  The
 solution is to uncheck the "Apply fonts and colors to non-KDE apps"
-option in Preferences->Look&Feel->Style.
+option in Preferences->Look&Feel->Style (KDE 2).  In KDE 3, this option
+is in the "Colors" section, rather than "Style".
 
 Alternatively, if you do want the KDE defaults to apply to other
 applications, but not to Emacs, you could modify the file `Emacs.ad'
@@ -585,9 +669,8 @@ this problem by putting this in your `.emacs' file:
  (setq ange-ftp-ftp-program-args '("-i" "-n" "-g" "-v" "--prompt" "")
 
 
-* Some versions of the W3 package released before Emacs 21.1 don't run
-properly with Emacs 21.  These problems are fixed in W3 version
-4.0pre.47.
+* Versions of the W3 package released before Emacs 21.1 don't run
+under Emacs 21.  This fixed in W3 version 4.0pre.47.
 
 * On AIX, if linking fails because libXbsd isn't found, check if you
 are compiling with the system's `cc' and CFLAGS containing `-O5'.  If
@@ -865,43 +948,6 @@ from Emacs 19.34 distribution:
   Specifying a different independent variable name will affect the
   resulting formula: @kbd{a F 1 k RET} produces @kbd{3 + 2 k}.
 
-* Unicode characters are not unified with other Mule charsets.
-
-As of v21.2, Emacs charsets are still not unified.  This means that
-characters which belong to charsets such as Latin-2, Greek, Hebrew,
-etc. and the same characters in the `mule-unicode-*' charsets are
-different characters, as far as Emacs is concerned.  For example, text
-which includes Unicode characters from the Latin-2 locale cannot be
-encoded by Emacs with ISO 8859-2 coding system; and if you yank Greek
-text from a buffer whose buffer-file-coding-system is greek-iso-8bit
-into a mule-unicode-0100-24ff buffer, Emacs won't be able to save that
-buffer neither as ISO 8859-7 nor as UTF-8.
-
-To work around this, install some add-on package such as Mule-UCS.
-
-* Problems when using Emacs with UTF-8 locales
-
-Some systems, including recent versions of GNU/Linux, have terminals
-or X11 subsystems that can be configured to provide Unicode/UTF-8
-input and display.  Normally, such a system sets environment variables
-such as LANG, LC_CTYPE, or LC_ALL to a string which ends with a
-`.UTF-8'.  For example, a system like this in a French locale might
-use `fr_FR.UTF-8' as the value of LANG.
-
-Since Unicode support in Emacs, as of v21.2, is not yet complete (see
-the previous entry in this file), UTF-8 support is not enabled by
-default, even in UTF-8 locales.  Thus, some Emacs features, such as
-non-ASCII keyboard input, might appear to be broken in these locales.
-To solve these problems, you need to turn on some options in your
-`.emacs' file.  Specifically, the following customizations should make
-Emacs work correctly with UTF-8 input and text:
-
-    (setq locale-coding-system 'utf-8)
-    (set-terminal-coding-system 'utf-8)
-    (set-keyboard-coding-system 'utf-8)
-    (set-selection-coding-system 'utf-8)
-    (prefer-coding-system 'utf-8)
-
 * The `oc-unicode' package doesn't work with Emacs 21.
 
 This package tries to define more private charsets than there are free
@@ -952,28 +998,6 @@ can be found.
 Other systems allow to set LD_RUN_PATH in a similar way, but before
 Emacs is linked.  With LD_RUN_PATH set, the linker will include a
 specified run-time search path in the executable.
-
-On some systems, Emacs could crash due to problems with dynamic
-linking.  Specifically, on SGI Irix 6.5, crashes were reported with
-backtraces like this:
-
-  (dbx) where
-   0 strcmp(0xf49239d, 0x4031184, 0x40302b4, 0x12, 0xf0000000, 0xf4923aa, 0x0, 0x492ddb2) ["/xlv22/ficus-jan23/work/irix/lib/libc/libc_n32_M3_ns/strings/strcmp.s":35, 0xfb7e480]
-   1 general_find_symbol(0xf49239d, 0x0, 0x0, 0x0, 0xf0000000, 0xf4923aa, 0x0, 0x492ddb2)
- ["/comp2/mtibuild/v73/workarea/v7.3/rld/rld.c":2140, 0xfb65a98]
-   2 resolve_symbol(0xf49239d, 0x4031184, 0x0, 0xfbdd438, 0x0, 0xf4923aa, 0x0, 0x492ddb2)
- ["/comp2/mtibuild/v73/workarea/v7.3/rld/rld.c":1947, 0xfb657e4]
-   3 lazy_text_resolve(0xd18, 0x1a3, 0x40302b4, 0x12, 0xf0000000, 0xf4923aa, 0x0, 0x492ddb2)
- ["/comp2/mtibuild/v73/workarea/v7.3/rld/rld.c":997, 0xfb64d44]
-   4 _rld_text_resolve(0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0)
- ["/comp2/mtibuild/v73/workarea/v7.3/rld/rld_bridge.s":175, 0xfb6032c]
-
-(`rld' is the dynamic linker.)  We don't know yet why this
-happens, but setting the environment variable LD_BIND_NOW to 1 (which
-forces the dynamic linker to bind all shared objects early on) seems
-to work around the problem.
-
-Please refer to the documentation of your dynamic linker for details.
 
 * On Solaris 2.7, building Emacs with WorkShop Compilers 5.0 98/12/15
 C 5.0 failed, apparently with non-default CFLAGS, most probably due to
@@ -1105,7 +1129,7 @@ or disable it entirely.
 This is a limitation of the Operating System, and can cause problems
 when shutting down Windows. Ensure that all subprocesses are exited
 cleanly before exiting Emacs. For more details, see the FAQ at
-ftp://ftp.gnu.org/gnu/windows/emacs/doc/index.html
+ftp://ftp.gnu.org/gnu/windows/emacs/docs/index.html
 
 * Windows 95/98/ME crashes when Emacs invokes non-existent programs.
 
@@ -1513,6 +1537,11 @@ Ispell.  (Ispell can only spell-check one language at a time, because
 it uses a single dictionary.)  Make sure that the text you are
 spelling and the dictionary used by Ispell conform to each other.
 
+If your spell-checking program is Aspell, it has been reported that if
+you have a personal configuration file (normally ~/.aspell.conf), it
+can cause this error.  Remove that file, execute `ispell-kill-ispell'
+in Emacs, and then try spell-checking again.
+
 * On Linux-based GNU systems using libc versions 5.4.19 through
 5.4.22, Emacs crashes at startup with a segmentation fault.
 
@@ -1531,6 +1560,11 @@ distinguish AltGr from an explicit Right-Alt and Left-Ctrl
 combination, whenever it sees Right-Alt and Left-Ctrl it assumes that
 AltGr has been pressed.  The variable `w32-recognize-altgr' can be set
 to nil to tell Emacs that AltGr is really Ctrl and Alt.
+
+* Emacs crashes when using the Exceed 6.0 X server
+
+If you are using Exceed 6.1, upgrade to a later version.  This was
+reported to prevent the crashes.
 
 * Under some Windows X-servers, Emacs' display is incorrect 
 
@@ -1926,6 +1960,17 @@ incompatible with Terminfo; as a result, the Emacs Terminfo support
 does not work with this version of ncurses.
 
 The fix is to install a newer version of ncurses, such as version 4.2.
+
+* Emacs does not start complaining that it cannot open termcap database file.
+
+If your system uses Terminfo rather than termcap (most modern systems
+do), this could happen if you have an old version of ncurses
+installed, or if the newer version is not visible to the Emacs
+configure script (i.e. it cannot be found along the usual path the
+linker looks for libraries).
+
+The solution is to install a newer version of ncurses, and make sure
+the linker can find it.
 
 * Strange results from format %d in a few cases, on a Sun.
 

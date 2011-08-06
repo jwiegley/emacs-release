@@ -170,7 +170,7 @@ Valid values are:
 
   nil                     This is the value to use the default settings which
 			  is by default for printing buffer with only ASCII
-			  and Latin characters.   The default setting can be
+			  and Latin characters.  The default setting can be
 			  changed by setting the variable
 			  `ps-mule-font-info-database-default' differently.
 			  The initial value of this variable is
@@ -1533,7 +1533,7 @@ This checks if all multi-byte characters in the region are printable or not."
 		    ps-current-font (1+ ps-current-font)))))))
 
   ;; If the header contains non-ASCII and non-Latin1 characters, prepare a font
-  ;; and glyphs for the first occurance of such characters.
+  ;; and glyphs for the first occurrence of such characters.
   (if (and ps-mule-header-charsets
 	   (not (eq (car ps-mule-header-charsets) 'latin-iso8859-1)))
       (let ((font-spec (ps-mule-get-font-spec (car ps-mule-header-charsets)

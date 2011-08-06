@@ -428,7 +428,10 @@ DEFUN ("window-hscroll", Fwindow_hscroll, Swindow_hscroll, 0, 1, 0,
 
 DEFUN ("set-window-hscroll", Fset_window_hscroll, Sset_window_hscroll, 2, 2, 0,
   "Set number of columns WINDOW is scrolled from left margin to NCOL.\n\
-NCOL should be zero or positive.")
+NCOL should be zero or positive.\n\
+\n\
+Note that if `automatic-hscrolling' is non-nil, you cannot scroll the\n\
+window so that the location of point is not visible.")
   (window, ncol)
      Lisp_Object window, ncol;
 {
@@ -2894,7 +2897,7 @@ unless the window is the selected window and the optional second\n\
 argument NOT-THIS-WINDOW is non-nil (interactively, with prefix arg).\n\
 If `pop-up-frames' is non-nil, make a new frame if no window shows BUFFER.\n\
 Returns the window displaying BUFFER.\n\
-If `display-reuse-frames' is non-nil, and another frame is currently\n\
+If `display-buffer-reuse-frames' is non-nil, and another frame is currently\n\
 displaying BUFFER, then simply raise that frame.\n\
 \n\
 The variables `special-display-buffer-names', `special-display-regexps',\n\

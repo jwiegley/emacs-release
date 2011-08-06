@@ -75,8 +75,9 @@
 ;; multilingual text.
 (load "international/mule-cmds")
 (load "case-table")
-(load "international/characters")
 (load "international/utf-8")
+(load "international/utf-16")
+(load "international/characters")
 
 (let ((set-case-syntax-set-multibyte t))
   (load "international/latin-1")
@@ -106,6 +107,14 @@
 (load "language/tibetan")
 (load "language/vietnamese")
 (load "language/misc-lang")
+;; Set the Custom type now the language list is actually defined.
+(put 'current-language-environment 'custom-type
+     (cons 'choice (mapcar (lambda (lang)
+			     (list 'const (car lang)))
+			   language-info-alist)))
+
+(load "international/ucs-tables")
+
 (update-coding-systems-internal)
 
 (load "indent")

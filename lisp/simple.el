@@ -29,8 +29,7 @@
 
 (eval-when-compile
   (autoload 'widget-convert "wid-edit")
-  (autoload 'shell-mode "shell")
-  (require 'cl))
+  (autoload 'shell-mode "shell"))
 
 
 (defgroup killing nil
@@ -1101,7 +1100,7 @@ we stop and ignore all further elements."
 If it crosses the edge, we return nil."
   (cond ((integerp undo-elt)
 	 (and (>= undo-elt start)
-	      (<  undo-elt end)))
+	      (<= undo-elt end)))
 	((eq undo-elt nil)
 	 t)
 	((atom undo-elt)
@@ -1121,16 +1120,16 @@ If it crosses the edge, we return nil."
 		   (cons alist-elt undo-adjusted-markers)))
 	   (and (cdr alist-elt)
 		(>= (cdr alist-elt) start)
-		(< (cdr alist-elt) end))))
+		(<= (cdr alist-elt) end))))
 	((null (car undo-elt))
 	 ;; (nil PROPERTY VALUE BEG . END)
 	 (let ((tail (nthcdr 3 undo-elt)))
 	   (and (>= (car tail) start)
-		(< (cdr tail) end))))
+		(<= (cdr tail) end))))
 	((integerp (car undo-elt))
 	 ;; (BEGIN . END)
 	 (and (>= (car undo-elt) start)
-	      (< (cdr undo-elt) end)))))
+	      (<= (cdr undo-elt) end)))))
 
 (defun undo-elt-crosses-region (undo-elt start end)
   "Test whether UNDO-ELT crosses one edge of that region START ... END.
@@ -1265,7 +1264,7 @@ specifies the value of ERROR-BUFFER."
 				     (current-buffer)))))
 	;; Preserve the match data in case called from a program.
 	(save-match-data
-	  (if (string-match "[ \t]*&[ \t]*$" command)
+	  (if (string-match "[ \t]*&[ \t]*\\'" command)
 	      ;; Command ending with ampersand means asynchronous.
 	      (let ((buffer (get-buffer-create
 			     (or output-buffer "*Async Shell Command*")))
@@ -1336,7 +1335,8 @@ and only used if a buffer is displayed."
 		  (if (= (buffer-size) 0)
 		      0
 		    (count-lines (point-min) (point-max)))))
-	     (cond ((or (<= lines 1)
+	     (cond ((= lines 0))
+		   ((or (<= lines 1)
 			(<= lines
 			    (if resize-mini-windows
 				(cond ((floatp max-mini-window-height)
@@ -4032,7 +4032,7 @@ Select the new buffer in another window.
 Optional second arg NORECORD non-nil means do not put this buffer at
 the front of the list of recently selected ones."
   (interactive "bClone buffer in other window: ")
-  (let ((popup-windows t))
+  (let ((pop-up-windows t))
     (set-buffer buffer)
     (clone-indirect-buffer nil t norecord)))
 

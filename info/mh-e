@@ -1,4 +1,4 @@
-This is ../info/mh-e, produced by makeinfo version 4.0 from mh-e.texi.
+This is ../info/mh-e, produced by makeinfo version 4.2 from mh-e.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -32,7 +32,7 @@ Indirect:
 mh-e-1: 1278
 mh-e-2: 49353
 mh-e-3: 98775
-mh-e-4: 144467
+mh-e-4: 144465
 
 Tag Table:
 (Indirect)
@@ -135,8 +135,8 @@ Ref: From Brian Reid-Footnote-1109998
 Node: From Jim Larus110486
 Node: From Stephen Gildea112743
 Node: Copying114879
-Node: Command Index134067
-Node: Variable Index138941
-Node: Concept Index144467
+Node: Command Index134065
+Node: Variable Index138939
+Node: Concept Index144465
 
 End Tag Table

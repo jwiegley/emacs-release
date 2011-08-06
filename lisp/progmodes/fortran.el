@@ -4,7 +4,7 @@
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Michael D. Prange <prange@erl.mit.edu>
-;; Maintainer: Dave Love <fx@gnu.org>
+;; Maintainer: Glenn Morris <gmorris@ast.cam.ac.uk>
 ;; Keywords: languages
 
 ;; This file is part of GNU Emacs.
@@ -972,12 +972,14 @@ non-comment Fortran statement in the file, and nil otherwise."
     (setq continue-test
 	  (and
 	   (not (looking-at fortran-comment-line-start-skip))
+           (not (looking-at "^[ \t]*#"))
 	   (or (looking-at
 	        (concat "[ \t]*"
 			(regexp-quote fortran-continuation-string)))
 	       (looking-at " \\{5\\}[^ 0\n]\\|\t[1-9]"))))
     (while (and (setq not-first-statement (= (forward-line -1) 0))
 		(or (looking-at fortran-comment-line-start-skip)
+                    (looking-at "^[ \t]*#")
 		    (looking-at "[ \t]*$\\| \\{5\\}[^ 0\n]\\|\t[1-9]")
 		    (looking-at (concat "[ \t]*" comment-start-skip)))))
     (cond ((and continue-test
@@ -999,6 +1001,7 @@ non-comment Fortran statement in the file, and nil otherwise."
 		      (and (= (forward-line 1) 0)
 			   (not (eobp))))
  		(or (looking-at fortran-comment-line-start-skip)
+                    (looking-at "^[ \t]*#")
  		    (looking-at "[ \t]*$\\|     [^ 0\n]\\|\t[1-9]")
  		    (looking-at (concat "[ \t]*" comment-start-skip)))))
     (if (not not-last-statement)
@@ -1083,12 +1086,13 @@ Return point or nil."
 
 (defun fortran-beginning-do ()
   "Search backwards for first unmatched DO [WHILE].
-Return point or nil."
-  (let ((case-fold-search t))
+Return point or nil.  Ignores labelled DO loops (ie DO 10 ... 10 CONTINUE)."
+  (let ((case-fold-search t)
+        (dostart-re "\\(\\(\\sw\\|\\s_\\)+:[ \t]*\\)?do[ \t]+[^0-9]"))
     (if (save-excursion
 	  (beginning-of-line)
 	  (skip-chars-forward " \t0-9")
-	  (looking-at "\\(\\(\\sw\\|\\s_\\)+:[ \t]*\\)?do[ \t]+"))
+	  (looking-at dostart-re))
 	;; Sitting on one.
 	(match-beginning 0)
       ;; Search for one.
@@ -1100,9 +1104,9 @@ Return point or nil."
 		      (not (and (looking-at fortran-end-prog-re)
 				(fortran-check-end-prog-re))))
 	    (skip-chars-forward " \t0-9")
-	    (cond ((looking-at
-		    "\\(\\(\\sw\\|\\s_\\)+:[ \t]*\\)?do[ \t]+[0-9]")
+	    (cond ((looking-at dostart-re)
 		   (setq count (1- count)))
+                  ;; Note labelled loop ends not considered.
 		  ((looking-at "end[ \t]*do\\b")
 		   (setq count (1+ count)))))
 	  (and (= count 0)
@@ -1792,7 +1796,7 @@ Intended as the value of `fill-paragraph-function'."
 	  (fortran-previous-statement)))
     (fortran-indent-line)))
 
-(defun fortran-strip-sqeuence-nos (&optional do-space)
+(defun fortran-strip-sequence-nos (&optional do-space)
   "Delete all text in column 72 and up (assumed to be sequence numbers).
 Normally also deletes trailing whitespace after stripping such text.
 Supplying prefix arg DO-SPACE prevents stripping the whitespace."
@@ -1807,28 +1811,29 @@ Supplying prefix arg DO-SPACE prevents stripping the whitespace."
 ;; for it.
 (defun fortran-current-defun ()
   "Function to use for `add-log-current-defun-function' in Fortran mode."
-  ;; We must be inside function body for this to work.
-  (fortran-beginning-of-subprogram)
-  (let ((case-fold-search t))		; case-insensitive
-    ;; search for fortran subprogram start
-    (if (re-search-forward
-	 (concat "^[ \t]*\\(program\\|subroutine\\|function"
-		 "\\|[ \ta-z0-9*()]*[ \t]+function\\|"
-		 "\\(block[ \t]*data\\)\\)")
-	 (save-excursion (fortran-end-of-subprogram)
-			 (point))
-	 t)
-	(or (match-string-no-properties 2)
-	    (progn
-	      ;; move to EOL or before first left paren
-	      (if (re-search-forward "[(\n]" nil t)
-		  (progn (backward-char)
-			 (skip-chars-backward " \t"))
-		(end-of-line))
-	      ;; Use the name preceding that.
-	      (buffer-substring-no-properties (point) (progn (backward-sexp)
-							     (point)))))
-      "main")))
+  (save-excursion
+    ;; We must be inside function body for this to work.
+    (fortran-beginning-of-subprogram)
+    (let ((case-fold-search t))		; case-insensitive
+      ;; search for fortran subprogram start
+      (if (re-search-forward
+           (concat "^[ \t]*\\(program\\|subroutine\\|function"
+                   "\\|[ \ta-z0-9*()]*[ \t]+function\\|"
+                   "\\(block[ \t]*data\\)\\)")
+           (save-excursion (fortran-end-of-subprogram)
+                           (point))
+           t)
+          (or (match-string-no-properties 2)
+              (progn
+                ;; move to EOL or before first left paren
+                (if (re-search-forward "[(\n]" nil t)
+                    (progn (backward-char)
+                           (skip-chars-backward " \t"))
+                  (end-of-line))
+                ;; Use the name preceding that.
+                (buffer-substring-no-properties (point) (progn (backward-sexp)
+                                                               (point)))))
+        "main"))))
 
 (provide 'fortran)
 

@@ -1152,7 +1152,8 @@ static struct face *x_get_glyph_face_and_encoding P_ ((struct frame *,
 						       XChar2b *,
 						       int *));
 static struct face *x_get_char_face_and_encoding P_ ((struct frame *, int,
-						      int, XChar2b *, int));
+						      int, XChar2b *, int,
+						      int));
 static XCharStruct *x_per_char_metric P_ ((XFontStruct *, XChar2b *));
 static void x_encode_char P_ ((int, XChar2b *, struct font_info *));
 static void x_append_glyph P_ ((struct it *));
@@ -1258,6 +1259,7 @@ x_encode_char (c, char2b, font_info)
 	{
 	  ccl->reg[0] = charset;
 	  ccl->reg[1] = char2b->byte2;
+	  ccl->reg[2] = -1;
 	}
       else
 	{
@@ -1293,15 +1295,17 @@ x_encode_char (c, char2b, font_info)
 
 /* Get face and two-byte form of character C in face FACE_ID on frame
    F.  The encoding of C is returned in *CHAR2B.  MULTIBYTE_P non-zero
-   means we want to display multibyte text.  Value is a pointer to a
-   realized face that is ready for display.  */
+   means we want to display multibyte text.  DISPLAY_P non-zero means
+   make sure that X resources for the face returned are allocated.
+   Value is a pointer to a realized face that is ready for display if
+   DISPLAY_P is non-zero.  */
 
 static INLINE struct face *
-x_get_char_face_and_encoding (f, c, face_id, char2b, multibyte_p)
+x_get_char_face_and_encoding (f, c, face_id, char2b, multibyte_p, display_p)
      struct frame *f;
      int c, face_id;
      XChar2b *char2b;
-     int multibyte_p;
+     int multibyte_p, display_p;
 {
   struct face *face = FACE_FROM_ID (f, face_id);
 
@@ -1343,8 +1347,11 @@ x_get_char_face_and_encoding (f, c, face_id, char2b, multibyte_p)
     }
 
   /* Make sure X resources of the face are allocated.  */
-  xassert (face != NULL);
-  PREPARE_FACE_FOR_DISPLAY (f, face);
+  if (display_p)
+    {
+      xassert (face != NULL);
+      PREPARE_FACE_FOR_DISPLAY (f, face);
+    }
   
   return face;
 }
@@ -1855,7 +1862,7 @@ x_produce_glyphs (it)
       /* Get font to use.  Encode IT->char_to_display.  */
       x_get_char_face_and_encoding (it->f, it->char_to_display,
 				    it->face_id, &char2b,
-				    it->multibyte_p);
+				    it->multibyte_p, 0);
       font = face->font;
 
       /* When no suitable font found, use the default font.  */
@@ -2087,7 +2094,7 @@ x_produce_glyphs (it)
       it->face_id = FACE_FOR_CHAR (it->f, face, it->char_to_display);
       face = FACE_FROM_ID (it->f, it->face_id);
       x_get_char_face_and_encoding (it->f, it->char_to_display,
-				    it->face_id, &char2b, it->multibyte_p);
+				    it->face_id, &char2b, it->multibyte_p, 0);
       font = face->font;
 
       /* When no suitable font found, use the default font.  */
@@ -2175,7 +2182,7 @@ x_produce_glyphs (it)
 	      
 	      face = FACE_FROM_ID (it->f, face_id);
 	      x_get_char_face_and_encoding (it->f, ch, face->id, &char2b,
-					    it->multibyte_p);
+					    it->multibyte_p, 0);
 	      font = face->font;
 	      if (font == NULL)
 		{
@@ -4973,7 +4980,7 @@ x_set_glyph_string_background_width (s, start, last_x)
 	int this_face_id = FACE_FOR_CHAR (XFRAME (w->frame), base_face, c); \
 	faces[n] = FACE_FROM_ID (XFRAME (w->frame), this_face_id);	  \
 	x_get_char_face_and_encoding (XFRAME (w->frame), c,		  \
-				      this_face_id, char2b + n, 1);	  \
+				      this_face_id, char2b + n, 1, 1);	  \
       }									  \
     									  \
     /* Make glyph_strings for each glyph sequence that is drawable by	  \
@@ -8466,7 +8473,7 @@ x_scroll_bar_to_input_event (event, ievent)
 
 /* Scroll bar callback for Motif scroll bars.  WIDGET is the scroll
    bar widget.  CLIENT_DATA is a pointer to the scroll_bar structure.
-   CALL_DATA is a pointer a a XmScrollBarCallbackStruct.  */
+   CALL_DATA is a pointer to a XmScrollBarCallbackStruct.  */
 
 static void
 xm_scroll_callback (widget, client_data, call_data)
@@ -8521,32 +8528,11 @@ xm_scroll_callback (widget, client_data, call_data)
 	XtVaGetValues (widget, XmNsliderSize, &slider_size, NULL);
 	UNBLOCK_INPUT;
 
-	/* At the max position of the scroll bar, do a line-wise
-	   movement.  Without doing anything, we would be called with
-	   the same cs->value again and again.  If we want to make
-	   sure that we can reach the end of the buffer, we have to do
-	   something.
-
-	   Implementation note: setting bar->dragging always to
-	   cs->value gives a smoother movement at the max position.
-	   Setting it to nil when doing line-wise movement gives
-	   a better slider behavior. */
-	
-	if (cs->value + slider_size == XM_SB_MAX
-	    || (dragging_down_p
-		&& last_scroll_bar_part == scroll_bar_down_arrow))
-	  {
-	    part = scroll_bar_down_arrow;
-	    bar->dragging = Qnil;
-	  }
-	else
-	  {
-	    whole = XM_SB_RANGE;
-	    portion = min (cs->value - XM_SB_MIN, XM_SB_MAX - slider_size);
+	whole = XM_SB_RANGE - slider_size;
+	portion = min (cs->value - XM_SB_MIN, whole);
 	    part = scroll_bar_handle;
 	    bar->dragging = make_number (cs->value);
 	  }
-      }
       break;
       
     case XmCR_VALUE_CHANGED:
@@ -8795,7 +8781,27 @@ x_set_toolkit_scroll_bar_thumb (bar, portion, position, whole)
   Widget widget = SCROLL_BAR_X_WIDGET (FRAME_X_DISPLAY (f), bar);
   float top, shown;
 
-  if (whole == 0)
+  BLOCK_INPUT;
+
+#ifdef USE_MOTIF
+
+  /* We use an estimate of 30 chars per line rather than the real
+     `portion' value.  This has the disadvantage that the thumb size
+     is not very representative, but it makes our life a lot easier.
+     Otherwise, we have to constantly adjust the thumb size, which
+     we can't always do quickly enough: while dragging, the size of
+     the thumb might prevent the user from dragging the thumb all the
+     way to the end.  but Motif and some versions of Xaw3d don't allow
+     updating the thumb size while dragging.  Also, even if we can update
+     its size, the update will often happen too late.
+     If you don't believe it, check out revision 1.650 of xterm.c to see
+     what hoops we were going through and the still poor behavior we got.  */
+  portion = XFASTINT (XWINDOW (bar->window)->height) * 30;
+  /* When the thumb is at the bottom, position == whole.
+     So we need to increase `whole' to make space for the thumb.  */
+  whole += portion;
+
+  if (whole <= 0)
     top = 0, shown = 1;
   else
     {
@@ -8803,12 +8809,9 @@ x_set_toolkit_scroll_bar_thumb (bar, portion, position, whole)
       shown = (float) portion / whole;
     }
 
-  BLOCK_INPUT;
-
-#ifdef USE_MOTIF
+  if (NILP (bar->dragging))
   {
     int size, value;
-    XmScrollBarWidget sb;
 
     /* Slider size.  Must be in the range [1 .. MAX - MIN] where MAX
        is the scroll bar's maximum and MIN is the scroll bar's minimum
@@ -8822,27 +8825,18 @@ x_set_toolkit_scroll_bar_thumb (bar, portion, position, whole)
     value = min (value, XM_SB_MAX - size);
     value = max (value, XM_SB_MIN);
 
-    if (NILP (bar->dragging))
       XmScrollBarSetValues (widget, value, size, 0, 0, False);
-    else if (last_scroll_bar_part == scroll_bar_down_arrow)
-      /* This has the negative side effect that the slider value is
-	 not what it would be if we scrolled here using line-wise or
-	 page-wise movement.  */
-      XmScrollBarSetValues (widget, value, XM_SB_RANGE - value, 0, 0, False);
-    else
-      {
-	/* If currently dragging, only update the slider size.
-	   This reduces flicker effects.  */
-	int old_value, old_size, increment, page_increment;
-	
-	XmScrollBarGetValues (widget, &old_value, &old_size,
-			      &increment, &page_increment);
-	XmScrollBarSetValues (widget, old_value,
-			      min (size, XM_SB_RANGE - old_value),
-			      0, 0, False);
-      }
   }
 #else /* !USE_MOTIF i.e. use Xaw */
+
+  if (whole == 0)
+    top = 0, shown = 1;
+  else
+    {
+      top = (float) position / whole;
+      shown = (float) portion / whole;
+    }
+
   {
     float old_top, old_shown;
     Dimension height;
@@ -9867,7 +9861,7 @@ static struct x_display_info *next_noop_dpyinfo;
 
    EXPECTED is nonzero if the caller knows input is available.  */
 
-int
+static int
 XTread_socket (sd, bufp, numchars, expected)
      register int sd;
      /* register */ struct input_event *bufp;
@@ -10216,6 +10210,7 @@ XTread_socket (sd, bufp, numchars, expected)
 		  x_real_positions (f, &x, &y);
 		  f->output_data.x->left_pos = x;
 		  f->output_data.x->top_pos = y;
+                  goto OTHER;
 		}
 	      break;
 
@@ -10527,7 +10522,8 @@ XTread_socket (sd, bufp, numchars, expected)
 			   || IsKeypadKey (keysym) /* 0xff80 <= x < 0xffbe */
 			   || IsFunctionKey (keysym) /* 0xffbe <= x < 0xffe1 */
 			   /* Any "vendor-specific" key is ok.  */
-			   || (orig_keysym & (1 << 28)))
+			   || (orig_keysym & (1 << 28))
+			   || (keysym != NoSymbol && nbytes == 0))
 			  && ! (IsModifierKey (orig_keysym)
 #ifndef HAVE_X11R5
 #ifdef XK_Mode_switch
@@ -10568,25 +10564,18 @@ XTread_socket (sd, bufp, numchars, expected)
 			      temp_buffer[temp_index++] = copy_bufptr[i];
 			    }
 
-			  if (/* If the event is not from XIM, */
-			      event.xkey.keycode != 0
-			      /* or the current locale doesn't request
-				 decoding of the intup data, ... */
-			      || coding.type == coding_type_raw_text
-			      || coding.type == coding_type_no_conversion)
-			    {
-			      /* ... we can use the input data as is.  */
-			      nchars = nbytes;
-			    }
-			  else
 			    { 
-			      /* We have to decode the input data.  */
+			      /* Decode the input data.  */
 			      int require;
 			      unsigned char *p;
 
 			      require = decoding_buffer_size (&coding, nbytes);
 			      p = (unsigned char *) alloca (require);
 			      coding.mode |= CODING_MODE_LAST_BLOCK;
+			      /* We explicitely disable composition
+				 handling because key data should not
+				 contain any composition sequence.  */
+			      coding.composing = COMPOSITION_DISABLED;
 			      decode_coding (&coding, copy_bufptr, p,
 					     nbytes, require);
 			      nbytes = coding.produced;
@@ -10865,16 +10854,6 @@ XTread_socket (sd, bufp, numchars, expected)
 		      f->output_data.x->win_gravity = NorthWestGravity;
 		      x_wm_set_size_hint (f, (long) 0, 0);
 		    }
-#ifdef USE_MOTIF
-		  /* Some window managers pass (0,0) as the location of
-		     the window, and the Motif event handler stores it
-		     in the emacs widget, which messes up Motif menus.  */
-		  if (event.xconfigure.x == 0 && event.xconfigure.y == 0)
-		    {
-		      event.xconfigure.x = f->output_data.x->widget->core.x;
-		      event.xconfigure.y = f->output_data.x->widget->core.y;
-		    }
-#endif /* USE_MOTIF */
 		}
 	      goto OTHER;
 
@@ -14217,10 +14196,12 @@ x_term_init (display_name, xrm_option, resource_name)
 	argv[argc++] = "-xrm";
 	argv[argc++] = xrm_option;
       }
+    stop_polling ();
     dpy = XtOpenDisplay (Xt_app_con, XSTRING (display_name)->data,
 			 resource_name, EMACS_CLASS,
 			 emacs_options, XtNumber (emacs_options),
 			 &argc, argv);
+    start_polling ();
 
 #ifdef HAVE_X11XTR6
     /* I think this is to compensate for XtSetLanguageProc.  */

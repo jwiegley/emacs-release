@@ -1,5 +1,5 @@
 /* Fully extensible Emacs, running on Unix, intended for GNU.
-   Copyright (C) 1985,86,87,93,94,95,97,98,1999,2001
+   Copyright (C) 1985,86,87,93,94,95,97,98,1999,2001,2002
       Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -753,7 +753,7 @@ main (argc, argv, envp)
       else
 	{
 	  printf ("GNU Emacs %s\n", XSTRING (tem)->data);
-	  printf ("Copyright (C) 2001 Free Software Foundation, Inc.\n");
+	  printf ("Copyright (C) 2002 Free Software Foundation, Inc.\n");
 	  printf ("GNU Emacs comes with ABSOLUTELY NO WARRANTY.\n");
 	  printf ("You may redistribute copies of Emacs\n");
 	  printf ("under the terms of the GNU General Public License.\n");
@@ -2135,6 +2135,17 @@ decode_env_path (evarname, defalt)
       /* Add /: to the front of the name
 	 if it would otherwise be treated as magic.  */
       tem = Ffind_file_name_handler (element, Qt);
+
+      /* However, if the handler says "I'm safe",
+	 don't bother adding /:.  */
+      if (SYMBOLP (tem))
+	{
+	  Lisp_Object prop;
+	  prop = Fget (tem, intern ("safe-magic"));
+	  if (! NILP (prop))
+	    tem = Qnil;
+	}
+
       if (! NILP (tem))
 	element = concat2 (build_string ("/:"), element);
 

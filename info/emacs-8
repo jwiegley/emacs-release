@@ -1,8 +1,7 @@
-This is ../info/emacs, produced by makeinfo version 4.0f from
-emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.3 from emacs.texi.
 
    This is the Fourteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 21.2.
+for Emacs version 21.3.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -190,6 +189,10 @@ name of the standard dictionary to use.  A value of `nil' says to use
 the default dictionary.  The command `M-x ispell-change-dictionary'
 sets this variable and then restarts the Ispell subprocess, so that it
 will use a different dictionary.
+
+   The dictionary used by `ispell-complete-word' can be customized
+separately by setting the value of the variable
+`ispell-complete-word-dict'.
 
 
 File: emacs,  Node: Files,  Next: Buffers,  Prev: Fixit,  Up: Top

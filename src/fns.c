@@ -1,5 +1,5 @@
 /* Random utility Lisp functions.
-   Copyright (C) 1985, 86, 87, 93, 94, 95, 97, 98, 99, 2000, 2001
+   Copyright (C) 1985, 86, 87, 93, 94, 95, 97, 98, 99, 2000, 2001, 2002
    Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -2145,7 +2145,7 @@ ARRAY is a vector, string, char-table, or bool-vector.")
 
 DEFUN ("char-table-subtype", Fchar_table_subtype, Schar_table_subtype,
        1, 1, 0,
-  "Return the subtype of char-table CHAR-TABLE.   The value is a symbol.")
+  "Return the subtype of char-table CHAR-TABLE.  The value is a symbol.")
   (char_table)
      Lisp_Object char_table;
 {
@@ -3076,12 +3076,12 @@ The normal messages at start and end of loading FILENAME are suppressed.")
   register Lisp_Object tem;
   CHECK_SYMBOL (feature, 0);
   tem = Fmemq (feature, Vfeatures);
-
-  LOADHIST_ATTACH (Fcons (Qrequire, feature));
   
   if (NILP (tem))
     {
       int count = specpdl_ptr - specpdl;
+
+      LOADHIST_ATTACH (Fcons (Qrequire, feature));
 
       /* Value saved here is to be restored into Vautoload_queue */
       record_unwind_protect (un_autoload, Vautoload_queue);
@@ -4953,7 +4953,7 @@ In hash tables create with NAME specified as test, use TEST to compare\n\
 keys, and HASH for computing hash codes of keys.\n\
 \n\
 TEST must be a function taking two arguments and returning non-nil\n\
-if both arguments are the same.   HASH must be a function taking\n\
+if both arguments are the same.  HASH must be a function taking\n\
 one argument and return an integer that is the hash code of the\n\
 argument.  Hash code computation should use the whole value range of\n\
 integers, including negative integers.")

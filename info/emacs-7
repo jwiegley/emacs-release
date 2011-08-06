@@ -1,8 +1,7 @@
-This is ../info/emacs, produced by makeinfo version 4.0f from
-emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.3 from emacs.texi.
 
    This is the Fourteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 21.2.
+for Emacs version 21.3.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -716,11 +715,12 @@ query-replace' command which finds each occurrence of the pattern and
 asks you whether to replace it.
 
    The replace commands normally operate on the text from point to the
-end of the buffer; however, in Transient Mark mode, when the mark is
-active, they operate on the region.  The replace commands all replace
-one string (or regexp) with one replacement string.  It is possible to
-perform several replacements in parallel using the command
-`expand-region-abbrevs' (*note Expanding Abbrevs::).
+end of the buffer; however, in Transient Mark mode (*note Transient
+Mark::), when the mark is active, they operate on the region.  The
+replace commands all replace one string (or regexp) with one
+replacement string.  It is possible to perform several replacements in
+parallel using the command `expand-region-abbrevs' (*note Expanding
+Abbrevs::).
 
 * Menu:
 

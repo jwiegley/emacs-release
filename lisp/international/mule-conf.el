@@ -218,7 +218,7 @@
 
 ;; 2-byte 2-column charsets.  Valid range of CHARSET-ID is 245..254.
 
-;; Ethiopic characters (Amahric and Tigrigna).
+;; Ethiopic characters (Amharic and Tigrigna).
 (define-charset 245 'ethiopic
   [2 94 2 0 ?3 0 "Ethiopic" "Ethiopic characters" "Ethiopic characters"])
 
@@ -430,7 +430,7 @@ Like `compound-text', but does not produce escape sequences for compositions."
 charsets or coding systems.")
 
 ;; Functions to support "Non-Standard Character Set Encodings" defined
-;; by the ICCCM spec.  We support that by converting the leading
+;; by the compound text spec.  We support that by converting the leading
 ;; sequence of the ``extended segment'' to the corresponding ISO-2022
 ;; sequences (if the leading sequence names an Emacs charset), or decode
 ;; the segment (if it names a coding system).  Encoding does the reverse.
@@ -505,15 +505,19 @@ charsets or coding systems.")
 (defvar non-standard-designations-alist
   '(("$(0" . (big5 "big5-0" 2))
     ("$(1" . (big5 "big5-0" 2))
-    ("-V"  . (t "iso8859-10" 1))
-    ("-Y"  . (t "iso8859-13" 1))
-    ("-_"  . (t "iso8859-14" 1))
-    ("-b"  . (t "iso8859-15" 1))
-    ("-f"  . (t "iso8859-16" 1)))
-  "Alist of ctext control sequences that introduce character sets which
-are not in the list of approved ICCCM encodings, and the corresponding
-coding system, identifier string, and number of octets per encoded
-character.
+    ;; The following are actually standard; generating extended
+    ;; segments for them is wrong and screws e.g. Latin-9 users
+    ;; pasting into a terminal window.  8859-{10,13,16} aren't Emacs
+    ;; charsets anyhow.  Presumably extended segments should be
+    ;; generated for all the really non-standard Emacs charsets...
+    ;; -- fx
+;;     ("-V"  . (t "iso8859-10" 1))
+;;     ("-Y"  . (t "iso8859-13" 1))
+;;     ("-_"  . (t "iso8859-14" 1))
+;;     ("-b"  . (t "iso8859-15" 1))
+;;     ("-f"  . (t "iso8859-16" 1))
+    )
+  "Alist of ctext control sequences for extended segments.
 
 Each element has the form (CTLSEQ . (ENCODING CHARSET NOCTETS)).  CTLSEQ
 is the control sequence (sans the leading ESC) that introduces the character
@@ -521,15 +525,30 @@ set in the text encoded by compound-text.  ENCODING is a coding system
 symbol; if it is t, it means that the ctext coding system already encodes
 the text correctly, and only the leading control sequence needs to be altered.
 If ENCODING is a coding system, we need to re-encode the text with that
-coding system.  CHARSET is the ICCCM name of the charset we need to put into
+coding system.  CHARSET is the name of the charset we need to put into
 the leading control sequence.  NOCTETS is the number of octets (bytes) that
 encode each character in this charset.  NOCTETS can be 0 (meaning the number
 of octets per character is variable), 1, 2, 3, or 4.")
 
 (defun ctext-pre-write-conversion (from to)
-  "Encode characters between FROM and TO as Compound Text w/Extended Segments."
-  (buffer-disable-undo)	; minimize consing due to insertions and deletions
-  (narrow-to-region from to)
+  "Encode characters between FROM and TO as Compound Text w/Extended Segments.
+
+If FROM is a string, or if the current buffer is not the one set up for us
+by run_pre_post_conversion_on_str, generate a new temp buffer, insert the
+text, and convert it in the temporary buffer.  Otherwise, convert in-place."
+  (cond ((and (string= (buffer-name) " *code-converting-work*")
+	      (not (stringp from)))
+	 ; Minimize consing due to subsequent insertions and deletions.
+	 (buffer-disable-undo)
+	 (narrow-to-region from to))
+	(t
+	 (let ((buf (current-buffer)))
+	   (set-buffer (generate-new-buffer " *temp"))
+	   (buffer-disable-undo)
+	   (if (stringp from)
+	       (insert from)
+	     (insert-buffer-substring buf from to))
+	   (setq from (point-min) to (point-max)))))
   (encode-coding-region from to 'ctext-no-compositions)
   ;; Replace ISO-2022 charset designations with extended segments, for
   ;; those charsets that are not part of the official X registry.
@@ -539,7 +558,8 @@ of octets per character is variable), 1, 2, 3, or 4.")
 	  (case-fold-search nil)
 	  pt desig encode-info encoding chset noctets textlen)
       (set-buffer-multibyte nil)
-      (while (re-search-forward "\e\\(\$([01]\\|-[VY_bf]\\)" nil 'move)
+      (while ;;  (re-search-forward "\e\\(\$([01]\\|-[VY_bf]\\)" nil 'move)
+	  (re-search-forward "\e\\(\$([01]\\)" nil 'move)
 	(setq desig (match-string 1)
 	      pt (point-marker)
 	      encode-info (cdr (assoc desig non-standard-designations-alist))
@@ -576,7 +596,7 @@ of octets per character is variable), 1, 2, 3, or 4.")
 
 (make-coding-system
  'compound-text-with-extensions 5 ?x
- "Compound text encoding with ICCCM Extended Segment extensions.
+ "Compound text encoding with extended segments.
 
 This coding system should be used only for X selections.  It is inappropriate
 for decoding and encoding files, process I/O, etc."

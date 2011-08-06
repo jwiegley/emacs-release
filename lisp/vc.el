@@ -6,7 +6,7 @@
 ;; Maintainer: Andre Spiegel <spiegel@gnu.org>
 ;; Keywords: tools
 
-;; $Id: vc.el,v 1.311.4.5 2002/03/05 13:41:05 spiegel Exp $
+;; $Id: vc.el,v 1.311.4.9 2003/01/19 06:46:21 spiegel Exp $
 
 ;; This file is part of GNU Emacs.
 
@@ -147,7 +147,8 @@
 ;;   contents with those of the master version.  If the backend does not
 ;;   have such a brief-comparison feature, the default implementation of
 ;;   this function can be used, which delegates to a full
-;;   vc-BACKEND-diff.
+;;   vc-BACKEND-diff.  (Note that vc-BACKEND-diff must not run
+;;   asynchronously in this case.)
 ;;
 ;; - mode-line-string (file)
 ;;
@@ -205,10 +206,12 @@
 ;;   Check out revision REV of FILE into the working area.  If EDITABLE
 ;;   is non-nil, FILE should be writable by the user and if locking is
 ;;   used for FILE, a lock should also be set.  If REV is non-nil, that
-;;   is the revision to check out (default is current workfile version);
-;;   if REV is the empty string, that means to check out the head of the
-;;   trunk.  If optional arg DESTFILE is given, it is an alternate
-;;   filename to write the contents to.
+;;   is the revision to check out (default is current workfile version).
+;;   If REV is t, that means to check out the head of the current branch;
+;;   if it is the empty string, check out the head of the trunk.  If
+;;   optional arg DESTFILE is given, it is an alternate filename
+;;   to write the contents to.  The implementation should pass the value 
+;;   of vc-checkout-switches to the backend command.
 ;;
 ;; * revert (file &optional contents-done)
 ;;
@@ -1022,21 +1025,6 @@ NOT-URGENT means it is ok to continue if the user says not to save."
 	(unless not-urgent
 	  (error "Aborted")))))
 
-(defun vc-workfile-unchanged-p (file)
-  "Return non-nil if FILE has not changed since the last checkout."
-  (let ((checkout-time (vc-file-getprop file 'vc-checkout-time))
-        (lastmod (nth 5 (file-attributes file))))
-    (if checkout-time
-        (equal checkout-time lastmod)
-      (let ((unchanged (vc-call workfile-unchanged-p file)))
-        (vc-file-setprop file 'vc-checkout-time (if unchanged lastmod 0))
-        unchanged))))
-
-(defun vc-default-workfile-unchanged-p (backend file)
-  "Check if FILE is unchanged by diffing against the master version.
-Return non-nil if FILE is unchanged."
-  (zerop (vc-call diff file (vc-workfile-version file))))
-
 (defun vc-default-latest-on-branch-p (backend file)
   "Return non-nil if FILE is the latest on its branch.
 This default implementation always returns non-nil, which means that
@@ -1149,7 +1137,7 @@ If VERBOSE is non-nil, query the user rather than using default parameters."
 	(if (yes-or-no-p (format
 			  "%s is not up-to-date.  Get latest version? "
 			  (file-name-nondirectory file)))
-	    (vc-checkout file (eq (vc-checkout-model file) 'implicit) "")
+	    (vc-checkout file (eq (vc-checkout-model file) 'implicit) t)
 	  (if (and (not (eq (vc-checkout-model file) 'implicit))
 		   (yes-or-no-p "Lock this version? "))
 	      (vc-checkout file t)
@@ -2122,25 +2110,34 @@ There is a special command, `*l', to mark all files currently locked."
   ;; The following is slightly modified from dired.el,
   ;; because file lines look a bit different in vc-dired-mode.
   (set (make-local-variable 'dired-move-to-filename-regexp)
-       (let*
-          ((l "\\([A-Za-z]\\|[^\0-\177]\\)")
-           ;; In some locales, month abbreviations are as short as 2 letters,
-           ;; and they can be padded on the right with spaces.
-           (month (concat l l "+ *"))
-           ;; Recognize any non-ASCII character.
-           ;; The purpose is to match a Kanji character.
-           (k "[^\0-\177]")
-           ;; (k "[^\x00-\x7f\x80-\xff]")
-           (s " ")
-           (yyyy "[0-9][0-9][0-9][0-9]")
-           (mm "[ 0-1][0-9]")
-           (dd "[ 0-3][0-9]")
-           (HH:MM "[ 0-2][0-9]:[0-5][0-9]")
-           (western (concat "\\(" month s dd "\\|" dd s month "\\)"
-                            s "\\(" HH:MM "\\|" s yyyy"\\|" yyyy s "\\)"))
-           (japanese (concat mm k s dd k s "\\(" s HH:MM "\\|" yyyy k "\\)")))
-	 ;; the .* below ensures that we find the last match on a line
-         (concat ".*" s "\\(" western "\\|" japanese "\\)" s)))
+  (let* ((l "\\([A-Za-z]\\|[^\0-\177]\\)")
+         ;; In some locales, month abbreviations are as short as 2 letters,
+         ;; and they can be followed by ".".
+         (month (concat l l "+\\.?"))
+         (s " ")
+         (yyyy "[0-9][0-9][0-9][0-9]")
+         (dd "[ 0-3][0-9]")
+         (HH:MM "[ 0-2][0-9]:[0-5][0-9]")
+         (seconds "[0-6][0-9]\\([.,][0-9]+\\)?")
+         (zone "[-+][0-2][0-9][0-5][0-9]")
+         (iso-mm-dd "[01][0-9]-[0-3][0-9]")
+         (iso-time (concat HH:MM "\\(:" seconds "\\( ?" zone "\\)?\\)?"))
+         (iso (concat "\\(\\(" yyyy "-\\)?" iso-mm-dd "[ T]" iso-time
+                      "\\|" yyyy "-" iso-mm-dd "\\)"))
+         (western (concat "\\(" month s "+" dd "\\|" dd "\\.?" s month "\\)"
+                          s "+"
+                          "\\(" HH:MM "\\|" yyyy "\\)"))
+         (western-comma (concat month s "+" dd "," s "+" yyyy))
+         ;; Japanese MS-Windows ls-lisp has one-digit months, and
+         ;; omits the Kanji characters after month and day-of-month.
+         (mm "[ 0-1]?[0-9]")
+         (japanese
+          (concat mm l "?" s dd l "?" s "+"
+                  "\\(" HH:MM "\\|" yyyy l "?" "\\)")))
+    ;; the .* below ensures that we find the last match on a line
+    (concat ".*" s
+            "\\(" western "\\|" western-comma "\\|" japanese "\\|" iso "\\)"
+            s "+")))
   (and (boundp 'vc-dired-switches)
        vc-dired-switches
        (set (make-local-variable 'dired-actual-switches)

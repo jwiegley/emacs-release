@@ -1054,7 +1054,7 @@ Argument NUM is the number of characters to delete."
 Repeat the most recent FIND command.  (The Emacs kill ring is used as
 the CUT buffer.)  
 Argument NUM is the repeat count.  A positive value indicates the of times
-to repeat the substitution.  A negative argument means replace all occurances
+to repeat the substitution.  A negative argument means replace all occurrences
 of the search text."
   (interactive "p")
   (cond ((or edt-select-mode (edt-check-match))
@@ -1233,7 +1233,7 @@ Argument NUM is the number of form feeds to insert."
 
 (defun edt-tab-insert (num)
   "Insert tab character at cursor position.
-Argument NUM is the the number of tabs to insert."
+Argument NUM is the number of tabs to insert."
   (interactive "*p")
   (edt-check-prefix num)
   (while (> num 0)

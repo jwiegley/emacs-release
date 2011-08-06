@@ -102,8 +102,8 @@
 ;; <URL:http://www.unlv.edu/chimera/>, Arena
 ;; <URL:ftp://ftp.yggdrasil.com/pub/dist/web/arena> and Amaya
 ;; <URL:ftp://ftp.w3.org/pub/amaya>.  mMosaic
-;; <URL:ftp://sig.enst.fr/pub/multicast/mMosaic/>,
-;; <URL:http://sig.enst.fr/~dauphin/mMosaic/> (with development
+;; <URL:ftp://ftp.enst.fr/pub/mbone/mMosaic/>,
+;; <URL:http://perso.enst.fr/~dauphin/mMosaic/> (with development
 ;; support for Java applets and multicast) can be used like Mosaic by
 ;; setting `browse-url-mosaic-program' appropriately.
 
@@ -661,7 +661,9 @@ to use."
   (interactive "e")
   (save-excursion
     (mouse-set-point event)
-    (browse-url-at-point browse-url-new-window-flag)))
+    ;; This handles browse-url-new-window-flag properly
+    ;; when it gets no arg.
+    (browse-url-at-point)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Browser-specific commands

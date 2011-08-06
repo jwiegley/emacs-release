@@ -2378,7 +2378,7 @@ See `term-prompt-regexp'."
 ;;; your cursor over a string that's a filename and have it taken as default.
 ;;;
 ;;; If the command is given in a file buffer whose major mode is in
-;;; SOURCE-MODES, then the the filename is the default file, and the
+;;; SOURCE-MODES, then the filename is the default file, and the
 ;;; file's directory is the default directory.
 ;;;
 ;;; If the buffer isn't a source file buffer (e.g., it's the process buffer),
@@ -2830,11 +2830,11 @@ See `term-prompt-regexp'."
 			   ((eq char ?\^G)
 			    (beep t)) ; Bell
 			   ((eq char ?\032)
-			    (let ((end (string-match "\r?$" str i)))
+			    (let ((end (string-match "\r?\n" str i)))
 			      (if end
-				  (progn (funcall term-command-hook
-						  (substring str (1+ i) end))
-					 (setq i (match-end 0)))
+				  (funcall term-command-hook
+					   (prog1 (substring str (1+ i) end)
+					     (setq i (match-end 0))))
 				(setq term-terminal-parameter
 				      (substring str i))
 				(setq term-terminal-state 4)

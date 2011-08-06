@@ -1,3 +1,36 @@
+2003-03-18  Francesco Potort,Al(B  <pot@gnu.org>
+
+	* Version 21.3 released.
+
+2002-12-18  Andrew Innes  <andrewi@gnu.org>
+
+	* makefile.w32-in ($(DOC)): Use -o and -a options to make-docfile,
+	because GNU make doesn't append when using >> redirection.
+
+2002-12-02  Richard M. Stallman  <rms@gnu.org>
+
+	* emacsclient.c (main): Test HAVE_GETCWD, not BSD_SYSTEM.
+
+2002-06-05  Francesco Potorti`  <pot@gnu.org>
+
+	* etags.c (main): Avoid a buffer overrun with sprintf.
+
+2002-05-31  Paul Eggert  <eggert@twinsun.com>
+
+	* etags.c (main): Use `sort -o TAGFILE TAGFILE' instead of
+	`sort TAGFILE -o TAGFILE', as POSIX 1003.1-2001 disallows
+	the latter usage.
+
+2002-05-31  Richard M. Stallman  <rms@gnu.org>
+
+	* Makefile.in (LIBS_MAIL): Renamed from LIB_MAIL.
+	(LIBS_MOVE): Renamed from MOVE_LIBS.
+
+2002-05-17  Eli Zaretskii  <eliz@is.elta.co.il>
+
+	* pop.c (socket_connection): Move the code to resolve the POP
+	host right before trying to connect with it.
+
 2002-03-16  Eli Zaretskii  <eliz@is.elta.co.il>
 
 	* Version 21.2 released.

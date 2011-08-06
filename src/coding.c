@@ -673,9 +673,16 @@ detect_coding_emacs_mule (src, src_end, multibytep)
 
 /* Record one COMPONENT (alternate character or composition rule).  */
 
-#define CODING_ADD_COMPOSITION_COMPONENT(coding, component)	\
-  (coding->cmp_data->data[coding->cmp_data->used++] = component)
-
+#define CODING_ADD_COMPOSITION_COMPONENT(coding, component)		\
+  do {									\
+    coding->cmp_data->data[coding->cmp_data->used++] = component;	\
+    if (coding->cmp_data->used - coding->cmp_data_start			\
+	== COMPOSITION_DATA_MAX_BUNCH_LENGTH)				\
+      {									\
+	CODING_ADD_COMPOSITION_END (coding, coding->produced_char);	\
+	coding->composing = COMPOSITION_NO;				\
+      }									\
+  } while (0)
 
 /* Get one byte from a data pointed by SRC and increment SRC.  If SRC
    is not less than SRC_END, return -1 without incrementing Src.  */
@@ -1319,6 +1326,9 @@ enum iso_code_class_type iso_code_class[256];
 #define SHIFT_OUT_OK(idx) \
   (CODING_SPEC_ISO_INITIAL_DESIGNATION (coding_system_table[idx], 1) >= 0)
 
+#define COMPOSITION_OK(idx)	\
+  (coding_system_table[idx]->composing != COMPOSITION_DISABLED)
+
 /* See the above "GENERAL NOTES on `detect_coding_XXX ()' functions".
    Check if a text is encoded in ISO2022.  If it is, return an
    integer in which appropriate flag bits any of:
@@ -1395,7 +1405,30 @@ detect_coding_iso2022 (src, src_end, multibytep)
 	  else if (c >= '0' && c <= '4')
 	    {
 	      /* ESC <Fp> for start/end composition.  */
-	      mask_found |= CODING_CATEGORY_MASK_ISO;
+	      if (COMPOSITION_OK (CODING_CATEGORY_IDX_ISO_7))
+		mask_found |= CODING_CATEGORY_MASK_ISO_7;
+	      else
+		mask &= ~CODING_CATEGORY_MASK_ISO_7;
+	      if (COMPOSITION_OK (CODING_CATEGORY_IDX_ISO_7_TIGHT))
+		mask_found |= CODING_CATEGORY_MASK_ISO_7_TIGHT;
+	      else
+		mask &= ~CODING_CATEGORY_MASK_ISO_7_TIGHT;
+	      if (COMPOSITION_OK (CODING_CATEGORY_IDX_ISO_8_1))
+		mask_found |= CODING_CATEGORY_MASK_ISO_8_1;
+	      else
+		mask &= ~CODING_CATEGORY_MASK_ISO_8_1;
+	      if (COMPOSITION_OK (CODING_CATEGORY_IDX_ISO_8_2))
+		mask_found |= CODING_CATEGORY_MASK_ISO_8_2;
+	      else
+		mask &= ~CODING_CATEGORY_MASK_ISO_8_2;
+	      if (COMPOSITION_OK (CODING_CATEGORY_IDX_ISO_7_ELSE))
+		mask_found |= CODING_CATEGORY_MASK_ISO_7_ELSE;
+	      else
+		mask &= ~CODING_CATEGORY_MASK_ISO_7_ELSE;
+	      if (COMPOSITION_OK (CODING_CATEGORY_IDX_ISO_8_ELSE))
+		mask_found |= CODING_CATEGORY_MASK_ISO_8_ELSE;
+	      else
+		mask &= ~CODING_CATEGORY_MASK_ISO_8_ELSE;
 	      break;
 	    }
 	  else
@@ -2685,7 +2718,7 @@ encode_coding_iso2022 (coding, source, destination, src_bytes, dst_bytes)
 
 /* Macros to decode or encode a character of Big5 in BIG5.  B1 and B2
    are the 1st and 2nd position-codes of Big5 in BIG5 coding system.
-   C1 and C2 are the 1st and 2nd position-codes of of Emacs' internal
+   C1 and C2 are the 1st and 2nd position-codes of Emacs' internal
    format.  CHARSET is `charset_big5_1' or `charset_big5_2'.  */
 
 /* Number of Big5 characters which have the same code in 1st byte.  */
@@ -3043,7 +3076,7 @@ encode_coding_sjis_big5 (coding, source, destination,
 	  switch (c)
 	    {
 	    case '\r':
-	      if (!coding->mode & CODING_MODE_SELECTIVE_DISPLAY)
+	      if (!(coding->mode & CODING_MODE_SELECTIVE_DISPLAY))
 		{
 		  EMIT_ONE_BYTE (c);
 		  break;
@@ -4317,11 +4350,13 @@ detect_eol (coding, src, src_bytes)
     {
       int src_multibyte = coding->src_multibyte;
       int dst_multibyte = coding->dst_multibyte;
+      struct composition_data *cmp_data = coding->cmp_data;
 
       setup_coding_system (XVECTOR (val)->contents[eol_type], coding);
       coding->src_multibyte = src_multibyte;
       coding->dst_multibyte = dst_multibyte;
       coding->heading_ascii = skip;
+      coding->cmp_data = cmp_data;
     }
 }
 
@@ -4590,7 +4625,7 @@ decode_eol_post_ccl (coding, ptr, bytes)
 	{
 	  /* If the last character is CR, we can't handle it here
 	     because LF will be in the not-yet-decoded source text.
-	     Recorded that the CR is not yet processed.  */
+	     Record that the CR is not yet processed.  */
 	  coding->spec.ccl.cr_carryover = 1;
 	  coding->produced--;
 	  coding->produced_char--;
@@ -4686,6 +4721,8 @@ decode_coding (coding, source, destination, src_bytes, dst_bytes)
      unsigned char *source, *destination;
      int src_bytes, dst_bytes;
 {
+  int extra = 0;
+
   if (coding->type == coding_type_undecided)
     detect_coding (coding, source, src_bytes);
 
@@ -4728,18 +4765,24 @@ decode_coding (coding, source, destination, src_bytes, dst_bytes)
     case coding_type_ccl:
       if (coding->spec.ccl.cr_carryover)
 	{
-	  /* Set the CR which is not processed by the previous call of
-	     decode_eol_post_ccl in DESTINATION.  */
+	  /* Put the CR which was not processed by the previous call
+	     of decode_eol_post_ccl in DESTINATION.  It will be
+	     decoded together with the following LF by the call to
+	     decode_eol_post_ccl below.  */
 	  *destination = '\r';
 	  coding->produced++;
 	  coding->produced_char++;
 	  dst_bytes--;
+	  extra = coding->spec.ccl.cr_carryover;
 	}
-      ccl_coding_driver (coding, source,
-			 destination + coding->spec.ccl.cr_carryover,
+      ccl_coding_driver (coding, source, destination + extra,
 			 src_bytes, dst_bytes, 0);
       if (coding->eol_type != CODING_EOL_LF)
-	decode_eol_post_ccl (coding, destination, coding->produced);
+	{
+	  coding->produced += extra;
+	  coding->produced_char += extra;
+	  decode_eol_post_ccl (coding, destination, coding->produced);
+	}
       break;
 
     default:
@@ -5277,6 +5320,9 @@ coding_restore_composition (coding, obj)
 	      int len = data[0] - 4, j;
 	      Lisp_Object args[MAX_COMPOSITION_COMPONENTS * 2 - 1];
 
+	      if (method == COMPOSITION_WITH_RULE_ALTCHARS
+		  && len % 2 == 0)
+		len --;
 	      for (j = 0; j < len; j++)
 		args[j] = make_number (data[4 + j]);
 	      components = (method == COMPOSITION_WITH_ALTCHARS
@@ -5670,9 +5716,19 @@ code_convert_region (from, from_byte, to, to_byte, coding, encodep, replace)
 		REQUIRE + LEN_BYTE = LEN_BYTE * (NEW / ORIG)
 		REQUIRE = LEN_BYTE * (NEW - ORIG) / ORIG
 	     Here, we are sure that NEW >= ORIG.  */
-	  float ratio = coding->produced - coding->consumed;
-	  ratio /= coding->consumed;
-	  require = len_byte * ratio;
+	  float ratio;
+
+	  if (coding->produced <= coding->consumed)
+	    {
+	      /* This happens because of CCL-based coding system with
+		 eol-type CRLF.  */
+	      require = 0;
+	    }
+	  else
+	    {
+	      ratio = (coding->produced - coding->consumed) / coding->consumed;
+	      require = len_byte * ratio;
+	    }
 	  first = 0;
 	}
       if ((src - dst) < (require + 2000))
@@ -5785,12 +5841,16 @@ run_pre_post_conversion_on_str (str, coding, encodep)
      int encodep;
 {
   int count = specpdl_ptr - specpdl;
-  struct gcpro gcpro1;
+  struct gcpro gcpro1, gcpro2;
   int multibyte = STRING_MULTIBYTE (str);
+  Lisp_Object old_deactivate_mark;
 
   record_unwind_protect (Fset_buffer, Fcurrent_buffer ());
   record_unwind_protect (code_convert_region_unwind, Qnil);
-  GCPRO1 (str);
+  /* It is not crucial to specbind this.  */
+  old_deactivate_mark = Vdeactivate_mark;
+  GCPRO2 (str, old_deactivate_mark);
+
   temp_output_buffer_setup (" *code-converting-work*");
   set_buffer_internal (XBUFFER (Vstandard_output));
   /* We must insert the contents of STR as is without
@@ -5810,6 +5870,7 @@ run_pre_post_conversion_on_str (str, coding, encodep)
       call1 (coding->post_read_conversion, make_number (Z - BEG));
     }
   inhibit_pre_post_conversion = 0;
+  Vdeactivate_mark = old_deactivate_mark;
   str = make_buffer_string (BEG, Z, 1);
   return unbind_to (count, str);
 }
@@ -6828,6 +6889,13 @@ which is a list of all the arguments given to this function.")
   if (nargs < 1 + XINT (target_idx))
     error ("Too few arguments for operation: %s",
 	   XSYMBOL (operation)->name->data);
+  /* For write-region, if the 6th argument (i.e. VISIT, the 5th
+     argument to write-region) is string, it must be treated as a
+     target file name.  */
+  if (EQ (operation, Qwrite_region)
+      && nargs > 5
+      && STRINGP (args[5]))
+    target_idx = make_number (4);
   target = args[XINT (target_idx) + 1];
   if (!(STRINGP (target)
 	|| (EQ (operation, Qopen_network_stream) && INTEGERP (target))))
@@ -7344,7 +7412,7 @@ The default value is `select-safe-coding-system' (which see).");
   DEFVAR_LISP ("char-coding-system-table", &Vchar_coding_system_table,
     "Char-table containing safe coding systems of each characters.\n\
 Each element doesn't include such generic coding systems that can\n\
-encode any characters.   They are in the first extra slot.");
+encode any characters.  They are in the first extra slot.");
   Vchar_coding_system_table = Fmake_char_table (Qchar_coding_system, Qnil);
 
   DEFVAR_BOOL ("inhibit-iso-escape-detection",

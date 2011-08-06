@@ -1,8 +1,7 @@
-This is ../info/emacs, produced by makeinfo version 4.0f from
-emacs.texi.
+This is ../info/emacs, produced by makeinfo version 4.3 from emacs.texi.
 
    This is the Fourteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 21.2.
+for Emacs version 21.3.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -405,7 +404,6 @@ GNU Free Documentation License
      of this license document, but changing it is not allowed.
 
 
-
   0. PREAMBLE
 
      The purpose of this License is to make a manual, textbook, or other
@@ -492,7 +490,6 @@ GNU Free Documentation License
      Page" means the text near the most prominent appearance of the
      work's title, preceding the beginning of the body of the text.
 
-
   2. VERBATIM COPYING
 
      You may copy and distribute the Document in any medium, either
@@ -508,7 +505,6 @@ GNU Free Documentation License
 
      You may also lend copies, under the same conditions stated above,
      and you may publicly display copies.
-
 
   3. COPYING IN QUANTITY
 
@@ -549,7 +545,6 @@ GNU Free Documentation License
      the Document well before redistributing any large number of
      copies, to give them a chance to provide you with an updated
      version of the Document.
-
 
   4. MODIFICATIONS
 
@@ -642,7 +637,6 @@ GNU Free Documentation License
      License give permission to use their names for publicity for or to
      assert or imply endorsement of any Modified Version.
 
-
   5. COMBINING DOCUMENTS
 
      You may combine the Document with other documents released under
@@ -668,7 +662,6 @@ GNU Free Documentation License
      "Acknowledgements", and any sections entitled "Dedications."  You
      must delete all sections entitled "Endorsements."
 
-
   6. COLLECTIONS OF DOCUMENTS
 
      You may make a collection consisting of the Document and other
@@ -683,7 +676,6 @@ GNU Free Documentation License
      a copy of this License into the extracted document, and follow
      this License in all other respects regarding verbatim copying of
      that document.
-
 
   7. AGGREGATION WITH INDEPENDENT WORKS
 
@@ -704,7 +696,6 @@ GNU Free Documentation License
      aggregate.  Otherwise they must appear on covers around the whole
      aggregate.
 
-
   8. TRANSLATION
 
      Translation is considered a kind of modification, so you may
@@ -718,7 +709,6 @@ GNU Free Documentation License
      disagreement between the translation and the original English
      version of this License, the original English version will prevail.
 
-
   9. TERMINATION
 
      You may not copy, modify, sublicense, or distribute the Document
@@ -728,7 +718,6 @@ GNU Free Documentation License
      License.  However, parties who have received copies, or rights,
      from you under this License will not have their licenses
      terminated so long as such parties remain in full compliance.
-
 
  10. FUTURE REVISIONS OF THIS LICENSE
 

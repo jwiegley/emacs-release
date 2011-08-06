@@ -1,4 +1,4 @@
-This is ../info/pcl-cvs, produced by makeinfo version 4.0 from
+This is ../info/pcl-cvs, produced by makeinfo version 4.2 from
 pcl-cvs.texi.
 
 INFO-DIR-SECTION Emacs
@@ -742,7 +742,7 @@ File: pcl-cvs,  Node: Adding and removing files,  Next: Undoing changes,  Prev: 
 Adding and removing files
 =========================
 
-   The following commands are available to make it easy to add fuiles to
+   The following commands are available to make it easy to add files to
 and remove them from the CVS repository.
 
 `a'
@@ -1392,21 +1392,21 @@ Node: Committing changes26113
 Node: Editing files28020
 Node: Getting info about files28923
 Node: Adding and removing files29429
-Node: Undoing changes30693
-Node: Removing handled entries31153
-Node: Ignoring files31998
-Node: Viewing differences32543
-Node: Invoking Ediff33664
-Node: Updating files34504
-Node: Tagging files34757
-Node: Miscellaneous commands35520
-Node: Log Edit Mode36422
-Node: Log View Mode37759
-Node: Customization38329
-Node: Customizing Faces41955
-Node: Bugs42724
-Node: Function and Variable Index44270
-Node: Concept Index49251
-Node: Key Index55054
+Node: Undoing changes30692
+Node: Removing handled entries31152
+Node: Ignoring files31997
+Node: Viewing differences32542
+Node: Invoking Ediff33663
+Node: Updating files34503
+Node: Tagging files34756
+Node: Miscellaneous commands35519
+Node: Log Edit Mode36421
+Node: Log View Mode37758
+Node: Customization38328
+Node: Customizing Faces41954
+Node: Bugs42723
+Node: Function and Variable Index44269
+Node: Concept Index49250
+Node: Key Index55053
 
 End Tag Table

@@ -763,7 +763,7 @@ Note:   This is the header of an rmail file.
 Note:   If you are seeing it in rmail,
 Note:    it means the file has no messages in it.\n\^_")))
 
-;; Decode Babyl formated part at the head of current buffer by
+;; Decode Babyl formatted part at the head of current buffer by
 ;; rmail-file-coding-system, or if it is nil, do auto conversion.
 
 (defun rmail-decode-babyl-format ()
@@ -792,7 +792,8 @@ Note:    it means the file has no messages in it.\n\^_")))
     (unless (memq coding-system
 		  '(undecided undecided-unix))
       (set-buffer-modified-p t)		; avoid locking when decoding
-      (decode-coding-region from to coding-system)
+      (let ((buffer-undo-list t))
+	(decode-coding-region from to coding-system))
       (setq coding-system last-coding-system-used))
     (set-buffer-modified-p modifiedp)
     (setq buffer-file-coding-system nil)

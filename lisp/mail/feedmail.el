@@ -428,7 +428,7 @@ the same Fcc: treatment applies to both Bcc: and Resent-Bcc: lines."
 
 (defcustom feedmail-nuke-body-in-fcc nil
   "*If non-nil remove body of message in copies saved via Fcc:.
-If an positive integer value, leave (up to) that many lines of the
+If a positive integer value, leave (up to) that many lines of the
 beginning of the body intact.  The result is that the Fcc: copy will
 consist only of the message headers, serving as a sort of an outgoing
 message log."
@@ -845,7 +845,7 @@ doesn't end with a slash.  Default, except on VMS, is \"$HOME/mail/q\"."
   (if (memq system-type '(axp-vms vax-vms))
       (expand-file-name (concat (getenv "HOME") "[.MAIL.DRAFT]"))
     (concat (getenv "HOME") "/mail/draft"))
-  "*Name of an directory where draft messages will be queued.
+  "*Name of a directory where draft messages will be queued.
 Directory will be created if necessary.  Should be a string that
 doesn't end with a slash.  Default, except on VMS, is \"$HOME/mail/draft\"."
   :group 'feedmail-queue
@@ -1278,7 +1278,7 @@ function, for example, to archive all of your sent messages someplace
 
 
 (defvar feedmail-is-a-resend nil
-  "*Non-nil means the the message is a Resend (in the RFC-822 sense).
+  "*Non-nil means the message is a Resend (in the RFC-822 sense).
 This affects the composition of certain headers.  feedmail sets this
 variable as soon as it starts prepping the message text buffer, so any
 user-supplied functions can rely on it.  Users shouldn't set or change this

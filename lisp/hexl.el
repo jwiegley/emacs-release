@@ -124,7 +124,7 @@ and \"-de\" when dehexlifying a buffer."
 (defun hexl-mode (&optional arg)
   "\\<hexl-mode-map>A mode for editing binary files in hex dump format.
 This is not an ordinary major mode; it alters some aspects
-if the current mode's behavior, but not all; also, you can exit
+of the current mode's behavior, but not all; also, you can exit
 Hexl mode and return to the previous mode using `hexl-mode-exit'.
 
 This function automatically converts a buffer into the hexl format
@@ -873,6 +873,7 @@ Customize the variable `hexl-follow-ascii' to disable this feature."
   (substitute-key-definition 'self-insert-command 'hexl-self-insert-command
 			     hexl-mode-map (current-global-map))
 
+  (define-key hexl-mode-map "\C-m" 'hexl-self-insert-command)
   (define-key hexl-mode-map [left] 'hexl-backward-char)
   (define-key hexl-mode-map [right] 'hexl-forward-char)
   (define-key hexl-mode-map [up] 'hexl-previous-line)

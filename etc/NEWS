@@ -1,9 +1,50 @@
-GNU Emacs NEWS -- history of user-visible changes.  2001-03-15
-Copyright (C) 1999, 2000, 2001 Free Software Foundation, Inc.
+GNU Emacs NEWS -- history of user-visible changes.  2002-12-08
+Copyright (C) 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 See the end for copying conditions.
 
 Please send Emacs bug reports to bug-gnu-emacs@gnu.org.
 For older news, see the file ONEWS
+
+
+* Installation changes in Emacs 21.3
+
+** Support for GNU/Linux on little-endian MIPS and on IBM S390 has
+been added.
+
+
+* Changes in Emacs 21.3
+
+** The obsolete C mode (c-mode.el) has been removed to avoid problems
+with Custom.
+
+** UTF-16 coding systems are available, encoding the same characters
+as mule-utf-8.  Coding system `utf-16-le-dos' is useful as the value
+of `selection-coding-system' in MS Windows, allowing you to paste
+multilingual text from the clipboard.  Set it interactively with
+C-x RET x or in .emacs with `(set-selection-coding-system 'utf-16-le-dos)'.
+
+** There is a new language environment for UTF-8 (set up automatically
+in UTF-8 locales).
+
+** Translation tables are available between equivalent characters in
+different Emacs charsets -- for instance `e with acute' coming from the
+Latin-1 and Latin-2 charsets.  User options `unify-8859-on-encoding-mode'
+and `unify-8859-on-decoding-mode' respectively turn on translation
+between ISO 8859 character sets (`unification') on encoding
+(e.g. writing a file) and decoding (e.g. reading a file).  Note that
+`unify-8859-on-encoding-mode' is useful and safe, but
+`unify-8859-on-decoding-mode' can cause text to change when you read
+it and write it out again without edits, so it is not generally advisable.
+By default `unify-8859-on-encoding-mode' is turned on.
+
+** In Emacs running on the X window system, the default value of
+`selection-coding-system' is now `compound-text-with-extensions'.
+
+If you want the old behavior, set selection-coding-system to
+compound-text, which may be significantly more efficient.  Using
+compound-text-with-extensions seems to be necessary only for decoding
+text from applications under XFree86 4.2, whose behaviour is actually
+contrary to the compound text specification.
 
 
 * Installation changes in Emacs 21.2
@@ -15,15 +56,13 @@ For older news, see the file ONEWS
 
 * Changes in Emacs 21.2
 
-** Emacs now supports ICCCM Extended Segments in X selections.
+** Emacs now supports compound-text extended segments in X selections.
 
-Some versions of X, notably XFree86, use Extended Segments to encode
-in X selections characters that belong to character sets which are not
-part of the list of standard charsets supported by the ICCCM spec.
-Examples of such non-standard character sets include ISO 8859-14, ISO
-8859-15, KOI8-R, and BIG5.  To paste selections with such characters
-into Emacs, use the new coding system compound-text-with-extensions as
-the value of selection-coding-system.
+X applications can use `extended segments' to encode characters in
+compound text that belong to character sets which are not part of the
+list of approved standard encodings for X, e.g. Big5.  To paste
+selections with such characters into Emacs, use the new coding system
+compound-text-with-extensions as the value of selection-coding-system.
 
 ** The default values of `tooltip-delay' and `tooltip-hide-delay'
 were changed.
@@ -2725,7 +2764,7 @@ CHAR
 
 `(minimal-match SEXP)'
      produce a non-greedy regexp for SEXP.  Normally, regexps matching
-     zero or more occurrances of something are \"greedy\" in that they
+     zero or more occurrences of something are \"greedy\" in that they
      match as much as they can, as long as the overall regexp can
      still match.  A non-greedy regexp matches as little as possible.
 
@@ -4153,16 +4192,16 @@ support strings as DATA, some types allow additional types of DATA.
 **** XBM, image type `xbm'.
 
 XBM images don't require an external library.  Additional image
-properties supported are
+properties supported are:
 
 `:foreground FG'
 
 FG must be a string specifying the image foreground color, or nil
-meaning to use the default.  Default is the frame's foreground.
+meaning to use the default.  Default is the frame's foreground color.
 
 `:background BG'
 
-BG must be a string specifying the image foreground color, or nil
+BG must be a string specifying the image background color, or nil
 meaning to use the default.  Default is the frame's background color.
 
 XBM images can be constructed from data instead of file.  In this
@@ -4218,23 +4257,23 @@ to display compressed images.
 
 PBM images don't require an external library.  Color, gray-scale and
 mono images are supported.  Additional image properties supported for
-mono images are
+mono images are:
 
 `:foreground FG'
 
 FG must be a string specifying the image foreground color, or nil
-meaning to use the default.  Default is the frame's foreground.
+meaning to use the default.  Default is the frame's foreground color.
 
 `:background FG'
 
-BG must be a string specifying the image foreground color, or nil
+BG must be a string specifying the image background color, or nil
 meaning to use the default.  Default is the frame's background color.
 
 **** JPEG, image type `jpeg'
 
 Support for JPEG images requires the external library `libjpeg',
-package `jpegsrc.v6a.tar.gz', or later.  Additional image properties
-are:
+package `jpegsrc.v6a.tar.gz', or later.  There are no additional image
+properties defined.
 
 **** TIFF, image type `tiff'
 
@@ -9299,7 +9338,7 @@ select one of those items.
 ----------------------------------------------------------------------
 Copyright information:
 
-Copyright (C) 1999, 2000, 2001 Free Software Foundation, Inc.
+Copyright (C) 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
    Permission is granted to anyone to make or distribute verbatim copies
    of this document as received, in any medium, provided that the

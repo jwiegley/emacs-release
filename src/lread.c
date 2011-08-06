@@ -489,10 +489,6 @@ read_filtered_event (no_switch_frame, ascii_required, error_nonascii,
   if (! NILP (delayed_switch_frame))
     unread_switch_frame = delayed_switch_frame;
 
-#ifdef HAVE_WINDOW_SYSTEM
-  if (display_hourglass_p)
-    start_hourglass ();
-#endif
   return val;
 }
 
@@ -3359,9 +3355,28 @@ init_lread ()
 	  Vload_path = decode_env_path (0, normal);
 	  if (!NILP (Vinstallation_directory))
 	    {
+	      Lisp_Object tem, tem1, sitelisp;
+
+	      /* Remove site-lisp dirs from path temporarily and store
+		 them in sitelisp, then conc them on at the end so
+		 they're always first in path.  */
+	      sitelisp = Qnil;
+	      while (1)
+		{
+		  tem = Fcar (Vload_path);
+		  tem1 = Fstring_match (build_string ("site-lisp"),
+					tem, Qnil);
+		  if (!NILP (tem1))
+		    {
+		      Vload_path = Fcdr (Vload_path);
+		      sitelisp = Fcons (tem, sitelisp);
+		    }
+		  else
+		    break;
+		}
+
 	      /* Add to the path the lisp subdir of the
 		 installation dir, if it exists.  */
-	      Lisp_Object tem, tem1;
 	      tem = Fexpand_file_name (build_string ("lisp"),
 				       Vinstallation_directory);
 	      tem1 = Ffile_exists_p (tem);
@@ -3370,7 +3385,7 @@ init_lread ()
 		  if (NILP (Fmember (tem, Vload_path)))
 		    {
 		      turn_off_warning = 1;
-		      Vload_path = nconc2 (Vload_path, Fcons (tem, Qnil));
+		      Vload_path = Fcons (tem, Vload_path);
 		    }
 		}
 	      else
@@ -3385,7 +3400,7 @@ init_lread ()
 	      if (!NILP (tem1))
 		{
 		  if (NILP (Fmember (tem, Vload_path)))
-		    Vload_path = nconc2 (Vload_path, Fcons (tem, Qnil));
+		    Vload_path = Fcons (tem, Vload_path);
 		}
 
 	      /* Add site-list under the installation dir, if it exists.  */
@@ -3395,7 +3410,7 @@ init_lread ()
 	      if (!NILP (tem1))
 		{
 		  if (NILP (Fmember (tem, Vload_path)))
-		    Vload_path = nconc2 (Vload_path, Fcons (tem, Qnil));
+		    Vload_path = Fcons (tem, Vload_path);
 		}
 
 	      /* If Emacs was not built in the source directory,
@@ -3423,21 +3438,23 @@ init_lread ()
 					       Vsource_directory);
 
 		      if (NILP (Fmember (tem, Vload_path)))
-			Vload_path = nconc2 (Vload_path, Fcons (tem, Qnil));
+			Vload_path = Fcons (tem, Vload_path);
 
 		      tem = Fexpand_file_name (build_string ("leim"),
 					       Vsource_directory);
 
 		      if (NILP (Fmember (tem, Vload_path)))
-			Vload_path = nconc2 (Vload_path, Fcons (tem, Qnil));
+			Vload_path = Fcons (tem, Vload_path);
 
 		      tem = Fexpand_file_name (build_string ("site-lisp"),
 					       Vsource_directory);
 
 		      if (NILP (Fmember (tem, Vload_path)))
-			Vload_path = nconc2 (Vload_path, Fcons (tem, Qnil));
+			Vload_path = Fcons (tem, Vload_path);
 		    }
 		}
+	      if (!NILP (sitelisp))
+		Vload_path = nconc2 (Fnreverse (sitelisp), Vload_path);
 	    }
 	}
     }

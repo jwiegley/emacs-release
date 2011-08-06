@@ -1,4 +1,4 @@
-This is ../info/idlwave, produced by makeinfo version 4.0 from
+This is ../info/idlwave, produced by makeinfo version 4.2 from
 idlwave.texi.
 
 INFO-DIR-SECTION Emacs
@@ -166,17 +166,16 @@ together and form a complete development environment.
    Here are a number of screenshots showing IDLWAVE in action.
 
    * XEmacs 21.1 with formatted and fontified code
-     (http://www.strw.leidenuniv.nl/~dominik/Tools/idlwave/font-lock.gif)
+     (http://idlwave.org/screenshots/font-lock.gif)
 
    * XEmacs 21.1 displaying routine info
-     (http://www.strw.leidenuniv.nl/~dominik/Tools/idlwave/rinfo.gif)
+     (http://idlwave.org/screenshots/rinfo.gif)
 
    * XEmacs 21.1 completing a keyword
-     (http://www.strw.leidenuniv.nl/~dominik/Tools/idlwave/complete.gif)
+     (http://idlwave.org/screenshots/complete.gif)
 
    * XEmacs 21.1 with debugging toolbar; execution stopped at a
-     breakpoint
-     (http://www.strw.leidenuniv.nl/~dominik/Tools/idlwave/shell.gif)
+     breakpoint (http://idlwave.org/screenshots/shell.gif)
 
    In this manual, each section contains a list of user options related
 to the subject.  Don't be confused by the shear number of options
@@ -856,10 +855,10 @@ the docs directly, without additional browsing and scrolling.  For this
 online help to work, you need an ASCII version of the IDL documentation
 which is not part of the standard IDLWAVE distribution.  The required
 files can be downloaded from the maintainers webpage
-(http://www.strw.leidenuniv.nl/~dominik/Tools/idlwave).  As the text is
-extracted from PDF files, the formatting of the help text is good for
-normal text, but graphics and multiline equations will not be well
-represented.  See also *Note Documentation Scan::.
+(http://idlwave.org/).  As the text is extracted from PDF files, the
+formatting of the help text is good for normal text, but graphics and
+multiline equations will not be well represented.  See also *Note
+Documentation Scan::.
 
    For routines which are not documented in the IDL manual (for example
 your own routines), the source code is used as help text.  If the
@@ -1745,9 +1744,8 @@ distributed with XEmacs/Emacs and have to be installed separately(1)
 (*note Installing Online Help::).
 
    You can also download IDLWAVE and install it yourself from the
-maintainers webpage
-(http://www.strw.leidenuniv.nl/~dominik/Tools/idlwave).  Follow the
-instructions in the INSTALL file.
+maintainers webpage (http://idlwave.org/).  Follow the instructions in
+the INSTALL file.
 
    ---------- Footnotes ----------
 
@@ -1763,9 +1761,8 @@ Installing Online Help
    If you want to use the online help display, two additional files (an
 ASCII version of the IDL documentation and a topics/code file) must be
 installed.  These files can also be downloaded from the maintainers
-webpage (http://www.strw.leidenuniv.nl/~dominik/Tools/idlwave).  You
-need to place the files somewhere on your system and tell IDLWAVE where
-they are with
+webpage (http://idlwave.org/).  You need to place the files somewhere
+on your system and tell IDLWAVE where they are with
 
      (setq idlwave-help-directory "/path/to/help/files/")
 
@@ -2533,51 +2530,51 @@ Index
 Tag Table:
 Node: Top1409
 Node: Introduction4402
-Node: IDLWAVE in a Nutshell7408
-Node: Getting Started9888
-Node: The IDLWAVE Major Mode23952
-Node: Code Formatting25013
-Node: Code Indentation25427
-Node: Comment Indentation26920
-Node: Continuation Lines27877
-Node: Syntax Highlighting30177
-Node: Routine Info30960
-Ref: Routine Info-Footnote-136377
-Node: Online Help36552
-Node: Completion41795
-Node: Routine Source47709
-Node: Resolving Routines48526
-Node: Code Templates49407
-Node: Actions50892
-Node: Block Boundary Check52639
-Node: Padding Operators53669
-Ref: Padding Operators-Footnote-155019
-Node: Case Changes55107
-Node: Doc Header56454
-Node: Motion Commands57490
-Node: Misc Options58257
-Node: The IDLWAVE Shell58841
-Ref: The IDLWAVE Shell-Footnote-159702
-Node: Starting the Shell59814
-Node: Using the Shell61912
-Ref: Using the Shell-Footnote-165332
-Node: Debugging IDL Programs65520
-Node: Compiling Programs67650
-Node: Breakpoints and Stepping69175
-Node: Examining Variables71625
-Node: Installation73787
-Node: Installing IDLWAVE74123
-Ref: Installing IDLWAVE-Footnote-174935
-Node: Installing Online Help75042
-Node: Upgrading from idl.el75639
-Node: Acknowledgement76781
-Node: Sources of Routine Info78344
-Node: Routine Definitions79103
-Node: Routine Information Sources80201
-Node: Library Catalog82405
-Node: Load-Path Shadows84950
-Node: Documentation Scan87513
-Node: Configuration Examples88449
-Node: Index93228
+Node: IDLWAVE in a Nutshell7315
+Node: Getting Started9795
+Node: The IDLWAVE Major Mode23859
+Node: Code Formatting24920
+Node: Code Indentation25334
+Node: Comment Indentation26827
+Node: Continuation Lines27784
+Node: Syntax Highlighting30084
+Node: Routine Info30867
+Ref: Routine Info-Footnote-136284
+Node: Online Help36459
+Node: Completion41669
+Node: Routine Source47583
+Node: Resolving Routines48400
+Node: Code Templates49281
+Node: Actions50766
+Node: Block Boundary Check52513
+Node: Padding Operators53543
+Ref: Padding Operators-Footnote-154893
+Node: Case Changes54981
+Node: Doc Header56328
+Node: Motion Commands57364
+Node: Misc Options58131
+Node: The IDLWAVE Shell58715
+Ref: The IDLWAVE Shell-Footnote-159576
+Node: Starting the Shell59688
+Node: Using the Shell61786
+Ref: Using the Shell-Footnote-165206
+Node: Debugging IDL Programs65394
+Node: Compiling Programs67524
+Node: Breakpoints and Stepping69049
+Node: Examining Variables71499
+Node: Installation73661
+Node: Installing IDLWAVE73997
+Ref: Installing IDLWAVE-Footnote-174776
+Node: Installing Online Help74883
+Node: Upgrading from idl.el75447
+Node: Acknowledgement76589
+Node: Sources of Routine Info78152
+Node: Routine Definitions78911
+Node: Routine Information Sources80009
+Node: Library Catalog82213
+Node: Load-Path Shadows84758
+Node: Documentation Scan87321
+Node: Configuration Examples88257
+Node: Index93036
 
 End Tag Table

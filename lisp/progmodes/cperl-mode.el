@@ -465,7 +465,7 @@ than 1 and nil will probably not work."
 
 (defcustom cperl-break-one-line-blocks-when-indent t
   "*Non-nil means that one-line if/unless/while/until/for/foreach BLOCKs
-need to be reformated into multiline ones when indenting a region."
+need to be reformatted into multiline ones when indenting a region."
   :type 'boolean
   :group 'cperl-indentation-details)
 
@@ -516,51 +516,49 @@ when syntaxifying a chunk of buffer."
 				   (repeat symbol)))))
   :group 'cperl-faces)
 
-(if window-system
-    (progn
-      (defvar cperl-dark-background
-	(cperl-choose-color "navy" "os2blue" "darkgreen"))
-      (defvar cperl-dark-foreground
-	(cperl-choose-color "orchid1" "orange"))
+(defvar cperl-dark-background
+  (cperl-choose-color "navy" "os2blue" "darkgreen"))
+(defvar cperl-dark-foreground
+  (cperl-choose-color "orchid1" "orange"))
 
-      (defface cperl-nonoverridable-face
-	`((((class grayscale) (background light))
-	   (:background "Gray90" :italic t :underline t))
-	  (((class grayscale) (background dark))
-	   (:foreground "Gray80" :italic t :underline t :bold t))
-	  (((class color) (background light))
-	   (:foreground "chartreuse3"))
-	  (((class color) (background dark))
-	   (:foreground ,cperl-dark-foreground))
-	  (t (:bold t :underline t)))
-	"Font Lock mode face used to highlight array names."
-	:group 'cperl-faces)
+(defface cperl-nonoverridable-face
+    `((((class grayscale) (background light))
+       (:background "Gray90" :italic t :underline t))
+      (((class grayscale) (background dark))
+       (:foreground "Gray80" :italic t :underline t :bold t))
+      (((class color) (background light))
+       (:foreground "chartreuse3"))
+      (((class color) (background dark))
+       (:foreground ,cperl-dark-foreground))
+      (t (:bold t :underline t)))
+  "Font Lock mode face used to highlight array names."
+  :group 'cperl-faces)
 
-      (defface cperl-array-face
-	`((((class grayscale) (background light))
-	   (:background "Gray90" :bold t))
-	  (((class grayscale) (background dark))
-	   (:foreground "Gray80" :bold t))
-	  (((class color) (background light))
-	   (:foreground "Blue" :background "lightyellow2" :bold t))
-	  (((class color) (background dark))
-	   (:foreground "yellow" :background ,cperl-dark-background :bold t))
-	  (t (:bold t)))
-	"Font Lock mode face used to highlight array names."
-	:group 'cperl-faces)
+(defface cperl-array-face
+    `((((class grayscale) (background light))
+       (:background "Gray90" :bold t))
+      (((class grayscale) (background dark))
+       (:foreground "Gray80" :bold t))
+      (((class color) (background light))
+       (:foreground "Blue" :background "lightyellow2" :bold t))
+      (((class color) (background dark))
+       (:foreground "yellow" :background ,cperl-dark-background :bold t))
+      (t (:bold t)))
+  "Font Lock mode face used to highlight array names."
+  :group 'cperl-faces)
 
-      (defface cperl-hash-face
-	`((((class grayscale) (background light))
-	   (:background "Gray90" :bold t :italic t))
-	  (((class grayscale) (background dark))
-	   (:foreground "Gray80" :bold t :italic t))
-	  (((class color) (background light))
-	   (:foreground "Red" :background "lightyellow2" :bold t :italic t))
-	  (((class color) (background dark))
-	   (:foreground "Red" :background ,cperl-dark-background :bold t :italic t))
-	  (t (:bold t :italic t)))
-	"Font Lock mode face used to highlight hash names."
-	:group 'cperl-faces)))
+(defface cperl-hash-face
+    `((((class grayscale) (background light))
+       (:background "Gray90" :bold t :italic t))
+      (((class grayscale) (background dark))
+       (:foreground "Gray80" :bold t :italic t))
+      (((class color) (background light))
+       (:foreground "Red" :background "lightyellow2" :bold t :italic t))
+      (((class color) (background dark))
+       (:foreground "Red" :background ,cperl-dark-background :bold t :italic t))
+      (t (:bold t :italic t)))
+  "Font Lock mode face used to highlight hash names."
+  :group 'cperl-faces)
 
 
 
@@ -578,7 +576,7 @@ For best results apply to an older Emacs the patches from
   ftp://ftp.math.ohio-state.edu/pub/users/ilya/cperl-mode/patches
 \(this upgrades syntax-parsing abilities of RMS Emaxen v19.34 and
 v20.2 up to the level of RMS Emacs v20.3 - a must for a good Perl
-mode.)  You will not get much from XEmacs, it's syntax abilities are
+mode.)  You will not get much from XEmacs, its syntax abilities are
 too primitive.
 
 Get support packages choose-color.el (or font-lock-extra.el before
@@ -595,7 +593,7 @@ want it to: put the following into your .emacs file:
 
   (defalias 'perl-mode 'cperl-mode)
 
-Get perl5-info from 
+Get perl5-info from
   $CPAN/doc/manual/info/perl-info.tar.gz
 older version was on
   http://www.metronet.com:70/9/perlinfo/perl5/manual/perl5-info.tar.gz
@@ -864,7 +862,7 @@ B) Speed of editing operations.
 				syntaxically to be not code
   `font-lock-constant-face'	HERE-doc delimiters, labels, delimiters of
 				2-arg operators s/y/tr/ or of RExen,
-  `font-lock-function-name-face' Special-cased m// and s//foo/, _ as 
+  `font-lock-function-name-face' Special-cased m// and s//foo/, _ as
 				a target of a file tests, file tests,
 				subroutine names at the moment of definition
 				(except those conflicting with Perl operators),
@@ -2617,7 +2615,7 @@ and closing parentheses and brackets.."
 		       (if (eq (preceding-char) ?\))
 			   (forward-sexp -1))
 		       ;; In the case it starts a subroutine, indent with
-		       ;; respect to `sub', not with respect to the the
+		       ;; respect to `sub', not with respect to the
 		       ;; first thing on the line, say in the case of
 		       ;; anonymous sub in a hash.
 		       ;;
@@ -3195,22 +3193,22 @@ the sections using `cperl-pod-head-face', `cperl-pod-face',
 		    (put-text-property (cperl-1- b) (point) 'syntax-type 'pod)
 		    (cperl-put-do-not-fontify b (point) t)
 		    ;; mark the non-literal parts as PODs
-		    (if cperl-pod-here-fontify 
+		    (if cperl-pod-here-fontify
 			(cperl-postpone-fontification b (point) 'face face t))
 		    (re-search-forward "\n\n[^ \t\f\n]" e 'toend)
 		    (beginning-of-line)
 		    (setq b (point)))
 		  (put-text-property (cperl-1- (point)) e 'syntax-type 'pod)
 		  (cperl-put-do-not-fontify (point) e t)
-		  (if cperl-pod-here-fontify 
-		      (progn 
+		  (if cperl-pod-here-fontify
+		      (progn
 			;; mark the non-literal parts as PODs
 			(cperl-postpone-fontification (point) e 'face face t)
 			(goto-char bb)
-			(if (looking-at 
+			(if (looking-at
 			     "=[a-zA-Z0-9_]+\\>[ \t]*\\(\\(\n?[^\n]\\)+\\)$")
 			    ;; mark the headers
-			    (cperl-postpone-fontification 
+			    (cperl-postpone-fontification
 			     (match-beginning 1) (match-end 1)
 				  'face head-face))
 			     (while (re-search-forward
@@ -6650,7 +6648,7 @@ We suppose that the regexp is scanned already."
       (set-marker e (1- (point)))
       (goto-char (1+ b))
       (while (re-search-forward "\\(\\\\\\\\\\)\\|(" e t)
-	(cond 
+	(cond
        ((match-beginning 1)		; Skip
 	nil)
        (t				; Group
@@ -6748,7 +6746,7 @@ We suppose that the regexp is scanned already."
 		    (goto-char pos1)
 		    (just-one-space)
 		    (cperl-indent-line))
-		(error "`%s' (EXPR) not with an {BLOCK}" s0)))
+		(error "`%s' (EXPR) not with a {BLOCK}" s0)))
 	  (error "`%s' not with an (EXPR)" s0)))
     (error "Not at `if', `unless', `while', or `unless'")))
 
