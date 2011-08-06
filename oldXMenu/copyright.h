@@ -1,4 +1,3 @@
-/* $Header: /cvsroot/emacs/emacs/oldXMenu/copyright.h,v 1.1 1999/10/03 19:35:25 fx Exp $ */
 /*
 
 Copyright 1985, 1986, 1987 by the Massachusetts Institute of Technology
@@ -17,3 +16,5 @@ without express or implied warranty.
 
 */
 
+/* arch-tag: c689b1bc-a3ba-41a1-baa0-a3622b5445b2
+   (do not change this comment) */

@@ -1,31 +1,33 @@
-This is ../info/ebrowse, produced by makeinfo version 4.2 from
+This is ../info/ebrowse, produced by makeinfo version 4.8 from
 ebrowse.texi.
+
+   This file documents Ebrowse, a C++ class browser for GNU Emacs.
+
+   Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007  Free
+Software Foundation, Inc.
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.2 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, with the Front-Cover texts
+     being "A GNU Manual," and with the Back-Cover Texts as in (a)
+     below.  A copy of the license is included in the section entitled
+     "GNU Free Documentation License" in the Emacs manual.
+
+     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
+     modify this GNU Manual, like GNU software.  Copies published by
+     the Free Software Foundation raise funds for GNU development."
+
+     This document is part of a collection distributed under the GNU
+     Free Documentation License.  If you want to distribute this
+     document separately from the collection, you can do so by adding a
+     copy of the license to the document, as described in section 6 of
+     the license.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Ebrowse: (ebrowse).   A C++ class browser for Emacs.
 END-INFO-DIR-ENTRY
-
-   This file documents Ebrowse, a C++ class browser for GNU Emacs.
-
-   Copyright (C) 2000 Free Software Foundation, Inc.
-
-   Permission is granted to copy, distribute and/or modify this document
-under the terms of the GNU Free Documentation License, Version 1.1 or
-any later version published by the Free Software Foundation; with no
-Invariant Sections, with the Front-Cover texts being "A GNU Manual,"
-and with the Back-Cover Texts as in (a) below.  A copy of the license
-is included in the section entitled "GNU Free Documentation License" in
-the Emacs manual.
-
-   (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-modify this GNU Manual, like GNU software.  Copies published by the Free
-Software Foundation raise funds for GNU development."
-
-   This document is part of a collection distributed under the GNU Free
-Documentation License.  If you want to distribute this document
-separately from the collection, you can do so by adding a copy of the
-license to the document, as described in section 6 of the license.
 
 
 File: ebrowse,  Node: Top,  Next: Overview,  Prev: (dir),  Up: (dir)
@@ -35,21 +37,22 @@ Ebrowse.
 
 * Menu:
 
-* Overview::			What is it and now does it work?
+* Overview::			What is it and how does it work?
 * Generating browser files::	How to process C++ source files
 * Loading a Tree::		How to start browsing
 * Tree Buffers::		Traversing class hierarchies
 * Member Buffers::		Looking at member information
 * Tags-like Functions::		Finding members from source files
+* GNU Free Documentation License:: The license for this documentation.
 * Concept Index::		An entry for each concept defined
 
 
 File: ebrowse,  Node: Overview,  Next: Generating browser files,  Prev: Top,  Up: Top
 
-Introduction
-************
+1 Introduction
+**************
 
-   When working in software projects using C++, I frequently missed
+When working in software projects using C++, I frequently missed
 software support for two things:
 
    * When you get a new class library, or you have to work on source
@@ -135,12 +138,12 @@ for:
 
 File: ebrowse,  Node: Generating browser files,  Next: Loading a Tree,  Prev: Overview,  Up: Top
 
-Processing Source Files
-***********************
+2 Processing Source Files
+*************************
 
-   Before you can start browsing a class hierarchy, you must run the
-parser `ebrowse' on your source files in order to generate a Lisp data
-base describing your program.
+Before you can start browsing a class hierarchy, you must run the parser
+`ebrowse' on your source files in order to generate a Lisp data base
+describing your program.
 
    The operation of `ebrowse' can be tailored with command line
 options.  Under normal circumstances it suffices to let the parser use
@@ -170,8 +173,8 @@ available command line options.
 
 File: ebrowse,  Node: Input files,  Next: Output file,  Prev: Generating browser files,  Up: Generating browser files
 
-Specifying Input Files
-======================
+2.1 Specifying Input Files
+==========================
 
 `file'
      Each file name on the command line tells `ebrowse' to parse that
@@ -202,8 +205,8 @@ work of properly identifying friend functions of a class.
 
 File: ebrowse,  Node: Output file,  Next: Structs and unions,  Prev: Input files,  Up: Generating browser files
 
-Changing the Output File Name
-=============================
+2.2 Changing the Output File Name
+=================================
 
 `--output-file=FILE'
      This option instructs `ebrowse' to generate a Lisp data base with
@@ -226,8 +229,8 @@ Changing the Output File Name
 
 File: ebrowse,  Node: Structs and unions,  Next: Matching,  Prev: Output file,  Up: Generating browser files
 
-Structs and Unions
-==================
+2.3 Structs and Unions
+======================
 
 `--no-structs-or-unions'
      This switch suppresses all classes in the data base declared as
@@ -240,12 +243,12 @@ Structs and Unions
 
 File: ebrowse,  Node: Matching,  Next: Verbosity,  Prev: Structs and unions,  Up: Generating browser files
 
-Regular Expressions
-===================
+2.4 Regular Expressions
+=======================
 
-   The parser `ebrowse' normally writes regular expressions to its
-output file that help the Lisp part of Ebrowse to find functions,
-variables etc. in their source files.
+The parser `ebrowse' normally writes regular expressions to its output
+file that help the Lisp part of Ebrowse to find functions, variables
+etc. in their source files.
 
    You can instruct `ebrowse' to omit these regular expressions by
 calling it with the command line switch `--no-regexps'.
@@ -286,8 +289,8 @@ coding styles are used.
 
 File: ebrowse,  Node: Verbosity,  Prev: Matching,  Up: Generating browser files
 
-Verbose Mode
-============
+2.5 Verbose Mode
+================
 
 `--verbose'
      When this option is specified on the command line, `ebrowse' prints
@@ -301,10 +304,10 @@ Verbose Mode
 
 File: ebrowse,  Node: Loading a Tree,  Next: Tree Buffers,  Prev: Generating browser files,  Up: Top
 
-Starting to Browse
-******************
+3 Starting to Browse
+********************
 
-   You start browsing a class hierarchy parsed by `ebrowse' by just
+You start browsing a class hierarchy parsed by `ebrowse' by just
 finding the `BROWSE' file with `C-x C-f'.
 
    An example of a tree buffer display is shown below.
@@ -330,10 +333,10 @@ where no highlight is displayed.
 
 File: ebrowse,  Node: Tree Buffers,  Next: Member Buffers,  Prev: Loading a Tree,  Up: Top
 
-Tree Buffers
-************
+4 Tree Buffers
+**************
 
-   Class trees are displayed in "tree buffers" which install their own
+Class trees are displayed in "tree buffers" which install their own
 major mode.  Most Emacs keys work in tree buffers in the usual way,
 e.g. you can move around in the buffer with the usual `C-f', `C-v'
 etc., or you can search with `C-s'.
@@ -359,11 +362,11 @@ calls `M-x describe-mode' in both tree and member buffers.
 
 File: ebrowse,  Node: Source Display,  Next: Member Display,  Prev: Tree Buffers,  Up: Tree Buffers
 
-Viewing and Finding Class Declarations
-======================================
+4.1 Viewing and Finding Class Declarations
+==========================================
 
-   You can view or find a class declaration when the cursor is on a
-class name.
+You can view or find a class declaration when the cursor is on a class
+name.
 
 `SPC'
      This command views the class declaration if the database contains
@@ -381,11 +384,11 @@ class name.
 
 File: ebrowse,  Node: Member Display,  Next: Go to Class,  Prev: Source Display,  Up: Tree Buffers
 
-Displaying Members
-==================
+4.2 Displaying Members
+======================
 
-   Ebrowse distinguishes six different kinds of members, each of which
-is displayed as a separate "member list": instance variables, instance
+Ebrowse distinguishes six different kinds of members, each of which is
+displayed as a separate "member list": instance variables, instance
 functions, static variables, static functions, friend functions, and
 types.
 
@@ -432,8 +435,8 @@ with `Mouse-3' on the class name.
 
 File: ebrowse,  Node: Go to Class,  Next: Quitting,  Prev: Member Display,  Up: Tree Buffers
 
-Finding a Class
-===============
+4.3 Finding a Class
+===================
 
 `/'
      This command reads a class name from the minibuffer with
@@ -454,8 +457,8 @@ Finding a Class
 
 File: ebrowse,  Node: Quitting,  Next: File Name Display,  Prev: Go to Class,  Up: Tree Buffers
 
-Burying a Tree Buffer
-=====================
+4.4 Burying a Tree Buffer
+=========================
 
 `q'
      Is a synonym for `M-x bury-buffer'.
@@ -463,8 +466,8 @@ Burying a Tree Buffer
 
 File: ebrowse,  Node: File Name Display,  Next: Expanding and Collapsing,  Prev: Quitting,  Up: Tree Buffers
 
-Displaying File Names
-=====================
+4.5 Displaying File Names
+=========================
 
 `T f'
      This command toggles the display of file names in a tree buffer.
@@ -491,13 +494,13 @@ Displaying File Names
 
 File: ebrowse,  Node: Expanding and Collapsing,  Next: Tree Indentation,  Prev: File Name Display,  Up: Tree Buffers
 
-Expanding and Collapsing a Tree
-===============================
+4.6 Expanding and Collapsing a Tree
+===================================
 
-   You can expand and collapse parts of a tree to reduce the complexity
-of large class hierarchies.  Expanding or collapsing branches of a tree
-has no impact on the functionality of other commands, like `/'.  (See
-also *Note Go to Class::.)
+You can expand and collapse parts of a tree to reduce the complexity of
+large class hierarchies.  Expanding or collapsing branches of a tree has
+no impact on the functionality of other commands, like `/'.  (See also
+*Note Go to Class::.)
 
    Collapsed branches are indicated with an ellipsis following the class
 name like in the example below.
@@ -522,8 +525,8 @@ name like in the example below.
 
 File: ebrowse,  Node: Tree Indentation,  Next: Killing Classes,  Prev: Expanding and Collapsing,  Up: Tree Buffers
 
-Changing the Tree Indentation
-=============================
+4.7 Changing the Tree Indentation
+=================================
 
 `T w'
      This command reads a new indentation width from the minibuffer and
@@ -533,8 +536,8 @@ Changing the Tree Indentation
 
 File: ebrowse,  Node: Killing Classes,  Next: Saving a Tree,  Prev: Tree Indentation,  Up: Tree Buffers
 
-Removing Classes from the Tree
-==============================
+4.8 Removing Classes from the Tree
+==================================
 
 `C-k'
      This command removes the class the cursor is on and all its derived
@@ -544,8 +547,8 @@ Removing Classes from the Tree
 
 File: ebrowse,  Node: Saving a Tree,  Next: Statistics,  Prev: Killing Classes,  Up: Tree Buffers
 
-Saving a Tree
-=============
+4.9 Saving a Tree
+=================
 
 `C-x C-s'
      This command writes a class tree to the file from which it was
@@ -590,10 +593,10 @@ display, like in the following example
 
 File: ebrowse,  Node: Member Buffers,  Next: Tags-like Functions,  Prev: Tree Buffers,  Up: Top
 
-Member Buffers
-**************
+5 Member Buffers
+****************
 
-   "Member buffers" are used to operate on lists of members of a class.
+"Member buffers" are used to operate on lists of members of a class.
 Ebrowse distinguishes six kinds of lists:
 
    * Instance variables (normal member variables);
@@ -633,8 +636,8 @@ buffer: members, classes, and the buffer itself.
 
 File: ebrowse,  Node: Switching Member Lists,  Next: Finding/Viewing,  Prev: Member Buffers,  Up: Member Buffers
 
-Switching Member Lists
-======================
+5.1 Switching Member Lists
+==========================
 
 `L n'
      This command switches the member buffer display to the next member
@@ -670,8 +673,8 @@ context menu.
 
 File: ebrowse,  Node: Finding/Viewing,  Next: Inherited Members,  Prev: Switching Member Lists,  Up: Member Buffers
 
-Finding and Viewing Member Source
-=================================
+5.2 Finding and Viewing Member Source
+=====================================
 
 `RET'
      This command finds the definition of the member the cursor is on.
@@ -699,8 +702,8 @@ menu displayed when clicking `Mouse-2' on a member name.
 
 File: ebrowse,  Node: Inherited Members,  Next: Searching Members,  Prev: Finding/Viewing,  Up: Member Buffers
 
-Display of Inherited Members
-============================
+5.3 Display of Inherited Members
+================================
 
 `D b'
      This command toggles the display of inherited members in the member
@@ -709,8 +712,8 @@ Display of Inherited Members
 
 File: ebrowse,  Node: Searching Members,  Next: Switching to Tree,  Prev: Inherited Members,  Up: Member Buffers
 
-Searching Members
-=================
+5.4 Searching Members
+=====================
 
 `G v'
      Position the cursor on a member whose name is read from the
@@ -736,21 +739,21 @@ with a mouse.
 
 File: ebrowse,  Node: Switching to Tree,  Next: Filters,  Prev: Searching Members,  Up: Member Buffers
 
-Switching to Tree Buffer
-========================
+5.5 Switching to Tree Buffer
+============================
 
-`TAB'
+`<TAB>'
      Pop up the tree buffer to which the member buffer belongs.
 
 `t'
-     Do the same as `TAB' but also position the cursor on the class
+     Do the same as <TAB> but also position the cursor on the class
      displayed in the member buffer.
 
 
 File: ebrowse,  Node: Filters,  Next: Attributes,  Prev: Switching to Tree,  Up: Member Buffers
 
-Filters
-=======
+5.6 Filters
+===========
 
 `F a u'
      This command toggles the display of `public' members.  The `a'
@@ -782,8 +785,8 @@ Filters
 
 File: ebrowse,  Node: Attributes,  Next: Long and Short Display,  Prev: Filters,  Up: Member Buffers
 
-Displaying Member Attributes
-============================
+5.7 Displaying Member Attributes
+================================
 
 `D a'
      Toggle the display of member attributes (default is on).
@@ -821,13 +824,13 @@ Displaying Member Attributes
     `t'
           The member is a function with a throw list.
 
-   This command is also in the buffer's context menu.
+This command is also in the buffer's context menu.
 
 
 File: ebrowse,  Node: Long and Short Display,  Next: Regexp Display,  Prev: Attributes,  Up: Member Buffers
 
-Long and Short Member Display
-=============================
+5.8 Long and Short Member Display
+=================================
 
 `D l'
      This command toggles the member buffer between short and long
@@ -851,8 +854,8 @@ Long and Short Member Display
 
 File: ebrowse,  Node: Regexp Display,  Next: Switching Classes,  Prev: Long and Short Display,  Up: Member Buffers
 
-Display of Regular Expressions
-==============================
+5.9 Display of Regular Expressions
+==================================
 
 `D r'
      This command toggles the long display form from displaying the
@@ -866,8 +869,8 @@ not been produced with the `ebrowse' option `--no-regexps', see *Note
 
 File: ebrowse,  Node: Switching Classes,  Next: Killing/Burying,  Prev: Regexp Display,  Up: Member Buffers
 
-Displaying Another Class
-========================
+5.10 Displaying Another Class
+=============================
 
 `C c'
      This command lets you switch the member buffer to another class.
@@ -893,8 +896,8 @@ Displaying Another Class
 
 File: ebrowse,  Node: Killing/Burying,  Next: Column Width,  Prev: Switching Classes,  Up: Member Buffers
 
-Burying a Member Buffer
-=======================
+5.11 Burying a Member Buffer
+============================
 
 `q'
      This command is a synonym for `M-x bury-buffer'.
@@ -902,8 +905,8 @@ Burying a Member Buffer
 
 File: ebrowse,  Node: Column Width,  Next: Redisplay,  Prev: Killing/Burying,  Up: Member Buffers
 
-Setting the Column Width
-========================
+5.12 Setting the Column Width
+=============================
 
 `D w'
      This command sets the column width depending on the display form
@@ -912,8 +915,8 @@ Setting the Column Width
 
 File: ebrowse,  Node: Redisplay,  Next: Getting Help,  Prev: Column Width,  Up: Member Buffers
 
-Forced Redisplay
-================
+5.13 Forced Redisplay
+=====================
 
 `C-l'
      This command forces a redisplay of the member buffer.  If the width
@@ -928,13 +931,13 @@ File: ebrowse,  Node: Getting Help,  Prev: Redisplay,  Up: Member Buffers
      This key is bound to `describe-mode'.
 
 
-File: ebrowse,  Node: Tags-like Functions,  Next: Concept Index,  Prev: Member Buffers,  Up: Top
+File: ebrowse,  Node: Tags-like Functions,  Next: GNU Free Documentation License,  Prev: Member Buffers,  Up: Top
 
-Tags-like Functions
-*******************
+6 Tags-like Functions
+*********************
 
-   Ebrowse provides tags functions similar to those of the standard
-Emacs Tags facility, but better suited to the needs of C++ programmers.
+Ebrowse provides tags functions similar to those of the standard Emacs
+Tags facility, but better suited to the needs of C++ programmers.
 
 * Menu:
 
@@ -950,15 +953,15 @@ Emacs Tags facility, but better suited to the needs of C++ programmers.
 
 File: ebrowse,  Node: Finding and Viewing,  Next: Position Stack,  Prev: Tags-like Functions,  Up: Tags-like Functions
 
-Finding and Viewing Members
-===========================
+6.1 Finding and Viewing Members
+===============================
 
-   The functions in this section are similar to those described in
-*Note Source Display::, and also in *Note Finding/Viewing::, except that
-they work in a C++ source buffer, not in member and tree buffers created
-by Ebrowse.
+The functions in this section are similar to those described in *Note
+Source Display::, and also in *Note Finding/Viewing::, except that they
+work in a C++ source buffer, not in member and tree buffers created by
+Ebrowse.
 
-`C-c b f'
+`C-c C-m f'
      Find the definition of the member around point.  If you invoke this
      function with a prefix argument, the declaration is searched.
 
@@ -967,52 +970,52 @@ by Ebrowse.
      declaration in front of the member name, this class name is used
      as initial input for the completion.
 
-`C-c b F'
+`C-c C-m F'
      Find the declaration of the member around point.
 
-`C-c b v'
+`C-c C-m v'
      View the definition of the member around point.
 
-`C-c b V'
+`C-c C-m V'
      View the declaration of the member around point.
 
-`C-c b 4 f'
+`C-c C-m 4 f'
      Find a member's definition in another window.
 
-`C-c b 4 F'
+`C-c C-m 4 F'
      Find a member's declaration in another window.
 
-`C-c b 4 v'
+`C-c C-m 4 v'
      View a member's definition in another window.
 
-`C-c b 4 V'
+`C-c C-m 4 V'
      View a member's declaration in another window.
 
-`C-c b 5 f'
+`C-c C-m 5 f'
      Find a member's definition in another frame.
 
-`C-c b 5 F'
+`C-c C-m 5 F'
      Find a member's declaration in another frame.
 
-`C-c b 5 v'
+`C-c C-m 5 v'
      View a member's definition in another frame.
 
-`C-c b 5 V'
+`C-c C-m 5 V'
      View a member's declaration in another frame.
 
 
 File: ebrowse,  Node: Position Stack,  Next: Search & Replace,  Prev: Finding and Viewing,  Up: Tags-like Functions
 
-The Position Stack
-==================
+6.2 The Position Stack
+======================
 
-   When jumping to a member declaration or definition with one of
+When jumping to a member declaration or definition with one of
 Ebrowse's commands, the position from where you performed the jump and
 the position where you jumped to are recorded in a "position stack".
 There are several ways in which you can quickly move to positions in
 the stack:
 
-`C-c b -'
+`C-c C-m -'
      This command sets point to the previous position in the position
      stack.  Directly after you performed a jump, this will put you
      back to the position where you came from.
@@ -1023,11 +1026,11 @@ the stack:
      When this number is reached, older positions are discarded when
      new positions are pushed on the stack.
 
-`C-c b +'
+`C-c C-m +'
      This command moves forward in the position stack, setting point to
      the next position stored in the position stack.
 
-`C-c b p'
+`C-c C-m p'
      Displays an electric buffer showing all positions saved in the
      stack.  You can select a position by pressing `SPC' in a line.
      You can view a position with `v'.
@@ -1035,286 +1038,730 @@ the stack:
 
 File: ebrowse,  Node: Search & Replace,  Next: Members in Files,  Prev: Position Stack,  Up: Tags-like Functions
 
-Searching and Replacing
-=======================
+6.3 Searching and Replacing
+===========================
 
-   Ebrowse allows you to perform operations on all or a subset of the
-files mentioned in a class tree.  When you invoke one of the following
+Ebrowse allows you to perform operations on all or a subset of the files
+mentioned in a class tree.  When you invoke one of the following
 functions and more than one class tree is loaded, you must choose a
 class tree to use from an electric tree menu.  If the selected tree
 contains marked classes, the following commands operate on the files
 mentioned in the marked classes only.  Otherwise all files in the class
 tree are used.
 
-`C-c b s'
+`C-c C-m s'
      This function performs a regular expression search in the chosen
      set of files.
 
-`C-c b u'
+`C-c C-m u'
      This command performs a search for calls of a given member which is
      selected in the usual way with completion.
 
-`C-c b %'
+`C-c C-m %'
      Perform a query replace over the set of files.
 
-`C-c b ,'
+`C-c C-m ,'
      All three operations above stop when finding a match.  You can
      restart the operation with this command.
 
-`C-c b n'
+`C-c C-m n'
      This restarts the last tags operation with the next file in the
      list.
 
 
 File: ebrowse,  Node: Members in Files,  Next: Apropos,  Prev: Search & Replace,  Up: Tags-like Functions
 
-Members in Files
-================
+6.4 Members in Files
+====================
 
-   The command `C-c b l', lists all members in a given file.  The file
+The command `C-c C-m l', lists all members in a given file.  The file
 name is read from the minibuffer with completion.
 
 
 File: ebrowse,  Node: Apropos,  Next: Symbol Completion,  Prev: Members in Files,  Up: Tags-like Functions
 
-Member Apropos
-==============
+6.5 Member Apropos
+==================
 
-   The command `C-c b a' can be used to display all members matching a
+The command `C-c C-m a' can be used to display all members matching a
 given regular expression.  This command can be very useful if you
 remember only part of a member name, and not its beginning.
 
    A special buffer is popped up containing all identifiers matching the
 regular expression, and what kind of symbol it is (e.g. a member
 function, or a type).  You can then switch to this buffer, and use the
-command `C-c b f', for example, to jump to a specific member.
+command `C-c C-m f', for example, to jump to a specific member.
 
 
 File: ebrowse,  Node: Symbol Completion,  Next: Member Buffer Display,  Prev: Apropos,  Up: Tags-like Functions
 
-Symbol Completion
-=================
+6.6 Symbol Completion
+=====================
 
-   The command `C-c b TAB' completes the symbol in front of point.
+The command `C-c C-m <TAB>' completes the symbol in front of point.
 
 
 File: ebrowse,  Node: Member Buffer Display,  Prev: Symbol Completion,  Up: Tags-like Functions
 
-Quick Member Display
-====================
+6.7 Quick Member Display
+========================
 
-   You can quickly display a member buffer containing the member the
-cursor in on with the command `C-c b m'.
+You can quickly display a member buffer containing the member the cursor
+in on with the command `C-c C-m m'.
 
 
-File: ebrowse,  Node: Concept Index,  Prev: Tags-like Functions,  Up: Top
+File: ebrowse,  Node: GNU Free Documentation License,  Next: Concept Index,  Prev: Tags-like Functions,  Up: Top
+
+Appendix A GNU Free Documentation License
+*****************************************
+
+                      Version 1.2, November 2002
+
+     Copyright (C) 2000,2001,2002  Free Software Foundation, Inc.
+     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+     Everyone is permitted to copy and distribute verbatim copies
+     of this license document, but changing it is not allowed.
+
+
+  0. PREAMBLE
+
+     The purpose of this License is to make a manual, textbook, or other
+     functional and useful document "free" in the sense of freedom: to
+     assure everyone the effective freedom to copy and redistribute it,
+     with or without modifying it, either commercially or
+     noncommercially.  Secondarily, this License preserves for the
+     author and publisher a way to get credit for their work, while not
+     being considered responsible for modifications made by others.
+
+     This License is a kind of "copyleft," which means that derivative
+     works of the document must themselves be free in the same sense.
+     It complements the GNU General Public License, which is a copyleft
+     license designed for free software.
+
+     We have designed this License in order to use it for manuals for
+     free software, because free software needs free documentation: a
+     free program should come with manuals providing the same freedoms
+     that the software does.  But this License is not limited to
+     software manuals; it can be used for any textual work, regardless
+     of subject matter or whether it is published as a printed book.
+     We recommend this License principally for works whose purpose is
+     instruction or reference.
+
+
+  1. APPLICABILITY AND DEFINITIONS
+
+     This License applies to any manual or other work, in any medium,
+     that contains a notice placed by the copyright holder saying it
+     can be distributed under the terms of this License.  Such a notice
+     grants a world-wide, royalty-free license, unlimited in duration,
+     to use that work under the conditions stated herein.  The
+     "Document," below, refers to any such manual or work.  Any member
+     of the public is a licensee, and is addressed as "you."  You
+     accept the license if you copy, modify or distribute the work in a
+     way requiring permission under copyright law.
+
+     A "Modified Version" of the Document means any work containing the
+     Document or a portion of it, either copied verbatim, or with
+     modifications and/or translated into another language.
+
+     A "Secondary Section" is a named appendix or a front-matter
+     section of the Document that deals exclusively with the
+     relationship of the publishers or authors of the Document to the
+     Document's overall subject (or to related matters) and contains
+     nothing that could fall directly within that overall subject.
+     (Thus, if the Document is in part a textbook of mathematics, a
+     Secondary Section may not explain any mathematics.)  The
+     relationship could be a matter of historical connection with the
+     subject or with related matters, or of legal, commercial,
+     philosophical, ethical or political position regarding them.
+
+     The "Invariant Sections" are certain Secondary Sections whose
+     titles are designated, as being those of Invariant Sections, in
+     the notice that says that the Document is released under this
+     License.  If a section does not fit the above definition of
+     Secondary then it is not allowed to be designated as Invariant.
+     The Document may contain zero Invariant Sections.  If the Document
+     does not identify any Invariant Sections then there are none.
+
+     The "Cover Texts" are certain short passages of text that are
+     listed, as Front-Cover Texts or Back-Cover Texts, in the notice
+     that says that the Document is released under this License.  A
+     Front-Cover Text may be at most 5 words, and a Back-Cover Text may
+     be at most 25 words.
+
+     A "Transparent" copy of the Document means a machine-readable copy,
+     represented in a format whose specification is available to the
+     general public, that is suitable for revising the document
+     straightforwardly with generic text editors or (for images
+     composed of pixels) generic paint programs or (for drawings) some
+     widely available drawing editor, and that is suitable for input to
+     text formatters or for automatic translation to a variety of
+     formats suitable for input to text formatters.  A copy made in an
+     otherwise Transparent file format whose markup, or absence of
+     markup, has been arranged to thwart or discourage subsequent
+     modification by readers is not Transparent.  An image format is
+     not Transparent if used for any substantial amount of text.  A
+     copy that is not "Transparent" is called "Opaque."
+
+     Examples of suitable formats for Transparent copies include plain
+     ASCII without markup, Texinfo input format, LaTeX input format,
+     SGML or XML using a publicly available DTD, and
+     standard-conforming simple HTML, PostScript or PDF designed for
+     human modification.  Examples of transparent image formats include
+     PNG, XCF and JPG.  Opaque formats include proprietary formats that
+     can be read and edited only by proprietary word processors, SGML
+     or XML for which the DTD and/or processing tools are not generally
+     available, and the machine-generated HTML, PostScript or PDF
+     produced by some word processors for output purposes only.
+
+     The "Title Page" means, for a printed book, the title page itself,
+     plus such following pages as are needed to hold, legibly, the
+     material this License requires to appear in the title page.  For
+     works in formats which do not have any title page as such, "Title
+     Page" means the text near the most prominent appearance of the
+     work's title, preceding the beginning of the body of the text.
+
+     A section "Entitled XYZ" means a named subunit of the Document
+     whose title either is precisely XYZ or contains XYZ in parentheses
+     following text that translates XYZ in another language.  (Here XYZ
+     stands for a specific section name mentioned below, such as
+     "Acknowledgements," "Dedications," "Endorsements," or "History.")
+     To "Preserve the Title" of such a section when you modify the
+     Document means that it remains a section "Entitled XYZ" according
+     to this definition.
+
+     The Document may include Warranty Disclaimers next to the notice
+     which states that this License applies to the Document.  These
+     Warranty Disclaimers are considered to be included by reference in
+     this License, but only as regards disclaiming warranties: any other
+     implication that these Warranty Disclaimers may have is void and
+     has no effect on the meaning of this License.
+
+  2. VERBATIM COPYING
+
+     You may copy and distribute the Document in any medium, either
+     commercially or noncommercially, provided that this License, the
+     copyright notices, and the license notice saying this License
+     applies to the Document are reproduced in all copies, and that you
+     add no other conditions whatsoever to those of this License.  You
+     may not use technical measures to obstruct or control the reading
+     or further copying of the copies you make or distribute.  However,
+     you may accept compensation in exchange for copies.  If you
+     distribute a large enough number of copies you must also follow
+     the conditions in section 3.
+
+     You may also lend copies, under the same conditions stated above,
+     and you may publicly display copies.
+
+  3. COPYING IN QUANTITY
+
+     If you publish printed copies (or copies in media that commonly
+     have printed covers) of the Document, numbering more than 100, and
+     the Document's license notice requires Cover Texts, you must
+     enclose the copies in covers that carry, clearly and legibly, all
+     these Cover Texts: Front-Cover Texts on the front cover, and
+     Back-Cover Texts on the back cover.  Both covers must also clearly
+     and legibly identify you as the publisher of these copies.  The
+     front cover must present the full title with all words of the
+     title equally prominent and visible.  You may add other material
+     on the covers in addition.  Copying with changes limited to the
+     covers, as long as they preserve the title of the Document and
+     satisfy these conditions, can be treated as verbatim copying in
+     other respects.
+
+     If the required texts for either cover are too voluminous to fit
+     legibly, you should put the first ones listed (as many as fit
+     reasonably) on the actual cover, and continue the rest onto
+     adjacent pages.
+
+     If you publish or distribute Opaque copies of the Document
+     numbering more than 100, you must either include a
+     machine-readable Transparent copy along with each Opaque copy, or
+     state in or with each Opaque copy a computer-network location from
+     which the general network-using public has access to download
+     using public-standard network protocols a complete Transparent
+     copy of the Document, free of added material.  If you use the
+     latter option, you must take reasonably prudent steps, when you
+     begin distribution of Opaque copies in quantity, to ensure that
+     this Transparent copy will remain thus accessible at the stated
+     location until at least one year after the last time you
+     distribute an Opaque copy (directly or through your agents or
+     retailers) of that edition to the public.
+
+     It is requested, but not required, that you contact the authors of
+     the Document well before redistributing any large number of
+     copies, to give them a chance to provide you with an updated
+     version of the Document.
+
+  4. MODIFICATIONS
+
+     You may copy and distribute a Modified Version of the Document
+     under the conditions of sections 2 and 3 above, provided that you
+     release the Modified Version under precisely this License, with
+     the Modified Version filling the role of the Document, thus
+     licensing distribution and modification of the Modified Version to
+     whoever possesses a copy of it.  In addition, you must do these
+     things in the Modified Version:
+
+     A. Use in the Title Page (and on the covers, if any) a title
+     distinct    from that of the Document, and from those of previous
+     versions    (which should, if there were any, be listed in the
+     History section    of the Document).  You may use the same title
+     as a previous version    if the original publisher of that version
+     gives permission.
+     B. List on the Title Page, as authors, one or more persons or
+     entities    responsible for authorship of the modifications in the
+     Modified    Version, together with at least five of the principal
+     authors of the    Document (all of its principal authors, if it
+     has fewer than five),    unless they release you from this
+     requirement.
+     C. State on the Title page the name of the publisher of the
+     Modified Version, as the publisher.
+     D. Preserve all the copyright notices of the Document.
+     E. Add an appropriate copyright notice for your modifications
+     adjacent to the other copyright notices.
+     F. Include, immediately after the copyright notices, a license
+     notice    giving the public permission to use the Modified Version
+     under the    terms of this License, in the form shown in the
+     Addendum below.
+     G. Preserve in that license notice the full lists of Invariant
+     Sections    and required Cover Texts given in the Document's
+     license notice.
+     H. Include an unaltered copy of this License.
+     I. Preserve the section Entitled "History," Preserve its Title,
+     and add    to it an item stating at least the title, year, new
+     authors, and    publisher of the Modified Version as given on the
+     Title Page.  If    there is no section Entitled "History" in the
+     Document, create one    stating the title, year, authors, and
+     publisher of the Document as    given on its Title Page, then add
+     an item describing the Modified    Version as stated in the
+     previous sentence.
+     J. Preserve the network location, if any, given in the Document for
+       public access to a Transparent copy of the Document, and
+     likewise    the network locations given in the Document for
+     previous versions    it was based on.  These may be placed in the
+     "History" section.     You may omit a network location for a work
+     that was published at    least four years before the Document
+     itself, or if the original    publisher of the version it refers
+     to gives permission.
+     K. For any section Entitled "Acknowledgements" or "Dedications,"
+     Preserve the Title of the section, and preserve in the section all
+       the substance and tone of each of the contributor
+     acknowledgements    and/or dedications given therein.
+     L. Preserve all the Invariant Sections of the Document,
+     unaltered in their text and in their titles.  Section numbers
+     or the equivalent are not considered part of the section titles.
+     M. Delete any section Entitled "Endorsements."  Such a section
+     may not be included in the Modified Version.
+     N. Do not retitle any existing section to be Entitled
+     "Endorsements"    or to conflict in title with any Invariant
+     Section.
+     O. Preserve any Warranty Disclaimers.
+
+     If the Modified Version includes new front-matter sections or
+     appendices that qualify as Secondary Sections and contain no
+     material copied from the Document, you may at your option
+     designate some or all of these sections as invariant.  To do this,
+     add their titles to the list of Invariant Sections in the Modified
+     Version's license notice.  These titles must be distinct from any
+     other section titles.
+
+     You may add a section Entitled "Endorsements," provided it contains
+     nothing but endorsements of your Modified Version by various
+     parties-for example, statements of peer review or that the text has
+     been approved by an organization as the authoritative definition
+     of a standard.
+
+     You may add a passage of up to five words as a Front-Cover Text,
+     and a passage of up to 25 words as a Back-Cover Text, to the end
+     of the list of Cover Texts in the Modified Version.  Only one
+     passage of Front-Cover Text and one of Back-Cover Text may be
+     added by (or through arrangements made by) any one entity.  If the
+     Document already includes a cover text for the same cover,
+     previously added by you or by arrangement made by the same entity
+     you are acting on behalf of, you may not add another; but you may
+     replace the old one, on explicit permission from the previous
+     publisher that added the old one.
+
+     The author(s) and publisher(s) of the Document do not by this
+     License give permission to use their names for publicity for or to
+     assert or imply endorsement of any Modified Version.
+
+  5. COMBINING DOCUMENTS
+
+     You may combine the Document with other documents released under
+     this License, under the terms defined in section 4 above for
+     modified versions, provided that you include in the combination
+     all of the Invariant Sections of all of the original documents,
+     unmodified, and list them all as Invariant Sections of your
+     combined work in its license notice, and that you preserve all
+     their Warranty Disclaimers.
+
+     The combined work need only contain one copy of this License, and
+     multiple identical Invariant Sections may be replaced with a single
+     copy.  If there are multiple Invariant Sections with the same name
+     but different contents, make the title of each such section unique
+     by adding at the end of it, in parentheses, the name of the
+     original author or publisher of that section if known, or else a
+     unique number.  Make the same adjustment to the section titles in
+     the list of Invariant Sections in the license notice of the
+     combined work.
+
+     In the combination, you must combine any sections Entitled
+     "History" in the various original documents, forming one section
+     Entitled "History"; likewise combine any sections Entitled
+     "Acknowledgements," and any sections Entitled "Dedications."  You
+     must delete all sections Entitled "Endorsements."
+
+  6. COLLECTIONS OF DOCUMENTS
+
+     You may make a collection consisting of the Document and other
+     documents released under this License, and replace the individual
+     copies of this License in the various documents with a single copy
+     that is included in the collection, provided that you follow the
+     rules of this License for verbatim copying of each of the
+     documents in all other respects.
+
+     You may extract a single document from such a collection, and
+     distribute it individually under this License, provided you insert
+     a copy of this License into the extracted document, and follow
+     this License in all other respects regarding verbatim copying of
+     that document.
+
+  7. AGGREGATION WITH INDEPENDENT WORKS
+
+     A compilation of the Document or its derivatives with other
+     separate and independent documents or works, in or on a volume of
+     a storage or distribution medium, is called an "aggregate" if the
+     copyright resulting from the compilation is not used to limit the
+     legal rights of the compilation's users beyond what the individual
+     works permit.  When the Document is included in an aggregate, this
+     License does not apply to the other works in the aggregate which
+     are not themselves derivative works of the Document.
+
+     If the Cover Text requirement of section 3 is applicable to these
+     copies of the Document, then if the Document is less than one half
+     of the entire aggregate, the Document's Cover Texts may be placed
+     on covers that bracket the Document within the aggregate, or the
+     electronic equivalent of covers if the Document is in electronic
+     form.  Otherwise they must appear on printed covers that bracket
+     the whole aggregate.
+
+  8. TRANSLATION
+
+     Translation is considered a kind of modification, so you may
+     distribute translations of the Document under the terms of section
+     4.  Replacing Invariant Sections with translations requires special
+     permission from their copyright holders, but you may include
+     translations of some or all Invariant Sections in addition to the
+     original versions of these Invariant Sections.  You may include a
+     translation of this License, and all the license notices in the
+     Document, and any Warranty Disclaimers, provided that you also
+     include the original English version of this License and the
+     original versions of those notices and disclaimers.  In case of a
+     disagreement between the translation and the original version of
+     this License or a notice or disclaimer, the original version will
+     prevail.
+
+     If a section in the Document is Entitled "Acknowledgements,"
+     "Dedications," or "History," the requirement (section 4) to
+     Preserve its Title (section 1) will typically require changing the
+     actual title.
+
+  9. TERMINATION
+
+     You may not copy, modify, sublicense, or distribute the Document
+     except as expressly provided for under this License.  Any other
+     attempt to copy, modify, sublicense or distribute the Document is
+     void, and will automatically terminate your rights under this
+     License.  However, parties who have received copies, or rights,
+     from you under this License will not have their licenses
+     terminated so long as such parties remain in full compliance.
+
+ 10. FUTURE REVISIONS OF THIS LICENSE
+
+     The Free Software Foundation may publish new, revised versions of
+     the GNU Free Documentation License from time to time.  Such new
+     versions will be similar in spirit to the present version, but may
+     differ in detail to address new problems or concerns.  See
+     http://www.gnu.org/copyleft/.
+
+     Each version of the License is given a distinguishing version
+     number.  If the Document specifies that a particular numbered
+     version of this License "or any later version" applies to it, you
+     have the option of following the terms and conditions either of
+     that specified version or of any later version that has been
+     published (not as a draft) by the Free Software Foundation.  If
+     the Document does not specify a version number of this License,
+     you may choose any version ever published (not as a draft) by the
+     Free Software Foundation.
+
+
+ADDENDUM: How to use this License for your documents
+====================================================
+
+To use this License in a document you have written, include a copy of
+the License in the document and put the following copyright and license
+notices just after the title page:
+
+     Copyright (C)  YEAR  YOUR NAME.
+     Permission is granted to copy, distribute and/or modify this document
+     under the terms of the GNU Free Documentation License, Version 1.2
+     or any later version published by the Free Software Foundation;
+     with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+     A copy of the license is included in the section entitled ``GNU
+     Free Documentation License.''
+
+   If you have Invariant Sections, Front-Cover Texts and Back-Cover
+Texts, replace the "with...Texts." line with this:
+
+     with the Invariant Sections being LIST THEIR TITLES, with the
+     Front-Cover Texts being LIST, and with the Back-Cover Texts being
+     LIST.
+
+   If you have Invariant Sections without Cover Texts, or some other
+combination of the three, merge those two alternatives to suit the
+situation.
+
+   If your document contains nontrivial examples of program code, we
+recommend releasing these examples in parallel under your choice of
+free software license, such as the GNU General Public License, to
+permit their use in free software.
+
+
+File: ebrowse,  Node: Concept Index,  Prev: GNU Free Documentation License,  Up: Top
 
 Concept Index
 *************
 
+ [index ]
 * Menu:
 
-* *Globals*:                             Member Display.
-* *Members* buffer:                      Member Display.
-* --append:                              Output file.
-* --files:                               Input files.
+* *Globals*:                             Member Display.       (line  6)
+* *Members* buffer:                      Member Display.       (line  6)
+* --append:                              Output file.          (line 18)
+* --files:                               Input files.          (line 10)
 * --help:                                Generating browser files.
-* --max-regexp-length:                   Matching.
-* --min-regexp-length:                   Matching.
-* --no-regexps:                          Matching.
-* --no-structs-or-unions:                Structs and unions.
-* --output-file:                         Output file.
-* --search-path:                         Input files.
-* --verbose:                             Verbosity.
-* --very-verbose:                        Verbosity.
-* appending output to class data base:   Output file.
-* apropos on class members:              Apropos.
-* attributes:                            Attributes.
-* base class, display:                   Switching Classes.
-* base classes, members:                 Inherited Members.
+                                                               (line 24)
+* --max-regexp-length:                   Matching.             (line 33)
+* --min-regexp-length:                   Matching.             (line 22)
+* --no-regexps:                          Matching.             (line 19)
+* --no-structs-or-unions:                Structs and unions.   (line  6)
+* --output-file:                         Output file.          (line  6)
+* --search-path:                         Input files.          (line 23)
+* --verbose:                             Verbosity.            (line  6)
+* --very-verbose:                        Verbosity.            (line 11)
+* appending output to class data base:   Output file.          (line 18)
+* apropos on class members:              Apropos.              (line  6)
+* attributes:                            Attributes.           (line  6)
+* base class, display:                   Switching Classes.    (line  6)
+* base classes, members:                 Inherited Members.    (line  6)
 * branches of class tree:                Expanding and Collapsing.
-* BROWSE file:                           Output file.
-* browsing:                              Loading a Tree.
-* buffer switching:                      Switching to Tree.
-* burying member buffers:                Killing/Burying.
-* burying tree buffer:                   Quitting.
+                                                               (line  6)
+* BROWSE file:                           Output file.          (line  6)
+* browsing:                              Loading a Tree.       (line  6)
+* buffer switching:                      Switching to Tree.    (line  6)
+* burying member buffers:                Killing/Burying.      (line  6)
+* burying tree buffer:                   Quitting.             (line  6)
 * class data base creation:              Generating browser files.
-* class declaration:                     Source Display.
-* class display:                         Switching Classes.
-* class location:                        Go to Class.
-* class members, types:                  Member Buffers.
-* class statistics:                      Statistics.
+                                                               (line  6)
+* class declaration:                     Source Display.       (line  6)
+* class display:                         Switching Classes.    (line  6)
+* class location:                        Go to Class.          (line  6)
+* class members, types:                  Member Buffers.       (line  6)
+* class statistics:                      Statistics.           (line  3)
 * class tree, collapse or expand:        Expanding and Collapsing.
-* class tree, save to a file:            Saving a Tree.
-* class trees:                           Tree Buffers.
-* class, remove from tree:               Killing Classes.
+                                                               (line  6)
+* class tree, save to a file:            Saving a Tree.        (line  6)
+* class trees:                           Tree Buffers.         (line  6)
+* class, remove from tree:               Killing Classes.      (line  6)
 * collapse tree branch:                  Expanding and Collapsing.
-* column width:                          Column Width.
+                                                               (line  6)
+* column width:                          Column Width.         (line  6)
 * command line for ebrowse:              Generating browser files.
-* completion:                            Symbol Completion.
-* const attribute:                       Attributes.
-* const members:                         Filters.
-* context menu:                          Loading a Tree.
-* declaration of a member, in member buffers: Finding/Viewing.
+                                                               (line 10)
+* completion:                            Symbol Completion.    (line  6)
+* const attribute:                       Attributes.           (line 27)
+* const members:                         Filters.              (line 22)
+* context menu:                          Loading a Tree.       (line 24)
+* declaration of a member, in member buffers: Finding/Viewing. (line  6)
 * defines:                               Switching Member Lists.
-* definition of a member, in member buffers: Finding/Viewing.
-* derived class, display:                Switching Classes.
+                                                               (line  6)
+* definition of a member, in member buffers: Finding/Viewing.  (line  6)
+* derived class, display:                Switching Classes.    (line  6)
 * display form:                          Long and Short Display.
+                                                               (line  6)
 * ebrowse, the program:                  Generating browser files.
+                                                               (line  6)
 * expand tree branch:                    Expanding and Collapsing.
-* expanding branches:                    Go to Class.
-* explicit attribute:                    Attributes.
-* extern "C" attribute:                  Attributes.
-* file names in tree buffers:            File Name Display.
-* file, members:                         Members in Files.
-* files:                                 Members in Files.
-* filters:                               Filters.
-* finding a class:                       Source Display.
-* finding class member, in C++ source:   Finding and Viewing.
-* finding members, in member buffers:    Finding/Viewing.
-* freezing a member buffer:              Member Display.
-* friend functions:                      Input files.
-* friend functions, list:                Member Display.
+                                                               (line  6)
+* expanding branches:                    Go to Class.          (line  6)
+* explicit attribute:                    Attributes.           (line 36)
+* extern "C" attribute:                  Attributes.           (line 18)
+* file names in tree buffers:            File Name Display.    (line  6)
+* file, members:                         Members in Files.     (line  6)
+* files:                                 Members in Files.     (line  6)
+* filters:                               Filters.              (line  6)
+* finding a class:                       Source Display.       (line  6)
+* finding class member, in C++ source:   Finding and Viewing.  (line  6)
+* finding members, in member buffers:    Finding/Viewing.      (line  6)
+* freezing a member buffer:              Member Display.       (line  6)
+* friend functions:                      Input files.          (line 28)
+* friend functions, list:                Member Display.       (line 34)
 * friends:                               Switching Member Lists.
-* header files:                          Input files.
-* help:                                  Getting Help.
-* indentation of the tree:               Tree Indentation.
-* indentation, member:                   Column Width.
-* inherited members:                     Inherited Members.
-* inline:                                Attributes.
-* inline members:                        Filters.
-* input files, for ebrowse:              Input files.
-* instance member variables, list:       Member Display.
-* killing classes:                       Killing Classes.
-* list class members in a file:          Members in Files.
-* loading:                               Loading a Tree.
-* locate class:                          Go to Class.
+                                                               (line  6)
+* header files:                          Input files.          (line 28)
+* help:                                  Getting Help.         (line  3)
+* indentation of the tree:               Tree Indentation.     (line  6)
+* indentation, member:                   Column Width.         (line  6)
+* inherited members:                     Inherited Members.    (line  6)
+* inline:                                Attributes.           (line 24)
+* inline members:                        Filters.              (line 19)
+* input files, for ebrowse:              Input files.          (line  6)
+* instance member variables, list:       Member Display.       (line 28)
+* killing classes:                       Killing Classes.      (line  6)
+* list class members in a file:          Members in Files.     (line  6)
+* loading:                               Loading a Tree.       (line  6)
+* locate class:                          Go to Class.          (line  6)
 * long display:                          Long and Short Display.
-* major modes, of Ebrowse buffers:       Overview.
-* marking classes:                       Marking Classes.
-* maximum regexp length for recording:   Matching.
-* member attribute display:              Attributes.
-* member buffer:                         Overview.
-* member buffer mode:                    Member Buffers.
+                                                               (line  6)
+* major modes, of Ebrowse buffers:       Overview.             (line 35)
+* marking classes:                       Marking Classes.      (line  3)
+* maximum regexp length for recording:   Matching.             (line 33)
+* member attribute display:              Attributes.           (line  6)
+* member buffer:                         Overview.             (line 44)
+* member buffer mode:                    Member Buffers.       (line  6)
 * member buffer, for member at point:    Member Buffer Display.
+                                                               (line  6)
 * member declaration, finding, in C++ source: Finding and Viewing.
-* member declarations, in member buffers: Finding/Viewing.
+                                                               (line  6)
+* member declarations, in member buffers: Finding/Viewing.     (line  6)
 * member definition, finding, in C++ source: Finding and Viewing.
-* member definitions, in member buffers: Finding/Viewing.
-* member functions, list:                Member Display.
-* member indentation:                    Column Width.
+                                                               (line  6)
+* member definitions, in member buffers: Finding/Viewing.      (line  6)
+* member functions, list:                Member Display.       (line 39)
+* member indentation:                    Column Width.         (line  6)
 * member lists, in member buffers:       Switching Member Lists.
-* member lists, in tree buffers:         Member Display.
-* members:                               Member Buffers.
-* members in file, listing:              Members in Files.
-* members, matching regexp:              Apropos.
-* minimum regexp length for recording:   Matching.
-* mouse highlight in tree buffers:       Loading a Tree.
-* mutable attribute:                     Attributes.
+                                                               (line  6)
+* member lists, in tree buffers:         Member Display.       (line  6)
+* members:                               Member Buffers.       (line  6)
+* members in file, listing:              Members in Files.     (line  6)
+* members, matching regexp:              Apropos.              (line  6)
+* minimum regexp length for recording:   Matching.             (line 22)
+* mouse highlight in tree buffers:       Loading a Tree.       (line 18)
+* mutable attribute:                     Attributes.           (line 33)
 * next member list:                      Switching Member Lists.
-* operations on marked classes:          Marking Classes.
-* output file name:                      Output file.
-* parser for C++ sources:                Overview.
-* position stack:                        Position Stack.
+                                                               (line  6)
+* operations on marked classes:          Marking Classes.      (line  3)
+* output file name:                      Output file.          (line  6)
+* parser for C++ sources:                Overview.             (line 26)
+* position stack:                        Position Stack.       (line  6)
 * previous member list:                  Switching Member Lists.
-* private members:                       Filters.
-* protected members:                     Filters.
-* public members:                        Filters.
-* pure virtual function attribute:       Attributes.
-* pure virtual members:                  Filters.
-* redisplay of member buffers:           Redisplay.
-* regular expression display:            Regexp Display.
-* regular expressions, recording:        Matching.
-* remove filters:                        Filters.
-* replacing in multiple C++ files:       Search & Replace.
-* response files:                        Input files.
-* restart tags-operation:                Search & Replace.
-* return to original position:           Position Stack.
-* save tree to a file:                   Saving a Tree.
-* search for class:                      Go to Class.
-* searching members:                     Searching Members.
-* searching multiple C++ files:          Search & Replace.
+                                                               (line 10)
+* private members:                       Filters.              (line 13)
+* protected members:                     Filters.              (line 10)
+* public members:                        Filters.              (line  6)
+* pure virtual function attribute:       Attributes.           (line 30)
+* pure virtual members:                  Filters.              (line 25)
+* redisplay of member buffers:           Redisplay.            (line  6)
+* regular expression display:            Regexp Display.       (line  6)
+* regular expressions, recording:        Matching.             (line  6)
+* remove filters:                        Filters.              (line 28)
+* replacing in multiple C++ files:       Search & Replace.     (line  6)
+* response files:                        Input files.          (line 10)
+* restart tags-operation:                Search & Replace.     (line  6)
+* return to original position:           Position Stack.       (line 12)
+* save tree to a file:                   Saving a Tree.        (line  6)
+* search for class:                      Go to Class.          (line  6)
+* searching members:                     Searching Members.    (line  6)
+* searching multiple C++ files:          Search & Replace.     (line  6)
 * short display:                         Long and Short Display.
-* standard input, specifying input files: Input files.
+                                                               (line  6)
+* standard input, specifying input files: Input files.         (line 17)
 * static:                                Switching Member Lists.
-* static member functions, list:         Member Display.
+                                                               (line 17)
+* static member functions, list:         Member Display.       (line 42)
 * static members:                        Switching Member Lists.
-* static variables, list:                Member Display.
-* statistics for a tree:                 Statistics.
-* structs:                               Structs and unions.
-* subclass, display:                     Switching Classes.
-* superclass, display:                   Switching Classes.
-* superclasses, members:                 Inherited Members.
-* switching buffers:                     Switching to Tree.
-* symbol completion:                     Symbol Completion.
-* tags:                                  Finding and Viewing.
-* template attribute:                    Attributes.
-* toggle mark:                           Marking Classes.
-* tree buffer:                           Overview.
-* tree buffer mode:                      Tree Buffers.
-* tree buffer, switch to:                Switching to Tree.
-* tree indentation:                      Tree Indentation.
-* tree statistics:                       Statistics.
-* tree, save to a file:                  Saving a Tree.
+                                                               (line  6)
+* static variables, list:                Member Display.       (line 31)
+* statistics for a tree:                 Statistics.           (line  3)
+* structs:                               Structs and unions.   (line  6)
+* subclass, display:                     Switching Classes.    (line  6)
+* superclass, display:                   Switching Classes.    (line  6)
+* superclasses, members:                 Inherited Members.    (line  6)
+* switching buffers:                     Switching to Tree.    (line  6)
+* symbol completion:                     Symbol Completion.    (line  6)
+* tags:                                  Finding and Viewing.  (line  6)
+* template attribute:                    Attributes.           (line 15)
+* toggle mark:                           Marking Classes.      (line  7)
+* tree buffer:                           Overview.             (line 38)
+* tree buffer mode:                      Tree Buffers.         (line  6)
+* tree buffer, switch to:                Switching to Tree.    (line  6)
+* tree indentation:                      Tree Indentation.     (line  6)
+* tree statistics:                       Statistics.           (line  3)
+* tree, save to a file:                  Saving a Tree.        (line  6)
 * types:                                 Switching Member Lists.
-* types of class members:                Member Buffers.
-* types, list:                           Member Display.
-* unions:                                Structs and unions.
-* unmark all:                            Marking Classes.
-* verbose operation:                     Verbosity.
-* viewing class member, in C++ source:   Finding and Viewing.
-* viewing members, in member buffers:    Finding/Viewing.
-* viewing, class:                        Source Display.
-* virtual attribute:                     Attributes.
-* virtual members:                       Filters.
+                                                               (line  6)
+* types of class members:                Member Buffers.       (line  6)
+* types, list:                           Member Display.       (line 45)
+* unions:                                Structs and unions.   (line  6)
+* unmark all:                            Marking Classes.      (line 12)
+* verbose operation:                     Verbosity.            (line  6)
+* viewing class member, in C++ source:   Finding and Viewing.  (line  6)
+* viewing members, in member buffers:    Finding/Viewing.      (line  6)
+* viewing, class:                        Source Display.       (line  6)
+* virtual attribute:                     Attributes.           (line 21)
+* virtual members:                       Filters.              (line 16)
 
 
 
 Tag Table:
-Node: Top1230
-Node: Overview1749
-Node: Generating browser files5341
-Node: Input files6461
-Node: Output file7717
-Node: Structs and unions8618
-Node: Matching9054
-Node: Verbosity11013
-Node: Loading a Tree11439
-Node: Tree Buffers12452
-Node: Source Display13601
-Node: Member Display14383
-Node: Go to Class16155
-Node: Quitting16874
-Node: File Name Display17064
-Node: Expanding and Collapsing17963
-Node: Tree Indentation18955
-Node: Killing Classes19334
-Node: Saving a Tree19696
-Node: Statistics20059
-Node: Marking Classes20338
-Node: Member Buffers21153
-Node: Switching Member Lists22608
-Node: Finding/Viewing23404
-Node: Inherited Members24451
-Node: Searching Members24761
-Node: Switching to Tree25661
-Node: Filters25999
-Node: Attributes26736
-Node: Long and Short Display27798
-Node: Regexp Display28744
-Node: Switching Classes29280
-Node: Killing/Burying30075
-Node: Column Width30292
-Node: Redisplay30556
-Node: Getting Help30933
-Node: Tags-like Functions31058
-Node: Finding and Viewing31820
-Node: Position Stack33329
-Node: Search & Replace34618
-Node: Members in Files35728
-Node: Apropos35994
-Node: Symbol Completion36605
-Node: Member Buffer Display36825
-Node: Concept Index37078
+Node: Top1339
+Node: Overview1929
+Node: Generating browser files5522
+Node: Input files6643
+Node: Output file7907
+Node: Structs and unions8816
+Node: Matching9260
+Node: Verbosity11224
+Node: Loading a Tree11658
+Node: Tree Buffers12672
+Node: Source Display13822
+Node: Member Display14609
+Node: Go to Class16386
+Node: Quitting17113
+Node: File Name Display17311
+Node: Expanding and Collapsing18218
+Node: Tree Indentation19215
+Node: Killing Classes19602
+Node: Saving a Tree19972
+Node: Statistics20343
+Node: Marking Classes20622
+Node: Member Buffers21437
+Node: Switching Member Lists22893
+Node: Finding/Viewing23697
+Node: Inherited Members24752
+Node: Searching Members25070
+Node: Switching to Tree25978
+Node: Filters26326
+Node: Attributes27071
+Node: Long and Short Display28138
+Node: Regexp Display29092
+Node: Switching Classes29636
+Node: Killing/Burying30441
+Node: Column Width30668
+Node: Redisplay30942
+Node: Getting Help31329
+Node: Tags-like Functions31454
+Node: Finding and Viewing32234
+Node: Position Stack33772
+Node: Search & Replace35072
+Node: Members in Files36197
+Node: Apropos36470
+Node: Symbol Completion37090
+Node: Member Buffer Display37319
+Node: GNU Free Documentation License37579
+Node: Concept Index59825
 
 End Tag Table

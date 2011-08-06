@@ -1,9 +1,10 @@
 ;;; edt-mapper.el --- create an EDT LK-201 map file for X-Windows Emacs
 
-;; Copyright (C) 1994, 1995, 2000, 2001  Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1995, 2000, 2001, 2002, 2003, 2004,
+;;   2005, 2006, 2007 Free Software Foundation, Inc.
 
-;; Author: Kevin Gallagher <kevingal@onramp.net>
-;; Maintainer: Kevin Gallagher <kevingal@onramp.net>
+;; Author: Kevin Gallagher <Kevin.Gallagher@boeing.com>
+;; Maintainer: Kevin Gallagher <Kevin.Gallagher@boeing.com>
 ;; Keywords: emulations
 
 ;; This file is part of GNU Emacs.
@@ -20,8 +21,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -113,13 +114,12 @@
   (sit-for 600)
   (kill-emacs t)))
 
-
 ;;;
 ;;;  Decide Emacs Variant, GNU Emacs or XEmacs (aka Lucid Emacs).
 ;;;  Determine Window System, and X Server Vendor (if appropriate).
 ;;;
 (defconst edt-x-emacs-p (string-match "XEmacs" emacs-version)
-  "Non-NIL if we are running XEmacs version 19, or higher.")
+  "Non-nil if we are running XEmacs version 19, or higher.")
 
 (defconst edt-emacs-variant (if edt-x-emacs-p "xemacs" "gnu")
   "Indicates Emacs variant:  GNU Emacs or XEmacs \(aka Lucid Emacs\).")
@@ -129,8 +129,12 @@
 
 (defconst edt-xserver (if (eq edt-window-system 'x)
 			  (if edt-x-emacs-p
-			      (replace-in-string (x-server-vendor) "[ _]" "-")
-			    (subst-char-in-string ?  ?- (x-server-vendor)))
+			      ;; The Cygwin window manager has a `/' in its
+			      ;; name, which breaks the generated file name of
+			      ;; the custom key map file.  Replace `/' with a
+			      ;; `-' to work around that.
+			      (replace-in-string (x-server-vendor) "[ /]" "-")
+			    (subst-char-in-string ?/ ?- (subst-char-in-string ?  ?- (x-server-vendor))))
 			nil)
   "Indicates X server vendor name, if applicable.")
 
@@ -145,6 +149,11 @@
 (defvar edt-enter-seq nil)
 (defvar edt-return-seq nil)
 (defvar edt-term nil)
+
+;; To silence the byte-compiler
+(eval-when-compile
+  (defvar EDT-key-name)
+  (defvar edt-save-function-key-map))
 
 ;;;
 ;;;  Determine Terminal Type (if appropriate).
@@ -197,7 +206,7 @@
 
     Sometimes, edt-mapper will ignore a key you press, and just continue to
     prompt for the same key.  This can happen when your window manager sucks
-    up the key and doesn't pass it on to emacs, or it could be an emacs bug.
+    up the key and doesn't pass it on to Emacs, or it could be an Emacs bug.
     Either way, there's nothing that edt-mapper can do about it.  You must
     press RETURN, to skip the current key and continue.  Later, you and/or
     your local system guru can try to figure out why the key is being ignored.
@@ -521,4 +530,5 @@
 (sit-for 600)
 (kill-emacs t)
 
+;;; arch-tag: 9eea59c8-b8b7-4d66-b858-c8920624c518
 ;;; edt-mapper.el ends here

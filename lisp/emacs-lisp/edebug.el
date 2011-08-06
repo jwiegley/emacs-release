@@ -1,7 +1,7 @@
 ;;; edebug.el --- a source-level debugger for Emacs Lisp
 
-;; Copyright (C) 1988, 89, 90, 91, 92, 93, 94, 95, 97, 1999, 2000, 2001
-;;       Free Software Foundation, Inc.
+;; Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1997, 1999,
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
 
 ;; Author: Daniel LaLiberte <liberte@holonexus.org>
 ;; Maintainer: FSF
@@ -21,8 +21,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 
@@ -61,7 +61,7 @@
 ;;; Options
 
 (defgroup edebug nil
-  "A source-level debugger for Emacs Lisp"
+  "A source-level debugger for Emacs Lisp."
   :group 'lisp)
 
 
@@ -80,7 +80,7 @@ using but only when you also use Edebug."
 
 ;;;###autoload
 (defcustom edebug-all-defs nil
-  "*If non-nil, evaluation of any defining forms will instrument for Edebug.
+  "*If non-nil, evaluating defining forms instruments for Edebug.
 This applies to `eval-defun', `eval-region', `eval-buffer', and
 `eval-current-buffer'.  `eval-region' is also called by
 `eval-last-sexp', and `eval-print-last-sexp'.
@@ -141,10 +141,10 @@ it."
   :group 'edebug)
 
 (defcustom edebug-initial-mode 'step
-  "*Initial execution mode for Edebug, if non-nil.  If this variable
-is non-@code{nil}, it specifies the initial execution mode for Edebug
-when it is first activated.  Possible values are step, next, go,
-Go-nonstop, trace, Trace-fast, continue, and Continue-fast."
+  "*Initial execution mode for Edebug, if non-nil.
+If this variable is non-nil, it specifies the initial execution mode
+for Edebug when it is first activated.  Possible values are step, next,
+go, Go-nonstop, trace, Trace-fast, continue, and Continue-fast."
   :type '(choice (const step) (const next) (const go)
 		 (const Go-nonstop) (const trace)
 		 (const Trace-fast) (const continue)
@@ -180,15 +180,15 @@ Use this with caution since it is not debugged."
 
 
 (defcustom edebug-print-length 50
-  "*Default value of `print-length' to use while printing results in Edebug."
+  "*Default value of `print-length' for printing results in Edebug."
   :type 'integer
   :group 'edebug)
 (defcustom edebug-print-level 50
-  "*Default value of `print-level' to use while printing results in Edebug."
+  "*Default value of `print-level' for printing results in Edebug."
   :type 'integer
   :group 'edebug)
 (defcustom edebug-print-circle t
-  "*Default value of `print-circle' to use while printing results in Edebug."
+  "*Default value of `print-circle' for printing results in Edebug."
   :type 'boolean
   :group 'edebug)
 
@@ -235,17 +235,10 @@ If the result is non-nil, then break.  Errors are ignored."
 
 ;;; Form spec utilities.
 
-;;;###autoload
-(defmacro def-edebug-spec (symbol spec)
-  "Set the `edebug-form-spec' property of SYMBOL according to SPEC.
-Both SYMBOL and SPEC are unevaluated. The SPEC can be 0, t, a symbol
-\(naming a function), or a list."
-  `(put (quote ,symbol) 'edebug-form-spec (quote ,spec)))
-
 (defmacro def-edebug-form-spec (symbol spec-form)
-  "For compatibility with old version.  Use `def-edebug-spec' instead."
-  (message "Obsolete: use def-edebug-spec instead.")
+  "For compatibility with old version."
   (def-edebug-spec symbol (eval spec-form)))
+(make-obsolete 'def-edebug-form-spec 'def-edebug-spec "22.1")
 
 (defun get-edebug-spec (symbol)
   ;; Get the spec of symbol resolving all indirection.
@@ -258,6 +251,20 @@ Both SYMBOL and SPEC are unevaluated. The SPEC can be 0, t, a symbol
     edebug-form-spec
     ))
 
+;;;###autoload
+(defun edebug-basic-spec (spec)
+  "Return t if SPEC uses only extant spec symbols.
+An extant spec symbol is a symbol that is not a function and has a
+`edebug-form-spec' property."
+  (cond ((listp spec)
+	 (catch 'basic
+	   (while spec
+	     (unless (edebug-basic-spec (car spec)) (throw 'basic nil))
+	     (setq spec (cdr spec)))
+	   t))
+	((symbolp spec)
+	 (unless (functionp spec) (get spec 'edebug-form-spec)))))
+
 ;;; Utilities
 
 ;; Define edebug-gensym - from old cl.el
@@ -266,8 +273,8 @@ Both SYMBOL and SPEC are unevaluated. The SPEC can be 0, t, a symbol
 
 (defun edebug-gensym (&optional prefix)
   "Generate a fresh uninterned symbol.
-There is an optional argument, PREFIX.  PREFIX is the
-string that begins the new name.  Most people take just the default,
+There is an  optional argument, PREFIX.  PREFIX is the
+string that begins the new name. Most people take just the default,
 except when debugging needs suggest otherwise."
   (if (null prefix)
       (setq prefix "G"))
@@ -302,12 +309,8 @@ A lambda list keyword is a symbol that starts with `&'."
   "Return a list of windows, in order of `next-window'."
   ;; This doesn't work for epoch.
   (let (window-list)
-    (walk-windows (lambda (w) (setq window-list (cons w window-list))))
+    (walk-windows (lambda (w) (push w window-list)))
     (nreverse window-list)))
-
-(defun edebug-window-live-p (window)
-  "Return non-nil if WINDOW is visible."
-  (get-window-with-predicate (lambda (w) (eq w window))))
 
 ;; Not used.
 '(defun edebug-two-window-p ()
@@ -326,17 +329,7 @@ A lambda list keyword is a symbol that starts with `&'."
   (setq object (edebug-lookup-function object))
   (if (and (listp object)
 	   (eq 'macro (car object))
-	   (edebug-functionp (cdr object)))
-      object))
-
-(defun edebug-functionp (object)
-  "Returns the function named by OBJECT, or nil if it is not a function."
-  (setq object (edebug-lookup-function object))
-  (if (or (subrp object)
-	  (byte-code-function-p object)
-	  (and (listp object)
-	       (eq (car object) 'lambda)
-	       (listp (car (cdr object)))))
+	   (functionp (cdr object)))
       object))
 
 (defun edebug-sort-alist (alist function)
@@ -371,52 +364,58 @@ Return the result of the last expression in BODY."
 
 (defun edebug-pop-to-buffer (buffer &optional window)
   ;; Like pop-to-buffer, but select window where BUFFER was last shown.
-  ;; Select WINDOW if it provided and it still exists.  Otherwise,
+  ;; Select WINDOW if it is provided and still exists.  Otherwise,
   ;; if buffer is currently shown in several windows, choose one.
   ;; Otherwise, find a new window, possibly splitting one.
-  (setq window (if (and (windowp window) (edebug-window-live-p window)
-			(eq (window-buffer window) buffer))
-		   window
-		 (if (eq (window-buffer (selected-window)) buffer)
-		     (selected-window)
-		   (edebug-get-buffer-window buffer))))
-  (if window
-      (select-window window)
-    (if (one-window-p)
-	(split-window))
-    ;;      (message "next window: %s" (next-window)) (sit-for 1)
-    (if (eq (get-buffer-window edebug-trace-buffer) (next-window))
-	;; Don't select trace window
-	nil
-      (select-window (next-window))))
-  (set-window-buffer (selected-window) buffer)
-  (set-window-hscroll (selected-window) 0);; should this be??
+  (setq window
+	(cond
+	 ((and (windowp window) (edebug-window-live-p window)
+	       (eq (window-buffer window) buffer))
+	  window)
+	 ((eq (window-buffer (selected-window)) buffer)
+	  ;; Selected window already displays BUFFER.
+	  (selected-window))
+	 ((edebug-get-buffer-window buffer))
+	 ((one-window-p 'nomini)
+	  ;; When there's one window only, split it.
+	  (split-window))
+	 ((let ((trace-window (get-buffer-window edebug-trace-buffer)))
+	    (catch 'found
+	      (dolist (elt (window-list nil 'nomini))
+		(unless (or (eq elt (selected-window)) (eq elt trace-window)
+			    (window-dedicated-p elt))
+		  ;; Found a non-dedicated window not showing
+		  ;; `edebug-trace-buffer', use it.
+		  (throw 'found elt))))))
+	 ;; All windows are dedicated or show `edebug-trace-buffer', split
+	 ;; selected one.
+	 (t (split-window))))
+  (select-window window)
+  (set-window-buffer window buffer)
+  (set-window-hscroll window 0);; should this be??
   ;; Selecting the window does not set the buffer until command loop.
   ;;(set-buffer buffer)
   )
-
 
 (defun edebug-get-displayed-buffer-points ()
   ;; Return a list of buffer point pairs, for all displayed buffers.
   (let (list)
     (walk-windows (lambda (w)
 		    (unless (eq w (selected-window))
-		      (setq list (cons (cons (window-buffer w)
-					     (window-point w))
-				       list)))))
+		      (push (cons (window-buffer w)
+				  (window-point w))
+			    list))))
     list))
 
 
 (defun edebug-set-buffer-points (buffer-points)
   ;; Restore the buffer-points created by edebug-get-displayed-buffer-points.
-  (let ((current-buffer (current-buffer)))
-    (mapcar (function (lambda (buf-point)
-			(if (buffer-name (car buf-point)) ; still exists
-			    (progn
-			      (set-buffer (car buf-point))
-			      (goto-char (cdr buf-point))))))
-	    buffer-points)
-    (set-buffer current-buffer)))
+  (save-current-buffer
+    (mapcar (lambda (buf-point)
+	      (when (buffer-live-p (car buf-point))
+		(set-buffer (car buf-point))
+		(goto-char (cdr buf-point))))
+	    buffer-points)))
 
 (defun edebug-current-windows (which-windows)
   ;; Get either a full window configuration or some window information.
@@ -493,7 +492,8 @@ also dependent on the values of `edebug-all-defs' and
 If the current defun is actually a call to `defvar', then reset the
 variable using its initial value expression even if the variable
 already has some other value.  (Normally `defvar' does not change the
-variable's value if it already has a value.)
+variable's value if it already has a value.)  Treat `defcustom'
+similarly.  Reinitialize the face according to `defface' specification.
 
 With a prefix argument, instrument the code for Edebug.
 
@@ -515,15 +515,27 @@ the minibuffer."
 		(edebug-all-defs (eq edebug-all-defs (not edebug-it))))
 	    (edebug-read-top-level-form))))
     ;; This should be consistent with `eval-defun-1', but not the
-    ;; same, since that gets a macroexpended form.
+    ;; same, since that gets a macroexpanded form.
     (cond ((and (eq (car form) 'defvar)
 		(cdr-safe (cdr-safe form)))
 	   ;; Force variable to be bound.
-	   (setq form (cons 'defconst (cdr form))))
+	   (makunbound (nth 1 form)))
 	  ((and (eq (car form) 'defcustom)
 		(default-boundp (nth 1 form)))
 	   ;; Force variable to be bound.
-	   (set-default (nth 1 form) (eval (nth 2 form)))))
+	   (set-default (nth 1 form) (eval (nth 2 form))))
+          ((eq (car form) 'defface)
+           ;; Reset the face.
+           (setq face-new-frame-defaults
+                 (assq-delete-all (nth 1 form) face-new-frame-defaults))
+           (put (nth 1 form) 'face-defface-spec nil)
+	   ;; See comments in `eval-defun-1' for purpose of code below
+	   (setq form (prog1 `(prog1 ,form
+				(put ',(nth 1 form) 'saved-face
+				     ',(get (nth 1 form) 'saved-face))
+				(put ',(nth 1 form) 'customized-face
+				     ,(nth 2 form)))
+			(put (nth 1 form) 'saved-face nil)))))
     (setq edebug-result (eval form))
     (if (not edebugging)
 	(princ edebug-result)
@@ -535,12 +547,24 @@ the minibuffer."
 
 ;;;###autoload
 (defun edebug-eval-top-level-form ()
-  "Evaluate a top level form, such as a defun or defmacro.
-This is like `eval-defun', but the code is always instrumented for Edebug.
-Print its name in the minibuffer and leave point where it is,
-or if an error occurs, leave point after it with mark at the original point."
+  "Evaluate the top level form point is in, stepping through with Edebug.
+This is like `eval-defun' except that it steps the code for Edebug
+before evaluating it.  It displays the value in the echo area
+using `eval-expression' (which see).
+
+If you do this on a function definition
+such as a defun or defmacro, it defines the function and instruments
+its definition for Edebug, so it will do Edebug stepping when called
+later.  It displays `Edebug: FUNCTION' in the echo area to indicate
+that FUNCTION is now instrumented for Edebug.
+
+If the current defun is actually a call to `defvar' or `defcustom',
+evaluating it this way resets the variable using its initial value
+expression even if the variable already has some other value.
+\(Normally `defvar' and `defcustom' do not alter the value if there
+already is one.)"
   (interactive)
-  (eval
+  (eval-expression
    ;; Bind edebug-all-forms only while reading, not while evalling
    ;; but this causes problems while edebugging edebug.
    (let ((edebug-all-forms t)
@@ -561,6 +585,7 @@ or if an error occurs, leave point after it with mark at the original point."
 ;; Compatibility with old versions.
 (defalias 'edebug-all-defuns 'edebug-all-defs)
 
+;;;###autoload
 (defun edebug-all-defs ()
   "Toggle edebugging of all definitions."
   (interactive)
@@ -569,6 +594,7 @@ or if an error occurs, leave point after it with mark at the original point."
 	   (if edebug-all-defs "on" "off")))
 
 
+;;;###autoload
 (defun edebug-all-forms ()
   "Toggle edebugging of all forms."
   (interactive)
@@ -597,7 +623,7 @@ or if an error occurs, leave point after it with mark at the original point."
 
 (make-variable-buffer-local 'edebug-form-data)
 
-(defconst edebug-form-data nil)
+(defvar edebug-form-data nil)
 ;; A list of entries associating symbols with buffer regions.
 ;; This is an automatic buffer local variable.  Each entry looks like:
 ;; @code{(@var{symbol} @var{begin-marker} @var{end-marker}).  The markers
@@ -712,8 +738,10 @@ or if an error occurs, leave point after it with mark at the original point."
   (if (and (eq (following-char) ?.)
 	   (save-excursion
 	     (forward-char 1)
-	     (and (>= (following-char) ?0)
-		  (<= (following-char) ?9))))
+	     (or (and (eq (aref edebug-read-syntax-table (following-char))
+			  'symbol)
+		      (not (= (following-char) ?\;)))
+		 (memq (following-char) '(?\, ?\.)))))
       'symbol
     (aref edebug-read-syntax-table (following-char))))
 
@@ -722,8 +750,7 @@ or if an error occurs, leave point after it with mark at the original point."
   ;; Leave point before the next token, skipping white space and comments.
   (skip-chars-forward " \t\r\n\f")
   (while (= (following-char) ?\;)
-    ;; \r is counted as a comment terminator to support selective display.
-    (skip-chars-forward "^\n\r")  ; skip the comment
+    (skip-chars-forward "^\n")  ; skip the comment
     (skip-chars-forward " \t\r\n\f")))
 
 
@@ -757,17 +784,17 @@ or if an error occurs, leave point after it with mark at the original point."
 ;; or for structures that have elements: (before <subexpressions> . after)
 ;; where the <subexpressions> are the offset structures for subexpressions
 ;; including the head of a list.
-(defconst edebug-offsets nil)
+(defvar edebug-offsets nil)
 
 ;; Stack of offset structures in reverse order of the nesting.
 ;; This is used to get back to previous levels.
-(defconst edebug-offsets-stack nil)
-(defconst edebug-current-offset nil) ; Top of the stack, for convenience.
+(defvar edebug-offsets-stack nil)
+(defvar edebug-current-offset nil) ; Top of the stack, for convenience.
 
 ;; We must store whether we just read a list with a dotted form that
 ;; is itself a list.  This structure will be condensed, so the offsets
 ;; must also be condensed.
-(defconst edebug-read-dotted-list nil)
+(defvar edebug-read-dotted-list nil)
 
 (defsubst edebug-initialize-offsets ()
   ;; Reinitialize offset recording.
@@ -814,10 +841,8 @@ or if an error occurs, leave point after it with mark at the original point."
   ;; Ignore the last created offset pair.
   (setcdr edebug-current-offset (cdr (cdr edebug-current-offset))))
 
-(def-edebug-spec edebug-storing-offsets (form body))
-(put 'edebug-storing-offsets 'lisp-indent-hook 1)
-
 (defmacro edebug-storing-offsets (point &rest body)
+  (declare (debug (form body)) (indent 1))
   `(unwind-protect
        (progn
 	 (edebug-store-before-offset ,point)
@@ -841,15 +866,13 @@ or if an error occurs, leave point after it with mark at the original point."
     ))
 
 (defun edebug-read-storing-offsets (stream)
-  (let ((class (edebug-next-token-class))
-	func
-	edebug-read-dotted-list) ; see edebug-store-after-offset
+  (let (edebug-read-dotted-list) ; see edebug-store-after-offset
     (edebug-storing-offsets (point)
-      (if (setq func (assq class edebug-read-alist))
-	  (funcall (cdr func) stream)
-	;; anything else, just read it.
-	(edebug-original-read stream))
-      )))
+      (funcall
+       (or (cdr (assq (edebug-next-token-class) edebug-read-alist))
+	   ;; anything else, just read it.
+	   'edebug-original-read)
+       stream))))
 
 (defun edebug-read-symbol (stream)
   (edebug-original-read stream))
@@ -861,25 +884,20 @@ or if an error occurs, leave point after it with mark at the original point."
   ;; Turn 'thing into (quote thing)
   (forward-char 1)
   (list
-   (edebug-storing-offsets (point)  'quote)
+   (edebug-storing-offsets (1- (point)) 'quote)
    (edebug-read-storing-offsets stream)))
+
+(defvar edebug-read-backquote-level 0
+  "If non-zero, we're in a new-style backquote.
+It should never be negative.  This controls how we read comma constructs.")
 
 (defun edebug-read-backquote (stream)
   ;; Turn `thing into (\` thing)
-  (let ((opoint (point)))
-    (forward-char 1)
-    ;; Generate the same structure of offsets we would have
-    ;; if the resulting list appeared verbatim in the input text.
-    (edebug-storing-offsets opoint
-      (list
-       (edebug-storing-offsets opoint  '\`)
-       (edebug-read-storing-offsets stream)))))
-
-(defvar edebug-read-backquote-new nil
-  "Non-nil if reading the inside of a new-style backquote with no parens around it.
-Value of nil means reading the inside of an old-style backquote construct
-which is surrounded by an extra set of parentheses.
-This controls how we read comma constructs.")
+  (forward-char 1)
+  (list
+   (edebug-storing-offsets (1- (point)) '\`)
+   (let ((edebug-read-backquote-level (1+ edebug-read-backquote-level)))
+     (edebug-read-storing-offsets stream))))
 
 (defun edebug-read-comma (stream)
   ;; Turn ,thing into (\, thing).  Handle ,@ and ,. also.
@@ -894,11 +912,12 @@ This controls how we read comma constructs.")
 	     (forward-char 1)))
       ;; Generate the same structure of offsets we would have
       ;; if the resulting list appeared verbatim in the input text.
-      (if edebug-read-backquote-new
-	  (list
-	   (edebug-storing-offsets opoint symbol)
-	   (edebug-read-storing-offsets stream))
-	(edebug-storing-offsets opoint symbol)))))
+      (if (zerop edebug-read-backquote-level)
+	  (edebug-storing-offsets opoint symbol)
+	(list
+	 (edebug-storing-offsets opoint symbol)
+	 (let ((edebug-read-backquote-level (1- edebug-read-backquote-level)))
+	   (edebug-read-storing-offsets stream)))))))
 
 (defun edebug-read-function (stream)
   ;; Turn #'thing into (function thing)
@@ -906,11 +925,11 @@ This controls how we read comma constructs.")
   (cond ((eq ?\' (following-char))
 	 (forward-char 1)
 	 (list
-	  (edebug-storing-offsets (point)
+	  (edebug-storing-offsets (- (point) 2)
 	    (if (featurep 'cl) 'function* 'function))
 	  (edebug-read-storing-offsets stream)))
 	((memq (following-char) '(?: ?B ?O ?X ?b ?o ?x ?1 ?2 ?3 ?4 ?5 ?6
-				    ?7 ?8 ?9 ?0))
+				  ?7 ?8 ?9 ?0))
 	 (backward-char 1)
 	 (edebug-original-read stream))
 	(t (edebug-syntax-error "Bad char after #"))))
@@ -920,18 +939,17 @@ This controls how we read comma constructs.")
   (prog1
       (let ((elements))
 	(while (not (memq (edebug-next-token-class) '(rparen dot)))
-	  (if (eq (edebug-next-token-class) 'backquote)
-	      (let ((edebug-read-backquote-new (not (null elements)))
-		    (opoint (point)))
-		(if edebug-read-backquote-new
-		    (setq elements (cons (edebug-read-backquote stream) elements))
-		  (forward-char 1)	; Skip backquote.
-		  ;; Call edebug-storing-offsets here so that we
-		  ;; produce the same offsets we would have had
-		  ;; if the backquote were an ordinary symbol.
-		  (setq elements (cons (edebug-storing-offsets opoint '\`)
-				       elements))))
-	    (setq elements (cons (edebug-read-storing-offsets stream) elements))))
+	  (if (and (eq (edebug-next-token-class) 'backquote)
+		   (null elements)
+		   (zerop edebug-read-backquote-level))
+	      (progn
+		;; Old style backquote.
+		(forward-char 1)	; Skip backquote.
+		;; Call edebug-storing-offsets here so that we
+		;; produce the same offsets we would have had
+		;; if the backquote were an ordinary symbol.
+		(push (edebug-storing-offsets (1- (point)) '\`) elements))
+	    (push (edebug-read-storing-offsets stream) elements)))
 	(setq elements (nreverse elements))
 	(if (eq 'dot (edebug-next-token-class))
 	    (let (dotted-form)
@@ -951,7 +969,7 @@ This controls how we read comma constructs.")
   (prog1
       (let ((elements))
 	(while (not (eq 'rbracket (edebug-next-token-class)))
-	  (setq elements (cons (edebug-read-storing-offsets stream) elements)))
+	  (push (edebug-read-storing-offsets stream) elements))
 	(apply 'vector (nreverse elements)))
     (forward-char 1)			; skip \]
     ))
@@ -973,7 +991,7 @@ This controls how we read comma constructs.")
   (setcdr cursor offsets)
   cursor)
 
-'(defun edebug-copy-cursor (cursor)
+(defun edebug-copy-cursor (cursor)
   ;; Copy the cursor using the same object and offsets.
   (cons (car cursor) (cdr cursor)))
 
@@ -1067,11 +1085,11 @@ This controls how we read comma constructs.")
 (defvar edebug-&rest)
 (defvar edebug-gate nil) ;; whether no-match forces an error.
 
-(defconst edebug-def-name nil) ; name of definition, used by interactive-form
-(defconst edebug-old-def-name nil) ; previous name of containing definition.
+(defvar edebug-def-name nil) ; name of definition, used by interactive-form
+(defvar edebug-old-def-name nil) ; previous name of containing definition.
 
-(defconst edebug-error-point nil)
-(defconst edebug-best-error nil)
+(defvar edebug-error-point nil)
+(defvar edebug-best-error nil)
 
 
 (defun edebug-read-and-maybe-wrap-form ()
@@ -1476,12 +1494,9 @@ expressions; a `progn' form will be returned enclosing these forms."
     (edebug-set-cursor cursor (edebug-cursor-expressions cursor)
 		       (cdr (edebug-cursor-offsets cursor)))
     (cond
-     ((null head) nil) ; () is legal.
-
      ((symbolp head)
       (cond
-       ((null head)
-	(edebug-syntax-error "nil head"))
+       ((null head) nil) ; () is legal.
        ((eq head 'interactive-p)
 	;; Special case: replace (interactive-p) with variable
 	(setq edebug-def-interactive 'check-it)
@@ -1492,14 +1507,19 @@ expressions; a `progn' form will be returned enclosing these forms."
 		    head (edebug-move-cursor cursor))))))
 
      ((consp head)
-      (if (and (listp head) (eq (car head) ',))
+      (if (eq (car head) ',)
+	  ;; The head of a form should normally be a symbol or a lambda
+	  ;; expression but it can also be an unquote form to be filled
+	  ;; before evaluation.  We evaluate the arguments anyway, on the
+	  ;; assumption that the unquote form will place a proper function
+	  ;; name (rather than a macro name).
 	  (edebug-match cursor '(("," def-form) body))
 	;; Process anonymous function and args.
 	;; This assumes no anonymous macros.
 	(edebug-match-specs cursor '(lambda-expr body) 'edebug-match-specs)))
 
      (t (edebug-syntax-error
-	 "Head of list form must be a symbol or lambda expression.")))
+	 "Head of list form must be a symbol or lambda expression")))
       ))
 
 ;;; Matching of specs.
@@ -1985,17 +2005,7 @@ expressions; a `progn' form will be returned enclosing these forms."
 	   [&optional ("interactive" interactive)]
 	   def-body))
 (def-edebug-spec defmacro
-  (&define name lambda-list def-body))
-(def-edebug-spec define-derived-mode
-  (&define name symbolp stringp [&optional stringp] def-body))
-(def-edebug-spec define-minor-mode
-  (&define name stringp
-	   [&optional sexp sexp &or consp symbolp]
-	   [&rest [keywordp sexp]]
-	   def-body))
-;; This plain doesn't work ;-(   -sm
-;; (def-edebug-spec define-skeleton
-;;   (&define name stringp def-body))
+  (&define name lambda-list [&optional ("declare" &rest sexp)] def-body))
 
 (def-edebug-spec arglist lambda-list)  ;; deprecated - use lambda-list.
 
@@ -2061,7 +2071,14 @@ expressions; a `progn' form will be returned enclosing these forms."
 (def-edebug-spec backquote-form
   (&or
    ([&or "," ",@"] &or ("quote" backquote-form) form)
-   (backquote-form &rest backquote-form)
+   ;; The simple version:
+   ;;   (backquote-form &rest backquote-form)
+   ;; doesn't handle (a . ,b).  The straightforward fix:
+   ;;   (backquote-form . [&or nil backquote-form])
+   ;; uses up too much stack space.
+   ;; Note that `(foo . ,@bar) is not legal, so we don't need to handle it.
+   (backquote-form [&rest [&not ","] backquote-form]
+		   . [&or nil backquote-form])
    ;; If you use dotted forms in backquotes, replace the previous line
    ;; with the following.  This takes quite a bit more stack space, however.
    ;; (backquote-form . [&or nil backquote-form])
@@ -2085,9 +2102,9 @@ expressions; a `progn' form will be returned enclosing these forms."
 (def-edebug-spec edebug-\` (def-form))
 
 ;; Assume immediate quote in unquotes mean backquote at next higher level.
-(def-edebug-spec , (&or ("quote" edebug-`) def-form))
+(def-edebug-spec , (&or ("quote" edebug-\`) def-form))
 (def-edebug-spec ,@ (&define  ;; so (,@ form) is never wrapped.
-		     &or ("quote" edebug-`) def-form))
+		     &or ("quote" edebug-\`) def-form))
 
 ;; New byte compiler.
 (def-edebug-spec defsubst defun)
@@ -2097,20 +2114,16 @@ expressions; a `progn' form will be returned enclosing these forms."
 
 (def-edebug-spec save-selected-window t)
 (def-edebug-spec save-current-buffer t)
-(def-edebug-spec save-match-data t)
-(def-edebug-spec with-output-to-string t)
-(def-edebug-spec with-current-buffer t)
-(def-edebug-spec combine-after-change-calls t)
+(def-edebug-spec delay-mode-hooks t)
 (def-edebug-spec with-temp-file t)
-(def-edebug-spec with-temp-buffer t)
 (def-edebug-spec with-temp-message t)
 (def-edebug-spec with-syntax-table t)
-(def-edebug-spec dolist ((symbolp form &rest form) &rest form))
-(def-edebug-spec dotimes ((symbolp form &rest form) &rest form))
 (def-edebug-spec push (form sexp))
 (def-edebug-spec pop (sexp))
-(def-edebug-spec unless t)
-(def-edebug-spec when t)
+
+(def-edebug-spec 1value (form))
+(def-edebug-spec noreturn (form))
+
 
 ;; Anything else?
 
@@ -2263,8 +2276,10 @@ error is signaled again."
 
 	    ;; Save the outside value of executing macro.  (here??)
 	    (edebug-outside-executing-macro executing-kbd-macro)
-	    (edebug-outside-pre-command-hook pre-command-hook)
-	    (edebug-outside-post-command-hook post-command-hook))
+	    (edebug-outside-pre-command-hook
+	     (edebug-var-status 'pre-command-hook))
+	    (edebug-outside-post-command-hook
+	     (edebug-var-status 'post-command-hook)))
 	(unwind-protect
 	    (let (;; Don't keep reading from an executing kbd macro
 		  ;; within edebug unless edebug-continue-kbd-macro is
@@ -2289,10 +2304,11 @@ error is signaled again."
 		    edebug-next-execution-mode nil)
 	      (edebug-enter edebug-function edebug-args edebug-body))
 	  ;; Reset global variables in case outside value was changed.
-	  (setq executing-kbd-macro edebug-outside-executing-macro
-		pre-command-hook edebug-outside-pre-command-hook
-		post-command-hook edebug-outside-post-command-hook
-		)))
+	  (setq executing-kbd-macro edebug-outside-executing-macro)
+	  (edebug-restore-status
+	   'post-command-hook edebug-outside-post-command-hook)
+	  (edebug-restore-status
+	   'pre-command-hook edebug-outside-pre-command-hook)))
 
     (let* ((edebug-data (get edebug-function 'edebug))
 	   (edebug-def-mark (car edebug-data)) ; mark at def start
@@ -2313,6 +2329,30 @@ error is signaled again."
 	(funcall edebug-body))
       )))
 
+(defun edebug-var-status (var)
+  "Return a cons cell describing the status of VAR's current binding.
+The purpose of this function is so you can properly undo
+subsequent changes to the same binding, by passing the status
+cons cell to `edebug-restore-status'.  The status cons cell
+has the form (LOCUS . VALUE), where LOCUS can be a buffer
+\(for a buffer-local binding), a frame (for a frame-local binding),
+or nil (if the default binding is current)."
+  (cons (variable-binding-locus var)
+	(symbol-value var)))
+
+(defun edebug-restore-status (var status)
+  "Reset VAR based on STATUS.
+STATUS should be a list you got from `edebug-var-status'."
+  (let ((locus (car status))
+	(value (cdr status)))
+    (cond ((bufferp locus)
+	   (if (buffer-live-p locus)
+	       (with-current-buffer locus
+		 (set var value))))
+	  ((framep locus)
+	   (modify-frame-parameters locus (list (cons var value))))
+	  (t
+	   (set var value)))))
 
 (defun edebug-enter-trace (edebug-body)
   (let ((edebug-stack-depth (1+ edebug-stack-depth))
@@ -2350,18 +2390,19 @@ MSG is printed after `::::} '."
 
 
 (defun edebug-slow-before (edebug-before-index)
-  ;; Debug current function given BEFORE position.
-  ;; Called from functions compiled with edebug-eval-top-level-form.
-  ;; Return the before index.
-  (setcar edebug-offset-indices edebug-before-index)
+  (unless edebug-active
+    ;; Debug current function given BEFORE position.
+    ;; Called from functions compiled with edebug-eval-top-level-form.
+    ;; Return the before index.
+    (setcar edebug-offset-indices edebug-before-index)
 
-  ;; Increment frequency count
-  (aset edebug-freq-count edebug-before-index
-	(1+ (aref edebug-freq-count edebug-before-index)))
+    ;; Increment frequency count
+    (aset edebug-freq-count edebug-before-index
+	  (1+ (aref edebug-freq-count edebug-before-index)))
 
-  (if (or (not (memq edebug-execution-mode '(Go-nonstop next)))
-	  (edebug-input-pending-p))
-      (edebug-debugger edebug-before-index 'before nil))
+    (if (or (not (memq edebug-execution-mode '(Go-nonstop next)))
+	    (edebug-input-pending-p))
+	(edebug-debugger edebug-before-index 'before nil)))
   edebug-before-index)
 
 (defun edebug-fast-before (edebug-before-index)
@@ -2369,22 +2410,24 @@ MSG is printed after `::::} '."
   )
 
 (defun edebug-slow-after (edebug-before-index edebug-after-index edebug-value)
-  ;; Debug current function given AFTER position and VALUE.
-  ;; Called from functions compiled with edebug-eval-top-level-form.
-  ;; Return VALUE.
-  (setcar edebug-offset-indices edebug-after-index)
-
-  ;; Increment frequency count
-  (aset edebug-freq-count edebug-after-index
-	(1+ (aref edebug-freq-count edebug-after-index)))
-  (if edebug-test-coverage (edebug-update-coverage))
-
-  (if (and (eq edebug-execution-mode 'Go-nonstop)
-	   (not (edebug-input-pending-p)))
-      ;; Just return result.
+  (if edebug-active
       edebug-value
-    (edebug-debugger edebug-after-index 'after edebug-value)
-    ))
+    ;; Debug current function given AFTER position and VALUE.
+    ;; Called from functions compiled with edebug-eval-top-level-form.
+    ;; Return VALUE.
+    (setcar edebug-offset-indices edebug-after-index)
+
+    ;; Increment frequency count
+    (aset edebug-freq-count edebug-after-index
+	  (1+ (aref edebug-freq-count edebug-after-index)))
+    (if edebug-test-coverage (edebug-update-coverage))
+
+    (if (and (eq edebug-execution-mode 'Go-nonstop)
+	     (not (edebug-input-pending-p)))
+	;; Just return result.
+	edebug-value
+      (edebug-debugger edebug-after-index 'after edebug-value)
+      )))
 
 (defun edebug-fast-after (edebug-before-index edebug-after-index edebug-value)
   ;; Do nothing but return the value.
@@ -2426,45 +2469,48 @@ MSG is printed after `::::} '."
 
 
 (defun edebug-debugger (edebug-offset-index edebug-arg-mode edebug-value)
-  ;; Check breakpoints and pending input.
-  ;; If edebug display should be updated, call edebug-display.
-  ;; Return edebug-value.
-  (let* (;; This needs to be here since breakpoints may be changed.
-	 (edebug-breakpoints (car (cdr edebug-data))) ; list of breakpoints
-	 (edebug-break-data (assq edebug-offset-index edebug-breakpoints))
-	 (edebug-break-condition (car (cdr edebug-break-data)))
-	 (edebug-global-break
-	  (if edebug-global-break-condition
-	      (condition-case nil
-		  (setq edebug-global-break-result
-			(eval edebug-global-break-condition))
-		(error nil))))
-	 (edebug-break))
+  (if inhibit-redisplay
+      ;; Don't really try to enter edebug within an eval from redisplay.
+      edebug-value
+    ;; Check breakpoints and pending input.
+    ;; If edebug display should be updated, call edebug-display.
+    ;; Return edebug-value.
+    (let* ( ;; This needs to be here since breakpoints may be changed.
+	   (edebug-breakpoints (car (cdr edebug-data)))	; list of breakpoints
+	   (edebug-break-data (assq edebug-offset-index edebug-breakpoints))
+	   (edebug-break-condition (car (cdr edebug-break-data)))
+	   (edebug-global-break
+	    (if edebug-global-break-condition
+		(condition-case nil
+		    (setq edebug-global-break-result
+			  (eval edebug-global-break-condition))
+		  (error nil))))
+	   (edebug-break))
 
 ;;;    (edebug-trace "exp: %s" edebug-value)
-    ;; Test whether we should break.
-    (setq edebug-break
-	  (or edebug-global-break
-	      (and edebug-break-data
-		   (or (not edebug-break-condition)
-		       (setq edebug-break-result
-			     (eval edebug-break-condition))))))
-    (if (and edebug-break
-	     (nth 2 edebug-break-data)) ; is it temporary?
-	;; Delete the breakpoint.
-	(setcdr edebug-data
-		(cons (delq edebug-break-data edebug-breakpoints)
-		      (cdr (cdr edebug-data)))))
+      ;; Test whether we should break.
+      (setq edebug-break
+	    (or edebug-global-break
+		(and edebug-break-data
+		     (or (not edebug-break-condition)
+			 (setq edebug-break-result
+			       (eval edebug-break-condition))))))
+      (if (and edebug-break
+	       (nth 2 edebug-break-data)) ; is it temporary?
+	  ;; Delete the breakpoint.
+	  (setcdr edebug-data
+		  (cons (delq edebug-break-data edebug-breakpoints)
+			(cdr (cdr edebug-data)))))
 
-    ;; Display if mode is not go, continue, or Continue-fast
-    ;; or break, or input is pending,
-    (if (or (not (memq edebug-execution-mode '(go continue Continue-fast)))
-	    edebug-break
-	    (edebug-input-pending-p))
-	(edebug-display))   ; <--------------- display
+      ;; Display if mode is not go, continue, or Continue-fast
+      ;; or break, or input is pending,
+      (if (or (not (memq edebug-execution-mode '(go continue Continue-fast)))
+	      edebug-break
+	      (edebug-input-pending-p))
+	  (edebug-display))		; <--------------- display
 
-    edebug-value
-    ))
+      edebug-value
+      )))
 
 
 ;; window-start now stored with each function.
@@ -2487,21 +2533,27 @@ MSG is printed after `::::} '."
 (defvar edebug-outside-o-a-p) ; outside overlay-arrow-position
 (defvar edebug-outside-o-a-s) ; outside overlay-arrow-string
 (defvar edebug-outside-c-i-e-a) ; outside cursor-in-echo-area
+(defvar edebug-outside-d-c-i-n-s-w) ; outside default-cursor-in-non-selected-windows
 
 (defvar edebug-eval-list nil) ;; List of expressions to evaluate.
 
 (defvar edebug-previous-result nil) ;; Last result returned.
 
 ;; Emacs 19 adds an arg to mark and mark-marker.
-(defalias 'edebug-mark 'mark)
 (defalias 'edebug-mark-marker 'mark-marker)
 
 
 (defun edebug-display ()
+  (unless (marker-position edebug-def-mark)
+    ;; The buffer holding the source has been killed.
+    ;; Let's at least show a backtrace so the user can figure out
+    ;; which function we're talking about.
+    (debug))
   ;; Setup windows for edebug, determine mode, maybe enter recursive-edit.
   ;; Uses local variables of edebug-enter, edebug-before, edebug-after
   ;; and edebug-debugger.
   (let ((edebug-active t)		; for minor mode alist
+	(edebug-with-timeout-suspend (with-timeout-suspend))
 	edebug-stop			; should we enter recursive-edit
 	(edebug-point (+ edebug-def-mark
 			 (aref (nth 2 edebug-data) edebug-offset-index)))
@@ -2512,6 +2564,7 @@ MSG is printed after `::::} '."
 	(edebug-outside-buffer (current-buffer))
 	(edebug-outside-point (point))
  	(edebug-outside-mark (edebug-mark))
+	(edebug-outside-unread-command-events unread-command-events)
 	edebug-outside-windows		; window or screen configuration
 	edebug-buffer-points
 
@@ -2523,11 +2576,14 @@ MSG is printed after `::::} '."
 
 	(edebug-outside-o-a-p overlay-arrow-position)
 	(edebug-outside-o-a-s overlay-arrow-string)
-	(edebug-outside-c-i-e-a cursor-in-echo-area))
+	(edebug-outside-c-i-e-a cursor-in-echo-area)
+	(edebug-outside-d-c-i-n-s-w default-cursor-in-non-selected-windows))
     (unwind-protect
 	(let ((overlay-arrow-position overlay-arrow-position)
 	      (overlay-arrow-string overlay-arrow-string)
 	      (cursor-in-echo-area nil)
+	      (default-cursor-in-non-selected-windows t)
+	      (unread-command-events unread-command-events)
 	      ;; any others??
 	      )
 	  (if (not (buffer-name edebug-buffer))
@@ -2616,26 +2672,27 @@ MSG is printed after `::::} '."
 
 	   (t (message "")))
 
+	  (setq unread-command-events nil)
 	  (if (eq 'after edebug-arg-mode)
 	      (progn
 		;; Display result of previous evaluation.
 		(if (and edebug-break
 			 (not (eq edebug-execution-mode 'Continue-fast)))
-		    (sit-for 1))	; Show break message.
+                    (edebug-sit-for edebug-sit-for-seconds)) ; Show message.
 		(edebug-previous-result)))
 
 	  (cond
 	   (edebug-break
 	    (cond
-	     ((eq edebug-execution-mode 'continue) (edebug-sit-for 1))
+	     ((eq edebug-execution-mode 'continue)
+              (edebug-sit-for edebug-sit-for-seconds))
 	     ((eq edebug-execution-mode 'Continue-fast) (edebug-sit-for 0))
 	     (t (setq edebug-stop t))))
 	   ;; not edebug-break
 	   ((eq edebug-execution-mode 'trace)
 	    (edebug-sit-for edebug-sit-for-seconds)) ; Force update and pause.
 	   ((eq edebug-execution-mode 'Trace-fast)
-	    (edebug-sit-for 0))		; Force update and continue.
-	   )
+	    (edebug-sit-for 0)))		; Force update and continue.
 
 	  (unwind-protect
 	      (if (or edebug-stop
@@ -2706,7 +2763,8 @@ MSG is printed after `::::} '."
 	      )				; if edebug-save-windows
 
 	    ;; Restore current buffer always, in case application needs it.
-	    (set-buffer edebug-outside-buffer)
+	    (if (buffer-name edebug-outside-buffer)
+		(set-buffer edebug-outside-buffer))
 	    ;; Restore point, and mark.
 	    ;; Needed even if restoring windows because
 	    ;; that doesn't restore point and mark in the current buffer.
@@ -2728,11 +2786,14 @@ MSG is printed after `::::} '."
 	    (set-buffer current-buffer))
 	  ;; ... nothing more.
 	  )
+      (with-timeout-unsuspend edebug-with-timeout-suspend)
       ;; Reset global variables to outside values in case they were changed.
       (setq
+       unread-command-events edebug-outside-unread-command-events
        overlay-arrow-position edebug-outside-o-a-p
        overlay-arrow-string edebug-outside-o-a-s
-       cursor-in-echo-area edebug-outside-c-i-e-a)
+       cursor-in-echo-area edebug-outside-c-i-e-a
+       default-cursor-in-non-selected-windows edebug-outside-d-c-i-n-s-w)
       )))
 
 
@@ -2819,7 +2880,6 @@ MSG is printed after `::::} '."
 
 	(edebug-outside-last-input-event last-input-event)
 	(edebug-outside-last-command-event last-command-event)
-	(edebug-outside-unread-command-events unread-command-events)
 	(edebug-outside-last-event-frame last-event-frame)
 	(edebug-outside-last-nonmenu-event last-nonmenu-event)
 	(edebug-outside-track-mouse track-mouse)
@@ -2841,7 +2901,6 @@ MSG is printed after `::::} '."
 	      ;; More for Emacs 19
 	      (last-input-event nil)
 	      (last-command-event nil)
-	      (unread-command-events nil)
 	      (last-event-frame nil)
 	      (last-nonmenu-event nil)
 	      (track-mouse nil)
@@ -2857,8 +2916,6 @@ MSG is printed after `::::} '."
 	      ;; others??
 	      )
 
-	  (if (fboundp 'zmacs-deactivate-region);; for lemacs
-	      (zmacs-deactivate-region))
 	  (if (and (eq edebug-execution-mode 'go)
 		   (not (memq edebug-arg-mode '(after error))))
 	      (message "Break"))
@@ -2891,6 +2948,7 @@ MSG is printed after `::::} '."
 		      (edebug-overlay-arrow))
 		  (setq buffer-read-only edebug-buffer-read-only)
 		  (use-local-map edebug-outside-map)
+		  (remove-hook 'kill-buffer-hook 'edebug-kill-buffer t)
 		  )
 	      ;; gotta have a buffer to let its buffer local variables be set
 	      (get-buffer-create " bogus edebug buffer"))
@@ -2903,7 +2961,6 @@ MSG is printed after `::::} '."
        last-command edebug-outside-last-command
        this-command edebug-outside-this-command
        unread-command-char edebug-outside-unread-command-char
-       unread-command-events edebug-outside-unread-command-events
        current-prefix-arg edebug-outside-current-prefix-arg
        last-input-char edebug-outside-last-input-char
        last-input-event edebug-outside-last-input-event
@@ -3167,8 +3224,8 @@ The default is one second."
 
 
 (defun edebug-modify-breakpoint (flag &optional condition temporary)
-  "Modify the breakpoint for the form at point or after it according
-to FLAG: set if t, clear if nil.  Then move to that point.
+  "Modify the breakpoint for the form at point or after it.
+Set it if FLAG is non-nil, clear it otherwise.  Then move to that point.
 If CONDITION or TEMPORARY are non-nil, add those attributes to
 the breakpoint.  "
   (let ((edebug-stop-point (edebug-find-stop-point)))
@@ -3217,36 +3274,16 @@ With prefix argument, make it a temporary breakpoint."
   (edebug-modify-breakpoint nil))
 
 
-;; For emacs 18, no read-expression-history
-(defun edebug-set-conditional-breakpoint (arg condition)
-  "Set a conditional breakpoint at nearest sexp.
-The condition is evaluated in the outside context.
-With prefix argument, make it a temporary breakpoint."
-  ;; (interactive "P\nxCondition: ")
+(defun edebug-set-global-break-condition (expression)
   (interactive
    (list
-    current-prefix-arg
-    ;; Edit previous condition as follows, but it is cumbersome:
-    (let ((edebug-stop-point (edebug-find-stop-point)))
-      (if edebug-stop-point
-          (let* ((edebug-def-name (car edebug-stop-point))
-                 (index (cdr edebug-stop-point))
-                 (edebug-data (get edebug-def-name 'edebug))
-                 (edebug-breakpoints (car (cdr edebug-data)))
-                 (edebug-break-data (assq index edebug-breakpoints))
-                 (edebug-break-condition (car (cdr edebug-break-data))))
-            (read-minibuffer
-             (format "Condition in %s: " edebug-def-name)
-             (if edebug-break-condition
-                 (format "%s" edebug-break-condition)
-               (format ""))))))))
-  (edebug-modify-breakpoint t condition arg))
-
-
-(defun edebug-set-global-break-condition (expression)
-  (interactive (list (read-minibuffer
-		      "Global Condition: "
-		      (format "%s" edebug-global-break-condition))))
+    (let ((initial (and edebug-global-break-condition
+			(format "%s" edebug-global-break-condition))))
+      (read-from-minibuffer
+       "Global Condition: " initial read-expression-map t
+       (if (equal (car read-expression-history) initial)
+	   '(read-expression-history . 1)
+	 'read-expression-history)))))
   (setq edebug-global-break-condition expression))
 
 
@@ -3321,7 +3358,7 @@ With prefix ARG, set temporary break at current point and go."
 
 
 (defun edebug-goto-here ()
-  "Proceed to this stop point."
+  "Proceed to first stop-point at or after current position of point."
   (interactive)
   (edebug-go-mode t))
 
@@ -3379,13 +3416,11 @@ go to the end of the last sexp, or if that is the same point, then step."
 (defun edebug-instrument-function (func)
   ;; Func should be a function symbol.
   ;; Return the function symbol, or nil if not instrumented.
-  (let ((func-marker))
-    (setq func-marker (get func 'edebug))
+  (let ((func-marker (get func 'edebug)))
     (cond
      ((markerp func-marker)
       ;; It is uninstrumented, so instrument it.
-      (save-excursion
-	(set-buffer (marker-buffer func-marker))
+      (with-current-buffer (marker-buffer func-marker)
 	(goto-char func-marker)
 	(edebug-eval-top-level-form)
 	func))
@@ -3393,9 +3428,13 @@ go to the end of the last sexp, or if that is the same point, then step."
       (message "%s is already instrumented." func)
       func)
      (t
-      ;; We could try harder, e.g. do a tags search.
-      (error "Don't know where %s is defined" func)
-      nil))))
+      (let ((loc (find-function-noselect func)))
+	(unless (cdr loc)
+	  (error "Could not find the definition in its file"))
+	(with-current-buffer (car loc)
+	  (goto-char (cdr loc))
+	  (edebug-eval-top-level-form)
+	  func))))))
 
 (defun edebug-instrument-callee ()
   "Instrument the definition of the function or macro about to be called.
@@ -3559,13 +3598,15 @@ Return the result of the last expression."
 
 	   (executing-kbd-macro edebug-outside-executing-macro)
 	   (defining-kbd-macro edebug-outside-defining-kbd-macro)
-	   (pre-command-hook edebug-outside-pre-command-hook)
-	   (post-command-hook edebug-outside-post-command-hook)
+	   ;; Get the values out of the saved statuses.
+	   (pre-command-hook (cdr edebug-outside-pre-command-hook))
+	   (post-command-hook (cdr edebug-outside-post-command-hook))
 
 	   ;; See edebug-display
 	   (overlay-arrow-position edebug-outside-o-a-p)
 	   (overlay-arrow-string edebug-outside-o-a-s)
 	   (cursor-in-echo-area edebug-outside-c-i-e-a)
+	   (default-cursor-in-non-selected-windows edebug-outside-d-c-i-n-s-w)
 	   )
        (unwind-protect
 	   (save-excursion		; of edebug-buffer
@@ -3600,13 +3641,19 @@ Return the result of the last expression."
 
 	  edebug-outside-executing-macro executing-kbd-macro
 	  edebug-outside-defining-kbd-macro defining-kbd-macro
-	  edebug-outside-pre-command-hook pre-command-hook
-	  edebug-outside-post-command-hook post-command-hook
 
 	  edebug-outside-o-a-p overlay-arrow-position
 	  edebug-outside-o-a-s overlay-arrow-string
 	  edebug-outside-c-i-e-a cursor-in-echo-area
-	  )))				; let
+	  edebug-outside-d-c-i-n-s-w default-cursor-in-non-selected-windows
+	  )
+
+	 ;; Restore the outside saved values; don't alter
+	 ;; the outside binding loci.
+	 (setcdr edebug-outside-pre-command-hook pre-command-hook)
+	 (setcdr edebug-outside-post-command-hook post-command-hook)
+
+	 ))				; let
      ))
 
 (defvar cl-debug-env nil) ;; defined in cl; non-nil when lexical env used.
@@ -3631,9 +3678,12 @@ Return the result of the last expression."
 ;; Replace printing functions.
 
 ;; obsolete names
-(defalias 'edebug-install-custom-print-funcs 'edebug-install-custom-print)
-(defalias 'edebug-reset-print-funcs 'edebug-uninstall-custom-print)
-(defalias 'edebug-uninstall-custom-print-funcs 'edebug-uninstall-custom-print)
+(define-obsolete-function-alias 'edebug-install-custom-print-funcs
+    'edebug-install-custom-print "22.1")
+(define-obsolete-function-alias 'edebug-reset-print-funcs
+    'edebug-uninstall-custom-print "22.1")
+(define-obsolete-function-alias 'edebug-uninstall-custom-print-funcs
+    'edebug-uninstall-custom-print "22.1")
 
 (defun edebug-install-custom-print ()
   "Replace print functions used by Edebug with custom versions."
@@ -3689,20 +3739,18 @@ Return the result of the last expression."
 	(print-level (or edebug-print-level print-level))
 	(print-circle (or edebug-print-circle print-circle))
 	(print-readably nil)) ;; lemacs uses this.
-    (edebug-prin1-to-string value)))
+    (condition-case nil
+	(edebug-prin1-to-string value)
+      (error "#Apparently circular structure#"))))
 
 (defun edebug-compute-previous-result (edebug-previous-value)
+  (if edebug-unwrap-results
+      (setq edebug-previous-value
+	    (edebug-unwrap* edebug-previous-value)))
   (setq edebug-previous-result
-	(if (and (integerp edebug-previous-value)
-		 (< edebug-previous-value 256)
-		 (>= edebug-previous-value 0))
-	    (format "Result: %s = %s" edebug-previous-value
-		    (single-key-description edebug-previous-value))
-	  (if edebug-unwrap-results
-	      (setq edebug-previous-value
-		    (edebug-unwrap* edebug-previous-value)))
-	  (concat "Result: "
-		  (edebug-safe-prin1-to-string edebug-previous-value)))))
+	(concat "Result: "
+		(edebug-safe-prin1-to-string edebug-previous-value)
+		(eval-expression-print-format edebug-previous-value))))
 
 (defun edebug-previous-result ()
   "Print the previous result."
@@ -3715,21 +3763,24 @@ Return the result of the last expression."
   "Evaluate an expression in the outside environment.
 If interactive, prompt for the expression.
 Print result in minibuffer."
-  (interactive "xEval: ")
+  (interactive (list (read-from-minibuffer
+		      "Eval: " nil read-expression-map t
+		      'read-expression-history)))
   (princ
    (edebug-outside-excursion
     (setq values (cons (edebug-eval edebug-expr) values))
-    (edebug-safe-prin1-to-string (car values)))))
+    (concat (edebug-safe-prin1-to-string (car values))
+            (eval-expression-print-format (car values))))))
 
 (defun edebug-eval-last-sexp ()
-  "Evaluate sexp before point in the outside environment;
-print value in minibuffer."
+  "Evaluate sexp before point in the outside environment.
+Print value in minibuffer."
   (interactive)
   (edebug-eval-expression (edebug-last-sexp)))
 
 (defun edebug-eval-print-last-sexp ()
-  "Evaluate sexp before point in the outside environment;
-print value into current buffer."
+  "Evaluate sexp before point in outside environment; insert value.
+This prints the value into current buffer."
   (interactive)
   (let* ((edebug-form (edebug-last-sexp))
 	 (edebug-result-string
@@ -3744,82 +3795,82 @@ print value into current buffer."
 
 ;;; Edebug Minor Mode
 
+(defvar gud-inhibit-global-bindings
+  "*Non-nil means don't do global rebindings of C-x C-a subcommands.")
+
 ;; Global GUD bindings for all emacs-lisp-mode buffers.
-(define-key emacs-lisp-mode-map "\C-x\C-a\C-s" 'edebug-step-mode)
-(define-key emacs-lisp-mode-map "\C-x\C-a\C-n" 'edebug-next-mode)
-(define-key emacs-lisp-mode-map "\C-x\C-a\C-c" 'edebug-go-mode)
-(define-key emacs-lisp-mode-map "\C-x\C-a\C-l" 'edebug-where)
+(unless gud-inhibit-global-bindings
+  (define-key emacs-lisp-mode-map "\C-x\C-a\C-s" 'edebug-step-mode)
+  (define-key emacs-lisp-mode-map "\C-x\C-a\C-n" 'edebug-next-mode)
+  (define-key emacs-lisp-mode-map "\C-x\C-a\C-c" 'edebug-go-mode)
+  (define-key emacs-lisp-mode-map "\C-x\C-a\C-l" 'edebug-where))
 
-
-(defvar edebug-mode-map nil)
-(if edebug-mode-map
-    nil
-  (progn
-    (setq edebug-mode-map (copy-keymap emacs-lisp-mode-map))
+(defvar edebug-mode-map
+  (let ((map (copy-keymap emacs-lisp-mode-map)))
     ;; control
-    (define-key edebug-mode-map " " 'edebug-step-mode)
-    (define-key edebug-mode-map "n" 'edebug-next-mode)
-    (define-key edebug-mode-map "g" 'edebug-go-mode)
-    (define-key edebug-mode-map "G" 'edebug-Go-nonstop-mode)
-    (define-key edebug-mode-map "t" 'edebug-trace-mode)
-    (define-key edebug-mode-map "T" 'edebug-Trace-fast-mode)
-    (define-key edebug-mode-map "c" 'edebug-continue-mode)
-    (define-key edebug-mode-map "C" 'edebug-Continue-fast-mode)
+    (define-key map " " 'edebug-step-mode)
+    (define-key map "n" 'edebug-next-mode)
+    (define-key map "g" 'edebug-go-mode)
+    (define-key map "G" 'edebug-Go-nonstop-mode)
+    (define-key map "t" 'edebug-trace-mode)
+    (define-key map "T" 'edebug-Trace-fast-mode)
+    (define-key map "c" 'edebug-continue-mode)
+    (define-key map "C" 'edebug-Continue-fast-mode)
 
-    ;;(define-key edebug-mode-map "f" 'edebug-forward) not implemented
-    (define-key edebug-mode-map "f" 'edebug-forward-sexp)
-    (define-key edebug-mode-map "h" 'edebug-goto-here)
+    ;;(define-key map "f" 'edebug-forward) not implemented
+    (define-key map "f" 'edebug-forward-sexp)
+    (define-key map "h" 'edebug-goto-here)
 
-    (define-key edebug-mode-map "I" 'edebug-instrument-callee)
-    (define-key edebug-mode-map "i" 'edebug-step-in)
-    (define-key edebug-mode-map "o" 'edebug-step-out)
+    (define-key map "I" 'edebug-instrument-callee)
+    (define-key map "i" 'edebug-step-in)
+    (define-key map "o" 'edebug-step-out)
 
     ;; quitting and stopping
-    (define-key edebug-mode-map "q" 'top-level)
-    (define-key edebug-mode-map "Q" 'edebug-top-level-nonstop)
-    (define-key edebug-mode-map "a" 'abort-recursive-edit)
-    (define-key edebug-mode-map "S" 'edebug-stop)
+    (define-key map "q" 'top-level)
+    (define-key map "Q" 'edebug-top-level-nonstop)
+    (define-key map "a" 'abort-recursive-edit)
+    (define-key map "S" 'edebug-stop)
 
     ;; breakpoints
-    (define-key edebug-mode-map "b" 'edebug-set-breakpoint)
-    (define-key edebug-mode-map "u" 'edebug-unset-breakpoint)
-    (define-key edebug-mode-map "B" 'edebug-next-breakpoint)
-    (define-key edebug-mode-map "x" 'edebug-set-conditional-breakpoint)
-    (define-key edebug-mode-map "X" 'edebug-set-global-break-condition)
+    (define-key map "b" 'edebug-set-breakpoint)
+    (define-key map "u" 'edebug-unset-breakpoint)
+    (define-key map "B" 'edebug-next-breakpoint)
+    (define-key map "x" 'edebug-set-conditional-breakpoint)
+    (define-key map "X" 'edebug-set-global-break-condition)
 
     ;; evaluation
-    (define-key edebug-mode-map "r" 'edebug-previous-result)
-    (define-key edebug-mode-map "e" 'edebug-eval-expression)
-    (define-key edebug-mode-map "\C-x\C-e" 'edebug-eval-last-sexp)
-    (define-key edebug-mode-map "E" 'edebug-visit-eval-list)
+    (define-key map "r" 'edebug-previous-result)
+    (define-key map "e" 'edebug-eval-expression)
+    (define-key map "\C-x\C-e" 'edebug-eval-last-sexp)
+    (define-key map "E" 'edebug-visit-eval-list)
 
     ;; views
-    (define-key edebug-mode-map "w" 'edebug-where)
-    (define-key edebug-mode-map "v" 'edebug-view-outside)  ;; maybe obsolete??
-    (define-key edebug-mode-map "p" 'edebug-bounce-point)
-    (define-key edebug-mode-map "P" 'edebug-view-outside) ;; same as v
-    (define-key edebug-mode-map "W" 'edebug-toggle-save-windows)
+    (define-key map "w" 'edebug-where)
+    (define-key map "v" 'edebug-view-outside) ;; maybe obsolete??
+    (define-key map "p" 'edebug-bounce-point)
+    (define-key map "P" 'edebug-view-outside) ;; same as v
+    (define-key map "W" 'edebug-toggle-save-windows)
 
     ;; misc
-    (define-key edebug-mode-map "?" 'edebug-help)
-    (define-key edebug-mode-map "d" 'edebug-backtrace)
+    (define-key map "?" 'edebug-help)
+    (define-key map "d" 'edebug-backtrace)
 
-    (define-key edebug-mode-map "-" 'negative-argument)
+    (define-key map "-" 'negative-argument)
 
     ;; statistics
-    (define-key edebug-mode-map "=" 'edebug-temp-display-freq-count)
+    (define-key map "=" 'edebug-temp-display-freq-count)
 
     ;; GUD bindings
-    (define-key edebug-mode-map "\C-c\C-s" 'edebug-step-mode)
-    (define-key edebug-mode-map "\C-c\C-n" 'edebug-next-mode)
-    (define-key edebug-mode-map "\C-c\C-c" 'edebug-go-mode)
+    (define-key map "\C-c\C-s" 'edebug-step-mode)
+    (define-key map "\C-c\C-n" 'edebug-next-mode)
+    (define-key map "\C-c\C-c" 'edebug-go-mode)
 
-    (define-key edebug-mode-map "\C-x " 'edebug-set-breakpoint)
-    (define-key edebug-mode-map "\C-c\C-d" 'edebug-unset-breakpoint)
-    (define-key edebug-mode-map "\C-c\C-t"
-      (function (lambda () (edebug-set-breakpoint t))))
-    (define-key edebug-mode-map "\C-c\C-l" 'edebug-where)
-    ))
+    (define-key map "\C-x " 'edebug-set-breakpoint)
+    (define-key map "\C-c\C-d" 'edebug-unset-breakpoint)
+    (define-key map "\C-c\C-t"
+      (lambda () (interactive) (edebug-set-breakpoint t)))
+    (define-key map "\C-c\C-l" 'edebug-where)
+    map))
 
 ;; Autoloading these global bindings doesn't make sense because
 ;; they cannot be used anyway unless Edebug is already loaded and active.
@@ -3827,42 +3878,40 @@ print value into current buffer."
 (defvar global-edebug-prefix "\^XX"
   "Prefix key for global edebug commands, available from any buffer.")
 
-(defvar global-edebug-map nil
+(defvar global-edebug-map
+  (let ((map (make-sparse-keymap)))
+
+    (define-key map " " 'edebug-step-mode)
+    (define-key map "g" 'edebug-go-mode)
+    (define-key map "G" 'edebug-Go-nonstop-mode)
+    (define-key map "t" 'edebug-trace-mode)
+    (define-key map "T" 'edebug-Trace-fast-mode)
+    (define-key map "c" 'edebug-continue-mode)
+    (define-key map "C" 'edebug-Continue-fast-mode)
+
+    ;; breakpoints
+    (define-key map "b" 'edebug-set-breakpoint)
+    (define-key map "u" 'edebug-unset-breakpoint)
+    (define-key map "x" 'edebug-set-conditional-breakpoint)
+    (define-key map "X" 'edebug-set-global-break-condition)
+
+    ;; views
+    (define-key map "w" 'edebug-where)
+    (define-key map "W" 'edebug-toggle-save-windows)
+
+    ;; quitting
+    (define-key map "q" 'top-level)
+    (define-key map "Q" 'edebug-top-level-nonstop)
+    (define-key map "a" 'abort-recursive-edit)
+
+    ;; statistics
+    (define-key map "=" 'edebug-display-freq-count)
+    map)
   "Global map of edebug commands, available from any buffer.")
 
-(if global-edebug-map
-    nil
-  (setq global-edebug-map (make-sparse-keymap))
+(global-unset-key global-edebug-prefix)
+(global-set-key global-edebug-prefix global-edebug-map)
 
-  (global-unset-key global-edebug-prefix)
-  (global-set-key global-edebug-prefix global-edebug-map)
-
-  (define-key global-edebug-map " " 'edebug-step-mode)
-  (define-key global-edebug-map "g" 'edebug-go-mode)
-  (define-key global-edebug-map "G" 'edebug-Go-nonstop-mode)
-  (define-key global-edebug-map "t" 'edebug-trace-mode)
-  (define-key global-edebug-map "T" 'edebug-Trace-fast-mode)
-  (define-key global-edebug-map "c" 'edebug-continue-mode)
-  (define-key global-edebug-map "C" 'edebug-Continue-fast-mode)
-
-  ;; breakpoints
-  (define-key global-edebug-map "b" 'edebug-set-breakpoint)
-  (define-key global-edebug-map "u" 'edebug-unset-breakpoint)
-  (define-key global-edebug-map "x" 'edebug-set-conditional-breakpoint)
-  (define-key global-edebug-map "X" 'edebug-set-global-break-condition)
-
-  ;; views
-  (define-key global-edebug-map "w" 'edebug-where)
-  (define-key global-edebug-map "W" 'edebug-toggle-save-windows)
-
-  ;; quitting
-  (define-key global-edebug-map "q" 'top-level)
-  (define-key global-edebug-map "Q" 'edebug-top-level-nonstop)
-  (define-key global-edebug-map "a" 'abort-recursive-edit)
-
-  ;; statistics
-  (define-key global-edebug-map "=" 'edebug-display-freq-count)
-  )
 
 (defun edebug-help ()
   (interactive)
@@ -3876,7 +3925,7 @@ buffer) there are local and global key bindings to several Edebug
 specific commands.  E.g. `edebug-step-mode' is bound to \\[edebug-step-mode]
 in the Edebug buffer and \\<global-map>\\[edebug-step-mode] in any buffer.
 
-Also see bindings for the eval list buffer, *edebug*.
+Also see bindings for the eval list buffer *edebug* in `edebug-eval-mode'.
 
 The edebug buffer commands:
 \\{edebug-mode-map}
@@ -3903,7 +3952,17 @@ edebug-on-signal
 edebug-unwrap-results
 edebug-global-break-condition
 "
+  ;; If the user kills the buffer in which edebug is currently active,
+  ;; exit to top level, because the edebug command loop can't usefully
+  ;; continue running in such a case.
+  (add-hook 'kill-buffer-hook 'edebug-kill-buffer nil t)
   (use-local-map edebug-mode-map))
+
+(defun edebug-kill-buffer ()
+  "Used on `kill-buffer-hook' when Edebug is operating in a buffer of Lisp code."
+  (let (kill-buffer-hook)
+    (kill-buffer (current-buffer)))
+  (top-level))
 
 ;;; edebug eval list mode
 
@@ -4010,20 +4069,19 @@ May only be called from within edebug-recursive-edit."
 (defvar edebug-eval-mode-map nil
   "Keymap for Edebug Eval mode.  Superset of Lisp Interaction mode.")
 
-(if edebug-eval-mode-map
-    nil
-  (setq edebug-eval-mode-map (copy-keymap lisp-interaction-mode-map))
+(unless edebug-eval-mode-map
+  (setq edebug-eval-mode-map (make-sparse-keymap))
+  (set-keymap-parent edebug-eval-mode-map lisp-interaction-mode-map)
 
   (define-key edebug-eval-mode-map "\C-c\C-w" 'edebug-where)
   (define-key edebug-eval-mode-map "\C-c\C-d" 'edebug-delete-eval-item)
   (define-key edebug-eval-mode-map "\C-c\C-u" 'edebug-update-eval-list)
   (define-key edebug-eval-mode-map "\C-x\C-e" 'edebug-eval-last-sexp)
-  (define-key edebug-eval-mode-map "\C-j" 'edebug-eval-print-last-sexp)
-  )
+  (define-key edebug-eval-mode-map "\C-j" 'edebug-eval-print-last-sexp))
 
 (put 'edebug-eval-mode 'mode-class 'special)
 
-(defun edebug-eval-mode ()
+(define-derived-mode edebug-eval-mode lisp-interaction-mode "Edebug Eval"
   "Mode for evaluation list buffer while in Edebug.
 
 In addition to all Interactive Emacs Lisp commands there are local and
@@ -4034,13 +4092,8 @@ buffer and \\<global-map>\\[edebug-step-mode] in any buffer.
 Eval list buffer commands:
 \\{edebug-eval-mode-map}
 
-Global commands prefixed by global-edebug-prefix:
-\\{global-edebug-map}
-"
-  (lisp-interaction-mode)
-  (setq major-mode 'edebug-eval-mode)
-  (setq mode-name "Edebug Eval")
-  (use-local-map edebug-eval-mode-map))
+Global commands prefixed by `global-edebug-prefix':
+\\{global-edebug-map}")
 
 ;;; Interface with standard debugger.
 
@@ -4161,8 +4214,8 @@ You must include newlines in FMT to break lines, but one newline is appended."
 ;;; Frequency count and coverage
 
 (defun edebug-display-freq-count ()
-  "Display the frequency count data for each line of the current
-definition.  The frequency counts are inserted as comment lines after
+  "Display the frequency count data for each line of the current definition.
+The frequency counts are inserted as comment lines after
 each line, and you can undo all insertions with one `undo' command.
 
 The counts are inserted starting under the `(' before an expression
@@ -4218,7 +4271,7 @@ reinstrument it."
 		       (- (current-column)
 			  (if (= ?\( (following-char)) 0 1)))))
 	    (insert (make-string
-		     (max 0 (- col (- (point) start-of-count-line))) ?\ )
+		     (max 0 (- col (- (point) start-of-count-line))) ?\s)
 		    (if (and (< 0 count)
 			     (not (memq coverage
 					'(unknown ok-coverage))))
@@ -4253,7 +4306,6 @@ It is removed when you hit any char."
 
 (defconst edebug-mode-menus
   '("Edebug"
-     "----"
      ["Stop" edebug-stop t]
      ["Step" edebug-step-mode t]
      ["Next" edebug-next-mode t]
@@ -4316,107 +4368,38 @@ It is removed when you hit any char."
 
 ;;; Emacs version specific code
 
-;;; The default for all above is Emacs 18, because it is easier to compile
-;;; Emacs 18 code in Emacs 19 than vice versa.  This default will
-;;; change once most people are using Emacs 19 or derivatives.
+(defalias 'edebug-window-live-p 'window-live-p)
 
-;; Epoch specific code is in a separate file: edebug-epoch.el.
+(defun edebug-mark ()
+  (mark t))
 
-;; The byte-compiler will complain about changes in number of arguments
-;; to functions like mark and read-from-minibuffer.  These warnings
-;; may be ignored because the right call should always be made.
-
-(defun edebug-emacs-19-specific ()
-
-  (defalias 'edebug-window-live-p 'window-live-p)
-
-  ;; Mark takes an argument in Emacs 19.
-  (defun edebug-mark ()
-    (mark t));; Does this work for lemacs too?
-
-  (defun edebug-set-conditional-breakpoint (arg condition)
-    "Set a conditional breakpoint at nearest sexp.
+(defun edebug-set-conditional-breakpoint (arg condition)
+  "Set a conditional breakpoint at nearest sexp.
 The condition is evaluated in the outside context.
 With prefix argument, make it a temporary breakpoint."
-    ;; (interactive "P\nxCondition: ")
-    (interactive
-     (list
-      current-prefix-arg
-      ;; Read condition as follows; getting previous condition is cumbersome:
-      (let ((edebug-stop-point (edebug-find-stop-point)))
-	(if edebug-stop-point
-	    (let* ((edebug-def-name (car edebug-stop-point))
-		   (index (cdr edebug-stop-point))
-		   (edebug-data (get edebug-def-name 'edebug))
-		   (edebug-breakpoints (car (cdr edebug-data)))
-		   (edebug-break-data (assq index edebug-breakpoints))
-		   (edebug-break-condition (car (cdr edebug-break-data)))
-		   (edebug-expression-history
-		    ;; Prepend the current condition, if any.
-		    (if edebug-break-condition
-			(cons edebug-break-condition read-expression-history)
-		      read-expression-history)))
-	      (prog1
-		  (read-from-minibuffer
-		   "Condition: " nil read-expression-map t
-		   'edebug-expression-history)
-		(setq read-expression-history edebug-expression-history)
-		))))))
-    (edebug-modify-breakpoint t condition arg))
+  ;; (interactive "P\nxCondition: ")
+  (interactive
+   (list
+    current-prefix-arg
+    ;; Read condition as follows; getting previous condition is cumbersome:
+    (let ((edebug-stop-point (edebug-find-stop-point)))
+      (if edebug-stop-point
+	  (let* ((edebug-def-name (car edebug-stop-point))
+		 (index (cdr edebug-stop-point))
+		 (edebug-data (get edebug-def-name 'edebug))
+		 (edebug-breakpoints (car (cdr edebug-data)))
+		 (edebug-break-data (assq index edebug-breakpoints))
+		 (edebug-break-condition (car (cdr edebug-break-data)))
+		 (initial (and edebug-break-condition
+			       (format "%s" edebug-break-condition))))
+	    (read-from-minibuffer
+	     "Condition: " initial read-expression-map t
+	     (if (equal (car read-expression-history) initial)
+		 '(read-expression-history . 1)
+	       'read-expression-history)))))))
+  (edebug-modify-breakpoint t condition arg))
 
-  (defun edebug-eval-expression (edebug-expr)
-    "Evaluate an expression in the outside environment.
-If interactive, prompt for the expression.
-Print result in minibuffer."
-    (interactive (list (read-from-minibuffer
-			"Eval: " nil read-expression-map t
-			'read-expression-history)))
-    (princ
-     (edebug-outside-excursion
-      (setq values (cons (edebug-eval edebug-expr) values))
-      (edebug-safe-prin1-to-string (car values)))))
-
-  (easy-menu-define edebug-menu edebug-mode-map "Edebug menus" edebug-mode-menus)
-  (if (display-popup-menus-p)
-      (x-popup-menu nil (lookup-key edebug-mode-map [menu-bar Edebug])))
-  )
-
-
-(defun edebug-lemacs-specific ()
-
-  ;; We need to bind zmacs-regions to nil around all calls to `mark' and
-  ;; `mark-marker' but don't bind it to nil before entering a recursive edit,
-  ;; that is, don't interfere with the binding the user might see while
-  ;; executing a command.
-
-  (defvar zmacs-regions)
-
-  (defun edebug-mark ()
-    (let ((zmacs-regions nil))
-      (mark)))
-
-  (defun edebug-mark-marker ()
-    (let ((zmacs-regions nil));; for lemacs
-      (mark-marker)))
-
-
-  (defun edebug-mode-menu (event)
-    (interactive "@event")
-    (popup-menu edebug-mode-menus))
-
-  (define-key edebug-mode-map 'button3 'edebug-mode-menu)
-  )
-
-(defun edebug-emacs-version-specific ()
-  (cond
-   ((string-match "Lucid" emacs-version);; Lucid Emacs
-    (edebug-lemacs-specific))
-
-   ((not (string-match "^18" emacs-version))
-    (edebug-emacs-19-specific))))
-
-(edebug-emacs-version-specific)
-
+(easy-menu-define edebug-menu edebug-mode-map "Edebug menus" edebug-mode-menus)
 
 ;;; Byte-compiler
 
@@ -4527,4 +4510,5 @@ Print result in minibuffer."
 
 (provide 'edebug)
 
+;;; arch-tag: 19c8d05c-4554-426e-ac72-e0fa1fcb0808
 ;;; edebug.el ends here

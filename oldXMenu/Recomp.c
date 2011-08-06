@@ -1,7 +1,7 @@
+/* Copyright    Massachusetts Institute of Technology    1985	*/
+
 #include "copyright.h"
 
-/* $Header: /cvsroot/emacs/emacs/oldXMenu/Recomp.c,v 1.1 1999/10/03 19:35:11 fx Exp $ */
-/* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*
  * XMenu:	MIT Project Athena, X Window system menu package
@@ -25,7 +25,7 @@ XMenuRecompute(display, menu)
 
     register int p_num;		/* Pane serial number. */
     register int s_num;		/* Selection serial number. */
-    
+
     /*
      * If there are no panes in the menu then return failure
      * because the menu is not initialized.
@@ -44,7 +44,7 @@ XMenuRecompute(display, menu)
     /*
      * For each pane in the menu...
      */
-        
+
     p_num = 0;
     for (
 	p_ptr = menu->p_list->next;
@@ -58,7 +58,7 @@ XMenuRecompute(display, menu)
 	    return(XM_FAILURE);
 	}
         p_num++;
-	
+
 	/*
 	 * For each selection in the pane...
 	 */
@@ -102,3 +102,6 @@ XMenuRecompute(display, menu)
     _XMErrorCode = XME_NO_ERROR;
     return(XM_SUCCESS);
 }
+
+/* arch-tag: 1fe99b82-3873-4aab-b2b3-f277c93e00d9
+   (do not change this comment) */

@@ -1,7 +1,7 @@
+/* Copyright    Massachusetts Institute of Technology    1985	*/
+
 #include "copyright.h"
 
-/* $Header: /cvsroot/emacs/emacs/oldXMenu/AddSel.c,v 1.2 2000/01/27 15:30:18 gerd Exp $ */
-/* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*
  * XMenu:	MIT Project Athena, X Window system menu package
@@ -32,7 +32,7 @@ XMenuAddSelection(display, menu, p_num, data, label, active, help)
 
     int label_length;		/* Label lenght in characters. */
     int label_width;		/* Label width in pixels. */
-    
+
     /*
      * Check for NULL pointers!
      */
@@ -59,7 +59,7 @@ XMenuAddSelection(display, menu, p_num, data, label, active, help)
      */
     label_length = strlen(label);
     label_width = XTextWidth(menu->s_fnt_info, label, label_length);
-    
+
     /*
      * Fill the XMSelect structure.
      */
@@ -81,7 +81,7 @@ XMenuAddSelection(display, menu, p_num, data, label, active, help)
     select->data = data;
     select->parent_p = pane;
     select->help_string = help;
-    
+
     /*
      * Insert the selection at the end of the selection list.
      */
@@ -103,3 +103,6 @@ XMenuAddSelection(display, menu, p_num, data, label, active, help)
     _XMErrorCode = XME_NO_ERROR;
     return((pane->s_count - 1));
 }
+
+/* arch-tag: 0161f024-c739-440d-9498-050280c6c355
+   (do not change this comment) */

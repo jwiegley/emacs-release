@@ -1,7 +1,7 @@
+/* Copyright    Massachusetts Institute of Technology    1985	*/
+
 #include "copyright.h"
 
-/* $Header: /cvsroot/emacs/emacs/oldXMenu/SetSel.c,v 1.1 1999/10/03 19:35:15 fx Exp $ */
-/* Copyright    Massachusetts Institute of Technology    1985	*/
 
 /*
  * XMenu:	MIT Project Athena, X Window system menu package
@@ -24,7 +24,7 @@ XMenuSetSelection(menu, p_num, s_num, active)
 {
     register XMPane *p_ptr;	/* XMPane pointer. */
     register XMSelect *s_ptr;	/* XMSelect pointer. */
-    
+
     /*
      * Find the right pane.
      */
@@ -48,3 +48,6 @@ XMenuSetSelection(menu, p_num, s_num, active)
     _XMErrorCode = XME_NO_ERROR;
     return(s_num);
 }
+
+/* arch-tag: 79198ae0-c5a4-4d31-adb0-5747f833f56a
+   (do not change this comment) */

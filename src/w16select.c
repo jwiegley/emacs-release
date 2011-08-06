@@ -1,5 +1,6 @@
 /* 16-bit Windows Selection processing for emacs on MS-Windows
-   Copyright (C) 1996, 1997 Free Software Foundation.
+   Copyright (C) 1996, 1997, 2001, 2002, 2003, 2004,
+                 2005, 2006, 2007 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -15,8 +16,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 /* These functions work by using WinOldAp interface.  WinOldAp
    (WINOLDAP.MOD) is a Microsoft Windows extension supporting
@@ -482,33 +483,31 @@ static char system_error_msg[] =
   "(Clipboard interface failure; clipboard data not set.)";
 
 DEFUN ("w16-set-clipboard-data", Fw16_set_clipboard_data, Sw16_set_clipboard_data, 1, 2, 0,
-       "This sets the clipboard data to the given text.")
-    (string, frame)
-    Lisp_Object string, frame;
+       doc: /* This sets the clipboard data to the given text.  */)
+     (string, frame)
+     Lisp_Object string, frame;
 {
   unsigned ok = 1, put_status = 0;
-  int nbytes;
+  int nbytes, charset_info, no_crlf_conversion;
   unsigned char *src, *dst = NULL;
-  int charset_info;
-  int no_crlf_conversion;
 
-  CHECK_STRING (string, 0);
+  CHECK_STRING (string);
 
   if (NILP (frame))
     frame = Fselected_frame ();
 
-  CHECK_LIVE_FRAME (frame, 0);
+  CHECK_LIVE_FRAME (frame);
   if ( !FRAME_MSDOS_P (XFRAME (frame)))
     goto done;
 
   BLOCK_INPUT;
 
-  nbytes = STRING_BYTES (XSTRING (string));
-  src = XSTRING (string)->data;
+  nbytes = SBYTES (string);
+  src = SDATA (string);
 
   /* Since we are now handling multilingual text, we must consider
      encoding text for the clipboard.  */
-  charset_info = find_charset_in_text (src, XSTRING (string)->size, nbytes,
+  charset_info = find_charset_in_text (src, SCHARS (string), nbytes,
 				       NULL, Qnil);
 
   if (charset_info == 0)
@@ -529,6 +528,13 @@ DEFUN ("w16-set-clipboard-data", Fw16_set_clipboard_data, Sw16_set_clipboard_dat
 	Vnext_selection_coding_system = Vselection_coding_system;
       setup_coding_system
 	(Fcheck_coding_system (Vnext_selection_coding_system), &coding);
+      if (SYMBOLP (coding.pre_write_conversion)
+	  && !NILP (Ffboundp (coding.pre_write_conversion)))
+	{
+	  string = run_pre_post_conversion_on_str (string, &coding, 1);
+	  src = SDATA (string);
+	  nbytes = SBYTES (string);
+	}
       coding.src_multibyte = 1;
       coding.dst_multibyte = 0;
       Vnext_selection_coding_system = Qnil;
@@ -584,7 +590,7 @@ DEFUN ("w16-set-clipboard-data", Fw16_set_clipboard_data, Sw16_set_clipboard_dat
 	    message2 (system_error_msg, sizeof (system_error_msg) - 1, 0);
 	    break;
 	}
-      sit_for (2, 0, 0, 1, 1);
+      sit_for (make_number (2), 0, 2);
     }
 
  done:
@@ -593,20 +599,19 @@ DEFUN ("w16-set-clipboard-data", Fw16_set_clipboard_data, Sw16_set_clipboard_dat
 }
 
 DEFUN ("w16-get-clipboard-data", Fw16_get_clipboard_data, Sw16_get_clipboard_data, 0, 1, 0,
-       "This gets the clipboard data in text format.")
+       doc: /* This gets the clipboard data in text format.  */)
      (frame)
      Lisp_Object frame;
 {
   unsigned data_size, truelen;
   unsigned char *htext;
   Lisp_Object ret = Qnil;
-  int no_crlf_conversion;
-  int require_encoding = 0;
+  int no_crlf_conversion, require_encoding = 0;
 
   if (NILP (frame))
     frame = Fselected_frame ();
 
-  CHECK_LIVE_FRAME (frame, 0);
+  CHECK_LIVE_FRAME (frame);
   if ( !FRAME_MSDOS_P (XFRAME (frame)))
     goto done;
 
@@ -626,27 +631,20 @@ DEFUN ("w16-get-clipboard-data", Fw16_get_clipboard_data, Sw16_get_clipboard_dat
     goto closeclip;
 
   /* Do we need to decode it?  */
-  if (
-#if 1
-      1
-#else
-      ! NILP (buffer_defaults.enable_multibyte_characters)
-#endif
-      )
-    {
-      /* If the clipboard data contains any 8-bit Latin-1 code, we
-	 need to decode it.  */
-      int i;
+  {
+    /* If the clipboard data contains any 8-bit Latin-1 code, we
+       need to decode it.  */
+    int i;
 
-      for (i = 0; i < truelen; i++)
-	{
-	  if (htext[i] >= 0x80)
-	    {
-	      require_encoding = 1;
-	      break;
-	    }
-	}
-    }
+    for (i = 0; i < truelen; i++)
+      {
+	if (htext[i] >= 0x80)
+	  {
+	    require_encoding = 1;
+	    break;
+	  }
+      }
+  }
   if (require_encoding)
     {
       int bufsize;
@@ -671,6 +669,9 @@ DEFUN ("w16-get-clipboard-data", Fw16_get_clipboard_data, Sw16_get_clipboard_dat
       ret = make_string_from_bytes ((char *) buf,
 				    coding.produced_char, coding.produced);
       xfree (buf);
+      if (SYMBOLP (coding.post_read_conversion)
+	  && !NILP (Ffboundp (coding.post_read_conversion)))
+	ret = run_pre_post_conversion_on_str (ret, &coding, 0);
       Vlast_coding_system_used = coding.symbol;
     }
   else
@@ -695,17 +696,17 @@ DEFUN ("w16-get-clipboard-data", Fw16_get_clipboard_data, Sw16_get_clipboard_dat
 /* Support checking for a clipboard selection. */
 
 DEFUN ("x-selection-exists-p", Fx_selection_exists_p, Sx_selection_exists_p,
-  0, 1, 0,
-  "Whether there is an owner for the given X Selection.\n\
-The arg should be the name of the selection in question, typically one of\n\
-the symbols `PRIMARY', `SECONDARY', or `CLIPBOARD'.\n\
-\(Those are literal upper-case symbol names, since that's what X expects.)\n\
-For convenience, the symbol nil is the same as `PRIMARY',\n\
-and t is the same as `SECONDARY'.")
-  (selection)
+       0, 1, 0,
+       doc: /* Whether there is an owner for the given X Selection.
+The arg should be the name of the selection in question, typically one of
+the symbols `PRIMARY', `SECONDARY', or `CLIPBOARD'.
+\(Those are literal upper-case symbol names, since that's what X expects.)
+For convenience, the symbol nil is the same as `PRIMARY',
+and t is the same as `SECONDARY'.  */)
+     (selection)
      Lisp_Object selection;
 {
-  CHECK_SYMBOL (selection, 0);
+  CHECK_SYMBOL (selection);
 
   /* Return nil for SECONDARY selection.  For PRIMARY (or nil)
      selection, check if there is some text on the kill-ring;
@@ -718,8 +719,8 @@ and t is the same as `SECONDARY'.")
      into the clipboard if we run under Windows, so we cannot check
      the clipboard alone.)  */
   if ((EQ (selection, Qnil) || EQ (selection, QPRIMARY))
-      && ! NILP (XSYMBOL (Fintern_soft (build_string ("kill-ring"),
-					Qnil))->value))
+      && ! NILP (SYMBOL_VALUE (Fintern_soft (build_string ("kill-ring"),
+					     Qnil))))
     return Qt;
 
   if (EQ (selection, QCLIPBOARD))
@@ -745,18 +746,18 @@ syms_of_win16select ()
   defsubr (&Sx_selection_exists_p);
 
   DEFVAR_LISP ("selection-coding-system", &Vselection_coding_system,
-    "Coding system for communicating with other X clients.\n\
-When sending or receiving text via cut_buffer, selection, and clipboard,\n\
-the text is encoded or decoded by this coding system.\n\
-The default value is `iso-latin-1-dos'.");
+	       doc: /* Coding system for communicating with other X clients.
+When sending or receiving text via cut_buffer, selection, and clipboard,
+the text is encoded or decoded by this coding system.
+The default value is `iso-latin-1-dos'.  */);
   Vselection_coding_system = intern ("iso-latin-1-dos");
 
   DEFVAR_LISP ("next-selection-coding-system", &Vnext_selection_coding_system,
-    "Coding system for the next communication with other X clients.\n\
-Usually, `selection-coding-system' is used for communicating with\n\
-other X clients.  But, if this variable is set, it is used for the\n\
-next communication only.  After the communication, this variable is\n\
-set to nil.");
+	       doc: /* Coding system for the next communication with other X clients.
+Usually, `selection-coding-system' is used for communicating with
+other X clients.  But, if this variable is set, it is used for the
+next communication only.  After the communication, this variable is
+set to nil.  */);
   Vnext_selection_coding_system = Qnil;
 
   QPRIMARY   = intern ("PRIMARY");	staticpro (&QPRIMARY);
@@ -764,3 +765,6 @@ set to nil.");
 }
 
 #endif /* MSDOS */
+
+/* arch-tag: 085a22c8-7324-436e-a6da-102464ce95d8
+   (do not change this comment) */

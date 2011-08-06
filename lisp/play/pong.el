@@ -1,6 +1,7 @@
 ;;; pong.el --- classical implementation of pong
 
-;; Copyright 1999, 2000, 2001 by Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
+;;   2005, 2006, 2007 Free Software Foundation, Inc.
 
 ;; Author: Benjamin Drieu <bdrieu@april.org>
 ;; Keywords: games
@@ -19,8 +20,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 
@@ -243,7 +244,7 @@
 
   (gamegrid-init-buffer pong-width
 			(+ 2 pong-height)
-			1)
+			?\s)
 
   (let ((buffer-read-only nil))
     (loop for y from 0 to (1- pong-height) do
@@ -321,7 +322,6 @@ implementations you move with left/right paddle."
 
   (define-key pong-mode-map pong-pause-key 'pong-pause)
 
-  (make-local-hook 'kill-buffer-hook)
   (add-hook 'kill-buffer-hook 'pong-quit nil t)
 
   ;; Initialization of some variables
@@ -460,4 +460,5 @@ pong-mode keybindings:\\<pong-mode-map>
 
 (provide 'pong)
 
+;;; arch-tag: 1fdf0fc5-13e2-4de4-aae4-09bdd5af99f3
 ;;; pong.el ends here

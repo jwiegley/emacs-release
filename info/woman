@@ -1,41 +1,43 @@
-This is ../info/woman, produced by makeinfo version 4.2 from woman.texi.
+This is ../info/woman, produced by makeinfo version 4.8 from woman.texi.
+
+This file documents WoMan: A program to browse Unix manual pages `W.O.
+(without) man'.
+
+Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software
+Foundation, Inc.
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.2 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, with the Front-Cover texts
+     being "A GNU Manual," and with the Back-Cover Texts as in (a)
+     below.  A copy of the license is included in the section entitled
+     "GNU Free Documentation License" in the Emacs manual.
+
+     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
+     modify this GNU Manual, like GNU software.  Copies published by
+     the Free Software Foundation raise funds for GNU development."
+
+     This document is part of a collection distributed under the GNU
+     Free Documentation License.  If you want to distribute this
+     document separately from the collection, you can do so by adding a
+     copy of the license to the document, as described in section 6 of
+     the license.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
-* WoMan: (woman).       Browse UN*X Manual Pages `Wo (without) Man'.
+* WoMan: (woman).       Browse UN*X Manual Pages "W.O. (without) Man".
 END-INFO-DIR-ENTRY
-
-This file documents WoMan: A program to browse Unix manual pages `wo
-(without) man'.
-
-Copyright (C) 2001  Free Software Foundation, Inc.
-
-Permission is granted to copy, distribute and/or modify this document
-under the terms of the GNU Free Documentation License, Version 1.1 or
-any later version published by the Free Software Foundation; with no
-Invariant Sections, with the Front-Cover texts being "A GNU Manual,"
-and with the Back-Cover Texts as in (a) below.  A copy of the license
-is included in the section entitled "GNU Free Documentation License" in
-the Emacs manual.
-
-(a) The FSF's Back-Cover Text is: "You have freedom to copy and modify
-this GNU Manual, like GNU software.  Copies published by the Free
-Software Foundation raise funds for GNU development."
-
-This document is part of a collection distributed under the GNU Free
-Documentation License.  If you want to distribute this document
-separately from the collection, you can do so by adding a copy of the
-license to the document, as described in section 6 of the license.
 
 
 File: woman,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 
-WoMan: Browse Unix Manual Pages "Wo (without) Man"
-**************************************************
+WoMan: Browse Unix Manual Pages "W.O. (without) Man"
+****************************************************
 
      Software Version 0.54 (beta)
-     Manual Last Updated Time-stamp: <2002-12-04 09:12:13 pavel>
-     
+     Manual Last Updated Time-stamp: <2006-03-25 14:59:03 karl>
+
      Francis J. Wright <F.J.Wright@qmw.ac.uk>
      School of Mathematical Sciences (http://centaur.maths.qmw.ac.uk/)
      Queen Mary and Westfield College (University of London)
@@ -45,7 +47,6 @@ WoMan: Browse Unix Manual Pages "Wo (without) Man"
 
 * Introduction::        Introduction
 * Background::          Background
-* Installation::        Installation and Setup
 * Finding::             Finding and Formatting Man Pages
 * Browsing::            Browsing Man Pages
 * Customization::       Customization
@@ -53,6 +54,7 @@ WoMan: Browse Unix Manual Pages "Wo (without) Man"
 * Technical::           Technical Details
 * Bugs::                Reporting Bugs
 * Acknowledgements::    Acknowledgements
+* GNU Free Documentation License:: The license for this documentation.
 * Command Index::       Command Index
 * Variable Index::      Variable Index
 * Keystroke Index::     Keystroke Index
@@ -61,8 +63,8 @@ WoMan: Browse Unix Manual Pages "Wo (without) Man"
 
 File: woman,  Node: Introduction,  Next: Background,  Prev: Top,  Up: Top
 
-Introduction
-************
+1 Introduction
+**************
 
 This version of WoMan should run with GNU Emacs 20.3 or later on any
 platform.  It has not been tested, and may not run, with any other
@@ -70,15 +72,15 @@ version of Emacs.  It was developed primarily on various versions of
 Microsoft Windows, but has also been tested on MS-DOS, and various
 versions of UNIX and GNU/Linux.
 
-WoMan is distributed with GNU Emacs 21, and the current source code and
-documentation files are available from my web server
+WoMan is distributed with GNU Emacs.  In addition, the current source
+code and documentation files are available from the WoMan web server
 (http://centaur.maths.qmw.ac.uk/Emacs/WoMan/).
 
 WoMan implements a subset of the formatting performed by the Emacs
 `man' (or `manual-entry') command to format a Unix-style "manual page"
 (usually abbreviated to "man page") for display, but without calling
 any external programs.  It is intended to emulate the whole of the
-`ROFF -man' macro package, plus those `ROFF' requests (*note
+`roff -man' macro package, plus those `roff' requests (*note
 Background: Background.) that are most commonly used in man pages.
 However, the emulation is modified to include the reformatting done by
 the Emacs `man' command.  No hyphenation is performed.
@@ -94,7 +96,7 @@ Disadvantages
 
 This browser works quite well on simple well-written man files.  It
 works less well on idiosyncratic files that "break the rules" or use
-the more obscure `ROFF' requests directly.  Current test results are
+the more obscure `roff' requests directly.  Current test results are
 available in the file `woman.status'
 (http://centaur.maths.qmw.ac.uk/Emacs/WoMan/files/woman.status).
 
@@ -115,38 +117,38 @@ functionality as testing shows that it is necessary.  Guidance on
 reporting bugs is given below.  *Note Reporting Bugs: Bugs.
 
 
-File: woman,  Node: Background,  Next: Installation,  Prev: Introduction,  Up: Top
+File: woman,  Node: Background,  Next: Finding,  Prev: Introduction,  Up: Top
 
-Background
-**********
+2 Background
+************
 
 WoMan is a browser for traditional Unix-style manual page documentation.
 Each such document is conventionally referred to as a "manual page", or
 "man page" for short, even though some are very much longer than one
 page.  A man page is a document written using the Unix "man" macros,
-which are themselves written in the NROFF/TROFF text processing markup
-language.  `NROFF' and `TROFF' are text processors originally written
+which are themselves written in the nroff/troff text processing markup
+language.  `nroff' and `troff' are text processors originally written
 for the UNIX operating system by Joseph F. Ossanna at Bell
 Laboratories, Murray Hill, New Jersey, USA.  They are closely related,
 and except in the few cases where the distinction between them is
-important I will refer to them both ambiguously as "ROFF".
+important I will refer to them both ambiguously as `roff'.
 
-`ROFF' markup consists of "requests" and "escape sequences".  A request
+`roff' markup consists of "requests" and "escape sequences".  A request
 occupies a complete line and begins with either a period or a single
 forward quote.  An escape sequences is embedded within the input text
 and begins (by default) with a backslash.  The original man macro
-package defines 20 new `ROFF' requests implemented as macros, which
+package defines 20 new `roff' requests implemented as macros, which
 were considered to be sufficient for writing man pages.  But whilst in
 principle man pages use only the man macros, in practice a significant
-number use many other `ROFF' requests.
+number use many other `roff' requests.
 
-The distinction between `TROFF' and `NROFF' is that `TROFF' was
-designed to drive a phototypesetter whereas `NROFF' was designed to
+The distinction between `troff' and `nroff' is that `troff' was
+designed to drive a phototypesetter whereas `nroff' was designed to
 produce essentially ASCII output for a character-based device similar
 to a teletypewriter (usually abbreviated to "teletype" or "tty").
-Hence, `TROFF' supports much finer control over output positioning than
-does `NROFF' and can be seen as a forerunner of TeX.  Traditionally,
-man pages are either formatted by `TROFF' for typesetting or by `NROFF'
+Hence, `troff' supports much finer control over output positioning than
+does `nroff' and can be seen as a forerunner of TeX.  Traditionally,
+man pages are either formatted by `troff' for typesetting or by `nroff'
 for printing on a character printer or displaying on a screen.  Of
 course, over the last 25 years or so, the distinction between typeset
 output on paper and characters on a screen has become blurred by the
@@ -157,9 +159,9 @@ only difference being the resolution.
 Nevertheless, Unix-style manual page documentation is still normally
 browsed on screen by running a program called `man'.  This program
 looks in a predefined set of directories for the man page matching a
-specified topic, then either formats the source file by running `NROFF'
+specified topic, then either formats the source file by running `nroff'
 or recovers a pre-formatted file, and displays it via a pager such as
-`more'.  `NROFF' normally formats for a printer, so it paginates the
+`more'.  `nroff' normally formats for a printer, so it paginates the
 output, numbers the pages, etc., most of which is irrelevant when the
 document is browsed as a continuous scrollable document on screen.  The
 only concession to on-screen browsing normally implemented by the `man'
@@ -169,7 +171,7 @@ For some time, Emacs has offered an improved interface for browsing man
 pages in the form of the Emacs `man' (or `manual-entry') command, see
 *Note man: (emacs)Documentation.  This command runs `man' as described
 above, perhaps in the background, and then post-processes the output to
-remove much of the `NROFF' pagination such as page headers and footers,
+remove much of the `nroff' pagination such as page headers and footers,
 and places the result into an Emacs buffer.  It puts this buffer into a
 special major mode, which is tailored for man page browsing, and
 provides a number of useful navigation commands, support for following
@@ -178,7 +180,7 @@ references, etc.  It provides some support for special display faces
 appears to have been developed over about 10 years, from the late 1980s
 to the late 1990s.
 
-There is considerable inefficiency in having `NROFF' paginate a
+There is considerable inefficiency in having `nroff' paginate a
 document and then removing most of the pagination!
 
 WoMan is an Emacs Lisp library that provides an emulation of the
@@ -195,22 +197,22 @@ with Unix-style manual page documentation.  This may be difficult to
 read because ports of the Unix-style `man' program can be a little
 awkward to set up.  I decided that it should not be too hard to emulate
 the 20 `man' macros directly, without treating them as macros and
-largely ignoring the underlying `ROFF' requests, given the text
+largely ignoring the underlying `roff' requests, given the text
 processing capabilities of Emacs.  This proved to be essentially true,
 and it did not take a great deal of work to be able to format simple man
 pages acceptably.
 
 One problem arose with the significant number of man pages that use
-`ROFF' requests in addition to the `man' macros, and since releasing
+`roff' requests in addition to the `man' macros, and since releasing
 the first version of WoMan I have been continually extending it to
-support more `ROFF' requests.  WoMan can now format a significant
+support more `roff' requests.  WoMan can now format a significant
 proportion of the man pages that I have tested, either well or at least
 readably.  However, I have added capabilities partly by making
 additional passes through the document, a design that is fundamentally
 flawed.  This can only be solved by a major re-design of WoMan to
 handle the major formatting within a single recursive pass, rather than
 the present multiple passes without any significant recursion.  There
-are some `ROFF' requests that cannot be handled satisfactorily within
+are some `roff' requests that cannot be handled satisfactorily within
 the present design.  Some of these are currently handled by kludges
 that "usually more or less work."
 
@@ -222,7 +224,7 @@ advantage of the display capabilities available to it, and I hope to
 develop WoMan to take advantage of developments in Emacs itself.  At
 present, WoMan uses several display faces to support bold and italic
 text, to indicate other fonts, etc.  The default faces are also
-coloured, but the choice of faces is customizable.  WoMan provides menu
+colored, but the choice of faces is customizable.  WoMan provides menu
 support for navigation and mouse support for following references, in
 addition to the navigation facilities provided by `man' mode.  WoMan
 has (this) texinfo documentation!
@@ -230,203 +232,21 @@ has (this) texinfo documentation!
 WoMan _does not_ replace `man', although it does use a number of the
 facilities implemented in the Emacs `man' library.  WoMan and man can
 happily co-exist, which is very useful for comparison and debugging
-purposes.  The only way in which WoMan affects `man' is that it adds a
-timer to indicate how long `man' has taken to format a man page.  The
-timing is as compatible as possible with the timing built into WoMan,
-for as fair a comparison as possible.  The time comparison seems to
-depend on the details of the platform, the version of `man' in use,
-etc, but times are similar and WoMan is never significantly slower than
-`man'.  This is despite the fact that WoMan is running byte code
-whereas most of the formatting done by `man' uses machine code, and is
-a testimony to the quality of the Emacs Lisp system.
+purposes.
 
-`NROFF' simulates non-ASCII characters by using one or more ASCII
+`nroff' simulates non-ASCII characters by using one or more ASCII
 characters.  WoMan should be able to do much better than this.  I have
 recently begun to add support for WoMan to use more of the characters
 in its default font and to use a symbol font, and it is an aspect that
 I intend to develop further in the near future.  It should be possible
-to move WoMan from an emulation of `NROFF' to an emulation of `TROFF'
+to move WoMan from an emulation of `nroff' to an emulation of `troff'
 as GNU Emacs moves to providing bit-mapped display facilities.
 
 
-File: woman,  Node: Installation,  Next: Finding,  Prev: Background,  Up: Top
+File: woman,  Node: Finding,  Next: Browsing,  Prev: Background,  Up: Top
 
-Installation and Setup
-**********************
-
-No installation is necessary if you just want to run the version of
-WoMan distributed with GNU Emacs 21 or later, although some additional
-setup may still be desirable.
-
-If you are installing `woman.el', either to update the version
-distributed with GNU Emacs or because WoMan was not distributed with
-your version of Emacs, then you need to put the file in a directory in
-your Emacs load path and byte compile it.  A good directory to use is
-the `site-lisp' directory in your Emacs file tree, e.g.
-`/usr/local/share/emacs/VERSION/site-lisp/' (where VERSION is your
-Emacs version), provided you have write access to it.  If you use a
-directory that is not included by default in your Emacs load path then
-you need to add something like this to your `.emacs' initialisation
-file:
-
-     (add-to-list 'load-path "my-lisp")
-
-where `my-lisp' is the pathname of the directory.  *Note The Init File
-~/.emacs: (emacs)Init File, for further details on customizing Emacs in
-general.
-
-You can byte-compile the file by using the Emacs command
-`byte-compile-file' or by opening the directory containing the file,
-putting point on it and pressing the key `B'.  (In fact, if the file is
-compiled then it is only the compiled file that needs to be in the
-Emacs load path, but leaving the source file there will do no harm.)
-
-Setup
-=====
-
-Setup that is either necessary or desirable consists of adding a small
-amount of Emacs Lisp code to your `.emacs' initialisation file.  It may
-be necessary (or at least convenient) to make WoMan autoload (if you
-are not running GNU Emacs 21 or later) and to set the search path used
-by the `woman' interface.  You may also find it convenient to make
-various WoMan menu and key bindings available and to make WoMan
-customizable even before WoMan has been loaded.
-
-It is possible to run WoMan from a command line (from outside or even
-from inside Emacs) by suitably configuring your command interpreter.
-
-* Menu:
-
-* Autoloading::         Autoloading
-* Search Path::         Search Path
-* Auto Bindings::       Preloading Menu and Key Bindings
-* Auto Customization::  Preloading Customization
-* Command Line::        Command Line Access
-
-
-File: woman,  Node: Autoloading,  Next: Search Path,  Prev: Installation,  Up: Installation
-
-Autoloading
-===========
-
-If you are not running GNU Emacs 21 or later then you are recommended to
-add these autoloads to your `.emacs' file:
-
-     (autoload 'woman "woman"
-       "Decode and browse a Unix man page." t)
-     (autoload 'woman-find-file "woman"
-       "Find, decode and browse a specific Unix man-page file." t)
-     (autoload 'woman-dired-find-file "woman"
-       "In dired, run the WoMan man-page browser on this file." t)
-
-(In GNU Emacs 21 and later these autoloads are predefined.)
-
-
-File: woman,  Node: Search Path,  Next: Auto Bindings,  Prev: Autoloading,  Up: Installation
-
-Search Path
-===========
-
-The next step is necessary if you want to use the friendliest WoMan
-interface, which is recommended in general.  If the `MANPATH'
-environment variable is set then WoMan will use it; alternatively (or
-additionally), if your platform uses a man configuration file (as do
-many versions of Linux) then WoMan will use it, provided it can find it.
-(This may need configuration.  *Note Interface Options: Interface
-Options.)  If these mechanisms correctly define the search path for man
-pages then no further action is required.
-
-Otherwise you may need to customize the user option `woman-manpath',
-and you may also want to customize the user option `woman-path'.  *Note
-Customization: Customization.  Now you can execute the extended command
-`woman' and enter or select a manual topic using completion, and if
-necessary select a filename, again using completion.  By default, WoMan
-suggests the word nearest to point in the current buffer as the topic.
-
-
-File: woman,  Node: Auto Bindings,  Next: Auto Customization,  Prev: Search Path,  Up: Installation
-
-Preloading Menu and Key Bindings
-================================
-
-Once WoMan is loaded it adds an item to the `Help' menu and defines one
-or more keys in dired mode to run WoMan on the current file.  If you
-would like these facilities always to be available, even before WoMan is
-loaded, then add the following to your `.emacs' file:
-
-     (define-key-after menu-bar-manuals-menu [woman]
-       '(menu-item "Read Man Page (WoMan)..." woman
-                   :help "Man-page documentation Without Man") t)
-     
-     (add-hook 'dired-mode-hook
-               (lambda ()
-                 (define-key dired-mode-map "W" 'woman-dired-find-file)))
-
-(By default, WoMan will automatically define the dired keys `W' and `w'
-when it loads, but only if they are not already defined.  This
-behaviour is controlled by the user option `woman-dired-keys'.  Note
-that the `dired-x' (dired extra) package binds
-`dired-copy-filename-as-kill' to the key `w', although `W' appears to
-be unused.  The `dired-x' package will over-write the WoMan binding for
-`w', whereas (by default) WoMan will not overwrite the `dired-x'
-binding.)
-
-
-File: woman,  Node: Auto Customization,  Next: Command Line,  Prev: Auto Bindings,  Up: Installation
-
-Preloading Customization
-========================
-
-WoMan supports the GNU Emacs 20+ customization facility, and puts a
-customization group called `WoMan' in the `Help' group under the
-top-level `Emacs' group.  In order to be able to customize WoMan
-without first loading it, add the following to your `.emacs' file:
-
-     (defgroup woman nil
-       "Browse UNIX manual pages `wo (without) man'."
-       :tag "WoMan" :group 'help :load "woman")
-
-
-File: woman,  Node: Command Line,  Prev: Auto Customization,  Up: Installation
-
-Command Line Access
-===================
-
-If you really want to square the man-woman circle then you can!  If you
-run the GNU command interpreter `bash' then you might care to define
-the following `bash' function in your `bash' initialisation file
-`.bashrc':
-
-     man() { gnudoit -q '(raise-frame (selected-frame)) (woman' \"$1\" ')' ; }
-
-If you use a Microsoft command interpreter (`command.com' or `cmd.exe')
-then you can create a file called `man.bat' somewhere in your path
-containing the two lines:
-
-     @echo off
-     gnudoit -q (raise-frame (selected-frame)) (woman \"%1\")
-
-and then (e.g. from a command prompt or the `Run...' option in the
-Windows `Start' menu) just execute
-
-     man man_page_name
-
-(Of course, if you already have a `man' command installed then you
-could call these commands `woman' instead of `man'.)
-
-The above examples assume that you have the `gnuserv' Emacs
-client-server package installed (which I recommend).  It would be
-possible to do something similar by calling Emacs directly, but that is
-less satisfactory, because you are likely to end up with multiple copies
-of Emacs running, which is generally inelegant, inefficient and
-inconvenient.  If you run a different command interpreter then something
-similar to the above suggestions should be possible.
-
-
-File: woman,  Node: Finding,  Next: Browsing,  Prev: Installation,  Up: Top
-
-Finding and Formatting Man Pages
-********************************
+3 Finding and Formatting Man Pages
+**********************************
 
 WoMan provides three user interfaces for finding and formatting man
 pages:
@@ -472,15 +292,14 @@ WoMan file paths.
 
 File: woman,  Node: Topic,  Next: Filename,  Prev: Finding,  Up: Finding
 
-Topic Interface
-===============
+3.1 Topic Interface
+===================
 
 The topic interface is accessed principally via the command `woman'.
 The same command can be accessed via the menu item `Help->Manuals->Read
-Man Page (WoMan)...' either once WoMan has been loaded or if it is set
-up specially.  *Note Installation and Setup: Installation.  The command
-reads a manual topic in the minibuffer, which can be the "basename" of
-a man file anywhere in the man file structure.  The "basename" in this
+Man Page (WoMan)...' once WoMan has been loaded.  The command reads a
+manual topic in the minibuffer, which can be the "basename" of a man
+file anywhere in the man file structure.  The "basename" in this
 context means the filename without any directory component and without
 any extension or suffix components that relate to the file type.  So,
 for example, if there is a compressed source file in Chapter 5 of the
@@ -501,8 +320,8 @@ be the standard mechanism under UNIX, then WoMan parses that.
 Otherwise, if WoMan can find a configuration file named (by default)
 `man.conf' (or something very similar), which seems to be the standard
 mechanism under GNU/Linux, then it parses that.  To be precise,
-"something very similar" means having two name components separated by
-a dot and respectively containing `man' and beginning with `conf', e.g.
+"something very similar" means starting with `man' and ending with
+`.conf' and possibly more lowercase letters, e.g.
 `manual.configuration'.  The search path and/or precise full path name
 for this file are set by the value of the customizable user option
 `woman-man.conf-path'.  If all else fails, WoMan uses a plausible
@@ -522,7 +341,9 @@ contain _directories of_ man files, whereas the elements of
 Secondly, the last directory component of each element of `woman-path'
 is treated as a regular (Emacs) match expression rather than a fixed
 name, which allows collections of related directories to be specified
-succinctly.
+succinctly.  Also, elements of `woman-manpath' can be conses,
+indicating a mapping from `PATH' environment variable components to man
+directory hierarchies.
 
 For topic completion to work, WoMan must build a list of all the manual
 files that it can access, which can be very slow, especially if a
@@ -552,8 +373,8 @@ Topic Cache: Cache, for further details.
 
 File: woman,  Node: Cache,  Next: Word at point,  Prev: Topic,  Up: Topic
 
-The WoMan Topic Cache
----------------------
+3.1.1 The WoMan Topic Cache
+---------------------------
 
 The amount of information that WoMan caches (in main memory and,
 optionally, saved to disc) is controlled by the user option
@@ -586,33 +407,31 @@ Emacs session.
 
 File: woman,  Node: Word at point,  Prev: Cache,  Up: Topic
 
-Using the "Word at Point" as a Topic Suggestion
------------------------------------------------
+3.1.2 Using the "Word at Point" as a Topic Suggestion
+-----------------------------------------------------
 
 By default, the `woman' command uses the word nearest to point in the
-current buffer as a suggestion for the topic to look up.  The topic
-must be confirmed or edited in the minibuffer.  This suggestion can be
-turned off, or `woman' can use the suggested topic without confirmation
-if possible, which is controlled by customizing the user option
-`woman-topic-at-point' to `nil' or `t' respectively.  (Its default
-value is neither `nil' nor `t', meaning ask for confirmation.)
+current buffer as a suggestion for the topic to look up, if it exists
+as a valid topic.  The topic can be confirmed or edited in the
+minibuffer.
 
-The variable `woman-topic-at-point' can also be rebound locally (using
-`let'), which may be useful to provide special private key bindings,
-e.g. this key binding for `C-c w' runs WoMan on the topic at point
-without seeking confirmation:
+You can also bind the variable `woman-use-topic-at-point' locally to a
+non-`nil' value (using `let'), in which case `woman' will can use the
+suggested topic without confirmation if possible.  This may be useful
+to provide special private key bindings, e.g. this key binding for `C-c
+w' runs WoMan on the topic at point without seeking confirmation:
 
      (global-set-key "\C-cw"
                      (lambda ()
                        (interactive)
-                       (let ((woman-topic-at-point t))
+                       (let ((woman-use-topic-at-point t))
                          (woman))))
 
 
 File: woman,  Node: Filename,  Next: Automatic,  Prev: Topic,  Up: Finding
 
-Filename Interface
-==================
+3.2 Filename Interface
+======================
 
 The commands in this family are completely independent of the topic
 interface, caching mechanism, etc.
@@ -657,8 +476,8 @@ used internally by WoMan.
 
 File: woman,  Node: Automatic,  Prev: Filename,  Up: Finding
 
-Automatic Interface
-===================
+3.3 Automatic Interface
+=======================
 
 Emacs provides an interface to detect automatically the format of a file
 and decode it when it is visited.  It is used primarily by the
@@ -681,7 +500,7 @@ To use it, put something like this in your `.emacs' file.  [The call to
 major mode selection.]
 
      (autoload 'woman-decode-region "woman")
-     
+
      (add-to-list 'format-alist
                   '(man "Unix man-page source format" "\\.\\(TH\\|ig\\) "
                         woman-decode-region nil nil
@@ -692,8 +511,8 @@ major mode selection.]
 
 File: woman,  Node: Browsing,  Next: Customization,  Prev: Finding,  Up: Top
 
-Browsing Man Pages
-******************
+4 Browsing Man Pages
+********************
 
 Once a man page has been found and formatted, WoMan provides a browsing
 interface that is essentially the same as that provided by the standard
@@ -722,10 +541,10 @@ lines squeezed to a single blank line.
 
 File: woman,  Node: Fonts,  Next: Navigation,  Prev: Browsing,  Up: Browsing
 
-Fonts and Faces
-===============
+4.1 Fonts and Faces
+===================
 
-Fonts used by `ROFF' are handled by WoMan as faces, the details of
+Fonts used by `roff' are handled by WoMan as faces, the details of
 which are customizable.  *Note Faces: Faces.  WoMan supports both the
 italic and bold fonts normally used in man pages, together with a single
 face to represent all unknown fonts (which are occasionally used in
@@ -737,8 +556,8 @@ sub-scripts, which are not displayed well by WoMan.
 
 File: woman,  Node: Navigation,  Next: References,  Prev: Fonts,  Up: Browsing
 
-Navigation
-==========
+4.2 Navigation
+==============
 
 Man (and hence WoMan) mode can be thought of as a superset of view mode.
 The buffer cannot be edited, so keys that would normally self-insert are
@@ -769,8 +588,8 @@ the `man' key bindings.
 
 File: woman,  Node: References,  Next: Changing,  Prev: Navigation,  Up: Browsing
 
-Following References
-====================
+4.3 Following References
+========================
 
 Man pages usually contain a "SEE ALSO" section containing references to
 other man pages.  If these man pages are installed then WoMan can
@@ -803,8 +622,8 @@ the word at point as default.
 
 File: woman,  Node: Changing,  Next: Convenience,  Prev: References,  Up: Browsing
 
-Changing the Current Man Page
-=============================
+4.4 Changing the Current Man Page
+=================================
 
 The man page currently being browsed by WoMan can be changed in several
 ways.  The command `woman' can be invoked to format another man page,
@@ -855,8 +674,8 @@ share code).
 
 File: woman,  Node: Convenience,  Next: Imenu,  Prev: Changing,  Up: Browsing
 
-Convenience Key Bindings
-========================
+4.5 Convenience Key Bindings
+============================
 
 `-'
      Begin a negative numeric argument for the next command
@@ -883,8 +702,8 @@ Convenience Key Bindings
 
 File: woman,  Node: Imenu,  Prev: Convenience,  Up: Browsing
 
-Imenu Support; Contents Menu
-============================
+4.6 Imenu Support; Contents Menu
+================================
 
 The WoMan menu provides an option to make a contents menu for the
 current man page (using `imenu').  Alternatively, if you customize the
@@ -902,17 +721,15 @@ Emacs.
 
 File: woman,  Node: Customization,  Next: Log,  Prev: Browsing,  Up: Top
 
-Customization
-*************
+5 Customization
+***************
 
-All WoMan user options are customizable, and it is recommended to change
-them only via the standard Emacs customization facilities.  WoMan
-defines a top-level customization group called `WoMan' under the parent
-group `Help'.  The WoMan customization group is available only once
-WoMan has been loaded unless it is specially set up to be automatically
-available.  *Note Preloading Customization: Auto Customization.  It can
-be accessed either via the standard Emacs facilities, e.g. via the
-`Help->Customize' submenu, or via the WoMan major mode menu.
+All WoMan user options are customizable, and it is recommended to
+change them only via the standard Emacs customization facilities.
+WoMan defines a top-level customization group called `WoMan' under the
+parent group `Help'.  It can be accessed either via the standard Emacs
+facilities, e.g. via the `Help->Customize' submenu, or via the WoMan
+major mode menu.
 
 The top-level WoMan group contains only a few general options and three
 subgroups.  The hooks are provided only for special purposes that, for
@@ -961,8 +778,8 @@ Customization Subgroups
 
 File: woman,  Node: Interface Options,  Next: Formatting Options,  Prev: Customization,  Up: Customization
 
-Interface Options
-=================
+5.1 Interface Options
+=====================
 
 These options control the process of locating the appropriate file to
 browse, and the appearance of the browsing interface.
@@ -985,7 +802,9 @@ browse, and the appearance of the browsing interface.
      manual files.  Each element should be the name of a directory that
      contains subdirectories of the form `man?', or more precisely
      subdirectories selected by the value of `woman-manpath-man-regexp'.
-     Non-directory and unreadable files are ignored.
+     Non-directory and unreadable files are ignored.  This can also
+     contain conses, with the car indicating a `PATH' variable
+     component mapped to the directory tree given in the cdr.
 
      If not set then the environment variable `MANPATH' is used.  If no
      such environment variable is found, the default list is determined
@@ -1104,24 +923,18 @@ browse, and the appearance of the browsing interface.
      A string representing the title to use if WoMan adds a Contents
      menu to the menubar.  Default is `"CONTENTS"'.
 
-`woman-topic-at-point'
-     A symbol, which may be either `t', `nil' or `confirm', that
-     controls the use by `woman' of the "word at point" as a topic
-     suggestion.  If it is non-`nil' then the `woman' command uses the
-     word at point as an initial topic suggestion when it reads a topic
-     from the minibuffer; if it is `t' then `woman' uses the word at
-     point _without interactive confirmation_ if it exists as a topic.
-     The value `confirm' means suggest a topic and ask for
-     confirmation.  The default value is that of
-     `woman-topic-at-point-default'.
+`woman-use-topic-at-point'
+     A boolean value that defaults to `nil'.  If non-`nil' then the
+     `woman' command uses the word at point as the topic, _without
+     interactive confirmation_, if it exists as a topic.
 
-`woman-topic-at-point-default'
-     A symbol, which may be either `t', `nil' or `confirm',
-     representing the default value for `woman-topic-at-point'.  The
-     default value is `confirm'.  [The variable `woman-topic-at-point'
-     may be `let'-bound when `woman' is loaded, in which case its
-     global value does not get defined.  The function `woman-file-name'
-     sets it to this value if it is unbound.]
+`woman-use-topic-at-point-default'
+     A boolean value representing the default value for
+     `woman-use-topic-at-point'.  The default value is `nil'.  [The
+     variable `woman-use-topic-at-point' may be `let'-bound when
+     `woman' is loaded, in which case its global value does not get
+     defined.  The function `woman-file-name' sets it to this value if
+     it is unbound.]
 
 `woman-uncompressed-file-regexp'
      A regular match expression used to select man source files
@@ -1136,9 +949,9 @@ browse, and the appearance of the browsing interface.
      becoming more common in the GNU world.  For example, the man pages
      in the `ncurses' package include `toe.1m', `form.3x', etc.
 
-     *Note:* an optional compression regexp will be appended, so this
-     regexp _must not_ end with any kind of string terminator such as
-     `$' or `\\''.
+     *Please note:* an optional compression regexp will be appended, so
+     this regexp _must not_ end with any kind of string terminator such
+     as `$' or `\\''.
 
 `woman-file-compression-regexp'
      A regular match expression used to match compressed man file
@@ -1165,8 +978,8 @@ browse, and the appearance of the browsing interface.
 
 File: woman,  Node: Formatting Options,  Next: Faces,  Prev: Interface Options,  Up: Customization
 
-Formatting Options
-==================
+5.2 Formatting Options
+======================
 
 These options control the layout that WoMan uses to format the man page.
 
@@ -1187,13 +1000,12 @@ These options control the layout that WoMan uses to format the man page.
 `woman-bold-headings'
      A boolean value.  If non-`nil' then embolden section and subsection
      headings.  Default is `t'.  [Heading emboldening is _not_ standard
-     `man' behaviour.]
+     `man' behavior.]
 
 `woman-ignore'
      A boolean value.  If non-`nil' then unrecognised requests etc. are
-     ignored.  Default is `t'.  This gives the standard `ROFF'
-     behaviour.  If `nil' then they are left in the buffer, which may
-     aid debugging.
+     ignored.  Default is `t'.  This gives the standard `roff' behavior.
+     If `nil' then they are left in the buffer, which may aid debugging.
 
 `woman-preserve-ascii'
      A boolean value.  If non-`nil' then preserve ASCII characters in
@@ -1202,14 +1014,14 @@ These options control the layout that WoMan uses to format the man page.
      saved to a file.  Default is `nil'.
 
 `woman-emulation'
-     WoMan emulation, currently either `NROFF' or `TROFF'.  Default is
-     `NROFF'.  `TROFF' emulation is experimental and largely untested.
+     WoMan emulation, currently either `nroff' or `troff'.  Default is
+     `nroff'.  `troff' emulation is experimental and largely untested.
 
 
 File: woman,  Node: Faces,  Next: Special symbols,  Prev: Formatting Options,  Up: Customization
 
-Faces
-=====
+5.3 Faces
+=========
 
 These options control the display faces that WoMan uses to format the
 man page.
@@ -1217,12 +1029,12 @@ man page.
 `woman-fontify'
      A boolean value.  If non-`nil' then WoMan assumes that face
      support is available.  It defaults to a non-`nil' value if the
-     display supports either colours or different fonts.
+     display supports either colors or different fonts.
 
 `woman-italic-face'
      Face for italic font in man pages.  Default: italic, underlined,
-     foreground red.  This is overkill!  `TROFF' uses just italic;
-     `NROFF' uses just underline.  You should probably select either
+     foreground red.  This is overkill!  `troff' uses just italic;
+     `nroff' uses just underline.  You should probably select either
      italic or underline as you prefer, but not both, although italic
      and underline work together perfectly well!
 
@@ -1243,8 +1055,8 @@ man page.
 
 File: woman,  Node: Special symbols,  Prev: Faces,  Up: Customization
 
-Special symbols
-===============
+5.4 Special symbols
+===================
 
 This section currently applies _only_ to Microsoft Windows.
 
@@ -1275,10 +1087,10 @@ on any other platform.
 
 File: woman,  Node: Log,  Next: Technical,  Prev: Customization,  Up: Top
 
-The *WoMan-Log* Buffer
-**********************
+6 The *WoMan-Log* Buffer
+************************
 
-This is modelled on the Emacs byte-compiler.  It logs all files
+This is modeled on the Emacs byte-compiler.  It logs all files
 formatted by WoMan and the time taken.  If WoMan finds anything that it
 cannot handle then it writes a warning to this buffer.  If the variable
 `woman-show-log' is non-`nil' (by default it is `nil') then WoMan
@@ -1291,22 +1103,22 @@ At present, all warnings should be treated with some suspicion.
 Uninterpreted escape sequences are also logged (in some cases).
 
 By resetting the variable `woman-ignore' to `nil' (by default it is
-`t'), uninterpreted `ROFF' requests can optionally be left in the
+`t'), uninterpreted `roff' requests can optionally be left in the
 formatted buffer to indicate precisely where they occurred.  *Note
 Interface Options: Interface Options.
 
 
 File: woman,  Node: Technical,  Next: Bugs,  Prev: Log,  Up: Top
 
-Technical Details
-*****************
+7 Technical Details
+*******************
 
 Horizontal and vertical spacing and resolution
 ==============================================
 
 WoMan currently assumes 10 characters per inch horizontally, hence a
 horizontal resolution of 24 basic units, and 5 lines per inch
-vertically, hence a vertical resolution of 48 basic units.  (`NROFF'
+vertically, hence a vertical resolution of 48 basic units.  (`nroff'
 uses 240 per inch.)
 
 Vertical spacing and blank lines
@@ -1320,33 +1132,28 @@ output.
 
 File: woman,  Node: Bugs,  Next: Acknowledgements,  Prev: Technical,  Up: Top
 
-Reporting Bugs
-**************
+8 Reporting Bugs
+****************
 
 If WoMan fails completely, or formats a file incorrectly (i.e.
 obviously wrongly or significantly differently from `man') or
 inelegantly, then please
 
-  a. check that you are running the latest version of `woman.el'
-     available from my web site
-     (http://centaur.maths.qmw.ac.uk/Emacs/WoMan/), and
+  1. try the latest version of `woman.el' from the Emacs CVS repository
+     on `http://savannah.gnu.org/'.  If it still fails, please
 
-  b. check that the problem is not already described in the file
-     `woman.status', also available from my web site
-     (http://centaur.maths.qmw.ac.uk/Emacs/WoMan/).
-
-If both of the above are true then please email me
-<F.J.Wright@qmw.ac.uk> the entry from the `*WoMan-Log*' buffer relating
-to the problem file, together with a brief description of the problem.
-Please indicate where you got the man source file from, but do not send
-it to me unless I ask you to!  Thanks.  (At present WoMan has no
-automated bug-reporting facility.)
+  2. send a bug report to <bug-gnu-emacs@gnu.org> and to
+     <F.J.Wright@qmw.ac.uk>.  Please include the entry from the
+     `*WoMan-Log*' buffer relating to the problem file, together with a
+     brief description of the problem.  Please indicate where you got
+     the man source file from, but do not send it unless asked to send
+     it.
 
 
-File: woman,  Node: Acknowledgements,  Next: Command Index,  Prev: Bugs,  Up: Top
+File: woman,  Node: Acknowledgements,  Next: GNU Free Documentation License,  Prev: Bugs,  Up: Top
 
-Acknowledgements
-****************
+9 Acknowledgements
+******************
 
 For Heather, Kathryn and Madelyn, the women in my life (although they
 will probably never use it)!
@@ -1393,38 +1200,459 @@ fragments, general interest, etc.:
      Eli Zaretskii, <eliz@is.elta.co.il>
 
 
-File: woman,  Node: Command Index,  Next: Variable Index,  Prev: Acknowledgements,  Up: Top
+File: woman,  Node: GNU Free Documentation License,  Next: Command Index,  Prev: Acknowledgements,  Up: Top
+
+Appendix A GNU Free Documentation License
+*****************************************
+
+                      Version 1.2, November 2002
+
+     Copyright (C) 2000,2001,2002  Free Software Foundation, Inc.
+     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+     Everyone is permitted to copy and distribute verbatim copies
+     of this license document, but changing it is not allowed.
+
+
+  0. PREAMBLE
+
+     The purpose of this License is to make a manual, textbook, or other
+     functional and useful document "free" in the sense of freedom: to
+     assure everyone the effective freedom to copy and redistribute it,
+     with or without modifying it, either commercially or
+     noncommercially.  Secondarily, this License preserves for the
+     author and publisher a way to get credit for their work, while not
+     being considered responsible for modifications made by others.
+
+     This License is a kind of "copyleft," which means that derivative
+     works of the document must themselves be free in the same sense.
+     It complements the GNU General Public License, which is a copyleft
+     license designed for free software.
+
+     We have designed this License in order to use it for manuals for
+     free software, because free software needs free documentation: a
+     free program should come with manuals providing the same freedoms
+     that the software does.  But this License is not limited to
+     software manuals; it can be used for any textual work, regardless
+     of subject matter or whether it is published as a printed book.
+     We recommend this License principally for works whose purpose is
+     instruction or reference.
+
+
+  1. APPLICABILITY AND DEFINITIONS
+
+     This License applies to any manual or other work, in any medium,
+     that contains a notice placed by the copyright holder saying it
+     can be distributed under the terms of this License.  Such a notice
+     grants a world-wide, royalty-free license, unlimited in duration,
+     to use that work under the conditions stated herein.  The
+     "Document," below, refers to any such manual or work.  Any member
+     of the public is a licensee, and is addressed as "you."  You
+     accept the license if you copy, modify or distribute the work in a
+     way requiring permission under copyright law.
+
+     A "Modified Version" of the Document means any work containing the
+     Document or a portion of it, either copied verbatim, or with
+     modifications and/or translated into another language.
+
+     A "Secondary Section" is a named appendix or a front-matter
+     section of the Document that deals exclusively with the
+     relationship of the publishers or authors of the Document to the
+     Document's overall subject (or to related matters) and contains
+     nothing that could fall directly within that overall subject.
+     (Thus, if the Document is in part a textbook of mathematics, a
+     Secondary Section may not explain any mathematics.)  The
+     relationship could be a matter of historical connection with the
+     subject or with related matters, or of legal, commercial,
+     philosophical, ethical or political position regarding them.
+
+     The "Invariant Sections" are certain Secondary Sections whose
+     titles are designated, as being those of Invariant Sections, in
+     the notice that says that the Document is released under this
+     License.  If a section does not fit the above definition of
+     Secondary then it is not allowed to be designated as Invariant.
+     The Document may contain zero Invariant Sections.  If the Document
+     does not identify any Invariant Sections then there are none.
+
+     The "Cover Texts" are certain short passages of text that are
+     listed, as Front-Cover Texts or Back-Cover Texts, in the notice
+     that says that the Document is released under this License.  A
+     Front-Cover Text may be at most 5 words, and a Back-Cover Text may
+     be at most 25 words.
+
+     A "Transparent" copy of the Document means a machine-readable copy,
+     represented in a format whose specification is available to the
+     general public, that is suitable for revising the document
+     straightforwardly with generic text editors or (for images
+     composed of pixels) generic paint programs or (for drawings) some
+     widely available drawing editor, and that is suitable for input to
+     text formatters or for automatic translation to a variety of
+     formats suitable for input to text formatters.  A copy made in an
+     otherwise Transparent file format whose markup, or absence of
+     markup, has been arranged to thwart or discourage subsequent
+     modification by readers is not Transparent.  An image format is
+     not Transparent if used for any substantial amount of text.  A
+     copy that is not "Transparent" is called "Opaque."
+
+     Examples of suitable formats for Transparent copies include plain
+     ASCII without markup, Texinfo input format, LaTeX input format,
+     SGML or XML using a publicly available DTD, and
+     standard-conforming simple HTML, PostScript or PDF designed for
+     human modification.  Examples of transparent image formats include
+     PNG, XCF and JPG.  Opaque formats include proprietary formats that
+     can be read and edited only by proprietary word processors, SGML
+     or XML for which the DTD and/or processing tools are not generally
+     available, and the machine-generated HTML, PostScript or PDF
+     produced by some word processors for output purposes only.
+
+     The "Title Page" means, for a printed book, the title page itself,
+     plus such following pages as are needed to hold, legibly, the
+     material this License requires to appear in the title page.  For
+     works in formats which do not have any title page as such, "Title
+     Page" means the text near the most prominent appearance of the
+     work's title, preceding the beginning of the body of the text.
+
+     A section "Entitled XYZ" means a named subunit of the Document
+     whose title either is precisely XYZ or contains XYZ in parentheses
+     following text that translates XYZ in another language.  (Here XYZ
+     stands for a specific section name mentioned below, such as
+     "Acknowledgements," "Dedications," "Endorsements," or "History.")
+     To "Preserve the Title" of such a section when you modify the
+     Document means that it remains a section "Entitled XYZ" according
+     to this definition.
+
+     The Document may include Warranty Disclaimers next to the notice
+     which states that this License applies to the Document.  These
+     Warranty Disclaimers are considered to be included by reference in
+     this License, but only as regards disclaiming warranties: any other
+     implication that these Warranty Disclaimers may have is void and
+     has no effect on the meaning of this License.
+
+  2. VERBATIM COPYING
+
+     You may copy and distribute the Document in any medium, either
+     commercially or noncommercially, provided that this License, the
+     copyright notices, and the license notice saying this License
+     applies to the Document are reproduced in all copies, and that you
+     add no other conditions whatsoever to those of this License.  You
+     may not use technical measures to obstruct or control the reading
+     or further copying of the copies you make or distribute.  However,
+     you may accept compensation in exchange for copies.  If you
+     distribute a large enough number of copies you must also follow
+     the conditions in section 3.
+
+     You may also lend copies, under the same conditions stated above,
+     and you may publicly display copies.
+
+  3. COPYING IN QUANTITY
+
+     If you publish printed copies (or copies in media that commonly
+     have printed covers) of the Document, numbering more than 100, and
+     the Document's license notice requires Cover Texts, you must
+     enclose the copies in covers that carry, clearly and legibly, all
+     these Cover Texts: Front-Cover Texts on the front cover, and
+     Back-Cover Texts on the back cover.  Both covers must also clearly
+     and legibly identify you as the publisher of these copies.  The
+     front cover must present the full title with all words of the
+     title equally prominent and visible.  You may add other material
+     on the covers in addition.  Copying with changes limited to the
+     covers, as long as they preserve the title of the Document and
+     satisfy these conditions, can be treated as verbatim copying in
+     other respects.
+
+     If the required texts for either cover are too voluminous to fit
+     legibly, you should put the first ones listed (as many as fit
+     reasonably) on the actual cover, and continue the rest onto
+     adjacent pages.
+
+     If you publish or distribute Opaque copies of the Document
+     numbering more than 100, you must either include a
+     machine-readable Transparent copy along with each Opaque copy, or
+     state in or with each Opaque copy a computer-network location from
+     which the general network-using public has access to download
+     using public-standard network protocols a complete Transparent
+     copy of the Document, free of added material.  If you use the
+     latter option, you must take reasonably prudent steps, when you
+     begin distribution of Opaque copies in quantity, to ensure that
+     this Transparent copy will remain thus accessible at the stated
+     location until at least one year after the last time you
+     distribute an Opaque copy (directly or through your agents or
+     retailers) of that edition to the public.
+
+     It is requested, but not required, that you contact the authors of
+     the Document well before redistributing any large number of
+     copies, to give them a chance to provide you with an updated
+     version of the Document.
+
+  4. MODIFICATIONS
+
+     You may copy and distribute a Modified Version of the Document
+     under the conditions of sections 2 and 3 above, provided that you
+     release the Modified Version under precisely this License, with
+     the Modified Version filling the role of the Document, thus
+     licensing distribution and modification of the Modified Version to
+     whoever possesses a copy of it.  In addition, you must do these
+     things in the Modified Version:
+
+     A. Use in the Title Page (and on the covers, if any) a title
+     distinct    from that of the Document, and from those of previous
+     versions    (which should, if there were any, be listed in the
+     History section    of the Document).  You may use the same title
+     as a previous version    if the original publisher of that version
+     gives permission.
+     B. List on the Title Page, as authors, one or more persons or
+     entities    responsible for authorship of the modifications in the
+     Modified    Version, together with at least five of the principal
+     authors of the    Document (all of its principal authors, if it
+     has fewer than five),    unless they release you from this
+     requirement.
+     C. State on the Title page the name of the publisher of the
+     Modified Version, as the publisher.
+     D. Preserve all the copyright notices of the Document.
+     E. Add an appropriate copyright notice for your modifications
+     adjacent to the other copyright notices.
+     F. Include, immediately after the copyright notices, a license
+     notice    giving the public permission to use the Modified Version
+     under the    terms of this License, in the form shown in the
+     Addendum below.
+     G. Preserve in that license notice the full lists of Invariant
+     Sections    and required Cover Texts given in the Document's
+     license notice.
+     H. Include an unaltered copy of this License.
+     I. Preserve the section Entitled "History," Preserve its Title,
+     and add    to it an item stating at least the title, year, new
+     authors, and    publisher of the Modified Version as given on the
+     Title Page.  If    there is no section Entitled "History" in the
+     Document, create one    stating the title, year, authors, and
+     publisher of the Document as    given on its Title Page, then add
+     an item describing the Modified    Version as stated in the
+     previous sentence.
+     J. Preserve the network location, if any, given in the Document for
+       public access to a Transparent copy of the Document, and
+     likewise    the network locations given in the Document for
+     previous versions    it was based on.  These may be placed in the
+     "History" section.     You may omit a network location for a work
+     that was published at    least four years before the Document
+     itself, or if the original    publisher of the version it refers
+     to gives permission.
+     K. For any section Entitled "Acknowledgements" or "Dedications,"
+     Preserve the Title of the section, and preserve in the section all
+       the substance and tone of each of the contributor
+     acknowledgements    and/or dedications given therein.
+     L. Preserve all the Invariant Sections of the Document,
+     unaltered in their text and in their titles.  Section numbers
+     or the equivalent are not considered part of the section titles.
+     M. Delete any section Entitled "Endorsements."  Such a section
+     may not be included in the Modified Version.
+     N. Do not retitle any existing section to be Entitled
+     "Endorsements"    or to conflict in title with any Invariant
+     Section.
+     O. Preserve any Warranty Disclaimers.
+
+     If the Modified Version includes new front-matter sections or
+     appendices that qualify as Secondary Sections and contain no
+     material copied from the Document, you may at your option
+     designate some or all of these sections as invariant.  To do this,
+     add their titles to the list of Invariant Sections in the Modified
+     Version's license notice.  These titles must be distinct from any
+     other section titles.
+
+     You may add a section Entitled "Endorsements," provided it contains
+     nothing but endorsements of your Modified Version by various
+     parties-for example, statements of peer review or that the text has
+     been approved by an organization as the authoritative definition
+     of a standard.
+
+     You may add a passage of up to five words as a Front-Cover Text,
+     and a passage of up to 25 words as a Back-Cover Text, to the end
+     of the list of Cover Texts in the Modified Version.  Only one
+     passage of Front-Cover Text and one of Back-Cover Text may be
+     added by (or through arrangements made by) any one entity.  If the
+     Document already includes a cover text for the same cover,
+     previously added by you or by arrangement made by the same entity
+     you are acting on behalf of, you may not add another; but you may
+     replace the old one, on explicit permission from the previous
+     publisher that added the old one.
+
+     The author(s) and publisher(s) of the Document do not by this
+     License give permission to use their names for publicity for or to
+     assert or imply endorsement of any Modified Version.
+
+  5. COMBINING DOCUMENTS
+
+     You may combine the Document with other documents released under
+     this License, under the terms defined in section 4 above for
+     modified versions, provided that you include in the combination
+     all of the Invariant Sections of all of the original documents,
+     unmodified, and list them all as Invariant Sections of your
+     combined work in its license notice, and that you preserve all
+     their Warranty Disclaimers.
+
+     The combined work need only contain one copy of this License, and
+     multiple identical Invariant Sections may be replaced with a single
+     copy.  If there are multiple Invariant Sections with the same name
+     but different contents, make the title of each such section unique
+     by adding at the end of it, in parentheses, the name of the
+     original author or publisher of that section if known, or else a
+     unique number.  Make the same adjustment to the section titles in
+     the list of Invariant Sections in the license notice of the
+     combined work.
+
+     In the combination, you must combine any sections Entitled
+     "History" in the various original documents, forming one section
+     Entitled "History"; likewise combine any sections Entitled
+     "Acknowledgements," and any sections Entitled "Dedications."  You
+     must delete all sections Entitled "Endorsements."
+
+  6. COLLECTIONS OF DOCUMENTS
+
+     You may make a collection consisting of the Document and other
+     documents released under this License, and replace the individual
+     copies of this License in the various documents with a single copy
+     that is included in the collection, provided that you follow the
+     rules of this License for verbatim copying of each of the
+     documents in all other respects.
+
+     You may extract a single document from such a collection, and
+     distribute it individually under this License, provided you insert
+     a copy of this License into the extracted document, and follow
+     this License in all other respects regarding verbatim copying of
+     that document.
+
+  7. AGGREGATION WITH INDEPENDENT WORKS
+
+     A compilation of the Document or its derivatives with other
+     separate and independent documents or works, in or on a volume of
+     a storage or distribution medium, is called an "aggregate" if the
+     copyright resulting from the compilation is not used to limit the
+     legal rights of the compilation's users beyond what the individual
+     works permit.  When the Document is included in an aggregate, this
+     License does not apply to the other works in the aggregate which
+     are not themselves derivative works of the Document.
+
+     If the Cover Text requirement of section 3 is applicable to these
+     copies of the Document, then if the Document is less than one half
+     of the entire aggregate, the Document's Cover Texts may be placed
+     on covers that bracket the Document within the aggregate, or the
+     electronic equivalent of covers if the Document is in electronic
+     form.  Otherwise they must appear on printed covers that bracket
+     the whole aggregate.
+
+  8. TRANSLATION
+
+     Translation is considered a kind of modification, so you may
+     distribute translations of the Document under the terms of section
+     4.  Replacing Invariant Sections with translations requires special
+     permission from their copyright holders, but you may include
+     translations of some or all Invariant Sections in addition to the
+     original versions of these Invariant Sections.  You may include a
+     translation of this License, and all the license notices in the
+     Document, and any Warranty Disclaimers, provided that you also
+     include the original English version of this License and the
+     original versions of those notices and disclaimers.  In case of a
+     disagreement between the translation and the original version of
+     this License or a notice or disclaimer, the original version will
+     prevail.
+
+     If a section in the Document is Entitled "Acknowledgements,"
+     "Dedications," or "History," the requirement (section 4) to
+     Preserve its Title (section 1) will typically require changing the
+     actual title.
+
+  9. TERMINATION
+
+     You may not copy, modify, sublicense, or distribute the Document
+     except as expressly provided for under this License.  Any other
+     attempt to copy, modify, sublicense or distribute the Document is
+     void, and will automatically terminate your rights under this
+     License.  However, parties who have received copies, or rights,
+     from you under this License will not have their licenses
+     terminated so long as such parties remain in full compliance.
+
+ 10. FUTURE REVISIONS OF THIS LICENSE
+
+     The Free Software Foundation may publish new, revised versions of
+     the GNU Free Documentation License from time to time.  Such new
+     versions will be similar in spirit to the present version, but may
+     differ in detail to address new problems or concerns.  See
+     http://www.gnu.org/copyleft/.
+
+     Each version of the License is given a distinguishing version
+     number.  If the Document specifies that a particular numbered
+     version of this License "or any later version" applies to it, you
+     have the option of following the terms and conditions either of
+     that specified version or of any later version that has been
+     published (not as a draft) by the Free Software Foundation.  If
+     the Document does not specify a version number of this License,
+     you may choose any version ever published (not as a draft) by the
+     Free Software Foundation.
+
+
+ADDENDUM: How to use this License for your documents
+====================================================
+
+To use this License in a document you have written, include a copy of
+the License in the document and put the following copyright and license
+notices just after the title page:
+
+     Copyright (C)  YEAR  YOUR NAME.
+     Permission is granted to copy, distribute and/or modify this document
+     under the terms of the GNU Free Documentation License, Version 1.2
+     or any later version published by the Free Software Foundation;
+     with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+     A copy of the license is included in the section entitled ``GNU
+     Free Documentation License.''
+
+If you have Invariant Sections, Front-Cover Texts and Back-Cover Texts,
+replace the "with...Texts." line with this:
+
+     with the Invariant Sections being LIST THEIR TITLES, with the
+     Front-Cover Texts being LIST, and with the Back-Cover Texts being
+     LIST.
+
+If you have Invariant Sections without Cover Texts, or some other
+combination of the three, merge those two alternatives to suit the
+situation.
+
+If your document contains nontrivial examples of program code, we
+recommend releasing these examples in parallel under your choice of
+free software license, such as the GNU General Public License, to
+permit their use in free software.
+
+
+File: woman,  Node: Command Index,  Next: Variable Index,  Prev: GNU Free Documentation License,  Up: Top
 
 Command Index
 *************
 
+ [index ]
 * Menu:
 
-* beginning-of-buffer:                   Convenience.
-* describe-mode:                         Convenience.
-* digit-argument:                        Convenience.
-* end-of-buffer:                         Convenience.
-* man:                                   Changing.
-* man-follow:                            References.
-* Man-follow-manual-reference:           References.
-* Man-goto-section:                      Navigation.
-* Man-goto-see-also-section:             Navigation.
-* Man-kill:                              Changing.
-* Man-next-section:                      Navigation.
-* Man-previous-section:                  Navigation.
-* Man-quit:                              Changing.
-* negative-argument:                     Convenience.
-* scroll-down:                           Navigation.
-* scroll-up:                             Navigation.
-* woman:                                 Changing.
-* woman-decode-buffer:                   Filename.
-* woman-dired-find-file:                 Filename.
-* woman-find-file:                       Filename.
-* woman-mouse-2:                         References.
-* WoMan-next-manpage:                    Changing.
-* WoMan-previous-manpage:                Changing.
-* woman-reformat-last-file:              Changing.
-* woman-tar-extract-file:                Filename.
+* beginning-of-buffer:                   Convenience.          (line 16)
+* describe-mode:                         Convenience.          (line 24)
+* digit-argument:                        Convenience.          (line 11)
+* end-of-buffer:                         Convenience.          (line 20)
+* man:                                   Changing.             (line 20)
+* man-follow:                            References.           (line 26)
+* Man-follow-manual-reference:           References.           (line 30)
+* Man-goto-section:                      Navigation.           (line 25)
+* Man-goto-see-also-section:             Navigation.           (line 28)
+* Man-kill:                              Changing.             (line 38)
+* Man-next-section:                      Navigation.           (line 18)
+* Man-previous-section:                  Navigation.           (line 21)
+* Man-quit:                              Changing.             (line 34)
+* negative-argument:                     Convenience.          (line  7)
+* scroll-down:                           Navigation.           (line 15)
+* scroll-up:                             Navigation.           (line 12)
+* woman:                                 Changing.             (line 30)
+* woman-decode-buffer:                   Filename.             (line 42)
+* woman-dired-find-file:                 Filename.             (line 18)
+* woman-find-file:                       Filename.             (line  9)
+* woman-mouse-2:                         References.           (line 21)
+* WoMan-next-manpage:                    Changing.             (line 46)
+* WoMan-previous-manpage:                Changing.             (line 43)
+* woman-reformat-last-file:              Changing.             (line 49)
+* woman-tar-extract-file:                Filename.             (line 29)
 
 
 File: woman,  Node: Variable Index,  Next: Keystroke Index,  Prev: Command Index,  Up: Top
@@ -1432,42 +1660,43 @@ File: woman,  Node: Variable Index,  Next: Keystroke Index,  Prev: Command Index
 Variable Index
 **************
 
+ [index ]
 * Menu:
 
-* w32-downcase-file-names:               Finding.
-* woman-addition-face:                   Faces.
-* woman-bold-face:                       Faces.
-* woman-bold-headings:                   Formatting Options.
-* woman-cache-filename:                  Interface Options.
-* woman-cache-level:                     Interface Options.
-* woman-default-indent:                  Formatting Options.
-* woman-dired-keys:                      Interface Options.
-* woman-emulation:                       Formatting Options.
-* woman-file-compression-regexp:         Interface Options.
-* woman-fill-column:                     Formatting Options.
-* woman-fill-frame:                      Formatting Options.
-* woman-fontify:                         Faces.
-* woman-ignore:                          Formatting Options.
-* woman-imenu:                           Interface Options.
-* woman-imenu-generic-expression:        Interface Options.
-* woman-imenu-title:                     Interface Options.
-* woman-italic-face:                     Faces.
-* woman-man.conf-path:                   Interface Options.
-* woman-manpath:                         Interface Options.
-* woman-manpath-man-regexp:              Interface Options.
-* woman-path:                            Interface Options.
-* woman-post-format-hook:                Customization.
-* woman-pre-format-hook:                 Customization.
-* woman-preserve-ascii:                  Formatting Options.
-* woman-show-log:                        Customization.
-* woman-symbol-font:                     Special symbols.
-* woman-topic-at-point:                  Interface Options.
-* woman-topic-at-point-default:          Interface Options.
-* woman-uncompressed-file-regexp:        Interface Options.
-* woman-unknown-face:                    Faces.
-* woman-use-extended-font:               Special symbols.
-* woman-use-own-frame:                   Interface Options.
-* woman-use-symbol-font:                 Special symbols.
+* w32-downcase-file-names:               Finding.             (line  35)
+* woman-addition-face:                   Faces.               (line  31)
+* woman-bold-face:                       Faces.               (line  21)
+* woman-bold-headings:                   Formatting Options.  (line  22)
+* woman-cache-filename:                  Interface Options.   (line 116)
+* woman-cache-level:                     Interface Options.   (line  97)
+* woman-default-indent:                  Formatting Options.  (line  17)
+* woman-dired-keys:                      Interface Options.   (line 125)
+* woman-emulation:                       Formatting Options.  (line  38)
+* woman-file-compression-regexp:         Interface Options.   (line 178)
+* woman-fill-column:                     Formatting Options.  (line   8)
+* woman-fill-frame:                      Formatting Options.  (line  12)
+* woman-fontify:                         Faces.               (line   9)
+* woman-ignore:                          Formatting Options.  (line  27)
+* woman-imenu:                           Interface Options.   (line 139)
+* woman-imenu-generic-expression:        Interface Options.   (line 131)
+* woman-imenu-title:                     Interface Options.   (line 144)
+* woman-italic-face:                     Faces.               (line  14)
+* woman-man.conf-path:                   Interface Options.   (line   9)
+* woman-manpath:                         Interface Options.   (line  22)
+* woman-manpath-man-regexp:              Interface Options.   (line  56)
+* woman-path:                            Interface Options.   (line  63)
+* woman-post-format-hook:                Customization.       (line  29)
+* woman-pre-format-hook:                 Customization.       (line  24)
+* woman-preserve-ascii:                  Formatting Options.  (line  32)
+* woman-show-log:                        Customization.       (line  19)
+* woman-symbol-font:                     Special symbols.     (line  25)
+* woman-uncompressed-file-regexp:        Interface Options.   (line 161)
+* woman-unknown-face:                    Faces.               (line  24)
+* woman-use-extended-font:               Special symbols.     (line  16)
+* woman-use-own-frame:                   Interface Options.   (line 194)
+* woman-use-symbol-font:                 Special symbols.     (line  20)
+* woman-use-topic-at-point:              Interface Options.   (line 148)
+* woman-use-topic-at-point-default:      Interface Options.   (line 153)
 
 
 File: woman,  Node: Keystroke Index,  Next: Concept Index,  Prev: Variable Index,  Up: Top
@@ -1475,30 +1704,31 @@ File: woman,  Node: Keystroke Index,  Next: Concept Index,  Prev: Variable Index
 Keystroke Index
 ***************
 
+ [index ]
 * Menu:
 
-* -:                                     Convenience.
-* .:                                     Convenience.
-* 0 .. 9:                                Convenience.
-* <:                                     Convenience.
-* >:                                     Convenience.
-* ?:                                     Convenience.
-* DEL:                                   Navigation.
-* g:                                     Navigation.
-* k:                                     Changing.
-* m:                                     Changing.
-* M-n:                                   Changing.
-* M-p:                                   Changing.
-* Mouse-2:                               References.
-* n:                                     Navigation.
-* p:                                     Navigation.
-* q:                                     Changing.
-* R:                                     Changing.
-* r:                                     References.
-* RET:                                   References.
-* s:                                     Navigation.
-* SPC:                                   Navigation.
-* w:                                     Changing.
+* -:                                     Convenience.          (line  7)
+* .:                                     Convenience.          (line 16)
+* 0 .. 9:                                Convenience.          (line 11)
+* <:                                     Convenience.          (line 15)
+* >:                                     Convenience.          (line 20)
+* ?:                                     Convenience.          (line 24)
+* DEL:                                   Navigation.           (line 15)
+* g:                                     Navigation.           (line 25)
+* k:                                     Changing.             (line 38)
+* m:                                     Changing.             (line 20)
+* M-n:                                   Changing.             (line 46)
+* M-p:                                   Changing.             (line 43)
+* Mouse-2:                               References.           (line 21)
+* n:                                     Navigation.           (line 18)
+* p:                                     Navigation.           (line 21)
+* q:                                     Changing.             (line 34)
+* R:                                     Changing.             (line 49)
+* r:                                     References.           (line 30)
+* RET:                                   References.           (line 26)
+* s:                                     Navigation.           (line 28)
+* SPC:                                   Navigation.           (line 12)
+* w:                                     Changing.             (line 30)
 
 
 File: woman,  Node: Concept Index,  Prev: Keystroke Index,  Up: Top
@@ -1506,105 +1736,90 @@ File: woman,  Node: Concept Index,  Prev: Keystroke Index,  Up: Top
 Concept Index
 *************
 
+ [index ]
 * Menu:
 
-* acknowledgements:                      Acknowledgements.
-* autoloading:                           Autoloading.
-* automatic interface:                   Automatic.
-* background:                            Background.
-* bindings, preloading:                  Auto Bindings.
-* browsing man pages:                    Browsing.
-* buffer, log:                           Log.
-* bugs, reporting:                       Bugs.
-* cache, topic:                          Cache.
-* case-sensitivity:                      Finding.
-* changing current man page:             Changing.
-* command line access:                   Command Line.
-* contents menu:                         Imenu.
-* convenience key bindings:              Convenience.
-* current man page, changing:            Changing.
-* customization:                         Customization.
-* customization, preloading:             Auto Customization.
-* directory separator character:         Interface Options.
-* faces <1>:                             Faces.
-* faces:                                 Fonts.
-* filename interface:                    Filename.
-* finding man pages:                     Finding.
-* following references:                  References.
-* fonts:                                 Fonts.
-* formatting man pages:                  Finding.
-* formatting options:                    Formatting Options.
-* horizontal spacing:                    Technical.
-* imenu support:                         Imenu.
-* installation:                          Installation.
-* interface options:                     Interface Options.
-* introduction:                          Introduction.
-* key bindings, convenience:             Convenience.
-* key bindings, preloading:              Auto Bindings.
-* log buffer:                            Log.
-* man pages, browsing:                   Browsing.
-* man pages, finding:                    Finding.
-* man pages, formatting:                 Finding.
-* MANPATH, directory separator:          Interface Options.
-* MANPATH, environment variable:         Interface Options.
-* menu bindings, preloading:             Auto Bindings.
-* navigation:                            Navigation.
-* point, word at:                        Word at point.
-* preloading customization:              Auto Customization.
-* preloading menu and key bindings:      Auto Bindings.
-* references:                            References.
-* reporting bugs:                        Bugs.
-* resolution:                            Technical.
-* search path:                           Search Path.
-* setup:                                 Installation.
-* spacing, horizontal and vertical:      Technical.
-* special symbols:                       Special symbols.
-* technical details:                     Technical.
-* topic cache:                           Cache.
-* topic interface:                       Topic.
-* using, browsing man pages:             Browsing.
-* using, finding man pages:              Finding.
-* using, formatting man pages:           Finding.
-* vertical spacing:                      Technical.
-* word at point:                         Word at point.
+* acknowledgements:                      Acknowledgements.     (line  6)
+* automatic interface:                   Automatic.            (line  6)
+* background:                            Background.           (line  6)
+* browsing man pages:                    Browsing.             (line  6)
+* buffer, log:                           Log.                  (line  6)
+* bugs, reporting:                       Bugs.                 (line  6)
+* cache, topic:                          Cache.                (line  6)
+* case-sensitivity:                      Finding.              (line 35)
+* changing current man page:             Changing.             (line  6)
+* contents menu:                         Imenu.                (line  6)
+* convenience key bindings:              Convenience.          (line  6)
+* current man page, changing:            Changing.             (line  6)
+* customization:                         Customization.        (line  6)
+* directory separator character:         Interface Options.    (line 52)
+* faces <1>:                             Faces.                (line  6)
+* faces:                                 Fonts.                (line  6)
+* filename interface:                    Filename.             (line  6)
+* finding man pages:                     Finding.              (line  6)
+* following references:                  References.           (line  6)
+* fonts:                                 Fonts.                (line  6)
+* formatting man pages:                  Finding.              (line  6)
+* formatting options:                    Formatting Options.   (line  6)
+* horizontal spacing:                    Technical.            (line  6)
+* imenu support:                         Imenu.                (line  6)
+* interface options:                     Interface Options.    (line  6)
+* introduction:                          Introduction.         (line  6)
+* key bindings, convenience:             Convenience.          (line  6)
+* log buffer:                            Log.                  (line  6)
+* man pages, browsing:                   Browsing.             (line  6)
+* man pages, finding:                    Finding.              (line  6)
+* man pages, formatting:                 Finding.              (line  6)
+* MANPATH, directory separator:          Interface Options.    (line 52)
+* MANPATH, environment variable:         Interface Options.    (line 31)
+* navigation:                            Navigation.           (line  6)
+* point, word at:                        Word at point.        (line  6)
+* references:                            References.           (line  6)
+* reporting bugs:                        Bugs.                 (line  6)
+* resolution:                            Technical.            (line  6)
+* spacing, horizontal and vertical:      Technical.            (line  6)
+* special symbols:                       Special symbols.      (line  6)
+* technical details:                     Technical.            (line  6)
+* topic cache:                           Cache.                (line  6)
+* topic interface:                       Topic.                (line  6)
+* using, browsing man pages:             Browsing.             (line  6)
+* using, finding man pages:              Finding.              (line  6)
+* using, formatting man pages:           Finding.              (line  6)
+* vertical spacing:                      Technical.            (line  6)
+* word at point:                         Word at point.        (line  6)
 
 
 
 Tag Table:
-Node: Top1247
-Node: Introduction2337
-Node: Background4837
-Node: Installation12694
-Node: Autoloading14979
-Node: Search Path15575
-Node: Auto Bindings16644
-Node: Auto Customization17862
-Node: Command Line18411
-Node: Finding19786
-Node: Topic21340
-Node: Cache25679
-Node: Word at point27375
-Node: Filename28439
-Node: Automatic30681
-Node: Browsing32236
-Node: Fonts33458
-Node: Navigation34106
-Node: References34976
-Node: Changing36358
-Node: Convenience38358
-Node: Imenu39089
-Node: Customization39874
-Node: Interface Options42045
-Node: Formatting Options50983
-Node: Faces52533
-Node: Special symbols53805
-Node: Log55024
-Node: Technical56136
-Node: Bugs56843
-Node: Acknowledgements57798
-Node: Command Index59699
-Node: Variable Index61141
-Node: Keystroke Index63235
-Node: Concept Index64530
+Node: Top1361
+Node: Introduction2473
+Node: Background4991
+Node: Finding12248
+Node: Topic13804
+Node: Cache18189
+Node: Word at point19897
+Node: Filename20829
+Node: Automatic23079
+Node: Browsing24637
+Node: Fonts25863
+Node: Navigation26519
+Node: References27397
+Node: Changing28787
+Node: Convenience30795
+Node: Imenu31534
+Node: Customization32327
+Node: Interface Options34311
+Node: Formatting Options43009
+Node: Faces44559
+Node: Special symbols45838
+Node: Log47065
+Node: Technical48180
+Node: Bugs48891
+Node: Acknowledgements49638
+Node: GNU Free Documentation License51560
+Node: Command Index73792
+Node: Variable Index75777
+Node: Keystroke Index78406
+Node: Concept Index80161
 
 End Tag Table
