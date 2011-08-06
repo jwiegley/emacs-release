@@ -1,9 +1,42 @@
+1997-09-19  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Version 20.2 released.
+
+	* textmodes/outline.el (outline-up-heading):
+	Avoid infinite loop at beginning of buffer.
+
+1997-09-19  Kenichi Handa  <handa@etl.go.jp>
+
+	* loadup.el: Load case-table before loading
+	international/characters.el.
+
+	* international/characters.el: Set case-table for Cyrillic characters.
+
+1997-09-19  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* gnus/gnus-topic.el (gnus-topic-check-topology):
+	Don't crash if (cadr topic) is nil.
+
+	* language/english.el (ASCII): Define as alias for English.
+
+	* saveplace.el (save-place-version-control): Make nil the default.
+
+	* international/quail.el (quail-simple-translation-keymap):
+	Bind delete and backspace explicitly, like DEL.
+
+1997-09-18  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* cal-menu.el: Require calendar only when compiling.
+
+	* international/quail.el (quail-set-keyboard-layout):
+	Add autoload cookie.
+
 1997-09-15  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 20.1 released.
 
 	* startup.el (normal-top-level-add-to-load-path):
-	Ignore case when comparing, if msdos or windowsnt.
+	Ignore case when comparing, if ms-dos or windows-nt.
 
 	* mail/mh-comp.el: Many doc fixes.
 	(mh-send-letter): Choose a coding system

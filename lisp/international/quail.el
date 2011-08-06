@@ -319,6 +319,8 @@ This map is activated while translation region is active.")
       (define-key map (char-to-string i) 'quail-self-insert-command)
       (setq i (1+ i)))
     (define-key map "\177" 'quail-delete-last-char)
+    (define-key map [delete] 'quail-delete-last-char)
+    (define-key map [backspace] 'quail-delete-last-char)
 ;;; This interferes with handling of escape sequences on non-X terminals.
 ;;;    (define-key map "\e" '(keymap (t . quail-execute-non-quail-command)))
     (let ((meta-map (make-sparse-keymap)))
@@ -693,6 +695,7 @@ The command `quail-set-keyboard-layout' usually sets this variable.")
 See the documentation of `quail-keyboard-layout' for the format of
  the layout string.")
 
+;;;###autoload
 (defun quail-set-keyboard-layout (kbd-type)
   "Set the current keyboard layout to the same as keyboard KBD-TYPE.
 

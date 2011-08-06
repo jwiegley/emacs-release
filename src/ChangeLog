@@ -1,3 +1,9 @@
+1997-09-19  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
+
+	* Version 20.2 released.
+
+	* s/sol2-5.h (SYSTEM_MALLOC): Defined.
+
 1997-09-15  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
 	* Version 20.1 released.

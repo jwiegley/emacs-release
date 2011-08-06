@@ -692,7 +692,8 @@ articles in the topic and its subtopics."
 	topic)
     (while (setq topic (pop alist))
       (while (cdr topic)
-	(if (gnus-gethash (cadr topic) gnus-newsrc-hashtb)
+	(if (and (cadr topic)
+		 (gnus-gethash (cadr topic) gnus-newsrc-hashtb))
 	    (setq topic (cdr topic))
 	  (setcdr topic (cddr topic)))))))
 
